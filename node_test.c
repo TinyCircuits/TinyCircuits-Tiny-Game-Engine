@@ -29,10 +29,13 @@ STATIC void base_node_class_print(const mp_print_t *print, mp_obj_t self_in, mp_
 STATIC mp_obj_t base_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_print_str(&mp_sys_stdout_print, "base node new\n");
     mp_arg_check_num(n_args, n_kw, 0, 0, true);
-    engine_base_node_class_obj_t *self = m_new_obj(engine_base_node_class_obj_t);
+
+    // How to make __del__ get called when object is garbage collected: https://github.com/micropython/micropython/issues/1878
+    // Why it might get called early: https://forum.micropython.org/viewtopic.php?t=1405 (make sure the object is actually return from this function)
+    engine_base_node_class_obj_t *self = m_new_obj_with_finaliser(engine_base_node_class_obj_t);
     self->base.type = &engine_base_node_class_type;
 
-    return objects[object_count];
+    return self;
 }
 
 
@@ -44,13 +47,13 @@ STATIC mp_obj_t base_node_class_init(mp_obj_t self_in) {
 MP_DEFINE_CONST_FUN_OBJ_1(base_node_class_init_obj, base_node_class_init);
 
 STATIC mp_obj_t base_node_class_del(mp_obj_t self_in) {
-    mp_print_str(&mp_sys_stdout_print, "base node del\n");
+    mp_print_str(&mp_sys_stdout_print, "base node DELETE\n");
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(base_node_class_del_obj, base_node_class_del);
 
 STATIC mp_obj_t base_node_class_register(mp_obj_t self_in, mp_obj_t child_in) {
-    mp_print_str(&mp_sys_stdout_print, "Register\n");
+    mp_print_str(&mp_sys_stdout_print, "Register node\n");
 
     objects[object_count] = MP_OBJ_TO_PTR(child_in);
     object_count++;
@@ -59,11 +62,11 @@ STATIC mp_obj_t base_node_class_register(mp_obj_t self_in, mp_obj_t child_in) {
 }
 MP_DEFINE_CONST_FUN_OBJ_2(base_node_class_register_obj, base_node_class_register);
 
-STATIC mp_obj_t base_node_class_tick() {
+STATIC mp_obj_t base_node_class_tick(mp_obj_t self_in) {
     mp_print_str(&mp_sys_stdout_print, "override me please and thanks\n");
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_0(base_node_class_tick_obj, base_node_class_tick);
+MP_DEFINE_CONST_FUN_OBJ_1(base_node_class_tick_obj, base_node_class_tick);
 
 
 // Class attributes
@@ -96,49 +99,13 @@ STATIC mp_obj_t engine_start(){
     mp_print_str(&mp_sys_stdout_print, "engine start\n");
     mp_obj_print_helper(&mp_sys_stdout_print, mp_obj_new_int(object_count), PRINT_REPR);
     mp_print_str(&mp_sys_stdout_print, "\n");
-    for(uint8_t iox=0; iox<object_count; iox++){
-
-        mp_obj_t dest[2];
-        mp_load_method(objects[iox], MP_QSTR_tick, dest);
-        mp_call_method_n_kw(0, 0, dest);
-        // mp_call_function_n_kw(dest[], 0, 0, MP_OBJ_NULL);
-        // return mp_obj_get_int(mp_call_method_n_kw(0, 0, dest));
-
-
-        // mp_obj_t gc_tick_fn = mp_load_attr(objects[iox], MP_QSTR_tick);
-        // if (gc_tick_fn) {
-        // //     mp_obj_print_helper(&mp_sys_stdout_print, "Found tick function", PRINT_REPR);
-        // //     mp_print_str(&mp_sys_stdout_print, "\n");
-        // //     // mp_call_function_0(gc_disable_fn);
-        // }
-
-
-        // mp_obj_instance_t *self = MP_OBJ_TO_PTR(objects[iox]);
-        // mp_obj_print_helper(&mp_sys_stdout_print, MP_OBJ_TO_PTR(self->subobj[4]), PRINT_REPR);
-        // mp_print_str(&mp_sys_stdout_print, "\n");
-        // mp_call_function_n_kw(self->subobj[4], 0, 0, MP_OBJ_NULL);
-
-
-
-        // // look for 'tick' function
-        // mp_obj_t tick_fn[2] = {MP_OBJ_NULL};
-        // struct class_lookup_data lookup = {
-        //     .obj = NULL,
-        //     .attr = MP_QSTR_tick,
-        //     .meth_offset = offsetof(mp_obj_type_t, base_node_class_tick),
-        //     .dest = test_fn,
-        //     .is_type = false,
-        // };
-        // mp_obj_class_lookup(&lookup, objects[iox]);
-
-        // if (tick_fn[0] == MP_OBJ_NULL || init_fn[0] == MP_OBJ_SENTINEL) {
-
-        // }
-
-        // mp_obj_instance_call(MP_OBJ_FROM_PTR(objects[iox]), 0, 0, NULL);
-        // mp_call_method_self_n_kw();
-        // MP_OBJ_FROM_PTR(self)
-    }
+    // while(true){
+        for(uint8_t iox=0; iox<object_count; iox++){
+            mp_obj_t dest[2];
+            mp_load_method(objects[iox], MP_QSTR_tick, dest);
+            mp_call_method_n_kw(0, 0, dest);
+        }
+    // }
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_0(engine_start_obj, engine_start);
@@ -159,3 +126,42 @@ const mp_obj_module_t engine_user_cmodule = {
 };
 
 MP_REGISTER_MODULE(MP_QSTR_engine, engine_user_cmodule);
+
+
+
+
+
+
+// typedef struct _cb_finalizer_t {
+//     mp_obj_base_t base;
+//     mp_obj_t fun;
+// } cb_finalizer_t;
+
+// extern const mp_obj_type_t mp_type_cb_finalizer;
+
+// STATIC mp_obj_t new_cb_finalizer(const mp_obj_type_t *type_in, size_t n_args, size_t n_kw, const mp_obj_t *args) {
+//     mp_arg_check_num(n_args, n_kw, 1, 1, false);
+//     cb_finalizer_t *o = m_new_obj_with_finaliser(cb_finalizer_t);
+//     o->base.type = &mp_type_cb_finalizer;
+//     o->fun = args[0];
+//     return o;
+// }
+
+// STATIC mp_obj_t cb_finalizer_del(mp_obj_t self_in) {
+//     return mp_call_function_0(((cb_finalizer_t *)self_in)->fun);
+// }
+// STATIC MP_DEFINE_CONST_FUN_OBJ_1(cb_finalizer_del_obj, cb_finalizer_del);
+
+// STATIC void cb_finalizer_attr(mp_obj_t self_in, qstr attr, mp_obj_t *dest) {
+//     if (dest[0] == MP_OBJ_NULL && attr == MP_QSTR___del__) {
+//         dest[0] = MP_OBJ_FROM_PTR(&cb_finalizer_del_obj);
+//         dest[1] = self_in;
+//     }
+// }
+
+// const mp_obj_type_t mp_type_cb_finalizer = {
+//     {&mp_type_type},
+//     .name = MP_QSTR_cb_finalizer,
+//     .make_new = new_cb_finalizer,
+//     .attr = cb_finalizer_attr,
+// };

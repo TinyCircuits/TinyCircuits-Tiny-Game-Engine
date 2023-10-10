@@ -28,6 +28,7 @@
 
 import engine
 from engine import BaseNode
+import gc
 print("dir(engine):",dir(engine))
 print("dir(BaseNode):", dir(BaseNode))
 
@@ -47,9 +48,15 @@ class MyNodeB(BaseNode):
 
 a = MyNodeA()
 b = MyNodeB()
-a.tick()
-b.tick()
+if(True):
+    c = MyNodeA()
+    del c
+# a.tick()
+# b.tick()
 
+# print(b)
+gc.collect()
+# print(dir(a))
 
 engine.start()
 
