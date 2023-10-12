@@ -24,12 +24,11 @@ mp_obj_t *objects[10];
 
 // Class required functions
 STATIC void base_node_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
-    (void)kind;
-    mp_print_str(print, "I am the base node class");
+    ENGINE_INFO_PRINTF("print(): BaseNode");
 }
 
 STATIC mp_obj_t base_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
-    mp_print_str(&mp_sys_stdout_print, "base node new\n");
+    ENGINE_INFO_PRINTF("New BaseNode");
     mp_arg_check_num(n_args, n_kw, 0, 0, true);
 
     // How to make __del__ get called when object is garbage collected: https://github.com/micropython/micropython/issues/1878
@@ -43,19 +42,21 @@ STATIC mp_obj_t base_node_class_new(const mp_obj_type_t *type, size_t n_args, si
 
 // Class methods
 STATIC mp_obj_t base_node_class_init(mp_obj_t self_in) {
-    mp_print_str(&mp_sys_stdout_print, "base node init\n");
+    ENGINE_INFO_PRINTF("BaseNode init");
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(base_node_class_init_obj, base_node_class_init);
 
+
 STATIC mp_obj_t base_node_class_del(mp_obj_t self_in) {
-    mp_print_str(&mp_sys_stdout_print, "base node DELETE\n");
+    ENGINE_INFO_PRINTF("BaseNode deleted (garbage collected, removing self from active engine objects)");
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(base_node_class_del_obj, base_node_class_del);
 
+
 STATIC mp_obj_t base_node_class_register(mp_obj_t self_in, mp_obj_t child_in) {
-    mp_print_str(&mp_sys_stdout_print, "Register node\n");
+    ENGINE_INFO_PRINTF("Registering subclass with BaseNode");
 
     objects[object_count] = MP_OBJ_TO_PTR(child_in);
     object_count++;
@@ -64,8 +65,9 @@ STATIC mp_obj_t base_node_class_register(mp_obj_t self_in, mp_obj_t child_in) {
 }
 MP_DEFINE_CONST_FUN_OBJ_2(base_node_class_register_obj, base_node_class_register);
 
+
 STATIC mp_obj_t base_node_class_tick(mp_obj_t self_in) {
-    mp_print_str(&mp_sys_stdout_print, "override me please and thanks\n");
+    ENGINE_WARNING_PRINTF("Tick function not overridden");
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(base_node_class_tick_obj, base_node_class_tick);
@@ -98,13 +100,8 @@ const mp_obj_type_t engine_base_node_class_type = {
 
 // Module functions
 STATIC mp_obj_t engine_start(){
-    ENGINE_ERROR_PRINTF("test");
+    ENGINE_INFO_PRINTF("Engine starting...");
 
-    mp_printf(&mp_sys_stdout_print, "%d\n", sizeof(objects[0])*10);
-
-    mp_print_str(&mp_sys_stdout_print, "engine start\n");
-    mp_obj_print_helper(&mp_sys_stdout_print, mp_obj_new_int(object_count), PRINT_REPR);
-    mp_print_str(&mp_sys_stdout_print, "\n");
     // while(true){
         for(uint8_t iox=0; iox<object_count; iox++){
             mp_obj_t dest[2];
@@ -115,6 +112,7 @@ STATIC mp_obj_t engine_start(){
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_0(engine_start_obj, engine_start);
+
 
 STATIC mp_obj_t engine_set_debug_level(mp_obj_t debug_level){
     // Translate the debug level and check if inbounds
@@ -134,6 +132,7 @@ STATIC mp_obj_t engine_set_debug_level(mp_obj_t debug_level){
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(engine_set_debug_level_obj, engine_set_debug_level);
+
 
 
 // Module attributes

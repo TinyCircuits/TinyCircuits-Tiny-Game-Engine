@@ -3,8 +3,7 @@ add_library(usermod_callback-test INTERFACE)
 
 # Add our source files to the lib
 target_sources(usermod_callback-test INTERFACE
-    ${CMAKE_CURRENT_LIST_DIR}/test.c
-    ${CMAKE_CURRENT_LIST_DIR}/node_test.c
+    ${CMAKE_CURRENT_LIST_DIR}/engine.c
 )
 
 # Add the current directory as an include directory.
