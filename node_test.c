@@ -4,6 +4,8 @@
 #include "py/runtime.h"
 #include "py/builtin.h"
 
+#include "utility/debug_print.h"
+
 
 
 // ### CLASS ###
@@ -31,7 +33,7 @@ STATIC mp_obj_t base_node_class_new(const mp_obj_type_t *type, size_t n_args, si
     mp_arg_check_num(n_args, n_kw, 0, 0, true);
 
     // How to make __del__ get called when object is garbage collected: https://github.com/micropython/micropython/issues/1878
-    // Why it might get called early: https://forum.micropython.org/viewtopic.php?t=1405 (make sure the object is actually return from this function)
+    // Why it might get called early: https://forum.micropython.org/viewtopic.php?t=1405 (make sure the object is actually returned from this function)
     engine_base_node_class_obj_t *self = m_new_obj_with_finaliser(engine_base_node_class_obj_t);
     self->base.type = &engine_base_node_class_type;
 
@@ -96,6 +98,10 @@ const mp_obj_type_t engine_base_node_class_type = {
 
 // Module functions
 STATIC mp_obj_t engine_start(){
+    ENGINE_ERROR_PRINTF("test");
+
+    mp_printf(&mp_sys_stdout_print, "%d\n", sizeof(objects[0])*10);
+
     mp_print_str(&mp_sys_stdout_print, "engine start\n");
     mp_obj_print_helper(&mp_sys_stdout_print, mp_obj_new_int(object_count), PRINT_REPR);
     mp_print_str(&mp_sys_stdout_print, "\n");
@@ -110,11 +116,36 @@ STATIC mp_obj_t engine_start(){
 }
 MP_DEFINE_CONST_FUN_OBJ_0(engine_start_obj, engine_start);
 
+STATIC mp_obj_t engine_set_debug_level(mp_obj_t debug_level){
+    // Translate the debug level and check if inbounds
+    uint8_t engine_debug_level = mp_obj_get_int(debug_level);
+    if(engine_debug_level > DEBUG_PRINT_LEVEL_INFO){
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Tried to set debug level to unknown value"));
+    }
+
+    // Set level and give info print
+    ENGINE_DEBUG_PRINT_LEVEL = engine_debug_level;
+
+    if(engine_debug_level == DEBUG_PRINT_LEVEL_NONE) {ENGINE_FORCE_PRINTF("Set engine debug level to NONE: the engine will not print errors, warnings, or info messages (exceptions will still occur)")};
+    if(engine_debug_level == DEBUG_PRINT_LEVEL_ALL) {ENGINE_FORCE_PRINTF("Set engine debug level to ALL: the engine will print all errors, warnings, and info messages")};
+    if(engine_debug_level == DEBUG_PRINT_LEVEL_WARNINGS) {ENGINE_FORCE_PRINTF("Set engine debug level to WARNINGS: the engine will only print warning and info messages")};
+    if(engine_debug_level == DEBUG_PRINT_LEVEL_INFO) {ENGINE_FORCE_PRINTF("Set engine debug level to INFO: the engine will only print info messages")};
+
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_1(engine_set_debug_level_obj, engine_set_debug_level);
+
+
 // Module attributes
 STATIC const mp_map_elem_t engine_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_simpleclass) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_BaseNode), (mp_obj_t)&engine_base_node_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_start), (mp_obj_t)&engine_start_obj },
+    { MP_ROM_QSTR(MP_QSTR_debug_print_level_none), MP_ROM_INT(DEBUG_PRINT_LEVEL_NONE) },
+    { MP_ROM_QSTR(MP_QSTR_debug_print_level_all), MP_ROM_INT(DEBUG_PRINT_LEVEL_ALL) },
+    { MP_ROM_QSTR(MP_QSTR_debug_print_level_warnings), MP_ROM_INT(DEBUG_PRINT_LEVEL_WARNINGS) },
+    { MP_ROM_QSTR(MP_QSTR_debug_print_level_info), MP_ROM_INT(DEBUG_PRINT_LEVEL_INFO) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_set_debug_print_level), (mp_obj_t)&engine_set_debug_level_obj },
 };
 
 // Module init
@@ -126,42 +157,3 @@ const mp_obj_module_t engine_user_cmodule = {
 };
 
 MP_REGISTER_MODULE(MP_QSTR_engine, engine_user_cmodule);
-
-
-
-
-
-
-// typedef struct _cb_finalizer_t {
-//     mp_obj_base_t base;
-//     mp_obj_t fun;
-// } cb_finalizer_t;
-
-// extern const mp_obj_type_t mp_type_cb_finalizer;
-
-// STATIC mp_obj_t new_cb_finalizer(const mp_obj_type_t *type_in, size_t n_args, size_t n_kw, const mp_obj_t *args) {
-//     mp_arg_check_num(n_args, n_kw, 1, 1, false);
-//     cb_finalizer_t *o = m_new_obj_with_finaliser(cb_finalizer_t);
-//     o->base.type = &mp_type_cb_finalizer;
-//     o->fun = args[0];
-//     return o;
-// }
-
-// STATIC mp_obj_t cb_finalizer_del(mp_obj_t self_in) {
-//     return mp_call_function_0(((cb_finalizer_t *)self_in)->fun);
-// }
-// STATIC MP_DEFINE_CONST_FUN_OBJ_1(cb_finalizer_del_obj, cb_finalizer_del);
-
-// STATIC void cb_finalizer_attr(mp_obj_t self_in, qstr attr, mp_obj_t *dest) {
-//     if (dest[0] == MP_OBJ_NULL && attr == MP_QSTR___del__) {
-//         dest[0] = MP_OBJ_FROM_PTR(&cb_finalizer_del_obj);
-//         dest[1] = self_in;
-//     }
-// }
-
-// const mp_obj_type_t mp_type_cb_finalizer = {
-//     {&mp_type_type},
-//     .name = MP_QSTR_cb_finalizer,
-//     .make_new = new_cb_finalizer,
-//     .attr = cb_finalizer_attr,
-// };

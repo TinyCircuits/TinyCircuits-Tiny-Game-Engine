@@ -35,7 +35,6 @@ print("dir(BaseNode):", dir(BaseNode))
 class MyNodeA(BaseNode):
     def __init__(self):
         self.register(self)
-        pass
 
     def tick(self):
         print("hi from tick()")
@@ -44,19 +43,15 @@ class MyNodeA(BaseNode):
 class MyNodeB(BaseNode):
     def __init__(self):
         self.register(self)
-        pass
+
 
 a = MyNodeA()
 b = MyNodeB()
 if(True):
     c = MyNodeA()
     del c
-# a.tick()
-# b.tick()
 
-# print(b)
 gc.collect()
-# print(dir(a))
 
 engine.start()
 
