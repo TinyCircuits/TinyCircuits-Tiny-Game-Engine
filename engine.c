@@ -4,93 +4,9 @@
 #include "py/runtime.h"
 #include "py/builtin.h"
 
+#include "engine.h"
 #include "utility/debug_print.h"
-
-
-
-// ### CLASS ###
-
-// Class type
-typedef struct _engine_base_node_class_obj_t {
-    mp_obj_base_t base;
-}engine_base_node_class_obj_t;
-
-const mp_obj_type_t engine_base_node_class_type;
-
-uint16_t object_count = 0;
-mp_obj_t *objects[10];
-
-
-
-// Class required functions
-STATIC void base_node_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
-    ENGINE_INFO_PRINTF("print(): BaseNode");
-}
-
-STATIC mp_obj_t base_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
-    ENGINE_INFO_PRINTF("New BaseNode");
-    mp_arg_check_num(n_args, n_kw, 0, 0, true);
-
-    // How to make __del__ get called when object is garbage collected: https://github.com/micropython/micropython/issues/1878
-    // Why it might get called early: https://forum.micropython.org/viewtopic.php?t=1405 (make sure the object is actually returned from this function)
-    engine_base_node_class_obj_t *self = m_new_obj_with_finaliser(engine_base_node_class_obj_t);
-    self->base.type = &engine_base_node_class_type;
-
-    return self;
-}
-
-
-// Class methods
-STATIC mp_obj_t base_node_class_init(mp_obj_t self_in) {
-    ENGINE_INFO_PRINTF("BaseNode init");
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_1(base_node_class_init_obj, base_node_class_init);
-
-
-STATIC mp_obj_t base_node_class_del(mp_obj_t self_in) {
-    ENGINE_INFO_PRINTF("BaseNode deleted (garbage collected, removing self from active engine objects)");
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_1(base_node_class_del_obj, base_node_class_del);
-
-
-STATIC mp_obj_t base_node_class_register(mp_obj_t self_in, mp_obj_t child_in) {
-    ENGINE_INFO_PRINTF("Registering subclass with BaseNode");
-
-    objects[object_count] = MP_OBJ_TO_PTR(child_in);
-    object_count++;
-
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_2(base_node_class_register_obj, base_node_class_register);
-
-
-STATIC mp_obj_t base_node_class_tick(mp_obj_t self_in) {
-    ENGINE_WARNING_PRINTF("Tick function not overridden");
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_1(base_node_class_tick_obj, base_node_class_tick);
-
-
-// Class attributes
-STATIC const mp_rom_map_elem_t base_node_class_locals_dict_table[] = {
-    { MP_ROM_QSTR(MP_QSTR___init__), MP_ROM_PTR(&base_node_class_init_obj) },
-    { MP_ROM_QSTR(MP_QSTR___del__), MP_ROM_PTR(&base_node_class_del_obj) },
-    { MP_ROM_QSTR(MP_QSTR_register), MP_ROM_PTR(&base_node_class_register_obj) },
-    { MP_ROM_QSTR(MP_QSTR_tick), MP_ROM_PTR(&base_node_class_tick_obj) },
-};
-
-// Class init
-STATIC MP_DEFINE_CONST_DICT(base_node_class_locals_dict, base_node_class_locals_dict_table);
-
-const mp_obj_type_t engine_base_node_class_type = {
-    { &mp_type_type },
-    .name = MP_QSTR_BaseNode,
-    .print = base_node_class_print,
-    .make_new = base_node_class_new,
-    .locals_dict = (mp_obj_dict_t*)&base_node_class_locals_dict,
-};
+#include "nodes/base_node.h"
 
 
 
@@ -102,13 +18,22 @@ const mp_obj_type_t engine_base_node_class_type = {
 STATIC mp_obj_t engine_start(){
     ENGINE_INFO_PRINTF("Engine starting...");
 
-    // while(true){
-        for(uint8_t iox=0; iox<object_count; iox++){
-            mp_obj_t dest[2];
-            mp_load_method(objects[iox], MP_QSTR_tick, dest);
+    object_list_node *current_node = NULL;
+    mp_obj_t dest[2];
+
+    while(true){
+        current_node = engine_objects.root.next;
+
+        while(current_node != NULL){
+            engine_base_node_class_obj_t *current_node_base_class_instance = ((engine_base_node_class_obj_t*)current_node->object);
+
+            mp_load_method(current_node_base_class_instance->child, MP_QSTR_tick, dest);
             mp_call_method_n_kw(0, 0, dest);
+
+            current_node = current_node->next;
         }
-    // }
+    }
+
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_0(engine_start_obj, engine_start);
@@ -137,14 +62,14 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_set_debug_level_obj, engine_set_debug_level);
 
 // Module attributes
 STATIC const mp_map_elem_t engine_globals_table[] = {
-    { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_simpleclass) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_BaseNode), (mp_obj_t)&engine_base_node_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_start), (mp_obj_t)&engine_start_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_set_debug_print_level), (mp_obj_t)&engine_set_debug_level_obj },
     { MP_ROM_QSTR(MP_QSTR_debug_print_level_none), MP_ROM_INT(DEBUG_PRINT_LEVEL_NONE) },
     { MP_ROM_QSTR(MP_QSTR_debug_print_level_all), MP_ROM_INT(DEBUG_PRINT_LEVEL_ALL) },
     { MP_ROM_QSTR(MP_QSTR_debug_print_level_warnings), MP_ROM_INT(DEBUG_PRINT_LEVEL_WARNINGS) },
     { MP_ROM_QSTR(MP_QSTR_debug_print_level_info), MP_ROM_INT(DEBUG_PRINT_LEVEL_INFO) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_set_debug_print_level), (mp_obj_t)&engine_set_debug_level_obj },
 };
 
 // Module init

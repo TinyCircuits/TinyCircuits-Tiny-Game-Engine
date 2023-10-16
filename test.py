@@ -32,9 +32,13 @@ import gc
 print("dir(engine):",dir(engine))
 print("dir(BaseNode):", dir(BaseNode))
 
+
+engine.set_debug_print_level(engine.debug_print_level_all)
+
+
 class MyNodeA(BaseNode):
     def __init__(self):
-        self.register(self)
+        super().__init__(self)
 
     def tick(self):
         print("hi from tick()")
@@ -42,7 +46,7 @@ class MyNodeA(BaseNode):
 
 class MyNodeB(BaseNode):
     def __init__(self):
-        self.register(self)
+        super().__init__(self)
 
 
 a = MyNodeA()
