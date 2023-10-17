@@ -18,17 +18,15 @@
 STATIC mp_obj_t engine_start(){
     ENGINE_INFO_PRINTF("Engine starting...");
 
-    object_list_node *current_node = NULL;
-    mp_obj_t dest[2];
+    linked_list_node *current_node = NULL;
 
     while(true){
-        current_node = engine_objects.root.next;
+        current_node = engine_objects.start;
 
         while(current_node != NULL){
             engine_base_node_class_obj_t *current_node_base_class_instance = ((engine_base_node_class_obj_t*)current_node->object);
 
-            mp_load_method(current_node_base_class_instance->child, MP_QSTR_tick, dest);
-            mp_call_method_n_kw(0, 0, dest);
+            mp_call_method_n_kw(0, 0, current_node_base_class_instance->tick_dest);
 
             current_node = current_node->next;
         }

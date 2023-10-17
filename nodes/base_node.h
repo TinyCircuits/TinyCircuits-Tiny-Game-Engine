@@ -14,7 +14,8 @@
 typedef struct {
     mp_obj_base_t base;
     mp_obj_t *child;
-    object_list_node *object_list_node;
+    linked_list_node *object_list_node;
+    mp_obj_t tick_dest[2];
 }engine_base_node_class_obj_t;
 
 const mp_obj_type_t engine_base_node_class_type;
@@ -36,7 +37,11 @@ STATIC mp_obj_t base_node_class_new(const mp_obj_type_t *type, size_t n_args, si
 
     ENGINE_INFO_PRINTF("Registering subclass with BaseNode and adding self to engine active objects");
     self->child = MP_OBJ_TO_PTR(args[0]);
-    self->object_list_node = object_list_add_obj(&engine_objects, self);
+    self->object_list_node = linked_list_add_obj(&engine_objects, self);
+
+    // Cache lookup results of 'tick()' function on this node
+    // instance so that the main engine loop can call it quickly
+    mp_load_method(self->child, MP_QSTR_tick, self->tick_dest);
 
     self->base.type = &engine_base_node_class_type;
 
@@ -50,7 +55,7 @@ STATIC mp_obj_t base_node_class_del(mp_obj_t self_in){
     ENGINE_INFO_PRINTF("BaseNode deleted (garbage collected, removing self from active engine objects)");
 
     engine_base_node_class_obj_t *self = ((engine_base_node_class_obj_t*)MP_OBJ_TO_PTR(self_in));
-    object_list_del_list_node(&engine_objects, self->object_list_node);
+    linked_list_del_list_node(&engine_objects, self->object_list_node);
 
     return mp_const_none;
 }
