@@ -41,9 +41,11 @@ linked_list_node *linked_list_add_obj(linked_list *list, void *obj){
     // Put data in the new node and link to previous 
     new_node->object = obj;
     new_node->previous = list->end;
+    new_node->is_end_node = true;
 
     // Add new node to list and set the end of the list to it
     list->end->next = new_node;
+    list->end->is_end_node = false;
     list->end = list->end->next;
 
     // Return pointer to the new node so it can be removed easily
