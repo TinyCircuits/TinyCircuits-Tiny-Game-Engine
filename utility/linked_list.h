@@ -121,6 +121,8 @@ linked_list_node *linked_list_sorted_add_obj(linked_list *list, void *obj, bool 
                 // Put the new node in the list
                 to_be_before_new_node->next = new_node;
                 to_be_after_new_node->previous = new_node;
+                new_node->previous = to_be_before_new_node;
+                new_node->next = to_be_after_new_node;
             }
 
             // Return the newly added node so it can be deleted easier in the future
