@@ -26,7 +26,13 @@ STATIC mp_obj_t engine_start(){
         while(current_node != NULL){
             engine_base_node_class_obj_t *current_node_base_class_instance = ((engine_base_node_class_obj_t*)current_node->object);
 
-            mp_call_method_n_kw(0, 0, current_node_base_class_instance->tick_dest);
+            // Don't call node callbacks unless it was not just added (callbacks can add nodes, don't want to call the next callbacks until next cycle)
+            if(current_node_base_class_instance->just_added == false){
+                mp_call_method_n_kw(0, 0, current_node_base_class_instance->tick_dest);
+            }else{
+                ENGINE_INFO_PRINTF("Did not call node callbacks, it was just added, will call them next game cycle");
+                current_node_base_class_instance->just_added = false;
+            }
 
             current_node = current_node->next;
         }
