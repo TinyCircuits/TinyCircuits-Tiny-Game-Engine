@@ -1,8 +1,8 @@
 #include "engine_object_layers.h"
 #include "nodes/base_node.h"
 
-uint16_t engine_object_layer_count = 16;
-linked_list engine_object_layers[16];
+uint16_t engine_object_layer_count = 8;
+linked_list engine_object_layers[8];
 
 
 linked_list_node *engine_add_object_to_layer(void *obj, uint16_t layer_index){
@@ -24,7 +24,7 @@ void engine_invoke_all_node_callbacks(){
     linked_list_node *current_node = NULL;
 
     for(uint16_t ilx=0; ilx<engine_object_layer_count; ilx++){
-        ENGINE_INFO_PRINTF("Starting on objects in layer %d/%d", ilx+1, engine_object_layer_count);
+        ENGINE_INFO_PRINTF("Starting on objects in layer %d/%d", ilx, engine_object_layer_count-1);
 
         current_node = engine_object_layers[ilx].start;
 
@@ -42,4 +42,6 @@ void engine_invoke_all_node_callbacks(){
             current_node = current_node->next;
         }
     }
+
+    ENGINE_INFO_PRINTF("##### GAME CYCLE COMPLETE #####\n");
 }

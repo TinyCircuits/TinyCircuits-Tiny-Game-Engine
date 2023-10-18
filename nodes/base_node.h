@@ -6,7 +6,7 @@
 
 
 // Class type
-typedef struct {
+typedef struct{
     mp_obj_base_t base;
     mp_obj_t *child;
     linked_list_node *object_list_node;
