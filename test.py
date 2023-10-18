@@ -1,42 +1,14 @@
-# There are two ways the API could look.
-
-# # Way #1:
-# import engine
-
-# my_new_node = engine.Node()
-
-# def my_tick_callback():
-#     print("Hi I am a node! I like to move around!")
-
-# my_new_node.set_callback(my_tick_callback)
-
-# engine.start()
-
-
-# # Way #2
-# import engine
-
-# class MyNewNode(engine.Node):
-#     def __init__(self):
-#         # I could do extra setup stuff here!
-#         pass
-
-#     # The name has to be this!
-#     def tick():
-#         # I can do anything here like move, print, or whatever
-#         pass
-
 import engine
-from engine import BaseNode
+from engine import EmptyNode
 import gc
 print("dir(engine):",dir(engine))
-# print("dir(BaseNode):", dir(BaseNode))
+print("dir(EmptyNode):", dir(EmptyNode))
 
 
 engine.set_debug_print_level(engine.debug_print_level_all)
 
 
-class MyNodeA(BaseNode):
+class MyNodeA(EmptyNode):
     def __init__(self):
         super().__init__(self)
 
@@ -44,17 +16,17 @@ class MyNodeA(BaseNode):
         print("hi from tick() A")
 
 
-class MyNodeB(BaseNode):
+class MyNodeB(EmptyNode):
     def __init__(self):
         super().__init__(self)
 
 
-class MyNodeC(BaseNode):
+class MyNodeC(EmptyNode):
     def __init__(self):
         super().__init__(self)
 
 
-class MyNodeD(BaseNode):
+class MyNodeD(EmptyNode):
     def __init__(self):
         super().__init__(self)
     

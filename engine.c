@@ -1,8 +1,7 @@
 #include <stdio.h>
 
 #include "engine.h"
-#include "nodes/base_node.h"
-
+#include "nodes/empty_node.h"
 
 
 // ### MODULE ###
@@ -44,7 +43,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_set_debug_level_obj, engine_set_debug_level);
 // Module attributes
 STATIC const mp_map_elem_t engine_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_BaseNode), (mp_obj_t)&engine_base_node_class_type },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_EmptyNode), (mp_obj_t)&engine_empty_node_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_start), (mp_obj_t)&engine_start_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_set_debug_print_level), (mp_obj_t)&engine_set_debug_level_obj },
     { MP_ROM_QSTR(MP_QSTR_debug_print_level_none), MP_ROM_INT(DEBUG_PRINT_LEVEL_NONE) },

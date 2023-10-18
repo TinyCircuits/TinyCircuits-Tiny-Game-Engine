@@ -1,5 +1,7 @@
 #include "engine_object_layers.h"
-#include "nodes/base_node.h"
+#include "nodes/minimal_node.h"
+#include "nodes/empty_node.h"
+#include "nodes/node_types.h"
 
 uint16_t engine_object_layer_count = 8;
 linked_list engine_object_layers[8];
@@ -21,25 +23,34 @@ void engine_remove_object_from_layer(linked_list_node *object_list_node, uint16_
 
 
 void engine_invoke_all_node_callbacks(){
-    linked_list_node *current_node = NULL;
+    linked_list_node *current_linked_list_node = NULL;
 
     for(uint16_t ilx=0; ilx<engine_object_layer_count; ilx++){
         ENGINE_INFO_PRINTF("Starting on objects in layer %d/%d", ilx, engine_object_layer_count-1);
 
-        current_node = engine_object_layers[ilx].start;
+        current_linked_list_node = engine_object_layers[ilx].start;
 
-        while(current_node != NULL){
-            engine_base_node_class_obj_t *current_node_base_class_instance = ((engine_base_node_class_obj_t*)current_node->object);
+        while(current_linked_list_node != NULL){
+            engine_minimal_node_class_obj_t *node = ((engine_minimal_node_class_obj_t*)current_linked_list_node->object);
 
-            // Don't call node callbacks unless it was not just added (callbacks can add nodes, don't want to call the next callbacks until next cycle)
-            if(current_node_base_class_instance->just_added == false){
-                mp_call_method_n_kw(0, 0, current_node_base_class_instance->tick_dest);
+            if(node_base_is_just_added(&node->node_base)){
+                if(node->node_base.type == NODE_TYPE_EMPTY){
+                    engine_empty_node_class_obj_t *empty_node = (engine_empty_node_class_obj_t*)node;
+                    mp_call_method_n_kw(0, 0, empty_node->tick_dest);
+                }
             }else{
                 ENGINE_INFO_PRINTF("Did not call node callbacks, it was just added, will call them next game cycle");
-                current_node_base_class_instance->just_added = false;
+                node_base_set_if_just_added(&node->node_base, false);
             }
 
-            current_node = current_node->next;
+            // // Don't call node callbacks unless it was not just added (callbacks can add nodes, don't want to call the next callbacks until next cycle)
+            // if(current_node_base_class_instance->just_added == false){
+            //     mp_call_method_n_kw(0, 0, current_node_base_class_instance->tick_dest);
+            // }else{
+
+            // }
+
+            current_linked_list_node = current_linked_list_node->next;
         }
     }
 
