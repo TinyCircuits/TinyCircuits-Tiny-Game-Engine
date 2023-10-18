@@ -31,9 +31,11 @@ void engine_invoke_all_node_callbacks(){
         current_linked_list_node = engine_object_layers[ilx].start;
 
         while(current_linked_list_node != NULL){
+            // Get minimal version of the current engine node (all nodes should be able to be cast to this)
             engine_minimal_node_class_obj_t *node = ((engine_minimal_node_class_obj_t*)current_linked_list_node->object);
 
-            if(node_base_is_just_added(&node->node_base)){
+            // As long as this node was not just added, figure out its type and what callbacks it has
+            if(node_base_is_just_added(&node->node_base) == false){
                 if(node->node_base.type == NODE_TYPE_EMPTY){
                     engine_empty_node_class_obj_t *empty_node = (engine_empty_node_class_obj_t*)node;
                     mp_call_method_n_kw(0, 0, empty_node->tick_dest);
@@ -42,13 +44,6 @@ void engine_invoke_all_node_callbacks(){
                 ENGINE_INFO_PRINTF("Did not call node callbacks, it was just added, will call them next game cycle");
                 node_base_set_if_just_added(&node->node_base, false);
             }
-
-            // // Don't call node callbacks unless it was not just added (callbacks can add nodes, don't want to call the next callbacks until next cycle)
-            // if(current_node_base_class_instance->just_added == false){
-            //     mp_call_method_n_kw(0, 0, current_node_base_class_instance->tick_dest);
-            // }else{
-
-            // }
 
             current_linked_list_node = current_linked_list_node->next;
         }
