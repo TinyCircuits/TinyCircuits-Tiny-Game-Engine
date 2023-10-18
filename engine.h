@@ -1,10 +1,8 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
-#include "utility/linked_list.h"
+#include "engine_object_layers.h"
 
-
-linked_list engine_objects;
 
 
 #endif  // ENGINE_H

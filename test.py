@@ -30,7 +30,7 @@ import engine
 from engine import BaseNode
 import gc
 print("dir(engine):",dir(engine))
-print("dir(BaseNode):", dir(BaseNode))
+# print("dir(BaseNode):", dir(BaseNode))
 
 
 engine.set_debug_print_level(engine.debug_print_level_all)
@@ -41,7 +41,7 @@ class MyNodeA(BaseNode):
         super().__init__(self)
 
     def tick(self):
-        print("hi from tick()")
+        print("hi from tick() A")
 
 
 class MyNodeB(BaseNode):
@@ -49,11 +49,27 @@ class MyNodeB(BaseNode):
         super().__init__(self)
 
 
+class MyNodeC(BaseNode):
+    def __init__(self):
+        super().__init__(self)
+
+
+class MyNodeD(BaseNode):
+    def __init__(self):
+        super().__init__(self)
+    
+    def tick(self):
+        # pass
+        print("hi from tick() D")
+
+
 a = MyNodeA()
 b = MyNodeB()
 if(True):
-    c = MyNodeA()
+    c = MyNodeC()
     del c
+d = MyNodeD()
+d.set_layer(7)
 
 gc.collect()
 

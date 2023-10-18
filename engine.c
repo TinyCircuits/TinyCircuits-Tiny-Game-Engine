@@ -1,14 +1,7 @@
 #include <stdio.h>
-#include "py/obj.h"
-#include "py/objtype.h"
-#include "py/runtime.h"
-#include "py/builtin.h"
 
 #include "engine.h"
-#include "utility/debug_print.h"
 #include "nodes/base_node.h"
-
-
 
 
 
@@ -18,24 +11,8 @@
 STATIC mp_obj_t engine_start(){
     ENGINE_INFO_PRINTF("Engine starting...");
 
-    linked_list_node *current_node = NULL;
-
     while(true){
-        current_node = engine_objects.start;
-
-        while(current_node != NULL){
-            engine_base_node_class_obj_t *current_node_base_class_instance = ((engine_base_node_class_obj_t*)current_node->object);
-
-            // Don't call node callbacks unless it was not just added (callbacks can add nodes, don't want to call the next callbacks until next cycle)
-            if(current_node_base_class_instance->just_added == false){
-                mp_call_method_n_kw(0, 0, current_node_base_class_instance->tick_dest);
-            }else{
-                ENGINE_INFO_PRINTF("Did not call node callbacks, it was just added, will call them next game cycle");
-                current_node_base_class_instance->just_added = false;
-            }
-
-            current_node = current_node->next;
-        }
+        engine_invoke_all_node_callbacks();
     }
 
     return mp_const_none;
