@@ -7,6 +7,8 @@ SRC_USERMOD += $(ENGINE_MOD_DIR)/utility/linked_list.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/engine_object_layers.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/display/engine_display.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/display/engine_display_sdl.c
+SRC_USERMOD += $(ENGINE_MOD_DIR)/display/engine_display_common.c
+SRC_USERMOD += $(ENGINE_MOD_DIR)/display/engine_display_draw.c
 
 # We can add our module folder to include paths if needed
 # This is not actually needed in this example.

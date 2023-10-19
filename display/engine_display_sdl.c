@@ -1,10 +1,21 @@
 #include "engine_display_sdl.h"
+#include "engine_display_common.h"
+#include "engine_display_draw.h"
 #include "utility/debug_print.h"
 #include <SDL2/SDL.h>
 
 SDL_Window *window;
-SDL_Surface *window_surface;
-SDL_Rect window_rect;
+SDL_Renderer *window_renderer;      // https://dev.to/noah11012/using-sdl2-2d-accelerated-renderering-1kcb
+SDL_Texture* window_frame_buffer;   // https://gamedev.stackexchange.com/questions/157604/how-to-get-access-to-framebuffer-as-a-uint32-t-in-sdl2
+
+
+void sdl_update_screen(){
+    engine_draw_fill(0x07E0);
+    SDL_UpdateTexture(window_frame_buffer , NULL, engine_get_active_screen_buffer(), SCREEN_WIDTH*sizeof(uint16_t));
+    SDL_RenderClear(window_renderer);
+    SDL_RenderCopy(window_renderer, window_frame_buffer, NULL, NULL);
+    SDL_RenderPresent(window_renderer);
+}
 
 
 void engine_display_sdl_init(){
@@ -17,7 +28,7 @@ void engine_display_sdl_init(){
     window = SDL_CreateWindow("Engine Window",
                                           600,
                                           400,
-                                          128, 128,
+                                          SCREEN_WIDTH, SCREEN_HEIGHT,
                                           SDL_WINDOW_ALWAYS_ON_TOP);
     
     if(!window){
@@ -25,19 +36,8 @@ void engine_display_sdl_init(){
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("SDL Window Init Error"));
     }
 
-    window_surface = SDL_GetWindowSurface(window);
+    window_renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    window_frame_buffer = SDL_CreateTexture(window_renderer, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-    if(!window_surface){
-        ENGINE_ERROR_PRINTF("Failed to get the surface from the window");
-        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("SDL Window Surface Init Error"));
-    }
-
-    window_rect.x = 0;
-    window_rect.y = 0;
-    window_rect.w = 128;
-    window_rect.h = 128;
-
-    SDL_FillRect(window_surface, &window_rect, 0x00000000);
-
-    SDL_UpdateWindowSurface(window);
+    sdl_update_screen();
 }

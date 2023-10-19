@@ -22,13 +22,6 @@ void engine_display_init(){
 void engine_display_send(){
     // Send the screen buffer to the display
     // TODO
-
-    // Switch which screen buffer should be drawn to
-    if(active_screen_buffer_index == 0){
-        active_screen_buffer_index = 1;
-    }else{
-        active_screen_buffer_index = 0;
-    }
-
-    active_screen_buffer = dual_screen_buffers[active_screen_buffer_index];
+    engine_get_active_screen_buffer();
+    engine_switch_active_screen_buffer();
 }
