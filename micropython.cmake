@@ -7,6 +7,8 @@ target_sources(usermod_engine INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/nodes/empty_node.c
     ${CMAKE_CURRENT_LIST_DIR}/utility/linked_list.c
     ${CMAKE_CURRENT_LIST_DIR}/engine_object_layers.c
+    ${CMAKE_CURRENT_LIST_DIR}/display/engine_display.c
+    ${CMAKE_CURRENT_LIST_DIR}/display/engine_display_sdl.c
 )
 
 # Add the current directory as an include directory.

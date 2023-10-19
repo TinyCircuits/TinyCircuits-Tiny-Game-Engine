@@ -1,6 +1,7 @@
 #include <stdio.h>
 
-#include "engine.h"
+#include "engine_object_layers.h"
+#include "display/engine_display.h"
 #include "nodes/empty_node.h"
 
 
@@ -9,9 +10,13 @@
 // Module functions
 STATIC mp_obj_t engine_start(){
     ENGINE_INFO_PRINTF("Engine starting...");
+    engine_display_init();
 
     while(true){
         engine_invoke_all_node_callbacks();
+        
+        // After every game cycle send the current active screen buffer to the display
+        engine_display_send();
     }
 
     return mp_const_none;
