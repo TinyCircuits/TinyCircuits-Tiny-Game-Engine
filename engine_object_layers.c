@@ -1,6 +1,7 @@
 #include "engine_object_layers.h"
 #include "nodes/minimal_node.h"
 #include "nodes/empty_node.h"
+#include "nodes/camera_node.h"
 #include "nodes/node_types.h"
 
 uint16_t engine_object_layer_count = 8;
@@ -39,6 +40,11 @@ void engine_invoke_all_node_callbacks(){
                 if(node->node_base.type == NODE_TYPE_EMPTY){
                     engine_empty_node_class_obj_t *empty_node = (engine_empty_node_class_obj_t*)node;
                     mp_call_method_n_kw(0, 0, empty_node->tick_dest);
+                }else if(node->node_base.type == NODE_TYPE_CAMERA){
+                    engine_camera_node_class_obj_t *camera_node = (engine_camera_node_class_obj_t*)node;
+                    mp_call_method_n_kw(0, 0, camera_node->tick_dest);
+                }else{
+                    ENGINE_WARNING_PRINTF("This node type doesn't do anything? %d", node->node_base.type);
                 }
             }else{
                 ENGINE_INFO_PRINTF("Did not call node callbacks, it was just added, will call them next game cycle");

@@ -1,18 +1,18 @@
 #include "empty_node.h"
+
 #include "node_types.h"
 #include "utility/debug_print.h"
 #include "../engine_object_layers.h"
 
 // Class required functions
 STATIC void empty_node_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
+    (void)kind;
     ENGINE_INFO_PRINTF("print(): EmptyNode");
 }
 
 STATIC mp_obj_t empty_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New EmptyNode");
     mp_arg_check_num(n_args, n_kw, 1, 1, true);
-
-    ENGINE_INFO_PRINTF("Registering subclass with BaseNode and adding self to engine active objects");
 
     // How to make __del__ get called when object is garbage collected: https://github.com/micropython/micropython/issues/1878
     // Why it might get called early: https://forum.micropython.org/viewtopic.php?t=1405 (make sure the object is actually returned from this function)
@@ -29,7 +29,7 @@ STATIC mp_obj_t empty_node_class_new(const mp_obj_type_t *type, size_t n_args, s
     // instance so that the main engine loop can call it quickly
     mp_load_method(MP_OBJ_TO_PTR(args[0]), MP_QSTR_tick, self->tick_dest);
 
-    return self;
+    return MP_OBJ_FROM_PTR(self);
 }
 
 
@@ -72,6 +72,7 @@ STATIC const mp_rom_map_elem_t empty_node_class_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_set_layer), MP_ROM_PTR(&empty_node_class_set_layer_obj) },
 };
 
+
 // Class init
 STATIC MP_DEFINE_CONST_DICT(empty_node_class_locals_dict, empty_node_class_locals_dict_table);
 
@@ -80,5 +81,13 @@ const mp_obj_type_t engine_empty_node_class_type = {
     .name = MP_QSTR_EmptyNode,
     .print = empty_node_class_print,
     .make_new = empty_node_class_new,
+    .call = NULL,
+    .unary_op = NULL,
+    .binary_op = NULL,
+    .attr = NULL,
+    .subscr = NULL,
+    .getiter = NULL,
+    .iternext = NULL,
+    .buffer_p = {NULL},
     .locals_dict = (mp_obj_dict_t*)&empty_node_class_locals_dict,
 };

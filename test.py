@@ -1,12 +1,12 @@
 import engine
-from engine import EmptyNode
+from engine import EmptyNode, CameraNode, Vector3
 import gc
 print("dir(engine):",dir(engine))
 print("dir(EmptyNode):", dir(EmptyNode))
-
+print("dir(CameraNode):", dir(CameraNode))
+print("dir(Vector3):", dir(Vector3))
 
 engine.set_debug_print_level(engine.debug_print_level_all)
-
 
 class MyNodeA(EmptyNode):
     def __init__(self):
@@ -34,6 +34,14 @@ class MyNodeD(EmptyNode):
         # pass
         print("hi from tick() D")
 
+class MyNodeCam(CameraNode):
+    def __init__(self):
+        super().__init__(self)
+    
+    def tick(self):
+        # pass
+        print("hi from camera!")
+
 
 a = MyNodeA()
 b = MyNodeB()
@@ -43,9 +51,12 @@ if(True):
 d = MyNodeD()
 d.set_layer(7)
 
+cam = MyNodeCam()
+print(cam.position)
+
 gc.collect()
 
-engine.start()
+# engine.start()
 
 
 

@@ -5,6 +5,8 @@ add_library(usermod_engine INTERFACE)
 target_sources(usermod_engine INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/engine.c
     ${CMAKE_CURRENT_LIST_DIR}/nodes/empty_node.c
+    ${CMAKE_CURRENT_LIST_DIR}/nodes/camera_node.c
+    ${CMAKE_CURRENT_LIST_DIR}/math/vector3.c
     ${CMAKE_CURRENT_LIST_DIR}/utility/linked_list.c
     ${CMAKE_CURRENT_LIST_DIR}/engine_object_layers.c
     ${CMAKE_CURRENT_LIST_DIR}/display/engine_display.c
