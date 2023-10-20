@@ -30,9 +30,8 @@ STATIC mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, 
     // instance so that the main engine loop can call it quickly
     mp_load_method(MP_OBJ_TO_PTR(args[0]), MP_QSTR_tick, self->tick_dest);
 
-    self->x = 0.0f;
-    self->y = 0.0f;
-    self->z = 0.0f;
+    ENGINE_INFO_PRINTF("Creating new Vector3 for CameraNode");
+    self->position = vector3_class_new(&vector3_class_type, 0, 0, NULL);
 
     return MP_OBJ_FROM_PTR(self);
 }
@@ -70,12 +69,29 @@ STATIC mp_obj_t camera_node_class_set_layer(mp_obj_t self_in, mp_obj_t layer){
 MP_DEFINE_CONST_FUN_OBJ_2(camera_node_class_set_layer_obj, camera_node_class_set_layer);
 
 
+// Function called when accessing like print(my_node.position.x) (load 'x')
+// my_node.position.x = 0 (store 'x').
+// See https://micropython-usermod.readthedocs.io/en/latest/usermods_09.html#properties
+// // See https://github.com/micropython/micropython/blob/91a3f183916e1514fbb8dc58ca5b77acc59d4346/extmod/modasyncio.c#L227
+STATIC void camera_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+    if(destination[0] == MP_OBJ_NULL){          // Load
+        if(attribute == MP_QSTR_position){
+            engine_camera_node_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
+            destination[0] = self->position;
+        }
+    }else if(destination[1] != MP_OBJ_NULL){    // Store
+        if(attribute == MP_QSTR_position){
+            destination[0] = MP_OBJ_NULL;   
+        }
+    }
+}
+
+
 // Class attributes
 STATIC const mp_rom_map_elem_t camera_node_class_locals_dict_table[] = {
-    { MP_ROM_QSTR(MP_QSTR___del__), MP_ROM_PTR(&camera_node_class_del_obj) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_position), (mp_obj_t)&vector3_class_type },
-    { MP_ROM_QSTR(MP_QSTR_tick), MP_ROM_PTR(&camera_node_class_tick_obj) },
-    { MP_ROM_QSTR(MP_QSTR_set_layer), MP_ROM_PTR(&camera_node_class_set_layer_obj) },
+    { MP_ROM_QSTR(MP_QSTR___del__),     MP_ROM_PTR(&camera_node_class_del_obj) },
+    { MP_ROM_QSTR(MP_QSTR_tick),        MP_ROM_PTR(&camera_node_class_tick_obj) },
+    { MP_ROM_QSTR(MP_QSTR_set_layer),   MP_ROM_PTR(&camera_node_class_set_layer_obj) },
 };
 
 
@@ -90,7 +106,7 @@ const mp_obj_type_t engine_camera_node_class_type = {
     .call = NULL,
     .unary_op = NULL,
     .binary_op = NULL,
-    .attr = NULL,
+    .attr = camera_class_attr,
     .subscr = NULL,
     .getiter = NULL,
     .iternext = NULL,

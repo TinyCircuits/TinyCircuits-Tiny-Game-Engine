@@ -51,8 +51,24 @@ if(True):
 d = MyNodeD()
 d.set_layer(7)
 
+
+print()
+
+
+v = Vector3()
+v.x = 2
+v.y = 2
+v.z = 2
+print(v, end='')
+
+
 cam = MyNodeCam()
-print(cam.position)
+print(cam.position, end='')
+cam.position.x = 1
+cam.position.y = 1
+cam.position.z = 1
+print(cam.position, end='')
+
 
 gc.collect()
 
