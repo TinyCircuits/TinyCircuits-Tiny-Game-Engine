@@ -41,11 +41,11 @@ STATIC void vector3_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *desti
 
     if(destination[0] == MP_OBJ_NULL){          // Load
         if(attribute == MP_QSTR_x){
-            destination[0] = mp_obj_new_float(self->x);
+            destination[0] = (mp_obj_t*)(&self->x);
         }else if(attribute == MP_QSTR_y){
-            destination[0] = mp_obj_new_float(self->y);
+            destination[0] = (mp_obj_t*)(&self->y);
         }else if(attribute == MP_QSTR_z){
-            destination[0] = mp_obj_new_float(self->z);
+            destination[0] = (mp_obj_t*)(&self->z);
         }
     }else if(destination[1] != MP_OBJ_NULL){    // Store
         if(attribute == MP_QSTR_x){

@@ -72,7 +72,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(camera_node_class_set_layer_obj, camera_node_class_set
 // Function called when accessing like print(my_node.position.x) (load 'x')
 // my_node.position.x = 0 (store 'x').
 // See https://micropython-usermod.readthedocs.io/en/latest/usermods_09.html#properties
-// // See https://github.com/micropython/micropython/blob/91a3f183916e1514fbb8dc58ca5b77acc59d4346/extmod/modasyncio.c#L227
+// See https://github.com/micropython/micropython/blob/91a3f183916e1514fbb8dc58ca5b77acc59d4346/extmod/modasyncio.c#L227
 STATIC void camera_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     if(destination[0] == MP_OBJ_NULL){          // Load
         if(attribute == MP_QSTR_position){
