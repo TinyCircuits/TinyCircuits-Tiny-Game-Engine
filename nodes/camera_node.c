@@ -81,6 +81,8 @@ STATIC void camera_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destin
         }
     }else if(destination[1] != MP_OBJ_NULL){    // Store
         if(attribute == MP_QSTR_position){
+            // if(mp_obj_str_get_qstr(destination[1]))
+            
             destination[0] = MP_OBJ_NULL;   
         }
     }

@@ -72,7 +72,7 @@ print(cam.position, end='')
 
 gc.collect()
 
-# engine.start()
+engine.start()
 
 
 
