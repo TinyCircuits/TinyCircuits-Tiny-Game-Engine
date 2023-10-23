@@ -14,7 +14,7 @@ typedef struct linked_list_node{
 } linked_list_node;
 
 
-typedef struct{
+typedef struct _linked_list{
     struct linked_list_node *start;
     struct linked_list_node *end;
     uint16_t count;

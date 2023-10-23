@@ -11,6 +11,8 @@
 
 
 void engine_display_init(){
+    engine_init_screen_buffers();
+
     #ifdef __unix__
         engine_display_sdl_init();
     #else
