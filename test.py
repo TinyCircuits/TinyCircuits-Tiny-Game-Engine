@@ -1,3 +1,7 @@
+print("HI")
+
+
+
 import engine
 from engine import EmptyNode, CameraNode, Vector3
 import gc
