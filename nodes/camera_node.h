@@ -15,6 +15,6 @@ typedef struct{
     // TODO: Rotation about x,y,z (matrix?)
 }engine_camera_node_class_obj_t;
 
-const mp_obj_type_t engine_camera_node_class_type;
+extern const mp_obj_type_t engine_camera_node_class_type;
 
 #endif  // CAMERA_NODE_H

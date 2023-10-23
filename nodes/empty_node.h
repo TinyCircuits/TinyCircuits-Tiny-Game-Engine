@@ -13,6 +13,6 @@ typedef struct{
     mp_obj_t tick_dest[2];          // Used for caching data used for calling the 'tick()' callback on instances of this node
 }engine_empty_node_class_obj_t;
 
-const mp_obj_type_t engine_empty_node_class_type;
+extern const mp_obj_type_t engine_empty_node_class_type;
 
 #endif  // EMPTY_NODE_H
