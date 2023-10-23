@@ -11,8 +11,8 @@
 
 typedef struct{
     uint8_t type;                       // The type of this node (see 'node_types.h')
-    linked_list_node *object_list_node; // Pointer to where node this stored in the layers of linked lists the engine tracks (used for easy linked list deletion)
-    uint16_t layer;                     // The layer of the linked list the 'object_list_node' lives in (used for easy deletion)
+    linked_list_node *object_list_node; // Pointer to where this node is stored in the layers of linked lists the engine tracks (used for easy linked list deletion)
+    uint16_t layer;                     // The layer index of the linked list the 'object_list_node' lives in (used for easy deletion)
     uint8_t meta_data;                  // Holds bits related to if this node is visible (not shown or shown but callbacks still called), disabled (callbacks not called but still shown), or just added
 }engine_node_base_t;
 

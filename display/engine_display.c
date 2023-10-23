@@ -23,7 +23,11 @@ void engine_display_init(){
 
 void engine_display_send(){
     // Send the screen buffer to the display
-    // TODO
-    engine_get_active_screen_buffer();
+    #ifdef __unix__
+        sdl_update_screen(engine_get_active_screen_buffer());
+    #else
+
+    #endif
+
     engine_switch_active_screen_buffer();
 }
