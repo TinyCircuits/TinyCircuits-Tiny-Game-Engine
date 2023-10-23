@@ -1,4 +1,5 @@
 #include "engine_display_common.h"
+#include <stdbool.h>
 #include <stdlib.h>
 
 // Two screen buffers are allocated so that one can be
@@ -15,12 +16,17 @@ static uint8_t active_screen_buffer_index = 0;
 // one is likely being sent to the screen while this is active)
 static uint16_t *active_screen_buffer;
 
+static bool is_initialzed = false;
+
 
 void engine_init_screen_buffers(){
-    dual_screen_buffers = (uint16_t**)malloc(sizeof(uint16_t*) * 2);
-    dual_screen_buffers[0] = (uint16_t*)malloc(sizeof(uint16_t) * SCREEN_BUFFER_SIZE);
-    dual_screen_buffers[1] = (uint16_t*)malloc(sizeof(uint16_t) * SCREEN_BUFFER_SIZE);
-    active_screen_buffer = dual_screen_buffers[0];
+    if(is_initialzed == false){
+        dual_screen_buffers = (uint16_t**)malloc(sizeof(uint16_t*) * 2);
+        dual_screen_buffers[0] = (uint16_t*)malloc(SCREEN_BUFFER_SIZE);
+        dual_screen_buffers[1] = (uint16_t*)malloc(SCREEN_BUFFER_SIZE);
+        active_screen_buffer = dual_screen_buffers[0];
+        is_initialzed = true;
+    }
 }
 
 
