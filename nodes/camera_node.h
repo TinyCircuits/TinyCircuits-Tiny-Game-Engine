@@ -17,4 +17,7 @@ typedef struct{
 
 extern const mp_obj_type_t engine_camera_node_class_type;
 
+// Not static since used by other files to create new camera object
+mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args);
+
 #endif  // CAMERA_NODE_H

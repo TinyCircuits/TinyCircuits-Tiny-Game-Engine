@@ -11,7 +11,7 @@ STATIC void camera_node_class_print(const mp_print_t *print, mp_obj_t self_in, m
     ENGINE_INFO_PRINTF("print(): CameraNode");
 }
 
-STATIC mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
+mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New CameraNode");
     mp_arg_check_num(n_args, n_kw, 1, 1, true);
 
