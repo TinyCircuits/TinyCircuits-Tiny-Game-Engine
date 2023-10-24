@@ -5,10 +5,6 @@
 #include "nodes/camera_node.h"
 #include "py/obj.h"
 
-// A linked list of cameras to loop through to render
-// all object layers for each camera
-static linked_list engine_cameras;
-
 // Cameras are nodes just like everything else but are tracked
 // new a different list that the engine can loop through quickly.
 // This avoids a search through all the nodes

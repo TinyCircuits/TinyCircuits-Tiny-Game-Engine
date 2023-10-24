@@ -1,5 +1,11 @@
 #include "engine_cameras.h"
 
+
+// A linked list of cameras to loop through to render
+// all object layers for each camera
+linked_list engine_cameras;
+
+
 linked_list_node *engine_camera_track(engine_camera_node_class_obj_t *obj){
     ENGINE_INFO_PRINTF("Tracking new camera");
     return linked_list_add_obj(&engine_cameras, obj);
