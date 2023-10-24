@@ -24,12 +24,12 @@ mp_obj_t vector3_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw
 
 // Class methods
 
-STATIC mp_obj_t vector3_class_test(){
+STATIC mp_obj_t vector3_class_test(mp_obj_t self){
     ENGINE_INFO_PRINTF("Vector3 test");
 
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_0(vector3_class_test_obj, vector3_class_test);
+MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_test_obj, vector3_class_test);
 
 
 // Function called when accessing like print(my_node.position.x) (load 'x')
@@ -46,6 +46,9 @@ STATIC void vector3_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *desti
             destination[0] = (mp_obj_t*)(&self->y);
         }else if(attribute == MP_QSTR_z){
             destination[0] = (mp_obj_t*)(&self->z);
+        }else if(attribute == MP_QSTR_test){
+            destination[0] = MP_OBJ_FROM_PTR(&vector3_class_test_obj);
+            destination[1] = self_in;
         }
     }else if(destination[1] != MP_OBJ_NULL){    // Store
         if(attribute == MP_QSTR_x){
