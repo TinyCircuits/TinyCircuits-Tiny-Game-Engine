@@ -70,6 +70,28 @@ STATIC mp_obj_t vector3_class_len(mp_obj_t _self) {
 }
 MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_len_obj, vector3_class_len);
 
+STATIC mp_obj_t vector3_class_normal(mp_obj_t _self) {
+  const vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
+  vector3_class_obj_t* ret = m_new_obj(vector3_class_obj_t);
+  ret->base.type = &vector3_class_type;
+  const float il = sqrtf(self->x*self->x + self->y*self->y + self->z*self->z);
+  ret->x = self->x * il;
+  ret->y = self->y * il;
+  ret->z = self->z * il;
+  return MP_OBJ_FROM_PTR(ret);
+}
+MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_normal_obj, vector3_class_normal);
+
+STATIC mp_obj_t vector3_class_normalize(mp_obj_t _self) {
+  const vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
+  const float il = sqrtf(self->x*self->x + self->y*self->y + self->z*self->z);
+  self->x *= il;
+  self->y *= il;
+  self->z *= il;
+  return MP_OBJ_FROM_PTR(self);
+}
+MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_normal_obj, vector3_class_normal);
+
 // STATIC mp_obj_t vector3_class_dot(size_t n_args, const mp_obj_t *args) {
 //     const vector3_class_obj_t* self = MP_OBJ_TO_PTR(args[0]);
 //     const vector3_class_obj_t* b = MP_OBJ_TO_PTR(args[1]);
@@ -95,22 +117,6 @@ STATIC void vector3_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *desti
     vector3_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
 
     if(destination[0] == MP_OBJ_NULL){          // Load
-        // if(attribute == MP_QSTR_x){
-        //     destination[0] = (mp_obj_t*)(&self->x);
-        // }else if(attribute == MP_QSTR_y){
-        //     destination[0] = (mp_obj_t*)(&self->y);
-        // }else if(attribute == MP_QSTR_z){
-        //     destination[0] = (mp_obj_t*)(&self->z);
-        // }else if(attribute == MP_QSTR_test){
-        //   destination[0] = MP_OBJ_FROM_PTR(&vector3_class_test_obj);
-        //   destination[1] = self_in;
-        // }else if(attribute == MP_QSTR_dot){
-        //   destination[0] = MP_OBJ_FROM_PTR(&vector3_class_dot_obj);
-        //   destination[1] = self_in;
-        // }else if(attribute == MP_QSTR_cross){
-        //   destination[0] = MP_OBJ_FROM_PTR(&vector3_class_cross_obj);
-        //   destination[1] = self_in;
-        // }
         switch(attribute) {
           case MP_QSTR_x: destination[0] = (mp_obj_t*)(&self->x); break;
           case MP_QSTR_y: destination[0] = (mp_obj_t*)(&self->y); break;
@@ -120,18 +126,11 @@ STATIC void vector3_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *desti
           case MP_QSTR_cross: destination[0] = MP_OBJ_FROM_PTR(&vector3_class_cross_obj); destination[1] = self_in; break;
           case MP_QSTR_len2: destination[0] = MP_OBJ_FROM_PTR(&vector3_class_len2_obj); destination[1] = self_in; break;
           case MP_QSTR_len: destination[0] = MP_OBJ_FROM_PTR(&vector3_class_len_obj); destination[1] = self_in; break;
+          case MP_QSTR_normal: destination[0] = MP_OBJ_FROM_PTR(&vector3_class_normal_obj); destination[1] = self_in; break;
+          case MP_QSTR_normalize: destination[0] = MP_OBJ_FROM_PTR(&vector3_class_normal_obj); destination[1] = self_in; break;
           default: break;
         }
     }else if(destination[1] != MP_OBJ_NULL){    // Store
-        // if(attribute == MP_QSTR_x){
-        //     self->x = mp_obj_get_float(destination[1]);
-        // }else if(attribute == MP_QSTR_y){
-        //     self->y = mp_obj_get_float(destination[1]);
-        // }else if(attribute == MP_QSTR_z){
-        //     self->z = mp_obj_get_float(destination[1]);
-        // }else{
-        //     return;
-        // }
         switch(attribute) {
           case MP_QSTR_x: self->x = mp_obj_get_float(destination[1]); break;
           case MP_QSTR_y: self->y = mp_obj_get_float(destination[1]); break;
