@@ -32,13 +32,6 @@ mp_obj_t vector3_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw
 
 
 // Class methods
-STATIC mp_obj_t vector3_class_test(mp_obj_t self){
-    ENGINE_INFO_PRINTF("Vector3 test");
-
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_test_obj, vector3_class_test);
-
 STATIC mp_obj_t vector3_class_dot(size_t n_args, const mp_obj_t *args) {
   const vector3_class_obj_t* self = MP_OBJ_TO_PTR(args[0]);
   const vector3_class_obj_t* b = MP_OBJ_TO_PTR(args[1]);
@@ -89,9 +82,6 @@ STATIC void vector3_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *desti
             destination[0] = (mp_obj_t*)(&self->y);
         }else if(attribute == MP_QSTR_z){
             destination[0] = (mp_obj_t*)(&self->z);
-        }else if(attribute == MP_QSTR_test){
-          destination[0] = MP_OBJ_FROM_PTR(&vector3_class_test_obj);
-          destination[1] = self_in;
         }else if(attribute == MP_QSTR_dot){
           destination[0] = MP_OBJ_FROM_PTR(&vector3_class_dot_obj);
           destination[1] = self_in;
@@ -143,7 +133,6 @@ STATIC void vector3_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *desti
 
 // Class attributes
 STATIC const mp_rom_map_elem_t vector3_class_locals_dict_table[] = {
-    { MP_ROM_QSTR(MP_QSTR_test), MP_ROM_PTR(&vector3_class_test_obj) },
     { MP_ROM_QSTR(MP_QSTR_dot), MP_ROM_PTR(&vector3_class_dot_obj) },
     { MP_ROM_QSTR(MP_QSTR_cross), MP_ROM_PTR(&vector3_class_cross_obj) },
 };
