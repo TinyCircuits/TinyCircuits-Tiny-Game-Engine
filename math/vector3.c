@@ -32,7 +32,6 @@ mp_obj_t vector3_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw
 
 
 // Class methods
-
 STATIC mp_obj_t vector3_class_test(mp_obj_t self){
     ENGINE_INFO_PRINTF("Vector3 test");
 
@@ -79,7 +78,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(vector3_class_cross_obj, 2, 2, vector
 // Function called when accessing like print(my_node.position.x) (load 'x')
 // my_node.position.x = 0 (store 'x').
 // See https://micropython-usermod.readthedocs.io/en/latest/usermods_09.html#properties
-// // See https://github.com/micropython/micropython/blob/91a3f183916e1514fbb8dc58ca5b77acc59d4346/extmod/modasyncio.c#L227
+// See https://github.com/micropython/micropython/blob/91a3f183916e1514fbb8dc58ca5b77acc59d4346/extmod/modasyncio.c#L227
 STATIC void vector3_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     vector3_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
 
