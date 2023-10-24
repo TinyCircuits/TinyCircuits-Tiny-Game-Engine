@@ -2,6 +2,7 @@
 #define VECTOR3_H
 
 #include "py/obj.h"
+#include <math.h>
 
 typedef struct{
     mp_obj_base_t base;
