@@ -5,6 +5,7 @@
 #include "engine_cameras.h"
 
 #include "math/vector3.h"
+#include "math/rectangle.h"
 
 #include "nodes/empty_node.h"
 #include "nodes/camera_node.h"
@@ -62,6 +63,7 @@ STATIC const mp_rom_map_elem_t engine_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine) },
     { MP_OBJ_NEW_QSTR(MP_QSTR___init__), (mp_obj_t)&engine_init_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Vector3), (mp_obj_t)&vector3_class_type },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_Rectangle), (mp_obj_t)&rectangle_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_EmptyNode), (mp_obj_t)&engine_empty_node_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_CameraNode), (mp_obj_t)&engine_camera_node_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_start), (mp_obj_t)&engine_start_obj },

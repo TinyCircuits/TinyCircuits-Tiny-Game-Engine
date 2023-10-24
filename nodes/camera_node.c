@@ -35,6 +35,9 @@ mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t 
     ENGINE_INFO_PRINTF("Creating new Vector3 for CameraNode");
     self->position = vector3_class_new(&vector3_class_type, 0, 0, NULL);
 
+    ENGINE_INFO_PRINTF("Creating new Rectangle for CameraNode viewport");
+    self->viewport = rectangle_class_new(&rectangle_class_type, 0, 0, NULL);
+
     return MP_OBJ_FROM_PTR(self);
 }
 
@@ -77,16 +80,23 @@ MP_DEFINE_CONST_FUN_OBJ_2(camera_node_class_set_layer_obj, camera_node_class_set
 // See https://micropython-usermod.readthedocs.io/en/latest/usermods_09.html#properties
 // See https://github.com/micropython/micropython/blob/91a3f183916e1514fbb8dc58ca5b77acc59d4346/extmod/modasyncio.c#L227
 STATIC void camera_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+    engine_camera_node_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
+
     if(destination[0] == MP_OBJ_NULL){          // Load
         if(attribute == MP_QSTR_position){
-            engine_camera_node_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
             destination[0] = self->position;
+        }else if(attribute == MP_QSTR_viewport){
+            destination[0] = self->viewport;
         }
     }else if(destination[1] != MP_OBJ_NULL){    // Store
         if(attribute == MP_QSTR_position){
             // if(mp_obj_str_get_qstr(destination[1]))
-            
+            ENGINE_WARNING_PRINTF("Setting position not implemented!");
             destination[0] = MP_OBJ_NULL;   
+        }else if(attribute == MP_QSTR_viewport){
+            // if(mp_obj_str_get_qstr(destination[1]))
+            ENGINE_WARNING_PRINTF("Setting viewport not implemented!");
+            destination[0] = MP_OBJ_NULL; 
         }
     }
 }
