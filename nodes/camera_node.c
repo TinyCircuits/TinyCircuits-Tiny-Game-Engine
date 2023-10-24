@@ -4,6 +4,7 @@
 #include "utility/debug_print.h"
 #include "../engine_object_layers.h"
 #include "math/vector3.h"
+#include "engine_cameras.h"
 
 // Class required functions
 STATIC void camera_node_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
@@ -22,6 +23,7 @@ mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t 
     self->node_base.layer = 0;
     self->node_base.type = NODE_TYPE_CAMERA;
     self->node_base.object_list_node = engine_add_object_to_layer(self, self->node_base.layer);
+    self->camera_list_node = engine_camera_track(self);
     node_base_set_if_visible(&self->node_base, true);
     node_base_set_if_disabled(&self->node_base, false);
     node_base_set_if_just_added(&self->node_base, true);
@@ -43,6 +45,7 @@ STATIC mp_obj_t camera_node_class_del(mp_obj_t self_in){
 
     engine_camera_node_class_obj_t *self = ((engine_camera_node_class_obj_t*)MP_OBJ_TO_PTR(self_in));
     engine_remove_object_from_layer(self->node_base.object_list_node, self->node_base.layer);
+    engine_camera_untrack(self->camera_list_node);
 
     return mp_const_none;
 }

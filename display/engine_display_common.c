@@ -1,4 +1,5 @@
 #include "engine_display_common.h"
+#include "../utility/debug_print.h"
 #include <stdbool.h>
 #include <stdlib.h>
 
@@ -21,6 +22,7 @@ static bool is_initialzed = false;
 
 void engine_init_screen_buffers(){
     if(is_initialzed == false){
+        ENGINE_INFO_PRINTF("Creating dual screen buffers of size %d bytes each on C heap", SCREEN_BUFFER_SIZE);
         dual_screen_buffers = (uint16_t**)malloc(sizeof(uint16_t*) * 2);
         dual_screen_buffers[0] = (uint16_t*)malloc(SCREEN_BUFFER_SIZE);
         dual_screen_buffers[1] = (uint16_t*)malloc(SCREEN_BUFFER_SIZE);
