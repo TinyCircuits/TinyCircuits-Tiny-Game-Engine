@@ -89,7 +89,7 @@ STATIC mp_obj_t vector3_class_normal(mp_obj_t _self) {
   const vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
   vector3_class_obj_t* ret = m_new_obj(vector3_class_obj_t);
   ret->base.type = &vector3_class_type;
-  const float il = sqrtf(self->x*self->x + self->y*self->y + self->z*self->z);
+  const float il = 1.f / sqrtf(self->x*self->x + self->y*self->y + self->z*self->z);
   ret->x = self->x * il;
   ret->y = self->y * il;
   ret->z = self->z * il;
@@ -101,14 +101,42 @@ STATIC mp_obj_t vector3_class_normalize(mp_obj_t _self) {
   if(!mp_obj_is_type(_self, &vector3_class_type)) {
         mp_raise_TypeError("expected vector argument");
   }
-  const vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
-  const float il = sqrtf(self->x*self->x + self->y*self->y + self->z*self->z);
+  vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
+  const float il = 1.f / sqrtf(self->x*self->x + self->y*self->y + self->z*self->z);
   self->x *= il;
   self->y *= il;
   self->z *= il;
   return MP_OBJ_FROM_PTR(self);
 }
-MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_normal_obj, vector3_class_normal);
+MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_normalize_obj, vector3_class_normalize);
+
+// Set vector to be the same size as another vector or length
+STATIC mp_obj_t vector3_class_resize(mp_obj_t _self, mp_obj_t _b) {
+  if(!mp_obj_is_type(_self, &vector3_class_type)) {
+        mp_raise_TypeError("expected vector argument");
+  }
+  vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
+  float f;
+  if(mp_obj_is_type(_b, &vector3_class_type)) { // Resize to match vector length
+
+    const vector3_class_obj_t* b = MP_OBJ_TO_PTR(_b);
+    f = sqrtf((b->x*b->x + b->y*b->y + b->z*b->z) / (self->x*self->x + self->y*self->y + self->z*self->z));
+
+
+  } else if(mp_obj_is_float(_b)) { // Resize to match scalar length
+
+    const float b = mp_obj_get_float(_b);
+    f = sqrtf((b*b) / (self->x*self->x + self->y*self->y + self->z*self->z));
+
+  } else {
+    mp_raise_TypeError("expected vector or scalar length");
+  }
+  self->x *= f;
+  self->y *= f;
+  self->z *= f;
+  return MP_OBJ_FROM_PTR(self);
+}
+MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_resize_obj, vector3_class_resize);
 
 // STATIC mp_obj_t vector3_class_dot(size_t n_args, const mp_obj_t *args) {
 //     const vector3_class_obj_t* self = MP_OBJ_TO_PTR(args[0]);
@@ -146,6 +174,7 @@ STATIC void vector3_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *desti
           case MP_QSTR_len: destination[0] = MP_OBJ_FROM_PTR(&vector3_class_len_obj); destination[1] = self_in; break;
           case MP_QSTR_normal: destination[0] = MP_OBJ_FROM_PTR(&vector3_class_normal_obj); destination[1] = self_in; break;
           case MP_QSTR_normalize: destination[0] = MP_OBJ_FROM_PTR(&vector3_class_normal_obj); destination[1] = self_in; break;
+          case MP_QSTR_resize: destination[0] = MP_OBJ_FROM_PTR(&vector3_class_resize_obj); destination[1] = self_in; break;
           default: break;
         }
     }else if(destination[1] != MP_OBJ_NULL){    // Store
