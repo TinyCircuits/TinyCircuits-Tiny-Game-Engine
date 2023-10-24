@@ -102,10 +102,10 @@ STATIC mp_obj_t vector3_class_normalize(mp_obj_t _self) {
         mp_raise_TypeError("expected vector argument");
   }
   vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
-  const float il = 1.f / sqrtf(self->x*self->x + self->y*self->y + self->z*self->z);
-  self->x *= il;
-  self->y *= il;
-  self->z *= il;
+  const mp_float_t il = 1.f / sqrtf(self->x*self->x + self->y*self->y + self->z*self->z);
+  self->x = self->x * il;
+  self->y = self->y * il;
+  self->z = self->z * il;
   return MP_OBJ_FROM_PTR(self);
 }
 MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_normalize_obj, vector3_class_normalize);
@@ -138,23 +138,6 @@ STATIC mp_obj_t vector3_class_resize(mp_obj_t _self, mp_obj_t _b) {
 }
 MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_resize_obj, vector3_class_resize);
 
-// STATIC mp_obj_t vector3_class_dot(size_t n_args, const mp_obj_t *args) {
-//     const vector3_class_obj_t* self = MP_OBJ_TO_PTR(args[0]);
-//     const vector3_class_obj_t* b = MP_OBJ_TO_PTR(args[1]);
-//     return mp_obj_new_float(self->x*b->x + self->y*b->y);
-// }
-// STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(vector3_class_dot_obj, 2, 2, vector3_class_dot);
-
-// STATIC mp_obj_t vector2_class_cross(mp_obj_t _self, mp_obj_t _b) {
-//   const vector3_class_obj_t* self = MP_OBJ_TO_PTR(self);
-//   const vector3_class_obj_t* b = MP_OBJ_TO_PTR(b);
-//
-//   vector3_class_obj_t* ret = m_new_obj(vector3_class_obj_t);
-
-//   return MP_OBJ_FROM_PTR(ret);
-// }
-
-
 // Function called when accessing like print(my_node.position.x) (load 'x')
 // my_node.position.x = 0 (store 'x').
 // See https://micropython-usermod.readthedocs.io/en/latest/usermods_09.html#properties
@@ -173,7 +156,7 @@ STATIC void vector3_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *desti
           case MP_QSTR_len2: destination[0] = MP_OBJ_FROM_PTR(&vector3_class_len2_obj); destination[1] = self_in; break;
           case MP_QSTR_len: destination[0] = MP_OBJ_FROM_PTR(&vector3_class_len_obj); destination[1] = self_in; break;
           case MP_QSTR_normal: destination[0] = MP_OBJ_FROM_PTR(&vector3_class_normal_obj); destination[1] = self_in; break;
-          case MP_QSTR_normalize: destination[0] = MP_OBJ_FROM_PTR(&vector3_class_normal_obj); destination[1] = self_in; break;
+          case MP_QSTR_normalize: destination[0] = MP_OBJ_FROM_PTR(&vector3_class_normalize_obj); destination[1] = self_in; break;
           case MP_QSTR_resize: destination[0] = MP_OBJ_FROM_PTR(&vector3_class_resize_obj); destination[1] = self_in; break;
           default: break;
         }
