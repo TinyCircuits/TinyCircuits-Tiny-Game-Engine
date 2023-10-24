@@ -40,6 +40,9 @@ STATIC mp_obj_t vector3_class_test(mp_obj_t self){
 MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_test_obj, vector3_class_test);
 
 STATIC mp_obj_t vector3_class_dot(mp_obj_t _self, mp_obj_t _b) {
+  if(!mp_obj_is_type(_self, &vector3_class_type) || !mp_obj_is_type(_b, &vector3_class_type)) {
+        mp_raise_TypeError("expected vector arguments");
+  }
   const vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
   const vector3_class_obj_t* b = MP_OBJ_TO_PTR(_b);
   return mp_obj_new_float(self->x*b->x + self->y*b->y + self->z*b->z);
@@ -47,6 +50,9 @@ STATIC mp_obj_t vector3_class_dot(mp_obj_t _self, mp_obj_t _b) {
 MP_DEFINE_CONST_FUN_OBJ_2(vector3_class_dot_obj, vector3_class_dot);
 
 STATIC mp_obj_t vector3_class_cross(mp_obj_t _self, mp_obj_t _b) {
+  if(!mp_obj_is_type(_self, &vector3_class_type) || !mp_obj_is_type(_b, &vector3_class_type)) {
+        mp_raise_TypeError("expected vector arguments");
+  }
   const vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
   const vector3_class_obj_t* b = MP_OBJ_TO_PTR(_b);
   vector3_class_obj_t* ret = m_new_obj(vector3_class_obj_t);
@@ -59,18 +65,27 @@ STATIC mp_obj_t vector3_class_cross(mp_obj_t _self, mp_obj_t _b) {
 MP_DEFINE_CONST_FUN_OBJ_2(vector3_class_cross_obj, vector3_class_cross);
 
 STATIC mp_obj_t vector3_class_len2(mp_obj_t _self) {
+  if(!mp_obj_is_type(_self, &vector3_class_type)) {
+        mp_raise_TypeError("expected vector argument");
+  }
   const vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
   return mp_obj_new_float(self->x*self->x + self->y*self->y + self->z*self->z);
 }
 MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_len2_obj, vector3_class_len2);
 
 STATIC mp_obj_t vector3_class_len(mp_obj_t _self) {
+  if(!mp_obj_is_type(_self, &vector3_class_type)) {
+        mp_raise_TypeError("expected vector argument");
+  }
   const vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
   return mp_obj_new_float(sqrtf(self->x*self->x + self->y*self->y + self->z*self->z));
 }
 MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_len_obj, vector3_class_len);
 
 STATIC mp_obj_t vector3_class_normal(mp_obj_t _self) {
+  if(!mp_obj_is_type(_self, &vector3_class_type)) {
+        mp_raise_TypeError("expected vector argument");
+  }
   const vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
   vector3_class_obj_t* ret = m_new_obj(vector3_class_obj_t);
   ret->base.type = &vector3_class_type;
@@ -83,6 +98,9 @@ STATIC mp_obj_t vector3_class_normal(mp_obj_t _self) {
 MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_normal_obj, vector3_class_normal);
 
 STATIC mp_obj_t vector3_class_normalize(mp_obj_t _self) {
+  if(!mp_obj_is_type(_self, &vector3_class_type)) {
+        mp_raise_TypeError("expected vector argument");
+  }
   const vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
   const float il = sqrtf(self->x*self->x + self->y*self->y + self->z*self->z);
   self->x *= il;
