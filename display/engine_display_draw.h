@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+// void engine_draw_pixel(uint16_t color, );
+
 // Fill entire screen buffer with a color
 void engine_draw_fill(uint16_t color);
 

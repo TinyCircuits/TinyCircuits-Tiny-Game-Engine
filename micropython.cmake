@@ -6,6 +6,7 @@ target_sources(usermod_engine INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/engine.c
     ${CMAKE_CURRENT_LIST_DIR}/nodes/empty_node.c
     ${CMAKE_CURRENT_LIST_DIR}/nodes/camera_node.c
+    ${CMAKE_CURRENT_LIST_DIR}/nodes/bitmap_sprite_node.c
     ${CMAKE_CURRENT_LIST_DIR}/math/vector3.c
     ${CMAKE_CURRENT_LIST_DIR}/math/rectangle.c
     ${CMAKE_CURRENT_LIST_DIR}/utility/debug_print.c

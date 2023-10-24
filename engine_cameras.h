@@ -14,5 +14,9 @@ linked_list_node *engine_camera_track(engine_camera_node_class_obj_t *obj);
 // remove the camera from the list of tracked cameras
 void engine_camera_untrack(linked_list_node *camera_list_node);
 
+// For each camera instance that is not disabled,
+// pass each camera to the draw callback
+void engine_camera_draw_for_each(mp_obj_t dest[2]);
+
 
 #endif  // ENGINE_CAMERAS_H

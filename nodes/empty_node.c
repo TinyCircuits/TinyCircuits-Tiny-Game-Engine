@@ -12,6 +12,8 @@ STATIC void empty_node_class_print(const mp_print_t *print, mp_obj_t self_in, mp
 
 STATIC mp_obj_t empty_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New EmptyNode");
+
+    // Check that there's an argument that's hopefully a reference to the inheriting subclass
     mp_arg_check_num(n_args, n_kw, 1, 1, true);
 
     // How to make __del__ get called when object is garbage collected: https://github.com/micropython/micropython/issues/1878

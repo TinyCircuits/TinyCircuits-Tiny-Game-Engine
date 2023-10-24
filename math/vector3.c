@@ -76,44 +76,27 @@ STATIC void vector3_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *desti
     vector3_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
 
     if(destination[0] == MP_OBJ_NULL){          // Load
-        if(attribute == MP_QSTR_x){
-            destination[0] = (mp_obj_t*)(&self->x);
-        }else if(attribute == MP_QSTR_y){
-            destination[0] = (mp_obj_t*)(&self->y);
-        }else if(attribute == MP_QSTR_z){
-            destination[0] = (mp_obj_t*)(&self->z);
-        }else if(attribute == MP_QSTR_dot){
-          destination[0] = MP_OBJ_FROM_PTR(&vector3_class_dot_obj);
-          destination[1] = self_in;
-        }else if(attribute == MP_QSTR_cross){
-          destination[0] = MP_OBJ_FROM_PTR(&vector3_class_cross_obj);
-          destination[1] = self_in;
+        switch(attribute){
+            case MP_QSTR_x:
+                destination[0] = (mp_obj_t*)(&self->x);
+            break;
+            case MP_QSTR_y:
+                destination[0] = (mp_obj_t*)(&self->y);
+            break;
+            case MP_QSTR_z:
+                destination[0] = (mp_obj_t*)(&self->z);
+            break;
+            case MP_QSTR_dot:
+                destination[0] = MP_OBJ_FROM_PTR(&vector3_class_dot_obj);
+                destination[1] = self_in;
+            break;
+            case MP_QSTR_cross:
+                destination[0] = MP_OBJ_FROM_PTR(&vector3_class_cross_obj);
+                destination[1] = self_in;
+            break;
+            default:
+            break;
         }
-        // switch(attribute) {
-        //   case MP_QSTR_x:
-        //     destination[0] = (mp_obj_t*)(&self->x);
-        //   break;
-        //   case MP_QSTR_y:
-        //     destination[0] = (mp_obj_t*)(&self->y);
-        //   break;
-        //   case MP_QSTR_z:
-        //     destination[0] = (mp_obj_t*)(&self->z);
-        //   break;
-        //   case MP_QSTR_test:
-        //     destination[0] = MP_OBJ_FROM_PTR(&vector3_class_test_obj);
-        //     destination[1] = self_in;
-        //   break;
-        //   case MP_QSTR_dot:
-        //     destination[0] = MP_OBJ_FROM_PTR(&vector3_class_dot_obj);
-        //     destination[1] = self_in;
-        //   break;
-        //   case MP_QSTR_cross:
-        //     destination[0] = MP_OBJ_FROM_PTR(&vector3_class_cross_obj);
-        //     destination[1] = self_in;
-        //   break;
-        //   default:
-        //   break;
-        // }
     }else if(destination[1] != MP_OBJ_NULL){    // Store
         if(attribute == MP_QSTR_x){
             self->x = mp_obj_get_float(destination[1]);
@@ -122,7 +105,7 @@ STATIC void vector3_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *desti
         }else if(attribute == MP_QSTR_z){
             self->z = mp_obj_get_float(destination[1]);
         }else{
-            return;
+            return; // Fail
         }
 
         // Success

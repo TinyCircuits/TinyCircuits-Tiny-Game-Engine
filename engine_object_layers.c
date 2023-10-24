@@ -3,12 +3,14 @@
 #include "nodes/minimal_node.h"
 #include "nodes/empty_node.h"
 #include "nodes/camera_node.h"
+#include "nodes/bitmap_sprite_node.h"
 #include "nodes/node_types.h"
 
 uint16_t engine_object_layer_count = 8;
 linked_list engine_object_layers[8];
 
 
+// Add an object to the pool of all nodes in 'engine_object_layers' at some layer
 linked_list_node *engine_add_object_to_layer(void *obj, uint16_t layer_index){
     if(layer_index >= engine_object_layer_count){
         ENGINE_ERROR_PRINTF("Tried to add object to layer %d but the max layer index is %d. Resize the number of available draw layers at the cost of memory", layer_index, engine_object_layer_count-1);
@@ -24,6 +26,11 @@ void engine_remove_object_from_layer(linked_list_node *object_list_node, uint16_
 }
 
 
+// Go through all nodes and call their callbacks depending on the
+// node type. For example, some nodes will only have a 'tick()'
+// callback while others will also have a 'draw()' callback.
+//
+// Nodes with a draw callback will be rendered
 void engine_invoke_all_node_callbacks(){
     linked_list_node *current_linked_list_node = NULL;
 
@@ -38,15 +45,31 @@ void engine_invoke_all_node_callbacks(){
 
             // As long as this node was not just added, figure out its type and what callbacks it has
             if(node_base_is_just_added(&node->node_base) == false){
-                if(node->node_base.type == NODE_TYPE_EMPTY){
-                    engine_empty_node_class_obj_t *empty_node = (engine_empty_node_class_obj_t*)node;
-                    mp_call_method_n_kw(0, 0, empty_node->tick_dest);
-                }else if(node->node_base.type == NODE_TYPE_CAMERA){
-                    engine_camera_node_class_obj_t *camera_node = (engine_camera_node_class_obj_t*)node;
-                    mp_call_method_n_kw(0, 0, camera_node->tick_dest);
-                }else{
-                    ENGINE_WARNING_PRINTF("This node type doesn't do anything? %d", node->node_base.type);
+                switch(node->node_base.type){
+                    case NODE_TYPE_EMPTY:
+                    {
+                        engine_empty_node_class_obj_t *empty_node = (engine_empty_node_class_obj_t*)node;
+                        mp_call_method_n_kw(0, 0, empty_node->tick_dest);
+                    }
+                    break;
+                    case NODE_TYPE_CAMERA:
+                    {
+                        engine_camera_node_class_obj_t *camera_node = (engine_camera_node_class_obj_t*)node;
+                        mp_call_method_n_kw(0, 0, camera_node->tick_dest);
+                    }
+                    break;
+                    case NODE_TYPE_BITMAP_SPRITE:
+                    {
+                        engine_bitmap_sprite_node_class_obj_t *bitmap_sprite_node = (engine_bitmap_sprite_node_class_obj_t*)node;
+                        mp_call_method_n_kw(0, 0, bitmap_sprite_node->tick_dest);
+                        engine_camera_draw_for_each(bitmap_sprite_node->draw_dest);
+                    }
+                    break;
+                    default:
+                        ENGINE_WARNING_PRINTF("This node type doesn't do anything? %d", node->node_base.type);
+                    break;
                 }
+
             }else{
                 ENGINE_INFO_PRINTF("Did not call node callbacks, it was just added, will call them next game cycle");
                 node_base_set_if_just_added(&node->node_base, false);

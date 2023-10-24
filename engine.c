@@ -9,6 +9,7 @@
 
 #include "nodes/empty_node.h"
 #include "nodes/camera_node.h"
+#include "nodes/bitmap_sprite_node.h"
 
 // ### MODULE ###
 
@@ -66,6 +67,7 @@ STATIC const mp_rom_map_elem_t engine_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_Rectangle), (mp_obj_t)&rectangle_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_EmptyNode), (mp_obj_t)&engine_empty_node_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_CameraNode), (mp_obj_t)&engine_camera_node_class_type },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_BitmapSpriteNode), (mp_obj_t)&engine_bitmap_sprite_node_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_start), (mp_obj_t)&engine_start_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_set_debug_print_level), (mp_obj_t)&engine_set_debug_level_obj },
     { MP_ROM_QSTR(MP_QSTR_debug_print_level_none), MP_ROM_INT(DEBUG_PRINT_LEVEL_NONE) },

@@ -14,6 +14,8 @@ STATIC void camera_node_class_print(const mp_print_t *print, mp_obj_t self_in, m
 
 mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New CameraNode");
+
+    // Check that there's an argument that's hopefully a reference to the inheriting subclass
     mp_arg_check_num(n_args, n_kw, 1, 1, true);
 
     // How to make __del__ get called when object is garbage collected: https://github.com/micropython/micropython/issues/1878
@@ -90,14 +92,15 @@ STATIC void camera_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destin
         }
     }else if(destination[1] != MP_OBJ_NULL){    // Store
         if(attribute == MP_QSTR_position){
-            // if(mp_obj_str_get_qstr(destination[1]))
             ENGINE_WARNING_PRINTF("Setting position not implemented!");
-            destination[0] = MP_OBJ_NULL;   
         }else if(attribute == MP_QSTR_viewport){
-            // if(mp_obj_str_get_qstr(destination[1]))
             ENGINE_WARNING_PRINTF("Setting viewport not implemented!");
-            destination[0] = MP_OBJ_NULL; 
+        }else{
+            return; // Fail
         }
+        
+        // Success
+        destination[0] = MP_OBJ_NULL; 
     }
 }
 
