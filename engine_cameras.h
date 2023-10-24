@@ -7,11 +7,16 @@
 
 // A linked list of cameras to loop through to render
 // all object layers for each camera
-linked_list engine_cameras;
+extern linked_list engine_cameras;
 
-// The main undeletable engine camera
-mp_obj_t engine_main_camera;
+// Cameras are nodes just like everything else but are tracked
+// new a different list that the engine can loop through quickly.
+// This avoids a search through all the nodes
+linked_list_node *engine_camera_track(engine_camera_node_class_obj_t *obj);
 
-void engine_camera_init();
+// Call this with the saved link_list_node pointer to
+// remove the camera from the list of tracked cameras
+void engine_camera_untrack(linked_list_node *camera_list_node);
+
 
 #endif  // ENGINE_CAMERAS_H

@@ -1,4 +1,5 @@
 #include "engine_object_layers.h"
+#include "engine_cameras.h"
 #include "nodes/minimal_node.h"
 #include "nodes/empty_node.h"
 #include "nodes/camera_node.h"
