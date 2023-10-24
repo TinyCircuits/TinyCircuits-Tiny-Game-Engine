@@ -109,14 +109,20 @@ STATIC void vector3_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *desti
           default: break;
         }
     }else if(destination[1] != MP_OBJ_NULL){    // Store
-        if(attribute == MP_QSTR_x){
-            self->x = mp_obj_get_float(destination[1]);
-        }else if(attribute == MP_QSTR_y){
-            self->y = mp_obj_get_float(destination[1]);
-        }else if(attribute == MP_QSTR_z){
-            self->z = mp_obj_get_float(destination[1]);
-        }else{
-            return;
+        // if(attribute == MP_QSTR_x){
+        //     self->x = mp_obj_get_float(destination[1]);
+        // }else if(attribute == MP_QSTR_y){
+        //     self->y = mp_obj_get_float(destination[1]);
+        // }else if(attribute == MP_QSTR_z){
+        //     self->z = mp_obj_get_float(destination[1]);
+        // }else{
+        //     return;
+        // }
+        switch(attribute) {
+          case MP_QSTR_x: self->x = mp_obj_get_float(destination[1]); break;
+          case MP_QSTR_y: self->y = mp_obj_get_float(destination[1]); break;
+          case MP_QSTR_z: self->z = mp_obj_get_float(destination[1]); break;
+          default: return;
         }
 
         // Success
