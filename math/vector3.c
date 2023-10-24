@@ -110,6 +110,93 @@ STATIC mp_obj_t vector3_class_normalize(mp_obj_t _self) {
 }
 MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_normalize_obj, vector3_class_normalize);
 
+STATIC mp_obj_t vector3_class_rotateZ(mp_obj_t _self, mp_obj_t _theta) {
+  if(!mp_obj_is_type(_self, &vector3_class_type)) {
+        mp_raise_TypeError("expected vector argument");
+  }
+  vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
+  mp_float_t xp, yp;
+  if(mp_obj_is_type(_theta, &vector3_class_type)) { // Rotate by vector theta (sin(t), cos(t), ~)
+
+    const vector3_class_obj_t* b = MP_OBJ_TO_PTR(_theta);
+    xp = self->x*b->y - self->y*b->x;
+    yp = self->y*b->y + self->x*b->x;
+
+  } else if(mp_obj_is_float(_theta)) { // Rotate by scalar theta
+
+    const float b = mp_obj_get_float(_theta);
+    const mp_float_t s = sinf(b);
+    const mp_float_t c = cosf(b);
+    xp = self->x*c - self->y*s;
+    yp = self->y*c + self->x*s;
+
+  } else {
+    mp_raise_TypeError("expected vector or scalar length");
+  }
+  self->x = xp;
+  self->y = yp;
+  return MP_OBJ_FROM_PTR(self);
+}
+MP_DEFINE_CONST_FUN_OBJ_2(vector3_class_rotateZ_obj, vector3_class_rotateZ);
+
+STATIC mp_obj_t vector3_class_rotateY(mp_obj_t _self, mp_obj_t _theta) {
+  if(!mp_obj_is_type(_self, &vector3_class_type)) {
+        mp_raise_TypeError("expected vector argument");
+  }
+  vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
+  mp_float_t xp, zp;
+  if(mp_obj_is_type(_theta, &vector3_class_type)) { // Rotate by vector theta (sin(t), cos(t), ~)
+
+    const vector3_class_obj_t* b = MP_OBJ_TO_PTR(_theta);
+    xp = self->x*b->y - self->z*b->x;
+    zp = self->z*b->y + self->x*b->x;
+
+  } else if(mp_obj_is_float(_theta)) { // Rotate by scalar theta
+
+    const float b = mp_obj_get_float(_theta);
+    const mp_float_t s = sinf(b);
+    const mp_float_t c = cosf(b);
+    xp = self->x*c - self->z*s;
+    zp = self->z*c + self->x*s;
+
+  } else {
+    mp_raise_TypeError("expected vector or scalar length");
+  }
+  self->x = xp;
+  self->z = zp;
+  return MP_OBJ_FROM_PTR(self);
+}
+MP_DEFINE_CONST_FUN_OBJ_2(vector3_class_rotateY_obj, vector3_class_rotateY);
+
+STATIC mp_obj_t vector3_class_rotateX(mp_obj_t _self, mp_obj_t _theta) {
+  if(!mp_obj_is_type(_self, &vector3_class_type)) {
+        mp_raise_TypeError("expected vector argument");
+  }
+  vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
+  mp_float_t yp, zp;
+  if(mp_obj_is_type(_theta, &vector3_class_type)) { // Rotate by vector theta (sin(t), cos(t), ~)
+
+    const vector3_class_obj_t* b = MP_OBJ_TO_PTR(_theta);
+    yp = self->y*b->y - self->z*b->x;
+    zp = self->z*b->y + self->y*b->x;
+
+  } else if(mp_obj_is_float(_theta)) { // Rotate by scalar theta
+
+    const float b = mp_obj_get_float(_theta);
+    const mp_float_t s = sinf(b);
+    const mp_float_t c = cosf(b);
+    yp = self->y*c - self->z*s;
+    zp = self->z*c + self->y*s;
+
+  } else {
+    mp_raise_TypeError("expected vector or scalar length");
+  }
+  self->y = yp;
+  self->z = zp;
+  return MP_OBJ_FROM_PTR(self);
+}
+MP_DEFINE_CONST_FUN_OBJ_2(vector3_class_rotateX_obj, vector3_class_rotateX);
+
 // Set vector to be the same size as another vector or length
 STATIC mp_obj_t vector3_class_resize(mp_obj_t _self, mp_obj_t _b) {
   if(!mp_obj_is_type(_self, &vector3_class_type)) {
@@ -121,7 +208,6 @@ STATIC mp_obj_t vector3_class_resize(mp_obj_t _self, mp_obj_t _b) {
 
     const vector3_class_obj_t* b = MP_OBJ_TO_PTR(_b);
     f = sqrtf((b->x*b->x + b->y*b->y + b->z*b->z) / (self->x*self->x + self->y*self->y + self->z*self->z));
-
 
   } else if(mp_obj_is_float(_b)) { // Resize to match scalar length
 
@@ -158,6 +244,9 @@ STATIC void vector3_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *desti
           case MP_QSTR_normal: destination[0] = MP_OBJ_FROM_PTR(&vector3_class_normal_obj); destination[1] = self_in; break;
           case MP_QSTR_normalize: destination[0] = MP_OBJ_FROM_PTR(&vector3_class_normalize_obj); destination[1] = self_in; break;
           case MP_QSTR_resize: destination[0] = MP_OBJ_FROM_PTR(&vector3_class_resize_obj); destination[1] = self_in; break;
+          case MP_QSTR_rotateZ: destination[0] = MP_OBJ_FROM_PTR(&vector3_class_rotateZ_obj); destination[1] = self_in; break;
+          case MP_QSTR_rotateY: destination[0] = MP_OBJ_FROM_PTR(&vector3_class_rotateY_obj); destination[1] = self_in; break;
+          case MP_QSTR_rotateX: destination[0] = MP_OBJ_FROM_PTR(&vector3_class_rotateX_obj); destination[1] = self_in; break;
           default: break;
         }
     }else if(destination[1] != MP_OBJ_NULL){    // Store
