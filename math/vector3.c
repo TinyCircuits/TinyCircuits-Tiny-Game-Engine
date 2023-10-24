@@ -39,16 +39,17 @@ STATIC mp_obj_t vector3_class_test(mp_obj_t self){
 }
 MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_test_obj, vector3_class_test);
 
-STATIC mp_obj_t vector3_class_dot(size_t n_args, const mp_obj_t *args) {
-  const vector3_class_obj_t* self = MP_OBJ_TO_PTR(args[0]);
-  const vector3_class_obj_t* b = MP_OBJ_TO_PTR(args[1]);
+STATIC mp_obj_t vector3_class_dot(mp_obj_t _self, mp_obj_t _b) {
+  const vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
+  const vector3_class_obj_t* b = MP_OBJ_TO_PTR(_b);
   return mp_obj_new_float(self->x*b->x + self->y*b->y + self->z*b->z);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(vector3_class_dot_obj, 2, 2, vector3_class_dot);
+MP_DEFINE_CONST_FUN_OBJ_2(vector3_class_dot_obj, vector3_class_dot);
+//STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(vector3_class_dot_obj, 2, 2, vector3_class_dot);
 
-STATIC mp_obj_t vector3_class_cross(size_t n_args, const mp_obj_t *args) {
-  const vector3_class_obj_t* self = MP_OBJ_TO_PTR(args[0]);
-  const vector3_class_obj_t* b = MP_OBJ_TO_PTR(args[1]);
+STATIC mp_obj_t vector3_class_cross(mp_obj_t _self, mp_obj_t _b) {
+  const vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
+  const vector3_class_obj_t* b = MP_OBJ_TO_PTR(_b);
   vector3_class_obj_t* ret = m_new_obj(vector3_class_obj_t);
   ret->base.type = &vector3_class_type;
   ret->x = self->y*b->z - self->z*b->y;
@@ -56,7 +57,8 @@ STATIC mp_obj_t vector3_class_cross(size_t n_args, const mp_obj_t *args) {
   ret->z = self->x*b->y - self->y*b->x;
   return MP_OBJ_FROM_PTR(ret);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(vector3_class_cross_obj, 2, 2, vector3_class_cross);
+MP_DEFINE_CONST_FUN_OBJ_2(vector3_class_cross_obj, vector3_class_cross);
+//STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(vector3_class_cross_obj, 2, 2, vector3_class_cross);
 
 // STATIC mp_obj_t vector3_class_dot(size_t n_args, const mp_obj_t *args) {
 //     const vector3_class_obj_t* self = MP_OBJ_TO_PTR(args[0]);
