@@ -71,26 +71,26 @@ STATIC void rectangle_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *des
 
 
 // Class attributes
-STATIC const mp_rom_map_elem_t vector3_class_locals_dict_table[] = {
-    { MP_ROM_QSTR(MP_QSTR_test), MP_ROM_PTR(&vector3_class_test_obj) },
+STATIC const mp_rom_map_elem_t rectangle_class_locals_dict_table[] = {
+    { MP_ROM_QSTR(MP_QSTR_area), MP_ROM_PTR(&rectangle_class_area_obj) },
 };
 
 
 // Class init
-STATIC MP_DEFINE_CONST_DICT(vector3_class_locals_dict, vector3_class_locals_dict_table);
+STATIC MP_DEFINE_CONST_DICT(rectangle_class_locals_dict, rectangle_class_locals_dict_table);
 
-const mp_obj_type_t vector3_class_type = {
+const mp_obj_type_t rectangle_class_type = {
     { &mp_type_type },
-    .name = MP_QSTR_Vector3,
-    .print = vector3_class_print,
-    .make_new = vector3_class_new,
+    .name = MP_QSTR_Rectangle,
+    .print = rectangle_class_print,
+    .make_new = rectangle_class_new,
     .call = NULL,
     .unary_op = NULL,
     .binary_op = NULL,
-    .attr = vector3_class_attr,
+    .attr = rectangle_class_attr,
     .subscr = NULL,
     .getiter = NULL,
     .iternext = NULL,
     .buffer_p = {NULL},
-    .locals_dict = (mp_obj_dict_t*)&vector3_class_locals_dict,
+    .locals_dict = (mp_obj_dict_t*)&rectangle_class_locals_dict,
 };

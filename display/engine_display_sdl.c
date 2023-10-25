@@ -10,7 +10,6 @@ SDL_Texture* window_frame_buffer;   // https://gamedev.stackexchange.com/questio
 
 
 void sdl_update_screen(uint16_t *screen_buffer_to_render){
-    engine_draw_fill(0x07E0);
     SDL_UpdateTexture(window_frame_buffer , NULL, screen_buffer_to_render, SCREEN_WIDTH*sizeof(uint16_t));
     SDL_RenderClear(window_renderer);
     SDL_RenderCopy(window_renderer, window_frame_buffer, NULL, NULL);
@@ -19,6 +18,8 @@ void sdl_update_screen(uint16_t *screen_buffer_to_render){
 
 
 void engine_display_sdl_init(){
+    engine_draw_fill(0x07E0);
+
     // https://dev.to/noah11012/using-sdl2-opening-a-window-79c
     if(SDL_Init(SDL_INIT_VIDEO) < 0){
         ENGINE_ERROR_PRINTF("Failed to initialize the SDL2 library");

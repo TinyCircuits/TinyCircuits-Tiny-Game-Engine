@@ -32,184 +32,174 @@ mp_obj_t vector3_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw
 
 
 // Class methods
-STATIC mp_obj_t vector3_class_test(mp_obj_t self){
-    ENGINE_INFO_PRINTF("Vector3 test");
-
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_test_obj, vector3_class_test);
-
-STATIC mp_obj_t vector3_class_dot(mp_obj_t _self, mp_obj_t _b) {
-  if(!mp_obj_is_type(_self, &vector3_class_type) || !mp_obj_is_type(_b, &vector3_class_type)) {
-        mp_raise_TypeError("expected vector arguments");
-  }
-  const vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
-  const vector3_class_obj_t* b = MP_OBJ_TO_PTR(_b);
-  return mp_obj_new_float(self->x*b->x + self->y*b->y + self->z*b->z);
+STATIC mp_obj_t vector3_class_dot(size_t n_args, const mp_obj_t *args) {
+    const vector3_class_obj_t* self = MP_OBJ_TO_PTR(args[0]);
+    const vector3_class_obj_t* b = MP_OBJ_TO_PTR(args[1]);
+    return mp_obj_new_float(self->x*b->x + self->y*b->y + self->z*b->z);
 }
 MP_DEFINE_CONST_FUN_OBJ_2(vector3_class_dot_obj, vector3_class_dot);
 
 STATIC mp_obj_t vector3_class_cross(mp_obj_t _self, mp_obj_t _b) {
-  if(!mp_obj_is_type(_self, &vector3_class_type) || !mp_obj_is_type(_b, &vector3_class_type)) {
+    if(!mp_obj_is_type(_self, &vector3_class_type) || !mp_obj_is_type(_b, &vector3_class_type)) {
         mp_raise_TypeError("expected vector arguments");
-  }
-  const vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
-  const vector3_class_obj_t* b = MP_OBJ_TO_PTR(_b);
-  vector3_class_obj_t* ret = m_new_obj(vector3_class_obj_t);
-  ret->base.type = &vector3_class_type;
-  ret->x = self->y*b->z - self->z*b->y;
-  ret->y = self->z*b->x - self->x*b->z;
-  ret->z = self->x*b->y - self->y*b->x;
-  return MP_OBJ_FROM_PTR(ret);
+    }
+    const vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
+    const vector3_class_obj_t* b = MP_OBJ_TO_PTR(_b);
+    vector3_class_obj_t* ret = m_new_obj(vector3_class_obj_t);
+    ret->base.type = &vector3_class_type;
+    ret->x = self->y*b->z - self->z*b->y;
+    ret->y = self->z*b->x - self->x*b->z;
+    ret->z = self->x*b->y - self->y*b->x;
+    return MP_OBJ_FROM_PTR(ret);
 }
 MP_DEFINE_CONST_FUN_OBJ_2(vector3_class_cross_obj, vector3_class_cross);
 
 STATIC mp_obj_t vector3_class_len2(mp_obj_t _self) {
-  if(!mp_obj_is_type(_self, &vector3_class_type)) {
+    if(!mp_obj_is_type(_self, &vector3_class_type)) {
         mp_raise_TypeError("expected vector argument");
-  }
-  const vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
-  return mp_obj_new_float(self->x*self->x + self->y*self->y + self->z*self->z);
+    }
+    const vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
+    return mp_obj_new_float(self->x*self->x + self->y*self->y + self->z*self->z);
 }
 MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_len2_obj, vector3_class_len2);
 
 STATIC mp_obj_t vector3_class_len(mp_obj_t _self) {
-  if(!mp_obj_is_type(_self, &vector3_class_type)) {
+    if(!mp_obj_is_type(_self, &vector3_class_type)) {
         mp_raise_TypeError("expected vector argument");
-  }
-  const vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
-  return mp_obj_new_float(sqrtf(self->x*self->x + self->y*self->y + self->z*self->z));
+    }
+    const vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
+    return mp_obj_new_float(sqrtf(self->x*self->x + self->y*self->y + self->z*self->z));
 }
 MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_len_obj, vector3_class_len);
 
 STATIC mp_obj_t vector3_class_normal(mp_obj_t _self) {
-  if(!mp_obj_is_type(_self, &vector3_class_type)) {
+    if(!mp_obj_is_type(_self, &vector3_class_type)) {
         mp_raise_TypeError("expected vector argument");
-  }
-  const vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
-  vector3_class_obj_t* ret = m_new_obj(vector3_class_obj_t);
-  ret->base.type = &vector3_class_type;
-  const float il = 1.f / sqrtf(self->x*self->x + self->y*self->y + self->z*self->z);
-  ret->x = self->x * il;
-  ret->y = self->y * il;
-  ret->z = self->z * il;
-  return MP_OBJ_FROM_PTR(ret);
+    }
+    const vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
+    vector3_class_obj_t* ret = m_new_obj(vector3_class_obj_t);
+    ret->base.type = &vector3_class_type;
+    const float il = 1.f / sqrtf(self->x*self->x + self->y*self->y + self->z*self->z);
+    ret->x = self->x * il;
+    ret->y = self->y * il;
+    ret->z = self->z * il;
+    return MP_OBJ_FROM_PTR(ret);
 }
 MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_normal_obj, vector3_class_normal);
 
 STATIC mp_obj_t vector3_class_normalize(mp_obj_t _self) {
-  if(!mp_obj_is_type(_self, &vector3_class_type)) {
+    if(!mp_obj_is_type(_self, &vector3_class_type)) {
         mp_raise_TypeError("expected vector argument");
-  }
-  vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
-  const mp_float_t il = 1.f / sqrtf(self->x*self->x + self->y*self->y + self->z*self->z);
-  self->x = self->x * il;
-  self->y = self->y * il;
-  self->z = self->z * il;
-  return MP_OBJ_FROM_PTR(self);
+    }
+    vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
+    const mp_float_t il = 1.f / sqrtf(self->x*self->x + self->y*self->y + self->z*self->z);
+    self->x = self->x * il;
+    self->y = self->y * il;
+    self->z = self->z * il;
+    return MP_OBJ_FROM_PTR(self);
 }
 MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_normalize_obj, vector3_class_normalize);
 
 STATIC mp_obj_t vector3_class_rotateZ(mp_obj_t _self, mp_obj_t _theta) {
-  if(!mp_obj_is_type(_self, &vector3_class_type)) {
+    if(!mp_obj_is_type(_self, &vector3_class_type)) {
         mp_raise_TypeError("expected vector argument");
-  }
-  vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
-  mp_float_t xp, yp;
-  if(mp_obj_is_type(_theta, &vector3_class_type)) { // Rotate by vector theta (sin(t), cos(t), ~)
+    }
+    vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
+    mp_float_t xp, yp;
+    if(mp_obj_is_type(_theta, &vector3_class_type)) { // Rotate by vector theta (sin(t), cos(t), ~)
 
-    const vector3_class_obj_t* b = MP_OBJ_TO_PTR(_theta);
-    xp = self->x*b->y - self->y*b->x;
-    yp = self->y*b->y + self->x*b->x;
+        const vector3_class_obj_t* b = MP_OBJ_TO_PTR(_theta);
+        xp = self->x*b->y - self->y*b->x;
+        yp = self->y*b->y + self->x*b->x;
 
-  } else if(mp_obj_is_float(_theta)) { // Rotate by scalar theta
+    } else if(mp_obj_is_float(_theta)) { // Rotate by scalar theta
 
-    const float b = mp_obj_get_float(_theta);
-    const mp_float_t s = sinf(b);
-    const mp_float_t c = cosf(b);
-    xp = self->x*c - self->y*s;
-    yp = self->y*c + self->x*s;
+        const float b = mp_obj_get_float(_theta);
+        const mp_float_t s = sinf(b);
+        const mp_float_t c = cosf(b);
+        xp = self->x*c - self->y*s;
+        yp = self->y*c + self->x*s;
 
-  } else {
-    mp_raise_TypeError("expected vector or scalar length");
-  }
-  self->x = xp;
-  self->y = yp;
-  return MP_OBJ_FROM_PTR(self);
+    } else {
+        mp_raise_TypeError("expected vector or scalar length");
+    }
+    self->x = xp;
+    self->y = yp;
+    return MP_OBJ_FROM_PTR(self);
 }
 MP_DEFINE_CONST_FUN_OBJ_2(vector3_class_rotateZ_obj, vector3_class_rotateZ);
 
 STATIC mp_obj_t vector3_class_rotateY(mp_obj_t _self, mp_obj_t _theta) {
-  if(!mp_obj_is_type(_self, &vector3_class_type)) {
+    if(!mp_obj_is_type(_self, &vector3_class_type)) {
         mp_raise_TypeError("expected vector argument");
-  }
-  vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
-  mp_float_t xp, zp;
-  if(mp_obj_is_type(_theta, &vector3_class_type)) { // Rotate by vector theta (sin(t), cos(t), ~)
+    }
+    vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
+    mp_float_t xp, zp;
+    if(mp_obj_is_type(_theta, &vector3_class_type)) { // Rotate by vector theta (sin(t), cos(t), ~)
 
-    const vector3_class_obj_t* b = MP_OBJ_TO_PTR(_theta);
-    xp = self->x*b->y - self->z*b->x;
-    zp = self->z*b->y + self->x*b->x;
+        const vector3_class_obj_t* b = MP_OBJ_TO_PTR(_theta);
+        xp = self->x*b->y - self->z*b->x;
+        zp = self->z*b->y + self->x*b->x;
 
-  } else if(mp_obj_is_float(_theta)) { // Rotate by scalar theta
+    } else if(mp_obj_is_float(_theta)) { // Rotate by scalar theta
 
-    const float b = mp_obj_get_float(_theta);
-    const mp_float_t s = sinf(b);
-    const mp_float_t c = cosf(b);
-    xp = self->x*c - self->z*s;
-    zp = self->z*c + self->x*s;
+        const float b = mp_obj_get_float(_theta);
+        const mp_float_t s = sinf(b);
+        const mp_float_t c = cosf(b);
+        xp = self->x*c - self->z*s;
+        zp = self->z*c + self->x*s;
 
-  } else {
-    mp_raise_TypeError("expected vector or scalar length");
-  }
-  self->x = xp;
-  self->z = zp;
-  return MP_OBJ_FROM_PTR(self);
+    } else {
+        mp_raise_TypeError("expected vector or scalar length");
+    }
+    self->x = xp;
+    self->z = zp;
+    return MP_OBJ_FROM_PTR(self);
 }
 MP_DEFINE_CONST_FUN_OBJ_2(vector3_class_rotateY_obj, vector3_class_rotateY);
 
 STATIC mp_obj_t vector3_class_rotateX(mp_obj_t _self, mp_obj_t _theta) {
-  if(!mp_obj_is_type(_self, &vector3_class_type)) {
+    if(!mp_obj_is_type(_self, &vector3_class_type)) {
         mp_raise_TypeError("expected vector argument");
-  }
-  vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
-  mp_float_t yp, zp;
-  if(mp_obj_is_type(_theta, &vector3_class_type)) { // Rotate by vector theta (sin(t), cos(t), ~)
+    }
+    vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
+    mp_float_t yp, zp;
+    if(mp_obj_is_type(_theta, &vector3_class_type)) { // Rotate by vector theta (sin(t), cos(t), ~)
 
-    const vector3_class_obj_t* b = MP_OBJ_TO_PTR(_theta);
-    yp = self->y*b->y - self->z*b->x;
-    zp = self->z*b->y + self->y*b->x;
+        const vector3_class_obj_t* b = MP_OBJ_TO_PTR(_theta);
+        yp = self->y*b->y - self->z*b->x;
+        zp = self->z*b->y + self->y*b->x;
 
-  } else if(mp_obj_is_float(_theta)) { // Rotate by scalar theta
+    } else if(mp_obj_is_float(_theta)) { // Rotate by scalar theta
 
-    const float b = mp_obj_get_float(_theta);
-    const mp_float_t s = sinf(b);
-    const mp_float_t c = cosf(b);
-    yp = self->y*c - self->z*s;
-    zp = self->z*c + self->y*s;
+        const float b = mp_obj_get_float(_theta);
+        const mp_float_t s = sinf(b);
+        const mp_float_t c = cosf(b);
+        yp = self->y*c - self->z*s;
+        zp = self->z*c + self->y*s;
 
-  } else {
-    mp_raise_TypeError("expected vector or scalar length");
-  }
-  self->y = yp;
-  self->z = zp;
-  return MP_OBJ_FROM_PTR(self);
+    } else {
+        mp_raise_TypeError("expected vector or scalar length");
+    }
+    self->y = yp;
+    self->z = zp;
+    return MP_OBJ_FROM_PTR(self);
 }
 MP_DEFINE_CONST_FUN_OBJ_2(vector3_class_rotateX_obj, vector3_class_rotateX);
 
 static void q_mul(const mp_float_t* q1, const mp_float_t* q2, mp_float_t* y) {
-  y[0] = q1[0]*q2[0] - q1[1]*q2[1] - q1[2]*q2[2] - q1[3]*q2[3];
-  y[1] = q1[0]*q2[1] + q1[1]*q2[0] - q1[2]*q2[3] + q1[3]*q2[2];
-  y[2] = q1[0]*q2[2] + q1[1]*q2[3] + q1[2]*q2[0] - q1[3]*q2[1];
-  y[3] = q1[0]*q2[3] - q1[1]*q2[2] + q1[2]*q2[1] + q1[3]*q2[0];
+    y[0] = q1[0]*q2[0] - q1[1]*q2[1] - q1[2]*q2[2] - q1[3]*q2[3];
+    y[1] = q1[0]*q2[1] + q1[1]*q2[0] - q1[2]*q2[3] + q1[3]*q2[2];
+    y[2] = q1[0]*q2[2] + q1[1]*q2[3] + q1[2]*q2[0] - q1[3]*q2[1];
+    y[3] = q1[0]*q2[3] - q1[1]*q2[2] + q1[2]*q2[1] + q1[3]*q2[0];
 }
 
 
 static void q_rot_mul(const mp_float_t* q1, const mp_float_t* q2, mp_float_t* y) { // Quaternion multiply assuming real component of q2 is zero
-  y[0] =  - q1[1]*q2[1] - q1[2]*q2[2] - q1[3]*q2[3];
-  y[1] =    q1[0]*q2[1] - q1[2]*q2[3] + q1[3]*q2[2];
-  y[2] =    q1[0]*q2[2] + q1[1]*q2[3] - q1[3]*q2[1];
-  y[3] =    q1[0]*q2[3] - q1[1]*q2[2] + q1[2]*q2[1];
+    y[0] =  - q1[1]*q2[1] - q1[2]*q2[2] - q1[3]*q2[3];
+    y[1] =    q1[0]*q2[1] - q1[2]*q2[3] + q1[3]*q2[2];
+    y[2] =    q1[0]*q2[2] + q1[1]*q2[3] - q1[3]*q2[1];
+    y[3] =    q1[0]*q2[3] - q1[1]*q2[2] + q1[2]*q2[1];
 }
 
 // Rotate by axis-angle form
@@ -260,28 +250,28 @@ MP_DEFINE_CONST_FUN_OBJ_3(vector3_class_rotate_obj, vector3_class_rotate);
 
 // Set vector to be the same size as another vector or length
 STATIC mp_obj_t vector3_class_resize(mp_obj_t _self, mp_obj_t _b) {
-  if(!mp_obj_is_type(_self, &vector3_class_type)) {
+    if(!mp_obj_is_type(_self, &vector3_class_type)) {
         mp_raise_TypeError("expected vector argument");
-  }
-  vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
-  float f;
-  if(mp_obj_is_type(_b, &vector3_class_type)) { // Resize to match vector length
+    }
+    vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
+    float f;
+    if(mp_obj_is_type(_b, &vector3_class_type)) { // Resize to match vector length
 
-    const vector3_class_obj_t* b = MP_OBJ_TO_PTR(_b);
-    f = sqrtf((b->x*b->x + b->y*b->y + b->z*b->z) / (self->x*self->x + self->y*self->y + self->z*self->z));
+        const vector3_class_obj_t* b = MP_OBJ_TO_PTR(_b);
+        f = sqrtf((b->x*b->x + b->y*b->y + b->z*b->z) / (self->x*self->x + self->y*self->y + self->z*self->z));
 
-  } else if(mp_obj_is_float(_b)) { // Resize to match scalar length
+    } else if(mp_obj_is_float(_b)) { // Resize to match scalar length
 
-    const float b = mp_obj_get_float(_b);
-    f = sqrtf((b*b) / (self->x*self->x + self->y*self->y + self->z*self->z));
+        const float b = mp_obj_get_float(_b);
+        f = sqrtf((b*b) / (self->x*self->x + self->y*self->y + self->z*self->z));
 
-  } else {
-    mp_raise_TypeError("expected vector or scalar length");
-  }
-  self->x *= f;
-  self->y *= f;
-  self->z *= f;
-  return MP_OBJ_FROM_PTR(self);
+    } else {
+        mp_raise_TypeError("expected vector or scalar length");
+    }
+    self->x *= f;
+    self->y *= f;
+    self->z *= f;
+    return MP_OBJ_FROM_PTR(self);
 }
 MP_DEFINE_CONST_FUN_OBJ_2(vector3_class_resize_obj, vector3_class_resize);
 
@@ -297,7 +287,6 @@ STATIC void vector3_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *desti
           case MP_QSTR_x: destination[0] = mp_obj_new_float(self->x); break;
           case MP_QSTR_y: destination[0] = mp_obj_new_float(self->y); break;
           case MP_QSTR_z: destination[0] = mp_obj_new_float(self->z); break;
-          case MP_QSTR_test: destination[0] = MP_OBJ_FROM_PTR(&vector3_class_test_obj); destination[1] = self_in; break;
           case MP_QSTR_dot: destination[0] = MP_OBJ_FROM_PTR(&vector3_class_dot_obj); destination[1] = self_in; break;
           case MP_QSTR_cross: destination[0] = MP_OBJ_FROM_PTR(&vector3_class_cross_obj); destination[1] = self_in; break;
           case MP_QSTR_len2: destination[0] = MP_OBJ_FROM_PTR(&vector3_class_len2_obj); destination[1] = self_in; break;
@@ -311,7 +300,7 @@ STATIC void vector3_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *desti
           case MP_QSTR_rotate: destination[0] = MP_OBJ_FROM_PTR(&vector3_class_rotate_obj); destination[1] = self_in; break;
           default: break;
         }
-    }else if(destination[1] != MP_OBJ_NULL){    // Store
+    } else if(destination[1] != MP_OBJ_NULL){    // Store
         switch(attribute) {
           case MP_QSTR_x: self->x = mp_obj_get_float(destination[1]); break;
           case MP_QSTR_y: self->y = mp_obj_get_float(destination[1]); break;
@@ -327,7 +316,6 @@ STATIC void vector3_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *desti
 
 // Class attributes
 STATIC const mp_rom_map_elem_t vector3_class_locals_dict_table[] = {
-    { MP_ROM_QSTR(MP_QSTR_test), MP_ROM_PTR(&vector3_class_test_obj) },
     { MP_ROM_QSTR(MP_QSTR_dot), MP_ROM_PTR(&vector3_class_dot_obj) },
     { MP_ROM_QSTR(MP_QSTR_cross), MP_ROM_PTR(&vector3_class_cross_obj) },
     { MP_ROM_QSTR(MP_QSTR_len), MP_ROM_PTR(&vector3_class_len_obj) },
