@@ -1,5 +1,6 @@
 #include "engine_display.h"
 #include "engine_display_common.h"
+#include "engine_display_draw.h"
 
 
 // https://stackoverflow.com/questions/43287103/predefined-macro-to-distinguish-arm-none-eabi-gcc-from-gcc
@@ -30,4 +31,7 @@ void engine_display_send(){
     #endif
 
     engine_switch_active_screen_buffer();
+
+    // Clear the new active screen buffer
+    engine_draw_fill_screen_buffer(0x0, engine_get_active_screen_buffer());
 }

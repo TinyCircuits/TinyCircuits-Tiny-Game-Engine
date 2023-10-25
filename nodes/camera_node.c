@@ -34,8 +34,11 @@ mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t 
     // instance so that the main engine loop can call it quickly
     mp_load_method(MP_OBJ_TO_PTR(args[0]), MP_QSTR_tick, self->tick_dest);
 
-    ENGINE_INFO_PRINTF("Creating new Vector3 for CameraNode");
+    ENGINE_INFO_PRINTF("Creating new Vector3 for CameraNode position");
     self->position = vector3_class_new(&vector3_class_type, 0, 0, NULL);
+
+    ENGINE_INFO_PRINTF("Creating new Vector3 for CameraNode rotation");
+    self->rotation = vector3_class_new(&vector3_class_type, 0, 0, NULL);
 
     ENGINE_INFO_PRINTF("Creating new Rectangle for CameraNode viewport");
     self->viewport = rectangle_class_new(&rectangle_class_type, 0, 0, NULL);
@@ -87,12 +90,16 @@ STATIC void camera_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destin
     if(destination[0] == MP_OBJ_NULL){          // Load
         if(attribute == MP_QSTR_position){
             destination[0] = self->position;
+        }if(attribute == MP_QSTR_rotation){
+            destination[0] = self->rotation;
         }else if(attribute == MP_QSTR_viewport){
             destination[0] = self->viewport;
         }
     }else if(destination[1] != MP_OBJ_NULL){    // Store
         if(attribute == MP_QSTR_position){
             ENGINE_WARNING_PRINTF("Setting position not implemented!");
+        }if(attribute == MP_QSTR_position){
+            ENGINE_WARNING_PRINTF("Setting rotation not implemented!");
         }else if(attribute == MP_QSTR_viewport){
             ENGINE_WARNING_PRINTF("Setting viewport not implemented!");
         }else{
