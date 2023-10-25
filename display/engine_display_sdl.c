@@ -18,8 +18,6 @@ void sdl_update_screen(uint16_t *screen_buffer_to_render){
 
 
 void engine_display_sdl_init(){
-    engine_draw_fill(0x07E0);
-
     // https://dev.to/noah11012/using-sdl2-opening-a-window-79c
     if(SDL_Init(SDL_INIT_VIDEO) < 0){
         ENGINE_ERROR_PRINTF("Failed to initialize the SDL2 library");

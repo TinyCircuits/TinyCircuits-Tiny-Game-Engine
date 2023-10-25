@@ -1,4 +1,5 @@
 #include "engine_display_common.h"
+#include "engine_display_draw.h"
 #include "../utility/debug_print.h"
 #include <stdbool.h>
 #include <stdlib.h>
@@ -26,6 +27,11 @@ void engine_init_screen_buffers(){
         dual_screen_buffers = (uint16_t**)malloc(sizeof(uint16_t*) * 2);
         dual_screen_buffers[0] = (uint16_t*)malloc(SCREEN_BUFFER_SIZE);
         dual_screen_buffers[1] = (uint16_t*)malloc(SCREEN_BUFFER_SIZE);
+
+        // Make sure both screen buffers are set to all zeros
+        engine_draw_fill_screen_buffer(0x0, dual_screen_buffers[0]);
+        engine_draw_fill_screen_buffer(0x0, dual_screen_buffers[1]);
+
         active_screen_buffer = dual_screen_buffers[0];
         is_initialzed = true;
     }

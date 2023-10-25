@@ -9,6 +9,7 @@ SRC_USERMOD += $(ENGINE_MOD_DIR)/math/vector3.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/math/rectangle.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/utility/debug_print.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/utility/linked_list.c
+SRC_USERMOD += $(ENGINE_MOD_DIR)/utility/engine_time.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/engine_object_layers.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/engine_cameras.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/display/engine_display.c

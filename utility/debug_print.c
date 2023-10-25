@@ -1,3 +1,7 @@
 #include "debug_print.h"
 
-uint8_t ENGINE_DEBUG_PRINT_LEVEL = DEBUG_PRINT_LEVEL_ALL;
+bool DEBUG_INFO_ENABLED = false;
+bool DEBUG_WARNINGS_ENABLED = false;
+bool DEBUG_ERRORS_ENABLED = false;
+bool DEBUG_PERFORMANCE_ENABLED = false;
+uint32_t engine_performance_timers[5] = {0};
