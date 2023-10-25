@@ -256,7 +256,7 @@ STATIC mp_obj_t vector3_class_resize(mp_obj_t self_in, mp_obj_t element_b){
 
     vector3_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
     mp_float_t f;
-    
+
     if(mp_obj_is_type(element_b, &vector3_class_type)){ // Resize to match vector length
         const vector3_class_obj_t* b = MP_OBJ_TO_PTR(element_b);
         f = sqrt((b->x*b->x + b->y*b->y + b->z*b->z) / (self->x*self->x + self->y*self->y + self->z*self->z));
@@ -300,7 +300,7 @@ STATIC void vector3_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *desti
           case MP_QSTR_rotate: destination[0] = MP_OBJ_FROM_PTR(&vector3_class_rotate_obj); destination[1] = self_in; break;
           default: break;
         }
-    } else if(destination[1] != MP_OBJ_NULL){    // Store
+    }else if(destination[1] != MP_OBJ_NULL){    // Store
         switch(attribute) {
           case MP_QSTR_x: self->x = mp_obj_get_float(destination[1]); break;
           case MP_QSTR_y: self->y = mp_obj_get_float(destination[1]); break;
