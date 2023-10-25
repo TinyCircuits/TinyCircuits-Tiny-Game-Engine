@@ -10,11 +10,11 @@
 // Class required functions
 STATIC void bitmap_sprite_node_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
     (void)kind;
-    ENGINE_INFO_PRINTF("print(): BitmapSprite Node");
+    ENGINE_INFO_PRINTF("print(): BitmapSpriteNode");
 }
 
 mp_obj_t bitmap_sprite_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
-    ENGINE_INFO_PRINTF("New BitmapSprite Node");
+    ENGINE_INFO_PRINTF("New BitmapSpriteNode");
     
     // Check that there's an argument that's hopefully a reference to the inheriting subclass
     mp_arg_check_num(n_args, n_kw, 1, 1, true);
@@ -51,7 +51,7 @@ mp_obj_t bitmap_sprite_node_class_new(const mp_obj_type_t *type, size_t n_args, 
 
 // Class methods
 STATIC mp_obj_t bitmap_sprite_node_class_del(mp_obj_t self_in){
-    ENGINE_INFO_PRINTF("BitmapSprite Node: Deleted (garbage collected, removing self from active engine objects)");
+    ENGINE_INFO_PRINTF("BitmapSpriteNode: Deleted (garbage collected, removing self from active engine objects)");
 
     engine_bitmap_sprite_node_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
     engine_remove_object_from_layer(self->node_base.object_list_node, self->node_base.layer);
@@ -62,20 +62,23 @@ MP_DEFINE_CONST_FUN_OBJ_1(bitmap_sprite_node_class_del_obj, bitmap_sprite_node_c
 
 
 STATIC mp_obj_t bitmap_sprite_node_class_tick(mp_obj_t self_in){
-    ENGINE_WARNING_PRINTF("BitmapSprite Node: Tick function not overridden");
+    ENGINE_WARNING_PRINTF("BitmapSpriteNode: Tick function not overridden");
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(bitmap_sprite_node_class_tick_obj, bitmap_sprite_node_class_tick);
 
 
 STATIC mp_obj_t bitmap_sprite_node_class_draw(mp_obj_t self_in, mp_obj_t camera_obj){
+    ENGINE_INFO_PRINTF("BitmapSpriteNode: Drawing");
+
     engine_camera_node_class_obj_t *camera = MP_OBJ_TO_PTR(camera_obj);
     vector3_class_obj_t *camera_position = camera->position;
     
-    camera_position->x = camera_position->x + (mp_float_t)1.0f;
-    engine_draw_fill(0x0);
+    camera_position->x = camera_position->x + (mp_float_t)0.05f;
+    camera_position->y = camera_position->y + (mp_float_t)0.05f;
 
-    ENGINE_WARNING_PRINTF("BitmapSprite Node: Draw function");
+    engine_draw_pixel(0xffff, 32, 32, camera);
+
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_2(bitmap_sprite_node_class_draw_obj, bitmap_sprite_node_class_draw);

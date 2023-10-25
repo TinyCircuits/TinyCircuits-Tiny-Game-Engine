@@ -14,6 +14,7 @@ typedef struct{
     engine_node_base_t node_base;       // Engine node base (holds information about type, linked list location, draw/execution layer, visible, disabled, or just added. Required, must be second element)
     mp_obj_t tick_dest[2];              // Used for caching data used for calling the 'tick()' callback on instances of this node
     mp_obj_t position;
+    mp_obj_t rotation;
     mp_obj_t viewport;
     linked_list_node *camera_list_node; // Used to keep reference into linked list of cameras in the scene
     // TODO: Rotation about x,y,z (matrix?)

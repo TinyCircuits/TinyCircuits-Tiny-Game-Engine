@@ -11,6 +11,7 @@ target_sources(usermod_engine INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/math/rectangle.c
     ${CMAKE_CURRENT_LIST_DIR}/utility/debug_print.c
     ${CMAKE_CURRENT_LIST_DIR}/utility/linked_list.c
+    ${CMAKE_CURRENT_LIST_DIR}/utility/engine_time.c
     ${CMAKE_CURRENT_LIST_DIR}/engine_object_layers.c
     ${CMAKE_CURRENT_LIST_DIR}/engine_cameras.c
     ${CMAKE_CURRENT_LIST_DIR}/display/engine_display.c
