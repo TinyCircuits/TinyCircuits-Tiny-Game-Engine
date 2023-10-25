@@ -6,6 +6,7 @@ SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/empty_node.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/camera_node.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/bitmap_sprite_node.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/math/vector3.c
+SRC_USERMOD += $(ENGINE_MOD_DIR)/math/vector2.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/math/rectangle.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/utility/debug_print.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/utility/linked_list.c
