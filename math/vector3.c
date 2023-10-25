@@ -198,18 +198,18 @@ STATIC mp_obj_t vector3_class_rotateX(mp_obj_t _self, mp_obj_t _theta) {
 MP_DEFINE_CONST_FUN_OBJ_2(vector3_class_rotateX_obj, vector3_class_rotateX);
 
 static void q_mul(const mp_float_t* q1, const mp_float_t* q2, mp_float_t* y) {
-  y[0] = q1[0]*q2[0] - q1[0]*q2[1] + q1[0]*q2[2] + q1[0]*q2[3];
-  y[1] = q1[1]*q2[0] - q1[1]*q2[1] + q1[1]*q2[2] + q1[1]*q2[3];
-  y[2] = q1[2]*q2[0] - q1[2]*q2[1] + q1[2]*q2[2] + q1[2]*q2[3];
-  y[3] = q1[3]*q2[0] - q1[3]*q2[1] + q1[3]*q2[2] + q1[3]*q2[3];
+  y[0] = q1[0]*q2[0] - q1[1]*q2[1] - q1[2]*q2[2] - q1[3]*q2[3];
+  y[1] = q1[0]*q2[1] + q1[1]*q2[0] - q1[2]*q2[3] + q1[3]*q2[2];
+  y[2] = q1[0]*q2[2] + q1[1]*q2[3] + q1[2]*q2[0] - q1[3]*q2[1];
+  y[3] = q1[0]*q2[3] - q1[1]*q2[2] + q1[2]*q2[1] + q1[3]*q2[0];
 }
 
 
 static void q_rot_mul(const mp_float_t* q1, const mp_float_t* q2, mp_float_t* y) { // Quaternion multiply assuming real component of q2 is zero
-  y[0] = - q1[0]*q2[1] + q1[0]*q2[2] + q1[0]*q2[3];
-  y[1] = - q1[1]*q2[1] + q1[1]*q2[2] + q1[1]*q2[3];
-  y[2] = - q1[2]*q2[1] + q1[2]*q2[2] + q1[2]*q2[3];
-  y[3] = - q1[3]*q2[1] + q1[3]*q2[2] + q1[3]*q2[3];
+  y[0] =  - q1[1]*q2[1] - q1[2]*q2[2] - q1[3]*q2[3];
+  y[1] =    q1[0]*q2[1] - q1[2]*q2[3] + q1[3]*q2[2];
+  y[2] =    q1[0]*q2[2] + q1[1]*q2[3] - q1[3]*q2[1];
+  y[3] =    q1[0]*q2[3] - q1[1]*q2[2] + q1[2]*q2[1];
 }
 
 // Rotate by axis-angle form
@@ -226,21 +226,33 @@ STATIC mp_obj_t vector3_class_rotate(mp_obj_t _self, mp_obj_t _axis, mp_obj_t _t
   vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
   vector3_class_obj_t* axis = MP_OBJ_TO_PTR(_axis);
 
+  //ENGINE_INFO_PRINTF("Axis: [%0.3f, %0.3f, %0.3f]", (double)axis->x, (double)axis->y, (double)axis->z);
+
   const mp_float_t s = sinf(mp_obj_get_float(_theta)*0.5f);
   const mp_float_t qa[4] = {cosf(mp_obj_get_float(_theta)*0.5f), axis->x * s, axis->y * s, axis->z * s};
   const mp_float_t qia[4] = {qa[0], -qa[1], -qa[2], -qa[3]};
   const mp_float_t qp[4] = {0.f, self->x, self->y, self->z};
+
+  //ENGINE_INFO_PRINTF("q: [%0.3f, %0.3f, %0.3f, %0.3f]", qa[0], qa[1], qa[2], qa[3]);
+  //ENGINE_INFO_PRINTF("qi: [%0.3f, %0.3f, %0.3f, %0.3f]", qia[0], qia[1], qia[2], qia[3]);
+
+  //ENGINE_INFO_PRINTF("qp: [%0.3f, %0.3f, %0.3f, %0.3f]", qp[0], qp[1], qp[2], qp[3]);
 
   mp_float_t rot1[4];
   mp_float_t rot2[4];
 
   // p' = q^(-1) * p * q
   q_rot_mul(qia, qp, rot1);
+  //ENGINE_INFO_PRINTF("qi * p: [%0.3f, %0.3f, %0.3f, %0.3f]", rot1[0], rot1[1], rot1[2], rot1[3]);
   q_mul(rot1, qa, rot2);
+
+  //ENGINE_INFO_PRINTF("qi * p * q: [%0.3f, %0.3f, %0.3f, %0.3f]", rot2[0], rot2[1], rot2[2], rot2[3]);
 
   self->x = rot2[1];
   self->y = rot2[2];
-  self->y = rot2[3];
+  self->z = rot2[3];
+
+  //ENGINE_INFO_PRINTF("Self: [%0.3f, %0.3f, %0.3f]", (double)self->x, (double)self->y, (double)self->z);
 
   return MP_OBJ_FROM_PTR(self);
 }
