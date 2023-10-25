@@ -225,10 +225,12 @@ STATIC mp_obj_t vector3_class_rotate(mp_obj_t _self, mp_obj_t _axis, mp_obj_t _t
   }
   vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
   vector3_class_obj_t* axis = MP_OBJ_TO_PTR(_axis);
+
   const mp_float_t s = sinf(mp_obj_get_float(_theta)*0.5f);
-  const mp_float_t qa[4] = {cosf(mp_obj_get_float(_theta)*0.5f), self->x * s, self->y * s, self->z * s};
+  const mp_float_t qa[4] = {cosf(mp_obj_get_float(_theta)*0.5f), axis->x * s, axis->y * s, axis->z * s};
   const mp_float_t qia[4] = {qa[0], -qa[1], -qa[2], -qa[3]};
   const mp_float_t qp[4] = {0.f, self->x, self->y, self->z};
+
   mp_float_t rot1[4];
   mp_float_t rot2[4];
 
@@ -280,9 +282,9 @@ STATIC void vector3_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *desti
 
     if(destination[0] == MP_OBJ_NULL){          // Load
         switch(attribute) {
-          case MP_QSTR_x: destination[0] = (mp_obj_t*)(&self->x); break;
-          case MP_QSTR_y: destination[0] = (mp_obj_t*)(&self->y); break;
-          case MP_QSTR_z: destination[0] = (mp_obj_t*)(&self->z); break;
+          case MP_QSTR_x: destination[0] = mp_obj_new_float(self->x); break;
+          case MP_QSTR_y: destination[0] = mp_obj_new_float(self->y); break;
+          case MP_QSTR_z: destination[0] = mp_obj_new_float(self->z); break;
           case MP_QSTR_test: destination[0] = MP_OBJ_FROM_PTR(&vector3_class_test_obj); destination[1] = self_in; break;
           case MP_QSTR_dot: destination[0] = MP_OBJ_FROM_PTR(&vector3_class_dot_obj); destination[1] = self_in; break;
           case MP_QSTR_cross: destination[0] = MP_OBJ_FROM_PTR(&vector3_class_cross_obj); destination[1] = self_in; break;
