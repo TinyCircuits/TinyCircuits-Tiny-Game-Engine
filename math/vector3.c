@@ -197,6 +197,53 @@ STATIC mp_obj_t vector3_class_rotateX(mp_obj_t _self, mp_obj_t _theta) {
 }
 MP_DEFINE_CONST_FUN_OBJ_2(vector3_class_rotateX_obj, vector3_class_rotateX);
 
+static void q_mul(const mp_float_t* q1, const mp_float_t* q2, mp_float_t* y) {
+  y[0] = q1[0]*q2[0] - q1[0]*q2[1] + q1[0]*q2[2] + q1[0]*q2[3];
+  y[1] = q1[1]*q2[0] - q1[1]*q2[1] + q1[1]*q2[2] + q1[1]*q2[3];
+  y[2] = q1[2]*q2[0] - q1[2]*q2[1] + q1[2]*q2[2] + q1[2]*q2[3];
+  y[3] = q1[3]*q2[0] - q1[3]*q2[1] + q1[3]*q2[2] + q1[3]*q2[3];
+}
+
+
+static void q_rot_mul(const mp_float_t* q1, const mp_float_t* q2, mp_float_t* y) { // Quaternion multiply assuming real component of q2 is zero
+  y[0] = - q1[0]*q2[1] + q1[0]*q2[2] + q1[0]*q2[3];
+  y[1] = - q1[1]*q2[1] + q1[1]*q2[2] + q1[1]*q2[3];
+  y[2] = - q1[2]*q2[1] + q1[2]*q2[2] + q1[2]*q2[3];
+  y[3] = - q1[3]*q2[1] + q1[3]*q2[2] + q1[3]*q2[3];
+}
+
+// Rotate by axis-angle form
+STATIC mp_obj_t vector3_class_rotate(mp_obj_t _self, mp_obj_t _axis, mp_obj_t _theta) {
+  if(!mp_obj_is_type(_self, &vector3_class_type)) {
+        mp_raise_TypeError("expected vector argument");
+  }
+  if(!mp_obj_is_type(_self, &vector3_class_type)) {
+        mp_raise_TypeError("expected vector argument");
+  }
+  if(!mp_obj_is_float(_theta)) {
+        mp_raise_TypeError("expected scalar angle");
+  }
+  vector3_class_obj_t* self = MP_OBJ_TO_PTR(_self);
+  vector3_class_obj_t* axis = MP_OBJ_TO_PTR(_axis);
+  const mp_float_t s = sinf(mp_obj_get_float(_theta)*0.5f);
+  const mp_float_t qa[4] = {cosf(mp_obj_get_float(_theta)*0.5f), self->x * s, self->y * s, self->z * s};
+  const mp_float_t qia[4] = {qa[0], -qa[1], -qa[2], -qa[3]};
+  const mp_float_t qp[4] = {0.f, self->x, self->y, self->z};
+  mp_float_t rot1[4];
+  mp_float_t rot2[4];
+
+  // p' = q^(-1) * p * q
+  q_rot_mul(qia, qp, rot1);
+  q_mul(rot1, qa, rot2);
+
+  self->x = rot2[1];
+  self->y = rot2[2];
+  self->y = rot2[3];
+
+  return MP_OBJ_FROM_PTR(self);
+}
+MP_DEFINE_CONST_FUN_OBJ_3(vector3_class_rotate_obj, vector3_class_rotate);
+
 // Set vector to be the same size as another vector or length
 STATIC mp_obj_t vector3_class_resize(mp_obj_t _self, mp_obj_t _b) {
   if(!mp_obj_is_type(_self, &vector3_class_type)) {
@@ -222,7 +269,7 @@ STATIC mp_obj_t vector3_class_resize(mp_obj_t _self, mp_obj_t _b) {
   self->z *= f;
   return MP_OBJ_FROM_PTR(self);
 }
-MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_resize_obj, vector3_class_resize);
+MP_DEFINE_CONST_FUN_OBJ_2(vector3_class_resize_obj, vector3_class_resize);
 
 // Function called when accessing like print(my_node.position.x) (load 'x')
 // my_node.position.x = 0 (store 'x').
@@ -247,6 +294,7 @@ STATIC void vector3_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *desti
           case MP_QSTR_rotateZ: destination[0] = MP_OBJ_FROM_PTR(&vector3_class_rotateZ_obj); destination[1] = self_in; break;
           case MP_QSTR_rotateY: destination[0] = MP_OBJ_FROM_PTR(&vector3_class_rotateY_obj); destination[1] = self_in; break;
           case MP_QSTR_rotateX: destination[0] = MP_OBJ_FROM_PTR(&vector3_class_rotateX_obj); destination[1] = self_in; break;
+          case MP_QSTR_rotate: destination[0] = MP_OBJ_FROM_PTR(&vector3_class_rotate_obj); destination[1] = self_in; break;
           default: break;
         }
     }else if(destination[1] != MP_OBJ_NULL){    // Store
@@ -268,6 +316,15 @@ STATIC const mp_rom_map_elem_t vector3_class_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_test), MP_ROM_PTR(&vector3_class_test_obj) },
     { MP_ROM_QSTR(MP_QSTR_dot), MP_ROM_PTR(&vector3_class_dot_obj) },
     { MP_ROM_QSTR(MP_QSTR_cross), MP_ROM_PTR(&vector3_class_cross_obj) },
+    { MP_ROM_QSTR(MP_QSTR_len), MP_ROM_PTR(&vector3_class_len_obj) },
+    { MP_ROM_QSTR(MP_QSTR_len2), MP_ROM_PTR(&vector3_class_len2_obj) },
+    { MP_ROM_QSTR(MP_QSTR_normal), MP_ROM_PTR(&vector3_class_normal_obj) },
+    { MP_ROM_QSTR(MP_QSTR_normalize), MP_ROM_PTR(&vector3_class_normalize_obj) },
+    { MP_ROM_QSTR(MP_QSTR_rotateX), MP_ROM_PTR(&vector3_class_rotateX_obj) },
+    { MP_ROM_QSTR(MP_QSTR_rotateY), MP_ROM_PTR(&vector3_class_rotateY_obj) },
+    { MP_ROM_QSTR(MP_QSTR_rotateZ), MP_ROM_PTR(&vector3_class_rotateZ_obj) },
+    { MP_ROM_QSTR(MP_QSTR_rotate), MP_ROM_PTR(&vector3_class_rotate_obj) },
+    { MP_ROM_QSTR(MP_QSTR_resize), MP_ROM_PTR(&vector3_class_resize_obj) },
 };
 
 
