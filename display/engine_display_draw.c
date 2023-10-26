@@ -57,7 +57,7 @@ void engine_draw_pixel(uint16_t color, int32_t x, int32_t y, engine_camera_node_
 
 
 void engine_draw_fill_screen_buffer(uint16_t color, uint16_t *screen_buffer){
-    memset(screen_buffer, color, SCREEN_BUFFER_SIZE);
+    memset(screen_buffer, color, SCREEN_BUFFER_SIZE_BYTES);
 }
 
 

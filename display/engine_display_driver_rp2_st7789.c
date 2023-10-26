@@ -46,31 +46,54 @@ int dma_tx;
 dma_channel_config dma_config;
 uint16_t *txbuf = NULL;
 
+// Default window based on: https://github.com/ArmDeveloperEcosystem/st7789-library-for-pico/blob/8e652102388b3592244119bfa24013ec42e5a7ed/src/st7789.c#L53-L77
+static uint8_t column_address_data[] = {
+    0,
+    0,
+    SCREEN_WIDTH >> 8,
+    SCREEN_WIDTH & 0xff,
+};
+static uint8_t row_address_data[] = {
+    0,
+    0,
+    SCREEN_HEIGHT >> 8,
+    SCREEN_HEIGHT & 0xff,
+};
+
 
 static void st7789_write_cmd(uint8_t cmd, const uint8_t* data, size_t length){
+    // https://github.com/ArmDeveloperEcosystem/st7789-library-for-pico/blob/8e652102388b3592244119bfa24013ec42e5a7ed/src/st7789.c#L21
+    spi_set_format(spi0, 8, SPI_CPOL_1, SPI_CPHA_1, SPI_MSB_FIRST);
+
     // Select screen chip and put into cmd mode (see pin connection reference)
     gpio_put(PIN_GP17_SPI0_CSn__TO__CS, 0);
     gpio_put(PIN_GP20__TO__DC, 0);
-    sleep_us(1);
     
     // Write the command to the driver through SPI
     spi_write_blocking(spi0, &cmd, sizeof(cmd));
+    gpio_put(PIN_GP20__TO__DC, 1);
     
     // If there's also data, write that but put chip in data mode (see pin connection reference)
     if(length > 0){
-        sleep_us(1);
-        gpio_put(PIN_GP20__TO__DC, 1);
-        sleep_us(1);
-        
-        // Now that we're in data mode, write the data
         spi_write_blocking(spi0, data, length);
     }
 
     // Now that everything is sent, make sure we're in data mode (and that the screen is not selected? idk)
-    sleep_us(1);
     gpio_put(PIN_GP17_SPI0_CSn__TO__CS, 1);
-    gpio_put(PIN_GP20__TO__DC, 1);
-    sleep_us(1);
+
+    spi_set_format(spi0, 16, SPI_CPOL_1, SPI_CPHA_1, SPI_MSB_FIRST);
+}
+
+
+static void st7789_reset_window(){
+    // CASET (2Ah): Column Address Set
+    st7789_write_cmd(0x2a, column_address_data, sizeof(column_address_data));
+
+    // RASET (2Bh): Row Address Set
+    st7789_write_cmd(0x2b, row_address_data, sizeof(row_address_data));
+
+    // RAMWR
+    st7789_write_cmd(0x2C, NULL, 0);
 }
 
 
@@ -79,12 +102,6 @@ static void st7789_init_cmd_sequence(){
 
     // Screen init cmd sequence: ref: https://github.com/ArmDeveloperEcosystem/st7789-library-for-pico/blob/8e652102388b3592244119bfa24013ec42e5a7ed/src/st7789.c#L116-L154
     gpio_put(PIN_GP22__TO__BL, 0);  // Backlight off during init
-
-    // Make sure chip select is not active, in data mode, and not in reset
-    gpio_put(PIN_GP17_SPI0_CSn__TO__CS, 1);
-    gpio_put(PIN_GP20__TO__DC,          1);
-    gpio_put(PIN_GP21__TO__RST,         1);
-    sleep_ms(100);
 
     // SWRESET (01h): Software Reset
     st7789_write_cmd(0x01, NULL, 0);
@@ -108,28 +125,6 @@ static void st7789_init_cmd_sequence(){
     // - RGB/BGR Order                 = RGB
     // - Display Data Latch Data Order = LCD Refresh Left to Right
     st7789_write_cmd(0x36, (uint8_t[]){ 0x00 }, 1);
-   
-    // CASET (2Ah): Column Address Set
-    uint8_t column_address_data[] = {
-        0,
-        0,
-        SCREEN_WIDTH >> 8,
-        SCREEN_WIDTH & 0xff,
-    };
-    st7789_write_cmd(0x2a, column_address_data, sizeof(column_address_data));
-
-    // RASET (2Bh): Row Address Set
-    uint8_t row_address_data[] = {
-        0,
-        0,
-        SCREEN_HEIGHT >> 8,
-        SCREEN_HEIGHT & 0xff,
-    };
-    st7789_write_cmd(0x2b, row_address_data, sizeof(row_address_data));
-
-    // RAMWR
-    st7789_write_cmd(0x2C, NULL, 0);
-    sleep_ms(10);
 
     // INVON (21h): Display Inversion On
     st7789_write_cmd(0x21, NULL, 0);
@@ -155,7 +150,6 @@ void engine_display_st7789_init(){
     // Init SPI
     ENGINE_INFO_PRINTF("Enabling SPI");
     spi_init(spi0, ST7789_SPI_MHZ);
-    spi_set_format(spi0, 8, SPI_CPOL_1, SPI_CPHA_1, SPI_MSB_FIRST); // https://github.com/ArmDeveloperEcosystem/st7789-library-for-pico/blob/8e652102388b3592244119bfa24013ec42e5a7ed/src/st7789.c#L21
 
     // Init pins (some are controlled through SPI peripheral 
     // and some are controlled through code using GPIO)
@@ -173,12 +167,12 @@ void engine_display_st7789_init(){
     gpio_set_dir(PIN_GP21__TO__RST, GPIO_OUT);
     gpio_set_dir(PIN_GP22__TO__BL, GPIO_OUT);
 
+    // Make sure not in reset
+    gpio_put(PIN_GP21__TO__RST, 1);
+    sleep_us(1);
+
     // Send each init command
     st7789_init_cmd_sequence();
-
-    // Select screen as slave and put into data mode
-    gpio_put(PIN_GP17_SPI0_CSn__TO__CS, 0);
-    gpio_put(PIN_GP20__TO__DC,          1);
 
     // Grab unused dma channel for SPI TX
     ENGINE_INFO_PRINTF("Enabling DMA for 16-bit transfers");
@@ -187,7 +181,7 @@ void engine_display_st7789_init(){
     // Configure the DMA channel (for SPI TX)
     dma_config = dma_channel_get_default_config(dma_tx);
     channel_config_set_transfer_data_size(&dma_config, DMA_SIZE_16);
-    channel_config_set_dreq(&dma_config, spi_get_dreq(spi0, true));
+    channel_config_set_dreq(&dma_config, DREQ_SPI0_TX);
 }
 
 
@@ -203,26 +197,7 @@ void engine_display_st7789_update(uint16_t *screen_buffer_to_render){
         ENGINE_PERFORMANCE_STOP(ENGINE_PERF_TIMER_2, "Time spent waiting on remaining DMA");
     }
 
-    // CASET (2Ah): Column Address Set
-    uint8_t column_address_data[] = {
-        0,
-        0,
-        SCREEN_WIDTH >> 8,
-        SCREEN_WIDTH & 0xff,
-    };
-    st7789_write_cmd(0x2a, column_address_data, sizeof(column_address_data));
-
-    // RASET (2Bh): Row Address Set
-    uint8_t row_address_data[] = {
-        0,
-        0,
-        SCREEN_HEIGHT >> 8,
-        SCREEN_HEIGHT & 0xff,
-    };
-    st7789_write_cmd(0x2b, row_address_data, sizeof(row_address_data));
-
-    // RAMWR
-    st7789_write_cmd(0x2C, NULL, 0);
+    st7789_reset_window();
 
     gpio_put(PIN_GP17_SPI0_CSn__TO__CS, 0);
     gpio_put(PIN_GP20__TO__DC,          1);
@@ -230,7 +205,7 @@ void engine_display_st7789_update(uint16_t *screen_buffer_to_render){
     // dma_channel_set_read_addr(dma_tx, txbuf, true);
     dma_channel_configure(dma_tx, &dma_config,
                           &spi_get_hw(spi0)->dr, // write address
-                          (uint16_t*)txbuf,                // read address
-                          SCREEN_BUFFER_SIZE,   // element count (each element is of size DMA_SIZE_16)
+                          txbuf,                // read address
+                          SCREEN_BUFFER_SIZE_PIXELS,   // element count (each element is of size DMA_SIZE_16)
                           true);               // don't start yet, need to set active frame buffer later
 }

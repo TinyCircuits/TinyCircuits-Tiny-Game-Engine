@@ -23,10 +23,10 @@ static bool is_initialzed = false;
 
 void engine_init_screen_buffers(){
     if(is_initialzed == false){
-        ENGINE_INFO_PRINTF("Creating dual screen buffers of size %d bytes each on C heap", SCREEN_BUFFER_SIZE);
+        ENGINE_INFO_PRINTF("Creating dual screen buffers of size %d bytes each on C heap", SCREEN_BUFFER_SIZE_BYTES);
         dual_screen_buffers = (uint16_t**)malloc(sizeof(uint16_t*) * 2);
-        dual_screen_buffers[0] = (uint16_t*)malloc(SCREEN_BUFFER_SIZE);
-        dual_screen_buffers[1] = (uint16_t*)malloc(SCREEN_BUFFER_SIZE);
+        dual_screen_buffers[0] = (uint16_t*)malloc(SCREEN_BUFFER_SIZE_BYTES);
+        dual_screen_buffers[1] = (uint16_t*)malloc(SCREEN_BUFFER_SIZE_BYTES);
 
         // Make sure both screen buffers are set to all zeros
         ENGINE_INFO_PRINTF("Filling both screen buffers with 0x0");
