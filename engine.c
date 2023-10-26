@@ -15,6 +15,11 @@
 
 // Module functions
 STATIC mp_obj_t engine_start(){
+    ENGINE_INFO_PRINTF("Engine init");
+    engine_display_init();
+    engine_display_send();
+    // engine_display_send();
+
     ENGINE_INFO_PRINTF("Engine starting...");
 
     while(true){
@@ -82,9 +87,6 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_enable_debug_setting_obj, engine_enable_debug_s
 
 
 STATIC mp_obj_t engine_init(){
-    ENGINE_INFO_PRINTF("Engine init");
-
-    engine_display_init();
 
     return mp_const_none;
 }

@@ -11,7 +11,7 @@
 #include "extmod/machine_spi.h"
 
 // Based on max from Bodmer: https://github.com/Bodmer/TFT_eSPI/blob/5162af0a0e13e0d4bc0e4c792ed28d38599a1f23/User_Setup.h#L366
-#define ST7789_SPI_MHZ 27 * 1000 * 1000
+#define ST7789_SPI_MHZ 80 * 1000 * 1000
 
 
 /* ##### PIN CONNECTIONS #####
@@ -43,6 +43,7 @@
 
 
 int dma_tx;
+dma_channel_config dma_config;
 uint16_t *txbuf = NULL;
 
 
@@ -126,6 +127,10 @@ static void st7789_init_cmd_sequence(){
     };
     st7789_write_cmd(0x2b, row_address_data, sizeof(row_address_data));
 
+    // RAMWR
+    st7789_write_cmd(0x2C, NULL, 0);
+    sleep_ms(10);
+
     // INVON (21h): Display Inversion On
     st7789_write_cmd(0x21, NULL, 0);
     sleep_ms(10);
@@ -150,7 +155,7 @@ void engine_display_st7789_init(){
     // Init SPI
     ENGINE_INFO_PRINTF("Enabling SPI");
     spi_init(spi0, ST7789_SPI_MHZ);
-    spi_set_format(spi0, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST); // https://github.com/ArmDeveloperEcosystem/st7789-library-for-pico/blob/8e652102388b3592244119bfa24013ec42e5a7ed/src/st7789.c#L21
+    spi_set_format(spi0, 8, SPI_CPOL_1, SPI_CPHA_1, SPI_MSB_FIRST); // https://github.com/ArmDeveloperEcosystem/st7789-library-for-pico/blob/8e652102388b3592244119bfa24013ec42e5a7ed/src/st7789.c#L21
 
     // Init pins (some are controlled through SPI peripheral 
     // and some are controlled through code using GPIO)
@@ -171,20 +176,18 @@ void engine_display_st7789_init(){
     // Send each init command
     st7789_init_cmd_sequence();
 
+    // Select screen as slave and put into data mode
+    gpio_put(PIN_GP17_SPI0_CSn__TO__CS, 0);
+    gpio_put(PIN_GP20__TO__DC,          1);
+
     // Grab unused dma channel for SPI TX
     ENGINE_INFO_PRINTF("Enabling DMA for 16-bit transfers");
     dma_tx = dma_claim_unused_channel(true);
 
     // Configure the DMA channel (for SPI TX)
-    spi_set_format(spi0, 16, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
-    dma_channel_config dma_config = dma_channel_get_default_config(dma_tx);
+    dma_config = dma_channel_get_default_config(dma_tx);
     channel_config_set_transfer_data_size(&dma_config, DMA_SIZE_16);
     channel_config_set_dreq(&dma_config, spi_get_dreq(spi0, true));
-    dma_channel_configure(dma_tx, &dma_config,
-                          &spi_get_hw(spi0)->dr, // write address
-                          txbuf,                // read address
-                          SCREEN_BUFFER_SIZE,   // element count (each element is of size DMA_SIZE_16)
-                          false);               // don't start yet, need to set active frame buffer later
 }
 
 
@@ -193,9 +196,41 @@ void engine_display_st7789_update(uint16_t *screen_buffer_to_render){
     // sent once the last frame is finished sending
     txbuf = screen_buffer_to_render;
 
-    while(dma_channel_is_busy(dma_tx)){
+    if(dma_channel_is_busy(dma_tx)){
         ENGINE_WARNING_PRINTF("Waiting on previous DMA transfer to complete. Could have done more last frame!");
+        ENGINE_PERFORMANCE_START(ENGINE_PERF_TIMER_2);
+        dma_channel_wait_for_finish_blocking(dma_tx);
+        ENGINE_PERFORMANCE_STOP(ENGINE_PERF_TIMER_2, "Time spent waiting on remaining DMA");
     }
 
-    dma_channel_start(dma_tx);
+    // CASET (2Ah): Column Address Set
+    uint8_t column_address_data[] = {
+        0,
+        0,
+        SCREEN_WIDTH >> 8,
+        SCREEN_WIDTH & 0xff,
+    };
+    st7789_write_cmd(0x2a, column_address_data, sizeof(column_address_data));
+
+    // RASET (2Bh): Row Address Set
+    uint8_t row_address_data[] = {
+        0,
+        0,
+        SCREEN_HEIGHT >> 8,
+        SCREEN_HEIGHT & 0xff,
+    };
+    st7789_write_cmd(0x2b, row_address_data, sizeof(row_address_data));
+
+    // RAMWR
+    st7789_write_cmd(0x2C, NULL, 0);
+
+    gpio_put(PIN_GP17_SPI0_CSn__TO__CS, 0);
+    gpio_put(PIN_GP20__TO__DC,          1);
+
+    // dma_channel_set_read_addr(dma_tx, txbuf, true);
+    dma_channel_configure(dma_tx, &dma_config,
+                          &spi_get_hw(spi0)->dr, // write address
+                          (uint16_t*)txbuf,                // read address
+                          SCREEN_BUFFER_SIZE,   // element count (each element is of size DMA_SIZE_16)
+                          true);               // don't start yet, need to set active frame buffer later
 }

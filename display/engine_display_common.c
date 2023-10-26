@@ -29,6 +29,7 @@ void engine_init_screen_buffers(){
         dual_screen_buffers[1] = (uint16_t*)malloc(SCREEN_BUFFER_SIZE);
 
         // Make sure both screen buffers are set to all zeros
+        ENGINE_INFO_PRINTF("Filling both screen buffers with 0x0");
         engine_draw_fill_screen_buffer(0x0, dual_screen_buffers[0]);
         engine_draw_fill_screen_buffer(0x0, dual_screen_buffers[1]);
 
