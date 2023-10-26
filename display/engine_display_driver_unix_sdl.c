@@ -1,4 +1,4 @@
-#include "engine_display_sdl.h"
+#include "engine_display_driver_unix_sdl.h"
 #include "engine_display_common.h"
 #include "engine_display_draw.h"
 #include "utility/debug_print.h"
@@ -9,7 +9,7 @@ SDL_Renderer *window_renderer;      // https://dev.to/noah11012/using-sdl2-2d-ac
 SDL_Texture* window_frame_buffer;   // https://gamedev.stackexchange.com/questions/157604/how-to-get-access-to-framebuffer-as-a-uint32-t-in-sdl2
 
 
-void sdl_update_screen(uint16_t *screen_buffer_to_render){
+void engine_display_sdl_update_screen(uint16_t *screen_buffer_to_render){
     SDL_UpdateTexture(window_frame_buffer , NULL, screen_buffer_to_render, SCREEN_WIDTH*sizeof(uint16_t));
     SDL_RenderClear(window_renderer);
     SDL_RenderCopy(window_renderer, window_frame_buffer, NULL, NULL);
@@ -38,5 +38,5 @@ void engine_display_sdl_init(){
     window_renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     window_frame_buffer = SDL_CreateTexture(window_renderer, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-    sdl_update_screen(engine_get_active_screen_buffer());
+    engine_display_sdl_update_screen(engine_get_active_screen_buffer());
 }

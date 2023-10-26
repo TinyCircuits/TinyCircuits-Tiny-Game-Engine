@@ -104,6 +104,7 @@ STATIC const mp_rom_map_elem_t engine_globals_table[] = {
 
     { MP_OBJ_NEW_QSTR(MP_QSTR_debug_enable_all), (mp_obj_t)&engine_debug_enable_all_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_debug_disable_all), (mp_obj_t)&engine_debug_disable_all_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_debug_enable_setting), (mp_obj_t)&engine_enable_debug_setting_obj },
     { MP_ROM_QSTR(MP_QSTR_debug_setting_info), MP_ROM_INT(DEBUG_SETTING_INFO) },
     { MP_ROM_QSTR(MP_QSTR_debug_setting_warnings), MP_ROM_INT(DEBUG_SETTING_WARNINGS) },
     { MP_ROM_QSTR(MP_QSTR_debug_setting_errors), MP_ROM_INT(DEBUG_SETTING_ERRORS) },

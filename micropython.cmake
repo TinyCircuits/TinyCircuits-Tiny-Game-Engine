@@ -15,6 +15,7 @@ target_sources(usermod_engine INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/engine_object_layers.c
     ${CMAKE_CURRENT_LIST_DIR}/engine_cameras.c
     ${CMAKE_CURRENT_LIST_DIR}/display/engine_display.c
+    ${CMAKE_CURRENT_LIST_DIR}/display/engine_display_driver_rp2_st7789.c
     ${CMAKE_CURRENT_LIST_DIR}/display/engine_display_common.c
     ${CMAKE_CURRENT_LIST_DIR}/display/engine_display_draw.c
 )

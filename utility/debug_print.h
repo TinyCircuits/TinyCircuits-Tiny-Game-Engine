@@ -60,9 +60,11 @@ extern uint32_t engine_performance_timers[5];
 
 
 // Tracks time (in ms) when called to used when calling 'ENGINE_PERFORMANCE_STOP()' later
-#define ENGINE_PERFORMANCE_START(timer)                                                         \
-    mp_printf(&mp_sys_stdout_print, "\x1b[36mPERFORMANCE[timer %d, start]\x1b[0m\n", timer);    \
-    engine_performance_timers[(uint8_t)timer] = millis();
+#define ENGINE_PERFORMANCE_START(timer)                                                             \
+    if(DEBUG_PERFORMANCE_ENABLED){                                                                  \
+        mp_printf(&mp_sys_stdout_print, "\x1b[36mPERFORMANCE[timer %d, start]\x1b[0m\n", timer);    \
+        engine_performance_timers[(uint8_t)timer] = millis();                                       \
+    }
 
 
 // Prints the time (in ms) since 'ENGINE_PERFORMANCE_START()' was called
