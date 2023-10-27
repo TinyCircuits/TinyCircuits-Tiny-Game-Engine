@@ -4,7 +4,9 @@
 #include "utility/debug_print.h"
 #include "../engine_object_layers.h"
 #include "math/vector3.h"
+#include "math/rectangle.h"
 #include "engine_cameras.h"
+#include "../display/engine_display_common.h"
 
 // Class required functions
 STATIC void camera_node_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
@@ -42,6 +44,11 @@ mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t 
 
     ENGINE_INFO_PRINTF("Creating new Rectangle for CameraNode viewport");
     self->viewport = rectangle_class_new(&rectangle_class_type, 0, 0, NULL);
+    rectangle_class_obj_t *camera_viewport = MP_OBJ_TO_PTR(self->viewport );
+    camera_viewport->x = 0.0;
+    camera_viewport->y = 0.0;
+    camera_viewport->width = SCREEN_WIDTH;
+    camera_viewport->height = SCREEN_HEIGHT;
 
     return MP_OBJ_FROM_PTR(self);
 }

@@ -46,18 +46,25 @@ int dma_tx;
 dma_channel_config dma_config;
 uint16_t *txbuf = NULL;
 
+
+const uint16_t window_x0 = (240/2) - (SCREEN_WIDTH/2);
+const uint16_t window_x1 = (240/2) + (SCREEN_WIDTH/2);
+
+const uint16_t window_y0 = (240/2) - (SCREEN_HEIGHT/2);
+const uint16_t window_y1 = (240/2) + (SCREEN_HEIGHT/2);
+
 // Default window based on: https://github.com/ArmDeveloperEcosystem/st7789-library-for-pico/blob/8e652102388b3592244119bfa24013ec42e5a7ed/src/st7789.c#L53-L77
 static uint8_t column_address_data[] = {
-    0,
-    0,
-    SCREEN_WIDTH >> 8,
-    SCREEN_WIDTH & 0xff,
+    window_x0 >> 8,
+    window_x0 & 0xff,
+    window_x1 >> 8,
+    window_x1 & 0xff,
 };
 static uint8_t row_address_data[] = {
-    0,
-    0,
-    SCREEN_HEIGHT >> 8,
-    SCREEN_HEIGHT & 0xff,
+    window_y0 >> 8,
+    window_y0 & 0xff,
+    window_y1 >> 8,
+    window_y1 & 0xff,
 };
 
 
