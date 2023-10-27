@@ -48,10 +48,10 @@ uint16_t *txbuf = NULL;
 
 
 const uint16_t window_x0 = (240/2) - (SCREEN_WIDTH/2);
-const uint16_t window_x1 = (240/2) + (SCREEN_WIDTH/2);
+const uint16_t window_x1 = (240/2) + (SCREEN_WIDTH/2) - 1;  // Very important that the address window is the correct SIZE!
 
 const uint16_t window_y0 = (240/2) - (SCREEN_HEIGHT/2);
-const uint16_t window_y1 = (240/2) + (SCREEN_HEIGHT/2);
+const uint16_t window_y1 = (240/2) + (SCREEN_HEIGHT/2) - 1; // Very important that the address window is the correct SIZE!
 
 // Default window based on: https://github.com/ArmDeveloperEcosystem/st7789-library-for-pico/blob/8e652102388b3592244119bfa24013ec42e5a7ed/src/st7789.c#L53-L77
 static uint8_t column_address_data[] = {

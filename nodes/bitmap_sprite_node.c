@@ -77,7 +77,7 @@ STATIC mp_obj_t bitmap_sprite_node_class_draw(mp_obj_t self_in, mp_obj_t camera_
     camera_position->x = camera_position->x + (mp_float_t)0.05f;
     camera_position->y = camera_position->y + (mp_float_t)0.05f;
 
-    engine_draw_pixel(0xffff, 32, 32, camera);
+    engine_draw_pixel(0b1111100000000000, 128/4, 128/4, camera);
 
     return mp_const_none;
 }
