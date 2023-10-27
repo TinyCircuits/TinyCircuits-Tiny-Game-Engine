@@ -70,6 +70,7 @@ static uint8_t row_address_data[] = {
 
 static void st7789_write_cmd(uint8_t cmd, const uint8_t* data, size_t length){
     // https://github.com/ArmDeveloperEcosystem/st7789-library-for-pico/blob/8e652102388b3592244119bfa24013ec42e5a7ed/src/st7789.c#L21
+    // Interesting note on performance: https://github.com/Bodmer/TFT_eSPI/blob/5162af0a0e13e0d4bc0e4c792ed28d38599a1f23/TFT_eSPI.cpp#L3416-L3417
     spi_set_format(spi0, 8, SPI_CPOL_1, SPI_CPHA_1, SPI_MSB_FIRST);
 
     // Select screen chip and put into cmd mode (see pin connection reference)
@@ -88,6 +89,7 @@ static void st7789_write_cmd(uint8_t cmd, const uint8_t* data, size_t length){
     // Now that everything is sent, make sure we're in data mode (and that the screen is not selected? idk)
     gpio_put(PIN_GP17_SPI0_CSn__TO__CS, 1);
 
+    // Interesting note on performance: https://github.com/Bodmer/TFT_eSPI/blob/5162af0a0e13e0d4bc0e4c792ed28d38599a1f23/TFT_eSPI.cpp#L3416-L3417
     spi_set_format(spi0, 16, SPI_CPOL_1, SPI_CPHA_1, SPI_MSB_FIRST);
 }
 
@@ -211,8 +213,8 @@ void engine_display_st7789_update(uint16_t *screen_buffer_to_render){
 
     // dma_channel_set_read_addr(dma_tx, txbuf, true);
     dma_channel_configure(dma_tx, &dma_config,
-                          &spi_get_hw(spi0)->dr, // write address
-                          txbuf,                // read address
-                          SCREEN_BUFFER_SIZE_PIXELS,   // element count (each element is of size DMA_SIZE_16)
-                          true);               // don't start yet, need to set active frame buffer later
+                          &spi_get_hw(spi0)->dr,        // write address
+                          txbuf,                        // read address
+                          SCREEN_BUFFER_SIZE_PIXELS,    // element count (each element is of size DMA_SIZE_16)
+                          true);                        // don't start yet, need to set active frame buffer later
 }
