@@ -74,7 +74,7 @@ STATIC mp_obj_t bitmap_sprite_node_class_draw(mp_obj_t self_in, mp_obj_t camera_
     engine_camera_node_class_obj_t *camera = MP_OBJ_TO_PTR(camera_obj);
     vector3_class_obj_t *camera_position = camera->position;
     
-    camera_position->z += 0.01;
+    camera_position->z += 0.05;
     camera_position->x = (20.0 * cos(camera_position->z));
     camera_position->y = (20.0 * sin(camera_position->z));
 
@@ -103,6 +103,8 @@ MP_DEFINE_CONST_FUN_OBJ_2(bitmap_sprite_node_class_set_layer_obj, bitmap_sprite_
 // See https://micropython-usermod.readthedocs.io/en/latest/usermods_09.html#properties
 // See https://github.com/micropython/micropython/blob/91a3f183916e1514fbb8dc58ca5b77acc59d4346/extmod/modasyncio.c#L227
 STATIC void bitmap_sprite_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+    ENGINE_INFO_PRINTF("Accessing BitmapSpriteNode attr");
+
     engine_bitmap_sprite_node_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
 
     if(destination[0] == MP_OBJ_NULL){          // Load

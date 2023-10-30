@@ -29,8 +29,6 @@ inline bool is_xy_inside_screen(int32_t x, int32_t y){
 }
 
 
-// If 'camera' is not NULL, rotate pixel around camera and offset/clip to viewport,
-// otherwise, make sure pixel is within screen bounds and put into screen buffer
 void engine_draw_pixel(uint16_t color, int32_t x, int32_t y, engine_camera_node_class_obj_t *camera){
     uint16_t *screen_buffer = engine_get_active_screen_buffer();
 

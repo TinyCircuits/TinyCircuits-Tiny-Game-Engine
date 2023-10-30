@@ -2,7 +2,7 @@
 #define RECTANGLE_2d_NODE_H
 
 #include "py/obj.h"
-#include "node_base.h"
+#include "../node_base.h"
 #include "math/vector3.h"
 #include "math/rectangle.h"
 #include "utility/linked_list.h"
@@ -14,8 +14,9 @@ typedef struct{
     mp_obj_t tick_dest[2];          // Used for caching data used for calling the 'tick()' callback on instances of this node
     mp_obj_t draw_dest[2];          // Used for caching data used for calling the 'draw()' callback on instances of this node
     mp_obj_t position;              // Vector2: 2d xy position of this node
-    mp_uint_t width;                // Rectangle width in px
-    mp_uint_t height;               // Rectangle height in px
+    mp_obj_t width;                 // Rectangle width in px
+    mp_obj_t height;                // Rectangle height in px
+    mp_obj_t color;                 // The color of this rectangle
 }engine_rectangle_2d_node_class_obj_t;
 
 extern const mp_obj_type_t engine_rectangle_2d_node_class_type;

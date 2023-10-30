@@ -3,6 +3,7 @@
 #include "nodes/minimal_node.h"
 #include "nodes/empty_node.h"
 #include "nodes/camera_node.h"
+#include "nodes/2d/rectangle_2d_node.h"
 #include "nodes/bitmap_sprite_node.h"
 #include "nodes/node_types.h"
 
@@ -56,6 +57,13 @@ void engine_invoke_all_node_callbacks(){
                     {
                         engine_camera_node_class_obj_t *camera_node = (engine_camera_node_class_obj_t*)node;
                         mp_call_method_n_kw(0, 0, camera_node->tick_dest);
+                    }
+                    break;
+                    case NODE_TYPE_RECTANGLE_2D:
+                    {
+                        engine_rectangle_2d_node_class_obj_t *rectangle_2d_node = (engine_rectangle_2d_node_class_obj_t*)node;
+                        mp_call_method_n_kw(0, 0, rectangle_2d_node->tick_dest);
+                        engine_camera_draw_for_each(rectangle_2d_node->draw_dest);
                     }
                     break;
                     case NODE_TYPE_BITMAP_SPRITE:

@@ -14,9 +14,9 @@ mp_obj_t vector3_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw
 
     if(n_args == 0) {
       self->base.type = &vector3_class_type;
-      self->x = 0.0f;
-      self->y = 0.0f;
-      self->z = 0.0f;
+      self->x = 0.0;
+      self->y = 0.0;
+      self->z = 0.0;
     } else if(n_args == 3) {
       self->base.type = &vector3_class_type;
       self->x = mp_obj_get_float(args[0]);
@@ -280,6 +280,8 @@ MP_DEFINE_CONST_FUN_OBJ_2(vector3_class_resize_obj, vector3_class_resize);
 // See https://micropython-usermod.readthedocs.io/en/latest/usermods_09.html#properties
 // See https://github.com/micropython/micropython/blob/91a3f183916e1514fbb8dc58ca5b77acc59d4346/extmod/modasyncio.c#L227
 STATIC void vector3_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+    ENGINE_INFO_PRINTF("Accessing Vector3 attr");
+
     vector3_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
 
     if(destination[0] == MP_OBJ_NULL){          // Load

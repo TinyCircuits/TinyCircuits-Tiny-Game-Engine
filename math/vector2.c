@@ -9,13 +9,15 @@ STATIC void vector2_class_print(const mp_print_t *print, mp_obj_t self_in, mp_pr
 
 
 mp_obj_t vector2_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
+    ENGINE_INFO_PRINTF("Accessing Vector2 attr");
+
     ENGINE_INFO_PRINTF("New Vector2");
     vector2_class_obj_t *self = m_new_obj(vector2_class_obj_t);
 
     if(n_args == 0) {
       self->base.type = &vector2_class_type;
-      self->x = 0.0f;
-      self->y = 0.0f;
+      self->x = 0.0;
+      self->y = 0.0;
   } else if(n_args == 2) {
       self->base.type = &vector2_class_type;
       self->x = mp_obj_get_float(args[0]);
