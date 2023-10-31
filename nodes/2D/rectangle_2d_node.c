@@ -38,9 +38,11 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
 
     ENGINE_INFO_PRINTF("Creating new Vector2 for BitmapSprite Node");
     self->position = vector2_class_new(&vector2_class_type, 0, 0, NULL);
-    self->width = mp_obj_new_int(15);
+    self->width = 15;
     self->height = mp_obj_new_int(5);
     self->color = mp_obj_new_int(0xffff);
+
+    self->draw_dest[1] = self;
 
     return MP_OBJ_FROM_PTR(self);
 }
@@ -103,6 +105,17 @@ STATIC mp_obj_t rectangle_2d_node_class_set_layer(mp_obj_t self_in, mp_obj_t lay
 MP_DEFINE_CONST_FUN_OBJ_2(rectangle_2d_node_class_set_layer_obj, rectangle_2d_node_class_set_layer);
 
 
+STATIC mp_obj_t rectangle_2d_node_class_set_width(mp_obj_t self_in, mp_obj_t width){
+    ENGINE_INFO_PRINTF("Setting width %d", mp_obj_get_int(width));
+
+    engine_rectangle_2d_node_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    self->width = mp_obj_get_int(width);
+
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_2(rectangle_2d_node_class_set_width_obj, rectangle_2d_node_class_set_width);
+
+
 // Function called when accessing like print(my_node.position.x) (load 'x')
 // my_node.position.x = 0 (store 'x').
 // See https://micropython-usermod.readthedocs.io/en/latest/usermods_09.html#properties
@@ -117,8 +130,9 @@ STATIC void rectangle_2d_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *
             case MP_QSTR_position:
                 destination[0] = self->position;
             break;
-            case MP_QSTR_width:
-                destination[0] = self->width;
+            case MP_QSTR_set_width:
+                destination[0] = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_set_width_obj);
+                destination[1] = self_in;
             break;
             case MP_QSTR_height:
                 destination[0] = self->height;
@@ -130,7 +144,7 @@ STATIC void rectangle_2d_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *
                 ENGINE_WARNING_PRINTF("Setting position not implemented!");
             break;
             case MP_QSTR_width:
-                self->width = destination[1];
+                // self->width = destination[1];
             break;
             case MP_QSTR_height:
                 self->height = destination[1];
