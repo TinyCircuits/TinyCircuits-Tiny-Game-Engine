@@ -29,15 +29,9 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_o
     vector2_class_obj_t *self_position = self->position;
 
     engine_camera_node_class_obj_t *camera = MP_OBJ_TO_PTR(camera_obj);
-    vector3_class_obj_t *camera_position = camera->position;
-    
-    camera_position->z += 0.05;
-    camera_position->x = (20.0 * cos(camera_position->z));
-    camera_position->y = (20.0 * sin(camera_position->z));
-
 
     // Rotation not implemented yet so this is simple!
-    for(mp_int_t y=0; y<5; y++){
+    for(mp_int_t y=0; y<self->height; y++){
         for(mp_int_t x=0; x<self->width; x++){
             engine_draw_pixel(self->color, (int32_t)self_position->x+x, (int32_t)self_position->y+y, camera);
         }
@@ -143,6 +137,22 @@ STATIC mp_obj_t rectangle_2d_node_class_set_height(mp_obj_t self_in, mp_obj_t he
 MP_DEFINE_CONST_FUN_OBJ_2(rectangle_2d_node_class_set_height_obj, rectangle_2d_node_class_set_height);
 
 
+STATIC mp_obj_t rectangle_2d_node_class_get_width(mp_obj_t self_in){
+    ENGINE_INFO_PRINTF("Getting width");
+    engine_rectangle_2d_node_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    return mp_obj_new_int(self->width);
+}
+MP_DEFINE_CONST_FUN_OBJ_1(rectangle_2d_node_class_get_width_obj, rectangle_2d_node_class_get_width);
+
+
+STATIC mp_obj_t rectangle_2d_node_class_get_height(mp_obj_t self_in){
+    ENGINE_INFO_PRINTF("Getting height");
+    engine_rectangle_2d_node_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    return mp_obj_new_int(self->height);
+}
+MP_DEFINE_CONST_FUN_OBJ_1(rectangle_2d_node_class_get_height_obj, rectangle_2d_node_class_get_height);
+
+
 // Function called when accessing like print(my_node.position.x) (load 'x')
 // my_node.position.x = 0 (store 'x').
 // See https://micropython-usermod.readthedocs.io/en/latest/usermods_09.html#properties
@@ -158,6 +168,14 @@ STATIC void rectangle_2d_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *
             break;
             case MP_QSTR_set_height:
                 destination[0] = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_set_height_obj);
+                destination[1] = self_in;
+            break;
+            case MP_QSTR_get_width:
+                destination[0] = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_get_width_obj);
+                destination[1] = self_in;
+            break;
+            case MP_QSTR_get_height:
+                destination[0] = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_get_height_obj);
                 destination[1] = self_in;
             break;
             default:
@@ -183,6 +201,8 @@ STATIC const mp_rom_map_elem_t rectangle_2d_node_class_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_set_layer),   MP_ROM_PTR(&rectangle_2d_node_class_set_layer_obj) },
     { MP_ROM_QSTR(MP_QSTR_set_width),   MP_ROM_PTR(&rectangle_2d_node_class_set_width_obj) },
     { MP_ROM_QSTR(MP_QSTR_set_height),   MP_ROM_PTR(&rectangle_2d_node_class_set_height_obj) },
+    { MP_ROM_QSTR(MP_QSTR_get_width),   MP_ROM_PTR(&rectangle_2d_node_class_get_width_obj) },
+    { MP_ROM_QSTR(MP_QSTR_get_height),   MP_ROM_PTR(&rectangle_2d_node_class_get_height_obj) },
 };
 
 
