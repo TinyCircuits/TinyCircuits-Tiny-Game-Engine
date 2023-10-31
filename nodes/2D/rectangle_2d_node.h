@@ -15,8 +15,8 @@ typedef struct{
     mp_obj_t draw_dest[2];          // Used for caching data used for calling the 'draw()' callback on instances of this node
     mp_obj_t position;              // Vector2: 2d xy position of this node
     mp_int_t width;                 // Rectangle width in px
-    mp_obj_t height;                // Rectangle height in px
-    mp_obj_t color;                 // The color of this rectangle
+    mp_int_t height;                // Rectangle height in px
+    mp_int_t color;                 // The color of this rectangle
 }engine_rectangle_2d_node_class_obj_t;
 
 extern const mp_obj_type_t engine_rectangle_2d_node_class_type;

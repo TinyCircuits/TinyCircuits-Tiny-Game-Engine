@@ -14,11 +14,45 @@ STATIC void rectangle_2d_node_class_print(const mp_print_t *print, mp_obj_t self
     ENGINE_INFO_PRINTF("print(): Rectangle2DNode");
 }
 
+
+STATIC mp_obj_t rectangle_2d_node_class_tick(mp_obj_t self_in){
+    ENGINE_WARNING_PRINTF("Rectangle2DNode: Tick function not overridden");
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_1(rectangle_2d_node_class_tick_obj, rectangle_2d_node_class_tick);
+
+
+STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_obj){
+    ENGINE_INFO_PRINTF("Rectangle2DNode: Drawing");
+
+    engine_rectangle_2d_node_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    vector2_class_obj_t *self_position = self->position;
+
+    engine_camera_node_class_obj_t *camera = MP_OBJ_TO_PTR(camera_obj);
+    vector3_class_obj_t *camera_position = camera->position;
+    
+    camera_position->z += 0.05;
+    camera_position->x = (20.0 * cos(camera_position->z));
+    camera_position->y = (20.0 * sin(camera_position->z));
+
+
+    // Rotation not implemented yet so this is simple!
+    for(mp_int_t y=0; y<5; y++){
+        for(mp_int_t x=0; x<self->width; x++){
+            engine_draw_pixel(self->color, (int32_t)self_position->x+x, (int32_t)self_position->y+y, camera);
+        }
+    }
+
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_2(rectangle_2d_node_class_draw_obj, rectangle_2d_node_class_draw);
+
+
 mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Rectangle2DNode");
     
     // Check that there's an argument that's hopefully a reference to the inheriting subclass
-    mp_arg_check_num(n_args, n_kw, 1, 1, true);
+    mp_arg_check_num(n_args, n_kw, 0, 1, true);
 
     // How to make __del__ get called when object is garbage collected: https://github.com/micropython/micropython/issues/1878
     // Why it might get called early: https://forum.micropython.org/viewtopic.php?t=1405 (make sure the object is actually returned from this function)
@@ -31,17 +65,31 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
     node_base_set_if_disabled(&self->node_base, false);
     node_base_set_if_just_added(&self->node_base, true);
 
-    // Cache lookup results of 'tick()' and 'draw()' functions on this
-    // node instance so that the main engine loop can call it quickly
-    mp_load_method(MP_OBJ_TO_PTR(args[0]), MP_QSTR_tick, self->tick_dest);
-    mp_load_method(MP_OBJ_TO_PTR(args[0]), MP_QSTR_draw, self->draw_dest);
+    // Handle setting callbacks depending on if this class was inherited or not
+    if(n_args == 0){
+        ENGINE_INFO_PRINTF("Rectangle2DNode: Does not have child class");
+        self->tick_dest[0] = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_tick_obj);
+        self->tick_dest[1] = self;
+
+        self->draw_dest[0] = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_draw_obj);
+        self->draw_dest[1] = self;
+    }else{
+        ENGINE_INFO_PRINTF("Rectangle2DNode: Does have child class");
+        mp_load_method(MP_OBJ_TO_PTR(args[0]), MP_QSTR_tick, self->tick_dest);
+        mp_load_method(MP_OBJ_TO_PTR(args[0]), MP_QSTR_draw, self->draw_dest);
+    }
+
 
     ENGINE_INFO_PRINTF("Creating new Vector2 for BitmapSprite Node");
     self->position = vector2_class_new(&vector2_class_type, 0, 0, NULL);
     self->width = 15;
-    self->height = mp_obj_new_int(5);
-    self->color = mp_obj_new_int(0xffff);
+    self->height = 5;
+    self->color = 0xffff;
 
+    // Set the self in the dest to the non inherited instance.
+    // All getters/setters operate on the base class instance,
+    // not the subclass
+    self->tick_dest[1] = self;
     self->draw_dest[1] = self;
 
     return MP_OBJ_FROM_PTR(self);
@@ -58,38 +106,6 @@ STATIC mp_obj_t rectangle_2d_node_class_del(mp_obj_t self_in){
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(rectangle_2d_node_class_del_obj, rectangle_2d_node_class_del);
-
-
-STATIC mp_obj_t rectangle_2d_node_class_tick(mp_obj_t self_in){
-    ENGINE_WARNING_PRINTF("Rectangle2DNode: Tick function not overridden");
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_1(rectangle_2d_node_class_tick_obj, rectangle_2d_node_class_tick);
-
-
-STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_obj){
-    ENGINE_INFO_PRINTF("Rectangle2DNode: Drawing");
-
-    engine_rectangle_2d_node_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    ENGINE_FORCE_PRINTF("TEST %lu", self->width);
-    // vector2_class_obj_t *self_position = self->position;
-
-    // engine_camera_node_class_obj_t *camera = MP_OBJ_TO_PTR(camera_obj);
-    
-    // ENGINE_FORCE_PRINTF("TEST %lu", self->height);
-
-    // // Rotation not implemented yet so this is simple!
-    // for(mp_uint_t y=0; y<5; y++){
-    //     for(mp_uint_t x=0; x<self->width; x++){
-    //         ENGINE_FORCE_PRINTF("%lu", self_position->x+x);
-    //         ENGINE_FORCE_PRINTF("%lu", self_position->y+y);
-    //         engine_draw_pixel(self->color, (int32_t)self_position->x+x, (int32_t)self_position->y+y, camera);
-    //     }
-    // }
-
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_2(rectangle_2d_node_class_draw_obj, rectangle_2d_node_class_draw);
 
 
 STATIC mp_obj_t rectangle_2d_node_class_set_layer(mp_obj_t self_in, mp_obj_t layer){
@@ -116,6 +132,17 @@ STATIC mp_obj_t rectangle_2d_node_class_set_width(mp_obj_t self_in, mp_obj_t wid
 MP_DEFINE_CONST_FUN_OBJ_2(rectangle_2d_node_class_set_width_obj, rectangle_2d_node_class_set_width);
 
 
+STATIC mp_obj_t rectangle_2d_node_class_set_height(mp_obj_t self_in, mp_obj_t height){
+    ENGINE_INFO_PRINTF("Setting height %d", mp_obj_get_int(height));
+
+    engine_rectangle_2d_node_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    self->height = mp_obj_get_int(height);
+
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_2(rectangle_2d_node_class_set_height_obj, rectangle_2d_node_class_set_height);
+
+
 // Function called when accessing like print(my_node.position.x) (load 'x')
 // my_node.position.x = 0 (store 'x').
 // See https://micropython-usermod.readthedocs.io/en/latest/usermods_09.html#properties
@@ -123,32 +150,21 @@ MP_DEFINE_CONST_FUN_OBJ_2(rectangle_2d_node_class_set_width_obj, rectangle_2d_no
 STATIC void rectangle_2d_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Rectangle2DNode attr");
 
-    engine_rectangle_2d_node_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
-
     if(destination[0] == MP_OBJ_NULL){          // Load
         switch(attribute){
-            case MP_QSTR_position:
-                destination[0] = self->position;
-            break;
             case MP_QSTR_set_width:
                 destination[0] = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_set_width_obj);
                 destination[1] = self_in;
             break;
-            case MP_QSTR_height:
-                destination[0] = self->height;
+            case MP_QSTR_set_height:
+                destination[0] = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_set_height_obj);
+                destination[1] = self_in;
             break;
+            default:
+                return; // Fail
         }
     }else if(destination[1] != MP_OBJ_NULL){    // Store
         switch(attribute){
-            case MP_QSTR_position:
-                ENGINE_WARNING_PRINTF("Setting position not implemented!");
-            break;
-            case MP_QSTR_width:
-                // self->width = destination[1];
-            break;
-            case MP_QSTR_height:
-                self->height = destination[1];
-            break;
             default:
                 return; // Fail
         }
@@ -165,6 +181,8 @@ STATIC const mp_rom_map_elem_t rectangle_2d_node_class_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_tick),        MP_ROM_PTR(&rectangle_2d_node_class_tick_obj) },
     { MP_ROM_QSTR(MP_QSTR_draw),        MP_ROM_PTR(&rectangle_2d_node_class_draw_obj) },
     { MP_ROM_QSTR(MP_QSTR_set_layer),   MP_ROM_PTR(&rectangle_2d_node_class_set_layer_obj) },
+    { MP_ROM_QSTR(MP_QSTR_set_width),   MP_ROM_PTR(&rectangle_2d_node_class_set_width_obj) },
+    { MP_ROM_QSTR(MP_QSTR_set_height),   MP_ROM_PTR(&rectangle_2d_node_class_set_height_obj) },
 };
 
 
