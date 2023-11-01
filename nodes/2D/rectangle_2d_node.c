@@ -26,18 +26,20 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_o
     ENGINE_INFO_PRINTF("Rectangle2DNode: Drawing");
 
     engine_rectangle_2d_node_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    vector2_class_obj_t *self_position = self->position;
-
     engine_camera_node_class_obj_t *camera = MP_OBJ_TO_PTR(camera_obj);
 
-    mp_int_t width = mp_obj_get_int(mp_load_attr(self->child_class, MP_QSTR_width));
-    mp_int_t height = mp_obj_get_int(mp_load_attr(self->child_class, MP_QSTR_height));
-    mp_int_t color = mp_obj_get_int(mp_load_attr(self->child_class, MP_QSTR_color));
+    // For whatever reason, position being a struct within self
+    // means that we don't need look up the position attribute.
+    // Only things like self.width need to be looked up
+    vector2_class_obj_t *position = self->position;
+    mp_int_t width = mp_obj_get_int(mp_load_attr(self->access, MP_QSTR_width));
+    mp_int_t height = mp_obj_get_int(mp_load_attr(self->access, MP_QSTR_height));
+    mp_int_t color = mp_obj_get_int(mp_load_attr(self->access, MP_QSTR_color));
 
     // Rotation not implemented yet so this is simple!
     for(mp_int_t y=0; y<height; y++){
         for(mp_int_t x=0; x<width; x++){
-            engine_draw_pixel(color, (int32_t)self_position->x+x, (int32_t)self_position->y+y, camera);
+            engine_draw_pixel(color, (int32_t)position->x+x, (int32_t)position->y+y, camera);
         }
     }
 
@@ -66,14 +68,14 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
     // Handle setting callbacks depending on if this class was inherited or not
     if(n_args == 0){
         ENGINE_INFO_PRINTF("Rectangle2DNode: Does not have child class");
-        self->child_class = self;
+        self->access = self;
         self->tick_dest[0] = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_tick_obj);
         self->draw_dest[0] = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_draw_obj);
     }else{
         ENGINE_INFO_PRINTF("Rectangle2DNode: Does have child class");
-        self->child_class = args[0];
-        mp_load_method(self->child_class, MP_QSTR_tick, self->tick_dest);
-        mp_load_method(self->child_class, MP_QSTR_draw, self->draw_dest);
+        self->access = args[0];
+        mp_load_method(self->access, MP_QSTR_tick, self->tick_dest);
+        mp_load_method(self->access, MP_QSTR_draw, self->draw_dest);
     }
 
 
@@ -129,6 +131,9 @@ STATIC void rectangle_2d_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *
 
     if(destination[0] == MP_OBJ_NULL){          // Load
         switch(attribute){
+            case MP_QSTR_position:
+                destination[0] = self->position;
+            break;
             case MP_QSTR_width:
                 destination[0] = self->width;
             break;
@@ -143,6 +148,9 @@ STATIC void rectangle_2d_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *
         }
     }else if(destination[1] != MP_OBJ_NULL){    // Store
         switch(attribute){
+            case MP_QSTR_position:
+                self->position = destination[1];
+            break;
             case MP_QSTR_width:
                 self->width = destination[1];
             break;

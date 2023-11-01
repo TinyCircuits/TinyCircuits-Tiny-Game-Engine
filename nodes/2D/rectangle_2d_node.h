@@ -11,7 +11,7 @@
 typedef struct{
     mp_obj_base_t base;             // MicroPython base (also used in engine for checking the type of generic node. This must be the first element of any node)
     engine_node_base_t node_base;   // Engine node base (holds information about type, linked list location, draw/execution layer, visible, disabled, or just added. Required, must be second element)
-    mp_obj_t child_class;
+    mp_obj_t access;
     mp_obj_t tick_dest[2];          // Used for caching data used for calling the 'tick()' callback on instances of this node
     mp_obj_t draw_dest[2];          // Used for caching data used for calling the 'draw()' callback on instances of this node
     mp_obj_t position;              // Vector2: 2d xy position of this node
