@@ -30,10 +30,14 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_o
 
     engine_camera_node_class_obj_t *camera = MP_OBJ_TO_PTR(camera_obj);
 
+    mp_int_t width = mp_obj_get_int(mp_load_attr(self->child_class, MP_QSTR_width));
+    mp_int_t height = mp_obj_get_int(mp_load_attr(self->child_class, MP_QSTR_height));
+    mp_int_t color = mp_obj_get_int(mp_load_attr(self->child_class, MP_QSTR_color));
+
     // Rotation not implemented yet so this is simple!
-    for(mp_int_t y=0; y<self->height; y++){
-        for(mp_int_t x=0; x<self->width; x++){
-            engine_draw_pixel(self->color, (int32_t)self_position->x+x, (int32_t)self_position->y+y, camera);
+    for(mp_int_t y=0; y<height; y++){
+        for(mp_int_t x=0; x<width; x++){
+            engine_draw_pixel(color, (int32_t)self_position->x+x, (int32_t)self_position->y+y, camera);
         }
     }
 
@@ -62,23 +66,22 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
     // Handle setting callbacks depending on if this class was inherited or not
     if(n_args == 0){
         ENGINE_INFO_PRINTF("Rectangle2DNode: Does not have child class");
+        self->child_class = self;
         self->tick_dest[0] = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_tick_obj);
-        self->tick_dest[1] = self;
-
         self->draw_dest[0] = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_draw_obj);
-        self->draw_dest[1] = self;
     }else{
         ENGINE_INFO_PRINTF("Rectangle2DNode: Does have child class");
-        mp_load_method(MP_OBJ_TO_PTR(args[0]), MP_QSTR_tick, self->tick_dest);
-        mp_load_method(MP_OBJ_TO_PTR(args[0]), MP_QSTR_draw, self->draw_dest);
+        self->child_class = args[0];
+        mp_load_method(self->child_class, MP_QSTR_tick, self->tick_dest);
+        mp_load_method(self->child_class, MP_QSTR_draw, self->draw_dest);
     }
 
 
     ENGINE_INFO_PRINTF("Creating new Vector2 for BitmapSprite Node");
     self->position = vector2_class_new(&vector2_class_type, 0, 0, NULL);
-    self->width = 15;
-    self->height = 5;
-    self->color = 0xffff;
+    self->width = mp_obj_new_int(15);
+    self->height = mp_obj_new_int(5);
+    self->color = mp_obj_new_int(0xffff);
 
     // Set the self in the dest to the non inherited instance.
     // All getters/setters operate on the base class instance,
@@ -115,68 +118,6 @@ STATIC mp_obj_t rectangle_2d_node_class_set_layer(mp_obj_t self_in, mp_obj_t lay
 MP_DEFINE_CONST_FUN_OBJ_2(rectangle_2d_node_class_set_layer_obj, rectangle_2d_node_class_set_layer);
 
 
-STATIC mp_obj_t rectangle_2d_node_class_set_position(mp_obj_t self_in, mp_obj_t x, mp_obj_t y){
-    ENGINE_INFO_PRINTF("Setting position %.03f %.03f", mp_obj_get_float(x), mp_obj_get_float(y));
-    engine_rectangle_2d_node_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    vector2_class_obj_t *self_position = self->position;
-    self_position->x = mp_obj_get_float(x);
-    self_position->y = mp_obj_get_float(y);
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_3(rectangle_2d_node_class_set_position_obj, rectangle_2d_node_class_set_position);
-
-
-STATIC mp_obj_t rectangle_2d_node_class_set_width(mp_obj_t self_in, mp_obj_t width){
-    ENGINE_INFO_PRINTF("Setting width %d", mp_obj_get_int(width));
-    engine_rectangle_2d_node_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    self->width = mp_obj_get_int(width);
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_2(rectangle_2d_node_class_set_width_obj, rectangle_2d_node_class_set_width);
-
-
-STATIC mp_obj_t rectangle_2d_node_class_set_height(mp_obj_t self_in, mp_obj_t height){
-    ENGINE_INFO_PRINTF("Setting height %d", mp_obj_get_int(height));
-    engine_rectangle_2d_node_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    self->height = mp_obj_get_int(height);
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_2(rectangle_2d_node_class_set_height_obj, rectangle_2d_node_class_set_height);
-
-
-STATIC mp_obj_t rectangle_2d_node_class_set_color(mp_obj_t self_in, mp_obj_t color){
-    ENGINE_INFO_PRINTF("Setting color %d", mp_obj_get_int(color));
-    engine_rectangle_2d_node_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    self->color = mp_obj_get_int(color);
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_2(rectangle_2d_node_class_set_color_obj, rectangle_2d_node_class_set_color);
-
-
-STATIC mp_obj_t rectangle_2d_node_class_get_width(mp_obj_t self_in){
-    ENGINE_INFO_PRINTF("Getting width");
-    engine_rectangle_2d_node_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    return mp_obj_new_int(self->width);
-}
-MP_DEFINE_CONST_FUN_OBJ_1(rectangle_2d_node_class_get_width_obj, rectangle_2d_node_class_get_width);
-
-
-STATIC mp_obj_t rectangle_2d_node_class_get_height(mp_obj_t self_in){
-    ENGINE_INFO_PRINTF("Getting height");
-    engine_rectangle_2d_node_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    return mp_obj_new_int(self->height);
-}
-MP_DEFINE_CONST_FUN_OBJ_1(rectangle_2d_node_class_get_height_obj, rectangle_2d_node_class_get_height);
-
-
-STATIC mp_obj_t rectangle_2d_node_class_get_color(mp_obj_t self_in){
-    ENGINE_INFO_PRINTF("Getting color");
-    engine_rectangle_2d_node_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    return mp_obj_new_int(self->color);;
-}
-MP_DEFINE_CONST_FUN_OBJ_1(rectangle_2d_node_class_get_color_obj, rectangle_2d_node_class_get_color);
-
-
 // Function called when accessing like print(my_node.position.x) (load 'x')
 // my_node.position.x = 0 (store 'x').
 // See https://micropython-usermod.readthedocs.io/en/latest/usermods_09.html#properties
@@ -184,41 +125,33 @@ MP_DEFINE_CONST_FUN_OBJ_1(rectangle_2d_node_class_get_color_obj, rectangle_2d_no
 STATIC void rectangle_2d_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Rectangle2DNode attr");
 
+    engine_rectangle_2d_node_class_obj_t *self = self_in;
+
     if(destination[0] == MP_OBJ_NULL){          // Load
         switch(attribute){
-            case MP_QSTR_set_position:
-                destination[0] = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_set_position_obj);
-                destination[1] = self_in;
+            case MP_QSTR_width:
+                destination[0] = self->width;
             break;
-            case MP_QSTR_set_width:
-                destination[0] = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_set_width_obj);
-                destination[1] = self_in;
+            case MP_QSTR_height:
+                destination[0] = self->height;
             break;
-            case MP_QSTR_set_height:
-                destination[0] = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_set_height_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_set_color:
-                destination[0] = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_set_color_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_get_width:
-                destination[0] = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_get_width_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_get_height:
-                destination[0] = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_get_height_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_get_color:
-                destination[0] = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_get_color_obj);
-                destination[1] = self_in;
+            case MP_QSTR_color:
+                destination[0] = self->color;
             break;
             default:
                 return; // Fail
         }
     }else if(destination[1] != MP_OBJ_NULL){    // Store
         switch(attribute){
+            case MP_QSTR_width:
+                self->width = destination[1];
+            break;
+            case MP_QSTR_height:
+                self->height = destination[1];
+            break;
+            case MP_QSTR_color:
+                self->color = destination[1];
+            break;
             default:
                 return; // Fail
         }
@@ -234,16 +167,7 @@ STATIC const mp_rom_map_elem_t rectangle_2d_node_class_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR___del__),     MP_ROM_PTR(&rectangle_2d_node_class_del_obj) },
     { MP_ROM_QSTR(MP_QSTR_tick),        MP_ROM_PTR(&rectangle_2d_node_class_tick_obj) },
     { MP_ROM_QSTR(MP_QSTR_draw),        MP_ROM_PTR(&rectangle_2d_node_class_draw_obj) },
-    { MP_ROM_QSTR(MP_QSTR_set_layer),   MP_ROM_PTR(&rectangle_2d_node_class_set_layer_obj) },
-
-    { MP_ROM_QSTR(MP_QSTR_set_position),   MP_ROM_PTR(&rectangle_2d_node_class_set_position_obj) },
-    { MP_ROM_QSTR(MP_QSTR_set_width),   MP_ROM_PTR(&rectangle_2d_node_class_set_width_obj) },
-    { MP_ROM_QSTR(MP_QSTR_set_height),   MP_ROM_PTR(&rectangle_2d_node_class_set_height_obj) },
-    { MP_ROM_QSTR(MP_QSTR_set_color),   MP_ROM_PTR(&rectangle_2d_node_class_set_color_obj) },
-
-    { MP_ROM_QSTR(MP_QSTR_get_width),   MP_ROM_PTR(&rectangle_2d_node_class_get_width_obj) },
-    { MP_ROM_QSTR(MP_QSTR_get_height),   MP_ROM_PTR(&rectangle_2d_node_class_get_height_obj) },
-    { MP_ROM_QSTR(MP_QSTR_get_height),   MP_ROM_PTR(&rectangle_2d_node_class_get_height_obj) },
+    { MP_ROM_QSTR(MP_QSTR_set_layer),   MP_ROM_PTR(&rectangle_2d_node_class_set_layer_obj) }
 };
 
 
