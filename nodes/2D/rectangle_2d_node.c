@@ -70,6 +70,8 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
         ENGINE_INFO_PRINTF("Rectangle2DNode: Does not have child class");
         self->access = self;
         self->tick_dest[0] = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_tick_obj);
+        self->tick_dest[1] = self;
+
         self->draw_dest[0] = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_draw_obj);
     }else{
         ENGINE_INFO_PRINTF("Rectangle2DNode: Does have child class");
@@ -85,10 +87,6 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
     self->height = mp_obj_new_int(5);
     self->color = mp_obj_new_int(0xffff);
 
-    // Set the self in the dest to the non inherited instance.
-    // All getters/setters operate on the base class instance,
-    // not the subclass
-    self->tick_dest[1] = self;
     self->draw_dest[1] = self;
 
     return MP_OBJ_FROM_PTR(self);
