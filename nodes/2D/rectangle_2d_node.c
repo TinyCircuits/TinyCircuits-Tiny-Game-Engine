@@ -95,7 +95,7 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
 
 // Class methods
 STATIC mp_obj_t rectangle_2d_node_class_del(mp_obj_t self_in){
-    ENGINE_INFO_PRINTF("Rectangle2DNode: Deleted (garbage collected, removing self from active engine objects)");
+    ENGINE_WARNING_PRINTF("Rectangle2DNode: Deleted (garbage collected, removing self from active engine objects)");
 
     engine_rectangle_2d_node_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
     engine_remove_object_from_layer(self->node_base.object_list_node, self->node_base.layer);
@@ -129,6 +129,10 @@ STATIC void rectangle_2d_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *
 
     if(destination[0] == MP_OBJ_NULL){          // Load
         switch(attribute){
+            case MP_QSTR___del__:
+                destination[0] = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_del_obj);
+                destination[1] = self_in;
+            break;
             case MP_QSTR_position:
                 destination[0] = self->position;
             break;
