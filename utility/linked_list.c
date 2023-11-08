@@ -32,7 +32,7 @@ linked_list_node *linked_list_add_obj(linked_list *list, void *obj){
         new_node->next = NULL;
         list->start = new_node;
         list->end = new_node;
-        list->count = 0;
+        list->count = 1;    // One object added when list initialized
         list->initialzed = true;
     }else{
         new_node->previous = list->end;
@@ -138,6 +138,14 @@ void linked_list_del_list_node(linked_list *list, linked_list_node *node){
     // 'previous' and 'next' are NULL set list to uninitialized
     if(node->previous == NULL && node->next == NULL){   // Only one node in list, the 'start' node
         list->initialzed = false;
+
+        // Important to set these to null. For example, when looping
+        // through the list it might be common to check if 'start' is NULL
+        // before continuing on. If the object attached to the linked list
+        // node were NULL but the linked list node is not then seg fault could
+        // occur
+        list->start = NULL;
+        list->end = NULL;
     }else if(node->previous == NULL){                   // Deleting 'start' but there are other nodes, link start to next
         list->start = node->next;
         list->start->previous = NULL;

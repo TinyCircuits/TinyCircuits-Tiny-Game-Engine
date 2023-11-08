@@ -11,6 +11,16 @@ uint16_t engine_object_layer_count = 8;
 linked_list engine_object_layers[8];
 
 
+uint16_t engine_get_total_object_count(){
+    uint16_t count = 0;
+    for(uint8_t ilx=0; ilx<engine_object_layer_count; ilx++){
+        count += engine_object_layers[ilx].count;
+    }
+
+    return count;
+}
+
+
 // Add an object to the pool of all nodes in 'engine_object_layers' at some layer
 linked_list_node *engine_add_object_to_layer(void *obj, uint16_t layer_index){
     if(layer_index >= engine_object_layer_count){
@@ -41,46 +51,49 @@ void engine_invoke_all_node_callbacks(){
         current_linked_list_node = engine_object_layers[ilx].start;
 
         while(current_linked_list_node != NULL){
-            // Get minimal version of the current engine node (all nodes should be able to be cast to this)
-            engine_minimal_node_class_obj_t *node = ((engine_minimal_node_class_obj_t*)current_linked_list_node->object);
+            // Get the base node that every node is stored under
+            engine_node_base_t *node_base = current_linked_list_node->object;
 
             // As long as this node was not just added, figure out its type and what callbacks it has
-            if(node_base_is_just_added(&node->node_base) == false){
-                switch(node->node_base.type){
-                    case NODE_TYPE_EMPTY:
-                    {
-                        engine_empty_node_class_obj_t *empty_node = (engine_empty_node_class_obj_t*)node;
-                        mp_call_method_n_kw(0, 0, empty_node->tick_dest);
-                    }
-                    break;
-                    case NODE_TYPE_CAMERA:
-                    {
-                        engine_camera_node_class_obj_t *camera_node = (engine_camera_node_class_obj_t*)node;
-                        mp_call_method_n_kw(0, 0, camera_node->tick_dest);
-                    }
+            if(node_base_is_just_added(node_base) == false){
+                switch(node_base->type){
+                    // case NODE_TYPE_EMPTY:
+                    // {
+                    //     // engine_empty_node_class_obj_t *empty_node = (engine_empty_node_class_obj_t*)node_base->node;
+                    //     mp_call_method_n_kw(0, 0, node_base->tick_cb);
+                    // }
+                    // break;
+                    // case NODE_TYPE_CAMERA:
+                    // {
+                    //     // engine_camera_node_class_obj_t *camera_node = (engine_camera_node_class_obj_t*)node_base->node;
+                    //     mp_call_method_n_kw(0, 0, node_base->tick_cb);
+                    // }
                     break;
                     case NODE_TYPE_RECTANGLE_2D:
                     {
-                        engine_rectangle_2d_node_class_obj_t *rectangle_2d_node = (engine_rectangle_2d_node_class_obj_t*)node;
-                        mp_call_method_n_kw(0, 0, rectangle_2d_node->tick_dest);
-                        engine_camera_draw_for_each(rectangle_2d_node->draw_dest);
+                        // engine_rectangle_2d_node_class_obj_t *rectangle_2d_node = (engine_rectangle_2d_node_class_obj_t*)node_base->node;
+                        mp_obj_t exec[2];
+                        exec[0] = node_base->tick_cb;
+                        exec[1] = node_base->node;
+                        mp_call_method_n_kw(0, 0, exec);
+                        // engine_camera_draw_for_each(node_base->draw_cb);
                     }
                     break;
-                    case NODE_TYPE_BITMAP_SPRITE:
-                    {
-                        engine_bitmap_sprite_node_class_obj_t *bitmap_sprite_node = (engine_bitmap_sprite_node_class_obj_t*)node;
-                        mp_call_method_n_kw(0, 0, bitmap_sprite_node->tick_dest);
-                        engine_camera_draw_for_each(bitmap_sprite_node->draw_dest);
-                    }
-                    break;
+                    // case NODE_TYPE_BITMAP_SPRITE:
+                    // {
+                    //     // engine_bitmap_sprite_node_class_obj_t *bitmap_sprite_node = (engine_bitmap_sprite_node_class_obj_t*)node_base->node;
+                    //     mp_call_method_n_kw(0, 0, node_base->tick_cb);
+                    //     engine_camera_draw_for_each(node_base->draw_cb);
+                    // }
+                    // break;
                     default:
-                        ENGINE_WARNING_PRINTF("This node type doesn't do anything? %d", node->node_base.type);
+                        ENGINE_WARNING_PRINTF("This node type doesn't do anything? %d", node_base->type);
                     break;
                 }
 
             }else{
                 ENGINE_INFO_PRINTF("Did not call node callbacks, it was just added, will call them next game cycle");
-                node_base_set_if_just_added(&node->node_base, false);
+                node_base_set_if_just_added(node_base, false);
             }
 
             current_linked_list_node = current_linked_list_node->next;

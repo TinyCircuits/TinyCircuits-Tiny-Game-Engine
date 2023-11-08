@@ -23,73 +23,83 @@ MP_DEFINE_CONST_FUN_OBJ_1(rectangle_2d_node_class_tick_obj, rectangle_2d_node_cl
 
 
 STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_obj){
-    ENGINE_INFO_PRINTF("Rectangle2DNode: Drawing");
+    // ENGINE_INFO_PRINTF("Rectangle2DNode: Drawing");
 
-    engine_rectangle_2d_node_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    engine_camera_node_class_obj_t *camera = MP_OBJ_TO_PTR(camera_obj);
+    // engine_rectangle_2d_node_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    // engine_camera_node_class_obj_t *camera = MP_OBJ_TO_PTR(camera_obj);
 
-    // For whatever reason, position being a struct within self
-    // means that we don't need look up the position attribute.
-    // Only things like self.width need to be looked up
-    vector2_class_obj_t *position = self->position;
-    mp_int_t width = mp_obj_get_int(mp_load_attr(self->access, MP_QSTR_width));
-    mp_int_t height = mp_obj_get_int(mp_load_attr(self->access, MP_QSTR_height));
-    mp_int_t color = mp_obj_get_int(mp_load_attr(self->access, MP_QSTR_color));
+    // // For whatever reason, position being a struct within self
+    // // means that we don't need to look up the position attribute.
+    // // Only things like self.width need to be looked up
+    // vector2_class_obj_t *position = self->position;
+    // mp_int_t width = mp_obj_get_int(mp_load_attr(self->access, MP_QSTR_width));
+    // mp_int_t height = mp_obj_get_int(mp_load_attr(self->access, MP_QSTR_height));
+    // mp_int_t color = mp_obj_get_int(mp_load_attr(self->access, MP_QSTR_color));
 
-    // Rotation not implemented yet so this is simple!
-    for(mp_int_t y=0; y<height; y++){
-        for(mp_int_t x=0; x<width; x++){
-            engine_draw_pixel(color, (int32_t)position->x+x, (int32_t)position->y+y, camera);
-        }
-    }
+    // // Rotation not implemented yet so this is simple!
+    // for(mp_int_t y=0; y<height; y++){
+    //     for(mp_int_t x=0; x<width; x++){
+    //         engine_draw_pixel(color, (int32_t)position->x+x, (int32_t)position->y+y, camera);
+    //     }
+    // }
 
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_2(rectangle_2d_node_class_draw_obj, rectangle_2d_node_class_draw);
 
 
+STATIC mp_obj_t rectangle_2d_class_attr_test(mp_obj_t self_in){
+    ENGINE_INFO_PRINTF("Accessing Rectangle2DNode attr test");
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_1(rectangle_2d_class_attr_test_obj, rectangle_2d_class_attr_test);
+
+
 mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Rectangle2DNode");
     
-    // Check that there's an argument that's hopefully a reference to the inheriting subclass
-    mp_arg_check_num(n_args, n_kw, 0, 1, true);
+    // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
+    engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);
+    node_base->base.type = &engine_rectangle_2d_node_class_type;
+    node_base->layer = 0;
+    node_base->type = NODE_TYPE_RECTANGLE_2D;
+    node_base->object_list_node = engine_add_object_to_layer(node_base, node_base->layer);
+    node_base_set_if_visible(node_base, true);
+    node_base_set_if_disabled(node_base, false);
+    node_base_set_if_just_added(node_base, true);
 
-    // How to make __del__ get called when object is garbage collected: https://github.com/micropython/micropython/issues/1878
-    // Why it might get called early: https://forum.micropython.org/viewtopic.php?t=1405 (make sure the object is actually returned from this function)
-    engine_rectangle_2d_node_class_obj_t *self = m_new_obj_with_finaliser(engine_rectangle_2d_node_class_obj_t);
-    self->base.type = &engine_rectangle_2d_node_class_type;
-    self->node_base.layer = 0;
-    self->node_base.type = NODE_TYPE_RECTANGLE_2D;
-    self->node_base.object_list_node = engine_add_object_to_layer(self, self->node_base.layer);
-    node_base_set_if_visible(&self->node_base, true);
-    node_base_set_if_disabled(&self->node_base, false);
-    node_base_set_if_just_added(&self->node_base, true);
+    node_base->draw_cb = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_draw_obj);
 
-    // Handle setting callbacks depending on if this class was inherited or not
-    if(n_args == 0){
-        ENGINE_INFO_PRINTF("Rectangle2DNode: Does not have child class");
-        self->access = self;
-        self->tick_dest[0] = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_tick_obj);
-        self->tick_dest[1] = self;
+    if(n_args == 0){        // Non-inherited (create a new object)
+        engine_rectangle_2d_node_class_obj_t *rectangle_2d_node = m_malloc(sizeof(engine_rectangle_2d_node_class_obj_t));
+        node_base->node = rectangle_2d_node;
 
-        self->draw_dest[0] = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_draw_obj);
+        node_base->tick_cb = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_tick_obj);
+
+        rectangle_2d_node->position = vector2_class_new(&vector2_class_type, 0, 0, NULL);
+        rectangle_2d_node->width = mp_obj_new_int(15);
+        rectangle_2d_node->height = mp_obj_new_int(5);
+        rectangle_2d_node->color = mp_obj_new_int(0xffff);
+    }else if(n_args == 1){  // Inherited (use existing object)
+        node_base->node = args[0];
+
+        mp_obj_t dest[2];
+        mp_load_method_maybe(node_base->node, MP_QSTR_tick, dest);
+        if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
+            node_base->tick_cb = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_tick_obj);
+        }else{                                                  // Likely found method (could be attribute)
+            node_base->tick_cb = dest[0];
+        }
+
+        mp_store_attr(node_base->node, MP_QSTR_position, vector2_class_new(&vector2_class_type, 0, 0, NULL));
+        mp_store_attr(node_base->node, MP_QSTR_width, mp_obj_new_int(15));
+        mp_store_attr(node_base->node, MP_QSTR_height, mp_obj_new_int(5));
+        mp_store_attr(node_base->node, MP_QSTR_color, mp_obj_new_int(0xffff));
     }else{
-        ENGINE_INFO_PRINTF("Rectangle2DNode: Does have child class");
-        self->access = args[0];
-        mp_load_method(self->access, MP_QSTR_tick, self->tick_dest);
-        mp_load_method(self->access, MP_QSTR_draw, self->draw_dest);
+        mp_raise_msg(&mp_type_RuntimeError, "Too many arguments passed to Rectangle2DNode constructor!");
     }
 
-
-    ENGINE_INFO_PRINTF("Creating new Vector2 for BitmapSprite Node");
-    self->position = vector2_class_new(&vector2_class_type, 0, 0, NULL);
-    self->width = mp_obj_new_int(15);
-    self->height = mp_obj_new_int(5);
-    self->color = mp_obj_new_int(0xffff);
-
-    self->draw_dest[1] = self;
-
-    return MP_OBJ_FROM_PTR(self);
+    return MP_OBJ_FROM_PTR(node_base);
 }
 
 
@@ -97,8 +107,8 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
 STATIC mp_obj_t rectangle_2d_node_class_del(mp_obj_t self_in){
     ENGINE_WARNING_PRINTF("Rectangle2DNode: Deleted (garbage collected, removing self from active engine objects)");
 
-    engine_rectangle_2d_node_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    engine_remove_object_from_layer(self->node_base.object_list_node, self->node_base.layer);
+    engine_node_base_t *node_base = self_in;
+    engine_remove_object_from_layer(node_base->object_list_node, node_base->layer);
 
     return mp_const_none;
 }
@@ -108,29 +118,42 @@ MP_DEFINE_CONST_FUN_OBJ_1(rectangle_2d_node_class_del_obj, rectangle_2d_node_cla
 STATIC mp_obj_t rectangle_2d_node_class_set_layer(mp_obj_t self_in, mp_obj_t layer){
     ENGINE_INFO_PRINTF("Setting object to layer %d", mp_obj_get_int(layer));
 
-    engine_rectangle_2d_node_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    engine_remove_object_from_layer(self->node_base.object_list_node, self->node_base.layer);
-    self->node_base.layer = (uint16_t)mp_obj_get_int(layer);
-    self->node_base.object_list_node = engine_add_object_to_layer(self, self->node_base.layer);
+    engine_node_base_t *node_base = self_in;
+    engine_remove_object_from_layer(node_base->object_list_node, node_base->layer);
+    node_base->layer = mp_obj_get_int(layer);
+    node_base->object_list_node = engine_add_object_to_layer(node_base, node_base->layer);
 
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_2(rectangle_2d_node_class_set_layer_obj, rectangle_2d_node_class_set_layer);
 
 
-// Function called when accessing like print(my_node.position.x) (load 'x')
-// my_node.position.x = 0 (store 'x').
-// See https://micropython-usermod.readthedocs.io/en/latest/usermods_09.html#properties
-// See https://github.com/micropython/micropython/blob/91a3f183916e1514fbb8dc58ca5b77acc59d4346/extmod/modasyncio.c#L227
+STATIC mp_obj_t rectangle_2d_node_class_get_layer(mp_obj_t self_in){
+    ENGINE_INFO_PRINTF("Getting object layer...");
+
+    engine_node_base_t *node_base = self_in;
+    return mp_obj_new_int(node_base->layer);
+}
+MP_DEFINE_CONST_FUN_OBJ_1(rectangle_2d_node_class_get_layer_obj, rectangle_2d_node_class_get_layer);
+
+
 STATIC void rectangle_2d_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Rectangle2DNode attr");
 
-    engine_rectangle_2d_node_class_obj_t *self = self_in;
+    engine_rectangle_2d_node_class_obj_t *self = ((engine_node_base_t*)(self_in))->node;
 
     if(destination[0] == MP_OBJ_NULL){          // Load
         switch(attribute){
             case MP_QSTR___del__:
                 destination[0] = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_del_obj);
+                destination[1] = self_in;
+            break;
+            case MP_QSTR_set_layer:
+                destination[0] = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_set_layer_obj);
+                destination[1] = self_in;
+            break;
+            case MP_QSTR_get_layer:
+                destination[0] = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_get_layer_obj);
                 destination[1] = self_in;
             break;
             case MP_QSTR_position:
@@ -175,9 +198,6 @@ STATIC void rectangle_2d_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *
 // Class attributes
 STATIC const mp_rom_map_elem_t rectangle_2d_node_class_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR___del__),     MP_ROM_PTR(&rectangle_2d_node_class_del_obj) },
-    { MP_ROM_QSTR(MP_QSTR_tick),        MP_ROM_PTR(&rectangle_2d_node_class_tick_obj) },
-    { MP_ROM_QSTR(MP_QSTR_draw),        MP_ROM_PTR(&rectangle_2d_node_class_draw_obj) },
-    { MP_ROM_QSTR(MP_QSTR_set_layer),   MP_ROM_PTR(&rectangle_2d_node_class_set_layer_obj) }
 };
 
 
