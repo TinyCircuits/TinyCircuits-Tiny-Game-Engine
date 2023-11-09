@@ -1,5 +1,6 @@
 import engine
 import math
+from common import run_tests
 
 def float_compare_eq(a, b, tol=1E-7) -> bool:
     return (abs(a-b) <= tol)
@@ -35,25 +36,14 @@ def resizeVec3ScalarTest() -> bool:
     print(v1.cross(engine.Vector3(3, 4, 5)))
     return (float_compare_eq(v1.len2(), mag*mag) and float_compare_eq(v1.cross(engine.Vector3(3, 4, 5)).len2(), 0))
 
-resultDict = {}
 
-testDict = {
-    "ConstructVec3": constructVec3Test,
-    "NormalizeVec3": normalizeVec3Test,
-    "RotateVec3": rotateVec3Test,
-    "ResizeVec3Vec": resizeVec3VecTest,
-    "ResizeVec3Scalar": resizeVec3ScalarTest,
-}
-        
-def print_results():
-    for testKey in testDict:
-        print("TEST: "+ testKey)
-        print("\tPASSED" if resultDict[testKey] else "\tFAILED")
-        
-def run_tests():
-    for testKey in testDict:
-        print("RUNNING TEST: "+testKey)
-        resultDict[testKey] = testDict[testKey]()
-    print_results()
 
-run_tests()
+test_list = [
+    ["ConstructVec3", constructVec3Test],
+    ["NormalizeVec3", normalizeVec3Test],
+    ["RotateVec3", rotateVec3Test],
+    ["ResizeVec3Vec", resizeVec3VecTest],
+    ["ResizeVec3Scalar", resizeVec3ScalarTest],
+]
+
+run_tests(test_list)

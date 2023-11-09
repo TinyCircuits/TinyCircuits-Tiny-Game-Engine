@@ -1,5 +1,6 @@
 import gc
 import engine
+from common import run_tests
 from engine import Rectangle2DNode, Vector2
 
 engine.debug_enable_all()
@@ -221,45 +222,30 @@ def non_inherited_attribute_gc_collect_test():
     return engine.get_total_object_count() == count_before
 
 
+test_list = [
+    ["non_inherited_attribute_xy_pos_test", non_inherited_attribute_xy_pos_test],
+    ["non_inherited_attribute_pos_test", non_inherited_attribute_pos_test],
+    ["non_inherited_attribute_width_test", non_inherited_attribute_width_test],
+    ["non_inherited_attribute_height_test", non_inherited_attribute_height_test],
+    ["non_inherited_attribute_color_test", non_inherited_attribute_color_test],
+    ["non_inherited_set_layer_test", non_inherited_set_layer_test],
+
+    ["inherited_attribute_init_xy_pos_test", inherited_attribute_init_xy_pos_test],
+    ["inherited_attribute_init_pos_test", inherited_attribute_init_pos_test],
+    ["inherited_attribute_init_width_test", inherited_attribute_init_width_test],
+    ["inherited_attribute_init_height_test", inherited_attribute_init_height_test],
+    ["inherited_attribute_init_color_test", inherited_attribute_init_color_test],
+    ["inherited_attribute_init_layer_test", inherited_attribute_init_layer_test],
+
+    ["inherited_attribute_tick_xy_pos_test", inherited_attribute_tick_xy_pos_test],
+    ["inherited_attribute_tick_pos_test", inherited_attribute_tick_pos_test],
+    ["inherited_attribute_tick_width_test", inherited_attribute_tick_width_test],
+    ["inherited_attribute_tick_height_test", inherited_attribute_tick_height_test],
+    ["inherited_attribute_tick_color_test", inherited_attribute_tick_color_test],
+    ["inherited_attribute_tick_layer_test", inherited_attribute_tick_layer_test],
+
+    ["non_inherited_attribute_gc_collect_test", non_inherited_attribute_gc_collect_test]
+]
 
 
-resultDict = {}
-
-testDict = {
-    "non_inherited_attribute_xy_pos_test": non_inherited_attribute_xy_pos_test,
-    "non_inherited_attribute_pos_test": non_inherited_attribute_pos_test,
-    "non_inherited_attribute_width_test": non_inherited_attribute_width_test,
-    "non_inherited_attribute_height_test": non_inherited_attribute_height_test,
-    "non_inherited_attribute_color_test": non_inherited_attribute_color_test,
-    "non_inherited_set_layer_test": non_inherited_set_layer_test,
-
-    "inherited_attribute_init_xy_pos_test": inherited_attribute_init_xy_pos_test,
-    "inherited_attribute_init_pos_test": inherited_attribute_init_pos_test,
-    "inherited_attribute_init_width_test": inherited_attribute_init_width_test,
-    "inherited_attribute_init_height_test": inherited_attribute_init_height_test,
-    "inherited_attribute_init_color_test": inherited_attribute_init_color_test,
-    "inherited_attribute_init_layer_test": inherited_attribute_init_layer_test,
-
-    "inherited_attribute_tick_xy_pos_test": inherited_attribute_tick_xy_pos_test,
-    "inherited_attribute_tick_pos_test": inherited_attribute_tick_pos_test,
-    "inherited_attribute_tick_width_test": inherited_attribute_tick_width_test,
-    "inherited_attribute_tick_height_test": inherited_attribute_tick_height_test,
-    "inherited_attribute_tick_color_test": inherited_attribute_tick_color_test,
-    "inherited_attribute_tick_layer_test": inherited_attribute_tick_layer_test,
-
-    "non_inherited_attribute_gc_collect_test": non_inherited_attribute_gc_collect_test
-}
-
-
-def print_results():
-    for testKey in testDict:
-        print("TEST: "+ testKey)
-        print("\tPASSED" if resultDict[testKey] else "\tFAILED")
-        
-def run_tests():
-    for testKey in testDict:
-        print("RUNNING TEST: "+testKey)
-        resultDict[testKey] = testDict[testKey]()
-    print_results()
-
-run_tests()
+run_tests(test_list)
