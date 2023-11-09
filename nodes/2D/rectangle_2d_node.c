@@ -107,6 +107,7 @@ STATIC mp_obj_t rectangle_2d_node_class_del(mp_obj_t self_in){
     ENGINE_WARNING_PRINTF("Rectangle2DNode: Deleted (garbage collected, removing self from active engine objects)");
 
     engine_node_base_t *node_base = self_in;
+    free(node_base->node_common_data);
     engine_remove_object_from_layer(node_base->object_list_node, node_base->layer);
 
     return mp_const_none;

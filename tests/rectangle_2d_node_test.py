@@ -222,6 +222,29 @@ def non_inherited_attribute_gc_collect_test():
     return engine.get_total_object_count() == count_before
 
 
+
+def inherited_attribute_gc_collect_test():
+    # Two ticks since object would be just added
+    engine.tick()
+    engine.tick()
+
+    class MyRect2D(Rectangle2DNode):
+        def __init__(self):
+            super().__init__(self)
+
+    # Get rid of any objects that maybe waiting to be deleted too
+    gc.collect()
+
+    # Get the count before adding another one, add one, then delete and collect it
+    count_before = engine.get_total_object_count()
+    inherited = MyRect2D()
+    del inherited
+    gc.collect()
+
+    # See if we're back to where we were before
+    return engine.get_total_object_count() == count_before
+
+
 test_list = [
     ["non_inherited_attribute_xy_pos_test", non_inherited_attribute_xy_pos_test],
     ["non_inherited_attribute_pos_test", non_inherited_attribute_pos_test],
@@ -244,7 +267,8 @@ test_list = [
     ["inherited_attribute_tick_color_test", inherited_attribute_tick_color_test],
     ["inherited_attribute_tick_layer_test", inherited_attribute_tick_layer_test],
 
-    ["non_inherited_attribute_gc_collect_test", non_inherited_attribute_gc_collect_test]
+    ["non_inherited_attribute_gc_collect_test", non_inherited_attribute_gc_collect_test],
+    ["inherited_attribute_gc_collect_test", inherited_attribute_gc_collect_test]
 ]
 
 
