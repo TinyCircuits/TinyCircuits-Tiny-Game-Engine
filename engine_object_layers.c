@@ -1,8 +1,6 @@
 #include "engine_object_layers.h"
-#include "engine_cameras.h"
 #include "nodes/minimal_node.h"
 #include "nodes/empty_node.h"
-#include "nodes/camera_node.h"
 #include "nodes/2d/rectangle_2d_node.h"
 #include "nodes/bitmap_sprite_node.h"
 #include "nodes/node_types.h"
@@ -64,19 +62,6 @@ void engine_invoke_all_node_callbacks(){
             // As long as this node was not just added, figure out its type and what callbacks it has
             if(node_base_is_just_added(node_base) == false){
                 switch(node_base->type){
-                    // case NODE_TYPE_EMPTY:
-                    // {
-                    //     // engine_empty_node_class_obj_t *empty_node = (engine_empty_node_class_obj_t*)node_base->node;
-                    //     mp_call_method_n_kw(0, 0, node_base->tick_cb);
-                    // }
-                    // break;
-                    case NODE_TYPE_CAMERA:
-                    {
-                        engine_camera_node_common_data_t *camera_node_common_data = node_base->node_common_data;
-                        exec[0] = camera_node_common_data->tick_cb;
-                        mp_call_method_n_kw(0, 0, exec);
-                    }
-                    break;
                     case NODE_TYPE_RECTANGLE_2D:
                     {
                         engine_rectangle_2d_node_common_data_t *rectangle_2d_node_common_data = node_base->node_common_data;
@@ -84,16 +69,9 @@ void engine_invoke_all_node_callbacks(){
                         mp_call_method_n_kw(0, 0, exec);
 
                         exec[0] = rectangle_2d_node_common_data->draw_cb;
-                        engine_camera_draw_for_each(exec);
+                        mp_call_method_n_kw(0, 0, exec);
                     }
                     break;
-                    // case NODE_TYPE_BITMAP_SPRITE:
-                    // {
-                    //     // engine_bitmap_sprite_node_class_obj_t *bitmap_sprite_node = (engine_bitmap_sprite_node_class_obj_t*)node_base->node;
-                    //     mp_call_method_n_kw(0, 0, node_base->tick_cb);
-                    //     engine_camera_draw_for_each(node_base->draw_cb);
-                    // }
-                    // break;
                     default:
                         ENGINE_WARNING_PRINTF("This node type doesn't do anything? %d", node_base->type);
                     break;

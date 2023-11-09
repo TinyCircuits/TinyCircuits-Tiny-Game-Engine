@@ -2,11 +2,9 @@
 #define ENGINE_DISPLAY_DRAW_H
 
 #include <stdint.h>
-#include "../nodes/camera_node.h"
 
-// If 'camera' is not NULL, rotate pixel around camera and offset/clip to viewport,
-// otherwise, make sure pixel is within screen bounds and put into screen buffer
-void engine_draw_pixel(uint16_t color, int32_t x, int32_t y, mp_obj_t camera);
+// Draw pixel within screen bounds and put into screen buffer
+void engine_draw_pixel(uint16_t color, int32_t x, int32_t y);
 
 // Fill entire screen buffer with a color
 void engine_draw_fill_screen_buffer(uint16_t color, uint16_t *screen_buffer);

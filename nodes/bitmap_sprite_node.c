@@ -1,7 +1,6 @@
 #include "bitmap_sprite_node.h"
 
 #include "node_types.h"
-#include "nodes/camera_node.h"
 #include "utility/debug_print.h"
 #include "../engine_object_layers.h"
 #include "math/vector3.h"
@@ -68,21 +67,14 @@ STATIC mp_obj_t bitmap_sprite_node_class_tick(mp_obj_t self_in){
 MP_DEFINE_CONST_FUN_OBJ_1(bitmap_sprite_node_class_tick_obj, bitmap_sprite_node_class_tick);
 
 
-STATIC mp_obj_t bitmap_sprite_node_class_draw(mp_obj_t self_in, mp_obj_t camera_obj){
+STATIC mp_obj_t bitmap_sprite_node_class_draw(mp_obj_t self_in){
     ENGINE_INFO_PRINTF("BitmapSpriteNode: Drawing");
 
-    engine_camera_node_class_obj_t *camera = MP_OBJ_TO_PTR(camera_obj);
-    vector3_class_obj_t *camera_position = camera->position;
-    
-    camera_position->z += 0.05;
-    camera_position->x = (20.0 * cos(camera_position->z));
-    camera_position->y = (20.0 * sin(camera_position->z));
 
-    engine_draw_pixel(0b1111100000000000, 128/4, 128/4, camera);
 
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_2(bitmap_sprite_node_class_draw_obj, bitmap_sprite_node_class_draw);
+MP_DEFINE_CONST_FUN_OBJ_1(bitmap_sprite_node_class_draw_obj, bitmap_sprite_node_class_draw);
 
 
 STATIC mp_obj_t bitmap_sprite_node_class_set_layer(mp_obj_t self_in, mp_obj_t layer){

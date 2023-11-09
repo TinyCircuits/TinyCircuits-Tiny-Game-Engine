@@ -5,7 +5,6 @@ add_library(usermod_engine INTERFACE)
 target_sources(usermod_engine INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/engine.c
     ${CMAKE_CURRENT_LIST_DIR}/nodes/empty_node.c
-    ${CMAKE_CURRENT_LIST_DIR}/nodes/camera_node.c
     ${CMAKE_CURRENT_LIST_DIR}/nodes/bitmap_sprite_node.c
     ${CMAKE_CURRENT_LIST_DIR}/nodes/2d/rectangle_2d_node.c
     ${CMAKE_CURRENT_LIST_DIR}/math/vector3.c
@@ -15,7 +14,6 @@ target_sources(usermod_engine INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/utility/linked_list.c
     ${CMAKE_CURRENT_LIST_DIR}/utility/engine_time.c
     ${CMAKE_CURRENT_LIST_DIR}/engine_object_layers.c
-    ${CMAKE_CURRENT_LIST_DIR}/engine_cameras.c
     ${CMAKE_CURRENT_LIST_DIR}/display/engine_display.c
     ${CMAKE_CURRENT_LIST_DIR}/display/engine_display_driver_rp2_st7789.c
     ${CMAKE_CURRENT_LIST_DIR}/display/engine_display_common.c

@@ -3,7 +3,6 @@ ENGINE_MOD_DIR := $(USERMOD_DIR)
 # Add our source files to the respective variables.
 SRC_USERMOD += $(ENGINE_MOD_DIR)/engine.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/empty_node.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/camera_node.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/bitmap_sprite_node.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/2d/rectangle_2d_node.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/math/vector3.c
@@ -13,7 +12,6 @@ SRC_USERMOD += $(ENGINE_MOD_DIR)/utility/debug_print.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/utility/linked_list.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/utility/engine_time.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/engine_object_layers.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/engine_cameras.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/display/engine_display.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/display/engine_display_driver_unix_sdl.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/display/engine_display_common.c
