@@ -1,5 +1,4 @@
 #include "engine_object_layers.h"
-#include "nodes/minimal_node.h"
 #include "nodes/empty_node.h"
 #include "nodes/2d/rectangle_2d_node.h"
 #include "nodes/bitmap_sprite_node.h"

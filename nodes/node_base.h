@@ -18,9 +18,6 @@ typedef struct{
     uint8_t type;                       // The type of this node (see 'node_types.h')
     void *node;
     void *node_common_data;             /// Common data for inherited and non-inherited nodes to always set here
-    
-    // mp_obj_t tick_cb;                   // Used for caching data used for calling the 'tick()' callback on instances of this node
-    // mp_obj_t draw_cb;                   // Used for caching data used for calling the 'draw()' callback on instances of this node
 }engine_node_base_t;
 
 
