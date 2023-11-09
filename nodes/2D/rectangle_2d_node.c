@@ -197,7 +197,7 @@ STATIC void rectangle_2d_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *
 
 // Class attributes
 STATIC const mp_rom_map_elem_t rectangle_2d_node_class_locals_dict_table[] = {
-    { MP_ROM_QSTR(MP_QSTR___del__),     MP_ROM_PTR(&rectangle_2d_node_class_del_obj) },
+    
 };
 
 
