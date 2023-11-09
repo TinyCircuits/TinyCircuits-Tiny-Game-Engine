@@ -8,7 +8,7 @@
 // Cameras are nodes just like everything else but are tracked
 // new a different list that the engine can loop through quickly.
 // This avoids a search through all the nodes
-linked_list_node *engine_camera_track(engine_camera_node_class_obj_t *obj);
+linked_list_node *engine_camera_track(engine_node_base_t *obj);
 
 // Call this with the saved link_list_node pointer to
 // remove the camera from the list of tracked cameras

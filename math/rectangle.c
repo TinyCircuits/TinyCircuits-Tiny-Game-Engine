@@ -9,15 +9,23 @@ STATIC void rectangle_class_print(const mp_print_t *print, mp_obj_t self_in, mp_
 
 mp_obj_t rectangle_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New rectangle");
-    mp_arg_check_num(n_args, n_kw, 0, 0, true);
 
     rectangle_class_obj_t *self = m_new_obj(rectangle_class_obj_t);
     self->base.type = &rectangle_class_type;
 
-    self->x = 0.0f;
-    self->y = 0.0f;
-    self->width = 0.0f;
-    self->height = 0.0f;
+    if(n_args == 0){
+        self->x = 0.0f;
+        self->y = 0.0f;
+        self->width = 0.0f;
+        self->height = 0.0f;
+    }else if(n_args == 4){
+        self->x = mp_obj_get_float(args[0]);
+        self->y = mp_obj_get_float(args[1]);
+        self->width = mp_obj_get_float(args[2]);
+        self->height = mp_obj_get_float(args[3]);
+    }else{
+        mp_raise_msg(&mp_type_RuntimeError, "Rectangle: Wrong number of arguments in constructor! Only accepts 0 or 4");
+    }
 
     return MP_OBJ_FROM_PTR(self);
 }

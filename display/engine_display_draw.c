@@ -29,7 +29,7 @@ inline bool is_xy_inside_screen(int32_t x, int32_t y){
 }
 
 
-void engine_draw_pixel(uint16_t color, int32_t x, int32_t y, engine_camera_node_class_obj_t *camera){
+void engine_draw_pixel(uint16_t color, int32_t x, int32_t y, mp_obj_t camera){
     uint16_t *screen_buffer = engine_get_active_screen_buffer();
 
     if(camera == NULL){
@@ -39,8 +39,8 @@ void engine_draw_pixel(uint16_t color, int32_t x, int32_t y, engine_camera_node_
             ENGINE_WARNING_PRINTF("Tried to draw pixel outside of screen bounds, clipped");
         }
     }else{
-        vector3_class_obj_t *camera_position = camera->position;
-        rectangle_class_obj_t *camera_viewport = camera->viewport;
+        vector3_class_obj_t *camera_position = mp_load_attr(camera, MP_QSTR_position);
+        rectangle_class_obj_t *camera_viewport  = mp_load_attr(camera, MP_QSTR_viewport);
 
         int32_t result_x = ((int32_t)camera_viewport->x) + (x - (int32_t)camera_position->x);
         int32_t result_y = ((int32_t)camera_viewport->y) + (y - (int32_t)camera_position->y);

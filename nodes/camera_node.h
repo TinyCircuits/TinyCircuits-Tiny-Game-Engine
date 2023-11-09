@@ -10,15 +10,15 @@
 // Camera nodes define the transform offset and
 // rotation in which everything is rendered.
 typedef struct{
-    mp_obj_base_t base;                 // MicroPython base (also used in engine for checking the type of generic node. This must be the first element of any node)
-    engine_node_base_t node_base;       // Engine node base (holds information about type, linked list location, draw/execution layer, visible, disabled, or just added. Required, must be second element)
-    mp_obj_t tick_dest[2];              // Used for caching data used for calling the 'tick()' callback on instances of this node
     mp_obj_t position;
     mp_obj_t rotation;
     mp_obj_t viewport;
-    linked_list_node *camera_list_node; // Used to keep reference into linked list of cameras in the scene
-    // TODO: Rotation about x,y,z (matrix?)
 }engine_camera_node_class_obj_t;
+
+typedef struct{
+    mp_obj_t tick_cb;
+    linked_list_node *camera_list_node;
+}engine_camera_node_common_data_t;
 
 extern const mp_obj_type_t engine_camera_node_class_type;
 

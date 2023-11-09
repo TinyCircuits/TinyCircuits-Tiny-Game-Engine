@@ -53,6 +53,13 @@ void engine_invoke_all_node_callbacks(){
         while(current_linked_list_node != NULL){
             // Get the base node that every node is stored under
             engine_node_base_t *node_base = current_linked_list_node->object;
+            mp_obj_t exec[2];
+
+            if(node_base->inherited){
+                exec[1] = node_base->node;
+            }else{
+                exec[1] = node_base;
+            }
 
             // As long as this node was not just added, figure out its type and what callbacks it has
             if(node_base_is_just_added(node_base) == false){
@@ -63,20 +70,21 @@ void engine_invoke_all_node_callbacks(){
                     //     mp_call_method_n_kw(0, 0, node_base->tick_cb);
                     // }
                     // break;
-                    // case NODE_TYPE_CAMERA:
-                    // {
-                    //     // engine_camera_node_class_obj_t *camera_node = (engine_camera_node_class_obj_t*)node_base->node;
-                    //     mp_call_method_n_kw(0, 0, node_base->tick_cb);
-                    // }
+                    case NODE_TYPE_CAMERA:
+                    {
+                        engine_camera_node_common_data_t *camera_node_common_data = node_base->node_common_data;
+                        exec[0] = camera_node_common_data->tick_cb;
+                        mp_call_method_n_kw(0, 0, exec);
+                    }
                     break;
                     case NODE_TYPE_RECTANGLE_2D:
                     {
-                        // engine_rectangle_2d_node_class_obj_t *rectangle_2d_node = (engine_rectangle_2d_node_class_obj_t*)node_base->node;
-                        mp_obj_t exec[2];
-                        exec[0] = node_base->tick_cb;
-                        exec[1] = node_base->node;
+                        engine_rectangle_2d_node_common_data_t *rectangle_2d_node_common_data = node_base->node_common_data;
+                        exec[0] = rectangle_2d_node_common_data->tick_cb;
                         mp_call_method_n_kw(0, 0, exec);
-                        // engine_camera_draw_for_each(node_base->draw_cb);
+
+                        exec[0] = rectangle_2d_node_common_data->draw_cb;
+                        engine_camera_draw_for_each(exec);
                     }
                     break;
                     // case NODE_TYPE_BITMAP_SPRITE:

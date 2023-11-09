@@ -15,6 +15,11 @@ typedef struct{
     mp_obj_t color;     // The color of this rectangle
 }engine_rectangle_2d_node_class_obj_t;
 
+typedef struct{
+    mp_obj_t tick_cb;
+    mp_obj_t draw_cb;
+}engine_rectangle_2d_node_common_data_t;
+
 extern const mp_obj_type_t engine_rectangle_2d_node_class_type;
 
 

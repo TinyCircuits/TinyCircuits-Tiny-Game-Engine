@@ -10,14 +10,17 @@
 #define NODE_BASE_JUST_ADDED_BIT_INDEX 2
 
 typedef struct{
-    mp_obj_base_t base;
-    uint8_t type;                       // The type of this node (see 'node_types.h')
+    mp_obj_base_t base;                 // All nodes get defined by what is placed in this
     linked_list_node *object_list_node; // Pointer to where this node is stored in the layers of linked lists the engine tracks (used for easy linked list deletion)
+    bool inherited;
     uint16_t layer;                     // The layer index of the linked list the 'object_list_node' lives in (used for easy deletion)
     uint8_t meta_data;                  // Holds bits related to if this node is visible (not shown or shown but callbacks still called), disabled (callbacks not called but still shown), or just added
-    mp_obj_t tick_cb;                   // Used for caching data used for calling the 'tick()' callback on instances of this node
-    mp_obj_t draw_cb;                   // Used for caching data used for calling the 'draw()' callback on instances of this node
+    uint8_t type;                       // The type of this node (see 'node_types.h')
     void *node;
+    void *node_common_data;             /// Common data for inherited and non-inherited nodes to always set here
+    
+    // mp_obj_t tick_cb;                   // Used for caching data used for calling the 'tick()' callback on instances of this node
+    // mp_obj_t draw_cb;                   // Used for caching data used for calling the 'draw()' callback on instances of this node
 }engine_node_base_t;
 
 

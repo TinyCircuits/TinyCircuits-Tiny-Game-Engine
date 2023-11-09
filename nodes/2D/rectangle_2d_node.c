@@ -23,25 +23,19 @@ MP_DEFINE_CONST_FUN_OBJ_1(rectangle_2d_node_class_tick_obj, rectangle_2d_node_cl
 
 
 STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_obj){
-    // ENGINE_INFO_PRINTF("Rectangle2DNode: Drawing");
+    ENGINE_INFO_PRINTF("Rectangle2DNode: Drawing");
 
-    // engine_rectangle_2d_node_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    // engine_camera_node_class_obj_t *camera = MP_OBJ_TO_PTR(camera_obj);
+    vector2_class_obj_t *position = mp_load_attr(self_in, MP_QSTR_position);
+    mp_int_t width = mp_obj_get_int(mp_load_attr(self_in, MP_QSTR_width));
+    mp_int_t height = mp_obj_get_int(mp_load_attr(self_in, MP_QSTR_height));
+    mp_int_t color = mp_obj_get_int(mp_load_attr(self_in, MP_QSTR_color));
 
-    // // For whatever reason, position being a struct within self
-    // // means that we don't need to look up the position attribute.
-    // // Only things like self.width need to be looked up
-    // vector2_class_obj_t *position = self->position;
-    // mp_int_t width = mp_obj_get_int(mp_load_attr(self->access, MP_QSTR_width));
-    // mp_int_t height = mp_obj_get_int(mp_load_attr(self->access, MP_QSTR_height));
-    // mp_int_t color = mp_obj_get_int(mp_load_attr(self->access, MP_QSTR_color));
-
-    // // Rotation not implemented yet so this is simple!
-    // for(mp_int_t y=0; y<height; y++){
-    //     for(mp_int_t x=0; x<width; x++){
-    //         engine_draw_pixel(color, (int32_t)position->x+x, (int32_t)position->y+y, camera);
-    //     }
-    // }
+    // Rotation not implemented yet so this is simple!
+    for(mp_int_t y=0; y<height; y++){
+        for(mp_int_t x=0; x<width; x++){
+            engine_draw_pixel(color, (int32_t)position->x+x, (int32_t)position->y+y, camera_obj);
+        }
+    }
 
     return mp_const_none;
 }
@@ -58,8 +52,11 @@ MP_DEFINE_CONST_FUN_OBJ_1(rectangle_2d_class_attr_test_obj, rectangle_2d_class_a
 mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Rectangle2DNode");
     
+    engine_rectangle_2d_node_common_data_t *common_data = malloc(sizeof(engine_rectangle_2d_node_common_data_t));
+
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);
+    node_base->node_common_data = common_data;
     node_base->base.type = &engine_rectangle_2d_node_class_type;
     node_base->layer = 0;
     node_base->type = NODE_TYPE_RECTANGLE_2D;
@@ -68,27 +65,31 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
     node_base_set_if_disabled(node_base, false);
     node_base_set_if_just_added(node_base, true);
 
-    node_base->draw_cb = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_draw_obj);
+    common_data->draw_cb = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_draw_obj);
 
     if(n_args == 0){        // Non-inherited (create a new object)
+        node_base->inherited = false;
+
         engine_rectangle_2d_node_class_obj_t *rectangle_2d_node = m_malloc(sizeof(engine_rectangle_2d_node_class_obj_t));
         node_base->node = rectangle_2d_node;
 
-        node_base->tick_cb = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_tick_obj);
+        common_data->tick_cb = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_tick_obj);
 
         rectangle_2d_node->position = vector2_class_new(&vector2_class_type, 0, 0, NULL);
         rectangle_2d_node->width = mp_obj_new_int(15);
         rectangle_2d_node->height = mp_obj_new_int(5);
         rectangle_2d_node->color = mp_obj_new_int(0xffff);
     }else if(n_args == 1){  // Inherited (use existing object)
+        node_base->inherited = true;
+
         node_base->node = args[0];
 
         mp_obj_t dest[2];
         mp_load_method_maybe(node_base->node, MP_QSTR_tick, dest);
         if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
-            node_base->tick_cb = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_tick_obj);
+            common_data->tick_cb = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_tick_obj);
         }else{                                                  // Likely found method (could be attribute)
-            node_base->tick_cb = dest[0];
+            common_data->tick_cb = dest[0];
         }
 
         mp_store_attr(node_base->node, MP_QSTR_position, vector2_class_new(&vector2_class_type, 0, 0, NULL));
