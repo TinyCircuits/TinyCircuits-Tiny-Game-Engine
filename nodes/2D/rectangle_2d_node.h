@@ -1,5 +1,5 @@
 #ifndef RECTANGLE_2D_NODE_H
-#define RECTANGLE_2d_NODE_H
+#define RECTANGLE_2D_NODE_H
 
 #include "py/obj.h"
 #include "../node_base.h"
@@ -23,4 +23,4 @@ typedef struct{
 extern const mp_obj_type_t engine_rectangle_2d_node_class_type;
 
 
-#endif  // RECTANGLE_2d_NODE_H
+#endif  // RECTANGLE_2D_NODE_H

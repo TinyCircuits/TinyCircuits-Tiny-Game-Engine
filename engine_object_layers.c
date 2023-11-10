@@ -1,7 +1,7 @@
 #include "engine_object_layers.h"
 #include "nodes/empty_node.h"
 #include "nodes/2d/rectangle_2d_node.h"
-#include "nodes/bitmap_sprite_node.h"
+#include "nodes/2d/sprite_2d_node.h"
 #include "nodes/node_types.h"
 
 uint16_t engine_object_layer_count = 8;
@@ -71,8 +71,18 @@ void engine_invoke_all_node_callbacks(){
                         mp_call_method_n_kw(0, 0, exec);
                     }
                     break;
+                    case NODE_TYPE_SPRITE_2D:
+                    {
+                        engine_sprite_2d_node_common_data_t *sprite_2d_node_common_data = node_base->node_common_data;
+                        exec[0] = sprite_2d_node_common_data->tick_cb;
+                        mp_call_method_n_kw(0, 0, exec);
+
+                        exec[0] = sprite_2d_node_common_data->draw_cb;
+                        mp_call_method_n_kw(0, 0, exec);
+                    }
+                    break;
                     default:
-                        ENGINE_WARNING_PRINTF("This node type doesn't do anything? %d", node_base->type);
+                        ENGINE_ERROR_PRINTF("This node type doesn't do anything? %d", node_base->type);
                     break;
                 }
 

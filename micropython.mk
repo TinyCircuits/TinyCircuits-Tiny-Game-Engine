@@ -3,7 +3,7 @@ ENGINE_MOD_DIR := $(USERMOD_DIR)
 # Add our source files to the respective variables.
 SRC_USERMOD += $(ENGINE_MOD_DIR)/engine.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/empty_node.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/bitmap_sprite_node.c
+SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/2d/sprite_2d_node.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/2d/rectangle_2d_node.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/math/vector3.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/math/vector2.c

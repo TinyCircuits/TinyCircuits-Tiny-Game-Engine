@@ -8,7 +8,7 @@
 #include "math/rectangle.h"
 
 #include "nodes/empty_node.h"
-#include "nodes/bitmap_sprite_node.h"
+#include "nodes/2d/sprite_2d_node.h"
 #include "nodes/2d/rectangle_2d_node.h"
 
 // ### MODULE ###
@@ -124,7 +124,7 @@ STATIC const mp_rom_map_elem_t engine_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_Vector3), (mp_obj_t)&vector3_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Rectangle), (mp_obj_t)&rectangle_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_EmptyNode), (mp_obj_t)&engine_empty_node_class_type },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_BitmapSpriteNode), (mp_obj_t)&engine_bitmap_sprite_node_class_type },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_Sprite2DNode), (mp_obj_t)&engine_sprite_2d_node_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Rectangle2DNode), (mp_obj_t)&engine_rectangle_2d_node_class_type },
     
     { MP_OBJ_NEW_QSTR(MP_QSTR_init), (mp_obj_t)&engine_init_obj },

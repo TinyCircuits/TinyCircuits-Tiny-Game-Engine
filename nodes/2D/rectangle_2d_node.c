@@ -40,13 +40,6 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in){
 MP_DEFINE_CONST_FUN_OBJ_1(rectangle_2d_node_class_draw_obj, rectangle_2d_node_class_draw);
 
 
-STATIC mp_obj_t rectangle_2d_class_attr_test(mp_obj_t self_in){
-    ENGINE_INFO_PRINTF("Accessing Rectangle2DNode attr test");
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_1(rectangle_2d_class_attr_test_obj, rectangle_2d_class_attr_test);
-
-
 mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Rectangle2DNode");
     
@@ -63,8 +56,6 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
     node_base_set_if_disabled(node_base, false);
     node_base_set_if_just_added(node_base, true);
 
-    common_data->draw_cb = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_draw_obj);
-
     if(n_args == 0){        // Non-inherited (create a new object)
         node_base->inherited = false;
 
@@ -72,6 +63,7 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
         node_base->node = rectangle_2d_node;
 
         common_data->tick_cb = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_tick_obj);
+        common_data->draw_cb = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_draw_obj);
 
         rectangle_2d_node->position = vector2_class_new(&vector2_class_type, 0, 0, NULL);
         rectangle_2d_node->width = mp_obj_new_int(15);
@@ -79,15 +71,22 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
         rectangle_2d_node->color = mp_obj_new_int(0xffff);
     }else if(n_args == 1){  // Inherited (use existing object)
         node_base->inherited = true;
-
         node_base->node = args[0];
 
+        // Look for function overrides otherwise use the defaults
         mp_obj_t dest[2];
         mp_load_method_maybe(node_base->node, MP_QSTR_tick, dest);
         if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
             common_data->tick_cb = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_tick_obj);
         }else{                                                  // Likely found method (could be attribute)
             common_data->tick_cb = dest[0];
+        }
+
+        mp_load_method_maybe(node_base->node, MP_QSTR_draw, dest);
+        if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
+            common_data->draw_cb = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_draw_obj);
+        }else{                                                  // Likely found method (could be attribute)
+            common_data->draw_cb = dest[0];
         }
 
         mp_store_attr(node_base->node, MP_QSTR_position, vector2_class_new(&vector2_class_type, 0, 0, NULL));
@@ -137,7 +136,7 @@ STATIC mp_obj_t rectangle_2d_node_class_get_layer(mp_obj_t self_in){
 MP_DEFINE_CONST_FUN_OBJ_1(rectangle_2d_node_class_get_layer_obj, rectangle_2d_node_class_get_layer);
 
 
-STATIC void rectangle_2d_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+STATIC void rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Rectangle2DNode attr");
 
     engine_rectangle_2d_node_class_obj_t *self = ((engine_node_base_t*)(self_in))->node;
@@ -212,7 +211,7 @@ const mp_obj_type_t engine_rectangle_2d_node_class_type = {
     .call = NULL,
     .unary_op = NULL,
     .binary_op = NULL,
-    .attr = rectangle_2d_class_attr,
+    .attr = rectangle_2d_node_class_attr,
     .subscr = NULL,
     .getiter = NULL,
     .iternext = NULL,
