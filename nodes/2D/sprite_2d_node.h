@@ -2,10 +2,6 @@
 #define SPRITE_2D_NODE_H
 
 #include "py/obj.h"
-#include "nodes/node_base.h"
-#include "math/vector3.h"
-#include "math/rectangle.h"
-#include "utility/linked_list.h"
 
 // A basic 2d sprite node
 typedef struct{

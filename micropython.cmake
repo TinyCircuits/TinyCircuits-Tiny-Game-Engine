@@ -8,6 +8,7 @@ target_sources(usermod_engine INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/math/engine_math_module.c
     ${CMAKE_CURRENT_LIST_DIR}/nodes/engine_nodes_module.c
     ${CMAKE_CURRENT_LIST_DIR}/nodes/empty_node.c
+    ${CMAKE_CURRENT_LIST_DIR}/nodes/3d/camera_node.c
     ${CMAKE_CURRENT_LIST_DIR}/nodes/2d/sprite_2d_node.c
     ${CMAKE_CURRENT_LIST_DIR}/nodes/2d/rectangle_2d_node.c
     ${CMAKE_CURRENT_LIST_DIR}/math/vector3.c

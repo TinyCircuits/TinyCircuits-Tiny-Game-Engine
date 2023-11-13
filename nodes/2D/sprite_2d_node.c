@@ -1,10 +1,12 @@
 #include "sprite_2d_node.h"
 
 #include "nodes/node_types.h"
+#include "nodes/node_base.h"
 #include "debug/debug_print.h"
 #include "engine_object_layers.h"
 #include "math/vector2.h"
 #include "draw/engine_display_draw.h"
+
 
 // Class required functions
 STATIC void sprite_2d_node_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){

@@ -3,6 +3,7 @@
 #include "nodes/2d/rectangle_2d_node.h"
 #include "nodes/2d/sprite_2d_node.h"
 #include "nodes/node_types.h"
+#include "nodes/node_base.h"
 
 uint16_t engine_object_layer_count = 8;
 linked_list engine_object_layers[8];

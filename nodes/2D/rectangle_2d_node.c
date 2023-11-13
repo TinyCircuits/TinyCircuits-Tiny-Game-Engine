@@ -1,5 +1,7 @@
 #include "rectangle_2d_node.h"
+
 #include "nodes/node_types.h"
+#include "nodes/node_base.h"
 #include "debug/debug_print.h"
 #include "engine_object_layers.h"
 #include "math/vector2.h"

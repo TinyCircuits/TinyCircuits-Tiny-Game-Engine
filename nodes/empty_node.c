@@ -1,6 +1,7 @@
 #include "empty_node.h"
 
 #include "node_types.h"
+#include "node_base.h"
 #include "debug/debug_print.h"
 #include "engine_object_layers.h"
 

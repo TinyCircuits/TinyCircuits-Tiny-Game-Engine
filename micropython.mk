@@ -6,6 +6,7 @@ SRC_USERMOD += $(ENGINE_MOD_DIR)/draw/engine_draw_module.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/math/engine_math_module.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/engine_nodes_module.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/empty_node.c
+SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/3d/camera_node.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/2d/sprite_2d_node.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/2d/rectangle_2d_node.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/math/vector3.c
