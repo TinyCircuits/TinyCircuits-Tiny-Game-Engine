@@ -47,6 +47,11 @@ void engine_draw_pixel(uint16_t color, int32_t x, int32_t y){
     }
 }
 
+void engine_draw_pixel_unsafe(uint16_t color, int32_t x, int32_t y){
+    uint16_t *screen_buffer = engine_get_active_screen_buffer();
+    screen_buffer[y*SCREEN_WIDTH + x] = color;
+}
+
 
 void engine_draw_fill_screen_buffer(uint16_t color, uint16_t *screen_buffer){
     memset(screen_buffer, color, SCREEN_BUFFER_SIZE_BYTES);
