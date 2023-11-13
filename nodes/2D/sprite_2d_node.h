@@ -2,7 +2,7 @@
 #define SPRITE_2D_NODE_H
 
 #include "py/obj.h"
-#include "../node_base.h"
+#include "nodes/node_base.h"
 #include "math/vector3.h"
 #include "math/rectangle.h"
 #include "utility/linked_list.h"

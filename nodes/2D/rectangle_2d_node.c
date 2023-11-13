@@ -1,10 +1,10 @@
 #include "rectangle_2d_node.h"
-#include "../node_types.h"
-#include "utility/debug_print.h"
-#include "../../engine_object_layers.h"
+#include "nodes/node_types.h"
+#include "debug/debug_print.h"
+#include "engine_object_layers.h"
 #include "math/vector2.h"
 #include "math/vector3.h"
-#include "display/engine_display_draw.h"
+#include "draw/engine_display_draw.h"
 
 // Class required functions
 STATIC void rectangle_2d_node_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){

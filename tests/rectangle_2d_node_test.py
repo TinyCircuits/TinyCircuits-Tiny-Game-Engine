@@ -1,9 +1,11 @@
 import gc
 import engine
+import engine_debug
+from engine_nodes import Rectangle2DNode
+from engine_math import Vector2, Rectangle
 from common import run_tests
-from engine import Rectangle2DNode, Vector2
 
-engine.debug_enable_all()
+engine_debug.debug_enable_all()
 engine.init()
 
 def non_inherited_attribute_xy_pos_test():

@@ -1,6 +1,6 @@
 #include "engine_display_common.h"
-#include "engine_display_draw.h"
-#include "../utility/debug_print.h"
+#include "draw/engine_display_draw.h"
+#include "debug/debug_print.h"
 #include <stdbool.h>
 #include <stdlib.h>
 

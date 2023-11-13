@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include "py/obj.h"
 
-#include "utility/debug_print.h"
+#include "debug/debug_print.h"
 
 
 typedef struct linked_list_node{

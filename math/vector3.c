@@ -1,5 +1,5 @@
 #include "vector3.h"
-#include "utility/debug_print.h"
+#include "debug/debug_print.h"
 
 // Class required functions
 STATIC void vector3_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){

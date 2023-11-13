@@ -1,9 +1,9 @@
-#include "engine_display_draw.h"
-#include "engine_display_common.h"
-#include "../utility/debug_print.h"
+#include "draw/engine_display_draw.h"
+#include "display/engine_display_common.h"
+#include "debug/debug_print.h"
 
-#include "../math/vector3.h"
-#include "../math/rectangle.h"
+#include "math/vector3.h"
+#include "math/rectangle.h"
 
 #include <string.h>
 

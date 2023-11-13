@@ -1,6 +1,6 @@
 #include "engine_display_driver_rp2_st7789.h"
 #include "engine_display_common.h"
-#include "../utility/debug_print.h"
+#include "debug/debug_print.h"
 
 #include <string.h>
 #include <stdbool.h>

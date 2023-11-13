@@ -1,8 +1,8 @@
 #include "empty_node.h"
 
 #include "node_types.h"
-#include "utility/debug_print.h"
-#include "../engine_object_layers.h"
+#include "debug/debug_print.h"
+#include "engine_object_layers.h"
 
 // Class required functions
 STATIC void empty_node_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){

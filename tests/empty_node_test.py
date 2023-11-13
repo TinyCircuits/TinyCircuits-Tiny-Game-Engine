@@ -1,9 +1,10 @@
 import gc
 import engine
+import engine_debug
+from engine_nodes import EmptyNode
 from common import run_tests
-from engine import EmptyNode
 
-engine.debug_enable_all()
+engine_debug.debug_enable_all()
 engine.init()
 
 

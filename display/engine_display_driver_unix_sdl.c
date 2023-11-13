@@ -1,7 +1,7 @@
 #include "engine_display_driver_unix_sdl.h"
 #include "engine_display_common.h"
-#include "engine_display_draw.h"
-#include "utility/debug_print.h"
+#include "draw/engine_display_draw.h"
+#include "debug/debug_print.h"
 #include <SDL2/SDL.h>
 
 SDL_Window *window;
