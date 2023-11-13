@@ -83,7 +83,7 @@ mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t 
 
 // Class methods
 STATIC mp_obj_t camera_node_class_del(mp_obj_t self_in){
-    ENGINE_INFO_PRINTF("CameraNode: Deleted (garbage collected, removing self from active engine objects)");
+    ENGINE_WARNING_PRINTF("CameraNode: Deleted (garbage collected, removing self from active engine objects)");
 
     engine_node_base_t *node_base = self_in;
     free(node_base->node_common_data);

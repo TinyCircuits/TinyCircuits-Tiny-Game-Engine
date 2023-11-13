@@ -3,26 +3,26 @@
 
 // Class required functions
 STATIC void rectangle_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
-    rectangle_class_obj_t *self = self_in;
-    ENGINE_INFO_PRINTF("print(): rectangle [x: %0.3f, y: %0.3f, width: %0.3f, height: %0.3f]", (double)self->x, (double)self->y, (double)self->width, (double)self->height);
+    (void)kind;
+    ENGINE_INFO_PRINTF("print(): Rectangle");
 }
 
 mp_obj_t rectangle_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
-    ENGINE_INFO_PRINTF("New rectangle");
+    ENGINE_INFO_PRINTF("New Rectangle");
 
     rectangle_class_obj_t *self = m_new_obj(rectangle_class_obj_t);
     self->base.type = &rectangle_class_type;
 
     if(n_args == 0){
-        self->x = 0.0f;
-        self->y = 0.0f;
-        self->width = 0.0f;
-        self->height = 0.0f;
+        self->x = mp_obj_new_float(0.0f);
+        self->y = mp_obj_new_float(0.0f);
+        self->width = mp_obj_new_float(0.0f);
+        self->height = mp_obj_new_float(0.0f);
     }else if(n_args == 4){
-        self->x = mp_obj_get_float(args[0]);
-        self->y = mp_obj_get_float(args[1]);
-        self->width = mp_obj_get_float(args[2]);
-        self->height = mp_obj_get_float(args[3]);
+        self->x = args[0];
+        self->y = args[1];
+        self->width = args[2];
+        self->height = args[3];
     }else{
         mp_raise_msg(&mp_type_RuntimeError, "Rectangle: Wrong number of arguments in constructor! Only accepts 0 or 4");
     }
@@ -39,35 +39,31 @@ STATIC mp_obj_t rectangle_class_area(mp_obj_t self){
 MP_DEFINE_CONST_FUN_OBJ_1(rectangle_class_area_obj, rectangle_class_area);
 
 
-// Function called when accessing like print(my_node.position.x) (load 'x')
-// my_node.position.x = 0 (store 'x').
-// See https://micropython-usermod.readthedocs.io/en/latest/usermods_09.html#properties
-// See https://github.com/micropython/micropython/blob/91a3f183916e1514fbb8dc58ca5b77acc59d4346/extmod/modasyncio.c#L227
 STATIC void rectangle_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     rectangle_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
 
     if(destination[0] == MP_OBJ_NULL){          // Load
         if(attribute == MP_QSTR_x){
-            destination[0] = (mp_obj_t*)(&self->x);
+            destination[0] = self->x;
         }else if(attribute == MP_QSTR_y){
-            destination[0] = (mp_obj_t*)(&self->y);
+            destination[0] = self->y;
         }else if(attribute == MP_QSTR_width){
-            destination[0] = (mp_obj_t*)(&self->width);
+            destination[0] = self->width;
         }else if(attribute == MP_QSTR_height){
-            destination[0] = (mp_obj_t*)(&self->height);
+            destination[0] = self->height;
         }else if(attribute == MP_QSTR_area){
             destination[0] = MP_OBJ_FROM_PTR(&rectangle_class_area_obj);
             destination[1] = self_in;
         }
     }else if(destination[1] != MP_OBJ_NULL){    // Store
         if(attribute == MP_QSTR_x){
-            self->x = mp_obj_get_float(destination[1]);
+            self->x = destination[1];
         }else if(attribute == MP_QSTR_y){
-            self->y = mp_obj_get_float(destination[1]);
+            self->y = destination[1];
         }else if(attribute == MP_QSTR_width){
-            self->width = mp_obj_get_float(destination[1]);
+            self->width = destination[1];
         }else if(attribute == MP_QSTR_height){
-            self->height = mp_obj_get_float(destination[1]);
+            self->height = destination[1];
         }else{
             return;
         }
@@ -80,7 +76,7 @@ STATIC void rectangle_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *des
 
 // Class attributes
 STATIC const mp_rom_map_elem_t rectangle_class_locals_dict_table[] = {
-    { MP_ROM_QSTR(MP_QSTR_area), MP_ROM_PTR(&rectangle_class_area_obj) },
+
 };
 
 

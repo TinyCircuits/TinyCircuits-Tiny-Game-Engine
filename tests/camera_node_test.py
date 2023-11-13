@@ -43,7 +43,7 @@ def non_inherited_attribute_xywh_viewport_test():
 
 def non_inherited_attribute_viewport_test():
     non_inherited = CameraNode()
-    non_inherited.viewport.x = Rectangle(4, 4, 4, 4)
+    non_inherited.viewport = Rectangle(4, 4, 4, 4)
     return non_inherited.viewport.x == 4 and non_inherited.viewport.y == 4 and non_inherited.viewport.width == 4 and non_inherited.viewport.height == 4
 
 
@@ -119,11 +119,12 @@ def inherited_attribute_tick_xyz_pos_test():
             self.position.y = 1
             self.position.z = 1
 
+    inherited = MyCam()
+
     # Two ticks since object would be just added
     engine.tick()
     engine.tick()
 
-    inherited = MyCam()
     return inherited.position.x == 1 and inherited.position.y == 1 and inherited.position.z == 1
 
 def inherited_attribute_tick_pos_test():
@@ -134,11 +135,12 @@ def inherited_attribute_tick_pos_test():
         def tick(self):
             self.position = Vector3(2, 2, 2)
 
+    inherited = MyCam()
+
     # Two ticks since object would be just added
     engine.tick()
     engine.tick()
 
-    inherited = MyCam()
     return inherited.position.x == 2 and inherited.position.y == 2 and inherited.position.z == 2
 
 def inherited_attribute_tick_xyz_rot_test():
@@ -151,11 +153,12 @@ def inherited_attribute_tick_xyz_rot_test():
             self.rotation.y = 3
             self.rotation.z = 3
 
+    inherited = MyCam()
+
     # Two ticks since object would be just added
     engine.tick()
     engine.tick()
 
-    inherited = MyCam()
     return inherited.rotation.x == 3 and inherited.rotation.y == 3 and inherited.rotation.z == 3
 
 def inherited_attribute_tick_rot_test():
@@ -166,11 +169,12 @@ def inherited_attribute_tick_rot_test():
         def tick(self):
             self.rotation = Vector3(4, 4, 4)
 
+    inherited = MyCam()
+
     # Two ticks since object would be just added
     engine.tick()
     engine.tick()
 
-    inherited = MyCam()
     return inherited.rotation.x == 4 and inherited.rotation.y == 4 and inherited.rotation.z == 4
 
 def inherited_attribute_tick_xywh_viewport_test():
@@ -184,11 +188,12 @@ def inherited_attribute_tick_xywh_viewport_test():
             self.viewport.width = 5
             self.viewport.height = 5
 
+    inherited = MyCam()
+
     # Two ticks since object would be just added
     engine.tick()
     engine.tick()
 
-    inherited = MyCam()
     return inherited.viewport.x == 5 and inherited.viewport.y == 5 and inherited.viewport.width == 5 and inherited.viewport.height == 5
 
 def inherited_attribute_tick_viewport_test():
@@ -199,11 +204,12 @@ def inherited_attribute_tick_viewport_test():
         def tick(self):
             self.viewport = Rectangle(6, 6, 6, 6)
 
+    inherited = MyCam()
+
     # Two ticks since object would be just added
     engine.tick()
     engine.tick()
 
-    inherited = MyCam()
     return inherited.viewport.x == 6 and inherited.viewport.y == 6 and inherited.viewport.width == 6 and inherited.viewport.height == 6
 
 

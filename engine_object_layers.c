@@ -1,5 +1,6 @@
 #include "engine_object_layers.h"
 #include "nodes/empty_node.h"
+#include "nodes/3d/camera_node.h"
 #include "nodes/2d/rectangle_2d_node.h"
 #include "nodes/2d/sprite_2d_node.h"
 #include "nodes/node_types.h"
@@ -62,6 +63,20 @@ void engine_invoke_all_node_callbacks(){
             // As long as this node was not just added, figure out its type and what callbacks it has
             if(node_base_is_just_added(node_base) == false){
                 switch(node_base->type){
+                    case NODE_TYPE_EMPTY:
+                    {
+                        engine_empty_node_common_data_t *empty_node_common_data = node_base->node_common_data;
+                        exec[0] = empty_node_common_data->tick_cb;
+                        mp_call_method_n_kw(0, 0, exec);
+                    }
+                    break;
+                    case NODE_TYPE_CAMERA:
+                    {
+                        engine_camera_node_common_data_t *camera_node_common_data = node_base->node_common_data;
+                        exec[0] = camera_node_common_data->tick_cb;
+                        mp_call_method_n_kw(0, 0, exec);
+                    }
+                    break;
                     case NODE_TYPE_RECTANGLE_2D:
                     {
                         engine_rectangle_2d_node_common_data_t *rectangle_2d_node_common_data = node_base->node_common_data;
