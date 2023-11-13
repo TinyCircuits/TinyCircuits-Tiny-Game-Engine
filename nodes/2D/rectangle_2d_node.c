@@ -26,6 +26,10 @@ MP_DEFINE_CONST_FUN_OBJ_1(rectangle_2d_node_class_tick_obj, rectangle_2d_node_cl
 STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("Rectangle2DNode: Drawing");
 
+    vector3_class_obj_t *camera_position = mp_load_attr(camera_node, MP_QSTR_position);
+    // vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node, MP_QSTR_rotation);
+    rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node, MP_QSTR_viewport);
+
     vector2_class_obj_t *position = mp_load_attr(self_in, MP_QSTR_position);
     mp_int_t width = mp_obj_get_int(mp_load_attr(self_in, MP_QSTR_width));
     mp_int_t height = mp_obj_get_int(mp_load_attr(self_in, MP_QSTR_height));
@@ -34,7 +38,7 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_n
     // Rotation not implemented yet so this is simple!
     for(mp_int_t y=0; y<height; y++){
         for(mp_int_t x=0; x<width; x++){
-            engine_draw_pixel(color, (int32_t)position->x+x, (int32_t)position->y+y, camera_node);
+            engine_draw_pixel(color, (int32_t)position->x+x, (int32_t)position->y+y, camera_position, camera_viewport);
         }
     }
 

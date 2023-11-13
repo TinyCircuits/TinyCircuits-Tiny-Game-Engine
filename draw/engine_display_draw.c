@@ -2,9 +2,6 @@
 #include "display/engine_display_common.h"
 #include "debug/debug_print.h"
 
-#include "math/vector3.h"
-#include "math/rectangle.h"
-
 #include <string.h>
 
 
@@ -26,20 +23,16 @@ inline bool is_xy_inside_screen(int32_t x, int32_t y){
 }
 
 
-void engine_draw_pixel(uint16_t color, int32_t x, int32_t y, mp_obj_t camera){
+void engine_draw_pixel(uint16_t color, int32_t x, int32_t y, vector3_class_obj_t *camera_position, rectangle_class_obj_t *camera_viewport){
     uint16_t *screen_buffer = engine_get_active_screen_buffer();
 
-    if(camera == NULL){
+    if(camera_position == NULL || camera_viewport == NULL){
         if(is_xy_inside_screen(x, y)){
             screen_buffer[y*SCREEN_WIDTH + x] = color;
         }else{
             ENGINE_WARNING_PRINTF("Tried to draw pixel outside of screen bounds, clipped");
         }
     }else{
-        vector3_class_obj_t *camera_position = mp_load_attr(camera, MP_QSTR_position);
-        // vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node, MP_QSTR_rotation);
-        rectangle_class_obj_t *camera_viewport = mp_load_attr(camera, MP_QSTR_viewport);
-
         int32_t vx = (int32_t)mp_obj_get_float(camera_viewport->x);
         int32_t vy = (int32_t)mp_obj_get_float(camera_viewport->y);
         uint8_t vw = (uint8_t)mp_obj_get_float(camera_viewport->width);
