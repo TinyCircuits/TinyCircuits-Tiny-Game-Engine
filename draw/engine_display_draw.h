@@ -14,6 +14,9 @@ void engine_draw_pixel_viewport(uint16_t color, int32_t x, int32_t y, int32_t vx
 // Draw pixel immediately without checking anything at all
 void engine_draw_pixel_unsafe(uint16_t color, int32_t x, int32_t y);
 
+// Draw pixel immediately without checking anything at all
+void engine_draw_pixel_unsafe(uint16_t color, int32_t x, int32_t y);
+
 // Fill entire screen buffer with a color
 void engine_draw_fill_screen_buffer(uint16_t color, uint16_t *screen_buffer);
 
