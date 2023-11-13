@@ -38,8 +38,11 @@ void engine_draw_pixel(uint16_t color, int32_t x, int32_t y, vector3_class_obj_t
         uint8_t vw = (uint8_t)mp_obj_get_float(camera_viewport->width);
         uint8_t vh = (uint8_t)mp_obj_get_float(camera_viewport->height);
 
-        int32_t result_x = ((int32_t)vx) + (x - (int32_t)camera_position->x);
-        int32_t result_y = ((int32_t)vy) + (y - (int32_t)camera_position->y);
+        int32_t px = (int32_t)mp_obj_get_float(camera_position->x);
+        int32_t py = (int32_t)mp_obj_get_float(camera_position->y);
+
+        int32_t result_x = vx + (x - px);
+        int32_t result_y = vy + (y - py);
 
         if(is_xy_inside_viewport(result_x, result_y, vx, vy, vw, vh)){
             screen_buffer[result_y*SCREEN_WIDTH + result_x] = color;
