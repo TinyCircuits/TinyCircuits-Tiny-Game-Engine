@@ -219,7 +219,7 @@ def non_inherited_attribute_gc_collect_test():
     engine.tick()
     engine.tick()
 
-    # Get rid of any objects that maybe waiting to be deleted too
+    # Get rid of any objects that may be waiting to be deleted too
     gc.collect()
 
     # Get the count before adding another one, add one, then delete and collect it
@@ -242,7 +242,7 @@ def inherited_attribute_gc_collect_test():
         def __init__(self):
             super().__init__(self)
 
-    # Get rid of any objects that maybe waiting to be deleted too
+    # Get rid of any objects that may be waiting to be deleted too
     gc.collect()
 
     # Get the count before adding another one, add one, then delete and collect it

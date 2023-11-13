@@ -2,6 +2,7 @@
 #define CAMERA_NODE_H
 
 #include "py/obj.h"
+#include "utility/linked_list.h"
 
 
 // Node the defines view that the world is rendered about
@@ -13,6 +14,7 @@ typedef struct{
 
 typedef struct{
     mp_obj_t tick_cb;
+    linked_list_node *camera_list_node;
 }engine_camera_node_common_data_t;
 
 extern const mp_obj_type_t engine_camera_node_class_type;

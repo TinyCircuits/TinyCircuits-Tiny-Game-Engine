@@ -17,6 +17,7 @@ SRC_USERMOD += $(ENGINE_MOD_DIR)/debug/debug_print.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/utility/linked_list.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/utility/engine_time.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/engine_object_layers.c
+SRC_USERMOD += $(ENGINE_MOD_DIR)/engine_cameras.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/display/engine_display.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/display/engine_display_driver_unix_sdl.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/display/engine_display_common.c

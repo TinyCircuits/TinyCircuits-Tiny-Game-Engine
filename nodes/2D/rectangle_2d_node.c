@@ -6,6 +6,7 @@
 #include "engine_object_layers.h"
 #include "math/vector2.h"
 #include "math/vector3.h"
+#include "math/rectangle.h"
 #include "draw/engine_display_draw.h"
 
 // Class required functions
@@ -22,7 +23,7 @@ STATIC mp_obj_t rectangle_2d_node_class_tick(mp_obj_t self_in){
 MP_DEFINE_CONST_FUN_OBJ_1(rectangle_2d_node_class_tick_obj, rectangle_2d_node_class_tick);
 
 
-STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in){
+STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("Rectangle2DNode: Drawing");
 
     vector2_class_obj_t *position = mp_load_attr(self_in, MP_QSTR_position);
@@ -33,13 +34,13 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in){
     // Rotation not implemented yet so this is simple!
     for(mp_int_t y=0; y<height; y++){
         for(mp_int_t x=0; x<width; x++){
-            engine_draw_pixel(color, (int32_t)position->x+x, (int32_t)position->y+y);
+            engine_draw_pixel(color, (int32_t)position->x+x, (int32_t)position->y+y, camera_node);
         }
     }
 
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_1(rectangle_2d_node_class_draw_obj, rectangle_2d_node_class_draw);
+MP_DEFINE_CONST_FUN_OBJ_2(rectangle_2d_node_class_draw_obj, rectangle_2d_node_class_draw);
 
 
 mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){

@@ -1,10 +1,11 @@
 #ifndef ENGINE_DISPLAY_DRAW_H
 #define ENGINE_DISPLAY_DRAW_H
 
+#include "py/obj.h"
 #include <stdint.h>
 
 // Draw pixel within screen bounds and put into screen buffer
-void engine_draw_pixel(uint16_t color, int32_t x, int32_t y);
+void engine_draw_pixel(uint16_t color, int32_t x, int32_t y, mp_obj_t camera);
 
 // Fill entire screen buffer with a color
 void engine_draw_fill_screen_buffer(uint16_t color, uint16_t *screen_buffer);

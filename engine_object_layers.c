@@ -5,6 +5,7 @@
 #include "nodes/2d/sprite_2d_node.h"
 #include "nodes/node_types.h"
 #include "nodes/node_base.h"
+#include "engine_cameras.h"
 
 uint16_t engine_object_layer_count = 8;
 linked_list engine_object_layers[8];
@@ -84,7 +85,8 @@ void engine_invoke_all_node_callbacks(){
                         mp_call_method_n_kw(0, 0, exec);
 
                         exec[0] = rectangle_2d_node_common_data->draw_cb;
-                        mp_call_method_n_kw(0, 0, exec);
+                        // mp_call_method_n_kw(0, 0, exec);
+                        engine_camera_draw_for_each(exec);
                     }
                     break;
                     case NODE_TYPE_SPRITE_2D:

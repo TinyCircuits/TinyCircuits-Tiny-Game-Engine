@@ -8,6 +8,7 @@
 #include "math/rectangle.h"
 #include "utility/linked_list.h"
 #include "display/engine_display_common.h"
+#include "engine_cameras.h"
 
 
 // Class required functions
@@ -39,6 +40,11 @@ mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t 
     node_base_set_if_visible(node_base, true);
     node_base_set_if_disabled(node_base, false);
     node_base_set_if_just_added(node_base, true);
+
+    // Track the node base for this camera so that it can be
+    // passed to draw callbacks, determined if inherited or not,
+    // and then atributes looked up and used for drawing
+    common_data->camera_list_node = engine_camera_track(node_base);
 
     mp_obj_t default_viewport_parameters[4];
     default_viewport_parameters[0] = mp_obj_new_float(0.0f);
@@ -86,8 +92,10 @@ STATIC mp_obj_t camera_node_class_del(mp_obj_t self_in){
     ENGINE_WARNING_PRINTF("CameraNode: Deleted (garbage collected, removing self from active engine objects)");
 
     engine_node_base_t *node_base = self_in;
-    free(node_base->node_common_data);
+    engine_camera_node_common_data_t *common_data = node_base->node_common_data;
+    engine_camera_untrack(common_data->camera_list_node);
     engine_remove_object_from_layer(node_base->object_list_node, node_base->layer);
+    free(node_base->node_common_data);
 
     return mp_const_none;
 }
