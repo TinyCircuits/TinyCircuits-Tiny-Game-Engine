@@ -35,10 +35,13 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_n
     mp_int_t height = mp_obj_get_int(mp_load_attr(self_in, MP_QSTR_height));
     mp_int_t color = mp_obj_get_int(mp_load_attr(self_in, MP_QSTR_color));
 
+    int32_t px = (int32_t)mp_obj_get_float(position->x);
+    int32_t py = (int32_t)mp_obj_get_float(position->y);
+
     // Rotation not implemented yet so this is simple!
     for(mp_int_t y=0; y<height; y++){
         for(mp_int_t x=0; x<width; x++){
-            engine_draw_pixel(color, (int32_t)position->x+x, (int32_t)position->y+y, camera_position, camera_viewport);
+            engine_draw_pixel(color, px+x, py+y, camera_position, camera_viewport);
         }
     }
 

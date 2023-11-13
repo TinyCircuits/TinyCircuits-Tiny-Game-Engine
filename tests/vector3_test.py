@@ -1,6 +1,7 @@
 import engine
-import math
+from engine_math import Vector3
 from common import run_tests
+import math
 
 def float_compare_eq(a, b, tol=1E-7) -> bool:
     return (abs(a-b) <= tol)
