@@ -1,7 +1,11 @@
 #include "py/obj.h"
-#include "engine_input_sdl.h"
-#include "engine_input_rp2.h"
 #include "engine_input_common.h"
+
+#ifdef __unix__
+    #include "engine_input_sdl.h"
+#else
+    #include "engine_input_rp2.h"
+#endif
 
 
 // Update 'pressed_buttons' (usually called once per game loop)

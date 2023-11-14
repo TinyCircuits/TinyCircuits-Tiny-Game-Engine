@@ -30,6 +30,14 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_n
     // vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node, MP_QSTR_rotation);
     rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node, MP_QSTR_viewport);
 
+    int32_t vx = (int32_t)mp_obj_get_float(camera_viewport->x);
+    int32_t vy = (int32_t)mp_obj_get_float(camera_viewport->y);
+    uint8_t vw = (uint8_t)mp_obj_get_float(camera_viewport->width);
+    uint8_t vh = (uint8_t)mp_obj_get_float(camera_viewport->height);
+
+    int32_t cx = (int32_t)mp_obj_get_float(camera_position->x);
+    int32_t cy = (int32_t)mp_obj_get_float(camera_position->y);
+
     vector2_class_obj_t *position = mp_load_attr(self_in, MP_QSTR_position);
     mp_int_t width = mp_obj_get_int(mp_load_attr(self_in, MP_QSTR_width));
     mp_int_t height = mp_obj_get_int(mp_load_attr(self_in, MP_QSTR_height));
@@ -41,7 +49,7 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_n
     // Rotation not implemented yet so this is simple!
     for(mp_int_t y=0; y<height; y++){
         for(mp_int_t x=0; x<width; x++){
-            engine_draw_pixel(color, px+x, py+y, camera_position, camera_viewport);
+            engine_draw_pixel_viewport(color, px+x, py+y, vx, vy, vw, vh, cx, cy);
         }
     }
 
