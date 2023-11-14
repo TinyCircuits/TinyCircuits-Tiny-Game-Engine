@@ -82,6 +82,10 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
     node_base_set_if_disabled(node_base, false);
     node_base_set_if_just_added(node_base, true);
 
+    mp_obj_t default_scale_parameters[2];
+    default_scale_parameters[0] = mp_obj_new_float(1.0f);
+    default_scale_parameters[1] = mp_obj_new_float(1.0f);
+
     if(n_args == 0){        // Non-inherited (create a new object)
         node_base->inherited = false;
 
@@ -92,9 +96,11 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
         common_data->draw_cb = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_draw_obj);
 
         rectangle_2d_node->position = vector2_class_new(&vector2_class_type, 0, 0, NULL);
+        rectangle_2d_node->scale = vector2_class_new(&vector2_class_type, 1, 0, default_scale_parameters);
         rectangle_2d_node->width = mp_obj_new_int(15);
         rectangle_2d_node->height = mp_obj_new_int(5);
         rectangle_2d_node->color = mp_obj_new_int(0xffff);
+        rectangle_2d_node->rotation = mp_obj_new_float(0.f);
     }else if(n_args == 1){  // Inherited (use existing object)
         node_base->inherited = true;
         node_base->node = args[0];
@@ -116,9 +122,11 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
         }
 
         mp_store_attr(node_base->node, MP_QSTR_position, vector2_class_new(&vector2_class_type, 0, 0, NULL));
+        mp_store_attr(node_base->node, MP_QSTR_scale, vector2_class_new(&vector2_class_type, 1, 0, default_scale_parameters));
         mp_store_attr(node_base->node, MP_QSTR_width, mp_obj_new_int(15));
         mp_store_attr(node_base->node, MP_QSTR_height, mp_obj_new_int(5));
         mp_store_attr(node_base->node, MP_QSTR_color, mp_obj_new_int(0xffff));
+        mp_store_attr(node_base->node, MP_QSTR_rotation, mp_obj_new_float(0.f));
     }else{
         mp_raise_msg(&mp_type_RuntimeError, "Too many arguments passed to Rectangle2DNode constructor!");
     }
