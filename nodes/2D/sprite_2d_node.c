@@ -6,6 +6,7 @@
 #include "engine_object_layers.h"
 #include "math/vector2.h"
 #include "draw/engine_display_draw.h"
+#include "extmod/vfs.h"
 
 
 // Class required functions
@@ -32,8 +33,12 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
     // vector2_class_obj_t *position = mp_load_attr(self_in, MP_QSTR_position);
 
     //void engine_draw_blit_scale_rotate(uint16_t *pixels, int32_t x, int32_t y, uint16_t width_log2, uint16_t height, int32_t xsc, int32_t ysc, int16_t theta)
+    // engine_sprite_2d_node_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
+    // const char* mode = "rb";
+    // const char* filename = ((mp_obj_str_t *)MP_OBJ_TO_PTR(self->filename))->data;
+    // mp_obj_t open_mode = mp_obj_new_str(mode, strlen(mode));
 
-    engine_draw_blit_scale_rotate()
+    //engine_draw_blit_scale_rotate()
 
     return mp_const_none;
 }
