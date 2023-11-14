@@ -33,7 +33,7 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
 
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_1(sprite_2d_node_class_draw_obj, sprite_2d_node_class_draw);
+MP_DEFINE_CONST_FUN_OBJ_2(sprite_2d_node_class_draw_obj, sprite_2d_node_class_draw);
 
 
 mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
@@ -100,7 +100,7 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
         mp_store_attr(node_base->node, MP_QSTR_rotation, mp_obj_new_float(0.0f));
         mp_store_attr(node_base->node, MP_QSTR_scale, vector2_class_new(&vector2_class_type, 2, 0, default_scale_parameters));
     }else{
-        mp_raise_msg(&mp_type_RuntimeError, "Too many arguments passed to Rectangle2DNode constructor!");
+        mp_raise_msg(&mp_type_RuntimeError, "Too many arguments passed to Sprite2DNode constructor!");
     }
 
     return MP_OBJ_FROM_PTR(node_base);
