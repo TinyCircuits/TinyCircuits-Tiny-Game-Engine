@@ -31,6 +31,10 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
 
     // vector2_class_obj_t *position = mp_load_attr(self_in, MP_QSTR_position);
 
+    //void engine_draw_blit_scale_rotate(uint16_t *pixels, int32_t x, int32_t y, uint16_t width_log2, uint16_t height, int32_t xsc, int32_t ysc, int16_t theta)
+
+    engine_draw_blit_scale_rotate()
+
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(sprite_2d_node_class_draw_obj, sprite_2d_node_class_draw);
@@ -38,7 +42,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(sprite_2d_node_class_draw_obj, sprite_2d_node_class_dr
 
 mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Sprite2DNode");
-    
+
     engine_sprite_2d_node_common_data_t *common_data = malloc(sizeof(engine_sprite_2d_node_common_data_t));
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
