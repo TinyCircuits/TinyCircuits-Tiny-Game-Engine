@@ -82,7 +82,6 @@ void engine_draw_fill_screen_buffer(uint16_t color, uint16_t *screen_buffer){
     }
 #endif
 
-
 void engine_draw_blit(uint16_t *pixels, int32_t x, int32_t y, uint16_t width, uint16_t height){
 
 }
@@ -143,7 +142,7 @@ void engine_draw_blit_scale_trishear(uint16_t *pixels, int32_t x, int32_t y, uin
     #ifndef __unix__
         init_interp(width_log2);
     #endif
-    
+
     int32_t width = 1u << width_log2;
     int32_t xe = (width * xsc) >> 16;
     int32_t ye = (height * ysc) >> 16;
