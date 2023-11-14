@@ -8,7 +8,8 @@
 #include "math/rectangle.h"
 
 // Draw pixel within screen bounds and put into screen buffer
-void engine_draw_pixel(uint16_t color, int32_t x, int32_t y, vector3_class_obj_t *camera_position, rectangle_class_obj_t *camera_viewport);
+void engine_draw_pixel(uint16_t color, int32_t x, int32_t y);
+void engine_draw_pixel_viewport(uint16_t color, int32_t x, int32_t y, int32_t vx, int32_t vy, uint8_t vw, uint8_t vh, int32_t px, int32_t py);
 
 // Draw pixel immediately without checking anything at all
 void engine_draw_pixel_unsafe(uint16_t color, int32_t x, int32_t y);

@@ -7,7 +7,6 @@ SRC_USERMOD += $(ENGINE_MOD_DIR)/math/engine_math_module.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/engine_nodes_module.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/input/engine_input_module.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/input/engine_input_sdl.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/input/engine_input_rp2.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/input/engine_input_common.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/empty_node.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/3d/camera_node.c
