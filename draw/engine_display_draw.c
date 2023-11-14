@@ -96,11 +96,11 @@ void engine_draw_blit_scale(uint16_t *pixels, int32_t x, int32_t y, uint16_t wid
     int32_t ty = 0x8000;
     int32_t tx = 0x8000;
 
-    if(xsc < 0) {
+    if(xsc < 0){
         xe = -xe;
         x -= xe;
     }
-    if(ysc < 0) {
+    if(ysc < 0){
         ye = -ye;
         y -= ye;
         ty = (height << 16) - 0x8000;

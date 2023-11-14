@@ -85,7 +85,6 @@ void engine_invoke_all_node_callbacks(){
                         mp_call_method_n_kw(0, 0, exec);
 
                         exec[0] = rectangle_2d_node_common_data->draw_cb;
-                        // mp_call_method_n_kw(0, 0, exec);
                         engine_camera_draw_for_each(exec);
                     }
                     break;
@@ -96,7 +95,7 @@ void engine_invoke_all_node_callbacks(){
                         mp_call_method_n_kw(0, 0, exec);
 
                         exec[0] = sprite_2d_node_common_data->draw_cb;
-                        mp_call_method_n_kw(0, 0, exec);
+                        engine_camera_draw_for_each(exec);
                     }
                     break;
                     default:

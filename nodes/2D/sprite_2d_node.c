@@ -22,8 +22,15 @@ STATIC mp_obj_t sprite_2d_node_class_tick(mp_obj_t self_in){
 MP_DEFINE_CONST_FUN_OBJ_1(sprite_2d_node_class_tick_obj, sprite_2d_node_class_tick);
 
 
-STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in){
+STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("Sprite2DNode: Drawing");
+
+    // vector3_class_obj_t *camera_position = mp_load_attr(camera_node, MP_QSTR_position);
+    // vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node, MP_QSTR_rotation);
+    // rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node, MP_QSTR_viewport);
+
+    // vector2_class_obj_t *position = mp_load_attr(self_in, MP_QSTR_position);
+
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(sprite_2d_node_class_draw_obj, sprite_2d_node_class_draw);
