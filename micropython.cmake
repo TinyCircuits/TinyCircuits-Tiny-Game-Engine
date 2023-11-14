@@ -7,6 +7,10 @@ target_sources(usermod_engine INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/draw/engine_draw_module.c
     ${CMAKE_CURRENT_LIST_DIR}/math/engine_math_module.c
     ${CMAKE_CURRENT_LIST_DIR}/nodes/engine_nodes_module.c
+    ${CMAKE_CURRENT_LIST_DIR}/input/engine_input_module.c
+    ${CMAKE_CURRENT_LIST_DIR}/input/engine_input_sdl.c
+    ${CMAKE_CURRENT_LIST_DIR}/input/engine_input_rp2.c
+    ${CMAKE_CURRENT_LIST_DIR}/input/engine_input_common.c
     ${CMAKE_CURRENT_LIST_DIR}/nodes/empty_node.c
     ${CMAKE_CURRENT_LIST_DIR}/nodes/3d/camera_node.c
     ${CMAKE_CURRENT_LIST_DIR}/nodes/2d/sprite_2d_node.c

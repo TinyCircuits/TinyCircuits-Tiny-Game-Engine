@@ -2,6 +2,7 @@
 
 #include "engine_object_layers.h"
 #include "display/engine_display.h"
+#include "input/engine_input_module.h"
 
 // ### MODULE ###
 
@@ -21,6 +22,11 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_init_obj, engine_init);
 STATIC mp_obj_t engine_tick(){
     ENGINE_PERFORMANCE_STOP(ENGINE_PERF_TIMER_1, "Loop time");
     ENGINE_PERFORMANCE_START(ENGINE_PERF_TIMER_1);
+
+    // Update/grab which buttons are pressed before calling all node callbacks
+    engine_input_update_pressed_buttons();
+
+    // Call every instanced node's callbacks
     engine_invoke_all_node_callbacks();
     
     // After every game cycle send the current active screen buffer to the display
