@@ -1,3 +1,6 @@
+# TODO
+Look into MICROPY_MODULE_ATTR_DELEGATION
+
 # Building and running
 1. `git clone https://github.com/TinyCircuits/micropython.git`
 2. `git checkout top-secret-engine-callback-test`
