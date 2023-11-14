@@ -2,7 +2,7 @@
 #define TAN_SIN_TABLE_INCLUDED
 
 // 16-bit tangent, sine table from 0..pi/2.
-const static uint16_t tan_sin_tab[512] = {
+static const uint16_t tan_sin_tab[512] = {
     0, 0,
     201, 402,
     402, 804,
