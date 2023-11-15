@@ -206,16 +206,16 @@ void engine_draw_blit_scale_trishear(uint16_t *pixels, int32_t x, int32_t y, uin
     }
 }
 
-void engine_draw_fillrect_scale_trishear(uint16_t color, int32_t x, int32_t y, uint16_t width, uint16_t height, int32_t xsc, int32_t ysc, int32_t xsr, int32_t ysr, int32_t xsr2){
+void engine_draw_fillrect_scale_trishear_viewport(uint16_t color, int32_t x, int32_t y, uint16_t width, uint16_t height, int32_t xsc, int32_t ysc, int32_t xsr, int32_t ysr, int32_t xsr2, int32_t vx, int32_t vy, uint8_t vw, uint8_t vh){
 
     int32_t xe = (width * xsc) >> 16;
     int32_t ye = (height * ysc) >> 16;
 
-    if(xsc < 0){
+    if(xsc < 0) {
         xe = -xe;
         x -= xe;
     }
-    if(ysc < 0){
+    if(ysc < 0) {
         ye = -ye;
         y -= ye;
     }
@@ -234,8 +234,9 @@ void engine_draw_fillrect_scale_trishear(uint16_t color, int32_t x, int32_t y, u
 
         for(int cx = 0; cx < xe; cx++){
             xshift2 = ((cy + (yshift >> 16)) * xsr2);
-
-                screen_buffer[fb_pos + (cx) + (yshift >> 16) * SCREEN_WIDTH + (xshift2 >> 16)] = color;
+            int32_t xp = x + (cx) + (xshift2 >> 16);
+            int32_t yp = y + (yshift >> 16);
+            if(is_xy_inside_viewport(xp, yp, vx, vy, vw, vw)) screen_buffer[fb_pos + (cx) + (yshift >> 16) * SCREEN_WIDTH + (xshift2 >> 16)] = color;
 
             yshift += ysr;
         }
@@ -292,7 +293,7 @@ void engine_draw_blit_scale_rotate(uint16_t *pixels, int32_t x, int32_t y, uint1
     engine_draw_blit_scale_trishear(pixels, x - cx, y - cy, width_log2, height, xsc, ysc, a, b, a, flip);
 }
 
-void engine_draw_fillrect_scale_rotate(uint16_t color, int32_t x, int32_t y, uint16_t width, uint16_t height, int32_t xsc, int32_t ysc, int16_t theta){
+void engine_draw_fillrect_scale_rotate_viewport(uint16_t color, int32_t x, int32_t y, uint16_t width, uint16_t height, int32_t xsc, int32_t ysc, int16_t theta, int32_t vx, int32_t vy, uint8_t vw, uint8_t vh){
     // Step 1: Get theta inside (-pi/2, pi/2) and flip if we need to
     theta &= 0x3FF;
     if(theta > 0x200) theta -= 0x400;
@@ -331,5 +332,5 @@ void engine_draw_fillrect_scale_rotate(uint16_t color, int32_t x, int32_t y, uin
     if(ysc < 0) cy -= ye;
     //Step 4: Triple shear (a, b, a);
     //blit_scale_trishear_pow2_tex_internal(fb, f_xs, tex, t_xs_log2, t_ys, x - cx, y - cy, xsc, ysc, a, b, a, flip);
-    engine_draw_fillrect_scale_trishear(color, x - cx, y - cy, width, height, xsc, ysc, a, b, a);
+    engine_draw_fillrect_scale_trishear_viewport(color, x - cx, y - cy, width, height, xsc, ysc, a, b, a, vx, vy, vw, vh);
 }

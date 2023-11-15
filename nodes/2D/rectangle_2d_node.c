@@ -27,13 +27,14 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_n
     ENGINE_INFO_PRINTF("Rectangle2DNode: Drawing");
 
     vector3_class_obj_t *camera_position = mp_load_attr(camera_node, MP_QSTR_position);
-    // vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node, MP_QSTR_rotation);
+    vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node, MP_QSTR_rotation);
     rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node, MP_QSTR_viewport);
 
     int32_t vx = (int32_t)mp_obj_get_float(camera_viewport->x);
     int32_t vy = (int32_t)mp_obj_get_float(camera_viewport->y);
     uint8_t vw = (uint8_t)mp_obj_get_float(camera_viewport->width);
     uint8_t vh = (uint8_t)mp_obj_get_float(camera_viewport->height);
+    const float cam_theta = mp_obj_get_float(camera_rotation->z);
 
     int32_t cx = (int32_t)mp_obj_get_float(camera_position->x);
     int32_t cy = (int32_t)mp_obj_get_float(camera_position->y);
@@ -58,8 +59,8 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_n
     //         engine_draw_pixel_viewport(color, px+x, py+y, vx, vy, vw, vh, cx, cy);
     //     }
     // }
-
-    engine_draw_fillrect_scale_rotate(color, px, py, width, height, xsc, ysc, (int16_t)(theta*1024 / (2*M_PI)));
+    //ENGINE_INFO_PRINTF("Rendering at %i, %i\n\r", vx, vy);
+    engine_draw_fillrect_scale_rotate_viewport(color, px+vx, py+vy, width, height, xsc, ysc, (int16_t)((theta-cam_theta)*1024 / (2*M_PI)), vx, vy, vw, vh);
 
     return mp_const_none;
 }
