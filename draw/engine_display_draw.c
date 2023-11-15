@@ -210,6 +210,13 @@ void engine_draw_fillrect_scale_trishear_viewport(uint16_t color, int32_t x, int
 
     int32_t xe = (width * xsc) >> 16;
     int32_t ye = (height * ysc) >> 16;
+    int32_t fb_pos = y * SCREEN_WIDTH;
+    int32_t x_start = ((xsc < 0)) ? ((width << 16) - 0x10000) : 0;
+
+    int32_t xshift = 0;
+    int32_t yshift = 0;
+    int64_t xshift2 = 0;
+    uint16_t *screen_buffer = engine_get_active_screen_buffer();
 
     if(xsc < 0) {
         xe = -xe;
@@ -220,25 +227,14 @@ void engine_draw_fillrect_scale_trishear_viewport(uint16_t color, int32_t x, int
         y -= ye;
     }
 
-    int32_t fb_pos = y * SCREEN_WIDTH + x;
-    int32_t x_start = ((xsc < 0)) ? ((width << 16) - 0x10000) : 0;
-
-    int32_t xshift = 0;
-    int32_t yshift = 0;
-    int32_t xshift2 = 0;
-    uint16_t *screen_buffer = engine_get_active_screen_buffer();
-
-    for(int cy = 0; cy < ye; cy++){
-        yshift = (xshift >> 16) * ysr;
+    for(int cy = y; cy < y + ye; cy++){
         fb_pos += (xshift >> 16);
-
-        for(int cx = 0; cx < xe; cx++){
-            xshift2 = ((cy + (yshift >> 16)) * xsr2);
-            int32_t xp = x + (cx) + (xshift2 >> 16);
-            int32_t yp = y + (yshift >> 16);
-            if(is_xy_inside_viewport(xp, yp, vx, vy, vw, vw)) screen_buffer[fb_pos + (cx) + (yshift >> 16) * SCREEN_WIDTH + (xshift2 >> 16)] = color;
-
-            yshift += ysr;
+        int32_t yp = (cy << 16) + (xshift >> 16) * ysr;
+        for(int cx = x; cx < x + xe; cx++) {
+            xshift2 = (((yp >> 16) - y) * xsr2);
+            int32_t xp = cx + (xshift >> 16) + (xshift2 >> 16);
+            if(is_xy_inside_viewport(xp, yp >> 16, vx, vy, vw, vw)) screen_buffer[fb_pos + (cx) + ((yp >> 16) - cy) * SCREEN_WIDTH + (xshift2 >> 16)] = color;
+            yp += ysr;
         }
 
         fb_pos -= (xshift >> 16);
