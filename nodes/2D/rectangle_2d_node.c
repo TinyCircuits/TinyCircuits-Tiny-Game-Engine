@@ -26,7 +26,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(rectangle_2d_node_class_tick_obj, rectangle_2d_node_cl
 STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("Rectangle2DNode: Drawing");
 
-    vector3_class_obj_t *camera_position = mp_load_attr(camera_node, MP_QSTR_position);
+    // vector3_class_obj_t *camera_position = mp_load_attr(camera_node, MP_QSTR_position);
     vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node, MP_QSTR_rotation);
     rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node, MP_QSTR_viewport);
 
@@ -34,10 +34,10 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_n
     int32_t vy = (int32_t)mp_obj_get_float(camera_viewport->y);
     uint8_t vw = (uint8_t)mp_obj_get_float(camera_viewport->width);
     uint8_t vh = (uint8_t)mp_obj_get_float(camera_viewport->height);
-    const float cam_theta = mp_obj_get_float(camera_rotation->z);
+    const float cam_theta = (float)mp_obj_get_float(camera_rotation->z);
 
-    int32_t cx = (int32_t)mp_obj_get_float(camera_position->x);
-    int32_t cy = (int32_t)mp_obj_get_float(camera_position->y);
+    // int32_t cx = (int32_t)mp_obj_get_float(camera_position->x);
+    // int32_t cy = (int32_t)mp_obj_get_float(camera_position->y);
 
     vector2_class_obj_t *position = mp_load_attr(self_in, MP_QSTR_position);
     mp_int_t width = mp_obj_get_int(mp_load_attr(self_in, MP_QSTR_width));

@@ -26,8 +26,6 @@ STATIC mp_obj_t engine_tick(){
     // Update/grab which buttons are pressed before calling all node callbacks
     engine_input_update_pressed_buttons();
 
-    engine_display_dma_wait();
-
     // Call every instanced node's callbacks
     engine_invoke_all_node_callbacks();
 

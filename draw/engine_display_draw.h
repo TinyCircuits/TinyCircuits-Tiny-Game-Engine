@@ -33,4 +33,6 @@ void engine_draw_fillrect_scale_trishear(uint16_t color, int32_t x, int32_t y, u
 
 void engine_draw_fillrect_scale_rotate(uint16_t color, int32_t x, int32_t y, uint16_t width, uint16_t height, int32_t xsc, int32_t ysc, int16_t theta);
 
+void engine_draw_fillrect_scale_rotate_viewport(uint16_t color, int32_t x, int32_t y, uint16_t width, uint16_t height, int32_t xsc, int32_t ysc, int16_t theta, int32_t vx, int32_t vy, uint8_t vw, uint8_t vh);
+
 #endif  // ENGINE_DISPLAY_DRAW_H
