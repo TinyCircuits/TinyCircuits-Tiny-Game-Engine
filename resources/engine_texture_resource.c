@@ -95,6 +95,9 @@ mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, si
     self->texture_data = stbi_load_from_callbacks(&stb_custom_callbacks, &stb_file_wrapper.file, &width, &height, &color_component_count, 3);
 
     if(self->texture_data){
+        self->width = mp_obj_new_int(width);
+        self->height = mp_obj_new_int(height);
+
         ENGINE_INFO_PRINTF("Loaded image data!");
 
         ENGINE_INFO_PRINTF("Source image parameters ('%s'):", filename);
@@ -179,6 +182,12 @@ STATIC void texture_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj
             break;
             case MP_QSTR_data:
                 destination[0] = self->texture_data_bytearray;
+            break;
+            case MP_QSTR_width:
+                destination[0] = self->width;
+            break;
+            case MP_QSTR_height:
+                destination[0] = self->height;
             break;
             default:
                 return; // Fail

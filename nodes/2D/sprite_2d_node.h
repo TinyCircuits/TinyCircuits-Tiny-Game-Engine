@@ -12,6 +12,7 @@ typedef struct{
     mp_obj_t fps;                   // How many frames per second the sprite should play its animation (if possible)
     mp_obj_t rotation;              // Rotation about into screen/z-axis in degrees
     mp_obj_t scale;                 // Vector2
+    mp_obj_t texture_resource;      // TextureResource
 }engine_sprite_2d_node_class_obj_t;
 
 typedef struct{

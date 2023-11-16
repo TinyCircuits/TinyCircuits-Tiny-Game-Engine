@@ -7,6 +7,7 @@
 #include "math/vector2.h"
 #include "draw/engine_display_draw.h"
 #include "extmod/vfs.h"
+#include "resources/engine_texture_resource.h"
 
 
 // Class required functions
@@ -31,6 +32,20 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
     // rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node, MP_QSTR_viewport);
 
     // vector2_class_obj_t *position = mp_load_attr(self_in, MP_QSTR_position);
+
+    texture_resource_class_obj_t *texture_resource = mp_load_attr(self_in, MP_QSTR_texture_resource);
+    uint16_t *data = (uint16_t*)texture_resource->texture_data;
+    int width = mp_obj_get_int(texture_resource->width);
+    int height = mp_obj_get_int(texture_resource->height);
+
+    for(int x=0; x<width; x++){
+        for(int y=0; y<height; y++){
+            int index = y*width + x;
+            engine_draw_pixel(data[index], x, y);
+        }
+    }
+
+    ENGINE_INFO_PRINTF("Sprite2DNode: %d %d", width, height);
 
     return mp_const_none;
 }
@@ -57,7 +72,7 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
     default_scale_parameters[0] = mp_obj_new_float(1.0f);
     default_scale_parameters[1] = mp_obj_new_float(1.0f);
 
-    if(n_args == 0){        // Non-inherited (create a new object)
+    if(n_args == 1){        // Non-inherited (create a new object)
         node_base->inherited = false;
 
         engine_sprite_2d_node_class_obj_t *sprite_2d_node = m_malloc(sizeof(engine_sprite_2d_node_class_obj_t));
@@ -73,7 +88,8 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
         sprite_2d_node->fps = mp_obj_new_int(5);
         sprite_2d_node->rotation = mp_obj_new_float(0.0f);
         sprite_2d_node->scale = vector2_class_new(&vector2_class_type, 2, 0, default_scale_parameters);
-    }else if(n_args == 1){  // Inherited (use existing object)
+        sprite_2d_node->texture_resource = args[0];
+    }else if(n_args == 2){  // Inherited (use existing object)
         node_base->inherited = true;
         node_base->node = args[0];
 
@@ -100,6 +116,7 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
         mp_store_attr(node_base->node, MP_QSTR_fps, mp_obj_new_int(5));
         mp_store_attr(node_base->node, MP_QSTR_rotation, mp_obj_new_float(0.0f));
         mp_store_attr(node_base->node, MP_QSTR_scale, vector2_class_new(&vector2_class_type, 2, 0, default_scale_parameters));
+        mp_store_attr(node_base->node, MP_QSTR_texture_resource, args[1]);
     }else{
         mp_raise_msg(&mp_type_RuntimeError, "Too many arguments passed to Sprite2DNode constructor!");
     }
@@ -183,6 +200,9 @@ STATIC void sprite_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
             case MP_QSTR_scale:
                 destination[0] = self->scale;
             break;
+            case MP_QSTR_texture_resource:
+                destination[0] = self->texture_resource;
+            break;
             default:
                 return; // Fail
         }
@@ -208,6 +228,9 @@ STATIC void sprite_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
             break;
             case MP_QSTR_scale:
                 self->scale = destination[1];
+            break;
+            case MP_QSTR_texture_resource:
+                self->texture_resource = destination[1];
             break;
             default:
                 return; // Fail

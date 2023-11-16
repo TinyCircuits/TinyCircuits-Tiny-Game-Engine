@@ -7,6 +7,8 @@ typedef struct{
     mp_obj_base_t base;
     unsigned char *texture_data;
     mp_obj_t texture_data_bytearray;
+    mp_obj_t width;
+    mp_obj_t height;
 }texture_resource_class_obj_t;
 
 extern const mp_obj_type_t texture_resource_class_type;
