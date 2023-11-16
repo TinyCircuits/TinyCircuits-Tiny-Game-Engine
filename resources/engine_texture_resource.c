@@ -118,9 +118,10 @@ mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, si
                 uint32_t index_pixel = (y_scan_line * width + x_pixel);
                 uint32_t index_three_channel = index_pixel*3;
 
-                uint16_t r = self->texture_data[index_three_channel]   & 0b0000000000011111;  // 5
-                uint16_t g = self->texture_data[index_three_channel+1] & 0b0000000000111111;  // 6
-                uint16_t b = self->texture_data[index_three_channel+2] & 0b0000000000011111;  // 5
+                // Get MSB of color channels
+                uint16_t r = (self->texture_data[index_three_channel]   & 0b0000000011111000) >> 3;  // 5
+                uint16_t g = (self->texture_data[index_three_channel+1] & 0b0000000011111100) >> 2;  // 6
+                uint16_t b = (self->texture_data[index_three_channel+2] & 0b0000000011111000) >> 3;  // 5
 
                 uint16_t pixel = 0b0000000000000000;
                 pixel = pixel | (r << 11);
