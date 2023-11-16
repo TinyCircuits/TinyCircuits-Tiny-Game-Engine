@@ -76,11 +76,11 @@ static void st7789_write_cmd(uint8_t cmd, const uint8_t* data, size_t length){
     // Select screen chip and put into cmd mode (see pin connection reference)
     gpio_put(PIN_GP17_SPI0_CSn__TO__CS, 0);
     gpio_put(PIN_GP20__TO__DC, 0);
-    
+
     // Write the command to the driver through SPI
     spi_write_blocking(spi0, &cmd, sizeof(cmd));
     gpio_put(PIN_GP20__TO__DC, 1);
-    
+
     // If there's also data, write that but put chip in data mode (see pin connection reference)
     if(length > 0){
         spi_write_blocking(spi0, data, length);
@@ -160,7 +160,7 @@ void engine_display_st7789_init(){
     ENGINE_INFO_PRINTF("Enabling SPI");
     spi_init(spi0, ST7789_SPI_MHZ);
 
-    // Init pins (some are controlled through SPI peripheral 
+    // Init pins (some are controlled through SPI peripheral
     // and some are controlled through code using GPIO)
     ENGINE_INFO_PRINTF("Enabling pins");
     gpio_set_function(PIN_GP19_SPI0_TX__TO__DIN, GPIO_FUNC_SPI);
@@ -193,18 +193,21 @@ void engine_display_st7789_init(){
     channel_config_set_dreq(&dma_config, DREQ_SPI0_TX);
 }
 
-
-void engine_display_st7789_update(uint16_t *screen_buffer_to_render){
-    // Point DMA to active screen buffer that should be
-    // sent once the last frame is finished sending
-    txbuf = screen_buffer_to_render;
-
+void engine_display_dma_wait() {
     if(dma_channel_is_busy(dma_tx)){
         ENGINE_WARNING_PRINTF("Waiting on previous DMA transfer to complete. Could have done more last frame!");
         ENGINE_PERFORMANCE_START(ENGINE_PERF_TIMER_2);
         dma_channel_wait_for_finish_blocking(dma_tx);
         ENGINE_PERFORMANCE_STOP(ENGINE_PERF_TIMER_2, "Time spent waiting on remaining DMA");
     }
+}
+
+void engine_display_st7789_update(uint16_t *screen_buffer_to_render){
+    // Point DMA to active screen buffer that should be
+    // sent once the last frame is finished sending
+    txbuf = screen_buffer_to_render;
+
+    engine_display_dma_wait();
 
     st7789_reset_window();
 

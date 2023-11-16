@@ -27,13 +27,14 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_n
     ENGINE_INFO_PRINTF("Rectangle2DNode: Drawing");
 
     vector3_class_obj_t *camera_position = mp_load_attr(camera_node, MP_QSTR_position);
-    // vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node, MP_QSTR_rotation);
+    vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node, MP_QSTR_rotation);
     rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node, MP_QSTR_viewport);
 
     int32_t vx = (int32_t)mp_obj_get_float(camera_viewport->x);
     int32_t vy = (int32_t)mp_obj_get_float(camera_viewport->y);
     uint8_t vw = (uint8_t)mp_obj_get_float(camera_viewport->width);
     uint8_t vh = (uint8_t)mp_obj_get_float(camera_viewport->height);
+    const float cam_theta = mp_obj_get_float(camera_rotation->z);
 
     int32_t cx = (int32_t)mp_obj_get_float(camera_position->x);
     int32_t cy = (int32_t)mp_obj_get_float(camera_position->y);
@@ -46,12 +47,20 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_n
     int32_t px = (int32_t)mp_obj_get_float(position->x);
     int32_t py = (int32_t)mp_obj_get_float(position->y);
 
+    vector2_class_obj_t *scale = mp_load_attr(self_in, MP_QSTR_scale);
+    mp_int_t xsc = (int32_t)(mp_obj_get_float(scale->x)*65536 + 0.5);
+    mp_int_t ysc = (int32_t)(mp_obj_get_float(scale->y)*65536 + 0.5);
+
+    mp_float_t theta = mp_obj_get_float(mp_load_attr(self_in, MP_QSTR_rotation));
+
     // Rotation not implemented yet so this is simple!
-    for(mp_int_t y=0; y<height; y++){
-        for(mp_int_t x=0; x<width; x++){
-            engine_draw_pixel_viewport(color, px+x, py+y, vx, vy, vw, vh, cx, cy);
-        }
-    }
+    // for(mp_int_t y=0; y<height; y++){
+    //     for(mp_int_t x=0; x<width; x++){
+    //         engine_draw_pixel_viewport(color, px+x, py+y, vx, vy, vw, vh, cx, cy);
+    //     }
+    // }
+    //ENGINE_INFO_PRINTF("Rendering at %i, %i\n\r", vx, vy);
+    engine_draw_fillrect_scale_rotate_viewport(color, px+vx, py+vy, width, height, xsc, ysc, (int16_t)((theta-cam_theta)*1024 / (2*M_PI)), vx, vy, vw, vh);
 
     return mp_const_none;
 }
@@ -60,7 +69,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(rectangle_2d_node_class_draw_obj, rectangle_2d_node_cl
 
 mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Rectangle2DNode");
-    
+
     engine_rectangle_2d_node_common_data_t *common_data = malloc(sizeof(engine_rectangle_2d_node_common_data_t));
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
@@ -74,6 +83,10 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
     node_base_set_if_disabled(node_base, false);
     node_base_set_if_just_added(node_base, true);
 
+    mp_obj_t default_scale_parameters[2];
+    default_scale_parameters[0] = mp_obj_new_float(1.0f);
+    default_scale_parameters[1] = mp_obj_new_float(1.0f);
+
     if(n_args == 0){        // Non-inherited (create a new object)
         node_base->inherited = false;
 
@@ -84,9 +97,11 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
         common_data->draw_cb = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_draw_obj);
 
         rectangle_2d_node->position = vector2_class_new(&vector2_class_type, 0, 0, NULL);
+        rectangle_2d_node->scale = vector2_class_new(&vector2_class_type, 2, 0, default_scale_parameters);
         rectangle_2d_node->width = mp_obj_new_int(15);
         rectangle_2d_node->height = mp_obj_new_int(5);
         rectangle_2d_node->color = mp_obj_new_int(0xffff);
+        rectangle_2d_node->rotation = mp_obj_new_float(0.f);
     }else if(n_args == 1){  // Inherited (use existing object)
         node_base->inherited = true;
         node_base->node = args[0];
@@ -108,9 +123,11 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
         }
 
         mp_store_attr(node_base->node, MP_QSTR_position, vector2_class_new(&vector2_class_type, 0, 0, NULL));
+        mp_store_attr(node_base->node, MP_QSTR_scale, vector2_class_new(&vector2_class_type, 2, 0, default_scale_parameters));
         mp_store_attr(node_base->node, MP_QSTR_width, mp_obj_new_int(15));
         mp_store_attr(node_base->node, MP_QSTR_height, mp_obj_new_int(5));
         mp_store_attr(node_base->node, MP_QSTR_color, mp_obj_new_int(0xffff));
+        mp_store_attr(node_base->node, MP_QSTR_rotation, mp_obj_new_float(0.f));
     }else{
         mp_raise_msg(&mp_type_RuntimeError, "Too many arguments passed to Rectangle2DNode constructor!");
     }
@@ -176,6 +193,9 @@ STATIC void rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_ob
             case MP_QSTR_position:
                 destination[0] = self->position;
             break;
+            case MP_QSTR_scale:
+                destination[0] = self->scale;
+            break;
             case MP_QSTR_width:
                 destination[0] = self->width;
             break;
@@ -185,6 +205,9 @@ STATIC void rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_ob
             case MP_QSTR_color:
                 destination[0] = self->color;
             break;
+            case MP_QSTR_rotation:
+                destination[0] = self->rotation;
+            break;
             default:
                 return; // Fail
         }
@@ -192,6 +215,9 @@ STATIC void rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_ob
         switch(attribute){
             case MP_QSTR_position:
                 self->position = destination[1];
+            break;
+            case MP_QSTR_scale:
+                self->scale = destination[1];
             break;
             case MP_QSTR_width:
                 self->width = destination[1];
@@ -201,6 +227,9 @@ STATIC void rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_ob
             break;
             case MP_QSTR_color:
                 self->color = destination[1];
+            break;
+            case MP_QSTR_rotation:
+                self->rotation = destination[1];
             break;
             default:
                 return; // Fail
@@ -214,7 +243,7 @@ STATIC void rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_ob
 
 // Class attributes
 STATIC const mp_rom_map_elem_t rectangle_2d_node_class_locals_dict_table[] = {
-    
+
 };
 
 

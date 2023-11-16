@@ -11,6 +11,9 @@ void engine_draw_pixel_viewport(uint16_t color, int32_t x, int32_t y, int32_t vx
 // Draw pixel immediately without checking anything at all
 void engine_draw_pixel_unsafe(uint16_t color, int32_t x, int32_t y);
 
+// Draw pixel immediately without checking anything at all
+void engine_draw_pixel_unsafe(uint16_t color, int32_t x, int32_t y);
+
 // Fill entire screen buffer with a color
 void engine_draw_fill_screen_buffer(uint16_t color, uint16_t *screen_buffer);
 
@@ -25,5 +28,9 @@ void engine_draw_blit_scale_trishear(uint16_t *pixels, int32_t x, int32_t y, uin
 
 // Blits pixels to screen at 'x' and 'y' given 'width' and 'height', after scaling by a factor of (xsc, ysc) and rotating by theta in 10-bit bradians.
 void engine_draw_blit_scale_rotate(uint16_t *pixels, int32_t x, int32_t y, uint16_t width_log2, uint16_t height, int32_t xsc, int32_t ysc, int16_t theta);
+
+void engine_draw_fillrect_scale_trishear(uint16_t color, int32_t x, int32_t y, uint16_t width, uint16_t height, int32_t xsc, int32_t ysc, int32_t xsr, int32_t ysr, int32_t xsr2);
+
+void engine_draw_fillrect_scale_rotate(uint16_t color, int32_t x, int32_t y, uint16_t width, uint16_t height, int32_t xsc, int32_t ysc, int16_t theta);
 
 #endif  // ENGINE_DISPLAY_DRAW_H

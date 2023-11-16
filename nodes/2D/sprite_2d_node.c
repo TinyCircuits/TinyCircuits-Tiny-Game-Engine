@@ -6,6 +6,7 @@
 #include "engine_object_layers.h"
 #include "math/vector2.h"
 #include "draw/engine_display_draw.h"
+#include "extmod/vfs.h"
 
 
 // Class required functions
@@ -38,7 +39,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(sprite_2d_node_class_draw_obj, sprite_2d_node_class_dr
 
 mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Sprite2DNode");
-    
+
     engine_sprite_2d_node_common_data_t *common_data = malloc(sizeof(engine_sprite_2d_node_common_data_t));
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
