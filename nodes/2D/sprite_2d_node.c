@@ -32,17 +32,9 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
 
     // vector2_class_obj_t *position = mp_load_attr(self_in, MP_QSTR_position);
 
-    //void engine_draw_blit_scale_rotate(uint16_t *pixels, int32_t x, int32_t y, uint16_t width_log2, uint16_t height, int32_t xsc, int32_t ysc, int16_t theta)
-    // engine_sprite_2d_node_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
-    // const char* mode = "rb";
-    // const char* filename = ((mp_obj_str_t *)MP_OBJ_TO_PTR(self->filename))->data;
-    // mp_obj_t open_mode = mp_obj_new_str(mode, strlen(mode));
-
-    //engine_draw_blit_scale_rotate()
-
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_1(sprite_2d_node_class_draw_obj, sprite_2d_node_class_draw);
+MP_DEFINE_CONST_FUN_OBJ_2(sprite_2d_node_class_draw_obj, sprite_2d_node_class_draw);
 
 
 mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
@@ -109,7 +101,7 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
         mp_store_attr(node_base->node, MP_QSTR_rotation, mp_obj_new_float(0.0f));
         mp_store_attr(node_base->node, MP_QSTR_scale, vector2_class_new(&vector2_class_type, 2, 0, default_scale_parameters));
     }else{
-        mp_raise_msg(&mp_type_RuntimeError, "Too many arguments passed to Rectangle2DNode constructor!");
+        mp_raise_msg(&mp_type_RuntimeError, "Too many arguments passed to Sprite2DNode constructor!");
     }
 
     return MP_OBJ_FROM_PTR(node_base);

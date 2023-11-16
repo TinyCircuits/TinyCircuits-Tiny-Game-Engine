@@ -45,7 +45,6 @@ void engine_draw_pixel_unsafe(uint16_t color, int32_t x, int32_t y){
     screen_buffer[y*SCREEN_WIDTH + x] = color;
 }
 
-
 void engine_draw_pixel(uint16_t color, int32_t x, int32_t y){
     uint16_t *screen_buffer = engine_get_active_screen_buffer();
 
@@ -54,6 +53,12 @@ void engine_draw_pixel(uint16_t color, int32_t x, int32_t y){
     }else{
         ENGINE_WARNING_PRINTF("Tried to draw pixel outside of screen bounds, clipped");
     }
+}
+
+
+void engine_draw_pixel_unsafe(uint16_t color, int32_t x, int32_t y){
+    uint16_t *screen_buffer = engine_get_active_screen_buffer();
+    screen_buffer[y*SCREEN_WIDTH + x] = color;
 }
 
 

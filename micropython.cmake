@@ -14,6 +14,7 @@ target_sources(usermod_engine INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/nodes/3d/camera_node.c
     ${CMAKE_CURRENT_LIST_DIR}/nodes/2d/sprite_2d_node.c
     ${CMAKE_CURRENT_LIST_DIR}/nodes/2d/rectangle_2d_node.c
+    ${CMAKE_CURRENT_LIST_DIR}/nodes/2d/physics_2d_node.c
     ${CMAKE_CURRENT_LIST_DIR}/math/vector3.c
     ${CMAKE_CURRENT_LIST_DIR}/math/vector2.c
     ${CMAKE_CURRENT_LIST_DIR}/math/rectangle.c
@@ -21,12 +22,16 @@ target_sources(usermod_engine INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/debug/debug_print.c
     ${CMAKE_CURRENT_LIST_DIR}/utility/linked_list.c
     ${CMAKE_CURRENT_LIST_DIR}/utility/engine_time.c
+    ${CMAKE_CURRENT_LIST_DIR}/libs/mpfile/mpfile.c
     ${CMAKE_CURRENT_LIST_DIR}/engine_object_layers.c
     ${CMAKE_CURRENT_LIST_DIR}/engine_cameras.c
     ${CMAKE_CURRENT_LIST_DIR}/display/engine_display.c
     ${CMAKE_CURRENT_LIST_DIR}/display/engine_display_driver_rp2_st7789.c
     ${CMAKE_CURRENT_LIST_DIR}/display/engine_display_common.c
     ${CMAKE_CURRENT_LIST_DIR}/draw/engine_display_draw.c
+    ${CMAKE_CURRENT_LIST_DIR}/resources/engine_resources_module.c
+    ${CMAKE_CURRENT_LIST_DIR}/resources/engine_texture_resource.c
+    ${CMAKE_CURRENT_LIST_DIR}/resources/engine_sound_resource.c
 )
 
 # Add the current directory as an include directory.
