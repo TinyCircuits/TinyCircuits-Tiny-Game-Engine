@@ -5,7 +5,7 @@
 // Module attributes
 STATIC const mp_rom_map_elem_t engine_resources_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_resources) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_Vector2), (mp_obj_t)&texture_resource_class_type },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_TextureResource), (mp_obj_t)&texture_resource_class_type },
 };
 
 // Module init
