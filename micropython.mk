@@ -86,8 +86,11 @@ SRC_USERMOD_CXX  += $(ENGINE_MOD_DIR)/libs/box2d/src/dynamics/b2_world.cpp
 CFLAGS_USERMOD += -I$(ENGINE_MOD_DIR)
 CFLAGS_USERMOD += -I$(ENGINE_MOD_DIR)/libs/box2d/include/
 
-CXXFLAGS_USERMOD += -std=c++11
 CXXFLAGS_USERMOD += -I$(ENGINE_MOD_DIR)
 CXXFLAGS_USERMOD += -I$(ENGINE_MOD_DIR)/libs/box2d/include/
+CXXFLAGS_USERMOD += -std=c++11
+
+# We use C++ features so have to link against the standard library.
+LDFLAGS_USERMOD += -lstdc++
 
 LDFLAGS_EXTRA += -lSDL2
