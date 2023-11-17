@@ -10,7 +10,7 @@
 #define STBI_NO_HDR
 #define STBI_NO_STDIO   // use custom callbacks, don't need UNIX C IO stb functions
 #define STBI_NO_THREAD_LOCALS
-#include "libs/stb/stb_image_modified.h"
+#include "libs/stb/stb_image.h"
 
 
 // Wrapper around mp_file_t to keep track of file size
