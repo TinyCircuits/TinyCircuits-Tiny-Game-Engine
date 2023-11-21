@@ -6,6 +6,7 @@
 #include "engine_object_layers.h"
 #include "math/vector2.h"
 #include "draw/engine_display_draw.h"
+#include "physics/engine_physics_module.h"
 
 
 // Class required functions
@@ -37,6 +38,15 @@ mp_obj_t physics_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
     node_base_set_if_visible(node_base, true);
     node_base_set_if_disabled(node_base, false);
     node_base_set_if_just_added(node_base, true);
+
+    // Track the node base for this physics node so that it can
+    // be looped over quickly in a linked list and have its
+    // attributes copied back and forth quickly between
+    // the engine and physics engine
+    common_data->physics_list_node = engine_physics_track_node(node_base);
+
+    ENGINE_INFO_PRINTF("Physics2DNode: Creating Box2d body...");
+    engine_physics_create_body(common_data);
 
     if(n_args == 0){        // Non-inherited (create a new object)
         node_base->inherited = false;
@@ -78,8 +88,10 @@ STATIC mp_obj_t physics_2d_node_class_del(mp_obj_t self_in){
     ENGINE_INFO_PRINTF("Physics2DNode: Deleted (garbage collected, removing self from active engine objects)");
 
     engine_node_base_t *node_base = self_in;
-    free(node_base->node_common_data);
+    engine_physics_2d_node_common_data_t *common_data = node_base->node_common_data;
+    engine_physics_untrack_node(common_data->physics_list_node);
     engine_remove_object_from_layer(node_base->object_list_node, node_base->layer);
+    free(node_base->node_common_data);
 
     return mp_const_none;
 }

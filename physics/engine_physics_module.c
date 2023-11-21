@@ -1,5 +1,23 @@
 #include "py/obj.h"
 #include "engine_physics_module.h"
+#include "nodes/node_base.h"
+
+
+// A linked list of physics nodes to loop
+// through to copy all parameters quickly
+linked_list engine_physics_nodes;
+
+
+linked_list_node *engine_physics_track_node(engine_node_base_t *obj){
+    ENGINE_INFO_PRINTF("Tracking physics node");
+    return linked_list_add_obj(&engine_physics_nodes, obj);
+}
+
+
+void engine_physics_untrack_node(linked_list_node *physics_list_node){
+    ENGINE_INFO_PRINTF("Untracking physics node");
+    linked_list_del_list_node(&engine_physics_nodes, physics_list_node);
+}
 
 
 // Module attributes
