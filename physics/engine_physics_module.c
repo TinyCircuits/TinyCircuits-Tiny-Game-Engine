@@ -1,6 +1,8 @@
 #include "py/obj.h"
 #include "engine_physics_module.h"
 #include "nodes/node_base.h"
+#include "display/engine_display_common.h"
+#include "physics/engine_physics.h"
 
 
 // A linked list of physics nodes to loop

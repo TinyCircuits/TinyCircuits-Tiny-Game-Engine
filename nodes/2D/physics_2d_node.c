@@ -46,7 +46,7 @@ mp_obj_t physics_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
     common_data->physics_list_node = engine_physics_track_node(node_base);
 
     ENGINE_INFO_PRINTF("Physics2DNode: Creating Box2d body...");
-    engine_physics_create_body(common_data);
+    engine_physics_create_rectangle_body(common_data);
 
     if(n_args == 0){        // Non-inherited (create a new object)
         node_base->inherited = false;

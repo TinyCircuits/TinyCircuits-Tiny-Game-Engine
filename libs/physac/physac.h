@@ -98,7 +98,7 @@
 //----------------------------------------------------------------------------------
 // Defines and Macros
 //----------------------------------------------------------------------------------
-#define     PHYSAC_MAX_BODIES               64
+#define     PHYSAC_MAX_BODIES               32
 #define     PHYSAC_MAX_MANIFOLDS            4096
 #define     PHYSAC_MAX_VERTICES             24
 #define     PHYSAC_CIRCLE_VERTICES          24
@@ -270,6 +270,8 @@ PHYSACDEF void ClosePhysics(void);                                              
     #include <sys/time.h>           // Required for: timespec
 #elif defined(__APPLE__)            // macOS also defines __MACH__
     #include <mach/mach_time.h>     // Required for: mach_absolute_time()
+#elif defined(__arm__)
+    #include "utility/engine_time.h"
 #endif
 
 //----------------------------------------------------------------------------------
@@ -1190,6 +1192,8 @@ static void PhysicsStep(void)
     }
 }
 
+#include "debug/debug_print.h"
+
 // Wrapper to ensure PhysicsStep is run with at a fixed time step
 PHYSACDEF void RunPhysicsStep(void)
 {
@@ -2012,6 +2016,10 @@ static void InitTimer(void)
         frequency = (timebase.denom*1e9)/timebase.numer;
     #endif
 
+    #if defined(__arm__)
+        frequency = 125.0 * 1000.0 * 1000.0;
+    #endif
+
     baseTime = GetTimeCount();      // Get MONOTONIC clock time offset
     startTime = GetCurrentTime();   // Get current time
 }
@@ -2033,6 +2041,10 @@ static uint64_t GetTimeCount(void)
 
     #if defined(__APPLE__)
         value = mach_absolute_time();
+    #endif
+
+    #if defined(__arm__)
+        value = millis();
     #endif
 
     return value;

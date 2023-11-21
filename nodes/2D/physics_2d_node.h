@@ -6,9 +6,6 @@
 #include "nodes/2d/physics_2d_node.h"
 #include "nodes/node_base.h"
 
-#define PHYSAC_STANDALONE
-#define PHYSAC_NO_THREADS
-#include "libs/physac/physac.h"
 
 typedef struct{
     mp_obj_t position;              // Vector2: 2d xy position of this node
@@ -18,8 +15,7 @@ typedef struct{
 
 typedef struct{
     mp_obj_t tick_cb;
-    void *box2d_shape;
-    void *box2d_body;
+    void *physac_body;
     linked_list_node *physics_list_node;    // All physics 2d nodes get added to a list that is easy to traverse
 }engine_physics_2d_node_common_data_t;
 
