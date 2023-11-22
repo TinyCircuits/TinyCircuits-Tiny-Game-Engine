@@ -3,7 +3,7 @@
 #include "engine_object_layers.h"
 #include "display/engine_display.h"
 #include "input/engine_input_module.h"
-#include "physics/engine_physics_module.h"
+#include "physics/engine_physics.h"
 
 // ### MODULE ###
 
@@ -36,6 +36,14 @@ STATIC mp_obj_t engine_tick(){
     // After every game cycle send the current active screen buffer to the display
     engine_display_send();
 
+
+    
+
+
+    // Before anything, sync the physics positions to the engine physics
+    // node positions (synced back later)
+    engine_physics_sync_engine_nodes_to_bodies();
+
     // Now that all the node callbacks were called and potentially moved
     // physics nodes around, step the physics engine another tick.
     // NOTE: Before each nodes callbacks are called the position
@@ -43,6 +51,10 @@ STATIC mp_obj_t engine_tick(){
     // all the callbacks for the physics nodes are done, the positions
     // from the engine node are synced back to the physics body
     engine_physics_tick();
+
+    // After all callbacks have messed around positions, sync engine
+    // nodes back to the physics engine bodies
+    engine_physics_sync_bodies_to_engine_nodes();
 
     return mp_const_none;
 }

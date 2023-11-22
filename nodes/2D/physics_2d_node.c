@@ -6,7 +6,7 @@
 #include "engine_object_layers.h"
 #include "math/vector2.h"
 #include "draw/engine_display_draw.h"
-#include "physics/engine_physics_module.h"
+#include "physics/engine_physics.h"
 
 
 // Class required functions
@@ -17,7 +17,14 @@ STATIC void physics_2d_node_class_print(const mp_print_t *print, mp_obj_t self_i
 
 
 STATIC mp_obj_t physics_2d_node_class_tick(mp_obj_t self_in){
-    ENGINE_WARNING_PRINTF("Physics2DNode: Tick function not overridden");
+    engine_node_base_t *node_base = self_in;
+    engine_physics_2d_node_common_data_t *common_data = node_base->node_common_data;
+
+    double x, y;
+
+    engine_physics_get_body_xy(common_data->physac_body, &x, &y);
+
+    ENGINE_WARNING_PRINTF("Physics2DNode: Tick function not overridden %0.3f %0.3f", x, y);
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(physics_2d_node_class_tick_obj, physics_2d_node_class_tick);

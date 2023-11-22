@@ -5,23 +5,6 @@
 #include "physics/engine_physics.h"
 
 
-// A linked list of physics nodes to loop
-// through to copy all parameters quickly
-linked_list engine_physics_nodes;
-
-
-linked_list_node *engine_physics_track_node(engine_node_base_t *obj){
-    ENGINE_INFO_PRINTF("Tracking physics node");
-    return linked_list_add_obj(&engine_physics_nodes, obj);
-}
-
-
-void engine_physics_untrack_node(linked_list_node *physics_list_node){
-    ENGINE_INFO_PRINTF("Untracking physics node");
-    linked_list_del_list_node(&engine_physics_nodes, physics_list_node);
-}
-
-
 // Module attributes
 STATIC const mp_rom_map_elem_t engine_physics_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_physics) },

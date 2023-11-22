@@ -3,7 +3,6 @@
 
 #include "py/obj.h"
 #include "utility/linked_list.h"
-#include "nodes/2d/physics_2d_node.h"
 #include "nodes/node_base.h"
 
 

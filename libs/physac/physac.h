@@ -98,12 +98,12 @@
 //----------------------------------------------------------------------------------
 // Defines and Macros
 //----------------------------------------------------------------------------------
-#define     PHYSAC_MAX_BODIES               32
-#define     PHYSAC_MAX_MANIFOLDS            4096
+#define     PHYSAC_MAX_BODIES               32      // Default: 64
+#define     PHYSAC_MAX_MANIFOLDS            1024    // Default: 4096
 #define     PHYSAC_MAX_VERTICES             24
 #define     PHYSAC_CIRCLE_VERTICES          24
 
-#define     PHYSAC_COLLISION_ITERATIONS     100
+#define     PHYSAC_COLLISION_ITERATIONS     50     // Default: 100
 #define     PHYSAC_PENETRATION_ALLOWANCE    0.05f
 #define     PHYSAC_PENETRATION_CORRECTION   0.4f
 
@@ -2017,7 +2017,7 @@ static void InitTimer(void)
     #endif
 
     #if defined(__arm__)
-        frequency = 125.0 * 1000.0 * 1000.0;
+        frequency = 60.0 * 2000.0;
     #endif
 
     baseTime = GetTimeCount();      // Get MONOTONIC clock time offset
