@@ -77,16 +77,20 @@ STATIC void empty_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *de
                 destination[0] = MP_OBJ_FROM_PTR(&node_base_del_obj);
                 destination[1] = self_in;
             break;
+            case MP_QSTR_add_child:
+                destination[0] = MP_OBJ_FROM_PTR(&node_base_add_child_obj);
+                destination[1] = self_in;
+            break;
+            case MP_QSTR_remove_child:
+                destination[0] = MP_OBJ_FROM_PTR(&node_base_remove_child_obj);
+                destination[1] = self_in;
+            break;
             case MP_QSTR_set_layer:
                 destination[0] = MP_OBJ_FROM_PTR(&node_base_set_layer_obj);
                 destination[1] = self_in;
             break;
             case MP_QSTR_get_layer:
                 destination[0] = MP_OBJ_FROM_PTR(&node_base_get_layer_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_add_child:
-                destination[0] = MP_OBJ_FROM_PTR(&node_base_add_child_obj);
                 destination[1] = self_in;
             break;
             default:

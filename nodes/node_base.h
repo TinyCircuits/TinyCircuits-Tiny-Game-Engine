@@ -27,14 +27,17 @@ typedef struct{
 mp_obj_t node_base_del(mp_obj_t self_in);
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(node_base_del_obj, node_base_del);
 
+mp_obj_t node_base_add_child(mp_obj_t self_parent_in, mp_obj_t child_in);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(node_base_add_child_obj, node_base_add_child);
+
+mp_obj_t node_base_remove_child(mp_obj_t self_parent_in, mp_obj_t child_in);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(node_base_remove_child_obj, node_base_remove_child);
+
 mp_obj_t node_base_set_layer(mp_obj_t self_in, mp_obj_t layer);
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(node_base_set_layer_obj, node_base_set_layer);
 
 mp_obj_t node_base_get_layer(mp_obj_t self_in);
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(node_base_get_layer_obj, node_base_get_layer);
-
-mp_obj_t node_base_add_child(mp_obj_t self_parent_in, mp_obj_t child_in);
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(node_base_add_child_obj, node_base_add_child);
 
 
 inline bool node_base_is_visible(engine_node_base_t *node_base){

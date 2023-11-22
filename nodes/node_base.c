@@ -38,28 +38,7 @@ mp_obj_t node_base_del(mp_obj_t self_in){
     engine_remove_object_from_layer(node_base->object_list_node, node_base->layer);
     free(node_base->node_common_data);
 
-    return mp_const_none;;
-}
-
-
-mp_obj_t node_base_set_layer(mp_obj_t self_in, mp_obj_t layer){
-    ENGINE_INFO_PRINTF("Node Base: Setting object to layer %d", mp_obj_get_int(layer));
-
-    engine_node_base_t *node_base = self_in;
-    engine_remove_object_from_layer(node_base->object_list_node, node_base->layer);
-    ENGINE_INFO_PRINTF("TEST 0");
-    node_base->layer = mp_obj_get_int(layer);
-    node_base->object_list_node = engine_add_object_to_layer(node_base, node_base->layer);
-
     return mp_const_none;
-}
-
-
-mp_obj_t node_base_get_layer(mp_obj_t self_in){
-    ENGINE_INFO_PRINTF("Node Base: Getting object layer...");
-
-    engine_node_base_t *node_base = self_in;
-    return mp_obj_new_int(node_base->layer);
 }
 
 
@@ -73,4 +52,43 @@ mp_obj_t node_base_add_child(mp_obj_t self_parent_in, mp_obj_t child_in){
     child_node_base->parent_node_base = parent_node_base;
 
     return mp_const_none;
+}
+
+
+mp_obj_t node_base_remove_child(mp_obj_t self_parent_in, mp_obj_t child_in){
+    ENGINE_INFO_PRINTF("Node Base: Removing child...");
+
+    engine_node_base_t *parent_node_base = self_parent_in;
+    engine_node_base_t *child_node_base = child_in;
+
+    // Check if the child's parent equals this node's memory location (bad idea?)
+    if(child_node_base->parent_node_base == parent_node_base){
+        linked_list_del_list_node(&parent_node_base->children_node_bases, child_node_base->location_in_parents_children);
+        child_node_base->parent_node_base = NULL;
+        child_node_base->location_in_parents_children = NULL;
+    }else{
+        mp_raise_msg(&mp_type_RuntimeError, "Child node does not exist on this parent, cannot remove!");
+    }
+
+    return mp_const_none;
+}
+
+
+mp_obj_t node_base_set_layer(mp_obj_t self_in, mp_obj_t layer){
+    ENGINE_INFO_PRINTF("Node Base: Setting object to layer %d", mp_obj_get_int(layer));
+
+    engine_node_base_t *node_base = self_in;
+    engine_remove_object_from_layer(node_base->object_list_node, node_base->layer);
+    node_base->layer = mp_obj_get_int(layer);
+    node_base->object_list_node = engine_add_object_to_layer(node_base, node_base->layer);
+
+    return mp_const_none;
+}
+
+
+mp_obj_t node_base_get_layer(mp_obj_t self_in){
+    ENGINE_INFO_PRINTF("Node Base: Getting object layer...");
+
+    engine_node_base_t *node_base = self_in;
+    return mp_obj_new_int(node_base->layer);
 }
