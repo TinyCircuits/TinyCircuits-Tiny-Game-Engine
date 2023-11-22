@@ -126,40 +126,6 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
 
 
 // Class methods
-STATIC mp_obj_t sprite_2d_node_class_del(mp_obj_t self_in){
-    ENGINE_INFO_PRINTF("Sprite2DNode: Deleted (garbage collected, removing self from active engine objects)");
-
-    engine_node_base_t *node_base = self_in;
-    free(node_base->node_common_data);
-    engine_remove_object_from_layer(node_base->object_list_node, node_base->layer);
-
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_1(sprite_2d_node_class_del_obj, sprite_2d_node_class_del);
-
-
-STATIC mp_obj_t sprite_2d_node_class_set_layer(mp_obj_t self_in, mp_obj_t layer){
-    ENGINE_INFO_PRINTF("Setting object to layer %d", mp_obj_get_int(layer));
-
-    engine_node_base_t *node_base = self_in;
-    engine_remove_object_from_layer(node_base->object_list_node, node_base->layer);
-    node_base->layer = mp_obj_get_int(layer);
-    node_base->object_list_node = engine_add_object_to_layer(node_base, node_base->layer);
-
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_2(sprite_2d_node_class_set_layer_obj, sprite_2d_node_class_set_layer);
-
-
-STATIC mp_obj_t sprite_2d_node_class_get_layer(mp_obj_t self_in){
-    ENGINE_INFO_PRINTF("Getting object layer...");
-
-    engine_node_base_t *node_base = self_in;
-    return mp_obj_new_int(node_base->layer);
-}
-MP_DEFINE_CONST_FUN_OBJ_1(sprite_2d_node_class_get_layer_obj, sprite_2d_node_class_get_layer);
-
-
 STATIC void sprite_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Sprite2DNode attr");
 
@@ -168,15 +134,19 @@ STATIC void sprite_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
     if(destination[0] == MP_OBJ_NULL){          // Load
         switch(attribute){
             case MP_QSTR___del__:
-                destination[0] = MP_OBJ_FROM_PTR(&sprite_2d_node_class_del_obj);
+                destination[0] = MP_OBJ_FROM_PTR(&node_base_del_obj);
                 destination[1] = self_in;
             break;
             case MP_QSTR_set_layer:
-                destination[0] = MP_OBJ_FROM_PTR(&sprite_2d_node_class_set_layer_obj);
+                destination[0] = MP_OBJ_FROM_PTR(&node_base_set_layer_obj);
                 destination[1] = self_in;
             break;
             case MP_QSTR_get_layer:
-                destination[0] = MP_OBJ_FROM_PTR(&sprite_2d_node_class_get_layer_obj);
+                destination[0] = MP_OBJ_FROM_PTR(&node_base_get_layer_obj);
+                destination[1] = self_in;
+            break;
+            case MP_QSTR_add_child:
+                destination[0] = MP_OBJ_FROM_PTR(&node_base_add_child_obj);
                 destination[1] = self_in;
             break;
             case MP_QSTR_position:

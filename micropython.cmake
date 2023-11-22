@@ -10,6 +10,7 @@ target_sources(usermod_engine INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/input/engine_input_module.c
     ${CMAKE_CURRENT_LIST_DIR}/input/engine_input_rp2.c
     ${CMAKE_CURRENT_LIST_DIR}/input/engine_input_common.c
+    ${CMAKE_CURRENT_LIST_DIR}/nodes/node_base.c
     ${CMAKE_CURRENT_LIST_DIR}/nodes/empty_node.c
     ${CMAKE_CURRENT_LIST_DIR}/nodes/3d/camera_node.c
     ${CMAKE_CURRENT_LIST_DIR}/nodes/2d/sprite_2d_node.c

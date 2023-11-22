@@ -88,42 +88,6 @@ mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t 
 
 
 // Class methods
-STATIC mp_obj_t camera_node_class_del(mp_obj_t self_in){
-    ENGINE_WARNING_PRINTF("CameraNode: Deleted (garbage collected, removing self from active engine objects)");
-
-    engine_node_base_t *node_base = self_in;
-    engine_camera_node_common_data_t *common_data = node_base->node_common_data;
-    engine_camera_untrack(common_data->camera_list_node);
-    engine_remove_object_from_layer(node_base->object_list_node, node_base->layer);
-    free(node_base->node_common_data);
-
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_1(camera_node_class_del_obj, camera_node_class_del);
-
-
-STATIC mp_obj_t camera_node_class_set_layer(mp_obj_t self_in, mp_obj_t layer){
-    ENGINE_INFO_PRINTF("Setting object to layer %d", mp_obj_get_int(layer));
-
-    engine_node_base_t *node_base = self_in;
-    engine_remove_object_from_layer(node_base->object_list_node, node_base->layer);
-    node_base->layer = mp_obj_get_int(layer);
-    node_base->object_list_node = engine_add_object_to_layer(node_base, node_base->layer);
-
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_2(camera_node_class_set_layer_obj, camera_node_class_set_layer);
-
-
-STATIC mp_obj_t camera_node_class_get_layer(mp_obj_t self_in){
-    ENGINE_INFO_PRINTF("Getting object layer...");
-
-    engine_node_base_t *node_base = self_in;
-    return mp_obj_new_int(node_base->layer);
-}
-MP_DEFINE_CONST_FUN_OBJ_1(camera_node_class_get_layer_obj, camera_node_class_get_layer);
-
-
 STATIC void camera_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing CameraNode attr");
 
@@ -132,15 +96,19 @@ STATIC void camera_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *d
     if(destination[0] == MP_OBJ_NULL){          // Load
         switch(attribute){
             case MP_QSTR___del__:
-                destination[0] = MP_OBJ_FROM_PTR(&camera_node_class_del_obj);
+                destination[0] = MP_OBJ_FROM_PTR(&node_base_del_obj);
                 destination[1] = self_in;
             break;
             case MP_QSTR_set_layer:
-                destination[0] = MP_OBJ_FROM_PTR(&camera_node_class_set_layer_obj);
+                destination[0] = MP_OBJ_FROM_PTR(&node_base_set_layer_obj);
                 destination[1] = self_in;
             break;
             case MP_QSTR_get_layer:
-                destination[0] = MP_OBJ_FROM_PTR(&camera_node_class_get_layer_obj);
+                destination[0] = MP_OBJ_FROM_PTR(&node_base_get_layer_obj);
+                destination[1] = self_in;
+            break;
+            case MP_QSTR_add_child:
+                destination[0] = MP_OBJ_FROM_PTR(&node_base_add_child_obj);
                 destination[1] = self_in;
             break;
             case MP_QSTR_position:
