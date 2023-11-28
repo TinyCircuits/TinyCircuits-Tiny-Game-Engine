@@ -32,11 +32,7 @@ void engine_camera_draw_for_each(mp_obj_t dest[2]){
     while(current_camera_list_node != NULL){
         engine_node_base_t *node_base = current_camera_list_node->object;
 
-        if(node_base->inherited){
-            arguments[2] = node_base->node;
-        }else{
-            arguments[2] = node_base;
-        }
+        arguments[2] = node_base->attr_accessor;
         
         mp_call_method_n_kw(1, 0, arguments);
         current_camera_list_node = current_camera_list_node->next;

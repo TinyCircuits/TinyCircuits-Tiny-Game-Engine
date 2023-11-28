@@ -77,6 +77,7 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
 
         engine_sprite_2d_node_class_obj_t *sprite_2d_node = m_malloc(sizeof(engine_sprite_2d_node_class_obj_t));
         node_base->node = sprite_2d_node;
+        node_base->attr_accessor = node_base;
 
         common_data->tick_cb = MP_OBJ_FROM_PTR(&sprite_2d_node_class_tick_obj);
         common_data->draw_cb = MP_OBJ_FROM_PTR(&sprite_2d_node_class_draw_obj);
@@ -92,6 +93,7 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
     }else if(n_args == 2){  // Inherited (use existing object)
         node_base->inherited = true;
         node_base->node = args[0];
+        node_base->attr_accessor = node_base->node;
 
         // Look for function overrides otherwise use the defaults
         mp_obj_t dest[2];

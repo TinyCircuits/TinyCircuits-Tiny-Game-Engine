@@ -16,6 +16,7 @@ typedef struct{
     uint16_t layer;                     // The layer index of the linked list the 'object_list_node' lives in (used for easy deletion)
     uint8_t meta_data;                  // Holds bits related to if this node is visible (not shown or shown but callbacks still called), disabled (callbacks not called but still shown), or just added
     uint8_t type;                       // The type of this node (see 'node_types.h')
+    void *attr_accessor;                // Used in conjunction with mp_get_attr
     void *node;                         // Points to subclass if 'inherited' true otherwise to engine node struct
     void *node_common_data;             // Common data for inherited and non-inherited nodes to always set here
     

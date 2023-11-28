@@ -57,6 +57,7 @@ mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t 
 
         engine_camera_node_class_obj_t *camera_node = m_malloc(sizeof(engine_camera_node_class_obj_t));
         node_base->node = camera_node;
+        node_base->attr_accessor = node_base;
 
         common_data->tick_cb = MP_OBJ_FROM_PTR(&camera_node_class_tick_obj);
 
@@ -66,6 +67,7 @@ mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t 
     }else if(n_args == 1){  // Inherited (use existing object)
         node_base->inherited = true;
         node_base->node = args[0];
+        node_base->attr_accessor = node_base->node;
 
         // Look for function overrides otherwise use the defaults
         mp_obj_t dest[2];

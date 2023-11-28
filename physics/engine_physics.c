@@ -68,15 +68,9 @@ void engine_physics_sync_engine_nodes_to_bodies(){
         float rotation_degrees = 0.0f;
         bool dynamic = false;
         
-        if(node_base->inherited){
-            engine_node_postion = mp_load_attr(node_base->node, MP_QSTR_position);
-            rotation_degrees = mp_obj_get_float(mp_load_attr(node_base->node, MP_QSTR_rotation));
-            dynamic = mp_obj_get_int(mp_load_attr(node_base->node, MP_QSTR_dynamic));
-        }else{
-            engine_node_postion = mp_load_attr(node_base, MP_QSTR_position);
-            rotation_degrees = mp_obj_get_float(mp_load_attr(node_base, MP_QSTR_rotation));
-            dynamic = mp_obj_get_int(mp_load_attr(node_base, MP_QSTR_dynamic));
-        }
+        engine_node_postion = mp_load_attr(node_base->attr_accessor, MP_QSTR_position);
+        rotation_degrees = mp_obj_get_float(mp_load_attr(node_base->attr_accessor, MP_QSTR_rotation));
+        dynamic = mp_obj_get_int(mp_load_attr(node_base->attr_accessor, MP_QSTR_dynamic));
         
         PhysicsBody body = common_data->physac_body;
         body->position.x = engine_node_postion->x;
