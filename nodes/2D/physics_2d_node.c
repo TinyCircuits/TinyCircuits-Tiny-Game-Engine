@@ -64,8 +64,10 @@ mp_obj_t physics_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
         common_data->tick_cb = MP_OBJ_FROM_PTR(&physics_2d_node_class_tick_obj);
 
         physics_2d_node->position = vector2_class_new(&vector2_class_type, 0, 0, NULL);
+        physics_2d_node->rotation = mp_obj_new_float(0.0f);
         physics_2d_node->velocity = vector2_class_new(&vector2_class_type, 0, 0, NULL);
         physics_2d_node->acceleration = vector2_class_new(&vector2_class_type, 0, 0, NULL);
+        physics_2d_node->dynamic = mp_obj_new_bool(true);
     }else if(n_args == 1){  // Inherited (use existing object)
         node_base->inherited = true;
         node_base->node = args[0];
@@ -80,8 +82,10 @@ mp_obj_t physics_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
         }
 
         mp_store_attr(node_base->node, MP_QSTR_position, vector2_class_new(&vector2_class_type, 0, 0, NULL));
+        mp_store_attr(node_base->node, MP_QSTR_rotation, mp_obj_new_float(0.0f));
         mp_store_attr(node_base->node, MP_QSTR_velocity, vector2_class_new(&vector2_class_type, 0, 0, NULL));
         mp_store_attr(node_base->node, MP_QSTR_acceleration, vector2_class_new(&vector2_class_type, 0, 0, NULL));
+        mp_store_attr(node_base->node, MP_QSTR_dynamic, mp_obj_new_bool(true));
     }else{
         mp_raise_msg(&mp_type_RuntimeError, "Too many arguments passed to Physics2DNode constructor!");
     }
@@ -121,11 +125,17 @@ STATIC void physics_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
             case MP_QSTR_position:
                 destination[0] = self->position;
             break;
+            case MP_QSTR_rotation:
+                destination[0] = self->rotation;
+            break;
             case MP_QSTR_velocity:
                 destination[0] = self->velocity;
             break;
             case MP_QSTR_acceleration:
                 destination[0] = self->acceleration;
+            break;
+            case MP_QSTR_dynamic:
+                destination[0] = self->dynamic;
             break;
             default:
                 return; // Fail
@@ -135,11 +145,17 @@ STATIC void physics_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
             case MP_QSTR_position:
                 self->position = destination[1];
             break;
+            case MP_QSTR_rotation:
+                self->rotation = destination[1];
+            break;
             case MP_QSTR_velocity:
                 self->velocity = destination[1];
             break;
             case MP_QSTR_acceleration:
                 self->acceleration = destination[1];
+            break;
+            case MP_QSTR_dynamic:
+                self->dynamic = destination[1];
             break;
             default:
                 return; // Fail

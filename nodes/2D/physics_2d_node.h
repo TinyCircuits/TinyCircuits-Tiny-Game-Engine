@@ -8,8 +8,10 @@
 
 typedef struct{
     mp_obj_t position;              // Vector2: 2d xy position of this node
+    mp_obj_t rotation;              // float
     mp_obj_t velocity;              // Vector2
-    mp_obj_t acceleration;          // Vector2 
+    mp_obj_t acceleration;          // Vector2
+    mp_obj_t dynamic;               // bool
 }engine_physics_2d_node_class_obj_t;
 
 typedef struct{

@@ -26,6 +26,16 @@ MP_DEFINE_CONST_FUN_OBJ_1(rectangle_2d_node_class_tick_obj, rectangle_2d_node_cl
 STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("Rectangle2DNode: Drawing");
 
+    engine_node_base_t *node_base = self_in;
+    mp_obj_t accessor;
+
+    if(node_base->inherited){
+        accessor = node_base->node;
+    }else{
+        accessor = node_base;
+    }
+
+
     // vector3_class_obj_t *camera_position = mp_load_attr(camera_node, MP_QSTR_position);
     vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node, MP_QSTR_rotation);
     rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node, MP_QSTR_viewport);
@@ -39,27 +49,43 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_n
     // int32_t cx = (int32_t)mp_obj_get_float(camera_position->x);
     // int32_t cy = (int32_t)mp_obj_get_float(camera_position->y);
 
-    vector2_class_obj_t *position = mp_load_attr(self_in, MP_QSTR_position);
-    mp_int_t width = mp_obj_get_int(mp_load_attr(self_in, MP_QSTR_width));
-    mp_int_t height = mp_obj_get_int(mp_load_attr(self_in, MP_QSTR_height));
-    mp_int_t color = mp_obj_get_int(mp_load_attr(self_in, MP_QSTR_color));
+    vector2_class_obj_t *position = mp_load_attr(accessor, MP_QSTR_position);
+    mp_int_t width = mp_obj_get_int(mp_load_attr(accessor, MP_QSTR_width));
+    mp_int_t height = mp_obj_get_int(mp_load_attr(accessor, MP_QSTR_height));
+    mp_int_t color = mp_obj_get_int(mp_load_attr(accessor, MP_QSTR_color));
 
     int32_t px = (int32_t)mp_obj_get_float(position->x);
     int32_t py = (int32_t)mp_obj_get_float(position->y);
+    mp_float_t p_rotation = 0.0f;
 
-    vector2_class_obj_t *scale = mp_load_attr(self_in, MP_QSTR_scale);
+    if(node_base->parent_node_base != NULL){
+        engine_node_base_t *parent_node_base = node_base->parent_node_base;
+        vector2_class_obj_t *parent_position;
+
+        if(parent_node_base->inherited){
+            parent_position = mp_load_attr(parent_node_base->node, MP_QSTR_position);
+        }else{
+            parent_position = mp_load_attr(parent_node_base, MP_QSTR_position);
+        }
+        
+        px += (int32_t)mp_obj_get_float(parent_position->x);
+        py += (int32_t)mp_obj_get_float(parent_position->y);
+
+        if(parent_node_base->type == NODE_TYPE_PHYSICS_2D){
+            if(parent_node_base->inherited){
+                p_rotation = mp_obj_get_float(mp_load_attr(parent_node_base->node, MP_QSTR_rotation));
+            }else{
+                p_rotation = mp_obj_get_float(mp_load_attr(parent_node_base, MP_QSTR_rotation));
+            }
+        }
+    }
+
+    vector2_class_obj_t *scale = mp_load_attr(accessor, MP_QSTR_scale);
     mp_int_t xsc = (int32_t)(mp_obj_get_float(scale->x)*65536 + 0.5);
     mp_int_t ysc = (int32_t)(mp_obj_get_float(scale->y)*65536 + 0.5);
 
-    mp_float_t theta = mp_obj_get_float(mp_load_attr(self_in, MP_QSTR_rotation));
+    mp_float_t theta = mp_obj_get_float(mp_load_attr(accessor, MP_QSTR_rotation)) + p_rotation;
 
-    // Rotation not implemented yet so this is simple!
-    // for(mp_int_t y=0; y<height; y++){
-    //     for(mp_int_t x=0; x<width; x++){
-    //         engine_draw_pixel_viewport(color, px+x, py+y, vx, vy, vw, vh, cx, cy);
-    //     }
-    // }
-    //ENGINE_INFO_PRINTF("Rendering at %i, %i\n\r", vx, vy);
     engine_draw_fillrect_scale_rotate_viewport(color, px+vx, py+vy, width, height, xsc, ysc, (int16_t)((theta-cam_theta)*1024 / (2*M_PI)), vx, vy, vw, vh);
 
     return mp_const_none;
