@@ -54,8 +54,8 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_n
     mp_int_t height = mp_obj_get_int(mp_load_attr(accessor, MP_QSTR_height));
     mp_int_t color = mp_obj_get_int(mp_load_attr(accessor, MP_QSTR_color));
 
-    int32_t px = (int32_t)mp_obj_get_float(position->x);
-    int32_t py = (int32_t)mp_obj_get_float(position->y);
+    int32_t px = (int32_t)position->x;
+    int32_t py = (int32_t)position->y;
     mp_float_t p_rotation = 0.0f;
 
     if(node_base->parent_node_base != NULL){
@@ -68,8 +68,8 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_n
             parent_position = mp_load_attr(parent_node_base, MP_QSTR_position);
         }
         
-        px += (int32_t)mp_obj_get_float(parent_position->x);
-        py += (int32_t)mp_obj_get_float(parent_position->y);
+        px += (int32_t)parent_position->x;
+        py += (int32_t)parent_position->y;
 
         if(parent_node_base->type == NODE_TYPE_PHYSICS_2D){
             if(parent_node_base->inherited){
@@ -81,8 +81,8 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_n
     }
 
     vector2_class_obj_t *scale = mp_load_attr(accessor, MP_QSTR_scale);
-    mp_int_t xsc = (int32_t)(mp_obj_get_float(scale->x)*65536 + 0.5);
-    mp_int_t ysc = (int32_t)(mp_obj_get_float(scale->y)*65536 + 0.5);
+    mp_int_t xsc = (int32_t)(scale->x*65536 + 0.5);
+    mp_int_t ysc = (int32_t)(scale->y*65536 + 0.5);
 
     mp_float_t theta = mp_obj_get_float(mp_load_attr(accessor, MP_QSTR_rotation)) + p_rotation;
 

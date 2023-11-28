@@ -56,11 +56,11 @@ void engine_invoke_all_node_callbacks(){
             engine_node_base_t *node_base = current_linked_list_node->object;
             mp_obj_t exec[2];
 
-            // if(node_base->inherited){
-            //     exec[1] = node_base->node;
-            // }else{
-            exec[1] = node_base;
-            // }
+            if(node_base->inherited){
+                exec[1] = node_base->node;
+            }else{
+                exec[1] = node_base;
+            }
 
             // As long as this node was not just added, figure out its type and what callbacks it has
             if(node_base_is_just_added(node_base) == false){

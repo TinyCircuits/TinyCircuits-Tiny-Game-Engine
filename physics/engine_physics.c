@@ -79,8 +79,8 @@ void engine_physics_sync_engine_nodes_to_bodies(){
         }
         
         PhysicsBody body = common_data->physac_body;
-        body->position.x = mp_obj_get_float(engine_node_postion->x);
-        body->position.y = mp_obj_get_float(engine_node_postion->y);
+        body->position.x = engine_node_postion->x;
+        body->position.y = engine_node_postion->y;
         body->orient = rotation_degrees * DEG2RAD;
         body->enabled = dynamic;
 
@@ -109,8 +109,8 @@ void engine_physics_sync_bodies_to_engine_nodes(){
             mp_store_attr(node_base, MP_QSTR_rotation, mp_obj_new_float(body->orient * RAD2DEG));
         }
 
-        engine_node_position->x = mp_obj_new_float(body->position.x);
-        engine_node_position->y = mp_obj_new_float(body->position.y);
+        engine_node_position->x = body->position.x;
+        engine_node_position->y = body->position.y;
 
         current_linked_list_node = current_linked_list_node->next;
     }

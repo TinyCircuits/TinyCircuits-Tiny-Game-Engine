@@ -6,8 +6,8 @@
 
 typedef struct{
     mp_obj_base_t base;
-    mp_obj_t x;
-    mp_obj_t y;
+    mp_float_t x;
+    mp_float_t y;
 }vector2_class_obj_t;
 
 extern const mp_obj_type_t vector2_class_type;

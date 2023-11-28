@@ -4,9 +4,7 @@
 // Class required functions
 STATIC void vector2_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
     vector2_class_obj_t *self = self_in;
-    const mp_float_t x = mp_obj_get_float(self->x);
-    const mp_float_t y = mp_obj_get_float(self->y);
-    ENGINE_INFO_PRINTF("print(): Vector2 [%0.3f, %0.3f]", (double)x, (double)y);
+    ENGINE_INFO_PRINTF("print(): Vector2 [%0.3f, %0.3f]", (double)self->x, (double)self->y);
 }
 
 
@@ -18,11 +16,11 @@ mp_obj_t vector2_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw
 
     if(n_args == 0){
         self->base.type = &vector2_class_type;
-        self->x = mp_obj_new_float(0.0);
-        self->y = mp_obj_new_float(0.0);
+        self->x = 0.0f;
+        self->y = 0.0f;
     }else if(n_args == 2){
-        self->x = args[0];
-        self->y = args[1];
+        self->x = mp_obj_get_float(args[0]);
+        self->y = mp_obj_get_float(args[1]);
     }else{
         mp_raise_TypeError("function takes 0 or 2 arguments");
     }
@@ -35,11 +33,7 @@ mp_obj_t vector2_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw
 STATIC mp_obj_t vector2_class_dot(mp_obj_t self_in, mp_obj_t vector_b){
     const vector2_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
     const vector2_class_obj_t* b = MP_OBJ_TO_PTR(vector_b);
-    const mp_float_t ax = mp_obj_get_float(self->x);
-    const mp_float_t ay = mp_obj_get_float(self->y);
-    const mp_float_t bx = mp_obj_get_float(b->x);
-    const mp_float_t by = mp_obj_get_float(b->y);
-    return mp_obj_new_float(ax*bx + ay*by);
+    return mp_obj_new_float(self->x*b->x + self->y*b->y);
 }
 MP_DEFINE_CONST_FUN_OBJ_2(vector2_class_dot_obj, vector2_class_dot);
 
@@ -47,11 +41,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(vector2_class_dot_obj, vector2_class_dot);
 STATIC mp_obj_t vector2_class_cross(mp_obj_t self_in, mp_obj_t vector_b){
     const vector2_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
     const vector2_class_obj_t* b = MP_OBJ_TO_PTR(vector_b);
-    const mp_float_t ax = mp_obj_get_float(self->x);
-    const mp_float_t ay = mp_obj_get_float(self->y);
-    const mp_float_t bx = mp_obj_get_float(b->x);
-    const mp_float_t by = mp_obj_get_float(b->y);
-    return mp_obj_new_float(ax*by - ay*bx);
+    return mp_obj_new_float(self->x*b->y - self->y*b->x);
 }
 MP_DEFINE_CONST_FUN_OBJ_2(vector2_class_cross_obj, vector2_class_cross);
 
@@ -61,9 +51,7 @@ STATIC mp_obj_t vector2_class_len2(mp_obj_t self_in){
         mp_raise_TypeError("expected vector argument");
     }
     const vector2_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
-    const mp_float_t x = mp_obj_get_float(self->x);
-    const mp_float_t y = mp_obj_get_float(self->y);
-    return mp_obj_new_float(x*x + y*y);
+    return mp_obj_new_float(self->x*self->x + self->y*self->y);
 }
 MP_DEFINE_CONST_FUN_OBJ_1(vector2_class_len2_obj, vector2_class_len2);
 
@@ -74,9 +62,7 @@ STATIC mp_obj_t vector2_class_len(mp_obj_t self_in){
     }
 
     const vector2_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
-    const mp_float_t x = mp_obj_get_float(self->x);
-    const mp_float_t y = mp_obj_get_float(self->y);
-    return mp_obj_new_float(sqrt(x*x + y*y));
+    return mp_obj_new_float(sqrt(self->x*self->x + self->y*self->y));
 }
 MP_DEFINE_CONST_FUN_OBJ_1(vector2_class_len_obj, vector2_class_len);
 
@@ -89,11 +75,9 @@ STATIC mp_obj_t vector2_class_normal(mp_obj_t self_in){
     const vector2_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
     vector2_class_obj_t* ret = m_new_obj(vector2_class_obj_t);
     ret->base.type = &vector2_class_type;
-    const mp_float_t x = mp_obj_get_float(self->x);
-    const mp_float_t y = mp_obj_get_float(self->y);
-    const mp_float_t il = 1.0 / sqrt(x*x + y*y);
-    ret->x = mp_obj_new_float(x * il);
-    ret->y = mp_obj_new_float(y * il);
+    const mp_float_t il = 1.0 / sqrt(self->x*self->x + self->y*self->y);
+    ret->x = self->x * il;
+    ret->y = self->y * il;
     return MP_OBJ_FROM_PTR(ret);
 }
 MP_DEFINE_CONST_FUN_OBJ_1(vector2_class_normal_obj, vector2_class_normal);
@@ -105,11 +89,9 @@ STATIC mp_obj_t vector2_class_normalize(mp_obj_t self_in){
     }
 
     vector2_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
-    const mp_float_t x = mp_obj_get_float(self->x);
-    const mp_float_t y = mp_obj_get_float(self->y);
-    const mp_float_t il = 1.0 / sqrt(x*x + y*y);
-    self->x = mp_obj_new_float(x * il);
-    self->y = mp_obj_new_float(y * il);
+    const mp_float_t il = 1.0 / sqrt(self->x*self->x + self->y*self->y);
+    self->x = self->x * il;
+    self->y = self->y * il;
     return MP_OBJ_FROM_PTR(self);
 }
 MP_DEFINE_CONST_FUN_OBJ_1(vector2_class_normalize_obj, vector2_class_normalize);
@@ -122,27 +104,23 @@ STATIC mp_obj_t vector2_class_rotateZ(mp_obj_t self_in, mp_obj_t _theta){
 
     vector2_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
     mp_float_t xp, yp;
-    const mp_float_t x = mp_obj_get_float(self->x);
-    const mp_float_t y = mp_obj_get_float(self->y);
 
     if(mp_obj_is_type(_theta, &vector2_class_type)){ // Rotate by vector theta (sin(t), cos(t), ~)
         const vector2_class_obj_t* b = MP_OBJ_TO_PTR(_theta);
-        const mp_float_t bx = mp_obj_get_float(b->x);
-        const mp_float_t by = mp_obj_get_float(b->y);
-        xp = x*by - y*bx;
-        yp = y*by + x*bx;
+        xp = self->x*b->y - self->y*b->x;
+        yp = self->y*b->y + self->x*b->x;
     }else if(mp_obj_is_float(_theta)){ // Rotate by scalar theta
         const mp_float_t b = mp_obj_get_float(_theta);
         const mp_float_t s = sin(b);
         const mp_float_t c = cos(b);
-        xp = x*c - y*s;
-        yp = y*c + x*s;
+        xp = self->x*c - self->y*s;
+        yp = self->y*c + self->x*s;
     }else{
         mp_raise_TypeError("expected vector or scalar length");
     }
 
-    self->x = mp_obj_new_float(xp);
-    self->y = mp_obj_new_float(yp);
+    self->x = xp;
+    self->y = yp;
     return MP_OBJ_FROM_PTR(self);
 }
 MP_DEFINE_CONST_FUN_OBJ_2(vector2_class_rotateZ_obj, vector2_class_rotateZ);
@@ -155,24 +133,20 @@ STATIC mp_obj_t vector2_class_resize(mp_obj_t self_in, mp_obj_t element_b){
     }
 
     vector2_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
-    const mp_float_t x = mp_obj_get_float(self->x);
-    const mp_float_t y = mp_obj_get_float(self->y);
     mp_float_t f;
 
     if(mp_obj_is_type(element_b, &vector2_class_type)){ // Resize to match vector length
         const vector2_class_obj_t* b = MP_OBJ_TO_PTR(element_b);
-        const mp_float_t bx = mp_obj_get_float(b->x);
-        const mp_float_t by = mp_obj_get_float(b->y);
-        f = sqrt((bx*bx + by*by) / (x*x + y*y));
+        f = sqrt((b->x*b->x + b->y*b->y) / (self->x*self->x + self->y*self->y));
     }else if(mp_obj_is_float(element_b)){ // Resize to match scalar length
         const mp_float_t b = mp_obj_get_float(element_b);
-        f = sqrt((b*b) / (x*x + y*y));
+        f = sqrt((b*b) / (self->x*self->x + self->y*self->y));
     }else{
         mp_raise_TypeError("expected vector or scalar length");
     }
 
-    self->x = mp_obj_new_float(x*f);
-    self->y = mp_obj_new_float(y*f);
+    self->x = self->x*f;
+    self->y = self->y*f;
     return MP_OBJ_FROM_PTR(self);
 }
 MP_DEFINE_CONST_FUN_OBJ_2(vector2_class_resize_obj, vector2_class_resize);
@@ -190,10 +164,10 @@ STATIC void vector2_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *desti
     if(destination[0] == MP_OBJ_NULL){          // Load
         switch(attribute) {
             case MP_QSTR_x:
-                destination[0] = self->x;
+                destination[0] = mp_obj_new_float(self->x);
             break;
             case MP_QSTR_y:
-                destination[0] = self->y;
+                destination[0] = mp_obj_new_float(self->y);
             break;
             case MP_QSTR_dot:
                 destination[0] = MP_OBJ_FROM_PTR(&vector2_class_dot_obj);
@@ -233,10 +207,10 @@ STATIC void vector2_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *desti
     }else if(destination[1] != MP_OBJ_NULL){    // Store
         switch(attribute) {
             case MP_QSTR_x:
-                self->x = destination[1];
+                self->x = mp_obj_get_float(destination[1]);
             break;
             case MP_QSTR_y:
-                self->y = destination[1];
+                self->y = mp_obj_get_float(destination[1]);
             break;
         default:
             return; // Fail
