@@ -14,15 +14,15 @@ mp_obj_t rectangle_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_
     self->base.type = &rectangle_class_type;
 
     if(n_args == 0){
-        self->x = mp_obj_new_float(0.0f);
-        self->y = mp_obj_new_float(0.0f);
-        self->width = mp_obj_new_float(0.0f);
-        self->height = mp_obj_new_float(0.0f);
+        self->x = 0.0f;
+        self->y = 0.0f;
+        self->width = 0.0f;
+        self->height = 0.0f;
     }else if(n_args == 4){
-        self->x = args[0];
-        self->y = args[1];
-        self->width = args[2];
-        self->height = args[3];
+        self->x = mp_obj_get_float(args[0]);
+        self->y = mp_obj_get_float(args[1]);
+        self->width = mp_obj_get_float(args[2]);
+        self->height = mp_obj_get_float(args[3]);
     }else{
         mp_raise_msg(&mp_type_RuntimeError, "Rectangle: Wrong number of arguments in constructor! Only accepts 0 or 4");
     }
@@ -35,7 +35,7 @@ mp_obj_t rectangle_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_
 STATIC mp_obj_t rectangle_class_area(mp_obj_t self_in){
     rectangle_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
     ENGINE_INFO_PRINTF("Rectangle getting area...");
-    return mp_obj_new_float(mp_obj_get_float(self->width) * mp_obj_get_float(self->height));
+    return mp_obj_new_float(self->width * self->height);
 }
 MP_DEFINE_CONST_FUN_OBJ_1(rectangle_class_area_obj, rectangle_class_area);
 
@@ -43,10 +43,10 @@ MP_DEFINE_CONST_FUN_OBJ_1(rectangle_class_area_obj, rectangle_class_area);
 STATIC mp_obj_t rectangle_class_overlapping(mp_obj_t self_in, mp_obj_t b_in){
     rectangle_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
     rectangle_class_obj_t* b = MP_OBJ_TO_PTR(b_in);
-    if(mp_obj_get_float(b->x) + mp_obj_get_float(b->width) < mp_obj_get_float(self->x)) return mp_const_false;
-    else if(mp_obj_get_float(self->x) + mp_obj_get_float(self->width) < mp_obj_get_float(b->x)) return mp_const_false;
-    else if(mp_obj_get_float(b->y) + mp_obj_get_float(b->height) < mp_obj_get_float(self->y)) return mp_const_false;
-    else if(mp_obj_get_float(self->y) + mp_obj_get_float(self->height) < mp_obj_get_float(b->y)) return mp_const_false;
+    if(b->x + b->width < self->x) return mp_const_false;
+    else if(self->x + self->width < b->x) return mp_const_false;
+    else if(b->y + b->height < self->y) return mp_const_false;
+    else if(self->y + self->height < b->y) return mp_const_false;
     else return mp_const_true;
 }
 MP_DEFINE_CONST_FUN_OBJ_2(rectangle_class_overlapping_obj, rectangle_class_overlapping);
@@ -58,16 +58,16 @@ STATIC void rectangle_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *des
     if(destination[0] == MP_OBJ_NULL){          // Load
         switch(attribute){
             case MP_QSTR_x:
-                destination[0] = self->x;
+                destination[0] = mp_obj_new_float(self->x);
             break;
             case MP_QSTR_y:
-                destination[0] = self->y;
+                destination[0] = mp_obj_new_float(self->y);
             break;
             case MP_QSTR_width:
-                destination[0] = self->width;
+                destination[0] = mp_obj_new_float(self->width);
             break;
             case MP_QSTR_height:
-                destination[0] = self->height;
+                destination[0] = mp_obj_new_float(self->height);
             break;
             case MP_QSTR_area:
                 destination[0] = MP_OBJ_FROM_PTR(&rectangle_class_area_obj);
@@ -83,16 +83,16 @@ STATIC void rectangle_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *des
     }else if(destination[1] != MP_OBJ_NULL){    // Store
         switch(attribute){
             case MP_QSTR_x:
-                self->x = destination[1];
+                self->x = mp_obj_get_float(destination[1]);
             break;
             case MP_QSTR_y:
-                self->y = destination[1];
+                self->y = mp_obj_get_float(destination[1]);
             break;
             case MP_QSTR_width:
-                self->width = destination[1];
+                self->width = mp_obj_get_float(destination[1]);
             break;
             case MP_QSTR_height:
-                self->height = destination[1];
+                self->height = mp_obj_get_float(destination[1]);
             break;
             default:
                 return; // Fail

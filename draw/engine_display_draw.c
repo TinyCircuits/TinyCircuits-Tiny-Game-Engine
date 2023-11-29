@@ -4,6 +4,11 @@
 #include "tan_sin_tab.h"
 #include <string.h>
 
+#include "nodes/node_base.h"
+#include "math/vector2.h"
+#include "math/vector3.h"
+#include "math/rectangle.h"
+
 #ifndef __unix__
     #include "hardware/interp.h"
 #endif
@@ -15,7 +20,7 @@ void engine_draw_fill(uint16_t color, uint16_t *screen_buffer){
 }
 
 
-bool engine_draw_pixel(uint16_t color, uint8_t x, uint8_t y){
+bool engine_draw_pixel(uint16_t color, int32_t x, int32_t y){
     if(x < SCREEN_WIDTH && y < SCREEN_HEIGHT){
         uint16_t *screen_buffer = engine_get_active_screen_buffer();
         uint16_t index = y * SCREEN_WIDTH + x;
@@ -29,48 +34,54 @@ bool engine_draw_pixel(uint16_t color, uint8_t x, uint8_t y){
 }
 
 
-void engine_draw_vertical_line(uint16_t color, uint8_t x_column, uint8_t y_start, uint8_t y_end){
+void engine_draw_vertical_line(uint16_t color, int32_t x_column, int32_t y_start, int32_t y_end){
 
 }
 
 
-void engine_draw_horizontal_line(uint16_t color, uint8_t y_row, uint8_t x_start, uint8_t x_end){
+void engine_draw_horizontal_line(uint16_t color, int32_t y_row, int32_t x_start, int32_t x_end){
 
 }
 
 
-void engine_draw_sloped_line(uint16_t color, uint8_t x_start, uint8_t y_start, uint8_t x_end, uint8_t y_end){
+void engine_draw_sloped_line(uint16_t color, int32_t x_start, int32_t y_start, int32_t x_end, int32_t y_end){
 
 }
 
 
-void engine_draw_line(uint16_t color, uint8_t x_start, uint8_t y_start, uint8_t x_end, uint8_t y_end){
+void engine_draw_line(uint16_t color, int32_t x_start, int32_t y_start, int32_t x_end, int32_t y_end, mp_obj_t camera_node_base_in){
+    engine_node_base_t *camera_node_base = camera_node_base_in;
+    vector2_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
+    vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
+    rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
     
+    float center_x = camera_position->x + camera_viewport->x + camera_viewport->width/2.0f;
+    float center_y = camera_position->y + camera_viewport->y + camera_viewport->width/2.0f;
 }
 
 
-void engine_draw_outline_rectangle(uint16_t color, uint8_t x_top_left, uint8_t y_top_left, uint8_t width, uint8_t height){
-
-}
-
-
-void engine_draw_filled_rectangle(uint16_t color, uint8_t x_top_left, uint8_t y_top_left, uint8_t width, uint8_t height){
-
-}
-
-
-void engine_draw_aligned_blit(uint16_t *buffer, uint8_t x_top_left, uint8_t y_top_left, uint8_t width, uint8_t height, uint16_t key, bool mirror_x, bool mirror_y){
+void engine_draw_outline_rectangle(uint16_t color, int32_t x_top_left, int32_t y_top_left, int32_t width, int32_t height){
 
 }
 
 
-void engine_draw_aligned_blit_with_mask(uint16_t *buffer, uint8_t x_top_left, uint8_t y_top_left, uint8_t width, uint8_t height, uint16_t mask_key, bool mirror_x, bool mirror_y, uint16_t *mask_buffer){
+void engine_draw_filled_rectangle(uint16_t color, int32_t x_top_left, int32_t y_top_left, int32_t width, int32_t height){
+
+}
+
+
+void engine_draw_aligned_blit(uint16_t *buffer, int32_t x_top_left, int32_t y_top_left, int32_t width, int32_t height, uint16_t key, bool mirror_x, bool mirror_y){
+
+}
+
+
+void engine_draw_aligned_blit_with_mask(uint16_t *buffer, int32_t x_top_left, int32_t y_top_left, int32_t width, int32_t height, uint16_t mask_key, bool mirror_x, bool mirror_y, uint16_t *mask_buffer){
 
 }
 
 
 
-inline bool is_xy_inside_viewport(int32_t x, int32_t y, int32_t vx, int32_t vy, uint8_t vw, uint8_t vh){
+inline bool is_xy_inside_viewport(int32_t x, int32_t y, int32_t vx, int32_t vy, int32_t vw, int32_t vh){
     if(x >= vx && y >= vy && x < vx+vw && y < vy+vh){
         return true;
     }
@@ -88,7 +99,7 @@ inline bool is_xy_inside_viewport(int32_t x, int32_t y, int32_t vx, int32_t vy, 
 // }
 
 
-// void engine_draw_pixel_viewport(uint16_t color, int32_t x, int32_t y, int32_t vx, int32_t vy, uint8_t vw, uint8_t vh, int32_t px, int32_t py){
+// void engine_draw_pixel_viewport(uint16_t color, int32_t x, int32_t y, int32_t vx, int32_t vy, int32_t vw, int32_t vh, int32_t px, int32_t py){
 //     uint16_t *screen_buffer = engine_get_active_screen_buffer();
 
 //     int32_t result_x = vx + (x - px);
@@ -268,7 +279,7 @@ inline bool is_xy_inside_viewport(int32_t x, int32_t y, int32_t vx, int32_t vy, 
 //     }
 // }
 
-void engine_draw_fillrect_scale_trishear_viewport(uint16_t color, int32_t x, int32_t y, uint16_t width, uint16_t height, int32_t xsc, int32_t ysc, int32_t xsr, int32_t ysr, int32_t xsr2, int32_t vx, int32_t vy, uint8_t vw, uint8_t vh){
+void engine_draw_fillrect_scale_trishear_viewport(uint16_t color, int32_t x, int32_t y, uint16_t width, uint16_t height, int32_t xsc, int32_t ysc, int32_t xsr, int32_t ysr, int32_t xsr2, int32_t vx, int32_t vy, int32_t vw, int32_t vh){
 
     int32_t xe = (width * xsc) >> 16;
     int32_t ye = (height * ysc) >> 16;
@@ -350,7 +361,7 @@ void engine_draw_fillrect_scale_trishear_viewport(uint16_t color, int32_t x, int
 // }
 
 
-void engine_draw_fillrect_scale_rotate_viewport(uint16_t color, int32_t x, int32_t y, uint16_t width, uint16_t height, int32_t xsc, int32_t ysc, int16_t theta, int32_t vx, int32_t vy, uint8_t vw, uint8_t vh){
+void engine_draw_fillrect_scale_rotate_viewport(uint16_t color, int32_t x, int32_t y, uint16_t width, uint16_t height, int32_t xsc, int32_t ysc, int16_t theta, int32_t vx, int32_t vy, int32_t vw, int32_t vh){
     // Step 1: Get theta inside (-pi/2, pi/2) and flip if we need to
     theta &= 0x3FF;
     if(theta > 0x200) theta -= 0x400;

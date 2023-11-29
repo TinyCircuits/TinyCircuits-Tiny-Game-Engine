@@ -33,11 +33,11 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_n
     vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node, MP_QSTR_rotation);
     rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node, MP_QSTR_viewport);
 
-    int32_t vx = (int32_t)mp_obj_get_float(camera_viewport->x);
-    int32_t vy = (int32_t)mp_obj_get_float(camera_viewport->y);
-    uint8_t vw = (uint8_t)mp_obj_get_float(camera_viewport->width);
-    uint8_t vh = (uint8_t)mp_obj_get_float(camera_viewport->height);
-    const float cam_theta = (float)mp_obj_get_float(camera_rotation->z);
+    int32_t vx = (int32_t)camera_viewport->x;
+    int32_t vy = (int32_t)camera_viewport->y;
+    uint8_t vw = (uint8_t)camera_viewport->width;
+    uint8_t vh = (uint8_t)camera_viewport->height;
+    const float cam_theta = camera_rotation->z;
 
     // int32_t cx = (int32_t)mp_obj_get_float(camera_position->x);
     // int32_t cy = (int32_t)mp_obj_get_float(camera_position->y);

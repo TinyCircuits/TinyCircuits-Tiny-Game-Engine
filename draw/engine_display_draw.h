@@ -9,30 +9,30 @@
 void engine_draw_fill(uint16_t color, uint16_t *screen_buffer);
 
 // Sets a single pixel in the screen buffer to 'color'
-bool engine_draw_pixel(uint16_t color, uint8_t x, uint8_t y);
+bool engine_draw_pixel(uint16_t color, int32_t x, int32_t y);
 
 
-void engine_draw_vertical_line(uint16_t color, uint8_t x_column, uint8_t y_start, uint8_t y_end);
+void engine_draw_vertical_line(uint16_t color, int32_t x_column, int32_t y_start, int32_t y_end);
 
 
-void engine_draw_horizontal_line(uint16_t color, uint8_t y_row, uint8_t x_start, uint8_t x_end);
+void engine_draw_horizontal_line(uint16_t color, int32_t y_row, int32_t x_start, int32_t x_end);
 
 
-void engine_draw_sloped_line(uint16_t color, uint8_t x_start, uint8_t y_start, uint8_t x_end, uint8_t y_end);
+void engine_draw_sloped_line(uint16_t color, int32_t x_start, int32_t y_start, int32_t x_end, int32_t y_end);
 
 
-void engine_draw_line(uint16_t color, uint8_t x_start, uint8_t y_start, uint8_t x_end, uint8_t y_end);
-void engine_draw_outline_rectangle(uint16_t color, uint8_t x_top_left, uint8_t y_top_left, uint8_t width, uint8_t height);
-void engine_draw_filled_rectangle(uint16_t color, uint8_t x_top_left, uint8_t y_top_left, uint8_t width, uint8_t height);
-void engine_draw_aligned_blit(uint16_t *buffer, uint8_t x_top_left, uint8_t y_top_left, uint8_t width, uint8_t height, uint16_t key, bool mirror_x, bool mirror_y);
-void engine_draw_aligned_blit_with_mask(uint16_t *buffer, uint8_t x_top_left, uint8_t y_top_left, uint8_t width, uint8_t height, uint16_t mask_key, bool mirror_x, bool mirror_y, uint16_t *mask_buffer);
+void engine_draw_line(uint16_t color, int32_t x_start, int32_t y_start, int32_t x_end, int32_t y_end, mp_obj_t camera_node_base);
+void engine_draw_outline_rectangle(uint16_t color, int32_t x_top_left, int32_t y_top_left, int32_t width, int32_t height);
+void engine_draw_filled_rectangle(uint16_t color, int32_t x_top_left, int32_t y_top_left, int32_t width, int32_t height);
+void engine_draw_aligned_blit(uint16_t *buffer, int32_t x_top_left, int32_t y_top_left, int32_t width, int32_t height, uint16_t key, bool mirror_x, bool mirror_y);
+void engine_draw_aligned_blit_with_mask(uint16_t *buffer, int32_t x_top_left, int32_t y_top_left, int32_t width, int32_t height, uint16_t mask_key, bool mirror_x, bool mirror_y, uint16_t *mask_buffer);
 
 
 
 
 // Draw pixel within screen bounds and put into screen buffer
 // void engine_draw_pixel(uint16_t color, int32_t x, int32_t y);
-// void engine_draw_pixel_viewport(uint16_t color, int32_t x, int32_t y, int32_t vx, int32_t vy, uint8_t vw, uint8_t vh, int32_t px, int32_t py);
+// void engine_draw_pixel_viewport(uint16_t color, int32_t x, int32_t y, int32_t vx, int32_t vy, int32_t vw, int32_t vh, int32_t px, int32_t py);
 
 // Draw pixel immediately without checking anything at all
 // void engine_draw_pixel_unsafe(uint16_t color, int32_t x, int32_t y);
@@ -59,6 +59,6 @@ void engine_draw_aligned_blit_with_mask(uint16_t *buffer, uint8_t x_top_left, ui
 
 // void engine_draw_fillrect_scale_rotate(uint16_t color, int32_t x, int32_t y, uint16_t width, uint16_t height, int32_t xsc, int32_t ysc, int16_t theta);
 
-void engine_draw_fillrect_scale_rotate_viewport(uint16_t color, int32_t x, int32_t y, uint16_t width, uint16_t height, int32_t xsc, int32_t ysc, int16_t theta, int32_t vx, int32_t vy, uint8_t vw, uint8_t vh);
+void engine_draw_fillrect_scale_rotate_viewport(uint16_t color, int32_t x, int32_t y, uint16_t width, uint16_t height, int32_t xsc, int32_t ysc, int16_t theta, int32_t vx, int32_t vy, int32_t vw, int32_t vh);
 
 #endif  // ENGINE_DISPLAY_DRAW_H
