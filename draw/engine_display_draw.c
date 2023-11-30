@@ -8,6 +8,7 @@
 #include "math/vector2.h"
 #include "math/vector3.h"
 #include "math/rectangle.h"
+#include "math/engine_math.h"
 
 #ifndef __unix__
     #include "hardware/interp.h"
@@ -21,7 +22,7 @@ void engine_draw_fill(uint16_t color, uint16_t *screen_buffer){
 
 
 bool engine_draw_pixel(uint16_t color, int32_t x, int32_t y){
-    if(x < SCREEN_WIDTH && y < SCREEN_HEIGHT){
+    if((x >= 0 && x < SCREEN_WIDTH) && (y >= 0 && y < SCREEN_HEIGHT)){
         uint16_t *screen_buffer = engine_get_active_screen_buffer();
         uint16_t index = y * SCREEN_WIDTH + x;
 
@@ -49,14 +50,45 @@ void engine_draw_sloped_line(uint16_t color, int32_t x_start, int32_t y_start, i
 }
 
 
-void engine_draw_line(uint16_t color, int32_t x_start, int32_t y_start, int32_t x_end, int32_t y_end, mp_obj_t camera_node_base_in){
+// https://en.wikipedia.org/wiki/Digital_differential_analyzer_(graphics_algorithm)
+void engine_draw_line(uint16_t color, float x_start, float y_start, float x_end, float y_end, mp_obj_t camera_node_base_in){
     engine_node_base_t *camera_node_base = camera_node_base_in;
     vector2_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
     vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
     rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
     
     float center_x = camera_position->x + camera_viewport->x + camera_viewport->width/2.0f;
-    float center_y = camera_position->y + camera_viewport->y + camera_viewport->width/2.0f;
+    float center_y = camera_position->y + camera_viewport->y + camera_viewport->height/2.0f;
+
+    // Rotate endpoints about camera
+    engine_math_rotate_point(&x_start, &y_start, center_x, center_y, camera_rotation->z * DEG2RAD);
+    engine_math_rotate_point(&x_end, &y_end, center_x, center_y, camera_rotation->z * DEG2RAD);
+
+    // Distance difference between endpoints
+    float dx = x_end - x_start;
+    float dy = y_end - y_start;
+
+    // See which axis requires most steps to draw complete line, store it
+    float step_count = 0.0f;
+    if(abs(dx) >= abs(dy)){
+        step_count = abs(dx);
+    }else{
+        step_count = abs(dy);
+    }
+
+    // Calculate how much to increment each axis each step
+    float slope_x = dx / step_count;
+    float slope_y = dy / step_count;
+
+    float line_x = x_start;
+    float line_y = y_start;
+
+    // Draw the line
+    for(uint32_t step=0; step<step_count; step++){
+        line_x = line_x + slope_x;
+        line_y = line_y + slope_y;
+        engine_draw_pixel(color, line_x, line_y);
+    }
 }
 
 

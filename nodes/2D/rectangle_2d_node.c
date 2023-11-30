@@ -27,11 +27,12 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_n
     ENGINE_INFO_PRINTF("Rectangle2DNode: Drawing");
 
     engine_node_base_t *node_base = self_in;
+    engine_node_base_t *camera_node_base = camera_node;
 
 
     // vector3_class_obj_t *camera_position = mp_load_attr(camera_node, MP_QSTR_position);
-    vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node, MP_QSTR_rotation);
-    rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node, MP_QSTR_viewport);
+    vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
+    rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
 
     int32_t vx = (int32_t)camera_viewport->x;
     int32_t vy = (int32_t)camera_viewport->y;

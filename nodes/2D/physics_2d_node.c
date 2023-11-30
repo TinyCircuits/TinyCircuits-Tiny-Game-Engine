@@ -30,6 +30,43 @@ STATIC mp_obj_t physics_2d_node_class_tick(mp_obj_t self_in){
 MP_DEFINE_CONST_FUN_OBJ_1(physics_2d_node_class_tick_obj, physics_2d_node_class_tick);
 
 
+STATIC mp_obj_t physics_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
+    ENGINE_INFO_PRINTF("Physics2DNode: Drawing");
+
+    engine_node_base_t *node_base = self_in;
+    engine_physics_2d_node_common_data_t *common_data = node_base->node_common_data;
+
+    // PhysicsBody body = common_data->physac_body;
+
+    int vertexCount = engine_physics_get_vertex_count(common_data->physac_body);
+    for(int j = 0; j < vertexCount; j++){
+        float vertex_a_x;
+        float vertex_a_y;
+        float vertex_b_x;
+        float vertex_b_y;
+
+        engine_physics_get_vertex(common_data->physac_body, &vertex_a_x, &vertex_a_y, j);
+
+        int jj = (((j + 1) < vertexCount) ? (j + 1) : 0);
+        engine_physics_get_vertex(common_data->physac_body, &vertex_b_x, &vertex_b_y, jj);
+
+        engine_draw_line(0b0000000000011111, vertex_a_x, vertex_a_y, vertex_b_x, vertex_b_y, camera_node);
+
+        // Get physics bodies shape vertices to draw lines
+        // Note: GetPhysicsShapeVertex() already calculates rotation transformations
+        // Vector2 vertexA = GetPhysicsShapeVertex(body, j);
+
+        // int jj = (((j + 1) < vertexCount) ? (j + 1) : 0);   // Get next vertex or first to close the shape
+        // Vector2 vertexB = GetPhysicsShapeVertex(body, jj);
+
+        // DrawLineV(vertexA, vertexB, GREEN);     // Draw a line between two vertex positions
+    }
+
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_2(physics_2d_node_class_draw_obj, physics_2d_node_class_draw);
+
+
 mp_obj_t physics_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Physics2DNode");
     
@@ -63,6 +100,7 @@ mp_obj_t physics_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
         node_base->attr_accessor = node_base;
 
         common_data->tick_cb = MP_OBJ_FROM_PTR(&physics_2d_node_class_tick_obj);
+        common_data->draw_cb = MP_OBJ_FROM_PTR(&physics_2d_node_class_draw_obj);
 
         physics_2d_node->position = vector2_class_new(&vector2_class_type, 0, 0, NULL);
         physics_2d_node->rotation = mp_obj_new_float(0.0f);
@@ -81,6 +119,13 @@ mp_obj_t physics_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
             common_data->tick_cb = MP_OBJ_FROM_PTR(&physics_2d_node_class_tick_obj);
         }else{                                                  // Likely found method (could be attribute)
             common_data->tick_cb = dest[0];
+        }
+
+        mp_load_method_maybe(node_base->node, MP_QSTR_draw, dest);
+        if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
+            common_data->draw_cb = MP_OBJ_FROM_PTR(&physics_2d_node_class_draw_obj);
+        }else{                                                  // Likely found method (could be attribute)
+            common_data->draw_cb = dest[0];
         }
 
         mp_store_attr(node_base->node, MP_QSTR_position, vector2_class_new(&vector2_class_type, 0, 0, NULL));

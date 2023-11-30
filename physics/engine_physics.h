@@ -11,7 +11,13 @@ void engine_physics_tick();
 
 void engine_physics_create_rectangle_body(engine_physics_2d_node_common_data_t *common_data);
 
+
 void engine_physics_get_body_xy(void *body, double *x, double *y);
+
+int engine_physics_get_vertex_count(void *body);
+
+void engine_physics_get_vertex(void *body, float *vx, float *vy, int vertex_index);
+
 
 // Physics are nodes just like everything else but are tracked
 // new a different list that the engine can loop through quickly.

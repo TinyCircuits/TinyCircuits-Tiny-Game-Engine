@@ -21,7 +21,7 @@ void engine_draw_horizontal_line(uint16_t color, int32_t y_row, int32_t x_start,
 void engine_draw_sloped_line(uint16_t color, int32_t x_start, int32_t y_start, int32_t x_end, int32_t y_end);
 
 
-void engine_draw_line(uint16_t color, int32_t x_start, int32_t y_start, int32_t x_end, int32_t y_end, mp_obj_t camera_node_base);
+void engine_draw_line(uint16_t color, float x_start, float y_start, float x_end, float y_end, mp_obj_t camera_node_base);
 void engine_draw_outline_rectangle(uint16_t color, int32_t x_top_left, int32_t y_top_left, int32_t width, int32_t height);
 void engine_draw_filled_rectangle(uint16_t color, int32_t x_top_left, int32_t y_top_left, int32_t width, int32_t height);
 void engine_draw_aligned_blit(uint16_t *buffer, int32_t x_top_left, int32_t y_top_left, int32_t width, int32_t height, uint16_t key, bool mirror_x, bool mirror_y);

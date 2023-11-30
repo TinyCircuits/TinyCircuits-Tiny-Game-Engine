@@ -2,16 +2,12 @@
 #include "debug/debug_print.h"
 #include "nodes/2D/physics_2d_node.h"
 #include "math/vector2.h"
-
+#include "math/engine_math.h"
 
 #define PHYSAC_STANDALONE
 #define PHYSAC_NO_THREADS
 #define PHYSAC_IMPLEMENTATION
 #include "libs/physac/physac.h"
-
-#define     PI                     3.14159265358979323846
-#define     RAD2DEG                (180.0f/PI)
-#define     DEG2RAD                (PI/180.0f)
 
 
 // A linked list of physics nodes to loop
@@ -41,6 +37,19 @@ void engine_physics_get_body_xy(void *body, double *x, double *y){
     PhysicsBody physics_body = body;
     *x = physics_body->position.x;
     *y = physics_body->position.y;
+}
+
+
+int engine_physics_get_vertex_count(void *body){
+    PhysicsBody physics_body = body;
+    return GetPhysicsShapeVerticesCount(physics_body->id);
+}
+
+
+void engine_physics_get_vertex(void *body, float *vx, float *vy, int vertex_index){
+    Vector2 vertex = GetPhysicsShapeVertex(body, vertex_index);
+    *vx = vertex.x;
+    *vy = vertex.y;
 }
 
 

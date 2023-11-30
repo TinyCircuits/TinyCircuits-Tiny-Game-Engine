@@ -4,6 +4,7 @@ add_library(usermod_engine INTERFACE)
 # Add our source files to the lib
 target_sources(usermod_engine INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/engine.c
+    ${CMAKE_CURRENT_LIST_DIR}/math/engine_math.c
     ${CMAKE_CURRENT_LIST_DIR}/draw/engine_draw_module.c
     ${CMAKE_CURRENT_LIST_DIR}/math/engine_math_module.c
     ${CMAKE_CURRENT_LIST_DIR}/nodes/engine_nodes_module.c
