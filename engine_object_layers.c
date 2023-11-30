@@ -56,7 +56,7 @@ void engine_invoke_all_node_callbacks(){
             engine_node_base_t *node_base = current_linked_list_node->object;
             mp_obj_t exec[2];
 
-            exec[1] = node_base;
+            exec[1] = node_base->attr_accessor;
 
             // As long as this node was not just added, figure out its type and what callbacks it has
             if(node_base_is_just_added(node_base) == false){

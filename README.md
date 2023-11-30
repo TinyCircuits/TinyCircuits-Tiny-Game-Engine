@@ -1,6 +1,6 @@
 # TODO
-[] Draw node origins if flag in engine_debug is true
 [] Implement PhysicsShapes that are used by Physics2dNodes to define size and shape of collision box/polygon/circle
+[] Draw node origins if flag in engine_debug is true
 [] Make all drawing functions take in camera node and then rotate, offset, and clip based on position and viewport (write to buffer raw if camera is null)
 [] Expose enough drawing functions to be able to mimic Thumby games
 [] Add way to look into sprite data on flash to get pixels when needed. Sprite/texture data should be read from flash since not enough ram to store lots of RGB565 bitmaps in SRAM
@@ -10,6 +10,7 @@
 [] Look into MICROPY_MODULE_ATTR_DELEGATION
 [] To avoid mp_load_attr calls, at the start of the game loop collect all node attributes into some local structure then load the local structure back into the micropython object (only really matters if inherited because of weird MicroPython attr storage for that case)
 [] Add options to give names to each node and then get nodes by name (gives list of nodes if more than one have the same name)
+[] Sound/music
 
 # Building and running
 1. `git clone https://github.com/TinyCircuits/micropython.git`

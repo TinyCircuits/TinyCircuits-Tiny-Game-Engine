@@ -2017,7 +2017,7 @@ static void InitTimer(void)
     #endif
 
     #if defined(__arm__)
-        frequency = 60.0 * 2000.0;
+        frequency = 60.0 * 500.0;
     #endif
 
     baseTime = GetTimeCount();      // Get MONOTONIC clock time offset
