@@ -38,29 +38,29 @@ STATIC mp_obj_t physics_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
 
     // PhysicsBody body = common_data->physac_body;
 
-    int vertexCount = engine_physics_get_vertex_count(common_data->physac_body);
-    for(int j = 0; j < vertexCount; j++){
-        float vertex_a_x;
-        float vertex_a_y;
-        float vertex_b_x;
-        float vertex_b_y;
+    // int vertexCount = engine_physics_get_vertex_count(common_data->physac_body);
+    // for(int j = 0; j < vertexCount; j++){
+    //     float vertex_a_x;
+    //     float vertex_a_y;
+    //     float vertex_b_x;
+    //     float vertex_b_y;
 
-        engine_physics_get_vertex(common_data->physac_body, &vertex_a_x, &vertex_a_y, j);
+    //     engine_physics_get_vertex(common_data->physac_body, &vertex_a_x, &vertex_a_y, j);
 
-        int jj = (((j + 1) < vertexCount) ? (j + 1) : 0);
-        engine_physics_get_vertex(common_data->physac_body, &vertex_b_x, &vertex_b_y, jj);
+    //     int jj = (((j + 1) < vertexCount) ? (j + 1) : 0);
+    //     engine_physics_get_vertex(common_data->physac_body, &vertex_b_x, &vertex_b_y, jj);
 
-        engine_draw_line(0b0000000000011111, vertex_a_x, vertex_a_y, vertex_b_x, vertex_b_y, camera_node);
+    //     engine_draw_line(0b0000000000011111, vertex_a_x, vertex_a_y, vertex_b_x, vertex_b_y, camera_node);
 
-        // Get physics bodies shape vertices to draw lines
-        // Note: GetPhysicsShapeVertex() already calculates rotation transformations
-        // Vector2 vertexA = GetPhysicsShapeVertex(body, j);
+    //     // Get physics bodies shape vertices to draw lines
+    //     // Note: GetPhysicsShapeVertex() already calculates rotation transformations
+    //     // Vector2 vertexA = GetPhysicsShapeVertex(body, j);
 
-        // int jj = (((j + 1) < vertexCount) ? (j + 1) : 0);   // Get next vertex or first to close the shape
-        // Vector2 vertexB = GetPhysicsShapeVertex(body, jj);
+    //     // int jj = (((j + 1) < vertexCount) ? (j + 1) : 0);   // Get next vertex or first to close the shape
+    //     // Vector2 vertexB = GetPhysicsShapeVertex(body, jj);
 
-        // DrawLineV(vertexA, vertexB, GREEN);     // Draw a line between two vertex positions
-    }
+    //     // DrawLineV(vertexA, vertexB, GREEN);     // Draw a line between two vertex positions
+    // }
 
     return mp_const_none;
 }
