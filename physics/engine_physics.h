@@ -11,6 +11,7 @@ void engine_physics_tick();
 
 void engine_physics_create_rectangle_body(engine_physics_2d_node_common_data_t *common_data);
 
+void *engine_physics_create_rectangle_shape(float width, float height);
 
 void engine_physics_get_body_xy(void *body, double *x, double *y);
 

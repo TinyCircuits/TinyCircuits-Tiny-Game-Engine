@@ -10,6 +10,7 @@
 [] Look into MICROPY_MODULE_ATTR_DELEGATION
 [] To avoid mp_load_attr calls, at the start of the game loop collect all node attributes into some local structure then load the local structure back into the micropython object (only really matters if inherited because of weird MicroPython attr storage for that case)
 [] Add options to give names to each node and then get nodes by name (gives list of nodes if more than one have the same name)
+[] Text/font
 [] Sound/music
 
 # Building and running

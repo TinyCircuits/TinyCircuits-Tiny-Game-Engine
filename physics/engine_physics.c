@@ -33,6 +33,16 @@ void engine_physics_create_rectangle_body(engine_physics_2d_node_common_data_t *
 }
 
 
+void *engine_physics_create_rectangle_shape(float width, float height){
+    PhysicsShape rectangle_shape;
+    // newBody->shape.type = PHYSICS_POLYGON;
+    // newBody->shape.body = NULL;
+    // newBody->shape.radius = 0.0f;
+    // newBody->shape.transform = Mat2Radians(0.0f);
+    // newBody->shape.vertexData = CreateRectanglePolygon(pos, (Vector2){ width, height });
+}
+
+
 void engine_physics_get_body_xy(void *body, double *x, double *y){
     PhysicsBody physics_body = body;
     *x = physics_body->position.x;
