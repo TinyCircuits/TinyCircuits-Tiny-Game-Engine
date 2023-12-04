@@ -21,6 +21,7 @@ mp_obj_t physics_shape_rectangle_class_new(const mp_obj_type_t *type, size_t n_a
         self->width = 15.0f;
         self->height = 5.0f;
     }else if(n_args == 2){
+        self->base.type = &physics_shape_rectangle_class_type;
         self->width = mp_obj_get_float(args[0]);
         self->height = mp_obj_get_float(args[1]);
     }else{
@@ -64,6 +65,21 @@ STATIC void physics_shape_rectangle_class_attr(mp_obj_t self_in, qstr attribute,
         destination[0] = MP_OBJ_NULL;
     }
 }
+
+// STATIC mp_obj_t physics_shape_rectangle_class_test(mp_obj_t self_in){
+//     if(!mp_obj_is_type(self_in, &physics_shape_rectangle_class_type)){
+//         mp_raise_TypeError("expected rectangle argument");
+//     }
+//
+//     const vector2_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
+//     vector2_class_obj_t* ret = m_new_obj(vector2_class_obj_t);
+//     ret->base.type = &vector2_class_type;
+//     const mp_float_t il = 1.0 / sqrt(self->x*self->x + self->y*self->y);
+//     ret->x = self->x * il;
+//     ret->y = self->y * il;
+//     return MP_OBJ_FROM_PTR(ret);
+// }
+// MP_DEFINE_CONST_FUN_OBJ_1(vector2_class_normal_obj, vector2_class_normal);
 
 
 // Class attributes

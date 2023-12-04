@@ -37,6 +37,7 @@ target_sources(usermod_engine INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/physics/engine_physics_module.c
     ${CMAKE_CURRENT_LIST_DIR}/physics/engine_physics.c
     ${CMAKE_CURRENT_LIST_DIR}/physics/shapes/engine_physics_shape_rectangle.c
+    ${CMAKE_CURRENT_LIST_DIR}/physics/shapes/engine_physics_shape_circle.c
 )
 
 # Add the current directory as an include directory.
