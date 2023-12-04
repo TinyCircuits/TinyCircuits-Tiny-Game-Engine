@@ -4,9 +4,6 @@
 #include "nodes/2d/physics_2d_node.h"
 #include "utility/linked_list.h"
 #include "nodes/node_base.h"
-#include "libs/Chipmunk2D/include/chipmunk/chipmunk.h"
-
-cpSpace *engine_physics_get_main_space();
 
 void engine_physics_init();
 

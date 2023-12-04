@@ -4,35 +4,20 @@
 #include "math/vector2.h"
 #include "math/engine_math.h"
 
-#include "libs/Chipmunk2D/include/chipmunk/chipmunk.h"
-#include "libs/Chipmunk2D/include/chipmunk/chipmunk_structs.h"
 
-// https://chipmunk-physics.net/release/ChipmunkLatest-Docs/
-cpSpace *physics_main_space = NULL;
-cpVect gravity;
-cpFloat time_step = 1.0/60.0;
 
 // A linked list of physics nodes to loop
 // through to copy all parameters quickly
 linked_list engine_physics_nodes;
 
 
-cpSpace *engine_physics_get_main_space(){
-    return physics_main_space;
-}
-
-
 void engine_physics_init(){
-    // Initialize physics and default physics bodies
-    gravity = cpv(0, -100);
-    physics_main_space = cpSpaceNew();
-    cpSpaceSetGravity(physics_main_space, gravity);
+
 }
 
 
 void engine_physics_tick(){
-    ENGINE_INFO_PRINTF("Physics: running physics step...");
-    cpSpaceStep(physics_main_space, time_step);
+
 }
 
 
@@ -58,9 +43,9 @@ void engine_physics_sync_engine_nodes_to_bodies(){
         engine_physics_2d_node_common_data_t *physics_node_common_data = physics_node_base->node_common_data;
         vector2_class_obj_t *engine_node_postion = mp_load_attr(physics_node_base->attr_accessor, MP_QSTR_position);
 
-        cpBody *physics_body = physics_node_common_data->physics_body;
-        physics_body->p.x = engine_node_postion->x;
-        physics_body->p.y = engine_node_postion->y;
+        // cpBody *physics_body = physics_node_common_data->physics_body;
+        // physics_body->p.x = engine_node_postion->x;
+        // physics_body->p.y = engine_node_postion->y;
 
         // float rotation_degrees = 0.0f;
         // bool dynamic = false;
@@ -92,9 +77,9 @@ void engine_physics_sync_bodies_to_engine_nodes(){
         engine_physics_2d_node_common_data_t *physics_node_common_data = physics_node_base->node_common_data;
         vector2_class_obj_t *engine_node_position = mp_load_attr(physics_node_base->attr_accessor, MP_QSTR_position);
 
-        cpBody *physics_body = physics_node_common_data->physics_body;
-        engine_node_position->x = physics_body->p.x;
-        engine_node_position->y = physics_body->p.y;
+        // cpBody *physics_body = physics_node_common_data->physics_body;
+        // engine_node_position->x = physics_body->p.x;
+        // engine_node_position->y = physics_body->p.y;
         
         // PhysicsBody body = common_data->physac_body;
 

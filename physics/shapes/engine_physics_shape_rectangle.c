@@ -27,8 +27,6 @@ mp_obj_t physics_shape_rectangle_class_new(const mp_obj_type_t *type, size_t n_a
         mp_raise_TypeError("PhysicsShapeRectangle Error: Function takes 0 or 2 arguments");
     }
 
-    self->physics_shape_rectangle = cpBoxShapeNew(NULL, self->width, self->height, 0.0f);
-
     return MP_OBJ_FROM_PTR(self);
 }
 

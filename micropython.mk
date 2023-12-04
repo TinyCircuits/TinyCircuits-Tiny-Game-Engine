@@ -36,46 +36,11 @@ SRC_USERMOD += $(ENGINE_MOD_DIR)/physics/engine_physics_module.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/physics/engine_physics.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/physics/shapes/engine_physics_shape_rectangle.c
 
-SRC_USERMOD += $(ENGINE_MOD_DIR)/libs/Chipmunk2D/src/chipmunk.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/libs/Chipmunk2D/src/cpArbiter.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/libs/Chipmunk2D/src/cpArray.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/libs/Chipmunk2D/src/cpBBTree.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/libs/Chipmunk2D/src/cpBody.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/libs/Chipmunk2D/src/cpCollision.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/libs/Chipmunk2D/src/cpConstraint.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/libs/Chipmunk2D/src/cpDampedRotarySpring.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/libs/Chipmunk2D/src/cpDampedSpring.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/libs/Chipmunk2D/src/cpGearJoint.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/libs/Chipmunk2D/src/cpGrooveJoint.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/libs/Chipmunk2D/src/cpHashSet.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/libs/Chipmunk2D/src/cpHastySpace.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/libs/Chipmunk2D/src/cpMarch.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/libs/Chipmunk2D/src/cpPinJoint.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/libs/Chipmunk2D/src/cpPivotJoint.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/libs/Chipmunk2D/src/cpPolyline.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/libs/Chipmunk2D/src/cpPolyShape.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/libs/Chipmunk2D/src/cpRatchetJoint.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/libs/Chipmunk2D/src/cpRobust.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/libs/Chipmunk2D/src/cpRotaryLimitJoint.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/libs/Chipmunk2D/src/cpShape.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/libs/Chipmunk2D/src/cpSimpleMotor.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/libs/Chipmunk2D/src/cpSlideJoint.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/libs/Chipmunk2D/src/cpSpace.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/libs/Chipmunk2D/src/cpSpaceComponent.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/libs/Chipmunk2D/src/cpSpaceDebug.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/libs/Chipmunk2D/src/cpSpaceHash.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/libs/Chipmunk2D/src/cpSpaceQuery.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/libs/Chipmunk2D/src/cpSpaceStep.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/libs/Chipmunk2D/src/cpSpatialIndex.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/libs/Chipmunk2D/src/cpSweep1D.c
-
 # We can add our module folder to include paths if needed
 # This is not actually needed in this example.
 CFLAGS_USERMOD += -I$(ENGINE_MOD_DIR)
-CFLAGS_USERMOD += -I$(ENGINE_MOD_DIR)/libs/Chipmunk2D/include
 
 CXXFLAGS_USERMOD += -I$(ENGINE_MOD_DIR)
-CXXFLAGS_USERMOD += -I$(ENGINE_MOD_DIR)/libs/Chipmunk2D/include
 CXXFLAGS_USERMOD += -std=c++11
 
 # We use C++ features so have to link against the standard library.

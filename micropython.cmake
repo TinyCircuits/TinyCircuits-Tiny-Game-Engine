@@ -37,45 +37,11 @@ target_sources(usermod_engine INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/physics/engine_physics_module.c
     ${CMAKE_CURRENT_LIST_DIR}/physics/engine_physics.c
     ${CMAKE_CURRENT_LIST_DIR}/physics/shapes/engine_physics_shape_rectangle.c
-
-    ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/src/chipmunk.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/src/cpArbiter.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/src/cpArray.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/src/cpBBTree.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/src/cpBody.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/src/cpCollision.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/src/cpConstraint.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/src/cpDampedRotarySpring.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/src/cpDampedSpring.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/src/cpGearJoint.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/src/cpGrooveJoint.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/src/cpHashSet.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/src/cpHastySpace.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/src/cpMarch.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/src/cpPinJoint.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/src/cpPivotJoint.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/src/cpPolyline.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/src/cpPolyShape.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/src/cpRatchetJoint.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/src/cpRobust.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/src/cpRotaryLimitJoint.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/src/cpShape.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/src/cpSimpleMotor.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/src/cpSlideJoint.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/src/cpSpace.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/src/cpSpaceComponent.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/src/cpSpaceDebug.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/src/cpSpaceHash.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/src/cpSpaceQuery.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/src/cpSpaceStep.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/src/cpSpatialIndex.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/src/cpSweep1D.c
 )
 
 # Add the current directory as an include directory.
 target_include_directories(usermod_engine INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}
-    ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/include
 )
 
 # Link our INTERFACE library to the usermod target.
