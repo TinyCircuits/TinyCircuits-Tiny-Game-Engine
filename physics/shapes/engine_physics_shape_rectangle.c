@@ -31,6 +31,19 @@ mp_obj_t physics_shape_rectangle_class_new(const mp_obj_type_t *type, size_t n_a
     return MP_OBJ_FROM_PTR(self);
 }
 
+// STATIC mp_obj_t physics_shape_rectangle_class_test(mp_obj_t self_in){
+//     if(!mp_obj_is_type(self_in, &physics_shape_rectangle_class_type)){
+//         mp_raise_TypeError("expected rectangle object");
+//     }
+//
+//     const physics_shape_rectangle_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
+//     vector2_class_obj_t* ret = m_new_obj(vector2_class_obj_t);
+//     ret->base.type = &vector2_class_type;
+//     ret->x = 0.0;
+//     ret->y = 0.0;
+//     return MP_OBJ_FROM_PTR(ret);
+// }
+// MP_DEFINE_CONST_FUN_OBJ_1(physics_shape_rectangle_class_test_obj, physics_shape_rectangle_class_test);
 
 // Class methods
 STATIC void physics_shape_rectangle_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
@@ -45,6 +58,10 @@ STATIC void physics_shape_rectangle_class_attr(mp_obj_t self_in, qstr attribute,
             break;
             case MP_QSTR_height:
                 destination[0] = mp_obj_new_float(self->height);
+            break;
+            case MP_QSTR_test:
+                destination[0] = MP_OBJ_FROM_PTR(&physics_shape_rectangle_class_test_obj);
+                destination[1] = self_in;
             break;
             default:
                 return; // Fail
@@ -65,21 +82,6 @@ STATIC void physics_shape_rectangle_class_attr(mp_obj_t self_in, qstr attribute,
         destination[0] = MP_OBJ_NULL;
     }
 }
-
-// STATIC mp_obj_t physics_shape_rectangle_class_test(mp_obj_t self_in){
-//     if(!mp_obj_is_type(self_in, &physics_shape_rectangle_class_type)){
-//         mp_raise_TypeError("expected rectangle argument");
-//     }
-//
-//     const vector2_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
-//     vector2_class_obj_t* ret = m_new_obj(vector2_class_obj_t);
-//     ret->base.type = &vector2_class_type;
-//     const mp_float_t il = 1.0 / sqrt(self->x*self->x + self->y*self->y);
-//     ret->x = self->x * il;
-//     ret->y = self->y * il;
-//     return MP_OBJ_FROM_PTR(ret);
-// }
-// MP_DEFINE_CONST_FUN_OBJ_1(vector2_class_normal_obj, vector2_class_normal);
 
 
 // Class attributes
