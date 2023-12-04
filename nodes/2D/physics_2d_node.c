@@ -31,6 +31,55 @@ STATIC mp_obj_t physics_2d_node_class_tick(mp_obj_t self_in){
 }
 MP_DEFINE_CONST_FUN_OBJ_1(physics_2d_node_class_tick_obj, physics_2d_node_class_tick);
 
+STATIC mp_obj_t physics_2d_node_class_test(mp_obj_t self_in, mp_obj_t b_in){
+    if(!mp_obj_is_type(self_in, &engine_physics_2d_node_class_type)){
+        mp_raise_TypeError("expected physics node argument");
+    }
+
+    const engine_node_base_t* self = MP_OBJ_TO_PTR(self_in);
+    const engine_node_base_t* b = MP_OBJ_TO_PTR(b_in);
+
+    vector2_class_obj_t* ret = m_new_obj(vector2_class_obj_t);
+    ret->base.type = &vector2_class_type;
+
+    vector2_class_obj_t *a_pos = mp_load_attr(self->attr_accessor, MP_QSTR_position);
+    vector2_class_obj_t *b_pos = mp_load_attr(b->attr_accessor, MP_QSTR_position);
+
+    mp_obj_t* a_shape = mp_load_attr(self->attr_accessor, MP_QSTR_physics_shape);
+    mp_obj_t* b_shape = mp_load_attr(b->attr_accessor, MP_QSTR_physics_shape);
+
+    if(mp_obj_is_type(a_shape, &physics_shape_rectangle_class_type)){
+        if(mp_obj_is_type(b_shape, &physics_shape_rectangle_class_type)){
+            ENGINE_INFO_PRINTF("Physics2DNode: rectangle-rectangle test");
+
+        } else if(mp_obj_is_type(b_shape, &physics_shape_circle_class_type)) {
+            ENGINE_INFO_PRINTF("Physics2DNode: rectangle-circle test");
+
+        } else {
+            mp_raise_TypeError("Unknown shape of B");
+
+        }
+    } else if(mp_obj_is_type(a_shape, &physics_shape_circle_class_type)) {
+        if(mp_obj_is_type(b_shape, &physics_shape_rectangle_class_type)){
+            ENGINE_INFO_PRINTF("Physics2DNode: circle-rectangle test");
+
+        } else if(mp_obj_is_type(b_shape, &physics_shape_circle_class_type)) {
+            ENGINE_INFO_PRINTF("Physics2DNode: circle-circle test");
+
+        } else {
+            mp_raise_TypeError("Unknown shape of B");
+
+        }
+    } else {
+        mp_raise_TypeError("Unknown shape of A");
+    }
+
+    ret->x = 0.0;
+    ret->y = 0.0;
+    return MP_OBJ_FROM_PTR(ret);
+}
+MP_DEFINE_CONST_FUN_OBJ_2(physics_2d_node_class_test_obj, physics_2d_node_class_test);
+
 
 STATIC mp_obj_t physics_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("Physics2DNode: Drawing");
@@ -108,6 +157,7 @@ mp_obj_t physics_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
         physics_2d_node->velocity = vector2_class_new(&vector2_class_type, 0, 0, NULL);
         physics_2d_node->acceleration = vector2_class_new(&vector2_class_type, 0, 0, NULL);
         physics_2d_node->dynamic = mp_obj_new_bool(true);
+        physics_2d_node->physics_shape = mp_const_none;
     }else if(n_args == 1){  // Inherited (use existing object)
         node_base->inherited = true;
         node_base->node = args[0];
@@ -134,6 +184,7 @@ mp_obj_t physics_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
         mp_store_attr(node_base->node, MP_QSTR_velocity, vector2_class_new(&vector2_class_type, 0, 0, NULL));
         mp_store_attr(node_base->node, MP_QSTR_acceleration, vector2_class_new(&vector2_class_type, 0, 0, NULL));
         mp_store_attr(node_base->node, MP_QSTR_dynamic, mp_obj_new_bool(true));
+        mp_store_attr(node_base->node, MP_QSTR_physics_shape, mp_const_none);
     }else{
         mp_raise_msg(&mp_type_RuntimeError, "Too many arguments passed to Physics2DNode constructor!");
     }
@@ -170,6 +221,10 @@ STATIC void physics_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
                 destination[0] = MP_OBJ_FROM_PTR(&node_base_get_layer_obj);
                 destination[1] = self_in;
             break;
+            case MP_QSTR_test:
+                destination[0] = MP_OBJ_FROM_PTR(&physics_2d_node_class_test_obj);
+                destination[1] = self_in;
+            break;
             case MP_QSTR_position:
                 destination[0] = self->position;
             break;
@@ -184,6 +239,9 @@ STATIC void physics_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
             break;
             case MP_QSTR_dynamic:
                 destination[0] = self->dynamic;
+            break;
+            case MP_QSTR_physics_shape:
+                destination[0] = self->physics_shape;
             break;
             default:
                 return; // Fail
@@ -204,6 +262,9 @@ STATIC void physics_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
             break;
             case MP_QSTR_dynamic:
                 self->dynamic = destination[1];
+            break;
+            case MP_QSTR_physics_shape:
+                self->physics_shape = destination[1];
             break;
             default:
                 return; // Fail

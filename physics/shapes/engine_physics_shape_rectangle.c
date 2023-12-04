@@ -59,10 +59,10 @@ STATIC void physics_shape_rectangle_class_attr(mp_obj_t self_in, qstr attribute,
             case MP_QSTR_height:
                 destination[0] = mp_obj_new_float(self->height);
             break;
-            case MP_QSTR_test:
-                destination[0] = MP_OBJ_FROM_PTR(&physics_shape_rectangle_class_test_obj);
-                destination[1] = self_in;
-            break;
+            // case MP_QSTR_test:
+            //     destination[0] = MP_OBJ_FROM_PTR(&physics_shape_rectangle_class_test_obj);
+            //     destination[1] = self_in;
+            // break;
             default:
                 return; // Fail
         }
