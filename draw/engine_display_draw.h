@@ -11,21 +11,12 @@ void engine_draw_fill(uint16_t color, uint16_t *screen_buffer);
 // Sets a single pixel in the screen buffer to 'color'
 bool engine_draw_pixel(uint16_t color, int32_t x, int32_t y);
 
-
-void engine_draw_vertical_line(uint16_t color, int32_t x_column, int32_t y_start, int32_t y_end);
-
-
-void engine_draw_horizontal_line(uint16_t color, int32_t y_row, int32_t x_start, int32_t x_end);
-
-
-void engine_draw_sloped_line(uint16_t color, int32_t x_start, int32_t y_start, int32_t x_end, int32_t y_end);
-
-
 void engine_draw_line(uint16_t color, float x_start, float y_start, float x_end, float y_end, mp_obj_t camera_node_base);
+
+
 void engine_draw_outline_rectangle(uint16_t color, int32_t x_top_left, int32_t y_top_left, int32_t width, int32_t height);
 void engine_draw_filled_rectangle(uint16_t color, int32_t x_top_left, int32_t y_top_left, int32_t width, int32_t height);
-void engine_draw_aligned_blit(uint16_t *buffer, int32_t x_top_left, int32_t y_top_left, int32_t width, int32_t height, uint16_t key, bool mirror_x, bool mirror_y);
-void engine_draw_aligned_blit_with_mask(uint16_t *buffer, int32_t x_top_left, int32_t y_top_left, int32_t width, int32_t height, uint16_t mask_key, bool mirror_x, bool mirror_y, uint16_t *mask_buffer);
+void engine_draw_blit(uint16_t *buffer, int32_t x_top_left, int32_t y_top_left, int32_t width, int32_t height, uint16_t key, bool mirror_x, bool mirror_y);
 
 
 

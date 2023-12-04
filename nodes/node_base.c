@@ -92,3 +92,19 @@ mp_obj_t node_base_get_layer(mp_obj_t self_in){
     engine_node_base_t *node_base = self_in;
     return mp_obj_new_int(node_base->layer);
 }
+
+
+void node_base_get_child_absolute_xy(int32_t *x, int32_t *y, mp_obj_t child_node_base_in){
+    *x = 0;
+    *y = 0;
+
+    engine_node_base_t *child_node_base = child_node_base_in;
+    engine_node_base_t *parent_node_base = child_node_base->parent_node_base;
+
+    // Keep going up until we reach the top-most parent (then we'll work out way back down)
+    while(parent_node_base != NULL){
+        parent_node_base = parent_node_base->parent_node_base;
+    }
+
+    
+}

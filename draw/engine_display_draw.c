@@ -35,21 +35,6 @@ bool engine_draw_pixel(uint16_t color, int32_t x, int32_t y){
 }
 
 
-void engine_draw_vertical_line(uint16_t color, int32_t x_column, int32_t y_start, int32_t y_end){
-
-}
-
-
-void engine_draw_horizontal_line(uint16_t color, int32_t y_row, int32_t x_start, int32_t x_end){
-
-}
-
-
-void engine_draw_sloped_line(uint16_t color, int32_t x_start, int32_t y_start, int32_t x_end, int32_t y_end){
-
-}
-
-
 // https://en.wikipedia.org/wiki/Digital_differential_analyzer_(graphics_algorithm)
 void engine_draw_line(uint16_t color, float x_start, float y_start, float x_end, float y_end, mp_obj_t camera_node_base_in){
     engine_node_base_t *camera_node_base = camera_node_base_in;
@@ -57,8 +42,9 @@ void engine_draw_line(uint16_t color, float x_start, float y_start, float x_end,
     vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
     rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
     
-    float center_x = camera_position->x + camera_viewport->x + camera_viewport->width/2.0f;
-    float center_y = camera_position->y + camera_viewport->y + camera_viewport->height/2.0f;
+    // Viewport x and y are only used for location inside framebuffer (so not used here)
+    float center_x = camera_position->x + camera_viewport->width/2.0f;
+    float center_y = camera_position->y + camera_viewport->height/2.0f;
 
     // Rotate endpoints about camera
     engine_math_rotate_point(&x_start, &y_start, center_x, center_y, camera_rotation->z * DEG2RAD);
@@ -102,12 +88,7 @@ void engine_draw_filled_rectangle(uint16_t color, int32_t x_top_left, int32_t y_
 }
 
 
-void engine_draw_aligned_blit(uint16_t *buffer, int32_t x_top_left, int32_t y_top_left, int32_t width, int32_t height, uint16_t key, bool mirror_x, bool mirror_y){
-
-}
-
-
-void engine_draw_aligned_blit_with_mask(uint16_t *buffer, int32_t x_top_left, int32_t y_top_left, int32_t width, int32_t height, uint16_t mask_key, bool mirror_x, bool mirror_y, uint16_t *mask_buffer){
+void engine_draw_blit(uint16_t *buffer, int32_t x_top_left, int32_t y_top_left, int32_t width, int32_t height, uint16_t key, bool mirror_x, bool mirror_y){
 
 }
 

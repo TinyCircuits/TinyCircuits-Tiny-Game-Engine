@@ -41,6 +41,9 @@ mp_obj_t node_base_get_layer(mp_obj_t self_in);
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(node_base_get_layer_obj, node_base_get_layer);
 
 
+void node_base_get_child_absolute_xy(int32_t *x, int32_t *y, mp_obj_t child_node_base);
+
+
 inline bool node_base_is_visible(engine_node_base_t *node_base){
     return BIT_GET(node_base->meta_data, NODE_BASE_VISIBLE_BIT_INDEX);
 }
