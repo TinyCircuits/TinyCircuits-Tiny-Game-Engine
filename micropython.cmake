@@ -36,6 +36,7 @@ target_sources(usermod_engine INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/resources/engine_sound_resource.c
     ${CMAKE_CURRENT_LIST_DIR}/physics/engine_physics_module.c
     ${CMAKE_CURRENT_LIST_DIR}/physics/engine_physics.c
+    ${CMAKE_CURRENT_LIST_DIR}/physics/shapes/engine_physics_shape_rectangle.c
 
     ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/src/chipmunk.c
     ${CMAKE_CURRENT_LIST_DIR}/libs/Chipmunk2D/src/cpArbiter.c

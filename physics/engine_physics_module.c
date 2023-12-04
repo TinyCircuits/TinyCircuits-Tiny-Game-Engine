@@ -3,11 +3,13 @@
 #include "nodes/node_base.h"
 #include "display/engine_display_common.h"
 #include "physics/engine_physics.h"
+#include "physics/shapes/engine_physics_shape_rectangle.h"
 
 
 // Module attributes
 STATIC const mp_rom_map_elem_t engine_physics_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_physics) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PhysicsShapeRectangle), (mp_obj_t)&physics_shape_rectangle_class_type},
 };
 
 // Module init

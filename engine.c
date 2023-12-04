@@ -13,8 +13,6 @@
 STATIC mp_obj_t engine_init(){
     ENGINE_INFO_PRINTF("Engine init");
 
-    engine_physics_init();
-
     engine_display_init();
     engine_display_send();
 

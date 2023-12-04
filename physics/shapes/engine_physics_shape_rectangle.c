@@ -1,8 +1,7 @@
 #include "engine_physics_shape_rectangle.h"
-
-
-#include "physics_shape_rectangle.h"
 #include "debug/debug_print.h"
+#include "physics/engine_physics.h"
+
 
 // Class required functions
 STATIC void physics_shape_rectangle_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
@@ -28,8 +27,7 @@ mp_obj_t physics_shape_rectangle_class_new(const mp_obj_type_t *type, size_t n_a
         mp_raise_TypeError("PhysicsShapeRectangle Error: Function takes 0 or 2 arguments");
     }
 
-
-    // self->physac_shape = 
+    self->physics_shape_rectangle = cpBoxShapeNew(NULL, self->width, self->height, 0.0f);
 
     return MP_OBJ_FROM_PTR(self);
 }

@@ -2,12 +2,13 @@
 #define ENGINE_PHYSICS_SHAPE_RECTANGLE_H
 
 #include "py/obj.h"
+#include "libs/Chipmunk2D/include/chipmunk/chipmunk.h"
 
 typedef struct{
     mp_obj_base_t base;
     mp_float_t width;
     mp_float_t height;
-    void *physac_shape;
+    cpShape *physics_shape_rectangle;
 }physics_shape_rectangle_class_obj_t;
 
 extern const mp_obj_type_t physics_shape_rectangle_class_type;

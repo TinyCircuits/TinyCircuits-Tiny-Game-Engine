@@ -4,20 +4,13 @@
 #include "nodes/2d/physics_2d_node.h"
 #include "utility/linked_list.h"
 #include "nodes/node_base.h"
+#include "libs/Chipmunk2D/include/chipmunk/chipmunk.h"
+
+cpSpace *engine_physics_get_main_space();
 
 void engine_physics_init();
 
 void engine_physics_tick();
-
-void engine_physics_create_rectangle_body(engine_physics_2d_node_common_data_t *common_data);
-
-void *engine_physics_create_rectangle_shape(float width, float height);
-
-void engine_physics_get_body_xy(void *body, double *x, double *y);
-
-int engine_physics_get_vertex_count(void *body);
-
-void engine_physics_get_vertex(void *body, float *vx, float *vy, int vertex_index);
 
 
 // Physics are nodes just like everything else but are tracked

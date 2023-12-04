@@ -34,6 +34,7 @@ SRC_USERMOD += $(ENGINE_MOD_DIR)/resources/engine_texture_resource.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/resources/engine_sound_resource.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/physics/engine_physics_module.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/physics/engine_physics.c
+SRC_USERMOD += $(ENGINE_MOD_DIR)/physics/shapes/engine_physics_shape_rectangle.c
 
 SRC_USERMOD += $(ENGINE_MOD_DIR)/libs/Chipmunk2D/src/chipmunk.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/libs/Chipmunk2D/src/cpArbiter.c

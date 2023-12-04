@@ -7,6 +7,7 @@
 #include "math/vector2.h"
 #include "draw/engine_display_draw.h"
 #include "physics/engine_physics.h"
+#include "physics/shapes/engine_physics_shape_rectangle.h"
 
 
 // Class required functions
@@ -17,14 +18,14 @@ STATIC void physics_2d_node_class_print(const mp_print_t *print, mp_obj_t self_i
 
 
 STATIC mp_obj_t physics_2d_node_class_tick(mp_obj_t self_in){
-    engine_node_base_t *node_base = self_in;
-    engine_physics_2d_node_common_data_t *common_data = node_base->node_common_data;
+    // engine_node_base_t *node_base = self_in;
+    // engine_physics_2d_node_common_data_t *common_data = node_base->node_common_data;
 
-    double x, y;
+    // double x, y;
 
-    engine_physics_get_body_xy(common_data->physac_body, &x, &y);
+    // engine_physics_get_body_xy(common_data->physac_body, &x, &y);
 
-    ENGINE_WARNING_PRINTF("Physics2DNode: Tick function not overridden %0.3f %0.3f", x, y);
+    // ENGINE_WARNING_PRINTF("Physics2DNode: Tick function not overridden %0.3f %0.3f", x, y);
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(physics_2d_node_class_tick_obj, physics_2d_node_class_tick);
@@ -33,8 +34,8 @@ MP_DEFINE_CONST_FUN_OBJ_1(physics_2d_node_class_tick_obj, physics_2d_node_class_
 STATIC mp_obj_t physics_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("Physics2DNode: Drawing");
 
-    engine_node_base_t *node_base = self_in;
-    engine_physics_2d_node_common_data_t *common_data = node_base->node_common_data;
+    // engine_node_base_t *node_base = self_in;
+    // engine_physics_2d_node_common_data_t *common_data = node_base->node_common_data;
 
     // PhysicsBody body = common_data->physac_body;
 
@@ -69,6 +70,11 @@ MP_DEFINE_CONST_FUN_OBJ_2(physics_2d_node_class_draw_obj, physics_2d_node_class_
 
 mp_obj_t physics_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Physics2DNode");
+
+    // Make sure physics are inited (can't do this in engine.start() since called after node constructors)
+    if(engine_physics_get_main_space() == NULL){
+        engine_physics_init();
+    }
     
     engine_physics_2d_node_common_data_t *common_data = malloc(sizeof(engine_physics_2d_node_common_data_t));
 
@@ -89,8 +95,13 @@ mp_obj_t physics_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
     // the engine and physics engine
     common_data->physics_list_node = engine_physics_track_node(node_base);
 
-    ENGINE_INFO_PRINTF("Physics2DNode: Creating Box2d body...");
-    engine_physics_create_rectangle_body(common_data);
+    // https://chipmunk-physics.net/release/ChipmunkLatest-Docs/
+    ENGINE_INFO_PRINTF("Physics2DNode: Creating default box body... %p", engine_physics_get_main_space());
+    common_data->physics_body = cpSpaceAddBody(engine_physics_get_main_space(), cpBodyNew(1.0f, cpMomentForBox(1.0f, 15.0f, 5.0f)));
+
+    physics_shape_rectangle_class_obj_t *physics_default_box_shape = physics_shape_rectangle_class_new(&physics_shape_rectangle_class_type, 0, 0, NULL);
+
+    cpShapeSetBody(physics_default_box_shape->physics_shape_rectangle, common_data->physics_body);
 
     if(n_args == 0){        // Non-inherited (create a new object)
         node_base->inherited = false;
@@ -107,6 +118,7 @@ mp_obj_t physics_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
         physics_2d_node->velocity = vector2_class_new(&vector2_class_type, 0, 0, NULL);
         physics_2d_node->acceleration = vector2_class_new(&vector2_class_type, 0, 0, NULL);
         physics_2d_node->dynamic = mp_obj_new_bool(true);
+        physics_2d_node->physics_shape = physics_default_box_shape;
     }else if(n_args == 1){  // Inherited (use existing object)
         node_base->inherited = true;
         node_base->node = args[0];
@@ -133,6 +145,7 @@ mp_obj_t physics_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
         mp_store_attr(node_base->node, MP_QSTR_velocity, vector2_class_new(&vector2_class_type, 0, 0, NULL));
         mp_store_attr(node_base->node, MP_QSTR_acceleration, vector2_class_new(&vector2_class_type, 0, 0, NULL));
         mp_store_attr(node_base->node, MP_QSTR_dynamic, mp_obj_new_bool(true));
+        mp_store_attr(node_base->node, MP_QSTR_shape, physics_default_box_shape);
     }else{
         mp_raise_msg(&mp_type_RuntimeError, "Too many arguments passed to Physics2DNode constructor!");
     }

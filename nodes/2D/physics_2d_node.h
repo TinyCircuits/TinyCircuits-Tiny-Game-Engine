@@ -4,6 +4,7 @@
 #include "py/obj.h"
 #include "utility/linked_list.h"
 #include "nodes/node_base.h"
+#include "libs/Chipmunk2D/include/chipmunk/chipmunk.h"
 
 
 typedef struct{
@@ -12,12 +13,13 @@ typedef struct{
     mp_obj_t velocity;              // Vector2
     mp_obj_t acceleration;          // Vector2
     mp_obj_t dynamic;               // bool
+    mp_obj_t physics_shape;         // 
 }engine_physics_2d_node_class_obj_t;
 
 typedef struct{
     mp_obj_t tick_cb;
     mp_obj_t draw_cb;
-    void *physac_body;
+    cpBody *physics_body;
     linked_list_node *physics_list_node;    // All physics 2d nodes get added to a list that is easy to traverse
 }engine_physics_2d_node_common_data_t;
 
