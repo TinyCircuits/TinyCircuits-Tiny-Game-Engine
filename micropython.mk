@@ -32,6 +32,7 @@ SRC_USERMOD += $(ENGINE_MOD_DIR)/display/engine_display_common.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/draw/engine_display_draw.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/resources/engine_resources_module.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/resources/engine_texture_resource.c
+SRC_USERMOD += $(ENGINE_MOD_DIR)/resources/engine_font_resource.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/resources/engine_sound_resource.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/physics/engine_physics_module.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/physics/engine_physics.c

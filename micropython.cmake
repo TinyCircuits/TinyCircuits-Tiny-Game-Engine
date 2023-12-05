@@ -34,6 +34,7 @@ target_sources(usermod_engine INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/draw/engine_display_draw.c
     ${CMAKE_CURRENT_LIST_DIR}/resources/engine_resources_module.c
     ${CMAKE_CURRENT_LIST_DIR}/resources/engine_texture_resource.c
+    ${CMAKE_CURRENT_LIST_DIR}/resources/engine_font_resource.c
     ${CMAKE_CURRENT_LIST_DIR}/resources/engine_sound_resource.c
     ${CMAKE_CURRENT_LIST_DIR}/physics/engine_physics_module.c
     ${CMAKE_CURRENT_LIST_DIR}/physics/engine_physics.c

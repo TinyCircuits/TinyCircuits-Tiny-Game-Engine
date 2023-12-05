@@ -22,6 +22,8 @@
 [] Tests for different configurations of child/parent relations (physics objects colliding with child physics objects, cameras are children of nodes, empty nodes without positions, etc.)
 [] Add outline flag to draw primitives such as Circle2DNode, Rectangle2DNode, Oval2DNode (future, slower), Polygon2DNode (future, slow), etc
 [] Add better draw line function that completes line fully
+[] Hierarchy translation bug in node_base when a child is an inherited class
+[] Particle node that keeps track of a bunch of different particles and allows users to define velocity, direction, and duration
 
 # Building and running
 1. `git clone https://github.com/TinyCircuits/micropython.git`
