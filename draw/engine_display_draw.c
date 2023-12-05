@@ -41,7 +41,7 @@ void engine_draw_line(uint16_t color, float x_start, float y_start, float x_end,
     vector2_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
     vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
     rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
-    
+
     // Viewport x and y are only used for location inside framebuffer (so not used here)
     float center_x = camera_position->x + camera_viewport->width/2.0f;
     float center_y = camera_position->y + camera_viewport->height/2.0f;
@@ -319,6 +319,50 @@ void engine_draw_fillrect_scale_trishear_viewport(uint16_t color, int32_t x, int
             int32_t xp = cx + (xshift >> 16) + (xshift2 >> 16);
             if(is_xy_inside_viewport(xp, yp >> 16, vx, vy, vw, vw)) screen_buffer[fb_pos + (cx) + ((yp >> 16) - cy) * SCREEN_WIDTH + (xshift2 >> 16)] = color;
             yp += ysr;
+        }
+
+        fb_pos -= (xshift >> 16);
+        fb_pos += SCREEN_WIDTH;
+        xshift += xsr;
+    }
+}
+
+void engine_draw_rect_scale_trishear_viewport(uint16_t color, int32_t x, int32_t y, uint16_t width, uint16_t height, int32_t xsc, int32_t ysc, int32_t xsr, int32_t ysr, int32_t xsr2, int32_t vx, int32_t vy, int32_t vw, int32_t vh){
+
+    int32_t xe = (width * xsc) >> 16;
+    int32_t ye = (height * ysc) >> 16;
+    int32_t fb_pos = y * SCREEN_WIDTH;
+
+    int32_t xshift = 0;
+    int64_t xshift2 = 0;
+    uint16_t *screen_buffer = engine_get_active_screen_buffer();
+
+    if(xsc < 0) {
+        xe = -xe;
+        x -= xe;
+    }
+    if(ysc < 0) {
+        ye = -ye;
+        y -= ye;
+    }
+
+    for(int cy = y; cy < y + ye; cy++){
+        fb_pos += (xshift >> 16);
+        int32_t yp = (cy << 16) + (xshift >> 16) * ysr;
+        if(cy == y || cy == y+ye) for(int cx = x; cx < x + xe; cx++) {
+            xshift2 = (((yp >> 16) - y) * xsr2);
+            int32_t xp = cx + (xshift >> 16) + (xshift2 >> 16);
+            if(is_xy_inside_viewport(xp, yp >> 16, vx, vy, vw, vw)) screen_buffer[fb_pos + (cx) + ((yp >> 16) - cy) * SCREEN_WIDTH + (xshift2 >> 16)] = color;
+            yp += ysr;
+        } else {
+            xshift2 = (((yp >> 16) - y) * xsr2);
+            int32_t xp = x + (xshift >> 16) + (xshift2 >> 16);
+            if(is_xy_inside_viewport(xp, yp >> 16, vx, vy, vw, vw)) screen_buffer[fb_pos + (x) + ((yp >> 16) - cy) * SCREEN_WIDTH + (xshift2 >> 16)] = color;
+            yp += ysr*xe;
+
+            xshift2 = (((yp >> 16) - y) * xsr2);
+            xp = x+xe + (xshift >> 16) + (xshift2 >> 16);
+            if(is_xy_inside_viewport(xp, yp >> 16, vx, vy, vw, vw)) screen_buffer[fb_pos + (x+xe) + ((yp >> 16) - cy) * SCREEN_WIDTH + (xshift2 >> 16)] = color;
         }
 
         fb_pos -= (xshift >> 16);

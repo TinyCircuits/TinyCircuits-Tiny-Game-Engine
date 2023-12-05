@@ -9,6 +9,7 @@
 #include "physics/engine_physics.h"
 #include "physics/shapes/engine_physics_shape_rectangle.h"
 #include "physics/shapes/engine_physics_shape_circle.h"
+#include "physics/shapes/engine_physics_manifold.h"
 #include "physics/shapes/shape_test.h"
 
 
@@ -40,21 +41,26 @@ STATIC mp_obj_t physics_2d_node_class_test(mp_obj_t self_in, mp_obj_t b_in){
     const engine_node_base_t* self = MP_OBJ_TO_PTR(self_in);
     const engine_node_base_t* b = MP_OBJ_TO_PTR(b_in);
 
-    vector2_class_obj_t* ret = m_new_obj(vector2_class_obj_t);
-    ret->base.type = &vector2_class_type;
+    physics_manifold_class_obj_t* ret = physics_manifold_class_new(&physics_manifold_class_type, 0, 0, NULL);
 
     vector2_class_obj_t *a_pos = mp_load_attr(self->attr_accessor, MP_QSTR_position);
     vector2_class_obj_t *b_pos = mp_load_attr(b->attr_accessor, MP_QSTR_position);
 
-    mp_obj_t* a_shape = mp_load_attr(self->attr_accessor, MP_QSTR_physics_shape);
-    mp_obj_t* b_shape = mp_load_attr(b->attr_accessor, MP_QSTR_physics_shape);
+    mp_obj_t a_shape = mp_load_attr(self->attr_accessor, MP_QSTR_physics_shape);
+    mp_obj_t b_shape = mp_load_attr(b->attr_accessor, MP_QSTR_physics_shape);
 
     if(mp_obj_is_type(a_shape, &physics_shape_rectangle_class_type)){
         if(mp_obj_is_type(b_shape, &physics_shape_rectangle_class_type)){
             ENGINE_INFO_PRINTF("Physics2DNode: rectangle-rectangle test");
+            physics_rectangle_rectangle_test(a_pos, a_shape, b_pos, b_shape, ret);
 
         } else if(mp_obj_is_type(b_shape, &physics_shape_circle_class_type)) {
             ENGINE_INFO_PRINTF("Physics2DNode: rectangle-circle test");
+            physics_circle_rectangle_test(b_pos, b_shape, a_pos, a_shape, ret);
+            ret->mtv_x = -ret->mtv_x;
+            ret->mtv_y = -ret->mtv_y;
+            ret->nrm_x = -ret->nrm_x;
+            ret->nrm_y = -ret->nrm_y;
 
         } else {
             mp_raise_TypeError("Unknown shape of B");
@@ -63,9 +69,11 @@ STATIC mp_obj_t physics_2d_node_class_test(mp_obj_t self_in, mp_obj_t b_in){
     } else if(mp_obj_is_type(a_shape, &physics_shape_circle_class_type)) {
         if(mp_obj_is_type(b_shape, &physics_shape_rectangle_class_type)){
             ENGINE_INFO_PRINTF("Physics2DNode: circle-rectangle test");
+            physics_circle_rectangle_test(a_pos, a_shape, b_pos, b_shape, ret);
 
         } else if(mp_obj_is_type(b_shape, &physics_shape_circle_class_type)) {
             ENGINE_INFO_PRINTF("Physics2DNode: circle-circle test");
+            physics_circle_circle_test(a_pos, a_shape, b_pos, b_shape, ret);
 
         } else {
             mp_raise_TypeError("Unknown shape of B");
@@ -75,8 +83,6 @@ STATIC mp_obj_t physics_2d_node_class_test(mp_obj_t self_in, mp_obj_t b_in){
         mp_raise_TypeError("Unknown shape of A");
     }
 
-    ret->x = 0.0;
-    ret->y = 0.0;
     return MP_OBJ_FROM_PTR(ret);
 }
 MP_DEFINE_CONST_FUN_OBJ_2(physics_2d_node_class_test_obj, physics_2d_node_class_test);

@@ -24,13 +24,19 @@ mp_obj_t physics_manifold_class_new(const mp_obj_type_t *type, size_t n_args, si
     // }else{
     //     mp_raise_TypeError("PhysicsShapeCircle Error: Function takes 0 or 1 arguments");
     // }
+    self->nrm_x = 0;
+    self->nrm_y = 0;
+    self->mtv_x = 0;
+    self->mtv_y = 0;
+    self->con_x = 0;
+    self->con_y = 0;
 
     return MP_OBJ_FROM_PTR(self);
 }
 
 // Class methods
 STATIC void physics_manifold_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
-    ENGINE_INFO_PRINTF("Accessing Physicsmanifold attr");
+    ENGINE_INFO_PRINTF("Accessing PhysicsManifold attr");
 
     physics_manifold_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
 

@@ -5,6 +5,7 @@
 #include "physics/engine_physics.h"
 #include "physics/shapes/engine_physics_shape_rectangle.h"
 #include "physics/shapes/engine_physics_shape_circle.h"
+#include "physics/shapes/engine_physics_manifold.h"
 
 
 // Module attributes
@@ -12,6 +13,7 @@ STATIC const mp_rom_map_elem_t engine_physics_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_physics) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_PhysicsShapeRectangle), (mp_obj_t)&physics_shape_rectangle_class_type},
     { MP_OBJ_NEW_QSTR(MP_QSTR_PhysicsShapeCircle), (mp_obj_t)&physics_shape_circle_class_type},
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PhysicsManifold), (mp_obj_t)&physics_manifold_class_type},
 };
 
 // Module init
