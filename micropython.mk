@@ -14,6 +14,7 @@ SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/empty_node.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/3d/camera_node.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/2d/sprite_2d_node.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/2d/rectangle_2d_node.c
+SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/2d/circle_2d_node.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/2d/physics_2d_node.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/math/vector3.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/math/vector2.c

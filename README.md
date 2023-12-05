@@ -1,10 +1,9 @@
 # TODO
+[.] Make child nodes rotate and be positioned correctly about parent (what about scale?)(need to handle all types when getting position and rotation since not all have those and some have 3D structures)
 [] Implement PhysicsShapes that are used by Physics2dNodes to define size and shape of collision box/polygon/circle
-[] Draw node origins if flag in engine_debug is true
 [] Make all drawing functions take in camera node and then rotate, offset, and clip based on position and viewport (write to buffer raw if camera is null)
 [] Expose enough drawing functions to be able to mimic Thumby games
 [] Add way to look into sprite data on flash to get pixels when needed. Sprite/texture data should be read from flash since not enough ram to store lots of RGB565 bitmaps in SRAM
-[] Make child nodes rotate and be positioned correctly about parent
 [] Write tests for all math, physics, and node functions
 [] Figure out physics timing, dt, gravity, and frequency for arm/rp2 and UNIX ports
 [] Look into MICROPY_MODULE_ATTR_DELEGATION
@@ -18,6 +17,11 @@
 [] Outline and filled polygon renderer (textured too?)
 [] Grid renderer (with offset and cell scale)
 [] Vector renderer? For all shapes?
+[] Game format?
+[] Fast sin/cos/tan lookups to replace math functions (only need to be fast, not accurate)
+[] Tests for different configurations of child/parent relations (physics objects colliding with child physics objects, cameras are children of nodes, empty nodes without positions, etc.)
+[] Add outline flag to draw primitives such as Circle2DNode, Rectangle2DNode, Oval2DNode (future, slower), Polygon2DNode (future, slow), etc
+[] Add better draw line function that completes line fully
 
 # Building and running
 1. `git clone https://github.com/TinyCircuits/micropython.git`
