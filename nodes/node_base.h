@@ -8,7 +8,6 @@
 #define NODE_BASE_VISIBLE_BIT_INDEX 0
 #define NODE_BASE_DISABLED_BIT_INDEX 1
 #define NODE_BASE_JUST_ADDED_BIT_INDEX 2
-#define NODE_BASE_MAX_CHILD_COUNT 4
 
 typedef struct{
     mp_obj_base_t base;                 // All nodes get defined by what is placed in this
