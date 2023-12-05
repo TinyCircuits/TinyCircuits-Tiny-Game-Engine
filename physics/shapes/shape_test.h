@@ -157,5 +157,4 @@ physics_interval_t physics_convex_project(vector2_class_obj_t* a_pos, physics_sh
         ret.max = fmaxf(ret.max, dot);
     }
     return ret;
-
 }
