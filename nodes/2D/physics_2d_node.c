@@ -9,6 +9,7 @@
 #include "physics/engine_physics.h"
 #include "physics/shapes/engine_physics_shape_rectangle.h"
 #include "physics/shapes/engine_physics_shape_circle.h"
+#include "physics/shapes/shape_test.h"
 
 
 // Class required functions
