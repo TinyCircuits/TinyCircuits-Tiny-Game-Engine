@@ -147,10 +147,15 @@ physics_interval_t physics_circle_project(vector2_class_obj_t* a_pos, physics_sh
 
 physics_interval_t physics_convex_project(vector2_class_obj_t* a_pos, physics_shape_convex_class_obj_t* a, vector2_class_obj_t* axis) {
     physics_interval_t ret = {INFINITY, -INFINITY};
-    mp_buffer_info_t v_list_info;
-    mp_get_buffer_raise(a->v_list, &v_list_info, MP_BUFFER_RW);
-    mp_buffer_info_t n_list_info;
-    mp_get_buffer_raise(a->n_list, &n_list_info, MP_BUFFER_RW);
+    mp_obj_t* vs;
+    size_t vs_len;
+    mp_obj_list_get(a->v_list, &vs_len, &vs);
+    for(int i = 0; i < vs_len; i++) {
+        vector2_class_obj_t* v = MP_OBJ_TO_PTR(vs[i]);
+        mp_float_t dot = v->x * axis->x + v->y * axis->y;
+        ret.min = fminf(ret.min, dot);
+        ret.max = fmaxf(ret.max, dot);
+    }
     return ret;
 
 }
