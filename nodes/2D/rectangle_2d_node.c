@@ -31,20 +31,24 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_n
     engine_node_base_t *rectangle_node_base = self_in;
     engine_node_base_t *camera_node_base = camera_node;
 
-    vector2_class_obj_t *rectangle_position = mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_position);
     vector2_class_obj_t *rectangle_scale =  mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_scale);
     mp_int_t rectangle_width = mp_obj_get_int(mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_width));
     mp_int_t rectangle_height = mp_obj_get_int(mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_height));
     mp_int_t rectangle_color = mp_obj_get_int(mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_color));
-    mp_float_t rectangle_rotation = mp_obj_get_float(mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_rotation));
 
     vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
     vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
     rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
 
+    float rectangle_resolved_hierarchy_x = 0.0f;
+    float rectangle_resolved_hierarchy_y = 0.0f;
+    float rectangle_resolved_hierarchy_rotation = 0.0f;
+
+    node_base_get_child_absolute_xy(&rectangle_resolved_hierarchy_x, &rectangle_resolved_hierarchy_y, &rectangle_resolved_hierarchy_rotation, self_in);
+
     // Store the non-rotated x and y for a second
-    float rectangle_rotated_x = rectangle_position->x-(camera_position->x);
-    float rectangle_rotated_y = rectangle_position->y-(camera_position->y);
+    float rectangle_rotated_x = rectangle_resolved_hierarchy_x-(camera_position->x);
+    float rectangle_rotated_y = rectangle_resolved_hierarchy_y-(camera_position->y);
 
     // Rotate rectangle origin about the camera
     engine_math_rotate_point(&rectangle_rotated_x, &rectangle_rotated_y, camera_viewport->width/2, camera_viewport->height/2, camera_rotation->z * DEG2RAD);
@@ -57,7 +61,7 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_n
                                                rectangle_height,
                                                (int32_t)(rectangle_scale->x*65536 + 0.5),
                                                (int32_t)(rectangle_scale->y*65536 + 0.5),
-                                               (int16_t)(((rectangle_rotation+camera_rotation->z) * DEG2RAD)*1024 / (2*PI)),
+                                               (int16_t)(((rectangle_resolved_hierarchy_rotation+camera_rotation->z) * DEG2RAD)*1024 / (2*PI)),
                                                camera_viewport->x,
                                                camera_viewport->y,
                                                camera_viewport->width,

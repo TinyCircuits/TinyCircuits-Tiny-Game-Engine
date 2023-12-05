@@ -10,8 +10,14 @@
 [] Look into MICROPY_MODULE_ATTR_DELEGATION
 [] To avoid mp_load_attr calls, at the start of the game loop collect all node attributes into some local structure then load the local structure back into the micropython object (only really matters if inherited because of weird MicroPython attr storage for that case)
 [] Add options to give names to each node and then get nodes by name (gives list of nodes if more than one have the same name)
-[] Text/font
+[] Text/font (maybe scalable but scaled to bitmap/file in flash and then streamed after scale changed once (will need a text resource to act as a ledger))
 [] Sound/music
+[] Line segment 2d node with bezier curve drawer option as for stroke/pen with collision
+[] Main menu and utility scalable UI elements with element traversal based on inputs with UI is active (make best guess on next element to go to based on position). Good for consistency
+[] Saving games
+[] Outline and filled polygon renderer (textured too?)
+[] Grid renderer (with offset and cell scale)
+[] Vector renderer? For all shapes?
 
 # Building and running
 1. `git clone https://github.com/TinyCircuits/micropython.git`

@@ -8,6 +8,7 @@
 #define NODE_BASE_VISIBLE_BIT_INDEX 0
 #define NODE_BASE_DISABLED_BIT_INDEX 1
 #define NODE_BASE_JUST_ADDED_BIT_INDEX 2
+#define NODE_BASE_MAX_CHILD_COUNT 4
 
 typedef struct{
     mp_obj_base_t base;                 // All nodes get defined by what is placed in this
@@ -41,7 +42,7 @@ mp_obj_t node_base_get_layer(mp_obj_t self_in);
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(node_base_get_layer_obj, node_base_get_layer);
 
 
-void node_base_get_child_absolute_xy(int32_t *x, int32_t *y, mp_obj_t child_node_base);
+void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, mp_obj_t child_node_base);
 
 
 inline bool node_base_is_visible(engine_node_base_t *node_base){
