@@ -28,7 +28,7 @@ mp_obj_t physics_shape_convex_class_new(const mp_obj_type_t *type, size_t n_args
             mp_raise_TypeError("Expected vertex list argument");
         }
     }else{
-        mp_raise_TypeError("PhysicsShapeCircle Error: Function takes 0 or 1 arguments");
+        mp_raise_TypeError("PhysicsShapeConvex Error: Function takes 0 or 1 arguments");
     }
 
     return MP_OBJ_FROM_PTR(self);
