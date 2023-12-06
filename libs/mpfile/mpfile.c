@@ -40,6 +40,11 @@
 const mp_obj_type_t mp_file_type;
 STATIC mp_obj_t mp___del__(mp_obj_t self);
 
+
+uint8_t two_byte_array[2];
+mp_obj_t *two_byte_bytearray = NULL;
+
+
 mp_file_t *mp_file_from_file_obj(mp_obj_t file_obj) {
     mp_file_t *file = m_new_obj(mp_file_t);
     memset(file, 0, sizeof(*file));
@@ -53,6 +58,10 @@ mp_file_t *mp_file_from_file_obj(mp_obj_t file_obj) {
 }
 
 mp_file_t *mp_open(const char *filename, const char *mode) {
+    if(two_byte_bytearray == NULL){
+        two_byte_bytearray = mp_obj_new_bytearray_by_ref(2, two_byte_array);
+    }
+
     mp_obj_t filename_obj = mp_obj_new_str(filename, strlen(filename));
     mp_obj_t mode_obj = mp_obj_new_str(mode, strlen(mode));
     mp_obj_t args[2] = { filename_obj, mode_obj };
@@ -69,6 +78,16 @@ mp_int_t mp_readinto(mp_file_t *file, void *buf, size_t num_bytes) {
     }
     nread =  mp_obj_get_int(bytes_read);
     return nread;
+}
+
+mp_int_t mp_readbyte_u16(mp_file_t *file){
+    mp_call_function_1(file->readinto_fn, two_byte_bytearray);
+
+    uint16_t byte_u16 = 0;
+    byte_u16 = byte_u16 | (two_byte_array[0] << 8);
+    byte_u16 = byte_u16 | two_byte_array[1];
+
+    return byte_u16;
 }
 
 off_t mp_seek(mp_file_t *file, off_t offset, int whence) {

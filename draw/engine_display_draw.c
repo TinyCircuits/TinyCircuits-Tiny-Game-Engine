@@ -21,7 +21,7 @@ void engine_draw_fill(uint16_t color, uint16_t *screen_buffer){
 }
 
 
-bool engine_draw_pixel(uint16_t color, int32_t x, int32_t y){
+void engine_draw_pixel(uint16_t color, int32_t x, int32_t y){
     if((x >= 0 && x < SCREEN_WIDTH) && (y >= 0 && y < SCREEN_HEIGHT)){
         uint16_t *screen_buffer = engine_get_active_screen_buffer();
         uint16_t index = y * SCREEN_WIDTH + x;

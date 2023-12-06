@@ -9,7 +9,7 @@
 void engine_draw_fill(uint16_t color, uint16_t *screen_buffer);
 
 // Sets a single pixel in the screen buffer to 'color'
-bool engine_draw_pixel(uint16_t color, int32_t x, int32_t y);
+void engine_draw_pixel(uint16_t color, int32_t x, int32_t y);
 
 void engine_draw_line(uint16_t color, float x_start, float y_start, float x_end, float y_end, mp_obj_t camera_node_base);
 

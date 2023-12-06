@@ -201,9 +201,9 @@ void engine_display_st7789_update(uint16_t *screen_buffer_to_render){
 
     if(dma_channel_is_busy(dma_tx)){
         ENGINE_WARNING_PRINTF("Waiting on previous DMA transfer to complete. Could have done more last frame!");
-        ENGINE_PERFORMANCE_START(ENGINE_PERF_TIMER_2);
+        // ENGINE_PERFORMANCE_START(ENGINE_PERF_TIMER_2);
         dma_channel_wait_for_finish_blocking(dma_tx);
-        ENGINE_PERFORMANCE_STOP(ENGINE_PERF_TIMER_2, "Time spent waiting on remaining DMA");
+        // ENGINE_PERFORMANCE_STOP(ENGINE_PERF_TIMER_2, "Time spent waiting on remaining DMA");
     }
 
     st7789_reset_window();
