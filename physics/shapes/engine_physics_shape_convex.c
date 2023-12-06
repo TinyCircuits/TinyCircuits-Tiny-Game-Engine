@@ -16,18 +16,20 @@ mp_obj_t physics_shape_convex_class_new(const mp_obj_type_t *type, size_t n_args
     physics_shape_convex_class_obj_t *self = m_new_obj(physics_shape_convex_class_obj_t);
 
     self->base.type = &physics_shape_convex_class_type;
-    self->v_list = mp_obj_new_list(0, NULL);
-    self->n_list = mp_obj_new_list(0, NULL);
 
-    // if(n_args == 0){
-    //     self->base.type = &physics_shape_convex_class_type;
-    //     self->radius = 5.0f;
-    // }else if(n_args == 1){
-    //     self->base.type = &physics_shape_convex_class_type;
-    //     self->radius = mp_obj_get_float(args[0]);
-    // }else{
-    //     mp_raise_TypeError("PhysicsShapeCircle Error: Function takes 0 or 1 arguments");
-    // }
+    if(n_args == 0){
+        self->v_list = mp_obj_new_list(0, NULL);
+        self->n_list = mp_obj_new_list(0, NULL);
+    }else if(n_args == 1){
+        if(mp_obj_is_type(args[0], &mp_type_list)) {
+            self->v_list = args[0];
+            self->base.type = &physics_shape_convex_class_type;
+        } else {
+            mp_raise_TypeError("Expected vertex list argument");
+        }
+    }else{
+        mp_raise_TypeError("PhysicsShapeCircle Error: Function takes 0 or 1 arguments");
+    }
 
     return MP_OBJ_FROM_PTR(self);
 }
