@@ -59,7 +59,7 @@ void physics_circle_circle_test(vector2_class_obj_t* a_pos, physics_shape_circle
     mp_float_t dist2 = dx*dx+dy*dy;
     //ENGINE_INFO_PRINTF("distance is %f\n\r", dist);
     if(dist2 != 0.0) {
-        mp_float_t dist = sqrt(dist2);
+        mp_float_t dist = MICROPY_FLOAT_C_FUN(sqrt)(dist2);
         mp_float_t idist = 1.0/dist;
         m->nrm_x = dx*idist;
         m->nrm_y = dy*idist;
@@ -84,7 +84,7 @@ void physics_circle_rectangle_test(vector2_class_obj_t* a_pos, physics_shape_cir
 
     } else if(dist2 != 0.0) {
         // Work out normal and constact
-        mp_float_t dist = sqrt(dist2);
+        mp_float_t dist = MICROPY_FLOAT_C_FUN(sqrt)(dist2);
         mp_float_t idist = 1.0/dist;
         m->nrm_x = dx*idist;
         m->nrm_y = dy*idist;
@@ -303,7 +303,7 @@ void physics_convex_circle_test(vector2_class_obj_t* a_pos, physics_shape_convex
         vector2_class_obj_t n;
         n.x = a_v->x - b_pos->x;
         n.y = a_v->y - b_pos->y;
-        mp_float_t il = 1.0 / sqrt(n.x*n.x + n.y*n.y);
+        mp_float_t il = 1.0 / MICROPY_FLOAT_C_FUN(sqrt)(n.x*n.x + n.y*n.y);
         n.x *= il;
         n.y *= il;
         physics_interval_t a_proj = physics_convex_project(a_pos, a, &n);

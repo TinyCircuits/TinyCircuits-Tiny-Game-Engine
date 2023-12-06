@@ -49,7 +49,7 @@ STATIC mp_obj_t physics_shape_convex_class_compute_normals(mp_obj_t self_in){
         vector2_class_obj_t* v2 = MP_OBJ_TO_PTR(vs[i+1]);
         mp_float_t dx = v2->x - v1->x;
         mp_float_t dy = v2->y - v1->y;
-        mp_float_t idist = 1.0/sqrt(dx*dx+dy*dy);
+        mp_float_t idist = 1.0/MICROPY_FLOAT_C_FUN(sqrt)(dx*dx+dy*dy);
         ns[i] = m_new_obj(vector2_class_obj_t);
         vector2_class_obj_t* n = MP_OBJ_TO_PTR(ns[i]);
         n->base.type = &vector2_class_type;
@@ -61,7 +61,7 @@ STATIC mp_obj_t physics_shape_convex_class_compute_normals(mp_obj_t self_in){
         vector2_class_obj_t* v2 = MP_OBJ_TO_PTR(vs[0]);
         mp_float_t dx = v2->x - v1->x;
         mp_float_t dy = v2->y - v1->y;
-        mp_float_t idist = 1.0/sqrt(dx*dx+dy*dy);
+        mp_float_t idist = 1.0/MICROPY_FLOAT_C_FUN(sqrt)(dx*dx+dy*dy);
         ns[ns_len-1] = m_new_obj(vector2_class_obj_t);
         vector2_class_obj_t* n = MP_OBJ_TO_PTR(ns[ns_len-1]);
         n->base.type = &vector2_class_type;
