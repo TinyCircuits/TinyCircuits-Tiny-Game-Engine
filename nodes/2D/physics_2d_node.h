@@ -11,6 +11,7 @@ typedef struct{
     mp_obj_t rotation;              // float
     mp_obj_t velocity;              // Vector2
     mp_obj_t acceleration;          // Vector2
+    mp_float_t angular_velocity;
     mp_obj_t dynamic;               // bool
     mp_obj_t physics_shape;         // Shape definition
 }engine_physics_2d_node_class_obj_t;
