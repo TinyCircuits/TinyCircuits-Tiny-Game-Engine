@@ -12,12 +12,6 @@ void physics_rectangle_rectangle_test(vector2_class_obj_t* a_pos, physics_shape_
     mp_float_t dy1 = a_pos->y + a->height - b_pos->y;
     mp_float_t dy2 = b_pos->y + b->height - a_pos->y;
     if((dx1 < 0) || (dx2 < 0) || (dy1 < 0) || (dy2 < 0)) {
-        // m->nrm_x = 0;
-        // m->nrm_y = 0;
-        // m->mtv_x = 0;
-        // m->mtv_y = 0;
-        // m->con_x = NAN;
-        // m->con_y = NAN;
         *m = const_separated_manifold;
         return;
     }
@@ -59,21 +53,9 @@ void physics_circle_circle_test(vector2_class_obj_t* a_pos, physics_shape_circle
     mp_float_t dy = a_pos->y - b_pos->y;
     mp_float_t rsum = a->radius + b->radius;
     if((dx*dx + dy*dy) > (rsum*rsum)) {
-        // m->nrm_x = 0;
-        // m->nrm_y = 0;
-        // m->mtv_x = 0;
-        // m->mtv_y = 0;
-        // m->con_x = NAN;
-        // m->con_y = NAN;
         *m = const_separated_manifold;
         return;
     }
-    // m->nrm_x = 0;
-    // m->nrm_y = 0;
-    // m->mtv_x = 0;
-    // m->mtv_y = 0;
-    // m->con_x = 0;
-    // m->con_y = 0;
     mp_float_t dist2 = dx*dx+dy*dy;
     //ENGINE_INFO_PRINTF("distance is %f\n\r", dist);
     if(dist2 != 0.0) {
