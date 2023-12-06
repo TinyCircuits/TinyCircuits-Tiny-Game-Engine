@@ -9,6 +9,7 @@
 #include "physics/engine_physics.h"
 #include "physics/shapes/engine_physics_shape_rectangle.h"
 #include "physics/shapes/engine_physics_shape_circle.h"
+#include "physics/shapes/engine_physics_shape_convex.h"
 #include "physics/shapes/engine_physics_manifold.h"
 #include "physics/shapes/shape_test.h"
 
@@ -62,6 +63,14 @@ STATIC mp_obj_t physics_2d_node_class_test(mp_obj_t self_in, mp_obj_t b_in){
             ret->nrm_x = -ret->nrm_x;
             ret->nrm_y = -ret->nrm_y;
 
+        } else if(mp_obj_is_type(b_shape, &physics_shape_convex_class_type)) {
+            ENGINE_INFO_PRINTF("Physics2DNode: rectangle-convex test");
+            physics_convex_rectangle_test(b_pos, b_shape, a_pos, a_shape, ret);
+            ret->mtv_x = -ret->mtv_x;
+            ret->mtv_y = -ret->mtv_y;
+            ret->nrm_x = -ret->nrm_x;
+            ret->nrm_y = -ret->nrm_y;
+
         } else {
             mp_raise_TypeError("Unknown shape of B");
 
@@ -74,6 +83,31 @@ STATIC mp_obj_t physics_2d_node_class_test(mp_obj_t self_in, mp_obj_t b_in){
         } else if(mp_obj_is_type(b_shape, &physics_shape_circle_class_type)) {
             ENGINE_INFO_PRINTF("Physics2DNode: circle-circle test");
             physics_circle_circle_test(a_pos, a_shape, b_pos, b_shape, ret);
+
+        } else if(mp_obj_is_type(b_shape, &physics_shape_convex_class_type)) {
+            ENGINE_INFO_PRINTF("Physics2DNode: circle-convex test");
+            physics_convex_circle_test(b_pos, b_shape, a_pos, a_shape, ret);
+            ret->mtv_x = -ret->mtv_x;
+            ret->mtv_y = -ret->mtv_y;
+            ret->nrm_x = -ret->nrm_x;
+            ret->nrm_y = -ret->nrm_y;
+
+        } else {
+            mp_raise_TypeError("Unknown shape of B");
+
+        }
+    } else if(mp_obj_is_type(a_shape, &physics_shape_convex_class_type)) {
+        if(mp_obj_is_type(b_shape, &physics_shape_rectangle_class_type)){
+            ENGINE_INFO_PRINTF("Physics2DNode: convex-rectangle test");
+            physics_convex_rectangle_test(a_pos, a_shape, b_pos, b_shape, ret);
+
+        } else if(mp_obj_is_type(b_shape, &physics_shape_circle_class_type)) {
+            ENGINE_INFO_PRINTF("Physics2DNode: convex-circle test");
+            physics_convex_circle_test(a_pos, a_shape, b_pos, b_shape, ret);
+
+        } else if(mp_obj_is_type(b_shape, &physics_shape_convex_class_type)) {
+            ENGINE_INFO_PRINTF("Physics2DNode: convex-convex test");
+            physics_convex_convex_test(a_pos, a_shape, b_pos, b_shape, ret);
 
         } else {
             mp_raise_TypeError("Unknown shape of B");
