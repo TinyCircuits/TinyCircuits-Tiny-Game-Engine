@@ -293,7 +293,7 @@ void physics_convex_circle_test(vector2_class_obj_t* a_pos, physics_shape_convex
     mp_obj_list_get(a->v_list, &a_vs_len, &a_vs);
     mp_float_t min_overlap = INFINITY;
 
-    // Circles have infinite surface normals, so just use the directions from the center to all the points on A
+    // Circles have infinitely many surface normals, so just use the directions from the center to all the points on A
     for(int i = 0; i < a_vs_len; i++) {
         vector2_class_obj_t* a_v = MP_OBJ_TO_PTR(a_vs[i]);
         vector2_class_obj_t n;
@@ -356,8 +356,10 @@ void physics_convex_circle_test(vector2_class_obj_t* a_pos, physics_shape_convex
             }
         }
     }
-    m->mtv_x = min_overlap * m->nrm_x;
-    m->mtv_y = min_overlap * m->nrm_y;
+    if(min_overlap != INFINITY) {
+        m->mtv_x = min_overlap * m->nrm_x;
+        m->mtv_y = min_overlap * m->nrm_y;
+    } else *m = const_separated_manifold;
 }
 
 void physics_convex_rectangle_test(vector2_class_obj_t* a_pos, physics_shape_convex_class_obj_t* a, vector2_class_obj_t* b_pos, physics_shape_rectangle_class_obj_t* b, physics_manifold_class_obj_t* m) {
