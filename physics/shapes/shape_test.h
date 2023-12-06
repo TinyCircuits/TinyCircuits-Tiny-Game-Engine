@@ -176,6 +176,10 @@ physics_interval_t physics_circle_project(vector2_class_obj_t* a_pos, physics_sh
     mp_float_t dot = axis->x * a_pos->x + axis->y * a_pos->y;
     ret.min = dot - a->radius;
     ret.max = dot + a->radius;
+    ret.v_min_x = a_pos->x - axis->x * a->radius;
+    ret.v_min_y = a_pos->y - axis->y * a->radius;
+    ret.v_max_x = a_pos->x + axis->x * a->radius;
+    ret.v_max_y = a_pos->y + axis->y * a->radius;
     return ret;
 }
 
