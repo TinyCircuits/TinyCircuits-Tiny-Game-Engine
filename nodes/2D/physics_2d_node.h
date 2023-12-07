@@ -8,12 +8,12 @@
 
 typedef struct{
     mp_obj_t position;              // Vector2: 2d xy position of this node
-    mp_obj_t rotation;              // float (Current rotation angle)
+    mp_float_t rotation;              // float (Current rotation angle)
     mp_obj_t velocity;              // Vector2 (Absolute velocity)
     mp_obj_t acceleration;          // Vector2 (Reference acceleration)
     mp_float_t angular_velocity;    // float (Angular velocity)
     mp_float_t i_mass;              // float (inverse mass)
-    mp_float_t I_tensor;            // float (inertia tensor)
+    mp_float_t i_I;            // float (inverse inertia tensor)
     mp_obj_t dynamic;               // bool
     mp_obj_t physics_shape;         // Shape definition
 }engine_physics_2d_node_class_obj_t;

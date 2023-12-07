@@ -34,6 +34,109 @@ STATIC mp_obj_t physics_2d_node_class_tick(mp_obj_t self_in){
 }
 MP_DEFINE_CONST_FUN_OBJ_1(physics_2d_node_class_tick_obj, physics_2d_node_class_tick);
 
+STATIC mp_obj_t physics_2d_node_class_apply_impulse(mp_obj_t self_in, mp_obj_t impulse_in, mp_obj_t point_in){
+
+    const engine_node_base_t* self = self_in;
+    vector2_class_obj_t* impulse = impulse_in;
+    vector2_class_obj_t* point = point_in;
+
+    mp_float_t i_mass = mp_obj_get_float(mp_load_attr(self->attr_accessor, MP_QSTR_i_mass));
+    mp_float_t i_I = mp_obj_get_float(mp_load_attr(self->attr_accessor, MP_QSTR_i_I));
+    mp_float_t ang_vel = mp_obj_get_float(mp_load_attr(self->attr_accessor, MP_QSTR_angular_velocity));
+
+    vector2_class_obj_t* vel = MP_OBJ_TO_PTR(mp_load_attr(self->attr_accessor, MP_QSTR_velocity));
+    vector2_class_obj_t* pos = MP_OBJ_TO_PTR(mp_load_attr(self->attr_accessor, MP_QSTR_position));
+
+    vel->x += i_mass * impulse->x;
+    vel->y += i_mass * impulse->y;
+
+    ang_vel += i_I * ((point->x - pos->x) * impulse->y - (point->y - pos->y) * impulse->x);
+
+    mp_store_attr(self->attr_accessor, MP_QSTR_angular_velocity, mp_obj_new_float(ang_vel));
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_3(physics_2d_node_class_apply_impulse_obj, physics_2d_node_class_apply_impulse);
+
+STATIC mp_obj_t physics_2d_node_class_apply_manifold_impulse(mp_obj_t a_in, mp_obj_t b_in, physics_manifold_class_obj_t* manifold){
+    engine_node_base_t* a = a_in;
+    engine_node_base_t* b = b_in;
+
+    vector2_class_obj_t* a_pos = MP_OBJ_TO_PTR(mp_load_attr(a->attr_accessor, MP_QSTR_position));
+    vector2_class_obj_t* b_pos = MP_OBJ_TO_PTR(mp_load_attr(b->attr_accessor, MP_QSTR_position));
+
+    vector2_class_obj_t* a_vel = MP_OBJ_TO_PTR(mp_load_attr(a->attr_accessor, MP_QSTR_velocity));
+    vector2_class_obj_t* b_vel = MP_OBJ_TO_PTR(mp_load_attr(b->attr_accessor, MP_QSTR_velocity));
+
+    mp_float_t a_ang_vel = mp_obj_get_float(mp_load_attr(a->attr_accessor, MP_QSTR_angular_velocity));
+    mp_float_t b_ang_vel = mp_obj_get_float(mp_load_attr(b->attr_accessor, MP_QSTR_angular_velocity));
+
+    mp_float_t a_i_mass = mp_obj_get_float(mp_load_attr(a->attr_accessor, MP_QSTR_i_mass));
+    mp_float_t b_i_mass = mp_obj_get_float(mp_load_attr(b->attr_accessor, MP_QSTR_i_mass));
+    mp_float_t a_i_I = mp_obj_get_float(mp_load_attr(a->attr_accessor, MP_QSTR_i_I));
+    mp_float_t b_i_I = mp_obj_get_float(mp_load_attr(b->attr_accessor, MP_QSTR_i_I));
+
+    // Radii deltas
+    mp_float_t rax = manifold->con_x - a_pos->x;
+    mp_float_t ray = manifold->con_y - a_pos->y;
+
+    mp_float_t rbx = manifold->con_x - a_pos->x;
+    mp_float_t rby = manifold->con_y - a_pos->y;
+    // Relative velocity
+    mp_float_t rvx = b_vel->x - b_ang_vel * rbx - a_vel->x + a_ang_vel * rax;
+    mp_float_t rvy = b_vel->y + b_ang_vel * rby - a_vel->y - a_ang_vel * ray;
+
+    mp_float_t contact_vel = rvx * manifold->nrm_x + rvy * manifold->nrm_y;
+
+    if(contact_vel > 0) return; // Separating
+
+    // Replace with real restitution, eventually
+    const mp_float_t e = MICROPY_FLOAT_CONST(0.5);
+
+    mp_float_t ra_cross_n = rax * manifold->nrm_y - ray * manifold->nrm_x;
+    mp_float_t rb_cross_n = rbx * manifold->nrm_y - rby * manifold->nrm_x;
+    mp_float_t i_mass_sum = a_i_mass + b_i_mass + ra_cross_n*ra_cross_n*a_i_I + rb_cross_n*rb_cross_n*b_i_I;
+    mp_float_t j = -(1.0 + e) * contact_vel;
+    j /= i_mass_sum;
+
+    vector2_class_obj_t impulse_a = {{&vector2_class_type}, -manifold->nrm_x*j, -manifold->nrm_y*j};
+    vector2_class_obj_t impulse_b = {{&vector2_class_type}, manifold->nrm_x*j, manifold->nrm_y*j};
+    vector2_class_obj_t ra = {{&vector2_class_type}, rax, ray};
+    vector2_class_obj_t rb = {{&vector2_class_type}, rbx, rby};
+    // Apply normal impulses
+    physics_2d_node_class_apply_impulse(a_in, MP_OBJ_FROM_PTR(&impulse_a), MP_OBJ_FROM_PTR(&ra));
+    physics_2d_node_class_apply_impulse(b_in, MP_OBJ_FROM_PTR(&impulse_b), MP_OBJ_FROM_PTR(&rb));
+
+    a_vel = MP_OBJ_TO_PTR(mp_load_attr(a->attr_accessor, MP_QSTR_velocity));
+    b_vel = MP_OBJ_TO_PTR(mp_load_attr(b->attr_accessor, MP_QSTR_velocity));
+    a_ang_vel = mp_obj_get_float(mp_load_attr(a->attr_accessor, MP_QSTR_angular_velocity));
+    b_ang_vel = mp_obj_get_float(mp_load_attr(b->attr_accessor, MP_QSTR_angular_velocity));
+
+    rvx = b_vel->x - b_ang_vel * rbx - a_vel->x + a_ang_vel * rax;
+    rvy = b_vel->y + b_ang_vel * rby - a_vel->y - a_ang_vel * ray;
+
+    mp_float_t rvdotn = rvx * manifold->nrm_x + rvy * manifold->nrm_y;
+
+    vector2_class_obj_t t = {{&vector2_class_type}, rvx - rvdotn * manifold->nrm_x, rvy - rvdotn * manifold->nrm_y};
+
+    mp_float_t t_il = 1.0 / MICROPY_FLOAT_C_FUN(sqrt)(t.x*t.x + t.y*t.y);
+
+    t.x *= t_il;
+    t.y *= t_il;
+
+    mp_float_t jt = -(rvx*t.x + rvy*t.y);
+    jt /= i_mass_sum;
+
+    const mp_float_t f = MICROPY_FLOAT_CONST(0.25);
+
+    vector2_class_obj_t t_impulse_a = {{&vector2_class_type}, -t.x*jt, -t.y*jt};
+    vector2_class_obj_t t_impulse_b = {{&vector2_class_type}, t.x*jt, t.y*jt};
+
+    physics_2d_node_class_apply_impulse(a_in, MP_OBJ_FROM_PTR(&t_impulse_a), MP_OBJ_FROM_PTR(&ra));
+    physics_2d_node_class_apply_impulse(b_in, MP_OBJ_FROM_PTR(&t_impulse_b), MP_OBJ_FROM_PTR(&rb));
+
+    return mp_const_none;
+}
+
 STATIC mp_obj_t physics_2d_node_class_test(mp_obj_t self_in, mp_obj_t b_in){
     if(!mp_obj_is_type(self_in, &engine_physics_2d_node_class_type)){
         mp_raise_TypeError("expected physics node argument");
@@ -194,7 +297,7 @@ mp_obj_t physics_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
         common_data->draw_cb = MP_OBJ_FROM_PTR(&physics_2d_node_class_draw_obj);
 
         physics_2d_node->position = vector2_class_new(&vector2_class_type, 0, 0, NULL);
-        physics_2d_node->rotation = mp_obj_new_float(0.0f);
+        physics_2d_node->rotation = 0.0;
         physics_2d_node->velocity = vector2_class_new(&vector2_class_type, 0, 0, NULL);
         physics_2d_node->acceleration = vector2_class_new(&vector2_class_type, 0, 0, NULL);
         physics_2d_node->dynamic = mp_obj_new_bool(true);
@@ -270,7 +373,16 @@ STATIC void physics_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
                 destination[0] = self->position;
             break;
             case MP_QSTR_rotation:
-                destination[0] = self->rotation;
+                destination[0] = mp_obj_new_float(self->rotation);
+            break;
+            case MP_QSTR_angular_velocity:
+                destination[0] = mp_obj_new_float(self->angular_velocity);
+            break;
+            case MP_QSTR_i_mass:
+                destination[0] = mp_obj_new_float(self->i_mass);
+            break;
+            case MP_QSTR_i_I:
+                destination[0] = mp_obj_new_float(self->i_I);
             break;
             case MP_QSTR_velocity:
                 destination[0] = self->velocity;
@@ -293,7 +405,16 @@ STATIC void physics_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
                 self->position = destination[1];
             break;
             case MP_QSTR_rotation:
-                self->rotation = destination[1];
+                self->rotation = mp_obj_get_float(destination[1]);
+            break;
+            case MP_QSTR_angular_velocity:
+                self->angular_velocity = mp_obj_get_float(destination[1]);
+            break;
+            case MP_QSTR_i_mass:
+                self->i_mass = mp_obj_get_float(destination[1]);
+            break;
+            case MP_QSTR_i_I:
+                self->i_I = mp_obj_get_float(destination[1]);
             break;
             case MP_QSTR_velocity:
                 self->velocity = destination[1];

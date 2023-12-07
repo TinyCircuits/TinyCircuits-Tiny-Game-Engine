@@ -1,10 +1,13 @@
+#ifndef ENGINE_PHYSICS_SHAPE_TEST_H
+#define ENGINE_PHYSICS_SHAPE_TEST_H
+
 #include "engine_physics_shape_rectangle.h"
 #include "engine_physics_shape_circle.h"
 #include "engine_physics_shape_convex.h"
 #include "engine_physics_manifold.h"
 #include <math.h>
 
-void physics_rectangle_rectangle_test(vector2_class_obj_t* a_pos, physics_shape_rectangle_class_obj_t* a, vector2_class_obj_t* b_pos, physics_shape_rectangle_class_obj_t* b, physics_manifold_class_obj_t* m) {
+STATIC void physics_rectangle_rectangle_test(vector2_class_obj_t* a_pos, physics_shape_rectangle_class_obj_t* a, vector2_class_obj_t* b_pos, physics_shape_rectangle_class_obj_t* b, physics_manifold_class_obj_t* m) {
     //physics_manifold_class_obj_t ret = const_separated_manifold;
 
     mp_float_t dx1 = a_pos->x + a->width - b_pos->x;
@@ -47,7 +50,7 @@ void physics_rectangle_rectangle_test(vector2_class_obj_t* a_pos, physics_shape_
     }
 }
 
-void physics_circle_circle_test(vector2_class_obj_t* a_pos, physics_shape_circle_class_obj_t* a, vector2_class_obj_t* b_pos, physics_shape_circle_class_obj_t* b, physics_manifold_class_obj_t* m) {
+STATIC void physics_circle_circle_test(vector2_class_obj_t* a_pos, physics_shape_circle_class_obj_t* a, vector2_class_obj_t* b_pos, physics_shape_circle_class_obj_t* b, physics_manifold_class_obj_t* m) {
     // physics_manifold_class_obj_t ret = const_separated_manifold;
     mp_float_t dx = a_pos->x - b_pos->x;
     mp_float_t dy = a_pos->y - b_pos->y;
@@ -72,7 +75,7 @@ void physics_circle_circle_test(vector2_class_obj_t* a_pos, physics_shape_circle
     }
 }
 
-void physics_circle_rectangle_test(vector2_class_obj_t* a_pos, physics_shape_circle_class_obj_t* a, vector2_class_obj_t* b_pos, physics_shape_rectangle_class_obj_t* b, physics_manifold_class_obj_t* m) {
+STATIC void physics_circle_rectangle_test(vector2_class_obj_t* a_pos, physics_shape_circle_class_obj_t* a, vector2_class_obj_t* b_pos, physics_shape_rectangle_class_obj_t* b, physics_manifold_class_obj_t* m) {
     // physics_manifold_class_obj_t ret = const_separated_manifold;
 
     mp_float_t dx = a_pos->x - fmaxf(b_pos->x, fminf(a_pos->x, b_pos->x + b->width));
@@ -113,7 +116,7 @@ typedef struct physics_interval_t {
     mp_float_t v_max_y;
 } physics_interval_t;
 
-physics_interval_t physics_rectangle_project(vector2_class_obj_t* a_pos, physics_shape_rectangle_class_obj_t* a, vector2_class_obj_t* axis) {
+STATIC physics_interval_t physics_rectangle_project(vector2_class_obj_t* a_pos, physics_shape_rectangle_class_obj_t* a, vector2_class_obj_t* axis) {
     physics_interval_t ret = {INFINITY, -INFINITY, 0, 0};
     mp_float_t dot = axis->x * a_pos->x + axis->y * a_pos->y;
     // ret.min = fminf(ret.min, dot);
@@ -171,7 +174,7 @@ physics_interval_t physics_rectangle_project(vector2_class_obj_t* a_pos, physics
 
 }
 
-physics_interval_t physics_circle_project(vector2_class_obj_t* a_pos, physics_shape_circle_class_obj_t* a, vector2_class_obj_t* axis) {
+STATIC physics_interval_t physics_circle_project(vector2_class_obj_t* a_pos, physics_shape_circle_class_obj_t* a, vector2_class_obj_t* axis) {
     physics_interval_t ret = {INFINITY, -INFINITY, 0, 0};
     mp_float_t dot = axis->x * a_pos->x + axis->y * a_pos->y;
     ret.min = dot - a->radius;
@@ -183,7 +186,7 @@ physics_interval_t physics_circle_project(vector2_class_obj_t* a_pos, physics_sh
     return ret;
 }
 
-physics_interval_t physics_convex_project(vector2_class_obj_t* a_pos, physics_shape_convex_class_obj_t* a, vector2_class_obj_t* axis) {
+STATIC physics_interval_t physics_convex_project(vector2_class_obj_t* a_pos, physics_shape_convex_class_obj_t* a, vector2_class_obj_t* axis) {
     physics_interval_t ret = {INFINITY, -INFINITY, 0, 0};
     mp_obj_t* vs;
     size_t vs_len;
@@ -207,7 +210,7 @@ physics_interval_t physics_convex_project(vector2_class_obj_t* a_pos, physics_sh
     return ret;
 }
 
-void physics_convex_convex_test(vector2_class_obj_t* a_pos, physics_shape_convex_class_obj_t* a, vector2_class_obj_t* b_pos, physics_shape_convex_class_obj_t* b, physics_manifold_class_obj_t* m) {
+STATIC void physics_convex_convex_test(vector2_class_obj_t* a_pos, physics_shape_convex_class_obj_t* a, vector2_class_obj_t* b_pos, physics_shape_convex_class_obj_t* b, physics_manifold_class_obj_t* m) {
     mp_obj_t* b_ns;
     size_t b_ns_len;
     mp_obj_list_get(b->n_list, &b_ns_len, &b_ns);
@@ -286,7 +289,7 @@ void physics_convex_convex_test(vector2_class_obj_t* a_pos, physics_shape_convex
     m->mtv_y = min_overlap * m->nrm_y;
 }
 
-void physics_convex_circle_test(vector2_class_obj_t* a_pos, physics_shape_convex_class_obj_t* a, vector2_class_obj_t* b_pos, physics_shape_circle_class_obj_t* b, physics_manifold_class_obj_t* m) {
+STATIC void physics_convex_circle_test(vector2_class_obj_t* a_pos, physics_shape_convex_class_obj_t* a, vector2_class_obj_t* b_pos, physics_shape_circle_class_obj_t* b, physics_manifold_class_obj_t* m) {
 
     mp_obj_t* a_ns;
     size_t a_ns_len;
@@ -366,7 +369,7 @@ void physics_convex_circle_test(vector2_class_obj_t* a_pos, physics_shape_convex
     } else *m = const_separated_manifold;
 }
 
-void physics_convex_rectangle_test(vector2_class_obj_t* a_pos, physics_shape_convex_class_obj_t* a, vector2_class_obj_t* b_pos, physics_shape_rectangle_class_obj_t* b, physics_manifold_class_obj_t* m) {
+STATIC void physics_convex_rectangle_test(vector2_class_obj_t* a_pos, physics_shape_convex_class_obj_t* a, vector2_class_obj_t* b_pos, physics_shape_rectangle_class_obj_t* b, physics_manifold_class_obj_t* m) {
 
     mp_obj_t* a_ns;
     size_t a_ns_len;
@@ -443,3 +446,5 @@ void physics_convex_rectangle_test(vector2_class_obj_t* a_pos, physics_shape_con
     m->mtv_x = min_overlap * m->nrm_x;
     m->mtv_y = min_overlap * m->nrm_y;
 }
+
+#endif // ENGINE_PHYSICS_SHAPE_TEST_H
