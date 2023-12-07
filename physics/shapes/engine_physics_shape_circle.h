@@ -6,7 +6,6 @@
 typedef struct{
     mp_obj_base_t base;
     mp_float_t radius;
-    void *physics_shape_circle;
 }physics_shape_circle_class_obj_t;
 
 extern const mp_obj_type_t physics_shape_circle_class_type;

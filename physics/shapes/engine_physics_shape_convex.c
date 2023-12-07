@@ -16,6 +16,10 @@ mp_obj_t physics_shape_convex_class_new(const mp_obj_type_t *type, size_t n_args
     physics_shape_convex_class_obj_t *self = m_new_obj(physics_shape_convex_class_obj_t);
 
     self->base.type = &physics_shape_convex_class_type;
+    self->I = 0.0;
+    self->area = 0.0;
+    self->center = m_new_obj(vector2_class_obj_t);
+    ((vector2_class_obj_t*)self->center)->base.type = &vector2_class_type;
 
     if(n_args == 0){
         self->v_list = mp_obj_new_list(0, NULL);
@@ -24,6 +28,8 @@ mp_obj_t physics_shape_convex_class_new(const mp_obj_type_t *type, size_t n_args
         if(mp_obj_is_type(args[0], &mp_type_list)) {
             self->v_list = args[0];
             self->base.type = &physics_shape_convex_class_type;
+            physics_shape_convex_class_compute_normals(MP_OBJ_FROM_PTR(self));
+            physics_shape_convex_class_compute_all(MP_OBJ_FROM_PTR(self));
         } else {
             mp_raise_TypeError("Expected vertex list argument");
         }
@@ -34,7 +40,6 @@ mp_obj_t physics_shape_convex_class_new(const mp_obj_type_t *type, size_t n_args
     return MP_OBJ_FROM_PTR(self);
 }
 
-// Set vector to be the same size as another vector or length
 STATIC mp_obj_t physics_shape_convex_class_compute_normals(mp_obj_t self_in){
 
     physics_shape_convex_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
@@ -77,6 +82,70 @@ STATIC mp_obj_t physics_shape_convex_class_compute_normals(mp_obj_t self_in){
 }
 MP_DEFINE_CONST_FUN_OBJ_1(physics_shape_convex_class_compute_normals_obj, physics_shape_convex_class_compute_normals);
 
+STATIC mp_obj_t physics_shape_convex_class_compute_all(mp_obj_t self_in){
+
+    physics_shape_convex_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
+
+    mp_obj_t* vs;
+    size_t vs_len;
+    mp_obj_list_get(self->v_list, &vs_len, &vs);
+
+    vector2_class_obj_t* center = MP_OBJ_TO_PTR(self->center);
+
+    center->x = 0.0;
+    center->y = 0.0;
+    mp_float_t area = 0.0;
+    mp_float_t I = 0.0;
+
+    const mp_float_t inv3 = MICROPY_FLOAT_CONST(1.0/3.0);
+
+    vector2_class_obj_t* s = MP_OBJ_TO_PTR(vs[0]);
+
+    for(int i = 0; i < vs_len; ++i) {
+        vector2_class_obj_t* vi = MP_OBJ_TO_PTR(vs[i]);
+        vector2_class_obj_t* vi2;
+
+        mp_float_t e1x = vi->x - s->x;
+        mp_float_t e1y = vi->y - s->y;
+
+        if(i + 1 < vs_len) vi2 = MP_OBJ_TO_PTR(vs[i+1]);
+        else vi2 = MP_OBJ_TO_PTR(vs[0]);
+
+        mp_float_t e2x = vi2->x - s->x;
+        mp_float_t e2y = vi2->y - s->y;
+
+        mp_float_t D = e1x*e2y - e2x*e1y;
+        mp_float_t t_area = D * 0.5;
+
+        area += t_area;
+
+        center->x += t_area * inv3 * (e1x + e2x);
+        center->y += t_area * inv3 * (e1y + e2y);
+
+        mp_float_t ix2 = e1x*e1x + e2x*e1x + e2x*e2x;
+        mp_float_t iy2 = e1y*e1y + e2y*e1y + e2y*e2y;
+
+        I += (0.25 * inv3 * D) * (ix2 + iy2);
+    }
+
+    self->area = area;
+    self->I = I;
+
+    mp_float_t inv_area = 1.0/area;
+
+    center->x *= inv_area;
+    center->y *= inv_area;
+
+    center->x += s->x;
+    center->y += s->y;
+
+    // self->I += area * (center->x * center->x - (center->x - s->x) * (center->x - s->x) + center->y * center->y - (center->y - s->y) * (center->y - s->y));
+    self->I += area * (s->x*(2*center->x - s->x) + s->y*(2*center->y - s->y));
+
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_1(physics_shape_convex_class_compute_all_obj, physics_shape_convex_class_compute_all);
+
 
 // Class methods
 STATIC void physics_shape_convex_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
@@ -89,11 +158,24 @@ STATIC void physics_shape_convex_class_attr(mp_obj_t self_in, qstr attribute, mp
             case MP_QSTR_v_list:
                 destination[0] = self->v_list;
             break;
+            case MP_QSTR_I:
+                destination[0] = mp_obj_new_float(self->I);
+            break;
+            case MP_QSTR_area:
+                destination[0] = mp_obj_new_float(self->area);
+            break;
+            case MP_QSTR_center:
+                destination[0] = self->center;
+            break;
             case MP_QSTR_n_list:
                 destination[0] = self->n_list;
             break;
             case MP_QSTR_compute_normals:
                 destination[0] = MP_OBJ_FROM_PTR(&physics_shape_convex_class_compute_normals_obj);
+                destination[1] = self_in;
+            break;
+            case MP_QSTR_compute_all:
+                destination[0] = MP_OBJ_FROM_PTR(&physics_shape_convex_class_compute_all_obj);
                 destination[1] = self_in;
             break;
             default:
@@ -106,6 +188,15 @@ STATIC void physics_shape_convex_class_attr(mp_obj_t self_in, qstr attribute, mp
             break;
             case MP_QSTR_n_list:
                 self->n_list = destination[1];
+            break;
+            case MP_QSTR_I:
+                self->I = mp_obj_get_float(destination[1]);
+            break;
+            case MP_QSTR_area:
+                self->area = mp_obj_get_float(destination[1]);
+            break;
+            case MP_QSTR_center:
+                self->center = destination[1];
             break;
         default:
             return; // Fail
