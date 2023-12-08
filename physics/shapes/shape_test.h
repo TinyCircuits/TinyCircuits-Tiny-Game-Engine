@@ -190,7 +190,7 @@ STATIC physics_interval_t physics_convex_project(vector2_class_obj_t* a_pos, phy
     physics_interval_t ret = {INFINITY, -INFINITY, 0, 0};
     mp_obj_t* vs;
     size_t vs_len;
-    mp_obj_list_get(a->v_list, &vs_len, &vs);
+    mp_obj_list_get(a->v_t_list, &vs_len, &vs);
     for(int i = 0; i < vs_len; i++) {
         vector2_class_obj_t* v = MP_OBJ_TO_PTR(vs[i]);
         mp_float_t dot = (v->x + a_pos->x) * axis->x + (v->y + a_pos->y) * axis->y;
@@ -213,19 +213,19 @@ STATIC physics_interval_t physics_convex_project(vector2_class_obj_t* a_pos, phy
 STATIC void physics_convex_convex_test(vector2_class_obj_t* a_pos, physics_shape_convex_class_obj_t* a, vector2_class_obj_t* b_pos, physics_shape_convex_class_obj_t* b, physics_manifold_class_obj_t* m) {
     mp_obj_t* b_ns;
     size_t b_ns_len;
-    mp_obj_list_get(b->n_list, &b_ns_len, &b_ns);
+    mp_obj_list_get(b->n_t_list, &b_ns_len, &b_ns);
 
     mp_obj_t* b_vs;
     size_t b_vs_len;
-    mp_obj_list_get(b->v_list, &b_vs_len, &b_vs);
+    mp_obj_list_get(b->v_t_list, &b_vs_len, &b_vs);
 
     mp_obj_t* a_ns;
     size_t a_ns_len;
-    mp_obj_list_get(a->n_list, &a_ns_len, &a_ns);
+    mp_obj_list_get(a->n_t_list, &a_ns_len, &a_ns);
 
     mp_obj_t* a_vs;
     size_t a_vs_len;
-    mp_obj_list_get(a->v_list, &a_vs_len, &a_vs);
+    mp_obj_list_get(a->v_t_list, &a_vs_len, &a_vs);
     mp_float_t min_overlap = INFINITY;
 
     // Project all of A's vertices onto B's surface normals
@@ -293,11 +293,11 @@ STATIC void physics_convex_circle_test(vector2_class_obj_t* a_pos, physics_shape
 
     mp_obj_t* a_ns;
     size_t a_ns_len;
-    mp_obj_list_get(a->n_list, &a_ns_len, &a_ns);
+    mp_obj_list_get(a->n_t_list, &a_ns_len, &a_ns);
 
     mp_obj_t* a_vs;
     size_t a_vs_len;
-    mp_obj_list_get(a->v_list, &a_vs_len, &a_vs);
+    mp_obj_list_get(a->v_t_list, &a_vs_len, &a_vs);
     mp_float_t min_overlap = INFINITY;
 
     // Circles have infinitely many surface normals, so just use the directions from the center to the closest vertex on A
@@ -391,11 +391,11 @@ STATIC void physics_convex_rectangle_test(vector2_class_obj_t* a_pos, physics_sh
 
     mp_obj_t* a_ns;
     size_t a_ns_len;
-    mp_obj_list_get(a->n_list, &a_ns_len, &a_ns);
+    mp_obj_list_get(a->n_t_list, &a_ns_len, &a_ns);
 
     mp_obj_t* a_vs;
     size_t a_vs_len;
-    mp_obj_list_get(a->v_list, &a_vs_len, &a_vs);
+    mp_obj_list_get(a->v_t_list, &a_vs_len, &a_vs);
     mp_float_t min_overlap = INFINITY;
 
     // Project all of A's vertices onto B's surface normals

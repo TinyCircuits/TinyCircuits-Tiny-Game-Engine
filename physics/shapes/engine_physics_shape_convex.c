@@ -28,8 +28,11 @@ mp_obj_t physics_shape_convex_class_new(const mp_obj_type_t *type, size_t n_args
         if(mp_obj_is_type(args[0], &mp_type_list)) {
             self->v_list = args[0];
             self->base.type = &physics_shape_convex_class_type;
+            vector2_class_obj_t t = {{&vector2_class_type}, (mp_float_t)(0.0), (mp_float_t)0.0};
+            vector2_class_obj_t r = {{&vector2_class_type}, (mp_float_t)(0.0), (mp_float_t)1.0};
             physics_shape_convex_class_compute_normals(MP_OBJ_FROM_PTR(self));
             physics_shape_convex_class_compute_all(MP_OBJ_FROM_PTR(self));
+            physics_shape_convex_class_compute_transform(MP_OBJ_FROM_PTR(self), &t, &r);
         } else {
             mp_raise_TypeError("Expected vertex list argument");
         }
@@ -146,6 +149,48 @@ STATIC mp_obj_t physics_shape_convex_class_compute_all(mp_obj_t self_in){
 }
 MP_DEFINE_CONST_FUN_OBJ_1(physics_shape_convex_class_compute_all_obj, physics_shape_convex_class_compute_all);
 
+STATIC mp_obj_t physics_shape_convex_class_compute_transform(mp_obj_t self_in, mp_obj_t translate_in, mp_obj_t rot_in){
+
+    physics_shape_convex_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
+
+    mp_obj_t* vs;
+    size_t vs_len;
+    mp_obj_list_get(self->v_list, &vs_len, &vs);
+
+    mp_obj_t* ns;
+    size_t ns_len;
+    mp_obj_list_get(self->n_list, &ns_len, &ns);
+
+    vector2_class_obj_t* translate = MP_OBJ_TO_PTR(translate_in);
+    vector2_class_obj_t* rot = MP_OBJ_TO_PTR(rot_in);
+
+    mp_obj_t vs_t[vs_len];
+    mp_obj_t ns_t[vs_len];
+
+    for(int i = 0; i < vs_len; i++) {
+        vector2_class_obj_t* v = MP_OBJ_TO_PTR(vs[i]);
+        vector2_class_obj_t* n = MP_OBJ_TO_PTR(ns[i]);
+
+        vs_t[i] = m_new_obj(vector2_class_obj_t);
+        vector2_class_obj_t* v_t = MP_OBJ_TO_PTR(vs_t[i]);
+        v_t->base.type = &vector2_class_type;
+        v_t->x = (v->x * rot->y - v->y * rot->x) + translate->x;
+        v_t->y = (v->y * rot->y + v->x * rot->x) + translate->y;
+
+        ns_t[i] = m_new_obj(vector2_class_obj_t);
+        vector2_class_obj_t* n_t = MP_OBJ_TO_PTR(vs_t[i]);
+        n_t->base.type = &vector2_class_type;
+        n_t->x = (n->x * rot->y - n->y * rot->x);
+        n_t->y = (n->y * rot->y + n->x * rot->x);
+    }
+
+    self->v_t_list = mp_obj_new_list(vs_len, vs_t);
+    self->n_t_list = mp_obj_new_list(vs_len, ns_t);
+
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_3(physics_shape_convex_class_compute_transform_obj, physics_shape_convex_class_compute_transform);
+
 
 // Class methods
 STATIC void physics_shape_convex_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
@@ -176,6 +221,10 @@ STATIC void physics_shape_convex_class_attr(mp_obj_t self_in, qstr attribute, mp
             break;
             case MP_QSTR_compute_all:
                 destination[0] = MP_OBJ_FROM_PTR(&physics_shape_convex_class_compute_all_obj);
+                destination[1] = self_in;
+            break;
+            case MP_QSTR_compute_transform:
+                destination[0] = MP_OBJ_FROM_PTR(&physics_shape_convex_class_compute_transform_obj);
                 destination[1] = self_in;
             break;
             default:

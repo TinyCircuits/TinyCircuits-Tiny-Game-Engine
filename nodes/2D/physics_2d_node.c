@@ -95,7 +95,7 @@ STATIC mp_obj_t physics_2d_node_class_apply_manifold_impulse(mp_obj_t a_in, mp_o
     if(contact_vel > 0) return; // Separating
 
     // Mix restitution
-    const mp_float_t e = MICROPY_FLOAT_C_FUN(max)(a_restitution, b_restitution);
+    const mp_float_t e = MICROPY_FLOAT_C_FUN(fmax)(a_restitution, b_restitution);
 
     mp_float_t ra_cross_n = rax * manifold->nrm_y - ray * manifold->nrm_x;
     mp_float_t rb_cross_n = rbx * manifold->nrm_y - rby * manifold->nrm_x;
@@ -142,6 +142,7 @@ STATIC mp_obj_t physics_2d_node_class_apply_manifold_impulse(mp_obj_t a_in, mp_o
 
     return mp_const_none;
 }
+MP_DEFINE_CONST_FUN_OBJ_3(physics_2d_node_class_apply_manifold_impulse_obj, physics_2d_node_class_apply_manifold_impulse);
 
 STATIC mp_obj_t physics_2d_node_class_test(mp_obj_t self_in, mp_obj_t b_in){
     if(!mp_obj_is_type(self_in, &engine_physics_2d_node_class_type)){
@@ -373,6 +374,14 @@ STATIC void physics_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
             break;
             case MP_QSTR_test:
                 destination[0] = MP_OBJ_FROM_PTR(&physics_2d_node_class_test_obj);
+                destination[1] = self_in;
+            break;
+            case MP_QSTR_apply_impulse:
+                destination[0] = MP_OBJ_FROM_PTR(&physics_2d_node_class_apply_impulse_obj);
+                destination[1] = self_in;
+            break;
+            case MP_QSTR_apply_manifold_impulse:
+                destination[0] = MP_OBJ_FROM_PTR(&physics_2d_node_class_apply_manifold_impulse_obj);
                 destination[1] = self_in;
             break;
             case MP_QSTR_position:
