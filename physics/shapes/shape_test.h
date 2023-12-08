@@ -300,38 +300,56 @@ STATIC void physics_convex_circle_test(vector2_class_obj_t* a_pos, physics_shape
     mp_obj_list_get(a->v_list, &a_vs_len, &a_vs);
     mp_float_t min_overlap = INFINITY;
 
-    // Circles have infinitely many surface normals, so just use the directions from the center to all the points on A
-    for(int i = 0; i < a_vs_len; i++) {
+    // Circles have infinitely many surface normals, so just use the directions from the center to the closest vertex on A
+    if(a_vs_len < 1) {*m = const_separated_manifold; return; }
+    vector2_class_obj_t* closest_v = MP_OBJ_TO_PTR(a_vs[0]);
+    mp_float_t dx = closest_v->x - b_pos->x;
+    mp_float_t dy = closest_v->y - b_pos->y;
+    mp_float_t min_dist2 = dx*dx+dy*dy;
+    if(min_dist2 == 0.0) min_dist2 = INFINITY;
+    for(int i = 1; i < a_vs_len; i++) {
+        ENGINE_INFO_PRINTF("Current closest point is (%f, %f) with mindist2 of %f\n\r", closest_v->x, closest_v->y, min_dist2);
         vector2_class_obj_t* a_v = MP_OBJ_TO_PTR(a_vs[i]);
-        vector2_class_obj_t n;
-        n.x = a_v->x - b_pos->x;
-        n.y = a_v->y - b_pos->y;
-        mp_float_t il = 1.0 / MICROPY_FLOAT_C_FUN(sqrt)(n.x*n.x + n.y*n.y);
-        n.x *= il;
-        n.y *= il;
-        physics_interval_t a_proj = physics_convex_project(a_pos, a, &n);
-        physics_interval_t b_proj = physics_circle_project(b_pos, b, &n);
-        if(a_proj.max < b_proj.min || a_proj.min > b_proj.max) {
-            // Separating axis!
-            *m = const_separated_manifold;
-            return;
-        } else {
-            if(a_proj.max - b_proj.min < min_overlap) {
-                // A's most extant point along the axis is in B
-                min_overlap = a_proj.max - b_proj.min;
-                m->nrm_x = -n.x;
-                m->nrm_y = -n.y;
-                m->con_x = a_proj.v_max_x;
-                m->con_y = a_proj.v_max_y;
-            }
-            if(b_proj.max - a_proj.min < min_overlap) {
-                // A's least extant point along the axis is in B
-                min_overlap = b_proj.max - a_proj.min;
-                m->nrm_x = -n.x;
-                m->nrm_y = -n.y;
-                m->con_x = a_proj.v_min_x;
-                m->con_y = a_proj.v_min_y;
-            }
+        ENGINE_INFO_PRINTF("v is (%f, %f)\n\r", a_v->x, a_v->y);
+        dx = a_v->x - b_pos->x;
+        dy = a_v->y - b_pos->y;
+        ENGINE_INFO_PRINTF("dx is (%f, %f)\n\r", dx, dy);
+        mp_float_t dist = dx*dx + dy*dy;
+        if(dist < min_dist2 && dist != 0.0) {
+            min_dist2 = dist;
+            closest_v = a_v;
+        }
+    }
+    ENGINE_INFO_PRINTF("Closest point is (%f, %f) with mindist2 of %f\n\r", closest_v->x, closest_v->y, min_dist2);
+
+    vector2_class_obj_t n;
+    n.x = closest_v->x - b_pos->x;
+    n.y = closest_v->y - b_pos->y;
+    mp_float_t il = 1.0 / MICROPY_FLOAT_C_FUN(sqrt)(n.x*n.x + n.y*n.y);
+    n.x *= il;
+    n.y *= il;
+    physics_interval_t a_proj = physics_convex_project(a_pos, a, &n);
+    physics_interval_t b_proj = physics_circle_project(b_pos, b, &n);
+    if(a_proj.max < b_proj.min || a_proj.min > b_proj.max) {
+        // Separating axis!
+        *m = const_separated_manifold;
+        return;
+    } else {
+        if(a_proj.max - b_proj.min < min_overlap) {
+            // A's most extant point along the axis is in B
+            min_overlap = a_proj.max - b_proj.min;
+            m->nrm_x = -n.x;
+            m->nrm_y = -n.y;
+            m->con_x = a_proj.v_max_x;
+            m->con_y = a_proj.v_max_y;
+        }
+        if(b_proj.max - a_proj.min < min_overlap) {
+            // A's least extant point along the axis is in B
+            min_overlap = b_proj.max - a_proj.min;
+            m->nrm_x = -n.x;
+            m->nrm_y = -n.y;
+            m->con_x = a_proj.v_min_x;
+            m->con_y = a_proj.v_min_y;
         }
     }
 
