@@ -197,13 +197,13 @@ STATIC physics_interval_t physics_convex_project(vector2_class_obj_t* a_pos, phy
         //ret.min = fminf(ret.min, dot);
         if(dot < ret.min) {
             ret.min = dot;
-            ret.v_min_x = v->x;
-            ret.v_min_y = v->y;
+            ret.v_min_x = v->x + a_pos->x;
+            ret.v_min_y = v->y + a_pos->y;
         }
         if(dot > ret.max) {
             ret.max = dot;
-            ret.v_max_x = v->x;
-            ret.v_max_y = v->y;
+            ret.v_max_x = v->x + a_pos->x;
+            ret.v_max_y = v->y + a_pos->y;
         }
         //ret.max = fmaxf(ret.max, dot);
     }

@@ -75,6 +75,11 @@ STATIC mp_obj_t physics_2d_node_class_apply_manifold_impulse(mp_obj_t a_in, mp_o
     mp_float_t a_i_I = mp_obj_get_float(mp_load_attr(a->attr_accessor, MP_QSTR_i_I));
     mp_float_t b_i_I = mp_obj_get_float(mp_load_attr(b->attr_accessor, MP_QSTR_i_I));
 
+    mp_float_t a_restitution = mp_obj_get_float(mp_load_attr(a->attr_accessor, MP_QSTR_restitution));
+    mp_float_t b_restitution = mp_obj_get_float(mp_load_attr(b->attr_accessor, MP_QSTR_restitution));
+    mp_float_t a_friction = mp_obj_get_float(mp_load_attr(a->attr_accessor, MP_QSTR_friction));
+    mp_float_t b_friction = mp_obj_get_float(mp_load_attr(b->attr_accessor, MP_QSTR_friction));
+
     // Radii deltas
     mp_float_t rax = manifold->con_x - a_pos->x;
     mp_float_t ray = manifold->con_y - a_pos->y;
@@ -89,8 +94,8 @@ STATIC mp_obj_t physics_2d_node_class_apply_manifold_impulse(mp_obj_t a_in, mp_o
 
     if(contact_vel > 0) return; // Separating
 
-    // Replace with real restitution, eventually
-    const mp_float_t e = MICROPY_FLOAT_CONST(0.5);
+    // Mix restitution
+    const mp_float_t e = MICROPY_FLOAT_C_FUN(max)(a_restitution, b_restitution);
 
     mp_float_t ra_cross_n = rax * manifold->nrm_y - ray * manifold->nrm_x;
     mp_float_t rb_cross_n = rbx * manifold->nrm_y - rby * manifold->nrm_x;
@@ -126,7 +131,8 @@ STATIC mp_obj_t physics_2d_node_class_apply_manifold_impulse(mp_obj_t a_in, mp_o
     mp_float_t jt = -(rvx*t.x + rvy*t.y);
     jt /= i_mass_sum;
 
-    const mp_float_t f = MICROPY_FLOAT_CONST(0.25);
+    // Replace with real friction, eventually
+    const mp_float_t f = MICROPY_FLOAT_C_FUN(sqrt)(a_friction * b_friction);
 
     vector2_class_obj_t t_impulse_a = {{&vector2_class_type}, -t.x*jt, -t.y*jt};
     vector2_class_obj_t t_impulse_b = {{&vector2_class_type}, t.x*jt, t.y*jt};
@@ -384,6 +390,12 @@ STATIC void physics_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
             case MP_QSTR_i_I:
                 destination[0] = mp_obj_new_float(self->i_I);
             break;
+            case MP_QSTR_restitution:
+                destination[0] = mp_obj_new_float(self->restitution);
+            break;
+            case MP_QSTR_friction:
+                destination[0] = mp_obj_new_float(self->friction);
+            break;
             case MP_QSTR_velocity:
                 destination[0] = self->velocity;
             break;
@@ -415,6 +427,12 @@ STATIC void physics_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
             break;
             case MP_QSTR_i_I:
                 self->i_I = mp_obj_get_float(destination[1]);
+            break;
+            case MP_QSTR_restitution:
+                self->restitution = mp_obj_get_float(destination[1]);
+            break;
+            case MP_QSTR_friction:
+                self->friction = mp_obj_get_float(destination[1]);
             break;
             case MP_QSTR_velocity:
                 self->velocity = destination[1];

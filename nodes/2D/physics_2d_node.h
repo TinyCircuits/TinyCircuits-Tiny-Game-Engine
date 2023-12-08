@@ -14,6 +14,8 @@ typedef struct{
     mp_float_t angular_velocity;    // float (Angular velocity)
     mp_float_t i_mass;              // float (inverse mass)
     mp_float_t i_I;            // float (inverse inertia tensor)
+    mp_float_t restitution;         // float (restitution coefficient)
+    mp_float_t friction;         // float (simple friction coefficient)
     mp_obj_t dynamic;               // bool
     mp_obj_t physics_shape;         // Shape definition
 }engine_physics_2d_node_class_obj_t;
