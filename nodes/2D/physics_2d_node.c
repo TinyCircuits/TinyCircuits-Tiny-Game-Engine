@@ -131,7 +131,7 @@ STATIC mp_obj_t physics_2d_node_class_apply_manifold_impulse(mp_obj_t a_in, mp_o
     mp_float_t jt = -(rvx*t.x + rvy*t.y);
     jt /= i_mass_sum;
 
-    // Replace with real friction, eventually
+    // Mix friction coefficients
     const mp_float_t f = MICROPY_FLOAT_C_FUN(sqrt)(a_friction * b_friction);
 
     vector2_class_obj_t t_impulse_a = {{&vector2_class_type}, -t.x*jt, -t.y*jt};
@@ -230,6 +230,40 @@ STATIC mp_obj_t physics_2d_node_class_test(mp_obj_t self_in, mp_obj_t b_in){
     return MP_OBJ_FROM_PTR(ret);
 }
 MP_DEFINE_CONST_FUN_OBJ_2(physics_2d_node_class_test_obj, physics_2d_node_class_test);
+
+STATIC mp_obj_t physics_2d_node_class_compute_mass(mp_obj_t self_in, mp_obj_t density_in){
+    if(!mp_obj_is_type(self_in, &engine_physics_2d_node_class_type)){
+        mp_raise_TypeError("expected physics node argument");
+    }
+
+    const engine_node_base_t* self = MP_OBJ_TO_PTR(self_in);
+
+    mp_obj_t a_shape = mp_load_attr(self->attr_accessor, MP_QSTR_physics_shape);
+    const mp_float_t density = mp_obj_get_float(density_in);
+
+    if(mp_obj_is_type(a_shape, &physics_shape_rectangle_class_type)){
+        physics_shape_rectangle_class_obj_t* rect = MP_OBJ_TO_PTR(a_shape);
+        mp_float_t mass = rect->width * rect->height * density;
+        mp_store_attr(self->attr_accessor, MP_QSTR_i_mass, mp_obj_new_float(1.0/mass));
+        mp_store_attr(self->attr_accessor, MP_QSTR_i_I, mp_obj_new_float(1.0));
+    } else if(mp_obj_is_type(a_shape, &physics_shape_circle_class_type)) {
+        physics_shape_circle_class_obj_t* c = MP_OBJ_TO_PTR(a_shape);
+        mp_float_t r2 = c->radius * c->radius;
+        mp_float_t mass = M_PI * r2 * density;
+        mp_store_attr(self->attr_accessor, MP_QSTR_i_mass, mp_obj_new_float(1.0/mass));
+        mp_store_attr(self->attr_accessor, MP_QSTR_i_I, mp_obj_new_float(1.0/(M_PI*r2*r2)));
+    } else if(mp_obj_is_type(a_shape, &physics_shape_convex_class_type)) {
+        physics_shape_convex_class_obj_t* convex = MP_OBJ_TO_PTR(a_shape);
+        mp_float_t mass = convex->area * density;
+        mp_store_attr(self->attr_accessor, MP_QSTR_i_mass, mp_obj_new_float(1.0/mass));
+        mp_store_attr(self->attr_accessor, MP_QSTR_i_I, mp_obj_new_float(1.0/(convex->I)));
+    } else {
+        mp_raise_TypeError("Unknown shape of A");
+    }
+
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_2(physics_2d_node_class_compute_mass_obj, physics_2d_node_class_compute_mass);
 
 
 STATIC mp_obj_t physics_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
@@ -374,6 +408,10 @@ STATIC void physics_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
             break;
             case MP_QSTR_test:
                 destination[0] = MP_OBJ_FROM_PTR(&physics_2d_node_class_test_obj);
+                destination[1] = self_in;
+            break;
+            case MP_QSTR_compute_mass:
+                destination[0] = MP_OBJ_FROM_PTR(&physics_2d_node_class_compute_mass_obj);
                 destination[1] = self_in;
             break;
             case MP_QSTR_apply_impulse:
