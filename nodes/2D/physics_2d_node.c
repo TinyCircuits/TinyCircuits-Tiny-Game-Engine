@@ -47,8 +47,12 @@ STATIC mp_obj_t physics_2d_node_class_apply_impulse(mp_obj_t self_in, mp_obj_t i
     vector2_class_obj_t* vel = MP_OBJ_TO_PTR(mp_load_attr(self->attr_accessor, MP_QSTR_velocity));
     vector2_class_obj_t* pos = MP_OBJ_TO_PTR(mp_load_attr(self->attr_accessor, MP_QSTR_position));
 
+    ENGINE_INFO_PRINTF("Vel before collision: %f, %f", vel->x, vel->y);
+
     vel->x += i_mass * impulse->x;
     vel->y += i_mass * impulse->y;
+
+    ENGINE_INFO_PRINTF("Vel after collision: %f, %f", vel->x, vel->y);
 
     ang_vel += i_I * ((point->x - pos->x) * impulse->y - (point->y - pos->y) * impulse->x);
 
