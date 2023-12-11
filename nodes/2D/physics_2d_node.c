@@ -338,7 +338,12 @@ mp_obj_t physics_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
         common_data->draw_cb = MP_OBJ_FROM_PTR(&physics_2d_node_class_draw_obj);
 
         physics_2d_node->position = vector2_class_new(&vector2_class_type, 0, 0, NULL);
-        physics_2d_node->rotation = 0.0;
+        physics_2d_node->rotation = mp_obj_new_float(0.0);
+        physics_2d_node->angular_velocity = mp_obj_new_float(0.0);
+        physics_2d_node->i_mass = mp_obj_new_float(1.0);
+        physics_2d_node->i_I = mp_obj_new_float(1.0);
+        physics_2d_node->restitution = mp_obj_new_float(0.3);
+        physics_2d_node->friction = mp_obj_new_float(0.3);
         physics_2d_node->velocity = vector2_class_new(&vector2_class_type, 0, 0, NULL);
         physics_2d_node->acceleration = vector2_class_new(&vector2_class_type, 0, 0, NULL);
         physics_2d_node->dynamic = mp_obj_new_bool(true);
@@ -426,22 +431,22 @@ STATIC void physics_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
                 destination[0] = self->position;
             break;
             case MP_QSTR_rotation:
-                destination[0] = mp_obj_new_float(self->rotation);
+                destination[0] = self->rotation;
             break;
             case MP_QSTR_angular_velocity:
-                destination[0] = mp_obj_new_float(self->angular_velocity);
+                destination[0] = self->angular_velocity;
             break;
             case MP_QSTR_i_mass:
-                destination[0] = mp_obj_new_float(self->i_mass);
+                destination[0] = self->i_mass;
             break;
             case MP_QSTR_i_I:
-                destination[0] = mp_obj_new_float(self->i_I);
+                destination[0] = self->i_I;
             break;
             case MP_QSTR_restitution:
-                destination[0] = mp_obj_new_float(self->restitution);
+                destination[0] = self->restitution;
             break;
             case MP_QSTR_friction:
-                destination[0] = mp_obj_new_float(self->friction);
+                destination[0] = self->friction;
             break;
             case MP_QSTR_velocity:
                 destination[0] = self->velocity;
@@ -464,22 +469,22 @@ STATIC void physics_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
                 self->position = destination[1];
             break;
             case MP_QSTR_rotation:
-                self->rotation = mp_obj_get_float(destination[1]);
+                self->rotation = destination[1];
             break;
             case MP_QSTR_angular_velocity:
-                self->angular_velocity = mp_obj_get_float(destination[1]);
+                self->angular_velocity = destination[1];
             break;
             case MP_QSTR_i_mass:
-                self->i_mass = mp_obj_get_float(destination[1]);
+                self->i_mass = destination[1];
             break;
             case MP_QSTR_i_I:
-                self->i_I = mp_obj_get_float(destination[1]);
+                self->i_I = destination[1];
             break;
             case MP_QSTR_restitution:
-                self->restitution = mp_obj_get_float(destination[1]);
+                self->restitution = destination[1];
             break;
             case MP_QSTR_friction:
-                self->friction = mp_obj_get_float(destination[1]);
+                self->friction = destination[1];
             break;
             case MP_QSTR_velocity:
                 self->velocity = destination[1];
