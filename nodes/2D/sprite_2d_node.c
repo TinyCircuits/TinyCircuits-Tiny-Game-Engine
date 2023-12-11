@@ -10,8 +10,8 @@
 #include "resources/engine_texture_resource.h"
 #include <fcntl.h>
 
-#include "pico/stdlib.h"
-#include "hardware/flash.h"
+// #include "pico/stdlib.h"
+// #include "hardware/flash.h"
 
 // Class required functions
 STATIC void sprite_2d_node_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
@@ -36,19 +36,19 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
 
     // vector2_class_obj_t *position = mp_load_attr(self_in, MP_QSTR_position);
 
-    texture_resource_class_obj_t *texture_resource = mp_load_attr(self_in, MP_QSTR_texture_resource);
-    int width = mp_obj_get_int(texture_resource->width);
-    int height = mp_obj_get_int(texture_resource->height);
+    // texture_resource_class_obj_t *texture_resource = mp_load_attr(self_in, MP_QSTR_texture_resource);
+    // int width = mp_obj_get_int(texture_resource->width);
+    // int height = mp_obj_get_int(texture_resource->height);
 
-    const uint16_t *flash_target_contents = (const uint16_t *) (XIP_BASE + 512*1024);
+    // const uint16_t *flash_target_contents = (const uint16_t *) (XIP_BASE + 512*1024);
 
-    for(int x=0; x<width; x++){
-        for(int y=0; y<height; y++){
-            engine_draw_pixel(flash_target_contents[y*width+x], x, y);
-        }
-    }
+    // for(int x=0; x<width; x++){
+    //     for(int y=0; y<height; y++){
+    //         engine_draw_pixel(flash_target_contents[y*width+x], x, y);
+    //     }
+    // }
 
-    ENGINE_INFO_PRINTF("Sprite2DNode: %d %d", width, height);
+    // ENGINE_INFO_PRINTF("Sprite2DNode: %d %d", width, height);
 
     return mp_const_none;
 }

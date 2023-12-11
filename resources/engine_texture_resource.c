@@ -1,9 +1,6 @@
 #include "engine_texture_resource.h"
 #include "debug/debug_print.h"
 
-#include "pico/stdlib.h"
-#include "hardware/flash.h"
-
 
 // Class required functions
 STATIC void texture_resource_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
@@ -17,25 +14,25 @@ mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, si
 
     texture_resource_class_obj_t *self = m_new_obj_with_finaliser(texture_resource_class_obj_t);
 
-    mp_file_t *file = mp_open(mp_obj_str_get_str(args[0]), "rb");
-    self->width = mp_obj_new_int(32);
-    self->height = mp_obj_new_int(32);
+    // mp_file_t *file = mp_open(mp_obj_str_get_str(args[0]), "rb");
+    // self->width = mp_obj_new_int(32);
+    // self->height = mp_obj_new_int(32);
 
-    uint8_t buf[256];
+    // uint8_t buf[256];
 
-    const uint8_t *flash_target_contents = (const uint8_t *)(XIP_BASE + 512*1024);
+    // const uint8_t *flash_target_contents = (const uint8_t *)(XIP_BASE + 512*1024);
 
-    for(uint8_t i=0; i<8; i++){
-        flash_range_erase((512*1024)+(i*4096), FLASH_SECTOR_SIZE);
-    }
+    // for(uint8_t i=0; i<8; i++){
+    //     flash_range_erase((512*1024)+(i*4096), FLASH_SECTOR_SIZE);
+    // }
 
-    uint32_t index=0;
-    while(mp_readinto(file, buf, 256) != 0){
-        flash_range_program((512*1024)+index, buf, 256);
-        index += 256;
-    }
+    // uint32_t index=0;
+    // while(mp_readinto(file, buf, 256) != 0){
+    //     flash_range_program((512*1024)+index, buf, 256);
+    //     index += 256;
+    // }
 
-    mp_close(file);
+    // mp_close(file);
 
     return MP_OBJ_FROM_PTR(self);
 }

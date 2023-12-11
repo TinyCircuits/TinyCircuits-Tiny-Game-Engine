@@ -4,6 +4,7 @@
 #include "display/engine_display.h"
 #include "input/engine_input_module.h"
 #include "physics/engine_physics.h"
+#include "resources/engine_resource_manager.h"
 
 // ### MODULE ###
 
@@ -33,9 +34,6 @@ STATIC mp_obj_t engine_tick(){
 
     // After every game cycle send the current active screen buffer to the display
     engine_display_send();
-
-
-    
 
 
     // Before anything, sync the physics positions to the engine physics
@@ -78,10 +76,20 @@ STATIC mp_obj_t engine_total_object_count(){
 MP_DEFINE_CONST_FUN_OBJ_0(engine_total_object_count_obj, engine_total_object_count);
 
 
+STATIC mp_obj_t engine_module_init(){
+    ENGINE_INFO_PRINTF("Engine init!");
+
+    engine_resource_reset_resource_flash();
+
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_0(engine_module_init_obj, engine_module_init);
+
 
 // Module attributes
 STATIC const mp_rom_map_elem_t engine_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR___init__), (mp_obj_t)&engine_module_init_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_init), (mp_obj_t)&engine_init_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_tick), (mp_obj_t)&engine_tick_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_start), (mp_obj_t)&engine_loop_obj },

@@ -1,9 +1,9 @@
 # TODO
+[] Add way to look into sprite data on flash to get pixels when needed. Sprite/texture data should be read from flash since not enough ram to store lots of RGB565 bitmaps in SRAM. Instead of dedicating a portion of flash to aligned texture/sprite data, make a fast_file module that uses lfs/unix read that will be used to load up 32x32 portions of sprites. Sprite files will be data aligned into grids (this doesn't work for fonts though...)
 [.] Make child nodes rotate and be positioned correctly about parent (what about scale?)(need to handle all types when getting position and rotation since not all have those and some have 3D structures)
 [] Implement PhysicsShapes that are used by Physics2dNodes to define size and shape of collision box/polygon/circle
 [] Make all drawing functions take in camera node and then rotate, offset, and clip based on position and viewport (write to buffer raw if camera is null)
 [] Expose enough drawing functions to be able to mimic Thumby games
-[] Add way to look into sprite data on flash to get pixels when needed. Sprite/texture data should be read from flash since not enough ram to store lots of RGB565 bitmaps in SRAM
 [] Write tests for all math, physics, and node functions
 [] Figure out physics timing, dt, gravity, and frequency for arm/rp2 and UNIX ports
 [] Look into MICROPY_MODULE_ATTR_DELEGATION
@@ -24,6 +24,7 @@
 [] Add better draw line function that completes line fully
 [] Hierarchy translation bug in node_base when a child is an inherited class
 [] Particle node that keeps track of a bunch of different particles and allows users to define velocity, direction, and duration
+[] If we went back to PIO DMA for SPI to the screen, could we do per-pixel operations are they are being sent out? Would PIO be flexible enough to support a very very simple shading language (most for changing pixel based on screen position)
 
 # Building and running
 1. `git clone https://github.com/TinyCircuits/micropython.git`

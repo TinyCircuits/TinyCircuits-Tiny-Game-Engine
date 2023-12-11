@@ -25,6 +25,7 @@ target_sources(usermod_engine INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/debug/debug_print.c
     ${CMAKE_CURRENT_LIST_DIR}/utility/linked_list.c
     ${CMAKE_CURRENT_LIST_DIR}/utility/engine_time.c
+    ${CMAKE_CURRENT_LIST_DIR}/utility/engine_file.c
     ${CMAKE_CURRENT_LIST_DIR}/libs/mpfile/mpfile.c
     ${CMAKE_CURRENT_LIST_DIR}/engine_object_layers.c
     ${CMAKE_CURRENT_LIST_DIR}/engine_cameras.c
@@ -32,7 +33,8 @@ target_sources(usermod_engine INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/display/engine_display_driver_rp2_st7789.c
     ${CMAKE_CURRENT_LIST_DIR}/display/engine_display_common.c
     ${CMAKE_CURRENT_LIST_DIR}/draw/engine_display_draw.c
-    ${CMAKE_CURRENT_LIST_DIR}/resources/engine_resources_module.c
+    ${CMAKE_CURRENT_LIST_DIR}/resources/engine_resource_module.c
+    ${CMAKE_CURRENT_LIST_DIR}/resources/engine_resource_manager.c
     ${CMAKE_CURRENT_LIST_DIR}/resources/engine_texture_resource.c
     ${CMAKE_CURRENT_LIST_DIR}/resources/engine_font_resource.c
     ${CMAKE_CURRENT_LIST_DIR}/resources/engine_sound_resource.c
