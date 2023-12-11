@@ -30,6 +30,8 @@ mp_obj_t physics_manifold_class_new(const mp_obj_type_t *type, size_t n_args, si
     self->mtv_y = 0;
     self->con_x = 0;
     self->con_y = 0;
+    self->body_a = NULL;
+    self->body_b = NULL;
 
     return MP_OBJ_FROM_PTR(self);
 }
@@ -60,6 +62,12 @@ STATIC void physics_manifold_class_attr(mp_obj_t self_in, qstr attribute, mp_obj
             case MP_QSTR_con_y:
                 destination[0] = mp_obj_new_float(self->con_y);
             break;
+            case MP_QSTR_body_a:
+                destination[0] = self->body_a;
+            break;
+            case MP_QSTR_body_b:
+                destination[0] = self->body_b;
+            break;
             default:
                 return; // Fail
         }
@@ -82,6 +90,12 @@ STATIC void physics_manifold_class_attr(mp_obj_t self_in, qstr attribute, mp_obj
             break;
             case MP_QSTR_con_y:
                 self->con_y = mp_obj_get_float(destination[1]);
+            break;
+            case MP_QSTR_body_a:
+                self->body_a = destination[1];
+            break;
+            case MP_QSTR_body_b:
+                self->body_b = destination[1];
             break;
         default:
             return; // Fail

@@ -27,6 +27,9 @@ typedef struct{
     linked_list_node *physics_list_node;    // All physics 2d nodes get added to a list that is easy to traverse
 }engine_physics_2d_node_common_data_t;
 
+mp_obj_t physics_2d_node_class_apply_manifold_impulse(mp_obj_t a_in, mp_obj_t b_in, mp_obj_t manifold_in);
+mp_obj_t physics_2d_node_class_test(mp_obj_t self_in, mp_obj_t b_in);
+
 extern const mp_obj_type_t engine_physics_2d_node_class_type;
 
 #endif  // PHYSICS_2D_NODE_H

@@ -24,5 +24,8 @@ void engine_physics_sync_engine_nodes_to_bodies();
 
 void engine_physics_sync_bodies_to_engine_nodes();
 
+// extern mp_obj_t physics_2d_node_class_apply_manifold_impulse(mp_obj_t a_in, mp_obj_t b_in, mp_obj_t manifold_in);
+// extern mp_obj_t physics_2d_node_class_test(mp_obj_t self_in, mp_obj_t b_in);
+
 
 #endif  // ENGINE_PHYSICS_H

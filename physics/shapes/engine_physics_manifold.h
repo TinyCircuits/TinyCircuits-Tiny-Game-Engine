@@ -12,6 +12,8 @@ typedef struct physics_manifold_class_obj_t {
     mp_float_t con_y;
     mp_float_t nrm_x;
     mp_float_t nrm_y;
+    mp_obj_t body_a;
+    mp_obj_t body_b;
 } physics_manifold_class_obj_t;
 
 extern const mp_obj_type_t physics_manifold_class_type;

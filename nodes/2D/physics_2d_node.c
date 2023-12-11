@@ -57,7 +57,9 @@ STATIC mp_obj_t physics_2d_node_class_apply_impulse(mp_obj_t self_in, mp_obj_t i
 }
 MP_DEFINE_CONST_FUN_OBJ_3(physics_2d_node_class_apply_impulse_obj, physics_2d_node_class_apply_impulse);
 
-STATIC mp_obj_t physics_2d_node_class_apply_manifold_impulse(mp_obj_t a_in, mp_obj_t b_in, physics_manifold_class_obj_t* manifold){
+mp_obj_t physics_2d_node_class_apply_manifold_impulse(mp_obj_t a_in, mp_obj_t b_in, mp_obj_t manifold_in){
+
+    physics_manifold_class_obj_t* manifold = manifold_in;
     engine_node_base_t* a = a_in;
     engine_node_base_t* b = b_in;
 
@@ -144,7 +146,7 @@ STATIC mp_obj_t physics_2d_node_class_apply_manifold_impulse(mp_obj_t a_in, mp_o
 }
 MP_DEFINE_CONST_FUN_OBJ_3(physics_2d_node_class_apply_manifold_impulse_obj, physics_2d_node_class_apply_manifold_impulse);
 
-STATIC mp_obj_t physics_2d_node_class_test(mp_obj_t self_in, mp_obj_t b_in){
+mp_obj_t physics_2d_node_class_test(mp_obj_t self_in, mp_obj_t b_in){
     if(!mp_obj_is_type(self_in, &engine_physics_2d_node_class_type)){
         mp_raise_TypeError("expected physics node argument");
     }

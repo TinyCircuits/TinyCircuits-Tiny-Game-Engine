@@ -7,9 +7,10 @@
 
 
 
-// A linked list of physics nodes to loop
-// through to copy all parameters quickly
+// A linked list of physics nodes and manifolds to loop
+// through quickly
 linked_list engine_physics_nodes;
+linked_list engine_physics_manifolds;
 
 
 void engine_physics_init(){
@@ -19,6 +20,45 @@ void engine_physics_init(){
 
 void engine_physics_tick(){
 
+    // Clear out the manifolds
+    linked_list_node *node_m = engine_physics_manifolds.start;
+    while(node_m != NULL) {
+        linked_list_node *next = node_m->next;
+        linked_list_del_list_node(&engine_physics_manifolds, node_m);
+        node_m = next;
+    }
+
+    // Generate manifolds
+    linked_list_node *node_a = engine_physics_nodes.start;
+    while(node_a != NULL){
+
+        //engine_node_base_t *a_physics_node_base = node_a->object;
+        linked_list_node *node_b = node_a->next;
+
+        while(node_b != NULL){
+            //engine_node_base_t *b_physics_node_base = node_b->object;
+
+            //physics_manifold_class_obj_t m;
+
+            mp_obj_t m = physics_2d_node_class_test(node_a->object, node_b->object);
+
+            ((physics_manifold_class_obj_t*)MP_OBJ_TO_PTR(m))->body_a = node_a->object;
+            ((physics_manifold_class_obj_t*)MP_OBJ_TO_PTR(m))->body_b = node_b->object;
+
+            linked_list_add_obj(&engine_physics_manifolds, MP_OBJ_TO_PTR(m));
+
+            node_b = node_a->next;
+        }
+    }
+
+    // Apply manifold impulses
+    node_m = engine_physics_manifolds.start;
+    while(node_m != NULL) {
+
+        physics_manifold_class_obj_t* m = MP_OBJ_TO_PTR(node_m->object);
+        physics_2d_node_class_apply_manifold_impulse(m->body_a, m->body_b, MP_OBJ_FROM_PTR(m));
+        node_m = node_m->next;
+    }
 }
 
 
