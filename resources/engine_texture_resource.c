@@ -10,13 +10,13 @@ STATIC void texture_resource_class_print(const mp_print_t *print, mp_obj_t self_
 
 mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New TextureResource");
-    mp_arg_check_num(n_args, n_kw, 1, 1, false);
+    mp_arg_check_num(n_args, n_kw, 3, 3, false);
 
     texture_resource_class_obj_t *self = m_new_obj_with_finaliser(texture_resource_class_obj_t);
 
-    const char *filename = mp_obj_str_get_str(args[0])
-    self->width = mp_obj_new_int(args[1]);
-    self->height = mp_obj_new_int(args[2]);
+    const char *filename = mp_obj_str_get_str(args[0]);
+    self->width = mp_obj_get_int(args[1]);
+    self->height = mp_obj_get_int(args[2]);
 
     uint32_t file_size = engine_file_get_size(filename);
 

@@ -45,10 +45,15 @@ mp_obj_t node_base_del(mp_obj_t self_in){
 
 
 mp_obj_t node_base_add_child(mp_obj_t self_parent_in, mp_obj_t child_in){
-    ENGINE_INFO_PRINTF("Node Base: Adding child...");
-
     engine_node_base_t *parent_node_base = self_parent_in;
-    engine_node_base_t *child_node_base = child_in;
+
+    // The passed in child could be a non-inherited node_base or an
+    // mp_obj_t with a parent 'node_base'. Always look up the node
+    // base from the 'MP_QSTR_node_base' that every node needs to have
+    // for this to work
+    engine_node_base_t *child_node_base = mp_load_attr(child_in, MP_QSTR_node_base);
+    
+    ENGINE_INFO_PRINTF("Node Base: Adding child... parent node type: %d, child node type: %d", parent_node_base->type, child_node_base->type);
 
     child_node_base->location_in_parents_children = linked_list_add_obj(&parent_node_base->children_node_bases, child_node_base);
     child_node_base->parent_node_base = parent_node_base;

@@ -171,6 +171,9 @@ STATIC void rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_ob
                 destination[0] = MP_OBJ_FROM_PTR(&node_base_get_layer_obj);
                 destination[1] = self_in;
             break;
+            case MP_QSTR_node_base:
+                destination[0] = self_in;
+            break;
             case MP_QSTR_position:
                 destination[0] = self->position;
             break;

@@ -18,7 +18,7 @@
 
 lfs2_t littlefs2 = { 0 };
 lfs2_file_t littlefs2_file = { 0 };
-lfs2_info littlefs2_file_info = { 0 };
+// lfs2_info littlefs2_file_info = { 0 };
 bool mounted = false;
 
 
@@ -166,9 +166,10 @@ void engine_file_open(const char *filename){
 
 
 uint32_t engine_file_get_size(const char *filename){
-    memset(&littlefs2_file_info, 0, sizeof(littlefs2_file_info));
-    lfs2_stat(&littlefs2, filename, &littlefs2_file_info);
-    return littlefs2_file_info.size;
+    // memset(&littlefs2_file_info, 0, sizeof(littlefs2_file_info));
+    // lfs2_stat(&littlefs2, filename, &littlefs2_file_info);
+    // return littlefs2_file_info.size;
+    return 0;
 }
 
 

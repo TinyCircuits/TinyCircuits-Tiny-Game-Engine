@@ -95,6 +95,9 @@ STATIC void empty_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *de
                 destination[0] = MP_OBJ_FROM_PTR(&node_base_get_layer_obj);
                 destination[1] = self_in;
             break;
+            case MP_QSTR_node_base:
+                destination[0] = self_in;
+            break;
             default:
                 return; // Fail
         }
