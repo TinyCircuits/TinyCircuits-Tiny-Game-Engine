@@ -16,10 +16,9 @@
 #endif
 
 
-
-
 lfs2_t littlefs2 = { 0 };
 lfs2_file_t littlefs2_file = { 0 };
+lfs2_info littlefs2_file_info = { 0 };
 bool mounted = false;
 
 
@@ -99,11 +98,13 @@ int engine_lfs2_erase(const struct lfs2_config *c, lfs2_block_t block){
 #define ENGINE_LFS2_LOOKAHEAD_SIZE 32
 #define ENGINE_LFS2_CACHE_SIZE 2 * ENGINE_LFS2_PROG_SIZE
 
+
 // MicroPython compiles its LFS2 with no malloc so we need to make our own buffers
 uint8_t engine_lfs2_read_buffer[ENGINE_LFS2_CACHE_SIZE];
 uint8_t engine_lfs2_prog_buffer[ENGINE_LFS2_CACHE_SIZE];
 uint8_t engine_lfs2_lookahead_buffer[ENGINE_LFS2_LOOKAHEAD_SIZE];
 uint8_t engine_lfs2_file_buffer[ENGINE_LFS2_CACHE_SIZE];
+
 
 const struct lfs2_config littlefs2_cfg = {
     // block device operations
@@ -161,6 +162,13 @@ void engine_file_open(const char *filename){
     ENGINE_INFO_PRINTF("Engine File: Opening file '%s'...", filename);
     lfs2_file_opencfg(&littlefs2, &littlefs2_file, filename, LFS2_O_RDWR, &littlefs2_file_cfg);
     ENGINE_INFO_PRINTF("Engine File: Opening file '%s' complete!", filename);
+}
+
+
+uint32_t engine_file_get_size(const char *filename){
+    memset(&littlefs2_file_info, 0, sizeof(littlefs2_file_info));
+    lfs2_stat(&littlefs2, filename, &littlefs2_file_info);
+    return littlefs2_file_info.size;
 }
 
 

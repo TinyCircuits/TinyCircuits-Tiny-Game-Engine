@@ -5,6 +5,8 @@
 
 void engine_file_open(const char *filename);
 
+uint32_t engine_file_get_size(const char *filename);
+
 void engine_file_close();
 
 void engine_file_read(void *buffer, uint32_t size);
