@@ -15,8 +15,8 @@ mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, si
     texture_resource_class_obj_t *self = m_new_obj_with_finaliser(texture_resource_class_obj_t);
 
     // mp_file_t *file = mp_open(mp_obj_str_get_str(args[0]), "rb");
-    // self->width = mp_obj_new_int(32);
-    // self->height = mp_obj_new_int(32);
+    self->width = mp_obj_new_int(32);
+    self->height = mp_obj_new_int(32);
 
     // uint8_t buf[256];
 

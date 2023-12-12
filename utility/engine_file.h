@@ -9,5 +9,7 @@ void engine_file_close();
 
 void engine_file_read(void *buffer, uint32_t size);
 
+uint8_t engine_file_get_u8(uint32_t u8_byte_offset);
+uint16_t engine_file_get_u16(uint32_t u16_byte_offset);
 
 #endif  // ENGINE_FILE_H
