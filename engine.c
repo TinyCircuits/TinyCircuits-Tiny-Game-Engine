@@ -79,7 +79,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_total_object_count_obj, engine_total_object_cou
 STATIC mp_obj_t engine_module_init(){
     ENGINE_INFO_PRINTF("Engine init!");
 
-    engine_resource_reset_resource_flash();
+    // engine_resource_reset_resource_flash();
 
     return mp_const_none;
 }

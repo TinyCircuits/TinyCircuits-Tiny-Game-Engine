@@ -40,6 +40,7 @@ SRC_USERMOD += $(ENGINE_MOD_DIR)/physics/engine_physics_module.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/physics/engine_physics.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/physics/shapes/engine_physics_shape_rectangle.c
 
+
 # We can add our module folder to include paths if needed
 # This is not actually needed in this example.
 CFLAGS_USERMOD += -I$(ENGINE_MOD_DIR)

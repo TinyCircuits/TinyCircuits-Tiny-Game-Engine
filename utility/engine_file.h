@@ -3,7 +3,7 @@
 
 #include "stdint.h"
 
-void engine_file_open(const char *filename, int flags);
+void engine_file_open(const char *filename);
 
 void engine_file_close();
 

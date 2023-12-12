@@ -48,5 +48,8 @@ target_include_directories(usermod_engine INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}
 )
 
+# target_link_libraries(usermod_engine INTERFACE -llfs2)
+
+
 # Link our INTERFACE library to the usermod target.
 target_link_libraries(usermod INTERFACE usermod_engine)

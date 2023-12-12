@@ -9,6 +9,7 @@
 #include "extmod/vfs.h"
 #include "resources/engine_texture_resource.h"
 #include <fcntl.h>
+#include "utility/engine_file.h"
 
 // #include "pico/stdlib.h"
 // #include "hardware/flash.h"
@@ -39,6 +40,10 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
     // texture_resource_class_obj_t *texture_resource = mp_load_attr(self_in, MP_QSTR_texture_resource);
     // int width = mp_obj_get_int(texture_resource->width);
     // int height = mp_obj_get_int(texture_resource->height);
+
+    engine_file_open("32x32.bin");
+
+    engine_file_close();
 
     // const uint16_t *flash_target_contents = (const uint16_t *) (XIP_BASE + 512*1024);
 

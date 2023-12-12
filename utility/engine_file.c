@@ -18,15 +18,21 @@
 
 
 
-lfs2_t littlefs2;
-lfs2_file_t littlefs2_file;
+lfs2_t littlefs2 = { 0 };
+lfs2_file_t littlefs2_file = { 0 };
 bool mounted = false;
 
 
 // https://github.com/TinyCircuits/micropython/blob/9b486340da22931cde82872f79e1c34db959548b/ports/rp2/rp2_flash.c#L79-L90
 // https://github.com/TinyCircuits/micropython/blob/9b486340da22931cde82872f79e1c34db959548b/ports/rp2/rp2_flash.c#L56C19-L56C48 (flash_base)
-int engine_lfs2_read(const struct lfs2_config *c, lfs2_block_t block, lfs2_off_t offset, void *buffer, lfs2_size_t size){
-    return memcpy(buffer, (void *)(XIP_BASE + MICROPY_HW_FLASH_STORAGE_BASE + offset), size);
+int engine_lfs2_read(const struct lfs2_config *c, lfs2_block_t block, lfs2_off_t off, uint8_t *buffer, lfs2_size_t size){
+    uint32_t offset = (block * FLASH_SECTOR_SIZE) + off;
+
+    ENGINE_INFO_PRINTF("Engine File: Reading %lu bytes starting at %lu", size, offset);
+
+    memcpy(buffer, (uint8_t *)(XIP_BASE + MICROPY_HW_FLASH_STORAGE_BASE + offset), size);
+
+    return 0;
 }
 
 
@@ -35,6 +41,8 @@ int engine_lfs2_read(const struct lfs2_config *c, lfs2_block_t block, lfs2_off_t
 // https://github.com/TinyCircuits/micropython/blob/9b486340da22931cde82872f79e1c34db959548b/ports/rp2/rp2_flash.c#L56C19-L56C48 (flash_base)
 int engine_lfs2_prog(const struct lfs2_config *c, lfs2_block_t block, lfs2_off_t off, const void *buffer, lfs2_size_t size){
     uint32_t offset = block * FLASH_SECTOR_SIZE;
+
+    ENGINE_INFO_PRINTF("Engine File: Programming %lu bytes starting at %lu", size, offset);
 
     mp_uint_t atomic_state = MICROPY_BEGIN_ATOMIC_SECTION();
     flash_range_erase(MICROPY_HW_FLASH_STORAGE_BASE + offset, size);
@@ -53,6 +61,7 @@ int engine_lfs2_prog(const struct lfs2_config *c, lfs2_block_t block, lfs2_off_t
 
 // https://github.com/TinyCircuits/micropython/blob/9b486340da22931cde82872f79e1c34db959548b/ports/rp2/rp2_flash.c#L125
 int engine_lfs2_sync(const struct lfs2_config *c){
+    ENGINE_INFO_PRINTF("Engine File: Sync (does nothing)");
     return 0;
 }
 
@@ -60,6 +69,8 @@ int engine_lfs2_sync(const struct lfs2_config *c){
 // https://github.com/TinyCircuits/micropython/blob/9b486340da22931cde82872f79e1c34db959548b/ports/rp2/rp2_flash.c#L131
 // https://github.com/TinyCircuits/micropython/blob/9b486340da22931cde82872f79e1c34db959548b/ports/rp2/rp2_flash.c#L56C19-L56C48 (flash_base)
 int engine_lfs2_erase(const struct lfs2_config *c, lfs2_block_t block){
+    ENGINE_INFO_PRINTF("Engine File: Erasing block %lu", block);
+
     uint32_t offset = block * FLASH_SECTOR_SIZE;
     // Flash erase/program must run in an atomic section because the XIP bit gets disabled.
     mp_uint_t atomic_state = MICROPY_BEGIN_ATOMIC_SECTION();
@@ -84,6 +95,16 @@ int engine_lfs2_erase(const struct lfs2_config *c, lfs2_block_t block){
 //      lookahead = 32
 // 8. We still need more information, that can be found here: https://github.com/TinyCircuits/micropython/blob/9b486340da22931cde82872f79e1c34db959548b/extmod/vfs_lfsx.c#L64
 // 9. The 'read' and 'prog' callbacks seem to be defined here: https://github.com/TinyCircuits/micropython/blob/9b486340da22931cde82872f79e1c34db959548b/ports/rp2/rp2_flash.c#L79-L115
+#define ENGINE_LFS2_PROG_SIZE 256
+#define ENGINE_LFS2_LOOKAHEAD_SIZE 32
+#define ENGINE_LFS2_CACHE_SIZE 2 * ENGINE_LFS2_PROG_SIZE
+
+// MicroPython compiles its LFS2 with no malloc so we need to make our own buffers
+uint8_t engine_lfs2_read_buffer[ENGINE_LFS2_CACHE_SIZE];
+uint8_t engine_lfs2_prog_buffer[ENGINE_LFS2_CACHE_SIZE];
+uint8_t engine_lfs2_lookahead_buffer[ENGINE_LFS2_LOOKAHEAD_SIZE];
+uint8_t engine_lfs2_file_buffer[ENGINE_LFS2_CACHE_SIZE];
+
 const struct lfs2_config littlefs2_cfg = {
     // block device operations
     .read  = engine_lfs2_read,
@@ -93,13 +114,22 @@ const struct lfs2_config littlefs2_cfg = {
 
     // block device configuration
     .read_size = 32,
-    .prog_size = 256,
-    .lookahead_size = 32,
+    .prog_size = ENGINE_LFS2_PROG_SIZE,
+    .lookahead_size = ENGINE_LFS2_LOOKAHEAD_SIZE,
 
     .block_size = FLASH_SECTOR_SIZE,                                    // https://github.com/TinyCircuits/micropython/blob/9b486340da22931cde82872f79e1c34db959548b/ports/rp2/rp2_flash.c#L129-L130
     .block_count = MICROPY_HW_FLASH_STORAGE_BYTES / FLASH_SECTOR_SIZE,  // https://github.com/TinyCircuits/micropython/blob/9b486340da22931cde82872f79e1c34db959548b/ports/rp2/rp2_flash.c#L127C44-L128
-    .cache_size = 4*256,                                                // https://github.com/TinyCircuits/micropython/blob/9b486340da22931cde82872f79e1c34db959548b/extmod/vfs_lfsx.c#L95
+    .cache_size = ENGINE_LFS2_CACHE_SIZE,                               // https://github.com/TinyCircuits/micropython/blob/9b486340da22931cde82872f79e1c34db959548b/extmod/vfs_lfsx.c#L95
     .block_cycles = 100,                                                // https://github.com/TinyCircuits/micropython/blob/9b486340da22931cde82872f79e1c34db959548b/extmod/vfs_lfsx.c#L94
+
+    .read_buffer = engine_lfs2_read_buffer,
+    .prog_buffer = engine_lfs2_prog_buffer,
+    .lookahead_buffer = engine_lfs2_lookahead_buffer
+};
+
+
+const struct lfs2_file_config littlefs2_file_cfg = {
+    .buffer = engine_lfs2_file_buffer
 };
 
 
@@ -109,27 +139,38 @@ const struct lfs2_config littlefs2_cfg = {
 // did a mount somewhere else that should be perfectly fine
 // https://github.com/littlefs-project/littlefs/tree/master
 void engine_file_mount(){
-    if(lfs2_mount(&littlefs2, &littlefs2_cfg)){
-        ENGINE_ERROR_PRINTF("Engine File: Something went wrong while mounting the filesystem...");
+    ENGINE_INFO_PRINTF("Engine File: Mounting filesystem...");
+
+    int err = lfs2_mount(&littlefs2, &littlefs2_cfg);
+
+    if(err < 0){
+        ENGINE_ERROR_PRINTF("Engine File: Something went wrong while mounting the filesystem... error %d", err);
     }
+
+    ENGINE_INFO_PRINTF("Engine File: Mounting filesystem complete!");
 }
 
 
-void engine_file_open(const char *filename, int flags){
+void engine_file_open(const char *filename){
     if(mounted == false){
         engine_file_mount();
-        mounted=true;
+        mounted = true;
     }
 
-    lfs2_file_open(&littlefs2, &littlefs2_file, filename, flags);
+    // Need to use this function since MicroPython is compiled without malloc (therefore need to supply)
+    ENGINE_INFO_PRINTF("Engine File: Opening file '%s'...", filename);
+    lfs2_file_opencfg(&littlefs2, &littlefs2_file, filename, LFS2_O_RDWR, &littlefs2_file_cfg);
+    ENGINE_INFO_PRINTF("Engine File: Opening file '%s' complete!", filename);
 }
 
 
 void engine_file_close(){
+    ENGINE_INFO_PRINTF("Engine File: closing file...");
     lfs2_file_close(&littlefs2, &littlefs2_file);
+    ENGINE_INFO_PRINTF("Engine File: closing file complete!");
 }
 
 
 void engine_file_read(void *buffer, uint32_t size){
-    lfs2_file_read(&littlefs2, &littlefs2_file, buffer, size);
+    // lfs2_file_read(&littlefs2, &littlefs2_file, buffer, size);
 }
