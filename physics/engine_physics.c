@@ -21,46 +21,54 @@ void engine_physics_init(){
 
 void engine_physics_tick(){
 
-    // ENGINE_INFO_PRINTF("Clearing manifolds\n\r");
-    // // Clear out the manifolds
-    // linked_list_node *node_m = engine_physics_manifolds.start;
-    // while(node_m != NULL) {
-    //     linked_list_node *next = node_m->next;
-    //     linked_list_del_list_node(&engine_physics_manifolds, node_m);
-    //     node_m = next;
-    // }
-    //
-    // ENGINE_INFO_PRINTF("Generating manifolds\n\r");
-    // // Generate manifolds
-    // linked_list_node *node_a = engine_physics_nodes.start;
-    // while(node_a != NULL){
-    //
-    //     //engine_node_base_t *a_physics_node_base = node_a->object;
-    //     linked_list_node *node_b = node_a->next;
-    //
-    //     while(node_b != NULL){
-    //
-    //         mp_obj_t m = physics_2d_node_class_test(node_a->object, node_b->object);
-    //
-    //         ((physics_manifold_class_obj_t*)MP_OBJ_TO_PTR(m))->body_a = node_a->object;
-    //         ((physics_manifold_class_obj_t*)MP_OBJ_TO_PTR(m))->body_b = node_b->object;
-    //
-    //         linked_list_add_obj(&engine_physics_manifolds, MP_OBJ_TO_PTR(m));
-    //
-    //         node_b = node_b->next;
-    //     }
-    //     node_a = node_a->next;
-    // }
-    //
-    // ENGINE_INFO_PRINTF("Applying manifolds\n\r");
-    // // Apply manifold impulses
-    // node_m = engine_physics_manifolds.start;
-    // while(node_m != NULL) {
-    //     // physics_manifold_class_obj_t* m = MP_OBJ_TO_PTR(node_m->object);
-    //     // ENGINE_INFO_PRINTF("Applying manifold %p\n\r", m);
-    //     // physics_2d_node_class_apply_manifold_impulse(m->body_a, m->body_b, MP_OBJ_FROM_PTR(m));
-    //     node_m = node_m->next;
-    // }
+    ENGINE_INFO_PRINTF("Clearing manifolds\n\r");
+    // Clear out the manifolds
+    linked_list_node *node_m = engine_physics_manifolds.start;
+    int manifolds = 0;
+    while(node_m != NULL) {
+        linked_list_node *next = node_m->next;
+        linked_list_del_list_node(&engine_physics_manifolds, node_m);
+        node_m = next;
+        manifolds++;
+    }
+
+
+
+    ENGINE_INFO_PRINTF("Cleared %f manifolds, Generating manifolds...\n\r", (float)manifolds);
+    manifolds = 0;
+    // Generate manifolds
+    linked_list_node *node_a = engine_physics_nodes.start;
+    while(node_a != NULL){
+
+        //engine_node_base_t *a_physics_node_base = node_a->object;
+        linked_list_node *node_b = node_a->next;
+
+        while(node_b != NULL){
+
+            mp_obj_t m = physics_2d_node_class_test(node_a->object, node_b->object);
+
+            ((physics_manifold_class_obj_t*)MP_OBJ_TO_PTR(m))->body_a = node_a->object;
+            ((physics_manifold_class_obj_t*)MP_OBJ_TO_PTR(m))->body_b = node_b->object;
+
+            linked_list_add_obj(&engine_physics_manifolds, MP_OBJ_TO_PTR(m));
+            manifolds++;
+
+            node_b = node_b->next;
+        }
+        node_a = node_a->next;
+    }
+
+    ENGINE_INFO_PRINTF("Generated %f manifolds\n\r", (float)manifolds);
+
+    ENGINE_INFO_PRINTF("Applying manifolds\n\r");
+    // Apply manifold impulses
+    node_m = engine_physics_manifolds.start;
+    while(node_m != NULL) {
+        physics_manifold_class_obj_t* m = MP_OBJ_TO_PTR(node_m->object);
+        ENGINE_INFO_PRINTF("Applying manifold %p\n\r", m);
+        physics_2d_node_class_apply_manifold_impulse(m->body_a, m->body_b, MP_OBJ_FROM_PTR(m));
+        node_m = node_m->next;
+    }
 }
 
 

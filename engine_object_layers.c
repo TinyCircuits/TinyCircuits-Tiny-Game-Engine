@@ -56,8 +56,6 @@ void engine_invoke_all_node_callbacks(){
             engine_node_base_t *node_base = current_linked_list_node->object;
             mp_obj_t exec[2];
 
-            exec[1] = node_base->attr_accessor;
-
             // As long as this node was not just added, figure out its type and what callbacks it has
             if(node_base_is_just_added(node_base) == false){
                 switch(node_base->type){
@@ -65,6 +63,7 @@ void engine_invoke_all_node_callbacks(){
                     {
                         engine_empty_node_common_data_t *empty_node_common_data = node_base->node_common_data;
                         exec[0] = empty_node_common_data->tick_cb;
+                        exec[1] = node_base->attr_accessor;
                         mp_call_method_n_kw(0, 0, exec);
                     }
                     break;
@@ -72,6 +71,7 @@ void engine_invoke_all_node_callbacks(){
                     {
                         engine_camera_node_common_data_t *camera_node_common_data = node_base->node_common_data;
                         exec[0] = camera_node_common_data->tick_cb;
+                        exec[1] = node_base->attr_accessor;
                         mp_call_method_n_kw(0, 0, exec);
                     }
                     break;
@@ -79,9 +79,11 @@ void engine_invoke_all_node_callbacks(){
                     {
                         engine_rectangle_2d_node_common_data_t *rectangle_2d_node_common_data = node_base->node_common_data;
                         exec[0] = rectangle_2d_node_common_data->tick_cb;
+                        exec[1] = node_base->attr_accessor;
                         mp_call_method_n_kw(0, 0, exec);
 
                         exec[0] = rectangle_2d_node_common_data->draw_cb;
+                        exec[1] = node_base;
                         engine_camera_draw_for_each(exec);
                     }
                     break;
@@ -89,9 +91,11 @@ void engine_invoke_all_node_callbacks(){
                     {
                         engine_sprite_2d_node_common_data_t *sprite_2d_node_common_data = node_base->node_common_data;
                         exec[0] = sprite_2d_node_common_data->tick_cb;
+                        exec[1] = node_base->attr_accessor;
                         mp_call_method_n_kw(0, 0, exec);
 
                         exec[0] = sprite_2d_node_common_data->draw_cb;
+                        exec[1] = node_base;
                         engine_camera_draw_for_each(exec);
                     }
                     break;
@@ -99,9 +103,11 @@ void engine_invoke_all_node_callbacks(){
                     {
                         engine_physics_2d_node_common_data_t *physics_2d_node_common_data = node_base->node_common_data;
                         exec[0] = physics_2d_node_common_data->tick_cb;
+                        exec[1] = node_base->attr_accessor;
                         mp_call_method_n_kw(0, 0, exec);
 
                         exec[0] = physics_2d_node_common_data->draw_cb;
+                        exec[1] = node_base;
                         engine_camera_draw_for_each(exec);
                     }
                     break;

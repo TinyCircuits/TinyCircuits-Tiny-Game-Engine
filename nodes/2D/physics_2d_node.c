@@ -47,6 +47,9 @@ STATIC mp_obj_t physics_2d_node_class_apply_impulse(mp_obj_t self_in, mp_obj_t i
     vector2_class_obj_t* vel = MP_OBJ_TO_PTR(mp_load_attr(self->attr_accessor, MP_QSTR_velocity));
     vector2_class_obj_t* pos = MP_OBJ_TO_PTR(mp_load_attr(self->attr_accessor, MP_QSTR_position));
 
+    ENGINE_INFO_PRINTF("Applying impulse at %f, %f", point->x, point->y);
+    ENGINE_INFO_PRINTF("Impulse is %f, %f", impulse->x, impulse->y);
+
     ENGINE_INFO_PRINTF("Vel before collision: %f, %f", vel->x, vel->y);
 
     vel->x += i_mass * impulse->x;
@@ -66,6 +69,9 @@ mp_obj_t physics_2d_node_class_apply_manifold_impulse(mp_obj_t a_in, mp_obj_t b_
     physics_manifold_class_obj_t* manifold = manifold_in;
     engine_node_base_t* a = a_in;
     engine_node_base_t* b = b_in;
+    if(manifold->nrm_x == 0.0 && manifold->nrm_y == 0.0) return mp_const_none; // Non-collision manifold
+
+    ENGINE_INFO_PRINTF("Manifold data: (%f, %f), (%f, %f), (%f, %f)", manifold->mtv_x, manifold->mtv_y, manifold->nrm_x, manifold->nrm_y,manifold->con_x, manifold->con_y);
 
     vector2_class_obj_t* a_pos = MP_OBJ_TO_PTR(mp_load_attr(a->attr_accessor, MP_QSTR_position));
     vector2_class_obj_t* b_pos = MP_OBJ_TO_PTR(mp_load_attr(b->attr_accessor, MP_QSTR_position));
@@ -90,8 +96,8 @@ mp_obj_t physics_2d_node_class_apply_manifold_impulse(mp_obj_t a_in, mp_obj_t b_
     mp_float_t rax = manifold->con_x - a_pos->x;
     mp_float_t ray = manifold->con_y - a_pos->y;
 
-    mp_float_t rbx = manifold->con_x - a_pos->x;
-    mp_float_t rby = manifold->con_y - a_pos->y;
+    mp_float_t rbx = manifold->con_x - b_pos->x;
+    mp_float_t rby = manifold->con_y - b_pos->y;
     // Relative velocity
     mp_float_t rvx = b_vel->x - b_ang_vel * rbx - a_vel->x + a_ang_vel * rax;
     mp_float_t rvy = b_vel->y + b_ang_vel * rby - a_vel->y - a_ang_vel * ray;
@@ -102,17 +108,25 @@ mp_obj_t physics_2d_node_class_apply_manifold_impulse(mp_obj_t a_in, mp_obj_t b_
 
     // Mix restitution
     const mp_float_t e = MICROPY_FLOAT_C_FUN(fmax)(a_restitution, b_restitution);
+    ENGINE_INFO_PRINTF("Restitution is %f", e);
 
     mp_float_t ra_cross_n = rax * manifold->nrm_y - ray * manifold->nrm_x;
     mp_float_t rb_cross_n = rbx * manifold->nrm_y - rby * manifold->nrm_x;
     mp_float_t i_mass_sum = a_i_mass + b_i_mass + ra_cross_n*ra_cross_n*a_i_I + rb_cross_n*rb_cross_n*b_i_I;
     mp_float_t j = -(1.0 + e) * contact_vel;
+
+    ENGINE_INFO_PRINTF("Contact velocity is %f", contact_vel);
     j /= i_mass_sum;
+
+    ENGINE_INFO_PRINTF("j is %f", j);
 
     vector2_class_obj_t impulse_a = {{&vector2_class_type}, -manifold->nrm_x*j, -manifold->nrm_y*j};
     vector2_class_obj_t impulse_b = {{&vector2_class_type}, manifold->nrm_x*j, manifold->nrm_y*j};
     vector2_class_obj_t ra = {{&vector2_class_type}, rax, ray};
     vector2_class_obj_t rb = {{&vector2_class_type}, rbx, rby};
+
+    ENGINE_INFO_PRINTF("Applying impulse at %f, %f", ra.x, ra.y);
+    ENGINE_INFO_PRINTF("Normal impulse is %f, %f", impulse_a.x, impulse_a.y);
     // Apply normal impulses
     physics_2d_node_class_apply_impulse(a_in, MP_OBJ_FROM_PTR(&impulse_a), MP_OBJ_FROM_PTR(&ra));
     physics_2d_node_class_apply_impulse(b_in, MP_OBJ_FROM_PTR(&impulse_b), MP_OBJ_FROM_PTR(&rb));
@@ -127,24 +141,49 @@ mp_obj_t physics_2d_node_class_apply_manifold_impulse(mp_obj_t a_in, mp_obj_t b_
 
     mp_float_t rvdotn = rvx * manifold->nrm_x + rvy * manifold->nrm_y;
 
+    ENGINE_INFO_PRINTF("rvdotn is %f", rvdotn);
+
     vector2_class_obj_t t = {{&vector2_class_type}, rvx - rvdotn * manifold->nrm_x, rvy - rvdotn * manifold->nrm_y};
 
-    mp_float_t t_il = 1.0 / MICROPY_FLOAT_C_FUN(sqrt)(t.x*t.x + t.y*t.y);
-
-    t.x *= t_il;
-    t.y *= t_il;
-
     mp_float_t jt = -(rvx*t.x + rvy*t.y);
-    jt /= i_mass_sum;
+    ENGINE_INFO_PRINTF("jt is %f", jt);
+    if(jt == 0.0 || (t.x == 0.0 && t.y == 0.0)) {
+        // Don't apply degenerate friction impulse
+    } else {
+        mp_float_t t_il = 1.0 / MICROPY_FLOAT_C_FUN(sqrt)(t.x*t.x + t.y*t.y);
 
-    // Mix friction coefficients
-    const mp_float_t f = MICROPY_FLOAT_C_FUN(sqrt)(a_friction * b_friction);
+        ENGINE_INFO_PRINTF("t is %f, %f", t.x, t.y);
+        ENGINE_INFO_PRINTF("rvx, rvy are %f, %f", rvx, rvy);
 
-    vector2_class_obj_t t_impulse_a = {{&vector2_class_type}, -t.x*jt, -t.y*jt};
-    vector2_class_obj_t t_impulse_b = {{&vector2_class_type}, t.x*jt, t.y*jt};
+        t.x *= t_il;
+        t.y *= t_il;
+        jt /= i_mass_sum;
 
-    physics_2d_node_class_apply_impulse(a_in, MP_OBJ_FROM_PTR(&t_impulse_a), MP_OBJ_FROM_PTR(&ra));
-    physics_2d_node_class_apply_impulse(b_in, MP_OBJ_FROM_PTR(&t_impulse_b), MP_OBJ_FROM_PTR(&rb));
+        // Mix friction coefficients
+        const mp_float_t f = MICROPY_FLOAT_C_FUN(sqrt)(a_friction * b_friction);
+
+        vector2_class_obj_t t_impulse_a = {{&vector2_class_type}, -t.x*jt, -t.y*jt};
+        vector2_class_obj_t t_impulse_b = {{&vector2_class_type}, t.x*jt, t.y*jt};
+
+        ENGINE_INFO_PRINTF("i_mass_sum is %f", i_mass_sum);
+        ENGINE_INFO_PRINTF("j is %f", jt);
+
+        ENGINE_INFO_PRINTF("Tangent impulse is %f, %f", t_impulse_a.x, t_impulse_a.y);
+
+        physics_2d_node_class_apply_impulse(a_in, MP_OBJ_FROM_PTR(&t_impulse_a), MP_OBJ_FROM_PTR(&ra));
+        physics_2d_node_class_apply_impulse(b_in, MP_OBJ_FROM_PTR(&t_impulse_b), MP_OBJ_FROM_PTR(&rb));
+    }
+
+    const mp_float_t percent = 0.4;
+    const mp_float_t slop = 0.05f;
+
+    if(manifold->mtv_x*manifold->mtv_x + manifold->mtv_y*manifold->mtv_y <= slop*slop) return mp_const_none; // Within slop range
+
+    a_pos->x += percent * manifold->mtv_x * a_i_mass / (a_i_mass + b_i_mass);
+    a_pos->y += percent * manifold->mtv_y * a_i_mass / (a_i_mass + b_i_mass);
+
+    b_pos->x -= percent * manifold->mtv_x * b_i_mass / (a_i_mass + b_i_mass);
+    b_pos->y -= percent * manifold->mtv_y * b_i_mass / (a_i_mass + b_i_mass);
 
     return mp_const_none;
 }

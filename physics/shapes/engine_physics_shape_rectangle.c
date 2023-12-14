@@ -17,11 +17,9 @@ mp_obj_t physics_shape_rectangle_class_new(const mp_obj_type_t *type, size_t n_a
     self->base.type = &physics_shape_rectangle_class_type;
 
     if(n_args == 0){
-        self->base.type = &physics_shape_rectangle_class_type;
         self->width = 15.0f;
         self->height = 5.0f;
     }else if(n_args == 2){
-        self->base.type = &physics_shape_rectangle_class_type;
         self->width = mp_obj_get_float(args[0]);
         self->height = mp_obj_get_float(args[1]);
     }else{
