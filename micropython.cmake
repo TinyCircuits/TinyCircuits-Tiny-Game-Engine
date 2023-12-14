@@ -25,7 +25,7 @@ target_sources(usermod_engine INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/debug/debug_print.c
     ${CMAKE_CURRENT_LIST_DIR}/utility/linked_list.c
     ${CMAKE_CURRENT_LIST_DIR}/utility/engine_time.c
-    ${CMAKE_CURRENT_LIST_DIR}/utility/engine_file.c
+    ${CMAKE_CURRENT_LIST_DIR}/utility/engine_file_rp2.c
     ${CMAKE_CURRENT_LIST_DIR}/libs/mpfile/mpfile.c
     ${CMAKE_CURRENT_LIST_DIR}/engine_object_layers.c
     ${CMAKE_CURRENT_LIST_DIR}/engine_cameras.c

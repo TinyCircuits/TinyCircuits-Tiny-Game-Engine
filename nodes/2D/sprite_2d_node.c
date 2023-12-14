@@ -41,25 +41,11 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
     int width = mp_obj_get_int(texture_resource->width);
     int height = mp_obj_get_int(texture_resource->height);
 
-    engine_file_open("32x32.bin");
-
     for(int x=0; x<width; x++){
         for(int y=0; y<height; y++){
-            engine_draw_pixel(engine_file_get_u16(y*width+x), x, y);
+            engine_draw_pixel(engine_fast_cache_file_get_u16(&texture_resource->cache_file, y*width+x), x, y);
         }
     }
-
-    engine_file_close();
-
-    // const uint16_t *flash_target_contents = (const uint16_t *) (XIP_BASE + 512*1024);
-
-    // for(int x=0; x<width; x++){
-    //     for(int y=0; y<height; y++){
-    //         engine_draw_pixel(flash_target_contents[y*width+x], x, y);
-    //     }
-    // }
-
-    // ENGINE_INFO_PRINTF("Sprite2DNode: %d %d", width, height);
 
     return mp_const_none;
 }

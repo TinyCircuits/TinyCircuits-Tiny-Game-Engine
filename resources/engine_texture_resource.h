@@ -3,12 +3,13 @@
 
 #include "py/obj.h"
 #include "libs/mpfile/mpfile.h"
+#include "utility/engine_file.h"
 
 typedef struct{
     mp_obj_base_t base;
     mp_obj_t width;
     mp_obj_t height;
-    uint32_t *block_address;
+    engine_fast_cache_file_t cache_file;
 }texture_resource_class_obj_t;
 
 extern const mp_obj_type_t texture_resource_class_type;

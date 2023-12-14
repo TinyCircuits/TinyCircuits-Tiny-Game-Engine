@@ -14,12 +14,9 @@ mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, si
 
     texture_resource_class_obj_t *self = m_new_obj_with_finaliser(texture_resource_class_obj_t);
 
-    const char *filename = mp_obj_str_get_str(args[0]);
-    self->width = mp_obj_get_int(args[1]);
-    self->height = mp_obj_get_int(args[2]);
-
-    uint32_t file_size = engine_file_get_size(filename);
-
+    engine_fast_cache_file_init(&self->cache_file, mp_obj_str_get_str(args[0]));
+    self->width = args[1];
+    self->height = args[2];
 
     return MP_OBJ_FROM_PTR(self);
 }
@@ -30,6 +27,7 @@ STATIC mp_obj_t texture_resource_class_del(mp_obj_t self_in){
     ENGINE_INFO_PRINTF("TextureResource: Deleted (freeing texture data)");
 
     texture_resource_class_obj_t *self = self_in;
+    engine_fast_cache_file_deinit(&self->cache_file);
 
     return mp_const_none;
 }

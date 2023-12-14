@@ -24,6 +24,7 @@
 [] Add better draw line function that completes line fully
 [] Particle node that keeps track of a bunch of different particles and allows users to define velocity, direction, and duration
 [] If we went back to PIO DMA for SPI to the screen, could we do per-pixel operations are they are being sent out? Would PIO be flexible enough to support a very very simple shading language (most for changing pixel based on screen position)
+[] Listen to serial for commands like button inputs or stop
 
 
 [x] Hierarchy translation bug in node_base when a child is an inherited class: seems to be fixed after adding node_base qstr attr to all nodes and using that to lookup the node base for the child node.
