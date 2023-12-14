@@ -152,6 +152,9 @@ void linked_list_del_list_node(linked_list *list, linked_list_node *node){
         // occur
         list->start = NULL;
         list->end = NULL;
+        list->count = 0;
+        free(node);
+        return;
     }else if(node->previous == NULL){                   // Deleting 'start' but there are other nodes, link start to next
         list->start = node->next;
         list->start->previous = NULL;

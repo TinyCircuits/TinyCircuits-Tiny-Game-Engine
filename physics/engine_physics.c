@@ -9,8 +9,9 @@
 
 // A linked list of physics nodes and manifolds to loop
 // through quickly
-linked_list engine_physics_nodes;
-linked_list engine_physics_manifolds;
+const static linked_list empty_list = (linked_list){NULL, NULL, 0, 0};
+linked_list engine_physics_nodes = empty_list;
+linked_list engine_physics_manifolds = empty_list;
 
 
 void engine_physics_init(){
@@ -21,13 +22,14 @@ void engine_physics_init(){
 
 void engine_physics_tick(){
 
-    ENGINE_INFO_PRINTF("Clearing manifolds\n\r");
+    ENGINE_INFO_PRINTF("Clearing manifolds, list length is %d\n\r", engine_physics_manifolds.count);
     // Clear out the manifolds
     linked_list_node *node_m = engine_physics_manifolds.start;
     int manifolds = 0;
     while(node_m != NULL) {
         linked_list_node *next = node_m->next;
         linked_list_del_list_node(&engine_physics_manifolds, node_m);
+        ENGINE_INFO_PRINTF("Deleted manifold\n\r\n\r");
         node_m = next;
         manifolds++;
     }
@@ -37,6 +39,7 @@ void engine_physics_tick(){
     ENGINE_INFO_PRINTF("Cleared %f manifolds, Generating manifolds...\n\r", (float)manifolds);
     manifolds = 0;
     // Generate manifolds
+    ENGINE_INFO_PRINTF("Physics node list length is %d\n\r", engine_physics_nodes.count);
     linked_list_node *node_a = engine_physics_nodes.start;
     while(node_a != NULL){
 
