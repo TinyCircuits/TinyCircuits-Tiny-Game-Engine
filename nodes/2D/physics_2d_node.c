@@ -190,6 +190,7 @@ mp_obj_t physics_2d_node_class_apply_manifold_impulse(mp_obj_t a_in, mp_obj_t b_
 MP_DEFINE_CONST_FUN_OBJ_3(physics_2d_node_class_apply_manifold_impulse_obj, physics_2d_node_class_apply_manifold_impulse);
 
 mp_obj_t physics_2d_node_class_test(mp_obj_t self_in, mp_obj_t b_in){
+    ENGINE_INFO_PRINTF("Testing shape...");
     if(!mp_obj_is_type(self_in, &engine_physics_2d_node_class_type)){
         mp_raise_TypeError("expected physics node argument");
     }
@@ -277,6 +278,7 @@ mp_obj_t physics_2d_node_class_test(mp_obj_t self_in, mp_obj_t b_in){
 MP_DEFINE_CONST_FUN_OBJ_2(physics_2d_node_class_test_obj, physics_2d_node_class_test);
 
 STATIC mp_obj_t physics_2d_node_class_compute_mass(mp_obj_t self_in, mp_obj_t density_in){
+    ENGINE_INFO_PRINTF("Computing shape mass...");
     if(!mp_obj_is_type(self_in, &engine_physics_2d_node_class_type)){
         mp_raise_TypeError("expected physics node argument");
     }
