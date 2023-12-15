@@ -20,33 +20,33 @@ STATIC void physics_rectangle_rectangle_test(vector2_class_obj_t* a_pos, physics
     }
     const mp_float_t min = fminf(dx1, fminf(dx2, fminf(dy1, dy2)));
     if(dx1 == min) {
-        m->mtv_x = dx1;
+        m->mtv_x = -dx1;
         m->mtv_y = 0;
         m->con_x = (a_pos->x + a->width + b_pos->x) * MICROPY_FLOAT_CONST(0.5);
         m->con_y = (fmaxf(a_pos->y, b_pos->y) + fminf(a_pos->y+a->height, b_pos->y+b->height)) * MICROPY_FLOAT_CONST(0.5);
-        m->nrm_x = 1;
+        m->nrm_x = -1;
         m->nrm_y = 0;
     } else if(dx2 == min) {
-        m->mtv_x = -dx2;
+        m->mtv_x = dx2;
         m->mtv_y = 0;
         m->con_x = (b_pos->x + b->width + a_pos->x) * MICROPY_FLOAT_CONST(0.5);
         m->con_y = (fmaxf(a_pos->y, b_pos->y) + fminf(a_pos->y+a->height, b_pos->y+b->height)) * MICROPY_FLOAT_CONST(0.5);
-        m->nrm_x = -1;
+        m->nrm_x = 1;
         m->nrm_y = 0;
     } else if(dy1 == min) {
         m->mtv_x = 0;
-        m->mtv_y = dy1;
+        m->mtv_y = -dy1;
         m->con_x = (fmaxf(a_pos->x, b_pos->x) + fminf(a_pos->x+a->width, b_pos->x+b->width)) * MICROPY_FLOAT_CONST(0.5);
         m->con_y = (a_pos->y + a->height + b_pos->y) * MICROPY_FLOAT_CONST(0.5);
         m->nrm_x = 0;
-        m->nrm_y = 1;
+        m->nrm_y = -1;
     } else {
         m->mtv_x = 0;
-        m->mtv_y = -dy2;
+        m->mtv_y = dy2;
         m->con_x = (fmaxf(a_pos->x, b_pos->x) + fminf(a_pos->x+a->width, b_pos->x+b->width)) * MICROPY_FLOAT_CONST(0.5);
         m->con_y = (b_pos->y + b->height + a_pos->y) * MICROPY_FLOAT_CONST(0.5);
         m->nrm_x = 0;
-        m->nrm_y = -1;
+        m->nrm_y = 1;
     }
 }
 
