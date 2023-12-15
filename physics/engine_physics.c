@@ -85,7 +85,7 @@ void engine_physics_tick(){
         pos->x += vel->x;
         pos->y += vel->y;
 
-        vel->y += gravity;
+        // vel->y += gravity;
 
         current_physics_node = current_physics_node->next;
     }
