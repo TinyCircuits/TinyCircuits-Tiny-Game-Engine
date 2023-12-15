@@ -89,6 +89,20 @@ mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t 
 }
 
 
+mp_obj_t camera_node_class_del(mp_obj_t self_in){
+    ENGINE_INFO_PRINTF("CameraNode: Deleted (garbage collected, removing self from active engine objects)");
+
+    engine_node_base_t *node_base = self_in;
+    engine_camera_node_common_data_t *common_data = node_base->node_common_data;
+    engine_camera_untrack(common_data->camera_list_node);
+
+    node_base_del(self_in);
+
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(physics_2d_node_class_del_obj, physics_2d_node_class_del);
+
+
 // Class methods
 STATIC void camera_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing CameraNode attr");

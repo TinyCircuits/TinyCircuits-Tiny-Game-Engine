@@ -31,11 +31,13 @@ bool track_blocks = false;
 int engine_lfs2_read(const struct lfs2_config *c, lfs2_block_t block, lfs2_off_t off, uint8_t *buffer, lfs2_size_t size){
     uint32_t offset = (block * FLASH_SECTOR_SIZE) + off;
 
+    ENGINE_INFO_PRINTF("Engine File RP2: Block %lu %lu %lu", block, off, size);
+
     if(track_blocks){
         if(current_block_count == 0){
             current_block_addresses[0] = block;
             current_block_count = 1;
-            ENGINE_INFO_PRINTF("Engine File RP2: Tracking block %lu", block);
+            // ENGINE_INFO_PRINTF("Engine File RP2: Tracking block %lu", block);
         }else{
             bool already_tracked = false;
             for(uint32_t ibx=0; ibx<current_block_count; ibx++){
@@ -48,12 +50,12 @@ int engine_lfs2_read(const struct lfs2_config *c, lfs2_block_t block, lfs2_off_t
             if(!already_tracked){
                 current_block_addresses[current_block_count] = block;
                 current_block_count++;
-                ENGINE_INFO_PRINTF("Engine File RP2: Tracking block %lu", block);
+                // ENGINE_INFO_PRINTF("Engine File RP2: Tracking block %lu", block);
             }
             
         }
     }else{
-        ENGINE_INFO_PRINTF("Engine File RP2: Reading %lu bytes starting at %lu", size, offset);
+        // ENGINE_INFO_PRINTF("Engine File RP2: Reading %lu bytes starting at %lu", size, offset);
     }
 
     memcpy(buffer, (uint8_t *)(XIP_BASE + MICROPY_HW_FLASH_STORAGE_BASE + offset), size);
@@ -121,9 +123,15 @@ int engine_lfs2_erase(const struct lfs2_config *c, lfs2_block_t block){
 //      lookahead = 32
 // 8. We still need more information, that can be found here: https://github.com/TinyCircuits/micropython/blob/9b486340da22931cde82872f79e1c34db959548b/extmod/vfs_lfsx.c#L64
 // 9. The 'read' and 'prog' callbacks seem to be defined here: https://github.com/TinyCircuits/micropython/blob/9b486340da22931cde82872f79e1c34db959548b/ports/rp2/rp2_flash.c#L79-L115
-#define ENGINE_LFS2_PROG_SIZE 256
+#define ENGINE_LFS2_PROG_SIZE 32
 #define ENGINE_LFS2_LOOKAHEAD_SIZE 32
 #define ENGINE_LFS2_CACHE_SIZE 2 * ENGINE_LFS2_PROG_SIZE
+
+
+// LittleFS stores all file data in blocks. Those blocks can be metapairs or CTZ blocks.
+// Metapair blocks store information about the entire file while also potentially storing
+// all the file data if the file is small enough. CTZ blocks store linked list data
+// as well as file data afterwards
 
 
 // MicroPython compiles its LFS2 with no malloc so we need to make our own buffers
@@ -227,42 +235,61 @@ int compare(const void *a, const void *b) {
 
 
 void engine_fast_cache_file_init(engine_fast_cache_file_t *cache_file, const char *filename){
+    // In case the file system has not been mounted yet, mount it
     if(mounted == false){
         engine_file_mount();
         mounted = true;
     }
 
-    // Get file size to see how many blocks the file
-    // will occupy
-    struct lfs2_info littlefs2_file_info = { 0 };
-    lfs2_stat(&littlefs2, filename, &littlefs2_file_info);
-    uint32_t file_size = littlefs2_file_info.size;
-    uint32_t block_count = (uint32_t)ceil(((float)file_size)/FLASH_SECTOR_SIZE);
+    // Open file that we want to cache information about
+    // engine_file_open(filename);
+
+
+    // engine_file_open("Caching file...");
+    // engine_file_open("'%s' information:", filename);
+
+    // ENGINE_WARNING_PRINTF("%lu", littlefs2_file.ctz.head);
+
+
+    // engine_file_open("Caching file complete!");
+
+
+    // uint32_t file_size = lfs2_file_size(&littlefs2, &littlefs2_file);
+
+
+    // // Get file size to see how many blocks the file
+    // // will occupy
+    // struct lfs2_info littlefs2_file_info = { 0 };
+    // lfs2_stat(&littlefs2, filename, &littlefs2_file_info);
+    // uint32_t file_size = littlefs2_file_info.size;
+    // uint32_t block_count = (uint32_t)ceil(((float)file_size)/FLASH_SECTOR_SIZE);
     
-    // Allocate enough space to store all the addresses
-    cache_file->block_flash_addresses = (uint32_t*)malloc(sizeof(uint32_t)*block_count);
+    // // Allocate enough space to store all the addresses
+    // cache_file->block_flash_addresses = (uint32_t*)malloc(sizeof(uint32_t)*block_count);
 
-    engine_file_open(filename);
-
-
-    current_block_addresses = cache_file->block_flash_addresses;
-    current_block_count = 0;
-    track_blocks = true;
-
-    uint8_t data = 0;
-    while(lfs2_file_read(&littlefs2, &littlefs2_file, &data, 1) != 0){}
-    track_blocks = false;
-
-    qsort(cache_file->block_flash_addresses, block_count, sizeof(int), compare);
-
-    for(uint32_t ibx=0; ibx<block_count; ibx++){
-        ENGINE_INFO_PRINTF("Engine File RP2: Sorted blocks: %lu [index: %lu]", cache_file->block_flash_addresses[ibx], ibx);
-    }
+    // engine_file_open(filename);
 
 
-    engine_file_close();
+    // current_block_addresses = cache_file->block_flash_addresses;
+    // current_block_count = 0;
+    // track_blocks = true;
 
-    ENGINE_INFO_PRINTF("Engine File RP2: Block count %lu %lu", block_count, file_size);
+    // uint8_t data = 0;
+    // ENGINE_INFO_PRINTF("Engine File RP2: Reading byte by byte...");
+    // while(lfs2_file_read(&littlefs2, &littlefs2_file, &data, 1) != 0){}
+    // ENGINE_INFO_PRINTF("Engine File RP2: Reading byte by byte complete!");
+    // track_blocks = false;
+
+    // qsort(cache_file->block_flash_addresses, block_count, sizeof(int), compare);
+
+    // for(uint32_t ibx=0; ibx<block_count; ibx++){
+    //     ENGINE_INFO_PRINTF("Engine File RP2: Sorted blocks: %lu [index: %lu]", cache_file->block_flash_addresses[ibx], ibx);
+    // }
+
+
+    // engine_file_close();
+
+    // ENGINE_INFO_PRINTF("Engine File RP2: Block count %lu %lu", block_count, file_size);
 }
 
 
@@ -277,25 +304,26 @@ uint8_t engine_fast_cache_file_get_u8(engine_fast_cache_file_t *cache_file, uint
 
 
 uint16_t engine_fast_cache_file_get_u16(engine_fast_cache_file_t *cache_file, uint32_t offset_u16){
-    uint32_t offset_u8 = offset_u16*2;
+    return 0xaaaa;
+    // uint32_t offset_u8 = offset_u16*2;
 
-    uint32_t block_index = (uint32_t)floor((offset_u8) / FLASH_SECTOR_SIZE);
-    // ENGINE_ERROR_PRINTF("%lu", block_index);
+    // uint32_t block_index = (uint32_t)floor((offset_u8) / FLASH_SECTOR_SIZE);
+    // // ENGINE_ERROR_PRINTF("%lu", block_index);
 
-    uint32_t offset_inside_block = offset_u8-(block_index*FLASH_SECTOR_SIZE);
-    // ENGINE_ERROR_PRINTF("%lu", offset_inside_block);
+    // uint32_t offset_inside_block = offset_u8-(block_index*FLASH_SECTOR_SIZE);
+    // // ENGINE_ERROR_PRINTF("%lu", offset_inside_block);
 
-    uint32_t flash_block_index = cache_file->block_flash_addresses[block_index];
-    // ENGINE_ERROR_PRINTF("%lu", flash_block_index);
+    // uint32_t flash_block_index = cache_file->block_flash_addresses[block_index];
+    // // ENGINE_ERROR_PRINTF("%lu", flash_block_index);
 
-    uint32_t flash_location = (flash_block_index*FLASH_SECTOR_SIZE)+offset_inside_block;
-    // ENGINE_ERROR_PRINTF("%lu\n", flash_location);
+    // uint32_t flash_location = (flash_block_index*FLASH_SECTOR_SIZE)+offset_inside_block;
+    // // ENGINE_ERROR_PRINTF("%lu\n", flash_location);
 
-    const uint8_t *flash_target_contents = (const uint8_t *) (XIP_BASE + MICROPY_HW_FLASH_STORAGE_BASE + flash_location);
+    // const uint8_t *flash_target_contents = (const uint8_t *) (XIP_BASE + MICROPY_HW_FLASH_STORAGE_BASE + flash_location);
 
-    uint16_t u16 = 0;
-    u16 = u16 | flash_target_contents[1] << 8;
-    u16 = u16 | flash_target_contents[0];
+    // uint16_t u16 = 0;
+    // u16 = u16 | flash_target_contents[1] << 8;
+    // u16 = u16 | flash_target_contents[0];
 
-    return u16;
+    // return u16;
 }
