@@ -8,6 +8,10 @@
 #include "draw/engine_display_draw.h"
 #include "physics/engine_physics.h"
 #include "physics/shapes/engine_physics_shape_rectangle.h"
+#include "physics/shapes/engine_physics_shape_circle.h"
+#include "physics/shapes/engine_physics_shape_convex.h"
+#include "physics/shapes/engine_physics_manifold.h"
+#include "physics/shapes/shape_test.h"
 
 
 // Class required functions
@@ -30,9 +34,289 @@ STATIC mp_obj_t physics_2d_node_class_tick(mp_obj_t self_in){
 }
 MP_DEFINE_CONST_FUN_OBJ_1(physics_2d_node_class_tick_obj, physics_2d_node_class_tick);
 
+STATIC mp_obj_t physics_2d_node_class_apply_impulse(mp_obj_t self_in, mp_obj_t impulse_in, mp_obj_t point_in){
+
+    const engine_node_base_t* self = self_in;
+    vector2_class_obj_t* impulse = impulse_in;
+    vector2_class_obj_t* point = point_in;
+
+    mp_float_t i_mass = mp_obj_get_float(mp_load_attr(self->attr_accessor, MP_QSTR_i_mass));
+    mp_float_t i_I = mp_obj_get_float(mp_load_attr(self->attr_accessor, MP_QSTR_i_I));
+    mp_float_t ang_vel = mp_obj_get_float(mp_load_attr(self->attr_accessor, MP_QSTR_angular_velocity));
+
+    vector2_class_obj_t* vel = MP_OBJ_TO_PTR(mp_load_attr(self->attr_accessor, MP_QSTR_velocity));
+    vector2_class_obj_t* pos = MP_OBJ_TO_PTR(mp_load_attr(self->attr_accessor, MP_QSTR_position));
+
+    ENGINE_INFO_PRINTF("Applying impulse at %f, %f", point->x, point->y);
+    ENGINE_INFO_PRINTF("Impulse is %f, %f", impulse->x, impulse->y);
+
+    ENGINE_INFO_PRINTF("Vel before collision: %f, %f", vel->x, vel->y);
+
+    vel->x += i_mass * impulse->x;
+    vel->y += i_mass * impulse->y;
+
+    ENGINE_INFO_PRINTF("Vel after collision: %f, %f", vel->x, vel->y);
+
+    ang_vel += i_I * ((point->x - pos->x) * impulse->y - (point->y - pos->y) * impulse->x);
+
+    mp_store_attr(self->attr_accessor, MP_QSTR_angular_velocity, mp_obj_new_float(ang_vel));
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_3(physics_2d_node_class_apply_impulse_obj, physics_2d_node_class_apply_impulse);
+
+mp_obj_t physics_2d_node_class_apply_manifold_impulse(mp_obj_t a_in, mp_obj_t b_in, mp_obj_t manifold_in){
+
+    physics_manifold_class_obj_t* manifold = manifold_in;
+    engine_node_base_t* a = a_in;
+    engine_node_base_t* b = b_in;
+    if(manifold->nrm_x == 0.0 && manifold->nrm_y == 0.0) return mp_const_none; // Non-collision manifold
+
+    ENGINE_INFO_PRINTF("Manifold data: (%f, %f), (%f, %f), (%f, %f)", manifold->mtv_x, manifold->mtv_y, manifold->nrm_x, manifold->nrm_y,manifold->con_x, manifold->con_y);
+
+    vector2_class_obj_t* a_pos = MP_OBJ_TO_PTR(mp_load_attr(a->attr_accessor, MP_QSTR_position));
+    vector2_class_obj_t* b_pos = MP_OBJ_TO_PTR(mp_load_attr(b->attr_accessor, MP_QSTR_position));
+
+    vector2_class_obj_t* a_vel = MP_OBJ_TO_PTR(mp_load_attr(a->attr_accessor, MP_QSTR_velocity));
+    vector2_class_obj_t* b_vel = MP_OBJ_TO_PTR(mp_load_attr(b->attr_accessor, MP_QSTR_velocity));
+
+    mp_float_t a_ang_vel = mp_obj_get_float(mp_load_attr(a->attr_accessor, MP_QSTR_angular_velocity));
+    mp_float_t b_ang_vel = mp_obj_get_float(mp_load_attr(b->attr_accessor, MP_QSTR_angular_velocity));
+
+    mp_float_t a_i_mass = mp_obj_get_float(mp_load_attr(a->attr_accessor, MP_QSTR_i_mass));
+    mp_float_t b_i_mass = mp_obj_get_float(mp_load_attr(b->attr_accessor, MP_QSTR_i_mass));
+    mp_float_t a_i_I = mp_obj_get_float(mp_load_attr(a->attr_accessor, MP_QSTR_i_I));
+    mp_float_t b_i_I = mp_obj_get_float(mp_load_attr(b->attr_accessor, MP_QSTR_i_I));
+
+    mp_float_t a_restitution = mp_obj_get_float(mp_load_attr(a->attr_accessor, MP_QSTR_restitution));
+    mp_float_t b_restitution = mp_obj_get_float(mp_load_attr(b->attr_accessor, MP_QSTR_restitution));
+    mp_float_t a_friction = mp_obj_get_float(mp_load_attr(a->attr_accessor, MP_QSTR_friction));
+    mp_float_t b_friction = mp_obj_get_float(mp_load_attr(b->attr_accessor, MP_QSTR_friction));
+
+    // Radii deltas
+    mp_float_t rax = manifold->con_x - a_pos->x;
+    mp_float_t ray = manifold->con_y - a_pos->y;
+
+    mp_float_t rbx = manifold->con_x - b_pos->x;
+    mp_float_t rby = manifold->con_y - b_pos->y;
+    // Relative velocity
+    mp_float_t rvx = b_vel->x - b_ang_vel * rbx - a_vel->x + a_ang_vel * rax;
+    mp_float_t rvy = b_vel->y + b_ang_vel * rby - a_vel->y - a_ang_vel * ray;
+
+    mp_float_t contact_vel = rvx * manifold->nrm_x + rvy * manifold->nrm_y;
+
+    if(contact_vel > 0) return; // Separating
+
+    // Mix restitution
+    const mp_float_t e = MICROPY_FLOAT_C_FUN(fmax)(a_restitution, b_restitution);
+    ENGINE_INFO_PRINTF("Restitution is %f", e);
+
+    mp_float_t ra_cross_n = rax * manifold->nrm_y - ray * manifold->nrm_x;
+    mp_float_t rb_cross_n = rbx * manifold->nrm_y - rby * manifold->nrm_x;
+    mp_float_t i_mass_sum = a_i_mass + b_i_mass + ra_cross_n*ra_cross_n*a_i_I + rb_cross_n*rb_cross_n*b_i_I;
+    mp_float_t j = -(1.0 + e) * contact_vel;
+
+    ENGINE_INFO_PRINTF("Contact velocity is %f", contact_vel);
+    j /= i_mass_sum;
+
+    ENGINE_INFO_PRINTF("j is %f", j);
+
+    vector2_class_obj_t impulse_a = {{&vector2_class_type}, -manifold->nrm_x*j, -manifold->nrm_y*j};
+    vector2_class_obj_t impulse_b = {{&vector2_class_type}, manifold->nrm_x*j, manifold->nrm_y*j};
+    vector2_class_obj_t ra = {{&vector2_class_type}, rax, ray};
+    vector2_class_obj_t rb = {{&vector2_class_type}, rbx, rby};
+
+    ENGINE_INFO_PRINTF("Applying impulse at %f, %f", ra.x, ra.y);
+    ENGINE_INFO_PRINTF("Normal impulse is %f, %f", impulse_a.x, impulse_a.y);
+    // Apply normal impulses
+    physics_2d_node_class_apply_impulse(a_in, MP_OBJ_FROM_PTR(&impulse_a), MP_OBJ_FROM_PTR(&ra));
+    physics_2d_node_class_apply_impulse(b_in, MP_OBJ_FROM_PTR(&impulse_b), MP_OBJ_FROM_PTR(&rb));
+
+    a_vel = MP_OBJ_TO_PTR(mp_load_attr(a->attr_accessor, MP_QSTR_velocity));
+    b_vel = MP_OBJ_TO_PTR(mp_load_attr(b->attr_accessor, MP_QSTR_velocity));
+    a_ang_vel = mp_obj_get_float(mp_load_attr(a->attr_accessor, MP_QSTR_angular_velocity));
+    b_ang_vel = mp_obj_get_float(mp_load_attr(b->attr_accessor, MP_QSTR_angular_velocity));
+
+    rvx = b_vel->x - b_ang_vel * rbx - a_vel->x + a_ang_vel * rax;
+    rvy = b_vel->y + b_ang_vel * rby - a_vel->y - a_ang_vel * ray;
+
+    mp_float_t rvdotn = rvx * manifold->nrm_x + rvy * manifold->nrm_y;
+
+    ENGINE_INFO_PRINTF("rvdotn is %f", rvdotn);
+
+    vector2_class_obj_t t = {{&vector2_class_type}, rvx - rvdotn * manifold->nrm_x, rvy - rvdotn * manifold->nrm_y};
+
+    mp_float_t jt = -(rvx*t.x + rvy*t.y);
+    ENGINE_INFO_PRINTF("jt is %f", jt);
+    if(jt == 0.0 || (t.x == 0.0 && t.y == 0.0)) {
+        // Don't apply degenerate friction impulse
+    } else {
+        mp_float_t t_il = 1.0 / MICROPY_FLOAT_C_FUN(sqrt)(t.x*t.x + t.y*t.y);
+
+        ENGINE_INFO_PRINTF("t is %f, %f", t.x, t.y);
+        ENGINE_INFO_PRINTF("rvx, rvy are %f, %f", rvx, rvy);
+
+        t.x *= t_il;
+        t.y *= t_il;
+        jt /= i_mass_sum;
+
+        // Mix friction coefficients
+        const mp_float_t f = MICROPY_FLOAT_C_FUN(sqrt)(a_friction * b_friction);
+
+        vector2_class_obj_t t_impulse_a = {{&vector2_class_type}, -t.x*jt, -t.y*jt};
+        vector2_class_obj_t t_impulse_b = {{&vector2_class_type}, t.x*jt, t.y*jt};
+
+        ENGINE_INFO_PRINTF("i_mass_sum is %f", i_mass_sum);
+        ENGINE_INFO_PRINTF("j is %f", jt);
+
+        ENGINE_INFO_PRINTF("Tangent impulse is %f, %f", t_impulse_a.x, t_impulse_a.y);
+
+        physics_2d_node_class_apply_impulse(a_in, MP_OBJ_FROM_PTR(&t_impulse_a), MP_OBJ_FROM_PTR(&ra));
+        physics_2d_node_class_apply_impulse(b_in, MP_OBJ_FROM_PTR(&t_impulse_b), MP_OBJ_FROM_PTR(&rb));
+    }
+
+    const mp_float_t percent = 0.4;
+    const mp_float_t slop = 0.05f;
+
+    if(manifold->mtv_x*manifold->mtv_x + manifold->mtv_y*manifold->mtv_y <= slop*slop) return mp_const_none; // Within slop range
+
+    a_pos->x += percent * manifold->mtv_x * a_i_mass / (a_i_mass + b_i_mass);
+    a_pos->y += percent * manifold->mtv_y * a_i_mass / (a_i_mass + b_i_mass);
+
+    b_pos->x -= percent * manifold->mtv_x * b_i_mass / (a_i_mass + b_i_mass);
+    b_pos->y -= percent * manifold->mtv_y * b_i_mass / (a_i_mass + b_i_mass);
+
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_3(physics_2d_node_class_apply_manifold_impulse_obj, physics_2d_node_class_apply_manifold_impulse);
+
+mp_obj_t physics_2d_node_class_test(mp_obj_t self_in, mp_obj_t b_in){
+    ENGINE_INFO_PRINTF("Testing shape...");
+    if(!mp_obj_is_type(self_in, &engine_physics_2d_node_class_type)){
+        mp_raise_TypeError("expected physics node argument");
+    }
+
+    const engine_node_base_t* self = MP_OBJ_TO_PTR(self_in);
+    const engine_node_base_t* b = MP_OBJ_TO_PTR(b_in);
+
+    physics_manifold_class_obj_t* ret = physics_manifold_class_new(&physics_manifold_class_type, 0, 0, NULL);
+
+    vector2_class_obj_t *a_pos = mp_load_attr(self->attr_accessor, MP_QSTR_position);
+    vector2_class_obj_t *b_pos = mp_load_attr(b->attr_accessor, MP_QSTR_position);
+
+    mp_obj_t a_shape = mp_load_attr(self->attr_accessor, MP_QSTR_physics_shape);
+    mp_obj_t b_shape = mp_load_attr(b->attr_accessor, MP_QSTR_physics_shape);
+
+    if(mp_obj_is_type(a_shape, &physics_shape_rectangle_class_type)){
+        if(mp_obj_is_type(b_shape, &physics_shape_rectangle_class_type)){
+            ENGINE_INFO_PRINTF("Physics2DNode: rectangle-rectangle test");
+            physics_rectangle_rectangle_test(a_pos, a_shape, b_pos, b_shape, ret);
+
+        } else if(mp_obj_is_type(b_shape, &physics_shape_circle_class_type)) {
+            ENGINE_INFO_PRINTF("Physics2DNode: rectangle-circle test");
+            physics_circle_rectangle_test(b_pos, b_shape, a_pos, a_shape, ret);
+            ret->mtv_x = -ret->mtv_x;
+            ret->mtv_y = -ret->mtv_y;
+            ret->nrm_x = -ret->nrm_x;
+            ret->nrm_y = -ret->nrm_y;
+
+        } else if(mp_obj_is_type(b_shape, &physics_shape_convex_class_type)) {
+            ENGINE_INFO_PRINTF("Physics2DNode: rectangle-convex test");
+            physics_convex_rectangle_test(b_pos, b_shape, a_pos, a_shape, ret);
+            ret->mtv_x = -ret->mtv_x;
+            ret->mtv_y = -ret->mtv_y;
+            ret->nrm_x = -ret->nrm_x;
+            ret->nrm_y = -ret->nrm_y;
+
+        } else {
+            mp_raise_TypeError("Unknown shape of B");
+
+        }
+    } else if(mp_obj_is_type(a_shape, &physics_shape_circle_class_type)) {
+        if(mp_obj_is_type(b_shape, &physics_shape_rectangle_class_type)){
+            ENGINE_INFO_PRINTF("Physics2DNode: circle-rectangle test");
+            physics_circle_rectangle_test(a_pos, a_shape, b_pos, b_shape, ret);
+
+        } else if(mp_obj_is_type(b_shape, &physics_shape_circle_class_type)) {
+            ENGINE_INFO_PRINTF("Physics2DNode: circle-circle test");
+            physics_circle_circle_test(a_pos, a_shape, b_pos, b_shape, ret);
+
+        } else if(mp_obj_is_type(b_shape, &physics_shape_convex_class_type)) {
+            ENGINE_INFO_PRINTF("Physics2DNode: circle-convex test");
+            physics_convex_circle_test(b_pos, b_shape, a_pos, a_shape, ret);
+            ret->mtv_x = -ret->mtv_x;
+            ret->mtv_y = -ret->mtv_y;
+            ret->nrm_x = -ret->nrm_x;
+            ret->nrm_y = -ret->nrm_y;
+
+        } else {
+            mp_raise_TypeError("Unknown shape of B");
+
+        }
+    } else if(mp_obj_is_type(a_shape, &physics_shape_convex_class_type)) {
+        if(mp_obj_is_type(b_shape, &physics_shape_rectangle_class_type)){
+            ENGINE_INFO_PRINTF("Physics2DNode: convex-rectangle test");
+            physics_convex_rectangle_test(a_pos, a_shape, b_pos, b_shape, ret);
+
+        } else if(mp_obj_is_type(b_shape, &physics_shape_circle_class_type)) {
+            ENGINE_INFO_PRINTF("Physics2DNode: convex-circle test");
+            physics_convex_circle_test(a_pos, a_shape, b_pos, b_shape, ret);
+
+        } else if(mp_obj_is_type(b_shape, &physics_shape_convex_class_type)) {
+            ENGINE_INFO_PRINTF("Physics2DNode: convex-convex test");
+            physics_convex_convex_test(a_pos, a_shape, b_pos, b_shape, ret);
+
+        } else {
+            mp_raise_TypeError("Unknown shape of B");
+
+        }
+    } else {
+        mp_raise_TypeError("Unknown shape of A");
+    }
+
+    return MP_OBJ_FROM_PTR(ret);
+}
+MP_DEFINE_CONST_FUN_OBJ_2(physics_2d_node_class_test_obj, physics_2d_node_class_test);
+
+STATIC mp_obj_t physics_2d_node_class_compute_mass(mp_obj_t self_in, mp_obj_t density_in){
+    ENGINE_INFO_PRINTF("Computing shape mass...");
+    if(!mp_obj_is_type(self_in, &engine_physics_2d_node_class_type)){
+        mp_raise_TypeError("expected physics node argument");
+    }
+
+    const engine_node_base_t* self = MP_OBJ_TO_PTR(self_in);
+
+    mp_obj_t a_shape = mp_load_attr(self->attr_accessor, MP_QSTR_physics_shape);
+    const mp_float_t density = mp_obj_get_float(density_in);
+
+    if(mp_obj_is_type(a_shape, &physics_shape_rectangle_class_type)){
+        physics_shape_rectangle_class_obj_t* rect = MP_OBJ_TO_PTR(a_shape);
+        mp_float_t mass = rect->width * rect->height * density;
+        mp_store_attr(self->attr_accessor, MP_QSTR_i_mass, mp_obj_new_float(1.0/mass));
+        mp_store_attr(self->attr_accessor, MP_QSTR_i_I, mp_obj_new_float(1.0));
+    } else if(mp_obj_is_type(a_shape, &physics_shape_circle_class_type)) {
+        physics_shape_circle_class_obj_t* c = MP_OBJ_TO_PTR(a_shape);
+        mp_float_t r2 = c->radius * c->radius;
+        mp_float_t mass = M_PI * r2 * density;
+        mp_store_attr(self->attr_accessor, MP_QSTR_i_mass, mp_obj_new_float(1.0/mass));
+        mp_store_attr(self->attr_accessor, MP_QSTR_i_I, mp_obj_new_float(1.0/(M_PI*r2*r2)));
+    } else if(mp_obj_is_type(a_shape, &physics_shape_convex_class_type)) {
+        physics_shape_convex_class_obj_t* convex = MP_OBJ_TO_PTR(a_shape);
+        mp_float_t mass = convex->area * density;
+        mp_store_attr(self->attr_accessor, MP_QSTR_i_mass, mp_obj_new_float(1.0/mass));
+        mp_store_attr(self->attr_accessor, MP_QSTR_i_I, mp_obj_new_float(1.0/(convex->I)));
+    } else {
+        mp_raise_TypeError("Unknown shape of A");
+    }
+
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_2(physics_2d_node_class_compute_mass_obj, physics_2d_node_class_compute_mass);
+
 
 STATIC mp_obj_t physics_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("Physics2DNode: Drawing");
+
+    engine_node_base_t* base = self_in;
 
     // engine_node_base_t *node_base = self_in;
     // engine_physics_2d_node_common_data_t *common_data = node_base->node_common_data;
@@ -70,7 +354,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(physics_2d_node_class_draw_obj, physics_2d_node_class_
 
 mp_obj_t physics_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Physics2DNode");
-    
+
     engine_physics_2d_node_common_data_t *common_data = malloc(sizeof(engine_physics_2d_node_common_data_t));
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
@@ -101,10 +385,16 @@ mp_obj_t physics_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
         common_data->draw_cb = MP_OBJ_FROM_PTR(&physics_2d_node_class_draw_obj);
 
         physics_2d_node->position = vector2_class_new(&vector2_class_type, 0, 0, NULL);
-        physics_2d_node->rotation = mp_obj_new_float(0.0f);
+        physics_2d_node->rotation = mp_obj_new_float(0.0);
+        physics_2d_node->angular_velocity = mp_obj_new_float(0.0);
+        physics_2d_node->i_mass = mp_obj_new_float(1.0);
+        physics_2d_node->i_I = mp_obj_new_float(1.0);
+        physics_2d_node->restitution = mp_obj_new_float(0.3);
+        physics_2d_node->friction = mp_obj_new_float(0.3);
         physics_2d_node->velocity = vector2_class_new(&vector2_class_type, 0, 0, NULL);
         physics_2d_node->acceleration = vector2_class_new(&vector2_class_type, 0, 0, NULL);
         physics_2d_node->dynamic = mp_obj_new_bool(true);
+        physics_2d_node->physics_shape = mp_const_none;
     }else if(n_args == 1){  // Inherited (use existing object)
         node_base->inherited = true;
         node_base->node = args[0];
@@ -131,6 +421,7 @@ mp_obj_t physics_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
         mp_store_attr(node_base->node, MP_QSTR_velocity, vector2_class_new(&vector2_class_type, 0, 0, NULL));
         mp_store_attr(node_base->node, MP_QSTR_acceleration, vector2_class_new(&vector2_class_type, 0, 0, NULL));
         mp_store_attr(node_base->node, MP_QSTR_dynamic, mp_obj_new_bool(true));
+        mp_store_attr(node_base->node, MP_QSTR_physics_shape, mp_const_none);
     }else{
         mp_raise_msg(&mp_type_RuntimeError, "Too many arguments passed to Physics2DNode constructor!");
     }
@@ -184,11 +475,42 @@ STATIC void physics_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
             case MP_QSTR_node_base:
                 destination[0] = self_in;
             break;
+            case MP_QSTR_test:
+                destination[0] = MP_OBJ_FROM_PTR(&physics_2d_node_class_test_obj);
+                destination[1] = self_in;
+            break;
+            case MP_QSTR_compute_mass:
+                destination[0] = MP_OBJ_FROM_PTR(&physics_2d_node_class_compute_mass_obj);
+                destination[1] = self_in;
+            break;
+            case MP_QSTR_apply_impulse:
+                destination[0] = MP_OBJ_FROM_PTR(&physics_2d_node_class_apply_impulse_obj);
+                destination[1] = self_in;
+            break;
+            case MP_QSTR_apply_manifold_impulse:
+                destination[0] = MP_OBJ_FROM_PTR(&physics_2d_node_class_apply_manifold_impulse_obj);
+                destination[1] = self_in;
+            break;
             case MP_QSTR_position:
                 destination[0] = self->position;
             break;
             case MP_QSTR_rotation:
                 destination[0] = self->rotation;
+            break;
+            case MP_QSTR_angular_velocity:
+                destination[0] = self->angular_velocity;
+            break;
+            case MP_QSTR_i_mass:
+                destination[0] = self->i_mass;
+            break;
+            case MP_QSTR_i_I:
+                destination[0] = self->i_I;
+            break;
+            case MP_QSTR_restitution:
+                destination[0] = self->restitution;
+            break;
+            case MP_QSTR_friction:
+                destination[0] = self->friction;
             break;
             case MP_QSTR_velocity:
                 destination[0] = self->velocity;
@@ -198,6 +520,9 @@ STATIC void physics_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
             break;
             case MP_QSTR_dynamic:
                 destination[0] = self->dynamic;
+            break;
+            case MP_QSTR_physics_shape:
+                destination[0] = self->physics_shape;
             break;
             default:
                 return; // Fail
@@ -210,6 +535,21 @@ STATIC void physics_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
             case MP_QSTR_rotation:
                 self->rotation = destination[1];
             break;
+            case MP_QSTR_angular_velocity:
+                self->angular_velocity = destination[1];
+            break;
+            case MP_QSTR_i_mass:
+                self->i_mass = destination[1];
+            break;
+            case MP_QSTR_i_I:
+                self->i_I = destination[1];
+            break;
+            case MP_QSTR_restitution:
+                self->restitution = destination[1];
+            break;
+            case MP_QSTR_friction:
+                self->friction = destination[1];
+            break;
             case MP_QSTR_velocity:
                 self->velocity = destination[1];
             break;
@@ -218,6 +558,9 @@ STATIC void physics_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
             break;
             case MP_QSTR_dynamic:
                 self->dynamic = destination[1];
+            break;
+            case MP_QSTR_physics_shape:
+                self->physics_shape = destination[1];
             break;
             default:
                 return; // Fail

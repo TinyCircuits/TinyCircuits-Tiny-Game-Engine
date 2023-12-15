@@ -1,5 +1,11 @@
 #include "linked_list.h"
 
+void linked_list_init(linked_list *list) {
+    list->start = list->end = NULL;
+    list->count = 0;
+    list->initialzed = false;
+}
+
 
 // Internal function for creating a new 'linked_list_node'
 linked_list_node *setup_new_node(linked_list *list){
@@ -72,7 +78,7 @@ linked_list_node *linked_list_add_obj(linked_list *list, void *obj){
 linked_list_node *linked_list_sorted_add_obj(linked_list *list, void *obj, bool (*compare_sort_func)()){
     ENGINE_INFO_PRINTF("Linked List: adding object, sorted");
 
-    // If not initialzed yet there won't be anything 
+    // If not initialzed yet there won't be anything
     // to sort, use the normal add object function
     if(list->initialzed == false){
         return linked_list_add_obj(list, obj);
@@ -133,7 +139,7 @@ linked_list_node *linked_list_sorted_add_obj(linked_list *list, void *obj, bool 
 void linked_list_del_list_node(linked_list *list, linked_list_node *node){
     ENGINE_INFO_PRINTF("Linked List: removing object");
 
-    // Only the 'start' node can have a NULL previous node, relink 
+    // Only the 'start' node can have a NULL previous node, relink
     // 'start' to its next if that's also not null. Otherwise, if
     // 'previous' and 'next' are NULL set list to uninitialized
     if(node != NULL){

@@ -39,6 +39,9 @@ SRC_USERMOD += $(ENGINE_MOD_DIR)/resources/engine_sound_resource.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/physics/engine_physics_module.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/physics/engine_physics.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/physics/shapes/engine_physics_shape_rectangle.c
+SRC_USERMOD += $(ENGINE_MOD_DIR)/physics/shapes/engine_physics_shape_circle.c
+SRC_USERMOD += $(ENGINE_MOD_DIR)/physics/shapes/engine_physics_shape_convex.c
+SRC_USERMOD += $(ENGINE_MOD_DIR)/physics/shapes/engine_physics_manifold.c
 
 
 # We can add our module folder to include paths if needed

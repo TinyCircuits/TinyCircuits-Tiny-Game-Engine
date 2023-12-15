@@ -8,11 +8,16 @@
 
 typedef struct{
     mp_obj_t position;              // Vector2: 2d xy position of this node
-    mp_obj_t rotation;              // float
-    mp_obj_t velocity;              // Vector2
-    mp_obj_t acceleration;          // Vector2
+    mp_obj_t rotation;              // float (Current rotation angle)
+    mp_obj_t velocity;              // Vector2 (Absolute velocity)
+    mp_obj_t acceleration;          // Vector2 (Reference acceleration)
+    mp_obj_t angular_velocity;    // float (Angular velocity)
+    mp_obj_t i_mass;              // float (inverse mass)
+    mp_obj_t i_I;            // float (inverse inertia tensor)
+    mp_obj_t restitution;         // float (restitution coefficient)
+    mp_obj_t friction;         // float (simple friction coefficient)
     mp_obj_t dynamic;               // bool
-    mp_obj_t physics_shape;         // 
+    mp_obj_t physics_shape;         // Shape definition
 }engine_physics_2d_node_class_obj_t;
 
 typedef struct{
@@ -21,6 +26,9 @@ typedef struct{
     void *physics_body;
     linked_list_node *physics_list_node;    // All physics 2d nodes get added to a list that is easy to traverse
 }engine_physics_2d_node_common_data_t;
+
+mp_obj_t physics_2d_node_class_apply_manifold_impulse(mp_obj_t a_in, mp_obj_t b_in, mp_obj_t manifold_in);
+mp_obj_t physics_2d_node_class_test(mp_obj_t self_in, mp_obj_t b_in);
 
 extern const mp_obj_type_t engine_physics_2d_node_class_type;
 
