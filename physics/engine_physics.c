@@ -97,3 +97,9 @@ void engine_physics_sync_bodies_to_engine_nodes(){
         current_linked_list_node = current_linked_list_node->next;
     }
 }
+
+
+void engine_physics_clear_all(){
+    ENGINE_INFO_PRINTF("Untracking physics nodes...");
+    linked_list_clear(&engine_physics_nodes);
+}

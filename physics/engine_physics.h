@@ -24,5 +24,7 @@ void engine_physics_sync_engine_nodes_to_bodies();
 
 void engine_physics_sync_bodies_to_engine_nodes();
 
+// Untrack all physics nodes
+void engine_physics_clear_all();
 
 #endif  // ENGINE_PHYSICS_H

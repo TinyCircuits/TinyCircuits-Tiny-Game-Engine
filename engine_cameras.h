@@ -19,5 +19,8 @@ void engine_camera_untrack(linked_list_node *camera_list_node);
 // pass each camera to the draw callback
 void engine_camera_draw_for_each(mp_obj_t dest[2]);
 
+// Remove all cameras from linked list
+void engine_camera_clear_all();
+
 
 #endif  // ENGINE_CAMERAS_H

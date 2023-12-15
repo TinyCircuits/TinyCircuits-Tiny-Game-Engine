@@ -26,6 +26,7 @@ linked_list_node *setup_new_node(linked_list *list);
 linked_list_node *linked_list_add_obj(linked_list *list, void *obj);
 linked_list_node *linked_list_sorted_add_obj(linked_list *list, void *obj, bool (*compare_sort_func)());
 void linked_list_del_list_node(linked_list *list, linked_list_node *node);
+void linked_list_clear(linked_list *list);
 
 
 #endif  // LINKED_LIST_H

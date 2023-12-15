@@ -100,7 +100,7 @@ mp_obj_t camera_node_class_del(mp_obj_t self_in){
 
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(physics_2d_node_class_del_obj, physics_2d_node_class_del);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(camera_node_class_del_obj, camera_node_class_del);
 
 
 // Class methods
@@ -112,7 +112,7 @@ STATIC void camera_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *d
     if(destination[0] == MP_OBJ_NULL){          // Load
         switch(attribute){
             case MP_QSTR___del__:
-                destination[0] = MP_OBJ_FROM_PTR(&node_base_del_obj);
+                destination[0] = MP_OBJ_FROM_PTR(&camera_node_class_del_obj);
                 destination[1] = self_in;
             break;
             case MP_QSTR_add_child:

@@ -37,3 +37,9 @@ void engine_camera_draw_for_each(mp_obj_t dest[2]){
         current_camera_list_node = current_camera_list_node->next;
     }
 }
+
+
+void engine_camera_clear_all(){
+    ENGINE_INFO_PRINTF("Untracking all cameras...");
+    linked_list_clear(&engine_cameras);
+}
