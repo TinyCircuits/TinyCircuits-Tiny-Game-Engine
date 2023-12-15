@@ -98,12 +98,50 @@ STATIC void physics_circle_rectangle_test(vector2_class_obj_t* a_pos, physics_sh
 
     } else {
         // Circle center is inside rectangle
-        physics_shape_rectangle_class_obj_t a_rect;
-        a_rect.width = a_rect.height = 2*a->radius;
-        vector2_class_obj_t a_rect_pos;
-        a_rect_pos.x = a_pos->x - a->radius;
-        a_rect_pos.y = a_pos->y - a->radius;
-        physics_rectangle_rectangle_test(&a_rect_pos, &a_rect, b_pos, b, m);
+        // physics_shape_rectangle_class_obj_t a_rect;
+        // a_rect.width = a_rect.height = 0;
+        // vector2_class_obj_t a_rect_pos;
+        // a_rect_pos.x = a_pos->x;
+        // a_rect_pos.y = a_pos->y;
+        // physics_rectangle_rectangle_test(&a_rect_pos, &a_rect, b_pos, b, m);
+        mp_float_t dx1 = a_pos->x - b_pos->x;
+        mp_float_t dx2 = b_pos->x + b->width - a_pos->x;
+        mp_float_t dy1 = a_pos->y - b_pos->y;
+        mp_float_t dy2 = b_pos->y + b->height - a_pos->y;
+        if((dx1 < 0) || (dx2 < 0) || (dy1 < 0) || (dy2 < 0)) {
+            *m = const_separated_manifold;
+            return;
+        }
+        const mp_float_t min = fminf(dx1, fminf(dx2, fminf(dy1, dy2)));
+        if(dx1 == min) {
+            m->mtv_x = -dx1 - a->radius;
+            m->mtv_y = 0;
+            m->con_x = (a_pos->x + b_pos->x) * MICROPY_FLOAT_CONST(0.5);
+            m->con_y = (fmaxf(a_pos->y, b_pos->y) + fminf(a_pos->y+a->radius, b_pos->y+b->height)) * MICROPY_FLOAT_CONST(0.5);
+            m->nrm_x = -1;
+            m->nrm_y = 0;
+        } else if(dx2 == min) {
+            m->mtv_x = dx2 + a->radius;
+            m->mtv_y = 0;
+            m->con_x = (b_pos->x + b->width + a_pos->x) *  MICROPY_FLOAT_CONST(0.5);
+            m->con_y = (fmaxf(a_pos->y, b_pos->y) + fminf(a_pos->y+a->radius, b_pos->y+b->height)) * MICROPY_FLOAT_CONST(0.5);
+            m->nrm_x = 1;
+            m->nrm_y = 0;
+        } else if(dy1 == min) {
+            m->mtv_x = 0;
+            m->mtv_y = -dy1 - a->radius;
+            m->con_x = (fmaxf(a_pos->x, b_pos->x) + fminf(a_pos->x+a->radius, b_pos->x+b->width)) * MICROPY_FLOAT_CONST(0.5);
+            m->con_y = (a_pos->y + b_pos->y) * MICROPY_FLOAT_CONST(0.5);
+            m->nrm_x = 0;
+            m->nrm_y = -1;
+        } else {
+            m->mtv_x = 0;
+            m->mtv_y = dy2 + a->radius;
+            m->con_x = (fmaxf(a_pos->x, b_pos->x) + fminf(a_pos->x+a->radius, b_pos->x+b->width)) * MICROPY_FLOAT_CONST(0.5);
+            m->con_y = (b_pos->y + b->height + a_pos->y) * MICROPY_FLOAT_CONST(0.5);
+            m->nrm_x = 0;
+            m->nrm_y = 1;
+        }
     }
 }
 
