@@ -9,13 +9,20 @@
 
 STATIC void physics_rectangle_rectangle_test(vector2_class_obj_t* a_pos, physics_shape_rectangle_class_obj_t* a, vector2_class_obj_t* b_pos, physics_shape_rectangle_class_obj_t* b, physics_manifold_class_obj_t* m) {
     //physics_manifold_class_obj_t ret = const_separated_manifold;
-
+    vector2_class_obj_t a_old = *a_pos;
+    vector2_class_obj_t b_old = *b_pos;
+    a_pos->x -= a->width * 0.5;
+    a_pos->y -= a->height * 0.5;
+    b_pos->x -= b->width * 0.5;
+    b_pos->y -= b->height * 0.5;
     mp_float_t dx1 = a_pos->x + a->width - b_pos->x;
     mp_float_t dx2 = b_pos->x + b->width - a_pos->x;
     mp_float_t dy1 = a_pos->y + a->height - b_pos->y;
     mp_float_t dy2 = b_pos->y + b->height - a_pos->y;
     if((dx1 < 0) || (dx2 < 0) || (dy1 < 0) || (dy2 < 0)) {
         *m = const_separated_manifold;
+        *a_pos = a_old;
+        *b_pos = b_old;
         return;
     }
     const mp_float_t min = fminf(dx1, fminf(dx2, fminf(dy1, dy2)));
@@ -48,6 +55,8 @@ STATIC void physics_rectangle_rectangle_test(vector2_class_obj_t* a_pos, physics
         m->nrm_x = 0;
         m->nrm_y = 1;
     }
+    *a_pos = a_old;
+    *b_pos = b_old;
 }
 
 STATIC void physics_circle_circle_test(vector2_class_obj_t* a_pos, physics_shape_circle_class_obj_t* a, vector2_class_obj_t* b_pos, physics_shape_circle_class_obj_t* b, physics_manifold_class_obj_t* m) {
