@@ -12,7 +12,7 @@
 const static linked_list empty_list = (linked_list){NULL, NULL, 0, 0};
 linked_list engine_physics_nodes = empty_list;
 linked_list engine_physics_manifolds = empty_list;
-
+float gravity = 0.00981f;
 
 void engine_physics_init(){
     linked_list_init(&engine_physics_nodes);
@@ -84,6 +84,8 @@ void engine_physics_tick(){
 
         pos->x += vel->x;
         pos->y += vel->y;
+
+        vel->y += gravity;
 
         current_physics_node = current_physics_node->next;
     }
