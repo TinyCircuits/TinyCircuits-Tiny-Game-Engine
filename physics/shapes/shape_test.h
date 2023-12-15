@@ -86,7 +86,7 @@ STATIC void physics_circle_rectangle_test(vector2_class_obj_t* a_pos, physics_sh
         *m = const_separated_manifold;
 
     } else if(dist2 != 0.0) {
-        // Work out normal and constact
+        // Work out normal and contact
         mp_float_t dist = MICROPY_FLOAT_C_FUN(sqrt)(dist2);
         mp_float_t idist = 1.0/dist;
         m->nrm_x = dx*idist;
@@ -116,14 +116,14 @@ STATIC void physics_circle_rectangle_test(vector2_class_obj_t* a_pos, physics_sh
         if(dx1 == min) {
             m->mtv_x = -dx1 - a->radius;
             m->mtv_y = 0;
-            m->con_x = (a_pos->x + b_pos->x) * MICROPY_FLOAT_CONST(0.5);
+            m->con_x = (a_pos->x + a->radius + b_pos->x) * MICROPY_FLOAT_CONST(0.5);
             m->con_y = (fmaxf(a_pos->y, b_pos->y) + fminf(a_pos->y+a->radius, b_pos->y+b->height)) * MICROPY_FLOAT_CONST(0.5);
             m->nrm_x = -1;
             m->nrm_y = 0;
         } else if(dx2 == min) {
             m->mtv_x = dx2 + a->radius;
             m->mtv_y = 0;
-            m->con_x = (b_pos->x + b->width + a_pos->x) *  MICROPY_FLOAT_CONST(0.5);
+            m->con_x = (b_pos->x + b->width + a_pos->x - a->radius) *  MICROPY_FLOAT_CONST(0.5);
             m->con_y = (fmaxf(a_pos->y, b_pos->y) + fminf(a_pos->y+a->radius, b_pos->y+b->height)) * MICROPY_FLOAT_CONST(0.5);
             m->nrm_x = 1;
             m->nrm_y = 0;
@@ -131,14 +131,14 @@ STATIC void physics_circle_rectangle_test(vector2_class_obj_t* a_pos, physics_sh
             m->mtv_x = 0;
             m->mtv_y = -dy1 - a->radius;
             m->con_x = (fmaxf(a_pos->x, b_pos->x) + fminf(a_pos->x+a->radius, b_pos->x+b->width)) * MICROPY_FLOAT_CONST(0.5);
-            m->con_y = (a_pos->y + b_pos->y) * MICROPY_FLOAT_CONST(0.5);
+            m->con_y = (a_pos->y + a->radius + b_pos->y) * MICROPY_FLOAT_CONST(0.5);
             m->nrm_x = 0;
             m->nrm_y = -1;
         } else {
             m->mtv_x = 0;
             m->mtv_y = dy2 + a->radius;
             m->con_x = (fmaxf(a_pos->x, b_pos->x) + fminf(a_pos->x+a->radius, b_pos->x+b->width)) * MICROPY_FLOAT_CONST(0.5);
-            m->con_y = (b_pos->y + b->height + a_pos->y) * MICROPY_FLOAT_CONST(0.5);
+            m->con_y = (b_pos->y + b->height + a_pos->y - a->radius) * MICROPY_FLOAT_CONST(0.5);
             m->nrm_x = 0;
             m->nrm_y = 1;
         }
