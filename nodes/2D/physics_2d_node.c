@@ -120,8 +120,8 @@ mp_obj_t physics_2d_node_class_apply_manifold_impulse(mp_obj_t a_in, mp_obj_t b_
 
     ENGINE_INFO_PRINTF("j is %f", j);
 
-    vector2_class_obj_t impulse_a = {{&vector2_class_type}, -manifold->nrm_x*j, -manifold->nrm_y*j};
-    vector2_class_obj_t impulse_b = {{&vector2_class_type}, manifold->nrm_x*j, manifold->nrm_y*j};
+    vector2_class_obj_t impulse_a = {{&vector2_class_type}, manifold->nrm_x*j, manifold->nrm_y*j};
+    vector2_class_obj_t impulse_b = {{&vector2_class_type}, -manifold->nrm_x*j, -manifold->nrm_y*j};
     vector2_class_obj_t ra = {{&vector2_class_type}, rax, ray};
     vector2_class_obj_t rb = {{&vector2_class_type}, rbx, rby};
 
@@ -162,8 +162,8 @@ mp_obj_t physics_2d_node_class_apply_manifold_impulse(mp_obj_t a_in, mp_obj_t b_
         // Mix friction coefficients
         const mp_float_t f = MICROPY_FLOAT_C_FUN(sqrt)(a_friction * b_friction);
 
-        vector2_class_obj_t t_impulse_a = {{&vector2_class_type}, -t.x*jt, -t.y*jt};
-        vector2_class_obj_t t_impulse_b = {{&vector2_class_type}, t.x*jt, t.y*jt};
+        vector2_class_obj_t t_impulse_a = {{&vector2_class_type}, t.x*jt, t.y*jt};
+        vector2_class_obj_t t_impulse_b = {{&vector2_class_type}, -t.x*jt, -t.y*jt};
 
         ENGINE_INFO_PRINTF("i_mass_sum is %f", i_mass_sum);
         ENGINE_INFO_PRINTF("j is %f", jt);
