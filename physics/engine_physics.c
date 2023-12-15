@@ -72,6 +72,21 @@ void engine_physics_tick(){
         physics_2d_node_class_apply_manifold_impulse(m->body_a, m->body_b, MP_OBJ_FROM_PTR(m));
         node_m = node_m->next;
     }
+
+    // Update all node positions
+    linked_list_node *current_physics_node = engine_physics_nodes.start;
+    while(current_physics_node != NULL){
+
+        engine_node_base_t *node_base = current_physics_node->object;
+        
+        vector2_class_obj_t *vel = mp_load_attr(node_base->attr_accessor, MP_QSTR_velocity);
+        vector2_class_obj_t *pos = mp_load_attr(node_base->attr_accessor, MP_QSTR_position);
+
+        pos->x += vel->x;
+        pos->y += vel->y;
+
+        current_physics_node = current_physics_node->next;
+    }
 }
 
 
