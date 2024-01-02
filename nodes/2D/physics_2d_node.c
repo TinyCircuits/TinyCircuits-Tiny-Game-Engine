@@ -51,13 +51,16 @@ STATIC mp_obj_t physics_2d_node_class_apply_impulse(mp_obj_t self_in, mp_obj_t i
     ENGINE_INFO_PRINTF("Impulse is %f, %f", impulse->x, impulse->y);
 
     ENGINE_INFO_PRINTF("Vel before collision: %f, %f", vel->x, vel->y);
+    ENGINE_INFO_PRINTF("Ang Vel before collision: %f", ang_vel);
 
     vel->x += i_mass * impulse->x;
     vel->y += i_mass * impulse->y;
 
     ENGINE_INFO_PRINTF("Vel after collision: %f, %f", vel->x, vel->y);
 
-    ang_vel += i_I * ((point->x - pos->x) * impulse->y - (point->y - pos->y) * impulse->x);
+    ang_vel += i_I * ((point->y) * impulse->x - (point->x) * impulse->y);
+
+    ENGINE_INFO_PRINTF("Ang Vel after collision: %f %f %f %f, %f %f %f %f", ang_vel, i_I, point->x, point->y, pos->x, pos->y, point->x, point->y);
 
     mp_store_attr(self->attr_accessor, MP_QSTR_angular_velocity, mp_obj_new_float(ang_vel));
     return mp_const_none;
@@ -101,6 +104,8 @@ mp_obj_t physics_2d_node_class_apply_manifold_impulse(mp_obj_t a_in, mp_obj_t b_
     // Relative velocity
     mp_float_t rvx = b_vel->x - b_ang_vel * rbx - a_vel->x + a_ang_vel * rax;
     mp_float_t rvy = b_vel->y + b_ang_vel * rby - a_vel->y - a_ang_vel * ray;
+    ENGINE_INFO_PRINTF("%f %f %f  %f %f %f", b_vel->x, b_ang_vel, rbx, a_vel->x, a_ang_vel, rax);
+    ENGINE_INFO_PRINTF("%f %f %f  %f %f %f", b_vel->y, b_ang_vel, rby, a_vel->y, a_ang_vel, ray);
 
     mp_float_t contact_vel = rvx * manifold->nrm_x + rvy * manifold->nrm_y;
 
@@ -124,9 +129,13 @@ mp_obj_t physics_2d_node_class_apply_manifold_impulse(mp_obj_t a_in, mp_obj_t b_
     vector2_class_obj_t impulse_b = {{&vector2_class_type}, manifold->nrm_x*j, manifold->nrm_y*j};
     vector2_class_obj_t ra = {{&vector2_class_type}, rax, ray};
     vector2_class_obj_t rb = {{&vector2_class_type}, rbx, rby};
+    vector2_class_obj_t contact = {{&vector2_class_type}, manifold->con_x, manifold->con_y};
 
     ENGINE_INFO_PRINTF("Applying impulse at %f, %f", ra.x, ra.y);
     ENGINE_INFO_PRINTF("Normal impulse is %f, %f", impulse_a.x, impulse_a.y);
+
+
+
     // Apply normal impulses
     physics_2d_node_class_apply_impulse(a_in, MP_OBJ_FROM_PTR(&impulse_a), MP_OBJ_FROM_PTR(&ra));
     physics_2d_node_class_apply_impulse(b_in, MP_OBJ_FROM_PTR(&impulse_b), MP_OBJ_FROM_PTR(&rb));
@@ -138,12 +147,15 @@ mp_obj_t physics_2d_node_class_apply_manifold_impulse(mp_obj_t a_in, mp_obj_t b_
 
     rvx = b_vel->x - b_ang_vel * rbx - a_vel->x + a_ang_vel * rax;
     rvy = b_vel->y + b_ang_vel * rby - a_vel->y - a_ang_vel * ray;
+    ENGINE_INFO_PRINTF("#2: %f %f %f  %f %f %f", b_vel->x, b_ang_vel, rbx, a_vel->x, a_ang_vel, rax);
+    ENGINE_INFO_PRINTF("#2: %f %f %f  %f %f %f", b_vel->y, b_ang_vel, rby, a_vel->y, a_ang_vel, ray);
 
     mp_float_t rvdotn = rvx * manifold->nrm_x + rvy * manifold->nrm_y;
 
     ENGINE_INFO_PRINTF("rvdotn is %f", rvdotn);
 
     vector2_class_obj_t t = {{&vector2_class_type}, rvx - rvdotn * manifold->nrm_x, rvy - rvdotn * manifold->nrm_y};
+    ENGINE_INFO_PRINTF("#2: %f %f %f %f", t.x, t.y, rvx, rvy);
 
     mp_float_t jt = -(rvx*t.x + rvy*t.y);
     ENGINE_INFO_PRINTF("jt is %f", jt);

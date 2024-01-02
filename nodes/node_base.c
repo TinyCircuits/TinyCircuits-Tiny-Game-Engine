@@ -118,11 +118,11 @@ void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, mp_obj
 
             if(seeking_parent_node_base != NULL){
                 vector2_class_obj_t *parent_position = mp_load_attr(seeking_parent_node_base->attr_accessor, MP_QSTR_position);
-                float parent_rotation_radian = mp_obj_get_float(mp_load_attr(seeking_parent_node_base->attr_accessor, MP_QSTR_rotation)) * DEG2RAD;
+                float parent_rotation_radian = mp_obj_get_float(mp_load_attr(seeking_parent_node_base->attr_accessor, MP_QSTR_rotation));
 
                 *x += parent_position->x;
                 *y += parent_position->y;
-                *rotation += (parent_rotation_radian * RAD2DEG);
+                *rotation += parent_rotation_radian;
                 engine_math_rotate_point(x, y, parent_position->x, parent_position->y, parent_rotation_radian);
             }else{
                 // Done, reached top-most parent

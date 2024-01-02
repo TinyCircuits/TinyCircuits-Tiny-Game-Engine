@@ -1,7 +1,8 @@
 #ifndef ENGINE_FILE_RP2_H
 #define ENGINE_FILE_RP2_H
 
-#include "stdint.h"
+#include <stdint.h>
+#include <stdbool.h>
 
 
 // Opening and seeking around files using UNIX or LittleFS
@@ -14,17 +15,23 @@
 // locations and get the data directly from flash. This means
 // the flash bus is receiving at least 4 bytes (offset) for every 
 // 2 from flash when getting pixels
-#if defined(__unix__)
-    typedef struct engine_fast_cache_file{
-        uint8_t *file_data;
-    }engine_fast_cache_file_t;
-#elif defined (__arm__)
-    typedef struct engine_fast_cache_file{
-        uint32_t *block_flash_addresses;
-    }engine_fast_cache_file_t;
-#else
-    #error "Engine File: Unsupported platform!"
-#endif
+typedef struct engine_fast_cache_file{
+    uint8_t *file_data;
+    uint32_t file_size;
+    bool in_ram;
+}engine_fast_cache_file_t;
+
+// #if defined(__unix__)
+//     typedef struct engine_fast_cache_file{
+//         uint8_t *file_data;
+//     }engine_fast_cache_file_t;
+// #elif defined (__arm__)
+//     typedef struct engine_fast_cache_file{
+//         uint32_t *block_flash_addresses;
+//     }engine_fast_cache_file_t;
+// #else
+//     #error "Engine File: Unsupported platform!"
+// #endif
 
 
 // Read/store information about the file at 'filename'

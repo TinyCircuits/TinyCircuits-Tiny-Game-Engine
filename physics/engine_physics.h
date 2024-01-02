@@ -19,11 +19,6 @@ linked_list_node *engine_physics_track_node(engine_node_base_t *obj);
 // remove the physics node from the list of tracked nodes
 void engine_physics_untrack_node(linked_list_node *physics_list_node);
 
-
-void engine_physics_sync_engine_nodes_to_bodies();
-
-void engine_physics_sync_bodies_to_engine_nodes();
-
 // Untrack all physics nodes
 void engine_physics_clear_all();
 

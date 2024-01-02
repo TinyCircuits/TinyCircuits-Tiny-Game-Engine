@@ -51,7 +51,7 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_n
     float rectangle_rotated_y = rectangle_resolved_hierarchy_y-(camera_position->y);
 
     // Rotate rectangle origin about the camera
-    engine_math_rotate_point(&rectangle_rotated_x, &rectangle_rotated_y, camera_viewport->width/2, camera_viewport->height/2, camera_rotation->z * DEG2RAD);
+    engine_math_rotate_point(&rectangle_rotated_x, &rectangle_rotated_y, camera_viewport->width/2, camera_viewport->height/2, camera_rotation->z);
 
 
     engine_draw_fillrect_scale_rotate_viewport(rectangle_color,
@@ -61,7 +61,7 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_n
                                                rectangle_height,
                                                (int32_t)(rectangle_scale->x*65536 + 0.5),
                                                (int32_t)(rectangle_scale->y*65536 + 0.5),
-                                               (int16_t)(((rectangle_resolved_hierarchy_rotation+camera_rotation->z) * DEG2RAD)*1024 / (2*PI)),
+                                               (int16_t)(((rectangle_resolved_hierarchy_rotation+camera_rotation->z))*1024 / (2*PI)),
                                                camera_viewport->x,
                                                camera_viewport->y,
                                                camera_viewport->width,

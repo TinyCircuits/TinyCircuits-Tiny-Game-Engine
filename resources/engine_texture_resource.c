@@ -10,9 +10,16 @@ STATIC void texture_resource_class_print(const mp_print_t *print, mp_obj_t self_
 
 mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New TextureResource");
-    mp_arg_check_num(n_args, n_kw, 3, 3, false);
+    mp_arg_check_num(n_args, n_kw, 3, 4, false);
 
     texture_resource_class_obj_t *self = m_new_obj_with_finaliser(texture_resource_class_obj_t);
+
+    // Set flag indicating if file data is to be stored in ram or not (faster if stored in ram, up to programmer)
+    if(n_args == 4){
+        self->cache_file.in_ram = mp_obj_get_int(args[3]);
+    }else{
+        self->cache_file.in_ram = false;
+    }
 
     engine_fast_cache_file_init(&self->cache_file, mp_obj_str_get_str(args[0]));
     self->width = args[1];

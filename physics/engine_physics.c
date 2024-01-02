@@ -21,6 +21,28 @@ void engine_physics_init(){
 
 
 void engine_physics_tick(){
+    // Update all node positions
+    linked_list_node *current_physics_node = engine_physics_nodes.start;
+    while(current_physics_node != NULL){
+
+        engine_node_base_t *node_base = current_physics_node->object;
+        
+        vector2_class_obj_t *vel = mp_load_attr(node_base->attr_accessor, MP_QSTR_velocity);
+        vector2_class_obj_t *pos = mp_load_attr(node_base->attr_accessor, MP_QSTR_position);
+        mp_float_t rotation = mp_obj_get_float(mp_load_attr(node_base->attr_accessor, MP_QSTR_rotation));
+        mp_float_t angular_vel = mp_obj_get_float(mp_load_attr(node_base->attr_accessor, MP_QSTR_angular_velocity));
+        vector2_class_obj_t *acceleration = mp_load_attr(node_base->attr_accessor, MP_QSTR_acceleration);
+
+        pos->x += vel->x;
+        pos->y += vel->y;
+
+        vel->y += gravity+acceleration->y;
+
+        mp_store_attr(node_base->attr_accessor, MP_QSTR_rotation, mp_obj_new_float(rotation+angular_vel));
+        mp_store_attr(node_base->attr_accessor, MP_QSTR_angular_velocity, mp_obj_new_float(0));
+
+        current_physics_node = current_physics_node->next;
+    }
 
     ENGINE_INFO_PRINTF("Clearing manifolds, list length is %d\n\r", engine_physics_manifolds.count);
     // Clear out the manifolds
@@ -33,8 +55,6 @@ void engine_physics_tick(){
         node_m = next;
         manifolds++;
     }
-
-
 
     ENGINE_INFO_PRINTF("Cleared %f manifolds, Generating manifolds...\n\r", (float)manifolds);
     manifolds = 0;
@@ -72,23 +92,6 @@ void engine_physics_tick(){
         physics_2d_node_class_apply_manifold_impulse(m->body_a, m->body_b, MP_OBJ_FROM_PTR(m));
         node_m = node_m->next;
     }
-
-    // Update all node positions
-    linked_list_node *current_physics_node = engine_physics_nodes.start;
-    while(current_physics_node != NULL){
-
-        engine_node_base_t *node_base = current_physics_node->object;
-        
-        vector2_class_obj_t *vel = mp_load_attr(node_base->attr_accessor, MP_QSTR_velocity);
-        vector2_class_obj_t *pos = mp_load_attr(node_base->attr_accessor, MP_QSTR_position);
-
-        pos->x += vel->x;
-        pos->y += vel->y;
-
-        // vel->y += gravity;
-
-        current_physics_node = current_physics_node->next;
-    }
 }
 
 
@@ -101,72 +104,6 @@ linked_list_node *engine_physics_track_node(engine_node_base_t *obj){
 void engine_physics_untrack_node(linked_list_node *physics_list_node){
     ENGINE_INFO_PRINTF("Untracking physics node");
     linked_list_del_list_node(&engine_physics_nodes, physics_list_node);
-}
-
-
-void engine_physics_sync_engine_nodes_to_bodies(){
-    // linked_list_node *current_linked_list_node = engine_physics_nodes.start;
-    //
-    // while(current_linked_list_node != NULL){
-    //     ENGINE_INFO_PRINTF("Physics: syncing engine node to physics body...");
-    //
-    //     engine_node_base_t *physics_node_base = current_linked_list_node->object;
-    //     engine_physics_2d_node_common_data_t *physics_node_common_data = physics_node_base->node_common_data;
-    //     vector2_class_obj_t *engine_node_postion = mp_load_attr(physics_node_base->attr_accessor, MP_QSTR_position);
-    //
-    //     // cpBody *physics_body = physics_node_common_data->physics_body;
-    //     // physics_body->p.x = engine_node_postion->x;
-    //     // physics_body->p.y = engine_node_postion->y;
-    //
-    //     // float rotation_degrees = 0.0f;
-    //     // bool dynamic = false;
-    //
-    //
-    //     // rotation_degrees = mp_obj_get_float(mp_load_attr(node_base->attr_accessor, MP_QSTR_rotation));
-    //     // dynamic = mp_obj_get_int(mp_load_attr(node_base->attr_accessor, MP_QSTR_dynamic));
-    //
-    //
-    //
-    //     // PhysicsBody body = common_data->physac_body;
-    //     // body->position.x = engine_node_postion->x;
-    //     // body->position.y = engine_node_postion->y;
-    //     // body->orient = rotation_degrees * DEG2RAD;
-    //     // body->enabled = dynamic;
-    //
-    //     current_linked_list_node = current_linked_list_node->next;
-    // }
-}
-
-
-void engine_physics_sync_bodies_to_engine_nodes(){
-    // linked_list_node *current_linked_list_node = engine_physics_nodes.start;
-    //
-    // while(current_linked_list_node != NULL){
-    //     ENGINE_INFO_PRINTF("Physics: syncing physics bodies to engine nodes...");
-    //
-    //     engine_node_base_t *physics_node_base = current_linked_list_node->object;
-    //     engine_physics_2d_node_common_data_t *physics_node_common_data = physics_node_base->node_common_data;
-    //     vector2_class_obj_t *engine_node_position = mp_load_attr(physics_node_base->attr_accessor, MP_QSTR_position);
-    //
-    //     // cpBody *physics_body = physics_node_common_data->physics_body;
-    //     // engine_node_position->x = physics_body->p.x;
-    //     // engine_node_position->y = physics_body->p.y;
-    //
-    //     // PhysicsBody body = common_data->physac_body;
-    //
-    //     // if(node_base->inherited){
-    //     //     engine_node_position = mp_load_attr(node_base->node, MP_QSTR_position);
-    //     //     mp_store_attr(node_base->node, MP_QSTR_rotation, mp_obj_new_float(body->orient * RAD2DEG));
-    //     // }else{
-    //     //     engine_node_position = mp_load_attr(node_base, MP_QSTR_position);
-    //     //     mp_store_attr(node_base, MP_QSTR_rotation, mp_obj_new_float(body->orient * RAD2DEG));
-    //     // }
-    //
-    //     // engine_node_position->x = body->position.x;
-    //     // engine_node_position->y = body->position.y;
-    //
-    //     current_linked_list_node = current_linked_list_node->next;
-    // }
 }
 
 
