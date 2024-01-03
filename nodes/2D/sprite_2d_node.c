@@ -5,11 +5,14 @@
 #include "debug/debug_print.h"
 #include "engine_object_layers.h"
 #include "math/vector2.h"
+#include "math/vector3.h"
+#include "math/rectangle.h"
 #include "draw/engine_display_draw.h"
 #include "extmod/vfs.h"
 #include "resources/engine_texture_resource.h"
 #include <fcntl.h>
 #include "utility/engine_file.h"
+#include "math/engine_math.h"
 
 // #include "pico/stdlib.h"
 // #include "hardware/flash.h"
@@ -31,23 +34,63 @@ MP_DEFINE_CONST_FUN_OBJ_1(sprite_2d_node_class_tick_obj, sprite_2d_node_class_ti
 STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("Sprite2DNode: Drawing");
 
-    // vector3_class_obj_t *camera_position = mp_load_attr(camera_node, MP_QSTR_position);
-    // vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node, MP_QSTR_rotation);
-    // rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node, MP_QSTR_viewport);
+    // Decode and store properties about the rectangle and camera nodes
+    engine_node_base_t *sprite_node_base = self_in;
+    engine_node_base_t *camera_node_base = camera_node;
 
-    // vector2_class_obj_t *position = mp_load_attr(self_in, MP_QSTR_position);
+    vector2_class_obj_t *sprite_scale =  mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_scale);
+    texture_resource_class_obj_t *sprite_texture = mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_texture_resource);
+    uint32_t sprite_width = mp_obj_get_int(sprite_texture->width);
+    uint32_t sprite_height = mp_obj_get_int(sprite_texture->height);
 
-    texture_resource_class_obj_t *texture_resource = mp_load_attr(self_in, MP_QSTR_texture_resource);
-    int width = mp_obj_get_int(texture_resource->width);
-    int height = mp_obj_get_int(texture_resource->height);
+    vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
+    vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
+    rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
 
-    for(int x=0; x<width; x++){
-        for(int y=0; y<height; y++){
-            engine_draw_pixel(engine_fast_cache_file_get_u16(&texture_resource->cache_file, y*width+x), x, y);
-        }
-    }
+    float sprite_resolved_hierarchy_x = 0.0f;
+    float sprite_resolved_hierarchy_y = 0.0f;
+    float sprite_resolved_hierarchy_rotation = 0.0f;
 
+    node_base_get_child_absolute_xy(&sprite_resolved_hierarchy_x, &sprite_resolved_hierarchy_y, &sprite_resolved_hierarchy_rotation, self_in);
+
+    // Store the non-rotated x and y for a second
+    float sprite_rotated_x = sprite_resolved_hierarchy_x-(camera_position->x);
+    float sprite_rotated_y = sprite_resolved_hierarchy_y-(camera_position->y);
+
+    // Rotate sprite origin about the camera
+    engine_math_rotate_point(&sprite_rotated_x, &sprite_rotated_y, camera_viewport->width/2, camera_viewport->height/2, camera_rotation->z);
+
+
+    engine_draw_blit_scale_rotate(sprite_texture->cache_file.file_data,
+                                  sprite_rotated_x,
+                                  sprite_rotated_y,
+                                  sprite_width, 
+                                  sprite_height,
+                                  (int32_t)(sprite_scale->x*65536 + 0.5),
+                                  (int32_t)(sprite_scale->y*65536 + 0.5),
+                                  (int16_t)(((sprite_resolved_hierarchy_rotation+camera_rotation->z))*1024 / (2*PI)));
+                                               
     return mp_const_none;
+
+
+
+    // // vector3_class_obj_t *camera_position = mp_load_attr(camera_node, MP_QSTR_position);
+    // // vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node, MP_QSTR_rotation);
+    // // rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node, MP_QSTR_viewport);
+
+    // // vector2_class_obj_t *position = mp_load_attr(self_in, MP_QSTR_position);
+
+    // texture_resource_class_obj_t *texture_resource = mp_load_attr(self_in, MP_QSTR_texture_resource);
+    // int width = mp_obj_get_int(texture_resource->width);
+    // int height = mp_obj_get_int(texture_resource->height);
+
+    // for(int x=0; x<width; x++){
+    //     for(int y=0; y<height; y++){
+    //         engine_draw_pixel(texture_resource_get_pixel(texture_resource, y*width+x), x, y);
+    //     }
+    // }
+
+    // return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_2(sprite_2d_node_class_draw_obj, sprite_2d_node_class_draw);
 
@@ -83,8 +126,6 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
         common_data->draw_cb = MP_OBJ_FROM_PTR(&sprite_2d_node_class_draw_obj);
 
         sprite_2d_node->position = vector2_class_new(&vector2_class_type, 0, 0, NULL);
-        sprite_2d_node->width = mp_obj_new_int(16);
-        sprite_2d_node->height = mp_obj_new_int(16);
         sprite_2d_node->filename = mp_obj_new_str("", 0);
         sprite_2d_node->fps = mp_obj_new_int(5);
         sprite_2d_node->rotation = mp_obj_new_float(0.0f);
@@ -112,8 +153,6 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
         }
 
         mp_store_attr(node_base->node, MP_QSTR_position, vector2_class_new(&vector2_class_type, 0, 0, NULL));
-        mp_store_attr(node_base->node, MP_QSTR_width, mp_obj_new_int(16));
-        mp_store_attr(node_base->node, MP_QSTR_height, mp_obj_new_int(16));
         mp_store_attr(node_base->node, MP_QSTR_filename, mp_obj_new_str("", 0));
         mp_store_attr(node_base->node, MP_QSTR_fps, mp_obj_new_int(5));
         mp_store_attr(node_base->node, MP_QSTR_rotation, mp_obj_new_float(0.0f));
@@ -161,12 +200,6 @@ STATIC void sprite_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
             case MP_QSTR_position:
                 destination[0] = self->position;
             break;
-            case MP_QSTR_width:
-                destination[0] = self->width;
-            break;
-            case MP_QSTR_height:
-                destination[0] = self->height;
-            break;
             case MP_QSTR_filename:
                 destination[0] = self->filename;
             break;
@@ -189,12 +222,6 @@ STATIC void sprite_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
         switch(attribute){
             case MP_QSTR_position:
                 self->position = destination[1];
-            break;
-            case MP_QSTR_width:
-                self->width = destination[1];
-            break;
-            case MP_QSTR_height:
-                self->height = destination[1];
             break;
             case MP_QSTR_filename:
                 self->filename = destination[1];

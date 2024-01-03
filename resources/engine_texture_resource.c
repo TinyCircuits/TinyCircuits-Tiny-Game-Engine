@@ -41,21 +41,9 @@ STATIC mp_obj_t texture_resource_class_del(mp_obj_t self_in){
 MP_DEFINE_CONST_FUN_OBJ_1(texture_resource_class_del_obj, texture_resource_class_del);
 
 
-mp_obj_t texture_resource_get_pixel(mp_obj_t self_in, mp_obj_t x_in, mp_obj_t y_in){
-    ENGINE_INFO_PRINTF("TextureResource: Getting pixel");
-
-    // texture_resource_class_obj_t *self = self_in;
-    // mp_int_t x = mp_obj_get_int(x_in);
-    // mp_int_t y = mp_obj_get_int(y_in);
-    // mp_int_t width = mp_obj_get_int(self->width);
-
-    // mp_seek(self->file, y*width+x, MP_SEEK_SET);
-
-    // return mp_obj_new_int(mp_readbyte_u16(self->file));
-
-    return mp_const_none;
+uint16_t texture_resource_get_pixel(texture_resource_class_obj_t *texture, uint32_t offset){
+    return engine_fast_cache_file_get_u16(&texture->cache_file, offset);
 }
-MP_DEFINE_CONST_FUN_OBJ_3(texture_resource_get_pixel_obj, texture_resource_get_pixel);
 
 
 STATIC void texture_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
@@ -67,10 +55,6 @@ STATIC void texture_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj
         switch(attribute) {
             case MP_QSTR___del__:
                 destination[0] = MP_OBJ_FROM_PTR(&texture_resource_class_del_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_get_pixel:
-                destination[0] = MP_OBJ_FROM_PTR(&texture_resource_get_pixel_obj);
                 destination[1] = self_in;
             break;
             case MP_QSTR_width:

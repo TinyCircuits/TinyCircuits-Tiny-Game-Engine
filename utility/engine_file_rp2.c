@@ -211,25 +211,30 @@ void engine_fast_cache_file_init(engine_fast_cache_file_t *cache_file, const cha
 
     cache_file->file_size = lfs2_file_size(&littlefs2, &littlefs2_file);
 
-    // Setup a location to store the file data from flash to.
+    // Setup a location to store the file data from flash.
     // Could be a contiguous location in flash or ram
     if(cache_file->in_ram){
+        ENGINE_INFO_PRINTF("Engine File RP2: Caching data to ram...");
+
         // Store in ram (on MicroPython heap, not C) (need to make sure it will not get garbage collected...)
         cache_file->file_data = m_malloc(cache_file->file_size);
         lfs2_file_read(&littlefs2, &littlefs2_file, cache_file->file_data, cache_file->file_size);
     }else{
+        ENGINE_INFO_PRINTF("Engine File RP2: Caching data to contigious flash...");
+
         uint32_t required_pages = (uint32_t)ceil(cache_file->file_size/FLASH_PAGE_SIZE);
         uint32_t erased_sectors = (uint32_t)floor((used_pages)/FLASH_SECTOR_SIZE);
+        uint32_t erased_sectors_offset = erased_sectors * FLASH_SECTOR_SIZE;
         uint32_t required_sectors = (uint32_t)ceil((float)(used_pages+required_pages)/(float)FLASH_SECTOR_SIZE);
+        uint32_t sectors_left_to_erase = required_sectors-erased_sectors;
 
-        ENGINE_WARNING_PRINTF("%lu %lu %lu %lu %lu %lu", required_pages, erased_sectors, required_sectors, (erased_sectors*FLASH_SECTOR_SIZE), (required_sectors-erased_sectors)*FLASH_SECTOR_SIZE, ENGINE_HW_FLASH_SPRITE_SPACE_BASE+(erased_sectors*FLASH_SECTOR_SIZE));
-
+        // Erase sectors before programming them
         mp_uint_t atomic_state = MICROPY_BEGIN_ATOMIC_SECTION();
-        flash_range_erase(ENGINE_HW_FLASH_SPRITE_SPACE_BASE+(erased_sectors*FLASH_SECTOR_SIZE), (required_sectors-erased_sectors)*FLASH_SECTOR_SIZE);
+        flash_range_erase(ENGINE_HW_FLASH_SPRITE_SPACE_BASE+erased_sectors_offset, sectors_left_to_erase*FLASH_SECTOR_SIZE);
         MICROPY_END_ATOMIC_SECTION(atomic_state);
         MICROPY_EVENT_POLL_HOOK
 
-        // Flash erase/program must run in an atomic section because the XIP bit gets disabled.
+        // Flash erase/program must run in an atomic section because the XIP bit gets disabled
         atomic_state = MICROPY_BEGIN_ATOMIC_SECTION();
         for(uint32_t ipx=0; ipx<required_pages; ipx++){
             lfs2_file_read(&littlefs2, &littlefs2_file, page_prog, FLASH_PAGE_SIZE);
@@ -238,15 +243,15 @@ void engine_fast_cache_file_init(engine_fast_cache_file_t *cache_file, const cha
         MICROPY_END_ATOMIC_SECTION(atomic_state);
         MICROPY_EVENT_POLL_HOOK
 
-        ENGINE_WARNING_PRINTF("%lu %lu %lu", required_pages, erased_sectors, required_sectors);
-
-        // Store in contiguous flash location
+        // Stored in contiguous flash location
         cache_file->file_data = (uint8_t*)(XIP_BASE + ENGINE_HW_FLASH_SPRITE_SPACE_BASE + (used_pages*FLASH_PAGE_SIZE));
 
         used_pages += required_pages;
     }
 
     engine_file_close();
+
+    ENGINE_INFO_PRINTF("Engine File RP2: Done caching data!");
 }
 
 
