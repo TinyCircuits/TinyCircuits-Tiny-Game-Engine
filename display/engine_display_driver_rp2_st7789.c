@@ -201,6 +201,11 @@ void engine_display_st7789_update(uint16_t *screen_buffer_to_render){
         ENGINE_PERFORMANCE_STOP(ENGINE_PERF_TIMER_2, "Time spent waiting on remaining DMA");
     }
 
+    // For SPI must also wait for FIFO to flush and reset format
+    // https://github.com/Bodmer/TFT_eSPI/blob/5162af0a0e13e0d4bc0e4c792ed28d38599a1f23/Processors/TFT_eSPI_RP2040.c#L600-L602
+    while (spi_get_hw(spi0)->sr & SPI_SSPSR_BSY_BITS) {};
+    hw_write_masked(&spi_get_hw(spi0)->cr0, (16 - 1) << SPI_SSPCR0_DSS_LSB, SPI_SSPCR0_DSS_BITS);
+
     // Point DMA to active screen buffer that should be
     // sent now that the last frame is finished sending
     txbuf = screen_buffer_to_render;
