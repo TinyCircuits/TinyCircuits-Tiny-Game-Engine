@@ -74,7 +74,7 @@ mp_obj_t node_base_remove_child(mp_obj_t self_parent_in, mp_obj_t child_in){
         child_node_base->parent_node_base = NULL;
         child_node_base->location_in_parents_children = NULL;
     }else{
-        mp_raise_msg(&mp_type_RuntimeError, "Child node does not exist on this parent, cannot remove!");
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Child node does not exist on this parent, cannot remove!"));
     }
 
     return mp_const_none;
@@ -105,9 +105,9 @@ void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, mp_obj
     engine_node_base_t *child_node_base = child_node_base_in;
 
     vector2_class_obj_t *child_node_base_position = mp_load_attr(child_node_base->attr_accessor, MP_QSTR_position);
-    *x = child_node_base_position->x;
-    *y = child_node_base_position->y;
-    *rotation = mp_obj_get_float(mp_load_attr(child_node_base->attr_accessor, MP_QSTR_rotation));
+    *x = (float)child_node_base_position->x;
+    *y = (float)child_node_base_position->y;
+    *rotation = (float)mp_obj_get_float(mp_load_attr(child_node_base->attr_accessor, MP_QSTR_rotation));
 
     // Before doing anything, check if this child even has a parent 
     if(child_node_base->parent_node_base != NULL){
@@ -118,12 +118,12 @@ void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, mp_obj
 
             if(seeking_parent_node_base != NULL){
                 vector2_class_obj_t *parent_position = mp_load_attr(seeking_parent_node_base->attr_accessor, MP_QSTR_position);
-                float parent_rotation_radian = mp_obj_get_float(mp_load_attr(seeking_parent_node_base->attr_accessor, MP_QSTR_rotation));
+                float parent_rotation_radian = (float)mp_obj_get_float(mp_load_attr(seeking_parent_node_base->attr_accessor, MP_QSTR_rotation));
 
-                *x += parent_position->x;
-                *y += parent_position->y;
+                *x += (float)parent_position->x;
+                *y += (float)parent_position->y;
                 *rotation += parent_rotation_radian;
-                engine_math_rotate_point(x, y, parent_position->x, parent_position->y, parent_rotation_radian);
+                engine_math_rotate_point(x, y, (float)parent_position->x, (float)parent_position->y, parent_rotation_radian);
             }else{
                 // Done, reached top-most parent
                 break;

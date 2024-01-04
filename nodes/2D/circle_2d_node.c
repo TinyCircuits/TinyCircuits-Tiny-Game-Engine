@@ -45,19 +45,19 @@ STATIC mp_obj_t circle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
     node_base_get_child_absolute_xy(&circle_resolved_hierarchy_x, &circle_resolved_hierarchy_y, &circle_resolved_hierarchy_rotation, self_in);
 
     // Store the non-rotated x and y for a second
-    float circle_rotated_x = circle_resolved_hierarchy_x-(camera_position->x);
-    float circle_rotated_y = circle_resolved_hierarchy_y-(camera_position->y);
+    float circle_rotated_x = circle_resolved_hierarchy_x-((float)camera_position->x);
+    float circle_rotated_y = circle_resolved_hierarchy_y-((float)camera_position->y);
 
     // Rotate rectangle origin about the camera
-    engine_math_rotate_point(&circle_rotated_x, &circle_rotated_y, camera_viewport->width/2, camera_viewport->height/2, camera_rotation->z * DEG2RAD);
+    engine_math_rotate_point(&circle_rotated_x, &circle_rotated_y, (float)camera_viewport->width/2, (float)camera_viewport->height/2, (float)camera_rotation->z * (float)DEG2RAD);
 
     // https://stackoverflow.com/a/59211338
     for(int x=-circle_radius; x<circle_radius; x++){
         int hh = (int)sqrt(circle_radius_sqr - x * x);
-        int rx = circle_rotated_x + x;
-        int ph = circle_rotated_y + hh;
+        int rx = (int)circle_rotated_x + x;
+        int ph = (int)circle_rotated_y + hh;
 
-        for(int y=circle_rotated_y-hh; y<ph; y++){
+        for(int y=(int)circle_rotated_y-hh; y<ph; y++){
             engine_draw_pixel(circle_color, rx, y);
         }
     }
@@ -123,7 +123,7 @@ mp_obj_t circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
         mp_store_attr(node_base->node, MP_QSTR_rotation, mp_obj_new_float(0.0f));
         mp_store_attr(node_base->node, MP_QSTR_color, mp_obj_new_int(0xffff));
     }else{
-        mp_raise_msg(&mp_type_RuntimeError, "Too many arguments passed to Circle2DNode constructor!");
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Too many arguments passed to Circle2DNode constructor!"));
     }
 
     return MP_OBJ_FROM_PTR(node_base);
@@ -204,23 +204,16 @@ STATIC void circle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
 STATIC const mp_rom_map_elem_t circle_2d_node_class_locals_dict_table[] = {
 
 };
-
-
-// Class init
 STATIC MP_DEFINE_CONST_DICT(circle_2d_node_class_locals_dict, circle_2d_node_class_locals_dict_table);
 
-const mp_obj_type_t engine_circle_2d_node_class_type = {
-    { &mp_type_type },
-    .name = MP_QSTR_Circle2DNode,
-    .print = circle_2d_node_class_print,
-    .make_new = circle_2d_node_class_new,
-    .call = NULL,
-    .unary_op = NULL,
-    .binary_op = NULL,
-    .attr = circle_2d_node_class_attr,
-    .subscr = NULL,
-    .getiter = NULL,
-    .iternext = NULL,
-    .buffer_p = {NULL},
-    .locals_dict = (mp_obj_dict_t*)&circle_2d_node_class_locals_dict,
-};
+
+MP_DEFINE_CONST_OBJ_TYPE(
+    engine_circle_2d_node_class_type,
+    MP_QSTR_Circle2DNode,
+    MP_TYPE_FLAG_NONE,
+
+    make_new, circle_2d_node_class_new,
+    print, circle_2d_node_class_print,
+    attr, circle_2d_node_class_attr,
+    locals_dict, &circle_2d_node_class_locals_dict
+);

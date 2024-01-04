@@ -47,25 +47,25 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_n
     node_base_get_child_absolute_xy(&rectangle_resolved_hierarchy_x, &rectangle_resolved_hierarchy_y, &rectangle_resolved_hierarchy_rotation, self_in);
 
     // Store the non-rotated x and y for a second
-    float rectangle_rotated_x = rectangle_resolved_hierarchy_x-(camera_position->x);
-    float rectangle_rotated_y = rectangle_resolved_hierarchy_y-(camera_position->y);
+    float rectangle_rotated_x = rectangle_resolved_hierarchy_x-((float)camera_position->x);
+    float rectangle_rotated_y = rectangle_resolved_hierarchy_y-((float)camera_position->y);
 
     // Rotate rectangle origin about the camera
-    engine_math_rotate_point(&rectangle_rotated_x, &rectangle_rotated_y, camera_viewport->width/2, camera_viewport->height/2, camera_rotation->z);
+    engine_math_rotate_point(&rectangle_rotated_x, &rectangle_rotated_y, (float)camera_viewport->width/2, (float)camera_viewport->height/2, (float)camera_rotation->z);
 
 
     engine_draw_fillrect_scale_rotate_viewport(rectangle_color,
-                                               rectangle_rotated_x,
-                                               rectangle_rotated_y,
+                                               (int32_t)rectangle_rotated_x,
+                                               (int32_t)rectangle_rotated_y,
                                                rectangle_width, 
                                                rectangle_height,
                                                (int32_t)(rectangle_scale->x*65536 + 0.5),
                                                (int32_t)(rectangle_scale->y*65536 + 0.5),
-                                               (int16_t)(((rectangle_resolved_hierarchy_rotation+camera_rotation->z))*1024 / (2*PI)),
-                                               camera_viewport->x,
-                                               camera_viewport->y,
-                                               camera_viewport->width,
-                                               camera_viewport->height);
+                                               (int16_t)(((rectangle_resolved_hierarchy_rotation+(float)camera_rotation->z))*1024 / (float)(2*PI)),
+                                               (int32_t)camera_viewport->x,
+                                               (int32_t)camera_viewport->y,
+                                               (int32_t)camera_viewport->width,
+                                               (int32_t)camera_viewport->height);
                                                
     return mp_const_none;
 }
@@ -136,7 +136,7 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
         mp_store_attr(node_base->node, MP_QSTR_color, mp_obj_new_int(0xffff));
         mp_store_attr(node_base->node, MP_QSTR_rotation, mp_obj_new_float(0.0f));
     }else{
-        mp_raise_msg(&mp_type_RuntimeError, "Too many arguments passed to Rectangle2DNode constructor!");
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Too many arguments passed to Rectangle2DNode constructor!"));
     }
 
     return MP_OBJ_FROM_PTR(node_base);
@@ -229,23 +229,16 @@ STATIC void rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_ob
 STATIC const mp_rom_map_elem_t rectangle_2d_node_class_locals_dict_table[] = {
 
 };
-
-
-// Class init
 STATIC MP_DEFINE_CONST_DICT(rectangle_2d_node_class_locals_dict, rectangle_2d_node_class_locals_dict_table);
 
-const mp_obj_type_t engine_rectangle_2d_node_class_type = {
-    { &mp_type_type },
-    .name = MP_QSTR_Rectangle2DNode,
-    .print = rectangle_2d_node_class_print,
-    .make_new = rectangle_2d_node_class_new,
-    .call = NULL,
-    .unary_op = NULL,
-    .binary_op = NULL,
-    .attr = rectangle_2d_node_class_attr,
-    .subscr = NULL,
-    .getiter = NULL,
-    .iternext = NULL,
-    .buffer_p = {NULL},
-    .locals_dict = (mp_obj_dict_t*)&rectangle_2d_node_class_locals_dict,
-};
+
+MP_DEFINE_CONST_OBJ_TYPE(
+    engine_rectangle_2d_node_class_type,
+    MP_QSTR_Rectangle2DNode,
+    MP_TYPE_FLAG_NONE,
+
+    make_new, rectangle_2d_node_class_new,
+    print, rectangle_2d_node_class_print,
+    attr, rectangle_2d_node_class_attr,
+    locals_dict, &rectangle_2d_node_class_locals_dict
+);

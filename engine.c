@@ -5,6 +5,7 @@
 #include "input/engine_input_module.h"
 #include "physics/engine_physics.h"
 #include "resources/engine_resource_manager.h"
+#include "engine_cameras.h"
 
 // ### MODULE ###
 

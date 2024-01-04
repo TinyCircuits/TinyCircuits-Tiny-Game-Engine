@@ -2,7 +2,6 @@
 #define ENGINE_TEXTURE_RESOURCE_H
 
 #include "py/obj.h"
-#include "libs/mpfile/mpfile.h"
 #include "utility/engine_file.h"
 
 typedef struct{

@@ -26,7 +26,6 @@ target_sources(usermod_engine INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/utility/linked_list.c
     ${CMAKE_CURRENT_LIST_DIR}/utility/engine_time.c
     ${CMAKE_CURRENT_LIST_DIR}/utility/engine_file_rp2.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/mpfile/mpfile.c
     ${CMAKE_CURRENT_LIST_DIR}/engine_object_layers.c
     ${CMAKE_CURRENT_LIST_DIR}/engine_cameras.c
     ${CMAKE_CURRENT_LIST_DIR}/display/engine_display.c
@@ -40,6 +39,7 @@ target_sources(usermod_engine INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/resources/engine_sound_resource.c
     ${CMAKE_CURRENT_LIST_DIR}/physics/engine_physics_module.c
     ${CMAKE_CURRENT_LIST_DIR}/physics/engine_physics.c
+    ${CMAKE_CURRENT_LIST_DIR}/physics/shapes/shape_test.c
     ${CMAKE_CURRENT_LIST_DIR}/physics/shapes/engine_physics_shape_rectangle.c
     ${CMAKE_CURRENT_LIST_DIR}/physics/shapes/engine_physics_shape_circle.c
     ${CMAKE_CURRENT_LIST_DIR}/physics/shapes/engine_physics_shape_convex.c

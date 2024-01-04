@@ -32,7 +32,7 @@ uint32_t erased_sectors = 0;
 
 // https://github.com/TinyCircuits/micropython/blob/9b486340da22931cde82872f79e1c34db959548b/ports/rp2/rp2_flash.c#L79-L90
 // https://github.com/TinyCircuits/micropython/blob/9b486340da22931cde82872f79e1c34db959548b/ports/rp2/rp2_flash.c#L56C19-L56C48 (flash_base)
-int engine_lfs2_read(const struct lfs2_config *c, lfs2_block_t block, lfs2_off_t off, uint8_t *buffer, lfs2_size_t size){
+int engine_lfs2_read(const struct lfs2_config *c, lfs2_block_t block, lfs2_off_t off, void *buffer, lfs2_size_t size){
     uint32_t offset = (block * FLASH_SECTOR_SIZE) + off;
 
     memcpy(buffer, (uint8_t *)(XIP_BASE + MICROPY_HW_FLASH_STORAGE_BASE + offset), size);
@@ -49,16 +49,8 @@ int engine_lfs2_prog(const struct lfs2_config *c, lfs2_block_t block, lfs2_off_t
 
     ENGINE_INFO_PRINTF("Engine File: Programming %lu bytes starting at %lu", size, offset);
 
-    mp_uint_t atomic_state = MICROPY_BEGIN_ATOMIC_SECTION();
     flash_range_erase(MICROPY_HW_FLASH_STORAGE_BASE + offset, size);
-    MICROPY_END_ATOMIC_SECTION(atomic_state);
-    MICROPY_EVENT_POLL_HOOK
-
-    // Flash erase/program must run in an atomic section because the XIP bit gets disabled.
-    atomic_state = MICROPY_BEGIN_ATOMIC_SECTION();
     flash_range_program(MICROPY_HW_FLASH_STORAGE_BASE + offset, buffer, size);
-    MICROPY_END_ATOMIC_SECTION(atomic_state);
-    MICROPY_EVENT_POLL_HOOK
 
     return 0;
 }
@@ -77,10 +69,7 @@ int engine_lfs2_erase(const struct lfs2_config *c, lfs2_block_t block){
     ENGINE_INFO_PRINTF("Engine File: Erasing block %lu", block);
 
     uint32_t offset = block * FLASH_SECTOR_SIZE;
-    // Flash erase/program must run in an atomic section because the XIP bit gets disabled.
-    mp_uint_t atomic_state = MICROPY_BEGIN_ATOMIC_SECTION();
     flash_range_erase(MICROPY_HW_FLASH_STORAGE_BASE + offset, FLASH_SECTOR_SIZE);
-    MICROPY_END_ATOMIC_SECTION(atomic_state);
 
     return 0;
 }
@@ -229,19 +218,12 @@ void engine_fast_cache_file_init(engine_fast_cache_file_t *cache_file, const cha
         uint32_t sectors_left_to_erase = required_sectors-erased_sectors;
 
         // Erase sectors before programming them
-        mp_uint_t atomic_state = MICROPY_BEGIN_ATOMIC_SECTION();
         flash_range_erase(ENGINE_HW_FLASH_SPRITE_SPACE_BASE+erased_sectors_offset, sectors_left_to_erase*FLASH_SECTOR_SIZE);
-        MICROPY_END_ATOMIC_SECTION(atomic_state);
-        MICROPY_EVENT_POLL_HOOK
 
-        // Flash erase/program must run in an atomic section because the XIP bit gets disabled
-        atomic_state = MICROPY_BEGIN_ATOMIC_SECTION();
         for(uint32_t ipx=0; ipx<required_pages; ipx++){
             lfs2_file_read(&littlefs2, &littlefs2_file, page_prog, FLASH_PAGE_SIZE);
             flash_range_program(ENGINE_HW_FLASH_SPRITE_SPACE_BASE+(used_pages*FLASH_PAGE_SIZE)+(ipx*FLASH_PAGE_SIZE), page_prog, FLASH_PAGE_SIZE);
         }
-        MICROPY_END_ATOMIC_SECTION(atomic_state);
-        MICROPY_EVENT_POLL_HOOK
 
         // Stored in contiguous flash location
         cache_file->file_data = (uint8_t*)(XIP_BASE + ENGINE_HW_FLASH_SPRITE_SPACE_BASE + (used_pages*FLASH_PAGE_SIZE));
@@ -265,7 +247,7 @@ void engine_fast_cache_file_deinit(engine_fast_cache_file_t *cache_file){
 
 
 uint8_t engine_fast_cache_file_get_u8(engine_fast_cache_file_t *cache_file, uint32_t offset_u8){
-    
+    return 0;
 }
 
 

@@ -9,7 +9,7 @@
 
 // A linked list of physics nodes and manifolds to loop
 // through quickly
-const static linked_list empty_list = (linked_list){NULL, NULL, 0, 0};
+static const linked_list empty_list = (linked_list){NULL, NULL, 0, 0};
 linked_list engine_physics_nodes = empty_list;
 linked_list engine_physics_manifolds = empty_list;
 float gravity = 0.00981f;

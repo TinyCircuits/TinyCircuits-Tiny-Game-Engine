@@ -24,7 +24,7 @@ mp_obj_t rectangle_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_
         self->width = mp_obj_get_float(args[2]);
         self->height = mp_obj_get_float(args[3]);
     }else{
-        mp_raise_msg(&mp_type_RuntimeError, "Rectangle: Wrong number of arguments in constructor! Only accepts 0 or 4");
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Rectangle: Wrong number of arguments in constructor! Only accepts 0 or 4"));
     }
 
     return MP_OBJ_FROM_PTR(self);
@@ -108,23 +108,16 @@ STATIC void rectangle_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *des
 STATIC const mp_rom_map_elem_t rectangle_class_locals_dict_table[] = {
 
 };
-
-
-// Class init
 STATIC MP_DEFINE_CONST_DICT(rectangle_class_locals_dict, rectangle_class_locals_dict_table);
 
-const mp_obj_type_t rectangle_class_type = {
-    { &mp_type_type },
-    .name = MP_QSTR_Rectangle,
-    .print = rectangle_class_print,
-    .make_new = rectangle_class_new,
-    .call = NULL,
-    .unary_op = NULL,
-    .binary_op = NULL,
-    .attr = rectangle_class_attr,
-    .subscr = NULL,
-    .getiter = NULL,
-    .iternext = NULL,
-    .buffer_p = {NULL},
-    .locals_dict = (mp_obj_dict_t*)&rectangle_class_locals_dict,
-};
+
+MP_DEFINE_CONST_OBJ_TYPE(
+    rectangle_class_type,
+    MP_QSTR_Rectangle,
+    MP_TYPE_FLAG_NONE,
+
+    make_new, rectangle_class_new,
+    print, rectangle_class_print,
+    attr, rectangle_class_attr,
+    locals_dict, &rectangle_class_locals_dict
+);

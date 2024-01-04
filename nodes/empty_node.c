@@ -62,7 +62,7 @@ STATIC mp_obj_t empty_node_class_new(const mp_obj_type_t *type, size_t n_args, s
             common_data->tick_cb = dest[0];
         }
     }else{
-        mp_raise_msg(&mp_type_RuntimeError, "Too many arguments passed to EmptyNode constructor!");
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Too many arguments passed to EmptyNode constructor!"));
     }
 
     return MP_OBJ_FROM_PTR(node_base);
@@ -117,23 +117,16 @@ STATIC void empty_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *de
 STATIC const mp_rom_map_elem_t empty_node_class_locals_dict_table[] = {
 
 };
-
-
-// Class init
 STATIC MP_DEFINE_CONST_DICT(empty_node_class_locals_dict, empty_node_class_locals_dict_table);
 
-const mp_obj_type_t engine_empty_node_class_type = {
-    { &mp_type_type },
-    .name = MP_QSTR_EmptyNode,
-    .print = empty_node_class_print,
-    .make_new = empty_node_class_new,
-    .call = NULL,
-    .unary_op = NULL,
-    .binary_op = NULL,
-    .attr = empty_node_class_attr,
-    .subscr = NULL,
-    .getiter = NULL,
-    .iternext = NULL,
-    .buffer_p = {NULL},
-    .locals_dict = (mp_obj_dict_t*)&empty_node_class_locals_dict,
-};
+
+MP_DEFINE_CONST_OBJ_TYPE(
+    engine_empty_node_class_type,
+    MP_QSTR_EmptyNode,
+    MP_TYPE_FLAG_NONE,
+
+    make_new, empty_node_class_new,
+    print, empty_node_class_print,
+    attr, empty_node_class_attr,
+    locals_dict, &empty_node_class_locals_dict
+);

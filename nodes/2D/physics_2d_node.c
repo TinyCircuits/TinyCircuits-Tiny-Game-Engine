@@ -92,8 +92,8 @@ mp_obj_t physics_2d_node_class_apply_manifold_impulse(mp_obj_t a_in, mp_obj_t b_
 
     mp_float_t a_restitution = mp_obj_get_float(mp_load_attr(a->attr_accessor, MP_QSTR_restitution));
     mp_float_t b_restitution = mp_obj_get_float(mp_load_attr(b->attr_accessor, MP_QSTR_restitution));
-    mp_float_t a_friction = mp_obj_get_float(mp_load_attr(a->attr_accessor, MP_QSTR_friction));
-    mp_float_t b_friction = mp_obj_get_float(mp_load_attr(b->attr_accessor, MP_QSTR_friction));
+    // mp_float_t a_friction = mp_obj_get_float(mp_load_attr(a->attr_accessor, MP_QSTR_friction));
+    // mp_float_t b_friction = mp_obj_get_float(mp_load_attr(b->attr_accessor, MP_QSTR_friction));
 
     // Radii deltas
     mp_float_t rax = manifold->con_x - a_pos->x;
@@ -109,7 +109,7 @@ mp_obj_t physics_2d_node_class_apply_manifold_impulse(mp_obj_t a_in, mp_obj_t b_
 
     mp_float_t contact_vel = rvx * manifold->nrm_x + rvy * manifold->nrm_y;
 
-    if(contact_vel < 0) return; // Separating
+    if(contact_vel < 0) return mp_const_none; // Separating
 
     // Mix restitution
     const mp_float_t e = MICROPY_FLOAT_C_FUN(fmax)(a_restitution, b_restitution);
@@ -129,7 +129,7 @@ mp_obj_t physics_2d_node_class_apply_manifold_impulse(mp_obj_t a_in, mp_obj_t b_
     vector2_class_obj_t impulse_b = {{&vector2_class_type}, manifold->nrm_x*j, manifold->nrm_y*j};
     vector2_class_obj_t ra = {{&vector2_class_type}, rax, ray};
     vector2_class_obj_t rb = {{&vector2_class_type}, rbx, rby};
-    vector2_class_obj_t contact = {{&vector2_class_type}, manifold->con_x, manifold->con_y};
+    // vector2_class_obj_t contact = {{&vector2_class_type}, manifold->con_x, manifold->con_y};
 
     ENGINE_INFO_PRINTF("Applying impulse at %f, %f", ra.x, ra.y);
     ENGINE_INFO_PRINTF("Normal impulse is %f, %f", impulse_a.x, impulse_a.y);
@@ -172,7 +172,7 @@ mp_obj_t physics_2d_node_class_apply_manifold_impulse(mp_obj_t a_in, mp_obj_t b_
         jt /= i_mass_sum;
 
         // Mix friction coefficients
-        const mp_float_t f = MICROPY_FLOAT_C_FUN(sqrt)(a_friction * b_friction);
+        // const mp_float_t f = MICROPY_FLOAT_C_FUN(sqrt)(a_friction * b_friction);
 
         vector2_class_obj_t t_impulse_a = {{&vector2_class_type}, -t.x*jt, -t.y*jt};
         vector2_class_obj_t t_impulse_b = {{&vector2_class_type}, t.x*jt, t.y*jt};
@@ -204,7 +204,7 @@ MP_DEFINE_CONST_FUN_OBJ_3(physics_2d_node_class_apply_manifold_impulse_obj, phys
 mp_obj_t physics_2d_node_class_test(mp_obj_t self_in, mp_obj_t b_in){
     ENGINE_INFO_PRINTF("Testing shape...");
     if(!mp_obj_is_type(self_in, &engine_physics_2d_node_class_type)){
-        mp_raise_TypeError("expected physics node argument");
+        mp_raise_TypeError(MP_ERROR_TEXT("expected physics node argument"));
     }
 
     const engine_node_base_t* self = MP_OBJ_TO_PTR(self_in);
@@ -240,7 +240,7 @@ mp_obj_t physics_2d_node_class_test(mp_obj_t self_in, mp_obj_t b_in){
             ret->nrm_y = -ret->nrm_y;
 
         } else {
-            mp_raise_TypeError("Unknown shape of B");
+            mp_raise_TypeError(MP_ERROR_TEXT("Unknown shape of B"));
 
         }
     } else if(mp_obj_is_type(a_shape, &physics_shape_circle_class_type)) {
@@ -261,7 +261,7 @@ mp_obj_t physics_2d_node_class_test(mp_obj_t self_in, mp_obj_t b_in){
             ret->nrm_y = -ret->nrm_y;
 
         } else {
-            mp_raise_TypeError("Unknown shape of B");
+            mp_raise_TypeError(MP_ERROR_TEXT("Unknown shape of B"));
 
         }
     } else if(mp_obj_is_type(a_shape, &physics_shape_convex_class_type)) {
@@ -278,11 +278,11 @@ mp_obj_t physics_2d_node_class_test(mp_obj_t self_in, mp_obj_t b_in){
             physics_convex_convex_test(a_pos, a_shape, b_pos, b_shape, ret);
 
         } else {
-            mp_raise_TypeError("Unknown shape of B");
+            mp_raise_TypeError(MP_ERROR_TEXT("Unknown shape of B"));
 
         }
     } else {
-        mp_raise_TypeError("Unknown shape of A");
+        mp_raise_TypeError(MP_ERROR_TEXT("Unknown shape of A"));
     }
 
     return MP_OBJ_FROM_PTR(ret);
@@ -292,7 +292,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(physics_2d_node_class_test_obj, physics_2d_node_class_
 STATIC mp_obj_t physics_2d_node_class_compute_mass(mp_obj_t self_in, mp_obj_t density_in){
     ENGINE_INFO_PRINTF("Computing shape mass...");
     if(!mp_obj_is_type(self_in, &engine_physics_2d_node_class_type)){
-        mp_raise_TypeError("expected physics node argument");
+        mp_raise_TypeError(MP_ERROR_TEXT("expected physics node argument"));
     }
 
     const engine_node_base_t* self = MP_OBJ_TO_PTR(self_in);
@@ -317,7 +317,7 @@ STATIC mp_obj_t physics_2d_node_class_compute_mass(mp_obj_t self_in, mp_obj_t de
         mp_store_attr(self->attr_accessor, MP_QSTR_i_mass, mp_obj_new_float(1.0/mass));
         mp_store_attr(self->attr_accessor, MP_QSTR_i_I, mp_obj_new_float(1.0/(convex->I)));
     } else {
-        mp_raise_TypeError("Unknown shape of A");
+        mp_raise_TypeError(MP_ERROR_TEXT("Unknown shape of A"));
     }
 
     return mp_const_none;
@@ -328,7 +328,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(physics_2d_node_class_compute_mass_obj, physics_2d_nod
 STATIC mp_obj_t physics_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("Physics2DNode: Drawing");
 
-    engine_node_base_t* base = self_in;
+    // engine_node_base_t* base = self_in;
 
     // engine_node_base_t *node_base = self_in;
     // engine_physics_2d_node_common_data_t *common_data = node_base->node_common_data;
@@ -435,7 +435,7 @@ mp_obj_t physics_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
         mp_store_attr(node_base->node, MP_QSTR_dynamic, mp_obj_new_bool(true));
         mp_store_attr(node_base->node, MP_QSTR_physics_shape, mp_const_none);
     }else{
-        mp_raise_msg(&mp_type_RuntimeError, "Too many arguments passed to Physics2DNode constructor!");
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Too many arguments passed to Physics2DNode constructor!"));
     }
 
     return MP_OBJ_FROM_PTR(node_base);
@@ -588,23 +588,16 @@ STATIC void physics_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
 STATIC const mp_rom_map_elem_t physics_2d_node_class_locals_dict_table[] = {
 
 };
-
-
-// Class init
 STATIC MP_DEFINE_CONST_DICT(physics_2d_node_class_locals_dict, physics_2d_node_class_locals_dict_table);
 
-const mp_obj_type_t engine_physics_2d_node_class_type = {
-    { &mp_type_type },
-    .name = MP_QSTR_Physics2DNode,
-    .print = physics_2d_node_class_print,
-    .make_new = physics_2d_node_class_new,
-    .call = NULL,
-    .unary_op = NULL,
-    .binary_op = NULL,
-    .attr = physics_2d_node_class_attr,
-    .subscr = NULL,
-    .getiter = NULL,
-    .iternext = NULL,
-    .buffer_p = {NULL},
-    .locals_dict = (mp_obj_dict_t*)&physics_2d_node_class_locals_dict,
-};
+
+MP_DEFINE_CONST_OBJ_TYPE(
+    engine_physics_2d_node_class_type,
+    MP_QSTR_Physics2DNode,
+    MP_TYPE_FLAG_NONE,
+
+    make_new, physics_2d_node_class_new,
+    print, physics_2d_node_class_print,
+    attr, physics_2d_node_class_attr,
+    locals_dict, &physics_2d_node_class_locals_dict
+);

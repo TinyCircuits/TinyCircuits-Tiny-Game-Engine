@@ -27,10 +27,6 @@ void engine_draw_pixel(uint16_t color, int32_t x, int32_t y){
         uint16_t index = y * SCREEN_WIDTH + x;
 
         screen_buffer[index] = color;
-
-        return true;
-    }else{
-        return false;
     }
 }
 
@@ -43,12 +39,12 @@ void engine_draw_line(uint16_t color, float x_start, float y_start, float x_end,
     rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
 
     // Viewport x and y are only used for location inside framebuffer (so not used here)
-    float center_x = camera_position->x + camera_viewport->width/2.0f;
-    float center_y = camera_position->y + camera_viewport->height/2.0f;
+    float center_x = (float)camera_position->x + (float)camera_viewport->width/2.0f;
+    float center_y = (float)camera_position->y + (float)camera_viewport->height/2.0f;
 
     // Rotate endpoints about camera
-    engine_math_rotate_point(&x_start, &y_start, center_x, center_y, camera_rotation->z * DEG2RAD);
-    engine_math_rotate_point(&x_end, &y_end, center_x, center_y, camera_rotation->z * DEG2RAD);
+    engine_math_rotate_point(&x_start, &y_start, center_x, center_y, (float)camera_rotation->z * DEG2RAD);
+    engine_math_rotate_point(&x_end, &y_end, center_x, center_y, (float)camera_rotation->z * DEG2RAD);
 
     // Distance difference between endpoints
     float dx = x_end - x_start;
@@ -56,10 +52,10 @@ void engine_draw_line(uint16_t color, float x_start, float y_start, float x_end,
 
     // See which axis requires most steps to draw complete line, store it
     float step_count = 0.0f;
-    if(abs(dx) >= abs(dy)){
-        step_count = abs(dx);
+    if(abs((int)dx) >= abs((int)dy)){
+        step_count = abs((int)dx);
     }else{
-        step_count = abs(dy);
+        step_count = abs((int)dy);
     }
 
     // Calculate how much to increment each axis each step
@@ -73,7 +69,7 @@ void engine_draw_line(uint16_t color, float x_start, float y_start, float x_end,
     for(uint32_t step=0; step<step_count; step++){
         line_x = line_x + slope_x;
         line_y = line_y + slope_y;
-        engine_draw_pixel(color, line_x, line_y);
+        engine_draw_pixel(color, (int32_t)line_x, (int32_t)line_y);
     }
 }
 
@@ -94,7 +90,7 @@ void engine_draw_blit(uint16_t *buffer, int32_t x_top_left, int32_t y_top_left, 
 
 
 
-inline bool is_xy_inside_viewport(int32_t x, int32_t y, int32_t vx, int32_t vy, int32_t vw, int32_t vh){
+bool is_xy_inside_viewport(int32_t x, int32_t y, int32_t vx, int32_t vy, int32_t vw, int32_t vh){
     if(x >= vx && y >= vy && x < vx+vw && y < vy+vh){
         return true;
     }

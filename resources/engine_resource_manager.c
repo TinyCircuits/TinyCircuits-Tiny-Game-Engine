@@ -24,7 +24,7 @@ void engine_resource_reset_resource_flash(){
     ENGINE_WARNING_PRINTF("TextureResource: Resetting resource flash space");
 
     #ifndef __unix__
-        total_resource_space = FLASH_SECTOR_SIZE*floor(FLASH_RESOURCE_LENGTH/FLASH_SECTOR_SIZE);
+        total_resource_space = FLASH_SECTOR_SIZE*(uint32_t)floor(FLASH_RESOURCE_LENGTH/FLASH_SECTOR_SIZE);
         free_room_start = 0;
         ENGINE_WARNING_PRINTF("TextureResource: Erasing %lu bytes starting at 0x%010x", total_resource_space, XIP_BASE+FLASH_RESOURCE_BASE_ADDRESS);
         flash_range_erase(FLASH_RESOURCE_BASE_ADDRESS, total_resource_space);

@@ -54,21 +54,21 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
     node_base_get_child_absolute_xy(&sprite_resolved_hierarchy_x, &sprite_resolved_hierarchy_y, &sprite_resolved_hierarchy_rotation, self_in);
 
     // Store the non-rotated x and y for a second
-    float sprite_rotated_x = sprite_resolved_hierarchy_x-(camera_position->x);
-    float sprite_rotated_y = sprite_resolved_hierarchy_y-(camera_position->y);
+    float sprite_rotated_x = sprite_resolved_hierarchy_x-((float)camera_position->x);
+    float sprite_rotated_y = sprite_resolved_hierarchy_y-((float)camera_position->y);
 
     // Rotate sprite origin about the camera
-    engine_math_rotate_point(&sprite_rotated_x, &sprite_rotated_y, camera_viewport->width/2, camera_viewport->height/2, camera_rotation->z);
+    engine_math_rotate_point(&sprite_rotated_x, &sprite_rotated_y, (float)camera_viewport->width/2, (float)camera_viewport->height/2, (float)camera_rotation->z);
 
 
-    engine_draw_blit_scale_rotate(sprite_texture->cache_file.file_data,
-                                  sprite_rotated_x,
-                                  sprite_rotated_y,
+    engine_draw_blit_scale_rotate((uint16_t*)sprite_texture->cache_file.file_data,
+                                  (int32_t)sprite_rotated_x,
+                                  (int32_t)sprite_rotated_y,
                                   sprite_width, 
                                   sprite_height,
                                   (int32_t)(sprite_scale->x*65536 + 0.5),
                                   (int32_t)(sprite_scale->y*65536 + 0.5),
-                                  (int16_t)(((sprite_resolved_hierarchy_rotation+camera_rotation->z))*1024 / (2*PI)));
+                                  (int16_t)(((sprite_resolved_hierarchy_rotation+(float)camera_rotation->z))*1024 / (float)(2*PI)));
                                                
     return mp_const_none;
 
@@ -159,7 +159,7 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
         mp_store_attr(node_base->node, MP_QSTR_scale, vector2_class_new(&vector2_class_type, 2, 0, default_scale_parameters));
         mp_store_attr(node_base->node, MP_QSTR_texture_resource, args[1]);
     }else{
-        mp_raise_msg(&mp_type_RuntimeError, "Too many arguments passed to Sprite2DNode constructor!");
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Too many arguments passed to Sprite2DNode constructor!"));
     }
 
     return MP_OBJ_FROM_PTR(node_base);
@@ -252,23 +252,16 @@ STATIC void sprite_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
 STATIC const mp_rom_map_elem_t sprite_2d_node_class_locals_dict_table[] = {
 
 };
-
-
-// Class init
 STATIC MP_DEFINE_CONST_DICT(sprite_2d_node_class_locals_dict, sprite_2d_node_class_locals_dict_table);
 
-const mp_obj_type_t engine_sprite_2d_node_class_type = {
-    { &mp_type_type },
-    .name = MP_QSTR_Sprite2DNode,
-    .print = sprite_2d_node_class_print,
-    .make_new = sprite_2d_node_class_new,
-    .call = NULL,
-    .unary_op = NULL,
-    .binary_op = NULL,
-    .attr = sprite_2d_node_class_attr,
-    .subscr = NULL,
-    .getiter = NULL,
-    .iternext = NULL,
-    .buffer_p = {NULL},
-    .locals_dict = (mp_obj_dict_t*)&sprite_2d_node_class_locals_dict,
-};
+
+MP_DEFINE_CONST_OBJ_TYPE(
+    engine_sprite_2d_node_class_type,
+    MP_QSTR_Sprite2DNode,
+    MP_TYPE_FLAG_NONE,
+
+    make_new, sprite_2d_node_class_new,
+    print, sprite_2d_node_class_print,
+    attr, sprite_2d_node_class_attr,
+    locals_dict, &sprite_2d_node_class_locals_dict
+);

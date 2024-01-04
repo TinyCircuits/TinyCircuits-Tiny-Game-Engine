@@ -22,7 +22,7 @@ mp_obj_t vector2_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw
         self->x = mp_obj_get_float(args[0]);
         self->y = mp_obj_get_float(args[1]);
     }else{
-        mp_raise_TypeError("function takes 0 or 2 arguments");
+        mp_raise_TypeError(MP_ERROR_TEXT("function takes 0 or 2 arguments"));
     }
 
     return MP_OBJ_FROM_PTR(self);
@@ -48,7 +48,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(vector2_class_cross_obj, vector2_class_cross);
 
 STATIC mp_obj_t vector2_class_len2(mp_obj_t self_in){
     if(!mp_obj_is_type(self_in, &vector2_class_type)){
-        mp_raise_TypeError("expected vector argument");
+        mp_raise_TypeError(MP_ERROR_TEXT("expected vector argument"));
     }
     const vector2_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
     return mp_obj_new_float(self->x*self->x + self->y*self->y);
@@ -58,7 +58,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(vector2_class_len2_obj, vector2_class_len2);
 
 STATIC mp_obj_t vector2_class_len(mp_obj_t self_in){
     if(!mp_obj_is_type(self_in, &vector2_class_type)){
-        mp_raise_TypeError("expected vector argument");
+        mp_raise_TypeError(MP_ERROR_TEXT("expected vector argument"));
     }
 
     const vector2_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
@@ -69,7 +69,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(vector2_class_len_obj, vector2_class_len);
 
 STATIC mp_obj_t vector2_class_normal(mp_obj_t self_in){
     if(!mp_obj_is_type(self_in, &vector2_class_type)){
-        mp_raise_TypeError("expected vector argument");
+        mp_raise_TypeError(MP_ERROR_TEXT("expected vector argument"));
     }
 
     const vector2_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
@@ -85,7 +85,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(vector2_class_normal_obj, vector2_class_normal);
 
 STATIC mp_obj_t vector2_class_normalize(mp_obj_t self_in){
     if(!mp_obj_is_type(self_in, &vector2_class_type)){
-        mp_raise_TypeError("expected vector argument");
+        mp_raise_TypeError(MP_ERROR_TEXT("expected vector argument"));
     }
 
     vector2_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
@@ -99,7 +99,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(vector2_class_normalize_obj, vector2_class_normalize);
 
 STATIC mp_obj_t vector2_class_rotateZ(mp_obj_t self_in, mp_obj_t _theta){
     if(!mp_obj_is_type(self_in, &vector2_class_type)){
-        mp_raise_TypeError("expected vector argument");
+        mp_raise_TypeError(MP_ERROR_TEXT("expected vector argument"));
     }
 
     vector2_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
@@ -116,7 +116,7 @@ STATIC mp_obj_t vector2_class_rotateZ(mp_obj_t self_in, mp_obj_t _theta){
         xp = self->x*c - self->y*s;
         yp = self->y*c + self->x*s;
     }else{
-        mp_raise_TypeError("expected vector or scalar length");
+        mp_raise_TypeError(MP_ERROR_TEXT("expected vector or scalar length"));
     }
 
     self->x = xp;
@@ -129,7 +129,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(vector2_class_rotateZ_obj, vector2_class_rotateZ);
 // Set vector to be the same size as another vector or length
 STATIC mp_obj_t vector2_class_resize(mp_obj_t self_in, mp_obj_t element_b){
     if(!mp_obj_is_type(self_in, &vector2_class_type)){
-        mp_raise_TypeError("expected vector argument");
+        mp_raise_TypeError(MP_ERROR_TEXT("expected vector argument"));
     }
 
     vector2_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
@@ -142,7 +142,7 @@ STATIC mp_obj_t vector2_class_resize(mp_obj_t self_in, mp_obj_t element_b){
         const mp_float_t b = mp_obj_get_float(element_b);
         f = sqrt((b*b) / (self->x*self->x + self->y*self->y));
     }else{
-        mp_raise_TypeError("expected vector or scalar length");
+        mp_raise_TypeError(MP_ERROR_TEXT("expected vector or scalar length"));
     }
 
     self->x = self->x*f;
@@ -226,23 +226,16 @@ STATIC void vector2_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *desti
 STATIC const mp_rom_map_elem_t vector2_class_locals_dict_table[] = {
 
 };
-
-
-// Class init
 STATIC MP_DEFINE_CONST_DICT(vector2_class_locals_dict, vector2_class_locals_dict_table);
 
-const mp_obj_type_t vector2_class_type = {
-    { &mp_type_type },
-    .name = MP_QSTR_Vector2,
-    .print = vector2_class_print,
-    .make_new = vector2_class_new,
-    .call = NULL,
-    .unary_op = NULL,
-    .binary_op = NULL,
-    .attr = vector2_class_attr,
-    .subscr = NULL,
-    .getiter = NULL,
-    .iternext = NULL,
-    .buffer_p = {NULL},
-    .locals_dict = (mp_obj_dict_t*)&vector2_class_locals_dict,
-};
+
+MP_DEFINE_CONST_OBJ_TYPE(
+    vector2_class_type,
+    MP_QSTR_Vector2,
+    MP_TYPE_FLAG_NONE,
+
+    make_new, vector2_class_new,
+    print, vector2_class_print,
+    attr, vector2_class_attr,
+    locals_dict, &vector2_class_locals_dict
+);

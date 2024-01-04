@@ -82,7 +82,7 @@ mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t 
         mp_store_attr(node_base->node, MP_QSTR_rotation, vector3_class_new(&vector3_class_type, 0, 0, NULL));
         mp_store_attr(node_base->node, MP_QSTR_viewport, rectangle_class_new(&rectangle_class_type, 4, 0, default_viewport_parameters));
     }else{
-        mp_raise_msg(&mp_type_RuntimeError, "Too many arguments passed to CameraNode constructor!");
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Too many arguments passed to CameraNode constructor!"));
     }
 
     return MP_OBJ_FROM_PTR(node_base);
@@ -168,23 +168,16 @@ STATIC void camera_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *d
 STATIC const mp_rom_map_elem_t camera_node_class_locals_dict_table[] = {
 
 };
-
-
-// Class init
 STATIC MP_DEFINE_CONST_DICT(camera_node_class_locals_dict, camera_node_class_locals_dict_table);
 
-const mp_obj_type_t engine_camera_node_class_type = {
-    { &mp_type_type },
-    .name = MP_QSTR_CameraNode,
-    .print = camera_node_class_print,
-    .make_new = camera_node_class_new,
-    .call = NULL,
-    .unary_op = NULL,
-    .binary_op = NULL,
-    .attr = camera_node_class_attr,
-    .subscr = NULL,
-    .getiter = NULL,
-    .iternext = NULL,
-    .buffer_p = {NULL},
-    .locals_dict = (mp_obj_dict_t*)&camera_node_class_locals_dict,
-};
+
+MP_DEFINE_CONST_OBJ_TYPE(
+    engine_camera_node_class_type,
+    MP_QSTR_CameraNode,
+    MP_TYPE_FLAG_NONE,
+
+    make_new, camera_node_class_new,
+    print, camera_node_class_print,
+    attr, camera_node_class_attr,
+    locals_dict, &camera_node_class_locals_dict
+);

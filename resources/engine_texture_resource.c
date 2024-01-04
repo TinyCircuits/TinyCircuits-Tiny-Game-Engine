@@ -13,6 +13,7 @@ mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, si
     mp_arg_check_num(n_args, n_kw, 3, 4, false);
 
     texture_resource_class_obj_t *self = m_new_obj_with_finaliser(texture_resource_class_obj_t);
+    self->base.type = &texture_resource_class_type;
 
     // Set flag indicating if file data is to be stored in ram or not (faster if stored in ram, up to programmer)
     if(n_args == 4){
@@ -82,23 +83,16 @@ STATIC void texture_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj
 STATIC const mp_rom_map_elem_t texture_resource_class_locals_dict_table[] = {
 
 };
-
-
-// Class init
 STATIC MP_DEFINE_CONST_DICT(texture_resource_class_locals_dict, texture_resource_class_locals_dict_table);
 
-const mp_obj_type_t texture_resource_class_type = {
-    { &mp_type_type },
-    .name = MP_QSTR_TextureResource,
-    .print = texture_resource_class_print,
-    .make_new = texture_resource_class_new,
-    .call = NULL,
-    .unary_op = NULL,
-    .binary_op = NULL,
-    .attr = texture_resource_class_attr,
-    .subscr = NULL,
-    .getiter = NULL,
-    .iternext = NULL,
-    .buffer_p = {NULL},
-    .locals_dict = (mp_obj_dict_t*)&texture_resource_class_locals_dict,
-};
+
+MP_DEFINE_CONST_OBJ_TYPE(
+    texture_resource_class_type,
+    MP_QSTR_TextureResource,
+    MP_TYPE_FLAG_NONE,
+
+    make_new, texture_resource_class_new,
+    print, texture_resource_class_print,
+    attr, texture_resource_class_attr,
+    locals_dict, &texture_resource_class_locals_dict
+);

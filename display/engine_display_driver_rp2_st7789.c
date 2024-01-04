@@ -8,7 +8,6 @@
 #include "hardware/spi.h"
 #include "hardware/dma.h"
 #include "hardware/gpio.h"
-#include "extmod/machine_spi.h"
 
 // Based on max from Bodmer: https://github.com/Bodmer/TFT_eSPI/blob/5162af0a0e13e0d4bc0e4c792ed28d38599a1f23/User_Setup.h#L366
 #define ST7789_SPI_MHZ 80 * 1000 * 1000

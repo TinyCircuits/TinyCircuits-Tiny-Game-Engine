@@ -23,7 +23,7 @@ mp_obj_t vector3_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw
       self->y = mp_obj_get_float(args[1]);
       self->z = mp_obj_get_float(args[2]);
     }else{
-      mp_raise_TypeError("function takes 0 or 3 arguments");
+      mp_raise_TypeError(MP_ERROR_TEXT("function takes 0 or 3 arguments"));
     }
     ENGINE_INFO_PRINTF("Returning Vector3");
     return MP_OBJ_FROM_PTR(self);
@@ -47,7 +47,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(vector3_class_dot_obj, vector3_class_dot);
 
 STATIC mp_obj_t vector3_class_cross(mp_obj_t self_in, mp_obj_t _b){
     if(!mp_obj_is_type(self_in, &vector3_class_type) || !mp_obj_is_type(_b, &vector3_class_type)){
-        mp_raise_TypeError("expected vector arguments");
+        mp_raise_TypeError(MP_ERROR_TEXT("expected vector arguments"));
     }
 
     const vector3_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
@@ -70,7 +70,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(vector3_class_cross_obj, vector3_class_cross);
 
 STATIC mp_obj_t vector3_class_len_squared(mp_obj_t self_in){
     if(!mp_obj_is_type(self_in, &vector3_class_type)) {
-        mp_raise_TypeError("expected vector argument");
+        mp_raise_TypeError(MP_ERROR_TEXT("expected vector argument"));
     }
     const vector3_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
     const mp_float_t x = self->x;
@@ -83,7 +83,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_len_squared_obj, vector3_class_len_squar
 
 STATIC mp_obj_t vector3_class_len(mp_obj_t self_in){
     if(!mp_obj_is_type(self_in, &vector3_class_type)){
-        mp_raise_TypeError("expected vector argument");
+        mp_raise_TypeError(MP_ERROR_TEXT("expected vector argument"));
     }
 
     const vector3_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
@@ -97,7 +97,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_len_obj, vector3_class_len);
 
 STATIC mp_obj_t vector3_class_normal(mp_obj_t self_in){
     if(!mp_obj_is_type(self_in, &vector3_class_type)){
-        mp_raise_TypeError("expected vector argument");
+        mp_raise_TypeError(MP_ERROR_TEXT("expected vector argument"));
     }
 
     const vector3_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
@@ -117,7 +117,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_normal_obj, vector3_class_normal);
 
 STATIC mp_obj_t vector3_class_normalize(mp_obj_t self_in){
     if(!mp_obj_is_type(self_in, &vector3_class_type)){
-        mp_raise_TypeError("expected vector argument");
+        mp_raise_TypeError(MP_ERROR_TEXT("expected vector argument"));
     }
 
     vector3_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
@@ -135,7 +135,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_normalize_obj, vector3_class_normalize);
 
 STATIC mp_obj_t vector3_class_rotateZ(mp_obj_t self_in, mp_obj_t _theta){
     if(!mp_obj_is_type(self_in, &vector3_class_type)){
-        mp_raise_TypeError("expected vector argument");
+        mp_raise_TypeError(MP_ERROR_TEXT("expected vector argument"));
     }
 
     vector3_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
@@ -156,7 +156,7 @@ STATIC mp_obj_t vector3_class_rotateZ(mp_obj_t self_in, mp_obj_t _theta){
         xp = x*c - y*s;
         yp = y*c + x*s;
     }else{
-        mp_raise_TypeError("expected vector or scalar length");
+        mp_raise_TypeError(MP_ERROR_TEXT("expected vector or scalar length"));
     }
 
     self->x = xp;
@@ -168,7 +168,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(vector3_class_rotateZ_obj, vector3_class_rotateZ);
 
 STATIC mp_obj_t vector3_class_rotateY(mp_obj_t self_in, mp_obj_t theta){
     if(!mp_obj_is_type(self_in, &vector3_class_type)){
-        mp_raise_TypeError("expected vector argument");
+        mp_raise_TypeError(MP_ERROR_TEXT("expected vector argument"));
     }
 
     vector3_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
@@ -189,7 +189,7 @@ STATIC mp_obj_t vector3_class_rotateY(mp_obj_t self_in, mp_obj_t theta){
         xp = x*c - z*s;
         zp = z*c + x*s;
     }else{
-        mp_raise_TypeError("expected vector or scalar length");
+        mp_raise_TypeError(MP_ERROR_TEXT("expected vector or scalar length"));
     }
 
     self->x = xp;
@@ -201,7 +201,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(vector3_class_rotateY_obj, vector3_class_rotateY);
 
 STATIC mp_obj_t vector3_class_rotateX(mp_obj_t self_in, mp_obj_t theta){
     if(!mp_obj_is_type(self_in, &vector3_class_type)){
-        mp_raise_TypeError("expected vector argument");
+        mp_raise_TypeError(MP_ERROR_TEXT("expected vector argument"));
     }
 
     vector3_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
@@ -222,7 +222,7 @@ STATIC mp_obj_t vector3_class_rotateX(mp_obj_t self_in, mp_obj_t theta){
         yp = y*c - z*s;
         zp = z*c + y*s;
     }else{
-        mp_raise_TypeError("expected vector or scalar length");
+        mp_raise_TypeError(MP_ERROR_TEXT("expected vector or scalar length"));
     }
 
     self->y = yp;
@@ -251,13 +251,13 @@ static void q_rot_mul(const mp_float_t* q1, const mp_float_t* q2, mp_float_t* y)
 // Rotate by axis-angle form
 STATIC mp_obj_t vector3_class_rotate(mp_obj_t self_in, mp_obj_t about_axis, mp_obj_t theta){
     if(!mp_obj_is_type(self_in, &vector3_class_type)){
-        mp_raise_TypeError("expected vector argument");
+        mp_raise_TypeError(MP_ERROR_TEXT("expected vector argument"));
     }
     if(!mp_obj_is_type(about_axis, &vector3_class_type)){
-        mp_raise_TypeError("expected vector argument");
+        mp_raise_TypeError(MP_ERROR_TEXT("expected vector argument"));
     }
     if(!mp_obj_is_float(theta)){
-        mp_raise_TypeError("expected scalar angle");
+        mp_raise_TypeError(MP_ERROR_TEXT("expected scalar angle"));
     }
     vector3_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
     const mp_float_t x = self->x;
@@ -294,7 +294,7 @@ MP_DEFINE_CONST_FUN_OBJ_3(vector3_class_rotate_obj, vector3_class_rotate);
 // Set vector to be the same size as another vector or length
 STATIC mp_obj_t vector3_class_resize(mp_obj_t self_in, mp_obj_t element_b){
     if(!mp_obj_is_type(self_in, &vector3_class_type)){
-        mp_raise_TypeError("expected vector argument");
+        mp_raise_TypeError(MP_ERROR_TEXT("expected vector argument"));
     }
 
     vector3_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
@@ -313,7 +313,7 @@ STATIC mp_obj_t vector3_class_resize(mp_obj_t self_in, mp_obj_t element_b){
         const mp_float_t b = mp_obj_get_float(element_b);
         f = sqrt((b*b) / (x*x + y*y + z*z));
     }else{
-        mp_raise_TypeError("expected vector or scalar length");
+        mp_raise_TypeError(MP_ERROR_TEXT("expected vector or scalar length"));
     }
 
     self->x = x*f;
@@ -412,23 +412,16 @@ STATIC void vector3_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *desti
 STATIC const mp_rom_map_elem_t vector3_class_locals_dict_table[] = {
 
 };
-
-
-// Class init
 STATIC MP_DEFINE_CONST_DICT(vector3_class_locals_dict, vector3_class_locals_dict_table);
 
-const mp_obj_type_t vector3_class_type = {
-    { &mp_type_type },
-    .name = MP_QSTR_Vector3,
-    .print = vector3_class_print,
-    .make_new = vector3_class_new,
-    .call = NULL,
-    .unary_op = NULL,
-    .binary_op = NULL,
-    .attr = vector3_class_attr,
-    .subscr = NULL,
-    .getiter = NULL,
-    .iternext = NULL,
-    .buffer_p = {NULL},
-    .locals_dict = (mp_obj_dict_t*)&vector3_class_locals_dict,
-};
+
+MP_DEFINE_CONST_OBJ_TYPE(
+    vector3_class_type,
+    MP_QSTR_Vector3,
+    MP_TYPE_FLAG_NONE,
+
+    make_new, vector3_class_new,
+    print, vector3_class_print,
+    attr, vector3_class_attr,
+    locals_dict, &vector3_class_locals_dict
+);

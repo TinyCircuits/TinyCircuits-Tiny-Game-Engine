@@ -5,7 +5,6 @@
 
 // Class required functions
 STATIC void physics_manifold_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
-    physics_manifold_class_obj_t *self = self_in;
     ENGINE_INFO_PRINTF("print(): PhysicsManifold");
 }
 
@@ -111,23 +110,16 @@ STATIC void physics_manifold_class_attr(mp_obj_t self_in, qstr attribute, mp_obj
 STATIC const mp_rom_map_elem_t physics_manifold_class_locals_dict_table[] = {
 
 };
-
-
-// Class init
 STATIC MP_DEFINE_CONST_DICT(physics_manifold_class_locals_dict, physics_manifold_class_locals_dict_table);
 
-const mp_obj_type_t physics_manifold_class_type = {
-    { &mp_type_type },
-    .name = MP_QSTR_PhysicsManifold,
-    .print = physics_manifold_class_print,
-    .make_new = physics_manifold_class_new,
-    .call = NULL,
-    .unary_op = NULL,
-    .binary_op = NULL,
-    .attr = physics_manifold_class_attr,
-    .subscr = NULL,
-    .getiter = NULL,
-    .iternext = NULL,
-    .buffer_p = {NULL},
-    .locals_dict = (mp_obj_dict_t*)&physics_manifold_class_locals_dict,
-};
+
+MP_DEFINE_CONST_OBJ_TYPE(
+    physics_manifold_class_type,
+    MP_QSTR_PhysicsManifold,
+    MP_TYPE_FLAG_NONE,
+
+    make_new, physics_manifold_class_new,
+    print, physics_manifold_class_print,
+    attr, physics_manifold_class_attr,
+    locals_dict, &physics_manifold_class_locals_dict
+);

@@ -6,7 +6,6 @@
 
 // Class required functions
 STATIC void physics_shape_convex_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
-    physics_shape_convex_class_obj_t *self = self_in;
     ENGINE_INFO_PRINTF("print(): PhysicsShapeConvex");
 }
 
@@ -34,16 +33,16 @@ mp_obj_t physics_shape_convex_class_new(const mp_obj_type_t *type, size_t n_args
             physics_shape_convex_class_compute_all(MP_OBJ_FROM_PTR(self));
             physics_shape_convex_class_compute_transform(MP_OBJ_FROM_PTR(self), &t, &r);
         } else {
-            mp_raise_TypeError("Expected vertex list argument");
+            mp_raise_TypeError(MP_ERROR_TEXT("Expected vertex list argument"));
         }
     }else{
-        mp_raise_TypeError("PhysicsShapeConvex Error: Function takes 0 or 1 arguments");
+        mp_raise_TypeError(MP_ERROR_TEXT("PhysicsShapeConvex Error: Function takes 0 or 1 arguments"));
     }
 
     return MP_OBJ_FROM_PTR(self);
 }
 
-STATIC mp_obj_t physics_shape_convex_class_compute_normals(mp_obj_t self_in){
+mp_obj_t physics_shape_convex_class_compute_normals(mp_obj_t self_in){
 
     physics_shape_convex_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
 
@@ -54,7 +53,7 @@ STATIC mp_obj_t physics_shape_convex_class_compute_normals(mp_obj_t self_in){
     mp_obj_t ns[vs_len];
     size_t ns_len = vs_len;
 
-    if(vs_len > 1) for(int i = 0; i < vs_len-1; i++) {
+    if(vs_len > 1) for(size_t i = 0; i < vs_len-1; i++) {
         vector2_class_obj_t* v1 = MP_OBJ_TO_PTR(vs[i]);
         vector2_class_obj_t* v2 = MP_OBJ_TO_PTR(vs[i+1]);
         mp_float_t dx = v2->x - v1->x;
@@ -85,7 +84,7 @@ STATIC mp_obj_t physics_shape_convex_class_compute_normals(mp_obj_t self_in){
 }
 MP_DEFINE_CONST_FUN_OBJ_1(physics_shape_convex_class_compute_normals_obj, physics_shape_convex_class_compute_normals);
 
-STATIC mp_obj_t physics_shape_convex_class_compute_all(mp_obj_t self_in){
+mp_obj_t physics_shape_convex_class_compute_all(mp_obj_t self_in){
 
     physics_shape_convex_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
 
@@ -104,7 +103,7 @@ STATIC mp_obj_t physics_shape_convex_class_compute_all(mp_obj_t self_in){
 
     vector2_class_obj_t* s = MP_OBJ_TO_PTR(vs[0]);
 
-    for(int i = 0; i < vs_len; ++i) {
+    for(size_t i = 0; i < vs_len; ++i) {
         vector2_class_obj_t* vi = MP_OBJ_TO_PTR(vs[i]);
         vector2_class_obj_t* vi2;
 
@@ -149,7 +148,7 @@ STATIC mp_obj_t physics_shape_convex_class_compute_all(mp_obj_t self_in){
 }
 MP_DEFINE_CONST_FUN_OBJ_1(physics_shape_convex_class_compute_all_obj, physics_shape_convex_class_compute_all);
 
-STATIC mp_obj_t physics_shape_convex_class_compute_transform(mp_obj_t self_in, mp_obj_t translate_in, mp_obj_t rot_in){
+mp_obj_t physics_shape_convex_class_compute_transform(mp_obj_t self_in, mp_obj_t translate_in, mp_obj_t rot_in){
 
     physics_shape_convex_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
 
@@ -167,7 +166,7 @@ STATIC mp_obj_t physics_shape_convex_class_compute_transform(mp_obj_t self_in, m
     mp_obj_t vs_t[vs_len];
     mp_obj_t ns_t[vs_len];
 
-    for(int i = 0; i < vs_len; i++) {
+    for(size_t i = 0; i < vs_len; i++) {
         vector2_class_obj_t* v = MP_OBJ_TO_PTR(vs[i]);
         vector2_class_obj_t* n = MP_OBJ_TO_PTR(ns[i]);
 
@@ -261,23 +260,16 @@ STATIC void physics_shape_convex_class_attr(mp_obj_t self_in, qstr attribute, mp
 STATIC const mp_rom_map_elem_t physics_shape_convex_class_locals_dict_table[] = {
 
 };
-
-
-// Class init
 STATIC MP_DEFINE_CONST_DICT(physics_shape_convex_class_locals_dict, physics_shape_convex_class_locals_dict_table);
 
-const mp_obj_type_t physics_shape_convex_class_type = {
-    { &mp_type_type },
-    .name = MP_QSTR_PhysicsShapeConvex,
-    .print = physics_shape_convex_class_print,
-    .make_new = physics_shape_convex_class_new,
-    .call = NULL,
-    .unary_op = NULL,
-    .binary_op = NULL,
-    .attr = physics_shape_convex_class_attr,
-    .subscr = NULL,
-    .getiter = NULL,
-    .iternext = NULL,
-    .buffer_p = {NULL},
-    .locals_dict = (mp_obj_dict_t*)&physics_shape_convex_class_locals_dict,
-};
+
+MP_DEFINE_CONST_OBJ_TYPE(
+    physics_shape_convex_class_type,
+    MP_QSTR_PhysicsShapeConvex,
+    MP_TYPE_FLAG_NONE,
+
+    make_new, physics_shape_convex_class_new,
+    print, physics_shape_convex_class_print,
+    attr, physics_shape_convex_class_attr,
+    locals_dict, &physics_shape_convex_class_locals_dict
+);
