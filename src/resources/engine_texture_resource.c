@@ -1,5 +1,7 @@
 #include "engine_texture_resource.h"
 #include "debug/debug_print.h"
+#include "resources/engine_resource_manager.h"
+#include <stdlib.h>
 
 
 // Class required functions
@@ -17,10 +19,15 @@ mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, si
 
     // Set flag indicating if file data is to be stored in ram or not (faster if stored in ram, up to programmer)
     if(n_args == 2){
-        self->cache_file.in_ram = mp_obj_get_int(args[3]);
+        self->in_ram = mp_obj_get_int(args[1]);
     }else{
-        self->cache_file.in_ram = false;
+        self->in_ram = false;
     }
+
+    // Always loaded into ram on unix port
+    #if defined(__unix__)
+        self->in_ram = true;
+    #endif
 
     // BMP parsing: https://en.wikipedia.org/wiki/BMP_file_format
     engine_file_open(mp_obj_str_get_str(args[0]));
@@ -30,7 +37,7 @@ mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, si
     uint32_t bitmap_width = engine_file_get_u32(18);
     uint32_t bitmap_height = engine_file_get_u32(22);
     uint32_t bitmap_bits_per_pixel = engine_file_get_u16(28);
-    uint32_t bitmap_bitmap_data_size = engine_file_get_u32(34);
+    uint32_t bitmap_data_size = engine_file_get_u32(34);
 
     ENGINE_INFO_PRINTF("TextureResource: BMP Parameters parsed from '%s':", mp_obj_str_get_str(args[0]));
     ENGINE_INFO_PRINTF("\tbitmap_id:\t\t\t%d", bitmap_id);
@@ -38,7 +45,7 @@ mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, si
     ENGINE_INFO_PRINTF("\tbitmap_width:\t\t\t%d", bitmap_width);
     ENGINE_INFO_PRINTF("\tbitmap_height:\t\t\t%d", bitmap_height);
     ENGINE_INFO_PRINTF("\tbitmap_bits_per_pixel:\t\t%d", bitmap_bits_per_pixel);
-    ENGINE_INFO_PRINTF("\tbitmap_bitmap_data_size:\t%d", bitmap_bitmap_data_size);
+    ENGINE_INFO_PRINTF("\bitmap_data_size:\t\t%d", bitmap_data_size);
 
     // Check header ID field
     if(bitmap_id != 19778){
@@ -54,7 +61,8 @@ mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, si
 
     engine_file_close();
 
-    // engine_fast_cache_file_init(&self->cache_file, mp_obj_str_get_str(args[0]));
+    // Pass the name of the file, size of the pixel data, and if it is in fast ram or not
+    self->data = (uint16_t*)engine_resource_get_space_and_fill(mp_obj_str_get_str(args[0]), bitmap_data_size, self->in_ram, bitmap_pixel_data_offset);
 
     return MP_OBJ_FROM_PTR(self);
 }
@@ -65,7 +73,18 @@ STATIC mp_obj_t texture_resource_class_del(mp_obj_t self_in){
     ENGINE_INFO_PRINTF("TextureResource: Deleted (freeing texture data)");
 
     texture_resource_class_obj_t *self = self_in;
-    engine_fast_cache_file_deinit(&self->cache_file);
+
+    if(self->in_ram){
+        #if defined(__unix__)
+            free(self->data);
+        #elif (__arm__)
+            m_free(self->data);
+        #else
+            #error "TextureResource: Unknown platform"
+        #endif
+    }else{
+        // Nothing done if not in ram, that flash goes to waste, for now
+    }
 
     return mp_const_none;
 }
@@ -73,7 +92,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(texture_resource_class_del_obj, texture_resource_class
 
 
 uint16_t texture_resource_get_pixel(texture_resource_class_obj_t *texture, uint32_t offset){
-    return engine_fast_cache_file_get_u16(&texture->cache_file, offset);
+    return texture->data[offset];
 }
 
 

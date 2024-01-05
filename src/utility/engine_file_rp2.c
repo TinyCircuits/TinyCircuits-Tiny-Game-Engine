@@ -22,13 +22,6 @@ lfs2_t littlefs2 = { 0 };
 lfs2_file_t littlefs2_file = { 0 };
 bool mounted = false;
 
-// Intermediate buffer to hold data read from flash before
-// programming it to a contigious area
-uint8_t page_prog[FLASH_PAGE_SIZE];
-
-uint32_t used_pages = 0;
-uint32_t erased_sectors = 0;
-
 
 // https://github.com/TinyCircuits/micropython/blob/9b486340da22931cde82872f79e1c34db959548b/ports/rp2/rp2_flash.c#L79-L90
 // https://github.com/TinyCircuits/micropython/blob/9b486340da22931cde82872f79e1c34db959548b/ports/rp2/rp2_flash.c#L56C19-L56C48 (flash_base)
@@ -178,6 +171,11 @@ void engine_file_read(void *buffer, uint32_t size){
 }
 
 
+void engine_file_seek(uint32_t offset){
+    lfs2_file_seek(&littlefs2, &littlefs2_file, offset, LFS2_SEEK_SET);
+}
+
+
 uint8_t engine_file_get_u8(uint32_t u8_byte_offset){
     uint8_t the_u8_byte = 0;
     lfs2_file_seek(&littlefs2, &littlefs2_file, u8_byte_offset, LFS2_SEEK_SET);
@@ -202,63 +200,6 @@ uint32_t engine_file_get_u32(uint32_t u8_byte_offset){
 }
 
 
-void engine_fast_cache_file_init(engine_fast_cache_file_t *cache_file, const char *filename){
-    // Open file that we want to cache information about
-    engine_file_open(filename);
-
-    cache_file->file_size = lfs2_file_size(&littlefs2, &littlefs2_file);
-
-    // Setup a location to store the file data from flash.
-    // Could be a contiguous location in flash or ram
-    if(cache_file->in_ram){
-        ENGINE_INFO_PRINTF("Engine File RP2: Caching data to ram...");
-
-        // Store in ram (on MicroPython heap, not C) (need to make sure it will not get garbage collected...)
-        cache_file->file_data = m_malloc(cache_file->file_size);
-        lfs2_file_read(&littlefs2, &littlefs2_file, cache_file->file_data, cache_file->file_size);
-    }else{
-        ENGINE_INFO_PRINTF("Engine File RP2: Caching data to contigious flash...");
-
-        uint32_t required_pages = (uint32_t)ceil(cache_file->file_size/FLASH_PAGE_SIZE);
-        uint32_t erased_sectors = (uint32_t)floor((used_pages)/FLASH_SECTOR_SIZE);
-        uint32_t erased_sectors_offset = erased_sectors * FLASH_SECTOR_SIZE;
-        uint32_t required_sectors = (uint32_t)ceil((float)(used_pages+required_pages)/(float)FLASH_SECTOR_SIZE);
-        uint32_t sectors_left_to_erase = required_sectors-erased_sectors;
-
-        // Erase sectors before programming them
-        flash_range_erase(ENGINE_HW_FLASH_SPRITE_SPACE_BASE+erased_sectors_offset, sectors_left_to_erase*FLASH_SECTOR_SIZE);
-
-        for(uint32_t ipx=0; ipx<required_pages; ipx++){
-            lfs2_file_read(&littlefs2, &littlefs2_file, page_prog, FLASH_PAGE_SIZE);
-            flash_range_program(ENGINE_HW_FLASH_SPRITE_SPACE_BASE+(used_pages*FLASH_PAGE_SIZE)+(ipx*FLASH_PAGE_SIZE), page_prog, FLASH_PAGE_SIZE);
-        }
-
-        // Stored in contiguous flash location
-        cache_file->file_data = (uint8_t*)(XIP_BASE + ENGINE_HW_FLASH_SPRITE_SPACE_BASE + (used_pages*FLASH_PAGE_SIZE));
-
-        used_pages += required_pages;
-    }
-
-    engine_file_close();
-
-    ENGINE_INFO_PRINTF("Engine File RP2: Done caching data!");
-}
-
-
-void engine_fast_cache_file_deinit(engine_fast_cache_file_t *cache_file){
-    if(cache_file->in_ram){
-        free(cache_file->file_data);
-    }else{
-        // Don't free anything for flash blocks, will just run out if keep allocating...
-    }
-}
-
-
-uint8_t engine_fast_cache_file_get_u8(engine_fast_cache_file_t *cache_file, uint32_t offset_u8){
-    return 0;
-}
-
-
-uint16_t engine_fast_cache_file_get_u16(engine_fast_cache_file_t *cache_file, uint32_t offset_u16){
-    return ((uint16_t*)cache_file->file_data)[offset_u16];
+uint32_t engine_file_size(){
+    return lfs2_file_size(&littlefs2, &littlefs2_file);
 }

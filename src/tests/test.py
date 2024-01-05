@@ -29,14 +29,14 @@ engine_debug.debug_enable_all()
 
 # # print("HI!")
 
-texture = TextureResource("32x32.bmp")
-# sprite = Sprite2DNode(texture)
-# sprite.position.x = 64
-# sprite.position.y = 64
+texture = TextureResource("32x32.bmp", True)
+sprite = Sprite2DNode(texture)
+sprite.position.x = 64
+sprite.position.y = 64
 # sprite.rotation = 45
-# camera = CameraNode()
+camera = CameraNode()
 
-# engine.start()
+engine.start()
 
 
 # node = Rectangle2DNode()

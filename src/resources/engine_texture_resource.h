@@ -8,7 +8,8 @@ typedef struct{
     mp_obj_base_t base;
     uint32_t width;
     uint32_t height;
-    engine_fast_cache_file_t cache_file;
+    uint16_t *data;
+    bool in_ram;
 }texture_resource_class_obj_t;
 
 extern const mp_obj_type_t texture_resource_class_type;
