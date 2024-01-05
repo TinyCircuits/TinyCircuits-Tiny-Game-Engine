@@ -6,8 +6,8 @@
 
 typedef struct{
     mp_obj_base_t base;
-    mp_obj_t width;
-    mp_obj_t height;
+    uint32_t width;
+    uint32_t height;
     engine_fast_cache_file_t cache_file;
 }texture_resource_class_obj_t;
 

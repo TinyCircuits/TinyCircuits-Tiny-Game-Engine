@@ -40,8 +40,8 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
 
     vector2_class_obj_t *sprite_scale =  mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_scale);
     texture_resource_class_obj_t *sprite_texture = mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_texture_resource);
-    uint32_t sprite_width = mp_obj_get_int(sprite_texture->width);
-    uint32_t sprite_height = mp_obj_get_int(sprite_texture->height);
+    uint32_t sprite_width = sprite_texture->width;
+    uint32_t sprite_height = sprite_texture->height;
 
     vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
     vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);

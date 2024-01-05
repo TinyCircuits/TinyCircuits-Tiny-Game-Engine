@@ -10,21 +10,51 @@ STATIC void texture_resource_class_print(const mp_print_t *print, mp_obj_t self_
 
 mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New TextureResource");
-    mp_arg_check_num(n_args, n_kw, 3, 4, false);
+    mp_arg_check_num(n_args, n_kw, 1, 2, false);
 
     texture_resource_class_obj_t *self = m_new_obj_with_finaliser(texture_resource_class_obj_t);
     self->base.type = &texture_resource_class_type;
 
     // Set flag indicating if file data is to be stored in ram or not (faster if stored in ram, up to programmer)
-    if(n_args == 4){
+    if(n_args == 2){
         self->cache_file.in_ram = mp_obj_get_int(args[3]);
     }else{
         self->cache_file.in_ram = false;
     }
 
-    engine_fast_cache_file_init(&self->cache_file, mp_obj_str_get_str(args[0]));
-    self->width = args[1];
-    self->height = args[2];
+    // BMP parsing: https://en.wikipedia.org/wiki/BMP_file_format
+    engine_file_open(mp_obj_str_get_str(args[0]));
+
+    uint16_t bitmap_id = engine_file_get_u16(0);
+    uint32_t bitmap_pixel_data_offset = engine_file_get_u32(10);
+    uint32_t bitmap_width = engine_file_get_u32(18);
+    uint32_t bitmap_height = engine_file_get_u32(22);
+    uint32_t bitmap_bits_per_pixel = engine_file_get_u16(28);
+    uint32_t bitmap_bitmap_data_size = engine_file_get_u32(34);
+
+    ENGINE_INFO_PRINTF("TextureResource: BMP Parameters parsed from '%s':", mp_obj_str_get_str(args[0]));
+    ENGINE_INFO_PRINTF("\tbitmap_id:\t\t\t%d", bitmap_id);
+    ENGINE_INFO_PRINTF("\tbitmap_pixel_data_offset:\t%d", bitmap_pixel_data_offset);
+    ENGINE_INFO_PRINTF("\tbitmap_width:\t\t\t%d", bitmap_width);
+    ENGINE_INFO_PRINTF("\tbitmap_height:\t\t\t%d", bitmap_height);
+    ENGINE_INFO_PRINTF("\tbitmap_bits_per_pixel:\t\t%d", bitmap_bits_per_pixel);
+    ENGINE_INFO_PRINTF("\tbitmap_bitmap_data_size:\t%d", bitmap_bitmap_data_size);
+
+    // Check header ID field
+    if(bitmap_id != 19778){
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("TextureResource: BMP header ID field incorrect!"));
+    }
+
+    if(bitmap_bits_per_pixel != 16){
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("TextureResource: BMP has wrong color depth! Expects 16-bits per pixel"));
+    }
+
+    self->width = bitmap_width;
+    self->height = bitmap_height;
+
+    engine_file_close();
+
+    // engine_fast_cache_file_init(&self->cache_file, mp_obj_str_get_str(args[0]));
 
     return MP_OBJ_FROM_PTR(self);
 }
@@ -59,10 +89,10 @@ STATIC void texture_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj
                 destination[1] = self_in;
             break;
             case MP_QSTR_width:
-                destination[0] = self->width;
+                destination[0] = mp_obj_new_int(self->width);
             break;
             case MP_QSTR_height:
-                destination[0] = self->height;
+                destination[0] = mp_obj_new_int(self->height);
             break;
             default:
                 return; // Fail

@@ -186,11 +186,19 @@ uint8_t engine_file_get_u8(uint32_t u8_byte_offset){
 }
 
 
-uint16_t engine_file_get_u16(uint32_t u16_byte_offset){
+uint16_t engine_file_get_u16(uint32_t u8_byte_offset){
     uint16_t the_u16_byte = 0;
-    lfs2_file_seek(&littlefs2, &littlefs2_file, u16_byte_offset*2, LFS2_SEEK_SET);
+    lfs2_file_seek(&littlefs2, &littlefs2_file, u8_byte_offset, LFS2_SEEK_SET);
     lfs2_file_read(&littlefs2, &littlefs2_file, &the_u16_byte, 2);
     return the_u16_byte;
+}
+
+
+uint32_t engine_file_get_u32(uint32_t u8_byte_offset){
+    uint32_t the_u32_byte = 0;
+    lfs2_file_seek(&littlefs2, &littlefs2_file, u8_byte_offset, LFS2_SEEK_SET);
+    lfs2_file_read(&littlefs2, &littlefs2_file, &the_u32_byte, 4);
+    return the_u32_byte;
 }
 
 

@@ -45,19 +45,18 @@ uint8_t engine_fast_cache_file_get_u8(engine_fast_cache_file_t *cache_file, uint
 // Get two bytes as uint16_t from file
 uint16_t engine_fast_cache_file_get_u16(engine_fast_cache_file_t *cache_file, uint32_t offset_u16);
 
+// Open a file instance until it is closed (cannot use this
+// across the engine to open multiple files at the same time)
+void engine_file_open(const char *filename);
 
-// // Open a file instance until it is closed (cannot use this
-// // across the engine to open multiple files at the same time)
-// void engine_file_open(const char *filename);
+// Close the file opened by 'engine_file_open(...)' (need to close
+// files on same thread in sequence with open, cannot be used across
+// the engine handle multiple files at the same time)
+void engine_file_close();
 
-// // Close the file opened by 'engine_file_open(...)' (need to close
-// // files on same thread in sequence with open, cannot be used across
-// // the engine handle multiple files at the same time)
-// void engine_file_close();
-
-
-// void engine_file_read(void *buffer, uint32_t size);
-// uint8_t engine_file_get_u8(uint32_t u8_byte_offset);
-// uint16_t engine_file_get_u16(uint32_t u16_byte_offset);
+void engine_file_read(void *buffer, uint32_t size);
+uint8_t engine_file_get_u8(uint32_t u8_byte_offset);
+uint16_t engine_file_get_u16(uint32_t u8_byte_offset);
+uint32_t engine_file_get_u32(uint32_t u8_byte_offset);
 
 #endif  // ENGINE_FILE_RP2_H
