@@ -99,50 +99,6 @@ bool is_xy_inside_viewport(int32_t x, int32_t y, int32_t vx, int32_t vy, int32_t
 }
 
 
-// inline bool is_xy_inside_screen(int32_t x, int32_t y){
-//     if(x >= 0 && y >= 0 && x < SCREEN_WIDTH && y < SCREEN_HEIGHT){
-//         return true;
-//     }
-
-//     return false;
-// }
-
-
-// void engine_draw_pixel_viewport(uint16_t color, int32_t x, int32_t y, int32_t vx, int32_t vy, int32_t vw, int32_t vh, int32_t px, int32_t py){
-//     uint16_t *screen_buffer = engine_get_active_screen_buffer();
-
-//     int32_t result_x = vx + (x - px);
-//     int32_t result_y = vy + (y - py);
-
-//     if(is_xy_inside_viewport(result_x, result_y, vx, vy, vw, vh)){
-//         screen_buffer[result_y*SCREEN_WIDTH + result_x] = color;
-//     }else{
-//         ENGINE_WARNING_PRINTF("Tried to draw pixel outside of viewport bounds, clipped");
-//     }
-// }
-
-
-// void engine_draw_pixel_unsafe(uint16_t color, int32_t x, int32_t y){
-//     uint16_t *screen_buffer = engine_get_active_screen_buffer();
-//     screen_buffer[y*SCREEN_WIDTH + x] = color;
-// }
-
-
-// void engine_draw_pixel(uint16_t color, int32_t x, int32_t y){
-//     uint16_t *screen_buffer = engine_get_active_screen_buffer();
-
-//     if(is_xy_inside_screen(x, y)){
-//         screen_buffer[y*SCREEN_WIDTH + x] = color;
-//     }else{
-//         ENGINE_WARNING_PRINTF("Tried to draw pixel outside of screen bounds, clipped");
-//     }
-// }
-
-
-// void engine_draw_fill_screen_buffer(uint16_t color, uint16_t *screen_buffer){
-//     memset(screen_buffer, color, SCREEN_BUFFER_SIZE_BYTES);
-// }
-
 
 #ifndef __unix__
     void init_interp(int t_xs_log2){
@@ -158,67 +114,64 @@ bool is_xy_inside_viewport(int32_t x, int32_t y, int32_t vx, int32_t vy, int32_t
     }
 #endif
 
-// void engine_draw_blit(uint16_t *pixels, int32_t x, int32_t y, uint16_t width, uint16_t height){
 
-// }
-
-
-// void engine_draw_blit_scale(uint16_t *pixels, int32_t x, int32_t y, uint16_t width_log2, uint16_t height, int32_t xsc, int32_t ysc){
-//     #ifndef __unix__
-//         init_interp(width_log2);
-//     #endif
-
-//     int32_t width = 1u << width_log2;
-//     int32_t xe = (width * xsc) >> 16;
-//     int32_t ye = (height * ysc) >> 16;
-//     int32_t dtx = ((int64_t)width << 16) / xe;
-//     int32_t dty = ((int64_t)height << 16) / ye;
-//     int32_t ty = 0x8000;
-//     int32_t tx = 0x8000;
-
-//     if(xsc < 0){
-//         xe = -xe;
-//         x -= xe;
-//     }
-//     if(ysc < 0){
-//         ye = -ye;
-//         y -= ye;
-//         ty = (height << 16) - 0x8000;
-//     }
-
-//     int32_t fb_pos = y * SCREEN_WIDTH + x;
-//     uint16_t *screen_buffer = engine_get_active_screen_buffer();
-
-//     for(int cy = 0; cy < ye; cy++){
-//         tx = (xsc < 0) ? ((width << 16) - 0x8000) : 0x8000;
-
-//         #ifndef __unix__
-//             interp0->accum[1] = tx;
-//             interp0->base[1] = dtx;
-//             interp0->accum[0] = ty;
-//             interp0->base[0] = 0;
-//         #endif
-
-//         for(int cx = 0; cx < xe; cx++){
-//             #ifndef __unix__
-//                 screen_buffer[fb_pos + cx] = pixels[interp_pop_full_result(interp0)];
-//             #else
-//                 screen_buffer[fb_pos + cx] = pixels[((ty >> 16) << width_log2) + (tx >> 16)];
-//                 tx += dtx;
-//             #endif
-//         }
-
-//         fb_pos += SCREEN_WIDTH;
-//         ty += dty;
-//     }
-// }
-
-
-void engine_draw_blit_scale_trishear(uint16_t *pixels, int32_t x, int32_t y, uint16_t width, uint16_t height, int32_t xsc, int32_t ysc, int32_t xsr, int32_t ysr, int32_t xsr2, int flip){
+void engine_draw_blit_scale(uint16_t *pixels, int32_t x, int32_t y, uint16_t width_log2, uint16_t height, int32_t xsc, int32_t ysc){
     #ifndef __unix__
-        init_interp(width);
+        init_interp(width_log2);
     #endif
 
+    int32_t width = 1u << width_log2;
+    int32_t xe = (width * xsc) >> 16;
+    int32_t ye = (height * ysc) >> 16;
+    int32_t dtx = ((int64_t)width << 16) / xe;
+    int32_t dty = ((int64_t)height << 16) / ye;
+    int32_t ty = 0x8000;
+    int32_t tx = 0x8000;
+
+    if(xsc < 0){
+        xe = -xe;
+        x -= xe;
+    }
+    if(ysc < 0){
+        ye = -ye;
+        y -= ye;
+        ty = (height << 16) - 0x8000;
+    }
+
+    int32_t fb_pos = y * SCREEN_WIDTH + x;
+    uint16_t *screen_buffer = engine_get_active_screen_buffer();
+
+    for(int cy = 0; cy < ye; cy++){
+        tx = (xsc < 0) ? ((width << 16) - 0x8000) : 0x8000;
+
+        #ifndef __unix__
+            interp0->accum[1] = tx;
+            interp0->base[1] = dtx;
+            interp0->accum[0] = ty;
+            interp0->base[0] = 0;
+        #endif
+
+        for(int cx = 0; cx < xe; cx++){
+            #ifndef __unix__
+                screen_buffer[fb_pos + cx] = pixels[interp_pop_full_result(interp0)];
+            #else
+                screen_buffer[fb_pos + cx] = pixels[((ty >> 16) << width_log2) + (tx >> 16)];
+                tx += dtx;
+            #endif
+        }
+
+        fb_pos += SCREEN_WIDTH;
+        ty += dty;
+    }
+}
+
+
+void engine_draw_blit_scale_trishear(uint16_t *pixels, int32_t x, int32_t y, uint16_t width_log2, uint16_t height, int32_t xsc, int32_t ysc, int32_t xsr, int32_t ysr, int32_t xsr2, int flip){
+    #ifndef __unix__
+        init_interp(width_log2);
+    #endif
+
+    int32_t width = 1u << width_log2;
     int32_t xe = (width * xsc) >> 16;
     int32_t ye = (height * ysc) >> 16;
     int32_t dtx = ((int64_t)width << 16) / xe;
@@ -366,8 +319,9 @@ void engine_draw_rect_scale_trishear_viewport(uint16_t color, int32_t x, int32_t
     }
 }
 
-void engine_draw_blit_scale_rotate(uint16_t *pixels, int32_t x, int32_t y, uint16_t width, uint16_t height, int32_t xsc, int32_t ysc, int16_t theta){
+void engine_draw_blit_scale_rotate(uint16_t *pixels, int32_t x, int32_t y, uint16_t width_log2, uint16_t height, int32_t xsc, int32_t ysc, int16_t theta){
     int flip = 0;
+    int32_t width = 1u << width_log2;
     // Step 1: Get theta inside (-pi/2, pi/2) and flip if we need to
     theta &= 0x3FF;
     if(theta > 0x200) theta -= 0x400;
@@ -408,7 +362,7 @@ void engine_draw_blit_scale_rotate(uint16_t *pixels, int32_t x, int32_t y, uint1
     if(ysc < 0) cy -= ye;
     //Step 4: Triple shear (a, b, a);
     //blit_scale_trishear_pow2_tex_internal(fb, f_xs, tex, t_xs_log2, t_ys, x - cx, y - cy, xsc, ysc, a, b, a, flip);
-    engine_draw_blit_scale_trishear(pixels, x - cx, y - cy, width, height, xsc, ysc, a, b, a, flip);
+    engine_draw_blit_scale_trishear(pixels, x - cx, y - cy, width_log2, height, xsc, ysc, a, b, a, flip);
 }
 
 

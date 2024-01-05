@@ -60,37 +60,16 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
     // Rotate sprite origin about the camera
     engine_math_rotate_point(&sprite_rotated_x, &sprite_rotated_y, (float)camera_viewport->width/2, (float)camera_viewport->height/2, (float)camera_rotation->z);
 
-
     engine_draw_blit_scale_rotate((uint16_t*)sprite_texture->cache_file.file_data,
                                   (int32_t)sprite_rotated_x,
                                   (int32_t)sprite_rotated_y,
-                                  sprite_width, 
+                                  (uint16_t)log2f(sprite_width),
                                   sprite_height,
                                   (int32_t)(sprite_scale->x*65536 + 0.5),
                                   (int32_t)(sprite_scale->y*65536 + 0.5),
                                   (int16_t)(((sprite_resolved_hierarchy_rotation+(float)camera_rotation->z))*1024 / (float)(2*PI)));
                                                
     return mp_const_none;
-
-
-
-    // // vector3_class_obj_t *camera_position = mp_load_attr(camera_node, MP_QSTR_position);
-    // // vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node, MP_QSTR_rotation);
-    // // rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node, MP_QSTR_viewport);
-
-    // // vector2_class_obj_t *position = mp_load_attr(self_in, MP_QSTR_position);
-
-    // texture_resource_class_obj_t *texture_resource = mp_load_attr(self_in, MP_QSTR_texture_resource);
-    // int width = mp_obj_get_int(texture_resource->width);
-    // int height = mp_obj_get_int(texture_resource->height);
-
-    // for(int x=0; x<width; x++){
-    //     for(int y=0; y<height; y++){
-    //         engine_draw_pixel(texture_resource_get_pixel(texture_resource, y*width+x), x, y);
-    //     }
-    // }
-
-    // return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_2(sprite_2d_node_class_draw_obj, sprite_2d_node_class_draw);
 
