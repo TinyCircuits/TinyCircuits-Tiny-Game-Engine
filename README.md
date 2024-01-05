@@ -9,11 +9,13 @@ Unfortunately, MicroPython's port make/cmake scripts are not flexible enough to 
 # Building and Using
 1. Unzip and drop a port from `mp_ports` folder into the `micropython/ports` folder
 2. Read the port's `README.md` and run the setup commands (probably involves build `mpy-cross` and getting submodules)
-3. Use one of the `build_and_run_xxx.py` scripts to build the MicroPython software, upload, and then run a Python file containing MicroPython code.
+3. Use the `build_and_run.py` script to build the MicroPython software, upload, and then run a Python file containing MicroPython code.
 
-The `build_and_run_xxx.py` scripts have a couple of arguments:
-* `python build_and_run_xxx.py scr/tests/test.py`: Builds then runs the script at `scr/tests/test.py`
-* `python build_and_run_xxx.py clean`: runs `make clean` for the port, doesn't do anything else
+The `build_and_run.py` scripts have a couple of arguments:
+* `python build_and_run.py rp2/unix scr/tests/test.py`: Builds then runs the script at `scr/tests/test.py`
+* `python build_and_run.py rp2/unix  clean`: runs `make clean` for the port, doesn't do anything else
+
+To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik.medium.com/run-x-display-from-wsl-f94791795376
 
 # TODO
 [] Add way to look into sprite data on flash to get pixels when needed. Sprite/texture data should be read from flash since not enough ram to store lots of RGB565 bitmaps in SRAM. Instead of dedicating a portion of flash to aligned texture/sprite data, make a fast_file module that uses lfs/unix read that will be used to load up 32x32 portions of sprites. Sprite files will be data aligned into grids (this doesn't work for fonts though...). Tested 100 x 32x32 sprite 2d node drawing at 40ms game loop, that should be fast enough.
