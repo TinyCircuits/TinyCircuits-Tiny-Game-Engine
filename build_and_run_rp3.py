@@ -24,6 +24,8 @@ def execute(cmd):
 
 
 # Clean the port directory if 'clean' is passed to the command
+run_file_provided = False
+
 if len(sys.argv) > 1:
     if sys.argv[1] == 'clean':
         print("Cleaning...")
@@ -32,10 +34,11 @@ if len(sys.argv) > 1:
     elif ".py" in sys.argv[1]:
         print("Freezing...")
         shutil.copyfile(sys.argv[1], "../../../ports/rp3/modules/" + sys.argv[1].split("/")[-1])
+        run_file_provided = True
 
 
 print("##### Building rp3 port #####")
-execute(['wsl', '-e', 'make', '-C', '../../../ports/rp3', '-j8', '-DUSER_C_MODULES=../../examples/usercmodule/TinyCircuits-Tiny-Game-Engine/micropython.cmake'])
+execute(['wsl', '-e', 'make', '-C', '../../../ports/rp3', '-j8', 'USER_C_MODULES=../../examples/usercmodule/TinyCircuits-Tiny-Game-Engine/micropython.cmake'])
 
 
 # https://stackoverflow.com/questions/827371/is-there-a-way-to-list-all-the-available-windows-drives
@@ -79,31 +82,32 @@ for port, desc, hwid in sorted(ports):
                 shutil.copyfile("../../../ports/rp3/build-RPI_PICO/firmware.uf2 ", drive_letter + ":\\firmware.uf2")
 
 
-                print("Waiting on port to run test manifest file...")
-                ports = serial.tools.list_ports.comports()
-                board_port = None
-                while board_port == None:
+                if run_file_provided:
+                    print("Waiting on port to run test manifest file...")
                     ports = serial.tools.list_ports.comports()
-                    for port, desc, hwid in sorted(ports):
-                        if("VID:PID=2E8A:0005" in hwid):
-                             board_port = port
-                print("Found port!")
+                    board_port = None
+                    while board_port == None:
+                        ports = serial.tools.list_ports.comports()
+                        for port, desc, hwid in sorted(ports):
+                            if("VID:PID=2E8A:0005" in hwid):
+                                board_port = port
+                    print("Found port!")
 
 
-                print("Connecting to serial port...")
-                connected = False
-                while connected == False:
-                    try:
-                        ser = serial.Serial(board_port, 4000000, timeout=0.25)
-                        print("Connected!")
-                        connected = True
-                    except:
-                         pass
+                    print("Connecting to serial port...")
+                    connected = False
+                    while connected == False:
+                        try:
+                            ser = serial.Serial(board_port, 4000000, timeout=0.25)
+                            print("Connected!")
+                            connected = True
+                        except:
+                            pass
 
-                print("Executing test file!")
-                ser.write("import test\r\n".encode("utf-8"))
-                while True:
-                    print(ser.readline().decode("utf-8"), end='')
+                    print("Executing test file!")
+                    ser.write("import test\r\n".encode("utf-8"))
+                    while True:
+                        print(ser.readline().decode("utf-8"), end='')
 
 
 

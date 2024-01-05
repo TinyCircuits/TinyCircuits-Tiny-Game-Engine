@@ -1,4 +1,4 @@
-ENGINE_MOD_DIR := $(USERMOD_DIR)
+ENGINE_MOD_DIR := $(USERMOD_DIR)/src
 
 # Add our source files to the respective variables.
 SRC_USERMOD += $(ENGINE_MOD_DIR)/engine.c
