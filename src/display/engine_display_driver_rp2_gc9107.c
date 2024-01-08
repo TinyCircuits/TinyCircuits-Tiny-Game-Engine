@@ -30,12 +30,12 @@
 
     NOTE: Not using PIO since we're using a standard SPI port (see: https://github.com/Bodmer/TFT_eSPI/blob/5162af0a0e13e0d4bc0e4c792ed28d38599a1f23/User_Setup.h#L331C90-L332C1)
 */
-#define PIN_GP19_SPI0_TX__TO__DIN  PICO_DEFAULT_SPI_TX_PIN      // Default refers to spi port 0
+#define PIN_GP19_SPI0_TX__TO__SDA  PICO_DEFAULT_SPI_TX_PIN      // Default refers to spi port 0
 #define PIN_GP18_SPI0_SCK__TO__CLK PICO_DEFAULT_SPI_SCK_PIN     // Default refers to spi port 0
 #define PIN_GP17_SPI0_CSn__TO__CS  PICO_DEFAULT_SPI_CSN_PIN     // Default refers to spi port 0
-#define PIN_GP20__TO__DC           16
-#define PIN_GP21__TO__RST          11
-#define PIN_GP22__TO__BL           20
+#define PIN_GP16__TO__DC           16
+#define PIN_GP11__TO__RST          11
+#define PIN_GP20__TO__BL           20
 
 int dma_tx;
 dma_channel_config dma_config;
@@ -49,13 +49,13 @@ static void gc9107_write_cmd(uint8_t cmd, const uint8_t* data, size_t length){
 
     // Select screen chip and put into cmd mode (see pin connection reference)
     gpio_put(PIN_GP17_SPI0_CSn__TO__CS, 0);
-    gpio_put(PIN_GP20__TO__DC, 0);
+    gpio_put(PIN_GP16__TO__DC, 0);
 
     // Write the command to the driver through SPI
     spi_write_blocking(spi0, &cmd, sizeof(cmd));
-    gpio_put(PIN_GP20__TO__DC, 1);
 
     // If there's also data, write that but put chip in data mode (see pin connection reference)
+    gpio_put(PIN_GP16__TO__DC, 1);
     if(length > 0){
         spi_write_blocking(spi0, data, length);
     }
@@ -69,9 +69,14 @@ static void gc9107_write_cmd(uint8_t cmd, const uint8_t* data, size_t length){
 }
 
 
-void gc9107_set_window(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2){
-    gc9107_write_cmd(0x2a, (uint8_t[]){ x1+2, x2+2 }, 2);
-    gc9107_write_cmd(0x2b, (uint8_t[]){ y1+2, y2+2 }, 2);
+void gc9107_set_window(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2){
+    gc9107_write_cmd(0x36, (uint8_t[]){ 0xC8 }, 1);
+    x1 += 2;
+    x2 += 2;
+    y1 += 1;
+    y2 += 1;
+    gc9107_write_cmd(0x2a, (uint8_t[]){ x1>>8, x1, x2>>8, x2 }, 4);
+    gc9107_write_cmd(0x2b, (uint8_t[]){ y1>>8, y1, y2>>8, y2 }, 4);
     gc9107_write_cmd(0x2c, NULL, 0);
 }
 
@@ -86,27 +91,27 @@ void engine_display_gc9107_init(){
     // Init pins (some are controlled through SPI peripheral
     // and some are controlled through code using GPIO)
     ENGINE_INFO_PRINTF("Enabling pins");
-    gpio_set_function(PIN_GP19_SPI0_TX__TO__DIN, GPIO_FUNC_SPI);
+    gpio_set_function(PIN_GP19_SPI0_TX__TO__SDA, GPIO_FUNC_SPI);
     gpio_set_function(PIN_GP18_SPI0_SCK__TO__CLK, GPIO_FUNC_SPI);
 
     // Setup GPIO
     gpio_init(PIN_GP17_SPI0_CSn__TO__CS);               // Although part of the SPI port, we'll control chip select manually
-    gpio_init(PIN_GP20__TO__DC);
-    gpio_init(PIN_GP21__TO__RST);
-    gpio_init(PIN_GP22__TO__BL);
+    gpio_init(PIN_GP16__TO__DC);
+    gpio_init(PIN_GP11__TO__RST);
+    gpio_init(PIN_GP20__TO__BL);
     gpio_set_dir(PIN_GP17_SPI0_CSn__TO__CS, GPIO_OUT);
-    gpio_set_dir(PIN_GP20__TO__DC, GPIO_OUT);
-    gpio_set_dir(PIN_GP21__TO__RST, GPIO_OUT);
-    gpio_set_dir(PIN_GP22__TO__BL, GPIO_OUT);
+    gpio_set_dir(PIN_GP16__TO__DC, GPIO_OUT);
+    gpio_set_dir(PIN_GP11__TO__RST, GPIO_OUT);
+    gpio_set_dir(PIN_GP20__TO__BL, GPIO_OUT);
 
     // Do the init sequence
-    gpio_put(PIN_GP22__TO__BL, 0);  // Backlight off during init
+    gpio_put(PIN_GP20__TO__BL, 0);  // Backlight off during init
 
     gpio_put(PIN_GP17_SPI0_CSn__TO__CS, 1);
     sleep_ms(5);
-    gpio_put(PIN_GP21__TO__RST, 0);
+    gpio_put(PIN_GP11__TO__RST, 0);
     sleep_ms(50);
-    gpio_put(PIN_GP21__TO__RST, 1);
+    gpio_put(PIN_GP11__TO__RST, 1);
     sleep_ms(120);
 
     gc9107_write_cmd(0xB0, (uint8_t[]){ 0xC0 }, 1);
@@ -137,7 +142,7 @@ void engine_display_gc9107_init(){
 
     gc9107_write_cmd(0xF0, (uint8_t[]){ 0x1F, 0x28, 0x04, 0x3E, 0x2A, 0x2E, 0x20, 0x00, 0x0C, 0x06, 0x00, 0x1C, 0x1F, 0x0f }, 14);
 
-    gc9107_write_cmd(0xF1, (uint8_t[]){ 0X00, 0X2D, 0X2F, 0X3C, 0X6F, 0X1C, 0X0B, 0X00, 0X00, 0X00, 0X07, 0X0D, 0X11, 0X0f }, 14);
+    gc9107_write_cmd(0xF1, (uint8_t[]){ 0x00, 0x2D, 0x2F, 0x3C, 0x6F, 0x1C, 0x0B, 0x00, 0x00, 0x00, 0x07, 0x0D, 0x11, 0x0f }, 14);
 
     gc9107_write_cmd(0x21, NULL, 0);
 
@@ -155,7 +160,7 @@ void engine_display_gc9107_init(){
     channel_config_set_transfer_data_size(&dma_config, DMA_SIZE_16);
     channel_config_set_dreq(&dma_config, DREQ_SPI0_TX);
 
-    gpio_put(PIN_GP22__TO__BL, 1);  // Backlight on after all init
+    gpio_put(PIN_GP20__TO__BL, 1);  // Backlight on after all init
 }
 
 
@@ -179,7 +184,7 @@ void engine_display_gc9107_update(uint16_t *screen_buffer_to_render){
     gc9107_set_window(0, 0, 127, 127);
 
     gpio_put(PIN_GP17_SPI0_CSn__TO__CS, 0);
-    gpio_put(PIN_GP20__TO__DC,          1);
+    gpio_put(PIN_GP16__TO__DC,          1);
 
     // dma_channel_set_read_addr(dma_tx, txbuf, true);
     dma_channel_configure(dma_tx, &dma_config,

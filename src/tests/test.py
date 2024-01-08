@@ -7,10 +7,6 @@ from engine_physics import PhysicsShapeRectangle
 from engine_nodes import EmptyNode, Sprite2DNode, Rectangle2DNode, Circle2DNode, CameraNode, Physics2DNode
 from engine_math import Vector3, Vector2, Rectangle
 from engine_resources import TextureResource
-from engine_physics import PhysicsShapeRectangle
-from engine_nodes import EmptyNode, Sprite2DNode, Rectangle2DNode, Circle2DNode, CameraNode, Physics2DNode
-from engine_math import Vector3, Vector2, Rectangle
-from engine_resources import TextureResource
 import gc
 import math
 import os
@@ -43,6 +39,31 @@ class MySprite(Sprite2DNode):
 sprite = MySprite()
 sprite.position.x = 64
 sprite.position.y = 64
+
+sprite2 = MySprite()
+sprite2.position.x = 32
+sprite2.scale.x = 0.5
+sprite2.scale.y = 0.5
+sprite.add_child(sprite2)
+
+sprite3 = MySprite()
+sprite3.position.x = -32
+sprite3.scale.x = 0.5
+sprite3.scale.y = 0.5
+sprite.add_child(sprite3)
+
+sprite4 = MySprite()
+sprite4.position.y = 32
+sprite4.scale.x = 0.5
+sprite4.scale.y = 0.5
+sprite.add_child(sprite4)
+
+sprite5 = MySprite()
+sprite5.position.y = -32
+sprite5.scale.x = 0.5
+sprite5.scale.y = 0.5
+sprite.add_child(sprite5)
+
 camera = CameraNode()
 
 engine.start()
