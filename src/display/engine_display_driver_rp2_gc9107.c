@@ -37,6 +37,12 @@
 #define PIN_GP11__TO__RST          11
 #define PIN_GP20__TO__BL           20
 
+// Who add these numbers? Not sure, if you don't then the window address is wrong
+const uint16_t WINDOW_ADDR_X1 = 0 + 2;
+const uint16_t WINDOW_ADDR_X2 = SCREEN_WIDTH + 1;
+const uint16_t WINDOW_ADDR_Y1 = 0 + 1;
+const uint16_t WINDOW_ADDR_Y2 = SCREEN_HEIGHT;
+
 int dma_tx;
 dma_channel_config dma_config;
 uint16_t *txbuf = NULL;
@@ -69,14 +75,10 @@ static void gc9107_write_cmd(uint8_t cmd, const uint8_t* data, size_t length){
 }
 
 
-void gc9107_set_window(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2){
+void gc9107_reset_window(){
     gc9107_write_cmd(0x36, (uint8_t[]){ 0xC8 }, 1);
-    x1 += 2;
-    x2 += 2;
-    y1 += 1;
-    y2 += 1;
-    gc9107_write_cmd(0x2a, (uint8_t[]){ x1>>8, x1, x2>>8, x2 }, 4);
-    gc9107_write_cmd(0x2b, (uint8_t[]){ y1>>8, y1, y2>>8, y2 }, 4);
+    gc9107_write_cmd(0x2a, (uint8_t[]){ WINDOW_ADDR_X1>>8, WINDOW_ADDR_X1, WINDOW_ADDR_X2>>8, WINDOW_ADDR_X2 }, 4);
+    gc9107_write_cmd(0x2b, (uint8_t[]){ WINDOW_ADDR_Y1>>8, WINDOW_ADDR_Y1, WINDOW_ADDR_Y2>>8, WINDOW_ADDR_Y2 }, 4);
     gc9107_write_cmd(0x2c, NULL, 0);
 }
 
@@ -181,7 +183,7 @@ void engine_display_gc9107_update(uint16_t *screen_buffer_to_render){
     // sent now that the last frame is finished sending
     txbuf = screen_buffer_to_render;
 
-    gc9107_set_window(0, 0, 127, 127);
+    gc9107_reset_window();
 
     gpio_put(PIN_GP17_SPI0_CSn__TO__CS, 0);
     gpio_put(PIN_GP16__TO__DC,          1);
