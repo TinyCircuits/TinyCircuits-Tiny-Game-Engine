@@ -7,7 +7,7 @@
 #ifdef __unix__
     #include "engine_display_driver_unix_sdl.h"
 #else
-    #include "engine_display_driver_rp2_st7789.h"
+    #include "engine_display_driver_rp2_gc9107.h"
 #endif
 
 
@@ -17,6 +17,7 @@ void engine_display_init(){
     #ifdef __unix__
         engine_display_sdl_init();
     #else
+        // engine_display_gc9107_init();
         engine_display_st7789_init();
     #endif
 }
@@ -27,6 +28,7 @@ void engine_display_send(){
     #ifdef __unix__
         engine_display_sdl_update_screen(engine_get_active_screen_buffer());
     #else
+        // engine_display_gc9107_update(engine_get_active_screen_buffer());
         engine_display_st7789_update(engine_get_active_screen_buffer());
     #endif
 

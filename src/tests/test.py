@@ -23,17 +23,26 @@ print("dir(Rectangle2DNode):", dir(Rectangle2DNode))
 print("dir(Vector3):", dir(Vector3))
 print("dir(Rectangle):", dir(Rectangle))
 
-engine_debug.debug_enable_all()
+# engine_debug.debug_enable_all()
 # engine_debug.debug_enable_setting(engine_debug.debug_setting_warnings)
 # engine_debug.debug_enable_setting(engine_debug.debug_setting_performance)
 
 # # print("HI!")
 
 texture = TextureResource("32x32.bmp", True)
-sprite = Sprite2DNode(texture)
+
+
+class MySprite(Sprite2DNode):
+    def __init__(self):
+        super().__init__(self, texture)
+    
+    def tick(self):
+        self.rotation += 0.01
+
+
+sprite = MySprite()
 sprite.position.x = 64
 sprite.position.y = 64
-# sprite.rotation = 45
 camera = CameraNode()
 
 engine.start()

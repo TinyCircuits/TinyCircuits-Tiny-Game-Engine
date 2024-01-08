@@ -7,7 +7,6 @@
 // https://github.com/ArmDeveloperEcosystem/st7789-library-for-pico/blob/main/src/include/pico/st7789.h
 // https://github.com/raspberrypi/pico-examples/blob/master/spi/spi_dma/spi_dma.c
 void engine_display_st7789_init();
-void engine_display_dma_wait();
 void engine_display_st7789_update(uint16_t *screen_buffer_to_render);
 
 #endif  // ENGINE_DISPLAY_DRIVER_RP2_ST7789_H
