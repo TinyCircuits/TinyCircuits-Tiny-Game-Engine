@@ -105,7 +105,6 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
         common_data->draw_cb = MP_OBJ_FROM_PTR(&sprite_2d_node_class_draw_obj);
 
         sprite_2d_node->position = vector2_class_new(&vector2_class_type, 0, 0, NULL);
-        sprite_2d_node->filename = mp_obj_new_str("", 0);
         sprite_2d_node->fps = mp_obj_new_int(5);
         sprite_2d_node->rotation = mp_obj_new_float(0.0f);
         sprite_2d_node->scale = vector2_class_new(&vector2_class_type, 2, 0, default_scale_parameters);
@@ -132,7 +131,6 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
         }
 
         mp_store_attr(node_base->node, MP_QSTR_position, vector2_class_new(&vector2_class_type, 0, 0, NULL));
-        mp_store_attr(node_base->node, MP_QSTR_filename, mp_obj_new_str("", 0));
         mp_store_attr(node_base->node, MP_QSTR_fps, mp_obj_new_int(5));
         mp_store_attr(node_base->node, MP_QSTR_rotation, mp_obj_new_float(0.0f));
         mp_store_attr(node_base->node, MP_QSTR_scale, vector2_class_new(&vector2_class_type, 2, 0, default_scale_parameters));
@@ -179,9 +177,6 @@ STATIC void sprite_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
             case MP_QSTR_position:
                 destination[0] = self->position;
             break;
-            case MP_QSTR_filename:
-                destination[0] = self->filename;
-            break;
             case MP_QSTR_fps:
                 destination[0] = self->fps;
             break;
@@ -201,9 +196,6 @@ STATIC void sprite_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
         switch(attribute){
             case MP_QSTR_position:
                 self->position = destination[1];
-            break;
-            case MP_QSTR_filename:
-                self->filename = destination[1];
             break;
             case MP_QSTR_fps:
                 self->fps = destination[1];

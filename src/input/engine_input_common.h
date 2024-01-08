@@ -12,7 +12,8 @@
 #define BUTTON_DPAD_RIGHT   5
 #define BUTTON_BUMPER_LEFT  6
 #define BUTTON_BUMPER_RIGHT 7
+#define BUTTON_MENU         8
 
-extern uint8_t engine_input_pressed_buttons;
+extern uint16_t engine_input_pressed_buttons;
 
 #endif  // ENGINE_INPUT_COMMON_H

@@ -202,33 +202,39 @@ void engine_draw_blit_scale_trishear(uint16_t *pixels, int32_t x, int32_t y, uin
         tx = x_start;
         fb_pos += (xshift >> 16);
 
-        #ifndef __unix__
-            interp0->accum[1] = tx;
-            interp0->base[1] = dtx;
-            interp0->accum[0] = ty;
-            interp0->base[0] = 0;
-        #endif
+        // #ifndef __unix__
+        //     interp0->accum[1] = tx;
+        //     interp0->base[1] = dtx;
+        //     interp0->accum[0] = ty;
+        //     interp0->base[0] = 0;
+        // #endif
 
         if(flip) for(int cx = 0; cx < xe; cx++){
             xshift2 = ((cy + (yshift >> 16)) * xsr2);
 
-            #ifndef __unix__
-                screen_buffer[fb_pos + (cx) + (yshift >> 16) * SCREEN_WIDTH + (xshift2 >> 16)] = pixels[width * height - 1 - interp_pop_full_result(interp0)];
-            #else
-                screen_buffer[fb_pos + (cx) + (yshift >> 16) * SCREEN_WIDTH + (xshift2 >> 16)] = pixels[width * height - 1 - ((ty >> 16) * width + (tx >> 16))];
+            // #ifndef __unix__
+            //     screen_buffer[fb_pos + (cx) + (yshift >> 16) * SCREEN_WIDTH + (xshift2 >> 16)] = pixels[width * height - 1 - interp_pop_full_result(interp0)];
+            // #else
+                uint32_t index = fb_pos + (cx) + (yshift >> 16) * SCREEN_WIDTH + (xshift2 >> 16);
+                if(index >= 0 && index < SCREEN_BUFFER_SIZE_BYTES){
+                    screen_buffer[index] = pixels[width * height - 1 - ((ty >> 16) * width + (tx >> 16))];
+                }
                 tx += dtx;
-            #endif
+            // #endif
 
             yshift += ysr;
         }else for(int cx = 0; cx < xe; cx++){
             xshift2 = ((cy + (yshift >> 16)) * xsr2);
 
-            #ifndef __unix__
-                screen_buffer[fb_pos + (cx) + (yshift >> 16) * SCREEN_WIDTH + (xshift2 >> 16)] = pixels[interp_pop_full_result(interp0)];
-            #else
-                screen_buffer[fb_pos + (cx) + (yshift >> 16) * SCREEN_WIDTH + (xshift2 >> 16)] = pixels[(ty >> 16) * width + (tx >> 16)];
+            // #ifndef __unix__
+            //     screen_buffer[fb_pos + (cx) + (yshift >> 16) * SCREEN_WIDTH + (xshift2 >> 16)] = pixels[interp_pop_full_result(interp0)];
+            // #else
+                uint32_t index = fb_pos + (cx) + (yshift >> 16) * SCREEN_WIDTH + (xshift2 >> 16);
+                if(index >= 0 && index < SCREEN_BUFFER_SIZE_BYTES){
+                    screen_buffer[index] = pixels[(ty >> 16) * width + (tx >> 16)];
+                }
                 tx += dtx;
-            #endif
+            // #endif
 
             yshift += ysr;
         }

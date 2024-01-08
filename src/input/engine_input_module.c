@@ -4,8 +4,17 @@
 #ifdef __unix__
     #include "engine_input_sdl.h"
 #else
-    #include "engine_input_rp2.h"
+    #include "engine_input_rp3.h"
 #endif
+
+
+void engine_input_setup(){
+    #ifdef __unix__
+        // Nothing to do
+    #else
+        engine_input_rp3_setup();
+    #endif
+}
 
 
 // Update 'pressed_buttons' (usually called once per game loop)
@@ -13,7 +22,7 @@ void engine_input_update_pressed_buttons(){
     #ifdef __unix__
         engine_input_sdl_update_pressed_mask();
     #else
-        engine_input_rp2_update_pressed_mask();
+        engine_input_rp3_update_pressed_mask();
     #endif
 }
 
@@ -66,6 +75,12 @@ STATIC mp_obj_t engine_input_is_BUMPER_RIGHT_pressed(){
 MP_DEFINE_CONST_FUN_OBJ_0(engine_input_is_BUMPER_RIGHT_pressed_obj, engine_input_is_BUMPER_RIGHT_pressed);
 
 
+STATIC mp_obj_t engine_input_is_MENU_pressed(){
+    return mp_obj_new_bool(BIT_GET(engine_input_pressed_buttons, BUTTON_MENU));
+}
+MP_DEFINE_CONST_FUN_OBJ_0(engine_input_is_MENU_pressed_obj, engine_input_is_MENU_pressed);
+
+
 // Module attributes
 STATIC const mp_rom_map_elem_t engine_input_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_input) },
@@ -77,6 +92,7 @@ STATIC const mp_rom_map_elem_t engine_input_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_is_dpad_right_pressed), (mp_obj_t)&engine_input_is_DPAD_RIGHT_pressed_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_is_bumper_left_pressed), (mp_obj_t)&engine_input_is_BUMPER_LEFT_pressed_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_is_bumper_right_pressed), (mp_obj_t)&engine_input_is_BUMPER_RIGHT_pressed_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_is_menu_pressed), (mp_obj_t)&engine_input_is_MENU_pressed_obj },
 };
 
 // Module init

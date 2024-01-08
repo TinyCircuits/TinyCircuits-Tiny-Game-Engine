@@ -33,6 +33,9 @@ void engine_input_sdl_update_pressed_mask(){
                 case SDLK_SPACE:    // BUMPER RIGHT
                     BIT_SET_TRUE(engine_input_pressed_buttons, BUTTON_BUMPER_RIGHT);
                 break;
+                case SDLK_RETURN:    // MENU
+                    BIT_SET_TRUE(engine_input_pressed_buttons, BUTTON_MENU);
+                break;
             }
         }else if(event.type == SDL_KEYUP){
             switch(event.key.keysym.sym){
@@ -59,6 +62,9 @@ void engine_input_sdl_update_pressed_mask(){
                 break;
                 case SDLK_SPACE:    // BUMPER RIGHT
                     BIT_SET_FALSE(engine_input_pressed_buttons, BUTTON_BUMPER_RIGHT);
+                break;
+                case SDLK_RETURN:    // MENU
+                    BIT_SET_FALSE(engine_input_pressed_buttons, BUTTON_MENU);
                 break;
             }
         }

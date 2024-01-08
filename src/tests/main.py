@@ -25,44 +25,84 @@ print("dir(Rectangle):", dir(Rectangle))
 
 # # print("HI!")
 
-texture = TextureResource("32x32.bmp", True)
-
+texture0 = TextureResource("32x32.bmp", True)
+texture1 = TextureResource("rpi.bmp", True)
+switched = False
+just_pressed = False
+rot_speed = 0.005
 
 class MySprite(Sprite2DNode):
     def __init__(self):
-        super().__init__(self, texture)
+        super().__init__(self, texture0)
     
     def tick(self):
-        self.rotation += 0.01
+        global rot_speed
+        global texture0
+        global texture1
+        global switched
+        global just_pressed
+        if engine_input.is_bumper_right_pressed():
+            rot_speed += 0.0001
+        if engine_input.is_bumper_left_pressed():
+            rot_speed -= 0.0001
+        
+        if engine_input.is_a_pressed():
+            self.scale.x += 0.01
+            self.scale.y += 0.01
+        if engine_input.is_b_pressed():
+            self.scale.x -= 0.01
+            self.scale.y -= 0.01
+
+        if engine_input.is_dpad_up_pressed():
+            self.position.y -= 0.1
+        if engine_input.is_dpad_down_pressed():
+            self.position.y += 0.1
+        if engine_input.is_dpad_left_pressed():
+            self.position.x -= 0.1
+        if engine_input.is_dpad_right_pressed():
+            self.position.x += 0.1
+
+        if just_pressed == False and engine_input.is_menu_pressed():
+            just_pressed = True
+            if switched == False:
+                switched = True
+                self.texture_resource = texture1
+            else:
+                switched = False
+                self.texture_resource = texture0
+        
+        if just_pressed == True and engine_input.is_menu_pressed() == False:
+            just_pressed = False
+        self.rotation += rot_speed
 
 
 sprite = MySprite()
 sprite.position.x = 64
 sprite.position.y = 64
 
-sprite2 = MySprite()
-sprite2.position.x = 32
-sprite2.scale.x = 0.5
-sprite2.scale.y = 0.5
-sprite.add_child(sprite2)
+# sprite2 = MySprite()
+# sprite2.position.x = 32
+# sprite2.scale.x = 0.5
+# sprite2.scale.y = 0.5
+# sprite.add_child(sprite2)
 
-sprite3 = MySprite()
-sprite3.position.x = -32
-sprite3.scale.x = 0.5
-sprite3.scale.y = 0.5
-sprite.add_child(sprite3)
+# sprite3 = MySprite()
+# sprite3.position.x = -32
+# sprite3.scale.x = 0.5
+# sprite3.scale.y = 0.5
+# sprite.add_child(sprite3)
 
-sprite4 = MySprite()
-sprite4.position.y = 32
-sprite4.scale.x = 0.5
-sprite4.scale.y = 0.5
-sprite.add_child(sprite4)
+# sprite4 = MySprite()
+# sprite4.position.y = 32
+# sprite4.scale.x = 0.5
+# sprite4.scale.y = 0.5
+# sprite.add_child(sprite4)
 
-sprite5 = MySprite()
-sprite5.position.y = -32
-sprite5.scale.x = 0.5
-sprite5.scale.y = 0.5
-sprite.add_child(sprite5)
+# sprite5 = MySprite()
+# sprite5.position.y = -32
+# sprite5.scale.x = 0.5
+# sprite5.scale.y = 0.5
+# sprite.add_child(sprite5)
 
 camera = CameraNode()
 

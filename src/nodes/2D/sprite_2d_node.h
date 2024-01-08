@@ -6,7 +6,6 @@
 // A basic 2d sprite node
 typedef struct{
     mp_obj_t position;              // Vector2: 2d xy position of this node
-    mp_obj_t filename;              // The filename of the sprite data in flash/LittleFS
     mp_obj_t fps;                   // How many frames per second the sprite should play its animation (if possible)
     mp_obj_t rotation;              // Rotation about into screen/z-axis in degrees
     mp_obj_t scale;                 // Vector2

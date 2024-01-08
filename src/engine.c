@@ -20,6 +20,7 @@ bool is_engine_looping = false;
 STATIC mp_obj_t engine_init(){
     ENGINE_INFO_PRINTF("Engine init");
 
+    engine_input_setup();
     engine_display_init();
     engine_display_send();
 
