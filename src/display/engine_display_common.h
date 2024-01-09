@@ -8,6 +8,9 @@
 #define SCREEN_BUFFER_SIZE_PIXELS SCREEN_WIDTH*SCREEN_HEIGHT
 #define SCREEN_BUFFER_SIZE_BYTES SCREEN_BUFFER_SIZE_PIXELS*2 // Number of pixels times 2 (16-bit pixels) is the number of bytes in a screen buffer
 
+// The fill color that is used to clear the screen
+uint16_t engine_fill_color;
+
 void engine_init_screen_buffers();
 
 // Returns the active screen buffer

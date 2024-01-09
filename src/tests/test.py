@@ -34,6 +34,8 @@ print("dir(Rectangle):", dir(Rectangle))
 
 # # print("HI!")
 
+engine_draw.set_background_color(engine_draw.darkgrey)
+
 texture0 = TextureResource("32x32.bmp")
 texture1 = TextureResource("rpi.bmp")
 switched = False
@@ -42,7 +44,7 @@ rot_speed = 0.005
 
 class MySprite(Sprite2DNode):
     def __init__(self):
-        super().__init__(self, texture0)
+        super().__init__(self, texture1)
     
     def tick(self):
         global rot_speed
@@ -89,31 +91,33 @@ sprite = MySprite()
 sprite.position.x = 64
 sprite.position.y = 64
 
-# sprite2 = MySprite()
-# sprite2.position.x = 32
-# sprite2.scale.x = 0.5
-# sprite2.scale.y = 0.5
-# sprite.add_child(sprite2)
+sprite2 = Sprite2DNode(texture0)
+sprite2.position.x = 32
+sprite2.scale.x = 0.5
+sprite2.scale.y = 0.5
+sprite.add_child(sprite2)
 
-# sprite3 = MySprite()
-# sprite3.position.x = -32
-# sprite3.scale.x = 0.5
-# sprite3.scale.y = 0.5
-# sprite.add_child(sprite3)
+sprite3 = Sprite2DNode(texture0)
+sprite3.position.x = -32
+sprite3.scale.x = 0.5
+sprite3.scale.y = 0.5
+sprite.add_child(sprite3)
 
-# sprite4 = MySprite()
-# sprite4.position.y = 32
-# sprite4.scale.x = 0.5
-# sprite4.scale.y = 0.5
-# sprite.add_child(sprite4)
+sprite4 = Sprite2DNode(texture0)
+sprite4.position.y = 32
+sprite4.scale.x = 0.5
+sprite4.scale.y = 0.5
+sprite.add_child(sprite4)
 
-# sprite5 = MySprite()
-# sprite5.position.y = -32
-# sprite5.scale.x = 0.5
-# sprite5.scale.y = 0.5
-# sprite.add_child(sprite5)
+sprite5 = Sprite2DNode(texture0)
+sprite5.position.y = -32
+sprite5.scale.x = 0.5
+sprite5.scale.y = 0.5
+sprite.add_child(sprite5)
 
 camera = CameraNode()
+
+gc.collect()
 
 engine.start()
 

@@ -17,7 +17,10 @@
 
 
 void engine_draw_fill(uint16_t color, uint16_t *screen_buffer){
-    memset(screen_buffer, color, SCREEN_BUFFER_SIZE_BYTES);
+    uint16_t *buf = screen_buffer;
+    uint16_t count = SCREEN_BUFFER_SIZE_PIXELS;
+
+    while(count--) *buf++ = color;
 }
 
 

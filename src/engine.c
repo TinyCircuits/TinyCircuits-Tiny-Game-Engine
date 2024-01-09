@@ -103,7 +103,7 @@ STATIC mp_obj_t engine_stop(){
         engine_reset();
     }else{
         // Looks like the main loop is running, the reset
-        // will be called when the current tick si over
+        // will be called when the current tick is over
         is_engine_looping = false;
     }
 

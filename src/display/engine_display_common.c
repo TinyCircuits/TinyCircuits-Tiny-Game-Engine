@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+uint16_t engine_fill_color = 0x0000;
+
 // Two screen buffers are allocated so that one can be
 // getting sent to the screen using the independent DMA
 // hardware while the other is being used by the CPU
