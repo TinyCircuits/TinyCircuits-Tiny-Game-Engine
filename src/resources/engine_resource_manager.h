@@ -4,9 +4,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-// Erases continuous/aligned resource dedicated portion of flash 
-void engine_resource_reset_resource_flash();
-
 // Return pointer to space to store resources like sprite data, font, sound, etc.
 // On the rp3 platform this can be flash or ram if fast. On unix, it will only
 // ever be in ram

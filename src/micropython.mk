@@ -30,6 +30,7 @@ SRC_USERMOD += $(ENGINE_MOD_DIR)/display/engine_display.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/display/engine_display_driver_unix_sdl.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/display/engine_display_common.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/draw/engine_display_draw.c
+SRC_USERMOD += $(ENGINE_MOD_DIR)/audio/engine_audio_module.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/resources/engine_resource_module.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/resources/engine_resource_manager.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/resources/engine_texture_resource.c

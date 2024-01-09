@@ -35,6 +35,7 @@ target_sources(usermod_engine INTERFACE
     ${ENGINE_MOD_DIR}/display/engine_display_driver_rp2_gc9107.c
     ${ENGINE_MOD_DIR}/display/engine_display_common.c
     ${ENGINE_MOD_DIR}/draw/engine_display_draw.c
+    ${ENGINE_MOD_DIR}/audio/engine_audio_module.c
     ${ENGINE_MOD_DIR}/resources/engine_resource_module.c
     ${ENGINE_MOD_DIR}/resources/engine_resource_manager.c
     ${ENGINE_MOD_DIR}/resources/engine_texture_resource.c

@@ -84,7 +84,7 @@ elif port == 'rp3':
         shutil.copyfile(run_file_path, "../../../ports/rp3/modules/" + run_file)
 
     print("##### Building rp3 port #####")
-    execute(['wsl', '-e', 'make', '-C', '../../../ports/rp3', '-j8', 'USER_C_MODULES=../../examples/usercmodule/TinyCircuits-Tiny-Game-Engine/src/micropython.cmake'])
+    execute(['wsl', '-e', 'make', '-C', '../../../ports/rp3', '-j8', 'BOARD=THUMBY_COLOR', 'USER_C_MODULES=../../examples/usercmodule/TinyCircuits-Tiny-Game-Engine/src/micropython.cmake'])
 
     # Get all ports
     ports = serial.tools.list_ports.comports()
@@ -117,7 +117,7 @@ elif port == 'rp3':
         print("Found drive letter! " + drive_letter)
 
         print("Copying firmware to device...")
-        shutil.copyfile("../../../ports/rp3/build-RPI_PICO/firmware.uf2 ", drive_letter + ":\\firmware.uf2")
+        shutil.copyfile("../../../ports/rp3/build-THUMBY_COLOR/firmware.uf2 ", drive_letter + ":\\firmware.uf2")
 
         # If provided a file to run, run it
         print("Trying to run file " + run_file + "...")

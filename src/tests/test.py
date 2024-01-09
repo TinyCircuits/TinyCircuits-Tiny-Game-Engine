@@ -1,3 +1,12 @@
+# import machine
+# p26_enable = machine.Pin(26, machine.Pin.OUT)
+# p26_enable.value(0)
+
+# p23_pwm = machine.Pin(23)
+# pwm23 = machine.PWM(p23_pwm)
+# pwm23.freq(500)
+# pwm23.duty(512)
+
 import engine
 import engine_draw
 import engine_debug
@@ -25,8 +34,8 @@ print("dir(Rectangle):", dir(Rectangle))
 
 # # print("HI!")
 
-texture0 = TextureResource("32x32.bmp", True)
-texture1 = TextureResource("rpi.bmp", True)
+texture0 = TextureResource("32x32.bmp")
+texture1 = TextureResource("rpi.bmp")
 switched = False
 just_pressed = False
 rot_speed = 0.005
