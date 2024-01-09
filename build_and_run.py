@@ -60,7 +60,7 @@ if port == 'unix' and clean:
     print("SUCCESS: Done cleaning unix port!")
     exit()
 elif port == 'rp3' and clean:
-    execute(['wsl', '-e', 'make', '-C', '../../../ports/rp3', 'clean'])
+    execute(['wsl', '-e', 'make', '-C', '../../../ports/rp3', 'clean', 'BOARD=THUMBY_COLOR'])
     print("SUCCESS: Done cleaning rp3 port!")
     exit()
 elif clean:
