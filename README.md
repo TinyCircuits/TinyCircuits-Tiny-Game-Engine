@@ -18,6 +18,19 @@ The `build_and_run.py` scripts have a couple of arguments:
 To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik.medium.com/run-x-display-from-wsl-f94791795376
 
 # TODO
+[] Flash issue
+[] Sprite transparency
+[] Clip sprites when scaled
+[] Fast backgrounds
+[] Animated sprites
+[] Documentation: markdown to PDF
+[] Physics: no rotation, no friction
+[] Text
+[] Audio/Music
+[] Performance, we'll see how it goes
+[] Weird sprite jumping/offset during rotation and scaling
+
+
 [] Add way to look into sprite data on flash to get pixels when needed. Sprite/texture data should be read from flash since not enough ram to store lots of RGB565 bitmaps in SRAM. Instead of dedicating a portion of flash to aligned texture/sprite data, make a fast_file module that uses lfs/unix read that will be used to load up 32x32 portions of sprites. Sprite files will be data aligned into grids (this doesn't work for fonts though...). Tested 100 x 32x32 sprite 2d node drawing at 40ms game loop, that should be fast enough.
 [.] Make child nodes rotate and be positioned correctly about parent (what about scale?)(need to handle all types when getting position and rotation since not all have those and some have 3D structures)
 [] Implement PhysicsShapes that are used by Physics2dNodes to define size and shape of collision box/polygon/circle
@@ -27,7 +40,7 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [] Write tests for all math, physics, and node functions
 [] Figure out physics timing, dt, gravity, and frequency for arm/rp2 and UNIX ports
 [] Look into MICROPY_MODULE_ATTR_DELEGATION
-[] To avoid mp_load_attr calls, at the start of the game loop collect all node attributes into some local structure then load the local structure back into the micropython object (only really matters if inherited because of weird MicroPython attr storage for that case)
+[] To avoid mp_load_attr calls, at the start of the game loop collect all node attributes into some local structure then load the local structure back into the Micropython object (only really matters if inherited because of weird MicroPython attr storage for that case)
 [] Add options to give names to each node and then get nodes by name (gives list of nodes if more than one have the same name)
 [] Text/font (maybe scalable but scaled to bitmap/file in flash and then streamed after scale changed once (will need a text resource to act as a ledger))
 [] Sound/music

@@ -34,7 +34,7 @@ print("dir(Rectangle):", dir(Rectangle))
 
 # # print("HI!")
 
-engine_draw.set_background_color(engine_draw.black)
+engine_draw.set_background_color(engine_draw.skyblue)
 
 texture0 = TextureResource("32x32.bmp")
 texture1 = TextureResource("rpi.bmp")
@@ -47,42 +47,64 @@ vox = VoxelSpaceNode(C18W, D18)
 class MyCam(CameraNode):
     def __init__(self):
         super().__init__(self)
+        self.distance = 0.1
+        self.mode = 0
+
+    def forward(self):
+        self.position.x -= math.cos(self.rotation.y) * self.distance
+        self.position.z -= math.sin(self.rotation.y) * self.distance
     
+    def backward(self):
+        self.position.x += math.cos(self.rotation.y) * self.distance
+        self.position.z += math.sin(self.rotation.y) * self.distance
+    
+    def left(self):
+        self.position.x += math.cos(self.rotation.y+(math.pi/2)) * self.distance
+        self.position.z += math.sin(self.rotation.y+(math.pi/2)) * self.distance
+    
+    def right(self):
+        self.position.x -= math.cos(self.rotation.y+(math.pi/2)) * self.distance
+        self.position.z -= math.sin(self.rotation.y+(math.pi/2)) * self.distance
+
     def tick(self):
         if engine_input.is_bumper_right_pressed():
-            self.rotation.y += 0.005
-            print("BUMPER RIGHT PRESSED!")
+            self.rotation.y += 0.05
         if engine_input.is_bumper_left_pressed():
-            self.rotation.y -= 0.005
-            print("BUMPER LEFT PRESSED!")
+            self.rotation.y -= 0.05
     
 
         if engine_input.is_dpad_up_pressed():
-            self.position.x -= 0.01
-            print("DPAD UP PRESSED!")
+            self.forward()
         if engine_input.is_dpad_down_pressed():
-            self.position.x += 0.01
-            print("DPAD DOWN PRESSED!")
+            self.backward()
         if engine_input.is_dpad_left_pressed():
-            self.position.z -= 0.01
-            print("DPAD LEFT PRESSED!")
+            self.left()
         if engine_input.is_dpad_right_pressed():
-            self.position.z += 0.01
-            print("DPAD RIGHT PRESSED!")
+            self.right()
         
         if engine_input.is_a_pressed():
-            self.position.y += 1
-            print("A PRESSED!")
+            if self.mode == 0:
+                self.position.y -= 1
+            else:
+                self.rotation.x -= 0.5
         if engine_input.is_b_pressed():
-            self.position.y -= 1
-            print("B PRESSED!")
+            if self.mode == 0:
+                self.position.y += 1
+            else:
+                self.rotation.x += 0.5
+        
+        if engine_input.is_menu_pressed():
+            if self.mode == 0:
+                self.mode = 1
+            else:
+                self.mode = 0
         
         # print(self.rotation.y, self.position.x, self.position.z)
 
 camera = MyCam()
 camera.position.x = 75
+camera.position.y = 50
 camera.position.z = 75
-# camera.rotation.y = 0.1
 engine.start()
 
 

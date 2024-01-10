@@ -5,6 +5,7 @@
 #include "debug/debug_print.h"
 #include "engine_object_layers.h"
 #include "math/vector3.h"
+#include "math/engine_math.h"
 #include "utility/linked_list.h"
 #include "display/engine_display_common.h"
 #include "resources/engine_texture_resource.h"
@@ -44,35 +45,41 @@ STATIC mp_obj_t voxelspace_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
     vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
     // rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
 
-    const float height = 50.0f;
     const float view_horizon = 45.0f;
     const float scale_height = 10.0f;
-    const float view_distance = 32.0f;
+    const float view_distance = 16.0f;
 
-    float sinphi = sin(camera_rotation->y);
-    float cosphi = cos(camera_rotation->y);
+    float sinang = sin(camera_rotation->y);
+    float cosang = cos(camera_rotation->y);
 
     float z = view_distance;
 
     while(z > 0.0f){
-        float pleft_x = (-cosphi*z - sinphi*z) + camera_position->x;
-        float pleft_y = ( sinphi*z - cosphi*z) + camera_position->z;
+        float pleft_x = -sinang * z - cosang * z;
+        float pleft_y =  cosang * z - sinang * z;
 
-        float pright_x = ( cosphi*z - sinphi*z) + camera_position->x;
-        float pright_y = (-sinphi*z - cosphi*z) + camera_position->z;
+        float pright_x =  sinang * z - cosang * z;
+        float pright_y = -cosang * z - sinang * z;
 
         float dx = (pright_x - pleft_x) / SCREEN_WIDTH;
         float dy = (pright_y - pleft_y) / SCREEN_WIDTH;
 
-        for(uint8_t i=0; i<SCREEN_WIDTH; i++){
-            uint32_t index = pleft_y * heightmap->width + pleft_x;
-            if(index < heightmap->width * heightmap->height){
-                uint16_t height_data = 0;
-                height_data += (heightmap->data[index] >> 0) & 0b00011111;
-                height_data += (heightmap->data[index] >> 5) & 0b00111111;
-                height_data += (heightmap->data[index] >> 11) & 0b00011111;
+        pleft_x += camera_position->x;
+        pleft_y += camera_position->z;
 
-                uint16_t height_on_screen = (height - height_data) / z * scale_height + (view_horizon+camera_position->y);
+        for(uint8_t i=0; i<SCREEN_WIDTH; i++){
+            int32_t x = pleft_x;
+            int32_t y = pleft_y;
+
+            if((x >= 0 && x < heightmap->width) && (y >= 0 && y < heightmap->height)){
+                uint32_t index = y * heightmap->width + x;
+
+                uint16_t altitude = 0;
+                altitude += (heightmap->data[index] >> 0) & 0b00011111;
+                altitude += (heightmap->data[index] >> 5) & 0b00111111;
+                altitude += (heightmap->data[index] >> 11) & 0b00011111;
+
+                uint16_t height_on_screen = (camera_position->y - altitude) / z * scale_height + (view_horizon + camera_rotation->x);
 
                 if(height_on_screen < SCREEN_HEIGHT){
                     uint8_t ipx = height_on_screen;
