@@ -169,7 +169,7 @@ void engine_draw_blit_scale(uint16_t *pixels, int32_t x, int32_t y, uint16_t wid
 }
 
 
-void engine_draw_blit_scale_trishear(uint16_t *pixels, int32_t x, int32_t y, uint16_t width_log2, uint16_t height, int32_t xsc, int32_t ysc, int32_t xsr, int32_t ysr, int32_t xsr2, int flip){
+void engine_draw_blit_scale_trishear(uint16_t *pixels, int32_t x, int32_t y, uint16_t width_log2, uint16_t height, int32_t xsc, int32_t ysc, int32_t xsr, int32_t ysr, int32_t xsr2, int flip, uint16_t transparent_color){
     #ifndef __unix__
         init_interp(width_log2);
     #endif
@@ -220,7 +220,10 @@ void engine_draw_blit_scale_trishear(uint16_t *pixels, int32_t x, int32_t y, uin
             // #else
                 uint32_t index = fb_pos + (cx) + (yshift >> 16) * SCREEN_WIDTH + (xshift2 >> 16);
                 if(index >= 0 && index < SCREEN_BUFFER_SIZE_BYTES){
-                    screen_buffer[index] = pixels[width * height - 1 - ((ty >> 16) * width + (tx >> 16))];
+                    uint16_t pixel = pixels[width * height - 1 - ((ty >> 16) * width + (tx >> 16))];
+                    if(transparent_color == ENGINE_NO_TRANSPARENCY_COLOR || pixel != transparent_color){
+                        screen_buffer[index] = pixel;
+                    }
                 }
                 tx += dtx;
             // #endif
@@ -234,7 +237,10 @@ void engine_draw_blit_scale_trishear(uint16_t *pixels, int32_t x, int32_t y, uin
             // #else
                 uint32_t index = fb_pos + (cx) + (yshift >> 16) * SCREEN_WIDTH + (xshift2 >> 16);
                 if(index >= 0 && index < SCREEN_BUFFER_SIZE_BYTES){
-                    screen_buffer[index] = pixels[(ty >> 16) * width + (tx >> 16)];
+                    uint16_t pixel = pixels[(ty >> 16) * width + (tx >> 16)];
+                    if(transparent_color == ENGINE_NO_TRANSPARENCY_COLOR || pixel != transparent_color){
+                        screen_buffer[index] = pixel;
+                    }
                 }
                 tx += dtx;
             // #endif
@@ -328,7 +334,7 @@ void engine_draw_rect_scale_trishear_viewport(uint16_t color, int32_t x, int32_t
     }
 }
 
-void engine_draw_blit_scale_rotate(uint16_t *pixels, int32_t x, int32_t y, uint16_t width_log2, uint16_t height, int32_t xsc, int32_t ysc, int16_t theta){
+void engine_draw_blit_scale_rotate(uint16_t *pixels, int32_t x, int32_t y, uint16_t width_log2, uint16_t height, int32_t xsc, int32_t ysc, int16_t theta, uint16_t transparent_color){
     int flip = 0;
     int32_t width = 1u << width_log2;
     // Step 1: Get theta inside (-pi/2, pi/2) and flip if we need to
@@ -371,7 +377,7 @@ void engine_draw_blit_scale_rotate(uint16_t *pixels, int32_t x, int32_t y, uint1
     if(ysc < 0) cy -= ye;
     //Step 4: Triple shear (a, b, a);
     //blit_scale_trishear_pow2_tex_internal(fb, f_xs, tex, t_xs_log2, t_ys, x - cx, y - cy, xsc, ysc, a, b, a, flip);
-    engine_draw_blit_scale_trishear(pixels, x - cx, y - cy, width_log2, height, xsc, ysc, a, b, a, flip);
+    engine_draw_blit_scale_trishear(pixels, x - cx, y - cy, width_log2, height, xsc, ysc, a, b, a, flip, transparent_color);
 }
 
 

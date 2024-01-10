@@ -40,6 +40,8 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
 
     vector2_class_obj_t *sprite_scale =  mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_scale);
     texture_resource_class_obj_t *sprite_texture = mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_texture_resource);
+    uint16_t transparent_color = mp_obj_get_int(mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_transparent_color));
+    
     uint32_t sprite_width = sprite_texture->width;
     uint32_t sprite_height = sprite_texture->height;
 
@@ -67,7 +69,8 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
                                   sprite_height,
                                   (int32_t)(sprite_scale->x*65536 + 0.5),
                                   (int32_t)(sprite_scale->y*65536 + 0.5),
-                                  (int16_t)(((sprite_resolved_hierarchy_rotation+(float)camera_rotation->z))*1024 / (float)(2*PI)));
+                                  (int16_t)(((sprite_resolved_hierarchy_rotation+(float)camera_rotation->z))*1024 / (float)(2*PI)),
+                                  transparent_color);
                                                
     return mp_const_none;
 }
@@ -109,6 +112,7 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
         sprite_2d_node->rotation = mp_obj_new_float(0.0f);
         sprite_2d_node->scale = vector2_class_new(&vector2_class_type, 2, 0, default_scale_parameters);
         sprite_2d_node->texture_resource = args[0];
+        sprite_2d_node->transparent_color = mp_obj_new_int(ENGINE_NO_TRANSPARENCY_COLOR);
     }else if(n_args == 2){  // Inherited (use existing object)
         node_base->inherited = true;
         node_base->node = args[0];
@@ -135,6 +139,7 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
         mp_store_attr(node_base->node, MP_QSTR_rotation, mp_obj_new_float(0.0f));
         mp_store_attr(node_base->node, MP_QSTR_scale, vector2_class_new(&vector2_class_type, 2, 0, default_scale_parameters));
         mp_store_attr(node_base->node, MP_QSTR_texture_resource, args[1]);
+        mp_store_attr(node_base->node, MP_QSTR_transparent_color, mp_obj_new_int(ENGINE_NO_TRANSPARENCY_COLOR));
     }else{
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Too many arguments passed to Sprite2DNode constructor!"));
     }
@@ -189,6 +194,9 @@ STATIC void sprite_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
             case MP_QSTR_texture_resource:
                 destination[0] = self->texture_resource;
             break;
+            case MP_QSTR_transparent_color:
+                destination[0] = self->transparent_color;
+            break;
             default:
                 return; // Fail
         }
@@ -208,6 +216,9 @@ STATIC void sprite_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
             break;
             case MP_QSTR_texture_resource:
                 self->texture_resource = destination[1];
+            break;
+            case MP_QSTR_transparent_color:
+                self->transparent_color = destination[1];
             break;
             default:
                 return; // Fail

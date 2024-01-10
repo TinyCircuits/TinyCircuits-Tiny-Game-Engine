@@ -34,162 +34,95 @@ print("dir(Rectangle):", dir(Rectangle))
 
 engine_draw.set_background_color(engine_draw.skyblue)
 
-# texture0 = TextureResource("32x32.bmp")
-# texture1 = TextureResource("rpi.bmp")
+texture0 = TextureResource("32x32.bmp")
+texture1 = TextureResource("rpi.bmp")
 
-C18W = TextureResource("C18W.bmp")
-D18 = TextureResource("D18.bmp")
 
-vox = VoxelSpaceNode(C18W, D18)
+switched = False
+just_pressed = False
+rot_speed = 0.005
 
-class MyCam(CameraNode):
+class MySprite(Sprite2DNode):
     def __init__(self):
-        super().__init__(self)
-        self.distance = 0.1
-        self.mode = 0
-
-    def forward(self):
-        self.position.x -= math.cos(self.rotation.y) * self.distance
-        self.position.z -= math.sin(self.rotation.y) * self.distance
+        super().__init__(self, texture1)
+        self.transparent_color = engine_draw.black
     
-    def backward(self):
-        self.position.x += math.cos(self.rotation.y) * self.distance
-        self.position.z += math.sin(self.rotation.y) * self.distance
-    
-    def left(self):
-        self.position.x += math.cos(self.rotation.y+(math.pi/2)) * self.distance
-        self.position.z += math.sin(self.rotation.y+(math.pi/2)) * self.distance
-    
-    def right(self):
-        self.position.x -= math.cos(self.rotation.y+(math.pi/2)) * self.distance
-        self.position.z -= math.sin(self.rotation.y+(math.pi/2)) * self.distance
-
     def tick(self):
+        global rot_speed
+        global texture0
+        global texture1
+        global switched
+        global just_pressed
         if engine_input.is_bumper_right_pressed():
-            self.rotation.y += 0.05
+            rot_speed += 0.0001
         if engine_input.is_bumper_left_pressed():
-            self.rotation.y -= 0.05
-    
-
-        if engine_input.is_dpad_up_pressed():
-            self.forward()
-        if engine_input.is_dpad_down_pressed():
-            self.backward()
-        if engine_input.is_dpad_left_pressed():
-            self.left()
-        if engine_input.is_dpad_right_pressed():
-            self.right()
+            rot_speed -= 0.0001
         
         if engine_input.is_a_pressed():
-            if self.mode == 0:
-                self.position.y -= 1
-            else:
-                self.rotation.x -= 0.5
+            self.scale.x += 0.01
+            self.scale.y += 0.01
         if engine_input.is_b_pressed():
-            if self.mode == 0:
-                self.position.y += 1
-            else:
-                self.rotation.x += 0.5
-        
-        if engine_input.is_menu_pressed():
-            if self.mode == 0:
-                self.mode = 1
-            else:
-                self.mode = 0
-        
-        # print(self.rotation.y, self.position.x, self.position.z)
+            self.scale.x -= 0.01
+            self.scale.y -= 0.01
 
-camera = MyCam()
-camera.position.x = 75
-camera.position.y = 50
-camera.position.z = 75
+        if engine_input.is_dpad_up_pressed():
+            self.position.y -= 0.1
+        if engine_input.is_dpad_down_pressed():
+            self.position.y += 0.1
+        if engine_input.is_dpad_left_pressed():
+            self.position.x -= 0.1
+        if engine_input.is_dpad_right_pressed():
+            self.position.x += 0.1
+
+        if just_pressed == False and engine_input.is_menu_pressed():
+            just_pressed = True
+            if switched == False:
+                switched = True
+                self.texture_resource = texture1
+            else:
+                switched = False
+                self.texture_resource = texture0
+        
+        if just_pressed == True and engine_input.is_menu_pressed() == False:
+            just_pressed = False
+        self.rotation += rot_speed
+
+
+sprite = MySprite()
+sprite.position.x = 64
+sprite.position.y = 64
+
+sprite2 = Sprite2DNode(texture0)
+sprite2.position.x = 32
+sprite2.scale.x = 0.5
+sprite2.scale.y = 0.5
+sprite2.transparent_color = engine_draw.black
+sprite.add_child(sprite2)
+
+sprite3 = Sprite2DNode(texture0)
+sprite3.position.x = -32
+sprite3.scale.x = 0.5
+sprite3.scale.y = 0.5
+sprite3.transparent_color = engine_draw.black
+sprite.add_child(sprite3)
+
+sprite4 = Sprite2DNode(texture0)
+sprite4.position.y = 32
+sprite4.scale.x = 0.5
+sprite4.scale.y = 0.5
+sprite4.transparent_color = engine_draw.black
+sprite.add_child(sprite4)
+
+sprite5 = Sprite2DNode(texture0)
+sprite5.position.y = -32
+sprite5.scale.x = 0.5
+sprite5.scale.y = 0.5
+sprite5.transparent_color = engine_draw.black
+sprite.add_child(sprite5)
+
+camera = CameraNode()
+
 engine.start()
-
-
-
-
-# switched = False
-# just_pressed = False
-# rot_speed = 0.005
-
-# class MySprite(Sprite2DNode):
-#     def __init__(self):
-#         super().__init__(self, texture1)
-    
-#     def tick(self):
-#         global rot_speed
-#         global texture0
-#         global texture1
-#         global switched
-#         global just_pressed
-#         if engine_input.is_bumper_right_pressed():
-#             rot_speed += 0.0001
-#         if engine_input.is_bumper_left_pressed():
-#             rot_speed -= 0.0001
-        
-#         if engine_input.is_a_pressed():
-#             self.scale.x += 0.01
-#             self.scale.y += 0.01
-#         if engine_input.is_b_pressed():
-#             self.scale.x -= 0.01
-#             self.scale.y -= 0.01
-
-#         if engine_input.is_dpad_up_pressed():
-#             self.position.y -= 0.1
-#         if engine_input.is_dpad_down_pressed():
-#             self.position.y += 0.1
-#         if engine_input.is_dpad_left_pressed():
-#             self.position.x -= 0.1
-#         if engine_input.is_dpad_right_pressed():
-#             self.position.x += 0.1
-
-#         if just_pressed == False and engine_input.is_menu_pressed():
-#             just_pressed = True
-#             if switched == False:
-#                 switched = True
-#                 self.texture_resource = texture1
-#             else:
-#                 switched = False
-#                 self.texture_resource = texture0
-        
-#         if just_pressed == True and engine_input.is_menu_pressed() == False:
-#             just_pressed = False
-#         self.rotation += rot_speed
-
-
-# sprite = MySprite()
-# sprite.position.x = 64
-# sprite.position.y = 64
-
-# sprite2 = Sprite2DNode(texture0)
-# sprite2.position.x = 32
-# sprite2.scale.x = 0.5
-# sprite2.scale.y = 0.5
-# sprite.add_child(sprite2)
-
-# sprite3 = Sprite2DNode(texture0)
-# sprite3.position.x = -32
-# sprite3.scale.x = 0.5
-# sprite3.scale.y = 0.5
-# sprite.add_child(sprite3)
-
-# sprite4 = Sprite2DNode(texture0)
-# sprite4.position.y = 32
-# sprite4.scale.x = 0.5
-# sprite4.scale.y = 0.5
-# sprite.add_child(sprite4)
-
-# sprite5 = Sprite2DNode(texture0)
-# sprite5.position.y = -32
-# sprite5.scale.x = 0.5
-# sprite5.scale.y = 0.5
-# sprite.add_child(sprite5)
-
-# camera = CameraNode()
-
-# gc.collect()
-
-# engine.start()
 
 
 # node = Rectangle2DNode()
