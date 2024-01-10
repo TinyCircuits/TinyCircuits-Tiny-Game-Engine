@@ -16,6 +16,7 @@ target_sources(usermod_engine INTERFACE
     ${ENGINE_MOD_DIR}/nodes/node_base.c
     ${ENGINE_MOD_DIR}/nodes/empty_node.c
     ${ENGINE_MOD_DIR}/nodes/3d/camera_node.c
+    ${ENGINE_MOD_DIR}/nodes/3d/voxelspace_node.c
     ${ENGINE_MOD_DIR}/nodes/2d/sprite_2d_node.c
     ${ENGINE_MOD_DIR}/nodes/2d/rectangle_2d_node.c
     ${ENGINE_MOD_DIR}/nodes/2d/circle_2d_node.c
