@@ -32,12 +32,10 @@ print("dir(Rectangle):", dir(Rectangle))
 # engine_debug.debug_enable_setting(engine_debug.debug_setting_warnings)
 # engine_debug.debug_enable_setting(engine_debug.debug_setting_performance)
 
-# # print("HI!")
-
 engine_draw.set_background_color(engine_draw.skyblue)
 
-texture0 = TextureResource("32x32.bmp")
-texture1 = TextureResource("rpi.bmp")
+# texture0 = TextureResource("32x32.bmp")
+# texture1 = TextureResource("rpi.bmp")
 
 C18W = TextureResource("C18W.bmp")
 D18 = TextureResource("D18.bmp")
@@ -106,6 +104,8 @@ camera.position.x = 75
 camera.position.y = 50
 camera.position.z = 75
 engine.start()
+
+
 
 
 # switched = False
@@ -185,11 +185,11 @@ engine.start()
 # sprite5.scale.y = 0.5
 # sprite.add_child(sprite5)
 
-camera = CameraNode()
+# camera = CameraNode()
 
 # gc.collect()
 
-engine.start()
+# engine.start()
 
 
 # node = Rectangle2DNode()

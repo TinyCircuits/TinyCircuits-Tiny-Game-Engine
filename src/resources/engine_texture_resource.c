@@ -41,11 +41,11 @@ mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, si
 
     ENGINE_INFO_PRINTF("TextureResource: BMP Parameters parsed from '%s':", mp_obj_str_get_str(args[0]));
     ENGINE_INFO_PRINTF("\tbitmap_id:\t\t\t%d", bitmap_id);
-    ENGINE_INFO_PRINTF("\tbitmap_pixel_data_offset:\t%d", bitmap_pixel_data_offset);
-    ENGINE_INFO_PRINTF("\tbitmap_width:\t\t\t%d", bitmap_width);
-    ENGINE_INFO_PRINTF("\tbitmap_height:\t\t\t%d", bitmap_height);
-    ENGINE_INFO_PRINTF("\tbitmap_bits_per_pixel:\t\t%d", bitmap_bits_per_pixel);
-    ENGINE_INFO_PRINTF("\bitmap_data_size:\t\t%d", bitmap_data_size);
+    ENGINE_INFO_PRINTF("\tbitmap_pixel_data_offset:\t%lu", bitmap_pixel_data_offset);
+    ENGINE_INFO_PRINTF("\tbitmap_width:\t\t\t%lu", bitmap_width);
+    ENGINE_INFO_PRINTF("\tbitmap_height:\t\t\t%lu", bitmap_height);
+    ENGINE_INFO_PRINTF("\tbitmap_bits_per_pixel:\t\t%lu", bitmap_bits_per_pixel);
+    ENGINE_INFO_PRINTF("\tbitmap_data_size:\t\t%lu", bitmap_data_size);
 
     // Check header ID field
     if(bitmap_id != 19778){
