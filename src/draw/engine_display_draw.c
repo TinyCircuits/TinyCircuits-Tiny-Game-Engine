@@ -335,33 +335,31 @@ void engine_draw_blit_scale_rotate(uint16_t *pixels, int32_t center_x, int32_t c
         The displacements are performed twice on the x-axis and once on the y axis in x y x order.
     */
     
-    // Step 1: Get the sin(rotation_angle_rad) and tan(rotation_angle_rad/2) results
-
-    int32_t xsc = x_scale*65536 + 0.5f;
-    int32_t ysc = y_scale*65536 + 0.5f;
-    
-
     ENGINE_PERFORMANCE_CYCLES_START();
 
-    int32_t a, b;
-    bool flip;
-    engine_math_sin_tan(rotation_angle_rad, &a, &b, &flip);
+    // Step 1: Get the sin(rotation_angle_rad) and tan(rotation_angle_rad/2) results
+    int32_t tri_shear_sin = 0;
+    int32_t tri_shear_tan = 0;
+    bool tri_shear_flip;
+    engine_math_sin_tan(rotation_angle_rad, &tri_shear_sin, &tri_shear_tan, &tri_shear_flip);
 
-    int32_t c = (((int64_t)a*b) >> 16) + 0x10000;
+    // 
+    int32_t x_fixed_point_scale = x_scale*65536 + 0.5f;
+    int32_t y_fixed_point_scale = y_scale*65536 + 0.5f;
+    int32_t scaled_width = ((int64_t)width * x_fixed_point_scale) >> 16;
+    int32_t scaled_height = ((int64_t)height * y_fixed_point_scale) >> 16;
+    if(x_fixed_point_scale < 0) scaled_width = -scaled_width;
+    if(y_fixed_point_scale < 0) scaled_height = -scaled_height;
 
-
-    // Step 3: Rotate center w.r.t. pivot so we can rotate about the center instead
-    int32_t xe = ((int64_t)width * xsc) >> 16;
-    int32_t ye = ((int64_t)height * ysc) >> 16;
-    if(xsc < 0) xe = -xe;
-    if(ysc < 0) ye = -ye;
-    int cx = ((int64_t)(xe/2) * c - (int64_t)(ye/2) * b) >> 16;
-    int cy = ((int64_t)(ye/2) * c + (int64_t)(xe/2) * b) >> 16;
-    if(xsc < 0) cx -= xe;
-    if(ysc < 0) cy -= ye;
+    // 
+    int32_t c = (((int64_t)tri_shear_sin*tri_shear_tan) >> 16) + 0x10000;
+    int cx = ((int64_t)(scaled_width/2) * c - (int64_t)(scaled_height/2) * tri_shear_tan) >> 16;
+    int cy = ((int64_t)(scaled_height/2) * c + (int64_t)(scaled_width/2) * tri_shear_tan) >> 16;
+    if(x_fixed_point_scale < 0) cx -= scaled_width;
+    if(y_fixed_point_scale < 0) cy -= scaled_height;
     //Step 4: Triple shear (a, b, a);
     
-    engine_draw_blit_scale_trishear(pixels, center_x - cx, center_y - cy, width, height, xsc, ysc, a, b, a, flip, transparent_color);
+    engine_draw_blit_scale_trishear(pixels, center_x - cx, center_y - cy, width, height, x_fixed_point_scale, y_fixed_point_scale, tri_shear_sin, tri_shear_tan, tri_shear_sin, tri_shear_flip, transparent_color);
 
     ENGINE_PERFORMANCE_CYCLES_STOP();
 }

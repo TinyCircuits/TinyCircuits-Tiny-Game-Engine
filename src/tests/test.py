@@ -87,7 +87,7 @@ class MySprite(Sprite2DNode):
         
         if just_pressed == True and engine_input.is_menu_pressed() == False:
             just_pressed = False
-        self.rotation += 0.01
+        self.rotation += 0.005
 
 
 sprite = MySprite()
