@@ -42,8 +42,8 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
     texture_resource_class_obj_t *sprite_texture = mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_texture_resource);
     uint16_t transparent_color = mp_obj_get_int(mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_transparent_color));
     
-    uint16_t sprite_width = sprite_texture->width;
-    uint16_t sprite_height = sprite_texture->height;
+    uint32_t sprite_width = sprite_texture->width;
+    uint32_t sprite_height = sprite_texture->height;
 
     vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
     vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
@@ -65,8 +65,8 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
     engine_draw_blit_scale_rotate((uint16_t*)sprite_texture->data,
                                   sprite_rotated_x,
                                   sprite_rotated_y,
-                                  (uint16_t)sprite_width,
-                                  (uint16_t)sprite_height,
+                                  sprite_width,
+                                  sprite_height,
                                   sprite_scale->x,
                                   sprite_scale->y,
                                   sprite_resolved_hierarchy_rotation+camera_rotation->z,
