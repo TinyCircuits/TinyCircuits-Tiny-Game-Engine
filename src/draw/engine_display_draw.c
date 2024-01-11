@@ -248,12 +248,11 @@ void engine_draw_rect_scale_trishear_viewport(uint16_t color, int32_t x, int32_t
 }
 
 
-void engine_draw_blit_scale_trishear(uint16_t *pixels, int32_t x, int32_t y, uint16_t width_log2, uint16_t height, int32_t xsc, int32_t ysc, int32_t xsr, int32_t ysr, int32_t xsr2, int flip, uint16_t transparent_color){
-    #ifndef __unix__
-        init_interp(width_log2);
-    #endif
+void engine_draw_blit_scale_trishear(uint16_t *pixels, int32_t x, int32_t y, int32_t width, uint16_t height, int32_t xsc, int32_t ysc, int32_t xsr, int32_t ysr, int32_t xsr2, int flip, uint16_t transparent_color){
+    // #ifndef __unix__
+    //     init_interp(width_log2);
+    // #endif
 
-    int32_t width = 1u << width_log2;
     int32_t xe = (width * xsc) >> 16;
     int32_t ye = (height * ysc) >> 16;
     int32_t dtx = ((int64_t)width << 16) / xe;
@@ -341,8 +340,6 @@ void engine_draw_blit_scale_rotate(uint16_t *pixels, float center_x, float cente
     
     ENGINE_PERFORMANCE_CYCLES_START();
 
-    uint16_t *screen_buffer = engine_get_active_screen_buffer();
-
     /*  https://cohost.org/tomforsyth/post/891823-rotation-with-three#:~:text=But%20the%20TL%3BDR%20is%20you%20do%20three%20shears%3A
         https://stackoverflow.com/questions/65909025/rotating-a-bitmap-with-3-shears    Lots of inspiration from here
         https://computergraphics.stackexchange.com/questions/10599/rotate-a-bitmap-with-shearing
@@ -361,98 +358,106 @@ void engine_draw_blit_scale_rotate(uint16_t *pixels, float center_x, float cente
         The displacements are performed twice on the x-axis and once on the y axis in x y x order.
     */
 
-    float scaled_width = (float)width * x_scale;
-    float scaled_height = (float)height * x_scale;
+    // uint16_t *screen_buffer = engine_get_active_screen_buffer();
 
-    float scaled_half_width = scaled_width / 2.0f;
-    float scaled_half_height = scaled_height / 2.0f;
+    // float scaled_width = (float)width * x_scale;
+    // float scaled_height = (float)height * x_scale;
 
-    // Cache these calculations
-    float tri_shear_tan = tanf(rotation_angle_rad/2.0f);
-    float tri_shear_sin = sinf(rotation_angle_rad);
+    // float scaled_half_width = scaled_width / 2.0f;
+    // float scaled_half_height = scaled_height / 2.0f;
+
+    // // Cache these calculations
+    // float tri_shear_tan = tanf(rotation_angle_rad/2.0f);
+    // float tri_shear_sin = sinf(rotation_angle_rad);
     
-    float sheared_x = 0;
-    float sheared_y = 0;
+    // float sheared_x = 0;
+    // float sheared_y = 0;
 
-    // Now we need to go over each column and displace the pixels
-    for(uint16_t src_pixel_x=0; src_pixel_x<width; src_pixel_x++){
-        for(uint16_t src_pixel_y=0; src_pixel_y<height; src_pixel_y++){
+    // // Now we need to go over each column and displace the pixels
+    // for(uint16_t src_pixel_x=0; src_pixel_x<width; src_pixel_x++){
+    //     for(uint16_t src_pixel_y=0; src_pixel_y<height; src_pixel_y++){
 
-            float src_pixel_centered_x = src_pixel_x - scaled_half_width;
-            float src_pixel_centered_y = src_pixel_y - scaled_half_height;
+    //         float src_pixel_centered_x = src_pixel_x - scaled_half_width;
+    //         float src_pixel_centered_y = src_pixel_y - scaled_half_height;
 
-            // Shear #1
-            sheared_x = (float)(src_pixel_centered_x - src_pixel_centered_y * tri_shear_tan);
-            sheared_y = src_pixel_centered_y;
+    //         // Shear #1
+    //         sheared_x = (float)(src_pixel_centered_x - src_pixel_centered_y * tri_shear_tan);
+    //         sheared_y = src_pixel_centered_y;
 
-            // Shear #2
-            sheared_y = sheared_x * tri_shear_sin + sheared_y;
+    //         // Shear #2
+    //         sheared_y = sheared_x * tri_shear_sin + sheared_y;
 
-            // Shear #3
-            sheared_x = sheared_x - sheared_y * tri_shear_tan;
+    //         // Shear #3
+    //         sheared_x = sheared_x - sheared_y * tri_shear_tan;
 
-            sheared_x = sheared_x * (scaled_width / width);
-            sheared_y = sheared_y * (scaled_height / height);
+    //         sheared_x = sheared_x * (scaled_width / width);
+    //         sheared_y = sheared_y * (scaled_height / height);
 
-            sheared_x += center_x;
-            sheared_y += center_y;
+    //         sheared_x += center_x;
+    //         sheared_y += center_y;
 
-            if((sheared_x >= 0 && sheared_x < SCREEN_WIDTH) && (sheared_y >= 0 && sheared_y < SCREEN_HEIGHT)){
-                uint16_t src_pixel_index = src_pixel_y * width + src_pixel_x;
-                uint16_t output_pixel_index = (uint16_t)sheared_y * SCREEN_WIDTH + (uint16_t)sheared_x;
+    //         if((sheared_x >= 0 && sheared_x < SCREEN_WIDTH) && (sheared_y >= 0 && sheared_y < SCREEN_HEIGHT)){
+    //             uint16_t src_pixel_index = src_pixel_y * width + src_pixel_x;
+    //             uint16_t output_pixel_index = (uint16_t)sheared_y * SCREEN_WIDTH + (uint16_t)sheared_x;
 
-                screen_buffer[output_pixel_index] = pixels[src_pixel_index];
-            }
-        }
+    //             screen_buffer[output_pixel_index] = pixels[src_pixel_index];
+    //         }
+    //     }
+    // }
+
+
+
+    int32_t x = center_x;
+    int32_t y = center_y;
+    int32_t sprite_scale_x = (int32_t)(x_scale*65536+0.5);
+    int32_t sprite_scale_y = (int32_t)(y_scale*65536+0.5);
+    int16_t sprite_rotation = (int16_t)(rotation_angle_rad*1024.0f / (2.0f*PI));
+
+    int flip = 0;
+
+    // Step 1: Get theta inside (-pi/2, pi/2) and flip if we need to
+    sprite_rotation &= 0x3FF;
+    if(sprite_rotation > 0x200) sprite_rotation -= 0x400;
+    if(sprite_rotation > 0x100){
+        // flip = 1;
+        sprite_rotation -= 0x200;
+    } else if(sprite_rotation < -0x100){
+        // flip = 1;
+        sprite_rotation += 0x200;
     }
 
+    int negative = 0;
+    if(sprite_rotation < 0){
+        negative = 1;
+        sprite_rotation = -sprite_rotation;
+    }
 
-    // int flip = 0;
-
-    // // Step 1: Get theta inside (-pi/2, pi/2) and flip if we need to
-    // theta &= 0x3FF;
-    // if(theta > 0x200) theta -= 0x400;
-    // if(theta > 0x100){
-    //     // flip = 1;
-    //     theta -= 0x200;
-    // } else if(theta < -0x100){
-    //     // flip = 1;
-    //     theta += 0x200;
-    // }
-
-    // int negative = 0;
-    // if(theta < 0){
-    //     negative = 1;
-    //     theta = -theta;
-    // }
-
-    // int idx = (theta << 1);
-    // int32_t a, b;
-    // if(idx != 512){
-    //     a = (negative) ? tan_sin_tab[idx] : -tan_sin_tab[idx];
-    //     b = (negative) ? -tan_sin_tab[idx+1] : tan_sin_tab[idx+1];
-    // }else{
-    //     a = (negative) ? 65536 : -65536;
-    //     b = (negative) ? -65536 : 65536;
-    // }
-    // int32_t c = (((int64_t)a*b) >> 16) + 0x10000;
+    int idx = (sprite_rotation << 1);
+    int32_t a, b;
+    if(idx != 512){
+        a = (negative) ? tan_sin_tab[idx] : -tan_sin_tab[idx];
+        b = (negative) ? -tan_sin_tab[idx+1] : tan_sin_tab[idx+1];
+    }else{
+        a = (negative) ? 65536 : -65536;
+        b = (negative) ? -65536 : 65536;
+    }
+    int32_t c = (((int64_t)a*b) >> 16) + 0x10000;
 
 
-    // // Step 3: Rotate center w.r.t. pivot so we can rotate about the center instead
-    // int32_t xe = ((int64_t)width * xsc) >> 16;
-    // int32_t ye = ((int64_t)height * ysc) >> 16;
-    // if(xsc < 0) xe = -xe;
-    // if(ysc < 0) ye = -ye;
-    // int cx = ((int64_t)(xe/2) * c - (int64_t)(ye/2) * b) >> 16;
-    // int cy = ((int64_t)(ye/2) * c + (int64_t)(xe/2) * b) >> 16;
-    // if(xsc < 0) cx -= xe;
-    // if(ysc < 0) cy -= ye;
+    // Step 3: Rotate center w.r.t. pivot so we can rotate about the center instead
+    int32_t xe = ((int64_t)width * sprite_scale_x) >> 16;
+    int32_t ye = ((int64_t)height * sprite_scale_y) >> 16;
+    if(sprite_scale_x < 0) xe = -xe;
+    if(sprite_scale_y < 0) ye = -ye;
+    int cx = ((int64_t)(xe/2) * c - (int64_t)(ye/2) * b) >> 16;
+    int cy = ((int64_t)(ye/2) * c + (int64_t)(xe/2) * b) >> 16;
+    if(sprite_scale_x < 0) cx -= xe;
+    if(sprite_scale_y < 0) cy -= ye;
+
+    // Step 4: Triple shear (a, b, a);
+    engine_draw_blit_scale_trishear(pixels, x - cx, y - cy, width, height, sprite_scale_x, sprite_scale_y, a, b, a, flip, transparent_color);
 
     ENGINE_PERFORMANCE_CYCLES_STOP();
-
-    //Step 4: Triple shear (a, b, a);
-    //blit_scale_trishear_pow2_tex_internal(fb, f_xs, tex, t_xs_log2, t_ys, x - cx, y - cy, xsc, ysc, a, b, a, flip);
-    // engine_draw_blit_scale_trishear(pixels, x - cx, y - cy, width_log2, height, xsc, ysc, a, b, a, flip, transparent_color);
 }
 
 

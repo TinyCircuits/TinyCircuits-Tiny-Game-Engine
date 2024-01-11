@@ -46,8 +46,8 @@ class MySprite(Sprite2DNode):
     def __init__(self):
         super().__init__(self, texture1)
         self.transparent_color = engine_draw.black
-        self.scale.x = 1
-        self.scale.y = 1
+        self.scale.x = 1.0
+        self.scale.y = 1.0
     
     def tick(self):
         global rot_speed
@@ -87,7 +87,7 @@ class MySprite(Sprite2DNode):
         
         if just_pressed == True and engine_input.is_menu_pressed() == False:
             just_pressed = False
-        self.rotation = math.pi/4
+        self.rotation += 0.01
 
 
 sprite = MySprite()

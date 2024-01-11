@@ -43,7 +43,7 @@ void engine_draw_blit(uint16_t *buffer, int32_t x_top_left, int32_t y_top_left, 
 // void engine_draw_blit_scale(uint16_t *pixels, int32_t x, int32_t y, uint16_t width_log2, uint16_t height, int32_t xsc, int32_t ysc);
 
 // Blits pixels to screen at 'x' and 'y' given 'width' and 'height', after scaling by a factor of (xsc, ysc) and shearing by xsr, then ysr, then xsr2.
-void engine_draw_blit_scale_trishear(uint16_t *pixels, int32_t x, int32_t y, uint16_t width, uint16_t height, int32_t xsc, int32_t ysc, int32_t xsr, int32_t ysr, int32_t xsr2, int flip, uint16_t transparent_color);
+void engine_draw_blit_scale_trishear(uint16_t *pixels, int32_t x, int32_t y, int32_t width, uint16_t height, int32_t xsc, int32_t ysc, int32_t xsr, int32_t ysr, int32_t xsr2, int flip, uint16_t transparent_color);
 
 // Blits pixels to screen at 'x' and 'y' given 'width' and 'height', after scaling by a factor of (xsc, ysc) and rotating by theta in 10-bit bradians.
 void engine_draw_blit_scale_rotate(uint16_t *pixels, float center_x, float center_y, uint16_t width, uint16_t height, float x_scale, float y_scale, float rotation_angle_rad, uint16_t transparent_color);
