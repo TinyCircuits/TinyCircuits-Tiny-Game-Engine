@@ -1,7 +1,7 @@
 #include "draw/engine_display_draw.h"
 #include "display/engine_display_common.h"
 #include "debug/debug_print.h"
-#include "tan_sin_tab.h"
+#include "math/trig_tables.h"
 #include <string.h>
 
 #include "nodes/node_base.h"
@@ -169,91 +169,6 @@ void engine_draw_blit_scale(uint16_t *pixels, int32_t x, int32_t y, uint16_t wid
 }
 
 
-void engine_draw_blit_scale_trishear(uint16_t *pixels, int32_t x, int32_t y, int32_t width, uint16_t height, int32_t xsc, int32_t ysc, int32_t xsr, int32_t ysr, int32_t xsr2, int flip, uint16_t transparent_color){
-    // #ifndef __unix__
-    //     init_interp(width_log2);
-    // #endif
-
-    int32_t xe = (width * xsc) >> 16;
-    int32_t ye = (height * ysc) >> 16;
-    int32_t dtx = ((int64_t)width << 16) / xe;
-    int32_t dty = ((int64_t)height << 16) / ye;
-    int32_t ty = 0;
-    int32_t tx = 0;
-
-    if(xsc < 0){
-        xe = -xe;
-        x -= xe;
-    }
-    if(ysc < 0){
-        ye = -ye;
-        y -= ye;
-        ty = (height << 16) - 0x10000;
-    }
-
-    int32_t fb_pos = y * SCREEN_WIDTH + x;
-    int32_t x_start = ((xsc < 0)) ? ((width << 16) - 0x10000) : 0;
-
-    int32_t xshift = 0;
-    int32_t yshift = 0;
-    int32_t xshift2 = 0;
-    uint16_t *screen_buffer = engine_get_active_screen_buffer();
-
-    for(int cy = 0; cy < ye; cy++){
-        yshift = (xshift >> 16) * ysr;
-        tx = x_start;
-        fb_pos += (xshift >> 16);
-
-        // #ifndef __unix__
-        //     interp0->accum[1] = tx;
-        //     interp0->base[1] = dtx;
-        //     interp0->accum[0] = ty;
-        //     interp0->base[0] = 0;
-        // #endif
-
-        if(flip) for(int cx = 0; cx < xe; cx++){
-            xshift2 = ((cy + (yshift >> 16)) * xsr2);
-
-            // #ifndef __unix__
-            //     screen_buffer[fb_pos + (cx) + (yshift >> 16) * SCREEN_WIDTH + (xshift2 >> 16)] = pixels[width * height - 1 - interp_pop_full_result(interp0)];
-            // #else
-                uint32_t index = fb_pos + (cx) + (yshift >> 16) * SCREEN_WIDTH + (xshift2 >> 16);
-                if(index >= 0 && index < SCREEN_BUFFER_SIZE_BYTES){
-                    uint16_t pixel = pixels[width * height - 1 - ((ty >> 16) * width + (tx >> 16))];
-                    if(transparent_color == ENGINE_NO_TRANSPARENCY_COLOR || pixel != transparent_color){
-                        screen_buffer[index] = pixel;
-                    }
-                }
-                tx += dtx;
-            // #endif
-
-            yshift += ysr;
-        }else for(int cx = 0; cx < xe; cx++){
-            xshift2 = ((cy + (yshift >> 16)) * xsr2);
-
-            // #ifndef __unix__
-            //     screen_buffer[fb_pos + (cx) + (yshift >> 16) * SCREEN_WIDTH + (xshift2 >> 16)] = pixels[interp_pop_full_result(interp0)];
-            // #else
-                uint32_t index = fb_pos + (cx) + (yshift >> 16) * SCREEN_WIDTH + (xshift2 >> 16);
-                if(index >= 0 && index < SCREEN_BUFFER_SIZE_BYTES){
-                    uint16_t pixel = pixels[(ty >> 16) * width + (tx >> 16)];
-                    if(transparent_color == ENGINE_NO_TRANSPARENCY_COLOR || pixel != transparent_color){
-                        screen_buffer[index] = pixel;
-                    }
-                }
-                tx += dtx;
-            // #endif
-
-            yshift += ysr;
-        }
-
-        fb_pos -= (xshift >> 16);
-        fb_pos += SCREEN_WIDTH;
-        xshift += xsr;
-        ty += dty;
-    }
-}
-
 void engine_draw_fillrect_scale_trishear_viewport(uint16_t color, int32_t x, int32_t y, uint16_t width, uint16_t height, int32_t xsc, int32_t ysc, int32_t xsr, int32_t ysr, int32_t xsr2, int32_t vx, int32_t vy, int32_t vw, int32_t vh){
 
     int32_t xe = (width * xsc) >> 16;
@@ -333,12 +248,101 @@ void engine_draw_rect_scale_trishear_viewport(uint16_t color, int32_t x, int32_t
     }
 }
 
-void engine_draw_blit_scale_rotate(uint16_t *pixels, float center_x, float center_y, int32_t width, uint16_t height, float x_scale, float y_scale, float rotation_angle_rad, uint16_t transparent_color){
-    int32_t x = center_x;
-    int32_t y = center_y;
+
+void engine_draw_blit_scale_trishear(uint16_t *pixels, int32_t x, int32_t y, int32_t width, uint16_t height, int32_t xsc, int32_t ysc, int32_t xsr, int32_t ysr, int32_t xsr2, int flip, uint16_t transparent_color){
+    int32_t xe = (width * xsc) >> 16;
+    int32_t ye = (height * ysc) >> 16;
+    int32_t dtx = ((int64_t)width << 16) / xe;
+    int32_t dty = ((int64_t)height << 16) / ye;
+    int32_t ty = 0;
+    int32_t tx = 0;
+
+    if(xsc < 0){
+        xe = -xe;
+        x -= xe;
+    }
+    if(ysc < 0){
+        ye = -ye;
+        y -= ye;
+        ty = (height << 16) - 0x10000;
+    }
+
+    int32_t fb_pos = y * SCREEN_WIDTH + x;
+    int32_t x_start = ((xsc < 0)) ? ((width << 16) - 0x10000) : 0;
+
+    int32_t xshift = 0;
+    int32_t yshift = 0;
+    int32_t xshift2 = 0;
+    uint16_t *screen_buffer = engine_get_active_screen_buffer();
+
+    for(int cy = 0; cy < ye; cy++){
+        yshift = (xshift >> 16) * ysr;
+        tx = x_start;
+        fb_pos += (xshift >> 16);
+
+        if(flip) for(int cx = 0; cx < xe; cx++){
+            xshift2 = ((cy + (yshift >> 16)) * xsr2);
+
+            uint32_t index = fb_pos + (cx) + (yshift >> 16) * SCREEN_WIDTH + (xshift2 >> 16);
+            if(index >= 0 && index < SCREEN_BUFFER_SIZE_BYTES){
+                uint16_t pixel = pixels[width * height - 1 - ((ty >> 16) * width + (tx >> 16))];
+                if(transparent_color == ENGINE_NO_TRANSPARENCY_COLOR || pixel != transparent_color){
+                    screen_buffer[index] = pixel;
+                }
+            }
+            tx += dtx;
+
+            yshift += ysr;
+        }else for(int cx = 0; cx < xe; cx++){
+            xshift2 = ((cy + (yshift >> 16)) * xsr2);
+
+            uint32_t index = fb_pos + (cx) + (yshift >> 16) * SCREEN_WIDTH + (xshift2 >> 16);
+            if(index >= 0 && index < SCREEN_BUFFER_SIZE_BYTES){
+                uint16_t pixel = pixels[(ty >> 16) * width + (tx >> 16)];
+                if(transparent_color == ENGINE_NO_TRANSPARENCY_COLOR || pixel != transparent_color){
+                    screen_buffer[index] = pixel;
+                }
+            }
+            tx += dtx;
+
+            yshift += ysr;
+        }
+
+        fb_pos -= (xshift >> 16);
+        fb_pos += SCREEN_WIDTH;
+        xshift += xsr;
+        ty += dty;
+    }
+}
+
+
+void engine_draw_blit_scale_rotate(uint16_t *pixels, int32_t center_x, int32_t center_y, int32_t width, uint16_t height, float x_scale, float y_scale, float rotation_angle_rad, uint16_t transparent_color){
+    /*  https://cohost.org/tomforsyth/post/891823-rotation-with-three#:~:text=But%20the%20TL%3BDR%20is%20you%20do%20three%20shears%3A
+        https://stackoverflow.com/questions/65909025/rotating-a-bitmap-with-3-shears    Lots of inspiration from here
+        https://computergraphics.stackexchange.com/questions/10599/rotate-a-bitmap-with-shearing
+        https://news.ycombinator.com/item?id=34485871 lots of sources
+        https://graphicsinterface.org/wp-content/uploads/gi1986-15.pdf
+        https://gautamnagrawal.medium.com/rotating-image-by-any-angle-shear-transformation-using-only-numpy-d28d16eb5076
+        https://datagenetics.com/blog/august32013/index.html
+        https://www.ocf.berkeley.edu/~fricke/projects/israel/paeth/rotation_by_shearing.html
+        https://www.ocf.berkeley.edu/~fricke/projects/israel/paeth/rotation_by_shearing.html#:~:text=To%20do%20a%20shear%20operation%20on%20a%20raster%20image%20(that%20is%20to%20say%2C%20a%20bitmap)%2C%20we%20just%20shift%20all%20the%20pixels%20in%20a%20given%20row%20(column)%20by%20an%20easy%2Dto%2Dcalculate%20displacement
+
+        The last link above highlights the most important part about doing rotations by shears:
+        "To do a shear operation on a raster image (that is to say, a bitmap), we just shift all
+        the pixels in a given row (column) by an easy-to-calculate displacement"
+
+        As that link mentions, we'll do the rotation by doing three shears/displacements per-pixel per column.
+        The displacements are performed twice on the x-axis and once on the y axis in x y x order.
+    */
+    
+    // Step 1: Get the sin(rotation_angle_rad) and tan(rotation_angle_rad/2) results
+
+    
+    
+    
     int32_t xsc = x_scale*65536 + 0.5f;
     int32_t ysc = y_scale*65536 + 0.5f;
-    int16_t theta = rotation_angle_rad * 1025 / (2*PI);
+    int16_t theta = rotation_angle_rad * 1024 / (2*PI);
     
     int flip = 0;
     // Step 1: Get theta inside (-pi/2, pi/2) and flip if we need to
@@ -358,11 +362,10 @@ void engine_draw_blit_scale_rotate(uint16_t *pixels, float center_x, float cente
         theta = -theta;
     }
 
-    int idx = (theta << 1);
     int32_t a, b;
-    if(idx != 512){
-        a = (negative) ? tan_sin_tab[idx] : -tan_sin_tab[idx];
-        b = (negative) ? -tan_sin_tab[idx+1] : tan_sin_tab[idx+1];
+    if(theta != 256){
+        a = (negative) ? tan_table[theta] : -tan_table[theta];
+        b = (negative) ? -sin_table[theta] : sin_table[theta];
     }else{
         a = (negative) ? 65536 : -65536;
         b = (negative) ? -65536 : 65536;
@@ -380,8 +383,8 @@ void engine_draw_blit_scale_rotate(uint16_t *pixels, float center_x, float cente
     if(xsc < 0) cx -= xe;
     if(ysc < 0) cy -= ye;
     //Step 4: Triple shear (a, b, a);
-    //blit_scale_trishear_pow2_tex_internal(fb, f_xs, tex, t_xs_log2, t_ys, x - cx, y - cy, xsc, ysc, a, b, a, flip);
-    engine_draw_blit_scale_trishear(pixels, x - cx, y - cy, width, height, xsc, ysc, a, b, a, flip, transparent_color);
+    
+    engine_draw_blit_scale_trishear(pixels, center_x - cx, center_y - cy, width, height, xsc, ysc, a, b, a, flip, transparent_color);
 }
 
 
@@ -404,8 +407,8 @@ void engine_draw_fillrect_scale_rotate_viewport(uint16_t color, int32_t x, int32
     int idx = (theta << 1);
     int32_t a, b;
     if(idx != 512){
-        a = (negative) ? tan_sin_tab[idx] : -tan_sin_tab[idx];
-        b = (negative) ? -tan_sin_tab[idx+1] : tan_sin_tab[idx+1];
+        a = (negative) ? tan_table[idx] : -tan_table[idx];
+        b = (negative) ? -sin_table[idx] : sin_table[idx];
     }else{
         a = (negative) ? 65536 : -65536;
         b = (negative) ? -65536 : 65536;
