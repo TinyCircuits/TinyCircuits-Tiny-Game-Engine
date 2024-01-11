@@ -337,39 +337,16 @@ void engine_draw_blit_scale_rotate(uint16_t *pixels, int32_t center_x, int32_t c
     
     // Step 1: Get the sin(rotation_angle_rad) and tan(rotation_angle_rad/2) results
 
-    
-    
-    
     int32_t xsc = x_scale*65536 + 0.5f;
     int32_t ysc = y_scale*65536 + 0.5f;
-    int16_t theta = rotation_angle_rad * 1024 / (2*PI);
     
-    int flip = 0;
-    // Step 1: Get theta inside (-pi/2, pi/2) and flip if we need to
-    theta &= 0x3FF;
-    if(theta > 0x200) theta -= 0x400;
-    if(theta > 0x100){
-        flip = 1;
-        theta -= 0x200;
-    } else if(theta < -0x100){
-        flip = 1;
-        theta += 0x200;
-    }
 
-    int negative = 0;
-    if(theta < 0){
-        negative = 1;
-        theta = -theta;
-    }
+    ENGINE_PERFORMANCE_CYCLES_START();
 
     int32_t a, b;
-    if(theta != 256){
-        a = (negative) ? tan_table[theta] : -tan_table[theta];
-        b = (negative) ? -sin_table[theta] : sin_table[theta];
-    }else{
-        a = (negative) ? 65536 : -65536;
-        b = (negative) ? -65536 : 65536;
-    }
+    bool flip;
+    engine_math_sin_tan(rotation_angle_rad, &a, &b, &flip);
+
     int32_t c = (((int64_t)a*b) >> 16) + 0x10000;
 
 
@@ -385,6 +362,8 @@ void engine_draw_blit_scale_rotate(uint16_t *pixels, int32_t center_x, int32_t c
     //Step 4: Triple shear (a, b, a);
     
     engine_draw_blit_scale_trishear(pixels, center_x - cx, center_y - cy, width, height, xsc, ysc, a, b, a, flip, transparent_color);
+
+    ENGINE_PERFORMANCE_CYCLES_STOP();
 }
 
 

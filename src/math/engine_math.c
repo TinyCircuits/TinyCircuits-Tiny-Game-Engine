@@ -1,6 +1,7 @@
 #include "engine_math.h"
 #include "trig_tables.h"
 #include "math.h"
+#include "debug/debug_print.h"
 
 // https://stackoverflow.com/a/22491252
 void engine_math_rotate_point(float *px, float *py, float cx, float cy, float angle_radians){
@@ -19,29 +20,31 @@ void engine_math_rotate_point(float *px, float *py, float cx, float cy, float an
 }
 
 
-void engine_math_sin_tan(float angle_radians, int32_t *sin_output, int32_t *tan_output){
-    // Get theta inside (-pi/2, pi/2)
-    int16_t theta = angle_radians * 1024 / (2*PI);
-    theta &= 0x3FF;
-    if(theta > 0x200) theta -= 0x400;
-    if(theta > 0x100){
-        theta -= 0x200;
-    } else if(theta < -0x100){
-        theta += 0x200;
+void engine_math_sin_tan(float angle_radians, int32_t *sin_output, int32_t *tan_output, bool *flip){
+    // Not sure what's going on here
+    int16_t theta_index = angle_radians * 1024 / (2*PI);
+
+    // Remainder after division by 1024: https://stackoverflow.com/a/11077172
+    theta_index = theta_index & 1023;
+
+    *flip = 0;
+    if(theta_index > 512){
+        theta_index -= 1024;
+    } 
+    if(theta_index > 256){
+        *flip = 1;
+        theta_index -= 512;
+    } else if(theta_index < -256){
+        *flip = 1;
+        theta_index += 512;
     }
 
-    int negative = 0;
-    if(theta < 0){
-        negative = 1;
-        theta = -theta;
-    }
-
-    int idx = (theta << 1);
-    if(idx != 512){
-        sin_output = (negative) ? tan_table[idx] : -tan_table[idx];
-        tan_output = (negative) ? -sin_table[idx] : sin_table[idx];
+    if(theta_index < 0){
+        theta_index = -theta_index;
+        *sin_output = tan_table[theta_index];
+        *tan_output = -sin_table[theta_index];
     }else{
-        sin_output = (negative) ? 65536 : -65536;
-        tan_output = (negative) ? -65536 : 65536;
+        *sin_output = -tan_table[theta_index];
+        *tan_output = sin_table[theta_index];
     }
 }

@@ -30,7 +30,7 @@ print("dir(Rectangle):", dir(Rectangle))
 
 # engine_debug.debug_enable_all()
 # engine_debug.debug_enable_setting(engine_debug.debug_setting_warnings)
-engine_debug.debug_enable_setting(engine_debug.debug_setting_performance)
+# engine_debug.debug_enable_setting(engine_debug.debug_setting_performance)
 
 engine_draw.set_background_color(engine_draw.skyblue)
 
