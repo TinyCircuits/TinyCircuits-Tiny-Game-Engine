@@ -26,7 +26,7 @@ extern bool DEBUG_PERFORMANCE_ENABLED;
 extern uint32_t engine_performance_timers[5];
 
 #define ENGINE_INFO_PRINTF(fmt, ...)                                \
-    if(DEBUG_INFO_ENABLED){        \
+    if(DEBUG_INFO_ENABLED){                                         \
         mp_printf(&mp_sys_stdout_print, "\x1b[32mINFO: ");          \
         mp_printf(&mp_sys_stdout_print, fmt, ##__VA_ARGS__);        \
         mp_printf(&mp_sys_stdout_print, "\x1b[0m\n");               \
@@ -34,7 +34,7 @@ extern uint32_t engine_performance_timers[5];
 
 
 #define ENGINE_WARNING_PRINTF(fmt, ...)                             \
-    if(DEBUG_WARNINGS_ENABLED){        \
+    if(DEBUG_WARNINGS_ENABLED){                                     \
         mp_printf(&mp_sys_stdout_print, "\x1b[33mWARNING: ");       \
         mp_printf(&mp_sys_stdout_print, fmt, ##__VA_ARGS__);        \
         mp_printf(&mp_sys_stdout_print, "\x1b[0m\n");               \
@@ -43,7 +43,7 @@ extern uint32_t engine_performance_timers[5];
 
 
 #define ENGINE_ERROR_PRINTF(fmt, ...)                           \
-    if(DEBUG_ERRORS_ENABLED){     \
+    if(DEBUG_ERRORS_ENABLED){                                   \
         mp_printf(&mp_sys_stdout_print, "\x1b[31mERROR: ");     \
         mp_printf(&mp_sys_stdout_print, fmt, ##__VA_ARGS__);    \
         mp_printf(&mp_sys_stdout_print, "\x1b[0m\n");           \
@@ -62,15 +62,30 @@ extern uint32_t engine_performance_timers[5];
 // Tracks time (in ms) when called to used when calling 'ENGINE_PERFORMANCE_STOP()' later
 #define ENGINE_PERFORMANCE_START(timer)                                                             \
     if(DEBUG_PERFORMANCE_ENABLED){                                                                  \
-        mp_printf(&mp_sys_stdout_print, "\x1b[36mPERFORMANCE[timer %d, start]\x1b[0m\n", timer+1);    \
+        mp_printf(&mp_sys_stdout_print, "\x1b[36mPERFORMANCE[timer %d, start]\x1b[0m\n", timer+1);  \
         engine_performance_timers[(uint8_t)timer] = millis();                                       \
     }
 
 
 // Prints the time (in ms) since 'ENGINE_PERFORMANCE_START()' was called
-#define ENGINE_PERFORMANCE_STOP(timer, label)                                                                                                                     \
-    if(DEBUG_PERFORMANCE_ENABLED){                                                                                                                                \
+#define ENGINE_PERFORMANCE_STOP(timer, label)                                                                                                   \
+    if(DEBUG_PERFORMANCE_ENABLED){                                                                                                              \
         mp_printf(&mp_sys_stdout_print, "\x1b[36mPERFORMANCE[timer %d, end]: %s: %lu ms\x1b[0m\n", timer+1, label, millis()-engine_performance_timers[timer]);  \
+    }
+
+
+// Tracks time (in ms) when called to used when calling 'ENGINE_PERFORMANCE_STOP()' later
+#define ENGINE_PERFORMANCE_CYCLES_START()                                                   \
+    if(DEBUG_PERFORMANCE_ENABLED){                                                          \
+        mp_printf(&mp_sys_stdout_print, "\x1b[36mPERFORMANCE CYCLES START:\x1b[0m\n");      \
+        cycles_start();                                                                     \
+    }
+
+
+// Prints the time (in ms) since 'ENGINE_PERFORMANCE_START()' was called
+#define ENGINE_PERFORMANCE_CYCLES_STOP()                                                                         \
+    if(DEBUG_PERFORMANCE_ENABLED){                                                                               \
+        mp_printf(&mp_sys_stdout_print, "\x1b[36mPERFORMANCE CYCLES STOP: %lu cycles\x1b[0m\n", cycles_stop());  \
     }
 
 
