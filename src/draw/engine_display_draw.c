@@ -248,6 +248,7 @@ void engine_draw_rect_scale_trishear_viewport(uint16_t color, int32_t x, int32_t
     }
 }
 
+#include "display/engine_display_driver_unix_sdl.h"
 
 void engine_draw_blit_scale_trishear(uint16_t *pixels, int32_t x, int32_t y, int32_t width, uint16_t height, int32_t xsc, int32_t ysc, int32_t xsr, int32_t ysr, int32_t xsr2, int flip, uint16_t transparent_color){
     int32_t xe = (width * xsc) >> 16;
@@ -284,6 +285,12 @@ void engine_draw_blit_scale_trishear(uint16_t *pixels, int32_t x, int32_t y, int
             xshift2 = ((cy + (yshift >> 16)) * xsr2);
             uint32_t output_index = fb_pos + (cx) + (yshift >> 16) * SCREEN_WIDTH + (xshift2 >> 16);
 
+            // ENGINE_FORCE_PRINTF("%d %d %d %d", cx, cy, (yshift >> 16), (xshift2 >> 16));
+
+            // int32_t abs_x_pos = x + (xshift >> 16) + (xshift2 >> 16);
+            // int32_t abs_y_pos = y + cy;
+
+            // if(output_index < SCREEN_BUFFER_SIZE_BYTES && abs_x_pos >= 0 && abs_x_pos < SCREEN_WIDTH){
             if(output_index < SCREEN_BUFFER_SIZE_BYTES){
                 uint16_t pixel = 0;
 
@@ -295,6 +302,7 @@ void engine_draw_blit_scale_trishear(uint16_t *pixels, int32_t x, int32_t y, int
 
                 if(transparent_color == ENGINE_NO_TRANSPARENCY_COLOR || pixel != transparent_color){
                     screen_buffer[output_index] = pixel;
+                    // engine_display_sdl_update_screen(engine_get_active_screen_buffer());
                 }
             }
 
@@ -333,7 +341,7 @@ void engine_draw_blit_scale_rotate(uint16_t *pixels, float center_x, float cente
     int32_t y = center_y;
     int32_t xsc = x_scale*65536 + 0.5f;
     int32_t ysc = y_scale*65536 + 0.5f;
-    int16_t theta = rotation_angle_rad * 1025 / (2*PI);
+    int16_t theta = (rotation_angle_rad+PI) * 1025 / (2*PI);
     
     int flip = 0;
     // Step 1: Get theta inside (-pi/2, pi/2) and flip if we need to
@@ -356,8 +364,8 @@ void engine_draw_blit_scale_rotate(uint16_t *pixels, float center_x, float cente
     int idx = (theta << 1);
     int32_t a, b;
     if(idx != 512){
-        a = (negative) ? tan_sin_tab[idx] : -tan_sin_tab[idx];
-        b = (negative) ? -tan_sin_tab[idx+1] : tan_sin_tab[idx+1];
+        a = (negative) ? -tan_sin_tab[idx] : tan_sin_tab[idx];
+        b = (negative) ? tan_sin_tab[idx+1] : -tan_sin_tab[idx+1];
     }else{
         a = (negative) ? 65536 : -65536;
         b = (negative) ? -65536 : 65536;
@@ -399,8 +407,8 @@ void engine_draw_fillrect_scale_rotate_viewport(uint16_t color, int32_t x, int32
     int idx = (theta << 1);
     int32_t a, b;
     if(idx != 512){
-        a = (negative) ? tan_sin_tab[idx] : -tan_sin_tab[idx];
-        b = (negative) ? -tan_sin_tab[idx+1] : tan_sin_tab[idx+1];
+        a = (negative) ? -tan_sin_tab[idx] : tan_sin_tab[idx];
+        b = (negative) ? tan_sin_tab[idx+1] : -tan_sin_tab[idx+1];
     }else{
         a = (negative) ? 65536 : -65536;
         b = (negative) ? -65536 : 65536;
