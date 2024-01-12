@@ -250,10 +250,6 @@ void engine_draw_rect_scale_trishear_viewport(uint16_t color, int32_t x, int32_t
 
 
 void engine_draw_blit_scale_trishear(uint16_t *pixels, int32_t x, int32_t y, int32_t width, uint16_t height, int32_t xsc, int32_t ysc, int32_t xsr, int32_t ysr, int32_t xsr2, int flip, uint16_t transparent_color){
-    // #ifndef __unix__
-    //     init_interp(width_log2);
-    // #endif
-
     int32_t xe = (width * xsc) >> 16;
     int32_t ye = (height * ysc) >> 16;
     int32_t dtx = ((int64_t)width << 16) / xe;
@@ -284,46 +280,25 @@ void engine_draw_blit_scale_trishear(uint16_t *pixels, int32_t x, int32_t y, int
         tx = x_start;
         fb_pos += (xshift >> 16);
 
-        // #ifndef __unix__
-        //     interp0->accum[1] = tx;
-        //     interp0->base[1] = dtx;
-        //     interp0->accum[0] = ty;
-        //     interp0->base[0] = 0;
-        // #endif
-
-        if(flip) for(int cx = 0; cx < xe; cx++){
+        for(int cx = 0; cx < xe; cx++){
             xshift2 = ((cy + (yshift >> 16)) * xsr2);
+            uint32_t output_index = fb_pos + (cx) + (yshift >> 16) * SCREEN_WIDTH + (xshift2 >> 16);
 
-            // #ifndef __unix__
-            //     screen_buffer[fb_pos + (cx) + (yshift >> 16) * SCREEN_WIDTH + (xshift2 >> 16)] = pixels[width * height - 1 - interp_pop_full_result(interp0)];
-            // #else
-                uint32_t index = fb_pos + (cx) + (yshift >> 16) * SCREEN_WIDTH + (xshift2 >> 16);
-                if(index >= 0 && index < SCREEN_BUFFER_SIZE_BYTES){
-                    uint16_t pixel = pixels[width * height - 1 - ((ty >> 16) * width + (tx >> 16))];
-                    if(transparent_color == ENGINE_NO_TRANSPARENCY_COLOR || pixel != transparent_color){
-                        screen_buffer[index] = pixel;
-                    }
+            if(output_index < SCREEN_BUFFER_SIZE_BYTES){
+                uint16_t pixel = 0;
+
+                if(flip){
+                    pixel = pixels[width * height - 1 - ((ty >> 16) * width + (tx >> 16))];
+                }else{
+                    pixel = pixels[(ty >> 16) * width + (tx >> 16)];
                 }
-                tx += dtx;
-            // #endif
 
-            yshift += ysr;
-        }else for(int cx = 0; cx < xe; cx++){
-            xshift2 = ((cy + (yshift >> 16)) * xsr2);
-
-            // #ifndef __unix__
-            //     screen_buffer[fb_pos + (cx) + (yshift >> 16) * SCREEN_WIDTH + (xshift2 >> 16)] = pixels[interp_pop_full_result(interp0)];
-            // #else
-                uint32_t index = fb_pos + (cx) + (yshift >> 16) * SCREEN_WIDTH + (xshift2 >> 16);
-                if(index >= 0 && index < SCREEN_BUFFER_SIZE_BYTES){
-                    uint16_t pixel = pixels[(ty >> 16) * width + (tx >> 16)];
-                    if(transparent_color == ENGINE_NO_TRANSPARENCY_COLOR || pixel != transparent_color){
-                        screen_buffer[index] = pixel;
-                    }
+                if(transparent_color == ENGINE_NO_TRANSPARENCY_COLOR || pixel != transparent_color){
+                    screen_buffer[output_index] = pixel;
                 }
-                tx += dtx;
-            // #endif
+            }
 
+            tx += dtx;
             yshift += ysr;
         }
 
