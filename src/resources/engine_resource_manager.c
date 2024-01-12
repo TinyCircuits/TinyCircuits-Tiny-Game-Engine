@@ -18,26 +18,30 @@
     // Intermediate buffer to hold data read from flash before
     // programming it to a contigious area
     uint8_t page_prog[FLASH_PAGE_SIZE];
+    uint16_t page_prog_index = 0;
+    uint32_t page_prog_count = 0;
 
     // How many pages (not sectors), that have been used so far
     uint32_t used_pages_count = 0;
 #endif
 
 
-uint8_t *engine_resource_get_space_and_fill(const char *filename, uint32_t space_size, bool fast_space, uint32_t offset){
-    engine_file_open(filename);
-    engine_file_seek(offset);
+uint8_t *current_storing_location = NULL;
+uint32_t index_in_storing_location = 0;
+bool storing_in_ram = false;
+
+
+// uint8_t *engine_resource_get_space_and_fill(const char *filename, uint32_t space_size, bool fast_space, uint32_t offset){
+uint8_t *engine_resource_get_space(uint32_t space_size, bool fast_space){    
     uint8_t *space = NULL;
 
     #ifdef __unix__
         ENGINE_INFO_PRINTF("EngineResourceManager: Allocating ram for unix resource");
         space = (uint8_t*)malloc(space_size);
-        engine_file_read(space, space_size);
     #elif __arm__
         if(fast_space){
             ENGINE_INFO_PRINTF("EngineResourceManager: Allocating ram for rp3 resource");
             space = (uint8_t*)m_malloc(space_size);    // Will this get collected by gc?
-            engine_file_read(space, space_size);
         }else{
             ENGINE_INFO_PRINTF("EngineResourceManager: Allocating flash for rp3 resource");
 
@@ -77,11 +81,6 @@ uint8_t *engine_resource_get_space_and_fill(const char *filename, uint32_t space
             // otherwise hangs forever
             uint32_t paused_interrupts = save_and_disable_interrupts();
             flash_range_erase(ENGINE_HW_FLASH_RESOURCE_SPACE_BASE+sectors_to_erase_offset, sectors_to_erase_size);
-
-            for(uint32_t ipx=0; ipx<required_pages_count; ipx++){
-                engine_file_read(page_prog, FLASH_PAGE_SIZE);
-                flash_range_program(ENGINE_HW_FLASH_RESOURCE_SPACE_BASE+(used_pages_count*FLASH_PAGE_SIZE)+(ipx*FLASH_PAGE_SIZE), page_prog, FLASH_PAGE_SIZE);
-            }
             restore_interrupts(paused_interrupts);
 
             // Stored in contiguous flash location
@@ -90,12 +89,70 @@ uint8_t *engine_resource_get_space_and_fill(const char *filename, uint32_t space
             used_pages_count += required_pages_count;
         }
     #else
-        #error "EngineResource: Unknown platform"
+        #error "EngineResourceManager: Unknown platform"
     #endif
 
     ENGINE_INFO_PRINTF("EngineResourceManager: Done allocating!");
 
-    engine_file_close();
-
     return space;
+}
+
+
+void engine_resource_start_storing(uint8_t *location, bool in_ram){
+    current_storing_location = location;
+    index_in_storing_location = 0;
+    storing_in_ram = in_ram;
+
+    // When using flash, need a way to track how many pages
+    // in this storing operation have been stored, use this
+    // to track
+    #if defined(__arm__)
+        page_prog_index = 0;
+        page_prog_count = 0;
+    #endif
+}
+
+
+void engine_resource_store_u16(uint16_t to_store){
+    if(storing_in_ram){
+        // Convert to u16 array
+        uint16_t *u16_current_storing_location = (uint16_t*)current_storing_location;
+        u16_current_storing_location[index_in_storing_location] = to_store;
+    }else{
+        #if defined(__arm__)
+            uint16_t *u16_page_prog = (uint16_t*)page_prog;
+
+            // Store the 'to_byte' byte in a buffer in ram for now
+            u16_page_prog[page_prog_index] = to_store;
+
+            // Once buffer is full, write it to flash and
+            // reset indices to start filling again
+            page_prog_index++;
+            if(page_prog_index >= FLASH_PAGE_SIZE/2){
+                uint32_t address_offset = ((uint32_t)current_storing_location) - XIP_BASE;
+                uint32_t paused_interrupts = save_and_disable_interrupts();
+                flash_range_program(address_offset + (page_prog_count*FLASH_PAGE_SIZE), page_prog, FLASH_PAGE_SIZE);
+                restore_interrupts(paused_interrupts);
+
+                page_prog_index = 0;
+                page_prog_count++;
+            }
+        #else
+            ENGINE_FORCE_PRINTF("EngineResourceManager: ERROR, no none ram programmer implemented on this platform! Resources will not work!");
+        #endif
+    }
+    
+    index_in_storing_location++;
+}
+
+
+void engine_resource_stop_storing(){
+    #if defined(__arm__)
+        if(page_prog_index != 0){
+            uint32_t address_offset = ((uint32_t)current_storing_location) - XIP_BASE;
+            uint32_t paused_interrupts = save_and_disable_interrupts();
+            flash_range_program(address_offset + (page_prog_count*FLASH_PAGE_SIZE), page_prog, FLASH_PAGE_SIZE);
+            restore_interrupts(paused_interrupts);
+        }
+    #endif
 }

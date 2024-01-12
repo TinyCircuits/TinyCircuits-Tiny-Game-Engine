@@ -21,15 +21,17 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Flash issue: Fixed. calculation on sectors erased already count used wrong information
 [X] Sprite transparency: Define a color to make transparent. Could use the 1bit of alpha for BMPs in the future
 [X] Fix rotation starting at incorrect angle and direction
-[] Clip sprites when scaled
+[X] Clip sprites when scaled
 [X] Fast backgrounds
+[X] Fix BMPs loading vertically flipped
 [] Animated sprites
-[] Documentation: markdown to PDF
+[] Weird sprite jumping/offset during rotation and scaling
 [] Physics: no rotation, no friction
+[] Documentation: markdown to PDF
 [] Text
 [] Audio/Music
+[] UI
 [] Performance, we'll see how it goes
-[] Weird sprite jumping/offset during rotation and scaling
 
 
 [] Should a flag be set in sprite2dnode to enable transpareny? Or just use special color 0b0000100000100001?

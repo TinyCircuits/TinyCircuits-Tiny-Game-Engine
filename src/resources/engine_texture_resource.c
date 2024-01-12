@@ -58,12 +58,28 @@ mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, si
 
     self->width = bitmap_width;
     self->height = bitmap_height;
+    
+    // Pass the size of the pixel data, and if it is in fast ram or not
+    self->data = (uint16_t*)engine_resource_get_space(bitmap_data_size, self->in_ram);
+    engine_resource_start_storing((uint8_t*)self->data, self->in_ram);
 
+    uint16_t bitmap_pixel_src_x = 0;
+    uint16_t bitmap_pixel_src_y = bitmap_height-1;
+    for(uint32_t bitmap_pixel_dest_index=0; bitmap_pixel_dest_index<bitmap_width*bitmap_height; bitmap_pixel_dest_index++){
+        
+        uint32_t bitmap_pixel_src_index = bitmap_pixel_src_y * bitmap_width + bitmap_pixel_src_x;
+        engine_resource_store_u16(engine_file_get_u16(bitmap_pixel_data_offset+bitmap_pixel_src_index*2));
+
+        bitmap_pixel_src_x++;
+        if(bitmap_pixel_src_x >= bitmap_width){
+            bitmap_pixel_src_x = 0;
+            bitmap_pixel_src_y--;
+        }
+    }
+
+    engine_resource_stop_storing();
     engine_file_close();
-
-    // Pass the name of the file, size of the pixel data, and if it is in fast ram or not
-    self->data = (uint16_t*)engine_resource_get_space_and_fill(mp_obj_str_get_str(args[0]), bitmap_data_size, self->in_ram, bitmap_pixel_data_offset);
-
+    
     return MP_OBJ_FROM_PTR(self);
 }
 

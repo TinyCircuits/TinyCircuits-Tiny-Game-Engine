@@ -295,13 +295,16 @@ void engine_draw_blit_scale_trishear(uint16_t *pixels, int32_t x, int32_t y, int
             xshift2 = ((cy + (yshift >> 16)) * xsr2);
             uint32_t output_index = fb_pos + (cx) + (yshift >> 16) * SCREEN_WIDTH + (xshift2 >> 16);
 
-            // ENGINE_FORCE_PRINTF("%d %d %d %d", cx, cy, (yshift >> 16), (xshift2 >> 16));
+            // ENGINE_FORCE_PRINTF("%d %d %d %d %d %d", cx, cy, (yshift >> 16), (xshift2 >> 16),   x+cx+(xshift >> 16)+(xshift2 >> 16),   y+cy+(yshift >> 16));
 
             // int32_t abs_x_pos = x + (xshift >> 16) + (xshift2 >> 16);
             // int32_t abs_y_pos = y + cy;
 
-            // if(output_index < SCREEN_BUFFER_SIZE_BYTES && abs_x_pos >= 0 && abs_x_pos < SCREEN_WIDTH){
-            if(output_index < SCREEN_BUFFER_SIZE_BYTES){
+            int32_t abs_x_pos = x+cx+(xshift >> 16)+(xshift2 >> 16);
+            int32_t abs_y_pos = y+cy+(yshift >> 16);
+            if(abs_x_pos >= 0 && abs_x_pos < SCREEN_WIDTH && abs_y_pos >= 0 && abs_y_pos < SCREEN_HEIGHT){
+            
+            // if(output_index < SCREEN_BUFFER_SIZE_PIXELS){
                 uint16_t pixel = 0;
 
                 if(flip){
@@ -347,16 +350,19 @@ void engine_draw_blit_scale_rotate(uint16_t *pixels, float center_x, float cente
         The displacements are performed twice on the x-axis and once on the y axis in x y x order.
     */
     
+//    ENGINE_PERFORMANCE_CYCLES_START();
+
     int32_t x = center_x;
     int32_t y = center_y;
     int32_t xsc = x_scale*65536 + 0.5f;
     int32_t ysc = y_scale*65536 + 0.5f;
-    int16_t theta = rotation_angle_rad * 1025 / (2*PI);
+    int16_t theta = rotation_angle_rad * 1024 / (2*PI);
     
     int flip = 0;
     // Step 1: Get theta inside (-pi/2, pi/2) and flip if we need to
     theta &= 0x3FF;
     if(theta > 0x200) theta -= 0x400;
+
     if(theta > 0x100){
         flip = 1;
         theta -= 0x200;
@@ -395,6 +401,8 @@ void engine_draw_blit_scale_rotate(uint16_t *pixels, float center_x, float cente
     //Step 4: Triple shear (a, b, a);
     //blit_scale_trishear_pow2_tex_internal(fb, f_xs, tex, t_xs_log2, t_ys, x - cx, y - cy, xsc, ysc, a, b, a, flip);
     engine_draw_blit_scale_trishear(pixels, x - cx, y - cy, width, height, xsc, ysc, a, b, a, flip, transparent_color);
+
+    // ENGINE_PERFORMANCE_CYCLES_STOP();
 }
 
 

@@ -28,12 +28,12 @@ print("dir(Rectangle2DNode):", dir(Rectangle2DNode))
 print("dir(Vector3):", dir(Vector3))
 print("dir(Rectangle):", dir(Rectangle))
 
-engine_debug.debug_enable_all()
+# engine_debug.debug_enable_all()
 # engine_debug.debug_enable_setting(engine_debug.debug_setting_warnings)
-# engine_debug.debug_enable_setting(engine_debug.debug_setting_performance)
+engine_debug.debug_enable_setting(engine_debug.debug_setting_performance)
 
 background = TextureResource("128x128.bmp")
-engine_draw.set_background(background)
+# engine_draw.set_background(background)
 # engine_draw.set_background_color(engine_draw.skyblue)
 
 texture0 = TextureResource("32x32.bmp")
@@ -89,40 +89,41 @@ class MySprite(Sprite2DNode):
         
         if just_pressed == True and engine_input.is_menu_pressed() == False:
             just_pressed = False
-        self.rotation = 0
+        # self.rotation = (3*math.pi)/4
+        self.rotation += 0.005
 
 
 sprite = MySprite()
-# sprite.position.x = 64
-# sprite.position.y = 64
+sprite.position.x = 64
+sprite.position.y = 64
 
-# sprite2 = Sprite2DNode(texture0)
-# sprite2.position.x = 32
-# sprite2.scale.x = 0.5
-# sprite2.scale.y = 0.5
-# sprite2.transparent_color = engine_draw.black
-# sprite.add_child(sprite2)
+sprite2 = Sprite2DNode(texture0)
+sprite2.position.x = 32
+sprite2.scale.x = 0.5
+sprite2.scale.y = 0.5
+sprite2.transparent_color = engine_draw.black
+sprite.add_child(sprite2)
 
-# sprite3 = Sprite2DNode(texture0)
-# sprite3.position.x = -32
-# sprite3.scale.x = 0.5
-# sprite3.scale.y = 0.5
-# sprite3.transparent_color = engine_draw.black
-# sprite.add_child(sprite3)
+sprite3 = Sprite2DNode(texture0)
+sprite3.position.x = -32
+sprite3.scale.x = 0.5
+sprite3.scale.y = 0.5
+sprite3.transparent_color = engine_draw.black
+sprite.add_child(sprite3)
 
-# sprite4 = Sprite2DNode(texture0)
-# sprite4.position.y = 32
-# sprite4.scale.x = 0.5
-# sprite4.scale.y = 0.5
-# sprite4.transparent_color = engine_draw.black
-# sprite.add_child(sprite4)
+sprite4 = Sprite2DNode(texture0)
+sprite4.position.y = 32
+sprite4.scale.x = 0.5
+sprite4.scale.y = 0.5
+sprite4.transparent_color = engine_draw.black
+sprite.add_child(sprite4)
 
-# sprite5 = Sprite2DNode(texture0)
-# sprite5.position.y = -32
-# sprite5.scale.x = 0.5
-# sprite5.scale.y = 0.5
-# sprite5.transparent_color = engine_draw.black
-# sprite.add_child(sprite5)
+sprite5 = Sprite2DNode(texture0)
+sprite5.position.y = -32
+sprite5.scale.x = 0.5
+sprite5.scale.y = 0.5
+sprite5.transparent_color = engine_draw.black
+sprite.add_child(sprite5)
 
 camera = CameraNode()
 
