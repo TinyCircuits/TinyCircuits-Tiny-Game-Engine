@@ -46,8 +46,8 @@ class MySprite(Sprite2DNode):
     def __init__(self):
         super().__init__(self, texture1)
         self.transparent_color = engine_draw.black
-        self.scale.x = 1.0
-        self.scale.y = 1.0
+        self.scale.x = 2
+        self.scale.y = 2
     
     def tick(self):
         global rot_speed

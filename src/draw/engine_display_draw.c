@@ -284,7 +284,7 @@ void engine_draw_blit_scale_trishear(uint16_t *pixels, int32_t x, int32_t y, int
             xshift2 = ((cy + (yshift >> 16)) * xsr2);
 
             uint32_t index = fb_pos + (cx) + (yshift >> 16) * SCREEN_WIDTH + (xshift2 >> 16);
-            if(index >= 0 && index < SCREEN_BUFFER_SIZE_BYTES){
+            if(index < SCREEN_BUFFER_SIZE_BYTES){
                 uint16_t pixel = pixels[width * height - 1 - ((ty >> 16) * width + (tx >> 16))];
                 if(transparent_color == ENGINE_NO_TRANSPARENCY_COLOR || pixel != transparent_color){
                     screen_buffer[index] = pixel;
@@ -297,7 +297,7 @@ void engine_draw_blit_scale_trishear(uint16_t *pixels, int32_t x, int32_t y, int
             xshift2 = ((cy + (yshift >> 16)) * xsr2);
 
             uint32_t index = fb_pos + (cx) + (yshift >> 16) * SCREEN_WIDTH + (xshift2 >> 16);
-            if(index >= 0 && index < SCREEN_BUFFER_SIZE_BYTES){
+            if(index < SCREEN_BUFFER_SIZE_BYTES){
                 uint16_t pixel = pixels[(ty >> 16) * width + (tx >> 16)];
                 if(transparent_color == ENGINE_NO_TRANSPARENCY_COLOR || pixel != transparent_color){
                     screen_buffer[index] = pixel;
@@ -334,16 +334,14 @@ void engine_draw_blit_scale_rotate(uint16_t *pixels, int32_t center_x, int32_t c
         As that link mentions, we'll do the rotation by doing three shears/displacements per-pixel per column.
         The displacements are performed twice on the x-axis and once on the y axis in x y x order.
     */
-    
-    ENGINE_PERFORMANCE_CYCLES_START();
 
     // Step 1: Get the sin(rotation_angle_rad) and tan(rotation_angle_rad/2) results
     int32_t tri_shear_sin = 0;
     int32_t tri_shear_tan = 0;
-    bool tri_shear_flip;
+    bool tri_shear_flip = 0;
     engine_math_sin_tan(rotation_angle_rad, &tri_shear_sin, &tri_shear_tan, &tri_shear_flip);
 
-    // 
+    // Scaling math
     int32_t x_fixed_point_scale = x_scale*65536 + 0.5f;
     int32_t y_fixed_point_scale = y_scale*65536 + 0.5f;
     int32_t scaled_width = ((int64_t)width * x_fixed_point_scale) >> 16;
@@ -351,17 +349,15 @@ void engine_draw_blit_scale_rotate(uint16_t *pixels, int32_t center_x, int32_t c
     if(x_fixed_point_scale < 0) scaled_width = -scaled_width;
     if(y_fixed_point_scale < 0) scaled_height = -scaled_height;
 
-    // 
+    // Rotation math
     int32_t c = (((int64_t)tri_shear_sin*tri_shear_tan) >> 16) + 0x10000;
     int cx = ((int64_t)(scaled_width/2) * c - (int64_t)(scaled_height/2) * tri_shear_tan) >> 16;
     int cy = ((int64_t)(scaled_height/2) * c + (int64_t)(scaled_width/2) * tri_shear_tan) >> 16;
     if(x_fixed_point_scale < 0) cx -= scaled_width;
     if(y_fixed_point_scale < 0) cy -= scaled_height;
-    //Step 4: Triple shear (a, b, a);
     
+    //Triple shear (a, b, a);
     engine_draw_blit_scale_trishear(pixels, center_x - cx, center_y - cy, width, height, x_fixed_point_scale, y_fixed_point_scale, tri_shear_sin, tri_shear_tan, tri_shear_sin, tri_shear_flip, transparent_color);
-
-    ENGINE_PERFORMANCE_CYCLES_STOP();
 }
 
 
