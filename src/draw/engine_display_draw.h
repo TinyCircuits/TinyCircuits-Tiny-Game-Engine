@@ -8,7 +8,10 @@
 #define ENGINE_NO_TRANSPARENCY_COLOR 0b0000100000100001
 
 // Fills entire screen buffer with 'color'
-void engine_draw_fill(uint16_t color, uint16_t *screen_buffer);
+void engine_draw_fill_color(uint16_t color, uint16_t *screen_buffer);
+
+// Fills entire screen buffer with 'src_buffer'
+void engine_draw_fill_buffer(uint16_t* src_buffer, uint16_t *screen_buffer);
 
 // Sets a single pixel in the screen buffer to 'color'
 void engine_draw_pixel(uint16_t color, int32_t x, int32_t y);

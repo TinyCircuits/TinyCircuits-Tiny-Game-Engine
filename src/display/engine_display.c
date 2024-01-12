@@ -36,5 +36,9 @@ void engine_display_send(){
     engine_switch_active_screen_buffer();
 
     // Clear the new active screen buffer
-    engine_draw_fill(engine_fill_color, engine_get_active_screen_buffer());
+    if(engine_fill_background != NULL){
+        engine_draw_fill_buffer(engine_fill_background, engine_get_active_screen_buffer());
+    }else{
+        engine_draw_fill_color(engine_fill_color, engine_get_active_screen_buffer());
+    }
 }

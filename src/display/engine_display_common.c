@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 uint16_t engine_fill_color = 0x0000;
+uint16_t *engine_fill_background = NULL;
 
 // Two screen buffers are allocated so that one can be
 // getting sent to the screen using the independent DMA
@@ -32,8 +33,8 @@ void engine_init_screen_buffers(){
 
         // Make sure both screen buffers are set to all zeros
         ENGINE_INFO_PRINTF("Filling both screen buffers with 0x0");
-        engine_draw_fill(0x0, dual_screen_buffers[0]);
-        engine_draw_fill(0x0, dual_screen_buffers[1]);
+        engine_draw_fill_color(0x0, dual_screen_buffers[0]);
+        engine_draw_fill_color(0x0, dual_screen_buffers[1]);
 
         active_screen_buffer = dual_screen_buffers[0];
         is_initialzed = true;

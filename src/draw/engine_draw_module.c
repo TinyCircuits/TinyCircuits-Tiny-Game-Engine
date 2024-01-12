@@ -1,5 +1,6 @@
 #include "py/obj.h"
 #include "display/engine_display_common.h"
+#include "resources/engine_texture_resource.h"
 
 
 STATIC mp_obj_t engine_draw_set_background_color(mp_obj_t background_color){
@@ -9,10 +10,24 @@ STATIC mp_obj_t engine_draw_set_background_color(mp_obj_t background_color){
 MP_DEFINE_CONST_FUN_OBJ_1(engine_draw_set_background_color_obj, engine_draw_set_background_color);
 
 
+STATIC mp_obj_t engine_draw_set_background(mp_obj_t background){
+    texture_resource_class_obj_t *background_texture_resource = background;
+
+    if(background_texture_resource->width != SCREEN_WIDTH || background_texture_resource->height != SCREEN_HEIGHT){
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Could not background image, images dimensions are not equal to screen dimensions!"));
+    }
+
+    engine_fill_background = background_texture_resource->data;
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_1(engine_draw_set_background_obj, engine_draw_set_background);
+
+
 // Module attributes
 STATIC const mp_rom_map_elem_t engine_draw_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_draw) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_set_background_color), (mp_obj_t)&engine_draw_set_background_color_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_set_background), (mp_obj_t)&engine_draw_set_background_obj },
 
     // // https://github.com/Bodmer/TFT_eSPI/blob/cbf06d7a214938d884b21d5aeb465241c25ce774/TFT_eSPI.h#L304-L328
     { MP_ROM_QSTR(MP_QSTR_black), MP_ROM_INT(0x0000) },

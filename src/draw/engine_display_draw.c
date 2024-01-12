@@ -16,11 +16,21 @@
 
 
 
-void engine_draw_fill(uint16_t color, uint16_t *screen_buffer){
+void engine_draw_fill_color(uint16_t color, uint16_t *screen_buffer){
     uint16_t *buf = screen_buffer;
     uint16_t count = SCREEN_BUFFER_SIZE_PIXELS;
 
     while(count--) *buf++ = color;
+}
+
+
+void engine_draw_fill_buffer(uint16_t* src_buffer, uint16_t *screen_buffer){
+    uint16_t index = 0;
+
+    while(index < SCREEN_BUFFER_SIZE_PIXELS){
+        screen_buffer[index] = src_buffer[index];
+        index++;
+    }
 }
 
 
@@ -341,7 +351,7 @@ void engine_draw_blit_scale_rotate(uint16_t *pixels, float center_x, float cente
     int32_t y = center_y;
     int32_t xsc = x_scale*65536 + 0.5f;
     int32_t ysc = y_scale*65536 + 0.5f;
-    int16_t theta = (rotation_angle_rad+PI) * 1025 / (2*PI);
+    int16_t theta = rotation_angle_rad * 1025 / (2*PI);
     
     int flip = 0;
     // Step 1: Get theta inside (-pi/2, pi/2) and flip if we need to

@@ -20,9 +20,9 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 # TODO
 [X] Flash issue: Fixed. calculation on sectors erased already count used wrong information
 [X] Sprite transparency: Define a color to make transparent. Could use the 1bit of alpha for BMPs in the future
-[] Fix rotation starting at incorrect angle and direction
+[X] Fix rotation starting at incorrect angle and direction
 [] Clip sprites when scaled
-[] Fast backgrounds
+[X] Fast backgrounds
 [] Animated sprites
 [] Documentation: markdown to PDF
 [] Physics: no rotation, no friction

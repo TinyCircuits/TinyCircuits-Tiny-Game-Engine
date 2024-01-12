@@ -10,6 +10,7 @@
 
 // The fill color that is used to clear the screen
 uint16_t engine_fill_color;
+uint16_t *engine_fill_background;
 
 void engine_init_screen_buffers();
 

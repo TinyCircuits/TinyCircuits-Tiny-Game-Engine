@@ -28,11 +28,13 @@ print("dir(Rectangle2DNode):", dir(Rectangle2DNode))
 print("dir(Vector3):", dir(Vector3))
 print("dir(Rectangle):", dir(Rectangle))
 
-# engine_debug.debug_enable_all()
+engine_debug.debug_enable_all()
 # engine_debug.debug_enable_setting(engine_debug.debug_setting_warnings)
 # engine_debug.debug_enable_setting(engine_debug.debug_setting_performance)
 
-engine_draw.set_background_color(engine_draw.skyblue)
+background = TextureResource("128x128.bmp")
+engine_draw.set_background(background)
+# engine_draw.set_background_color(engine_draw.skyblue)
 
 texture0 = TextureResource("32x32.bmp")
 texture1 = TextureResource("rpi.bmp")
@@ -91,8 +93,8 @@ class MySprite(Sprite2DNode):
 
 
 sprite = MySprite()
-sprite.position.x = 64
-sprite.position.y = 64
+# sprite.position.x = 64
+# sprite.position.y = 64
 
 # sprite2 = Sprite2DNode(texture0)
 # sprite2.position.x = 32
