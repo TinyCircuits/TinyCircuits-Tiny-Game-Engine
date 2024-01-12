@@ -63,13 +63,13 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
     engine_math_rotate_point(&sprite_rotated_x, &sprite_rotated_y, (float)camera_viewport->width/2, (float)camera_viewport->height/2, (float)camera_rotation->z);
 
     engine_draw_blit_scale_rotate((uint16_t*)sprite_texture->data,
-                                  sprite_rotated_x,
-                                  sprite_rotated_y,
-                                  sprite_width,
+                                  (int32_t)sprite_rotated_x,
+                                  (int32_t)sprite_rotated_y,
+                                  (uint16_t)log2f(sprite_width),
                                   sprite_height,
-                                  sprite_scale->x,
-                                  sprite_scale->y,
-                                  sprite_resolved_hierarchy_rotation+camera_rotation->z,
+                                  (int32_t)(sprite_scale->x*65536 + 0.5),
+                                  (int32_t)(sprite_scale->y*65536 + 0.5),
+                                  (int16_t)(((sprite_resolved_hierarchy_rotation+(float)camera_rotation->z))*1024 / (float)(2*PI)),
                                   transparent_color);
                                                
     return mp_const_none;

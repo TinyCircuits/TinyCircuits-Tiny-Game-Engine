@@ -12,8 +12,8 @@ void engine_math_rotate_point(float *px, float *py, float cx, float cy, float an
     float cos_angle = cosf(angle_radians);
     float sin_angle = sinf(angle_radians);
 
-    float x_center_rotated = x_centered * cos_angle - y_centered * sin_angle;
-    float y_center_rotated = x_centered * sin_angle + y_centered * cos_angle;
+    float x_center_rotated = x_centered * cos_angle - y_centered * -sin_angle;
+    float y_center_rotated = x_centered * -sin_angle + y_centered * cos_angle;
 
     *px = x_center_rotated + cx;
     *py = y_center_rotated + cy;

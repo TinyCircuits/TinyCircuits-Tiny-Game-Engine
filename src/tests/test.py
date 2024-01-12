@@ -32,17 +32,17 @@ print("dir(Rectangle):", dir(Rectangle))
 # engine_debug.debug_enable_setting(engine_debug.debug_setting_warnings)
 engine_debug.debug_enable_setting(engine_debug.debug_setting_performance)
 
-background = TextureResource("128x128.bmp")
-# engine_draw.set_background(background)
+background = TextureResource("128x128.bmp", True)
+engine_draw.set_background(background)
 # engine_draw.set_background_color(engine_draw.skyblue)
 
-texture0 = TextureResource("32x32.bmp")
-texture1 = TextureResource("rpi.bmp")
+texture0 = TextureResource("32x32.bmp", True)
+texture1 = TextureResource("rpi.bmp", True)
 
 
 switched = False
 just_pressed = False
-rot_speed = 0.0005
+rot_speed = 0.005
 
 class MySprite(Sprite2DNode):
     def __init__(self):
@@ -58,9 +58,9 @@ class MySprite(Sprite2DNode):
         global switched
         global just_pressed
         if engine_input.is_bumper_right_pressed():
-            rot_speed += 0.0001
-        if engine_input.is_bumper_left_pressed():
             rot_speed -= 0.0001
+        if engine_input.is_bumper_left_pressed():
+            rot_speed += 0.0001
         
         if engine_input.is_a_pressed():
             self.scale.x += 0.01
@@ -90,7 +90,7 @@ class MySprite(Sprite2DNode):
         if just_pressed == True and engine_input.is_menu_pressed() == False:
             just_pressed = False
         # self.rotation = (3*math.pi)/4
-        self.rotation += 0.005
+        self.rotation += rot_speed
 
 
 sprite = MySprite()
