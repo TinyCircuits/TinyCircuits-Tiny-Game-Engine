@@ -24,8 +24,10 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Clip sprites when scaled
 [X] Fast backgrounds
 [X] Fix BMPs loading vertically flipped
-[] Fix child objects rotating opposite about the parent object (occurred after fixing incorrect parent rotation)
+[X] Fix child objects rotating opposite about the parent object (occurred after fixing incorrect parent rotation)
 [] Animated sprites
+    [] Option 1:    Let Sprite2DNodes take in a texture that will then auto assign the width and height.
+                    Unless someone 
 [] Weird sprite jumping/offset during rotation and scaling
 [] Physics: no rotation, no friction
 [] Documentation: markdown to PDF

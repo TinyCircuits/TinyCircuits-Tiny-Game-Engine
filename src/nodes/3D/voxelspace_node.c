@@ -46,8 +46,8 @@ STATIC mp_obj_t voxelspace_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
     // rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
 
     const float view_horizon = 45.0f;
-    const float scale_height = 10.0f;
-    const float view_distance = 16.0f;
+    const float scale_height = 30.0f;
+    const float view_distance = 24.0f;
 
     float sinang = sin(camera_rotation->y);
     float cosang = cos(camera_rotation->y);
@@ -96,60 +96,6 @@ STATIC mp_obj_t voxelspace_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
 
         z -= 1.0f;
     }
-
-
-
-    // float sinang = sinf(camera_rotation->y);
-    // float cosang = cosf(camera_rotation->y);
-
-    // float dz = 1.0f;
-    // float z = 1.0f;
-
-    // // const float height = 1.0f;
-    // const float view_horizon = 90.0f;
-    // // const float scale_height = 0.01f;
-    // const float view_distance = 64.0f;
-
-    // while(z < view_distance){
-    //     // 90 degree field of view
-    //     float plx =  -cosang * z - sinang * z;
-    //     float ply =   sinang * z - cosang * z;
-    //     float prx =   cosang * z - sinang * z;
-    //     float pry =  -sinang * z - cosang * z;
-
-    //     plx += camera_position->x;
-    //     ply += camera_position->z;
-    //     prx += camera_position->x;
-    //     pry += camera_position->z;
-
-    //     float dx = (prx - plx) / SCREEN_WIDTH;
-    //     float dy = (pry - ply) / SCREEN_WIDTH;
-
-    //     float invz = 1.0f / z * 440.0f;
-
-    //     for(uint8_t i=0; i<SCREEN_WIDTH; i++){
-    //         if((plx >= 0 && plx < heightmap->width) && (ply >= 0 && ply < heightmap->height)){
-
-    //             uint32_t index = (uint32_t)((ply*heightmap->width) + plx);
-    //             uint8_t height = (heightmap->data[index] >> 5) & 0b00011111;
-    //             uint8_t height_on_screen = (uint8_t)(((camera_position->y - height) * invz + view_horizon)/25.0f);
-
-    //             ENGINE_FORCE_PRINTF("%d", height_on_screen);
-
-    //             if(height_on_screen >= 0 && height_on_screen < SCREEN_HEIGHT){
-    //                 for(uint8_t ipx=SCREEN_HEIGHT; ipx>SCREEN_HEIGHT-height_on_screen; ipx--){
-    //                     engine_draw_pixel(texture->data[index], i, ipx);
-    //                 }
-    //             }
-
-    //             plx += dx;
-    //             ply += dy;
-    //         }
-
-    //         dz += 0.05f;
-    //         z += dz;
-    //     }
-    // }
 
     return mp_const_none;
 }

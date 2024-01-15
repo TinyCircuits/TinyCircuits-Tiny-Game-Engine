@@ -37,7 +37,7 @@ engine_draw.set_background(background)
 # engine_draw.set_background_color(engine_draw.skyblue)
 
 texture0 = TextureResource("32x32.bmp", True)
-texture1 = TextureResource("rpi.bmp", True)
+texture1 = TextureResource("sheet.bmp")
 
 
 switched = False
@@ -47,9 +47,9 @@ rot_speed = 0.005
 class MySprite(Sprite2DNode):
     def __init__(self):
         super().__init__(self, texture1)
-        self.transparent_color = engine_draw.black
-        self.scale.x = 3
-        self.scale.y = 3
+        # self.transparent_color = engine_draw.black
+        self.scale.x = 1
+        self.scale.y = 1
     
     def tick(self):
         global rot_speed

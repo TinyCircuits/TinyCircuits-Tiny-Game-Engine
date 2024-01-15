@@ -13,6 +13,7 @@
 #include <fcntl.h>
 #include "utility/engine_file.h"
 #include "math/engine_math.h"
+#include "utility/engine_time.h"
 
 // #include "pico/stdlib.h"
 // #include "hardware/flash.h"
@@ -37,17 +38,53 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
     // Decode and store properties about the rectangle and camera nodes
     engine_node_base_t *sprite_node_base = self_in;
     engine_node_base_t *camera_node_base = camera_node;
+    engine_sprite_2d_node_common_data_t *sprite_common_data= sprite_node_base->node_common_data;
 
     vector2_class_obj_t *sprite_scale =  mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_scale);
     texture_resource_class_obj_t *sprite_texture = mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_texture_resource);
-    uint16_t transparent_color = mp_obj_get_int(mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_transparent_color));
-    
-    uint32_t sprite_width = sprite_texture->width;
-    uint32_t sprite_height = sprite_texture->height;
 
     vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
     vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
     rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
+
+    uint16_t sprite_frame_count_x = mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_count_x);
+    uint16_t sprite_frame_count_y = mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_count_y);
+    uint16_t sprite_frame_current_x = mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_current_x);
+    uint16_t sprite_frame_current_y = mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_current_y);
+
+    uint16_t transparent_color = mp_obj_get_int(mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_transparent_color));
+    uint32_t spritesheet_width = sprite_texture->width;
+    uint32_t spritesheet_height = sprite_texture->height;
+
+    uint16_t *sprite_pixel_data = (uint16_t*)sprite_texture->data;
+    uint8_t sprite_fps = mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_fps);
+    uint16_t sprite_period = (uint16_t)((float)1.0f/(float)sprite_fps);
+
+    uint32_t current_ms_time = millis();
+    if(current_ms_time - sprite_common_data->time_at_last_animation_update_ms >= sprite_period){
+        sprite_frame_current_x++;
+
+        // If reach end of x-axis frames, go to the next line and restart x
+        if(sprite_frame_current_x >= sprite_frame_count_x){
+            sprite_frame_current_x = 0;
+            sprite_frame_current_y++;
+        }
+
+        // If reach end of y-axis frames, restart at x=0 and y=0
+        if(sprite_frame_current_y >= sprite_frame_count_y){
+            sprite_frame_count_y = 0;
+        }
+
+        // Update/store the current frame index
+        mp_store_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_current_x, mp_obj_new_int(sprite_frame_current_x));
+        mp_store_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_current_y, mp_obj_new_int(sprite_frame_current_y));
+    }
+
+    uint32_t sprite_frame_width = spritesheet_width/sprite_frame_count_x;
+    uint32_t sprite_frame_height = sprite_frame_height/sprite_frame_count_y;
+    uint32_t sprite_frame_abs_x = sprite_frame_width*sprite_frame_current_x;
+    uint32_t sprite_frame_abs_y = sprite_frame_height*sprite_frame_current_y;
+    uint32_t sprite_frame_fb_start_index = sprite_frame_abs_y * spritesheet_width + sprite_frame_abs_x;
 
     float sprite_resolved_hierarchy_x = 0.0f;
     float sprite_resolved_hierarchy_y = 0.0f;
@@ -62,11 +99,11 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
     // Rotate sprite origin about the camera
     engine_math_rotate_point(&sprite_rotated_x, &sprite_rotated_y, (float)camera_viewport->width/2, (float)camera_viewport->height/2, (float)camera_rotation->z);
 
-    engine_draw_blit_scale_rotate((uint16_t*)sprite_texture->data,
+    engine_draw_blit_scale_rotate( sprite_pixel_data,
                                   (int32_t)sprite_rotated_x,
                                   (int32_t)sprite_rotated_y,
-                                  (uint16_t)log2f(sprite_width),
-                                  sprite_height,
+                                  spritesheet_width,
+                                  spritesheet_height,
                                   (int32_t)(sprite_scale->x*65536 + 0.5),
                                   (int32_t)(sprite_scale->y*65536 + 0.5),
                                   (int16_t)(((sprite_resolved_hierarchy_rotation+(float)camera_rotation->z))*1024 / (float)(2*PI)),
@@ -81,6 +118,7 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
     ENGINE_INFO_PRINTF("New Sprite2DNode");
 
     engine_sprite_2d_node_common_data_t *common_data = malloc(sizeof(engine_sprite_2d_node_common_data_t));
+    common_data->time_at_last_animation_update_ms = millis();
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);
@@ -113,6 +151,10 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
         sprite_2d_node->scale = vector2_class_new(&vector2_class_type, 2, 0, default_scale_parameters);
         sprite_2d_node->texture_resource = args[0];
         sprite_2d_node->transparent_color = mp_obj_new_int(ENGINE_NO_TRANSPARENCY_COLOR);
+        sprite_2d_node->frame_count_x = mp_obj_new_int(1);
+        sprite_2d_node->frame_count_y = mp_obj_new_int(1);
+        sprite_2d_node->frame_current_x = mp_obj_new_int(0);
+        sprite_2d_node->frame_current_y = mp_obj_new_int(0);
     }else if(n_args == 2){  // Inherited (use existing object)
         node_base->inherited = true;
         node_base->node = args[0];
@@ -140,6 +182,10 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
         mp_store_attr(node_base->node, MP_QSTR_scale, vector2_class_new(&vector2_class_type, 2, 0, default_scale_parameters));
         mp_store_attr(node_base->node, MP_QSTR_texture_resource, args[1]);
         mp_store_attr(node_base->node, MP_QSTR_transparent_color, mp_obj_new_int(ENGINE_NO_TRANSPARENCY_COLOR));
+        mp_store_attr(node_base->node, MP_QSTR_frame_count_x, mp_obj_new_int(1));
+        mp_store_attr(node_base->node, MP_QSTR_frame_count_y, mp_obj_new_int(1));
+        mp_store_attr(node_base->node, MP_QSTR_frame_current_x, mp_obj_new_int(0));
+        mp_store_attr(node_base->node, MP_QSTR_frame_current_y, mp_obj_new_int(0));
     }else{
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Too many arguments passed to Sprite2DNode constructor!"));
     }
@@ -197,6 +243,18 @@ STATIC void sprite_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
             case MP_QSTR_transparent_color:
                 destination[0] = self->transparent_color;
             break;
+            case MP_QSTR_frame_count_x:
+                destination[0] = self->frame_count_x;
+            break;
+            case MP_QSTR_frame_count_y:
+                destination[0] = self->frame_count_y;
+            break;
+            case MP_QSTR_frame_current_x:
+                destination[0] = self->frame_current_x;
+            break;
+            case MP_QSTR_frame_current_y:
+                destination[0] = self->frame_current_y;
+            break;
             default:
                 return; // Fail
         }
@@ -219,6 +277,18 @@ STATIC void sprite_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
             break;
             case MP_QSTR_transparent_color:
                 self->transparent_color = destination[1];
+            break;
+            case MP_QSTR_frame_count_x:
+                self->frame_count_x = destination[1];
+            break;
+            case MP_QSTR_frame_count_y:
+                self->frame_count_y = destination[1];
+            break;
+            case MP_QSTR_frame_current_x:
+                self->frame_current_x = destination[1];
+            break;
+            case MP_QSTR_frame_current_y:
+                self->frame_current_y = destination[1];
             break;
             default:
                 return; // Fail

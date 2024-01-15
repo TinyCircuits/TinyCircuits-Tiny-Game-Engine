@@ -259,12 +259,12 @@ void engine_draw_rect_scale_trishear_viewport(uint16_t color, int32_t x, int32_t
 }
 
 
-void engine_draw_blit_scale_trishear(uint16_t *pixels, int32_t x, int32_t y, uint16_t width_log2, uint16_t height, int32_t xsc, int32_t ysc, int32_t xsr, int32_t ysr, int32_t xsr2, int flip, uint16_t transparent_color){
-    #ifndef __unix__
-        init_interp(width_log2);
-    #endif
+void engine_draw_blit_scale_trishear(uint16_t *pixels, int32_t x, int32_t y, int32_t width, uint16_t height, int32_t xsc, int32_t ysc, int32_t xsr, int32_t ysr, int32_t xsr2, int flip, uint16_t transparent_color){
+    // #ifndef __unix__
+    //     init_interp(width_log2);
+    // #endif
 
-    int32_t width = 1u << width_log2;
+    // int32_t width = 1u << width_log2;
     int32_t xe = (width * xsc) >> 16;
     int32_t ye = (height * ysc) >> 16;
     int32_t dtx = ((int64_t)width << 16) / xe;
@@ -350,7 +350,7 @@ void engine_draw_blit_scale_trishear(uint16_t *pixels, int32_t x, int32_t y, uin
 }
 
 
-void engine_draw_blit_scale_rotate(uint16_t *pixels, int32_t x, int32_t y, uint16_t width_log2, uint16_t height, int32_t xsc, int32_t ysc, int16_t theta, uint16_t transparent_color){
+void engine_draw_blit_scale_rotate(uint16_t *pixels, int32_t x, int32_t y, int32_t width, uint16_t height, int32_t xsc, int32_t ysc, int16_t theta, uint16_t transparent_color){
     /*  https://cohost.org/tomforsyth/post/891823-rotation-with-three#:~:text=But%20the%20TL%3BDR%20is%20you%20do%20three%20shears%3A
         https://stackoverflow.com/questions/65909025/rotating-a-bitmap-with-3-shears    Lots of inspiration from here
         https://computergraphics.stackexchange.com/questions/10599/rotate-a-bitmap-with-shearing
@@ -370,7 +370,7 @@ void engine_draw_blit_scale_rotate(uint16_t *pixels, int32_t x, int32_t y, uint1
     */
 
     int flip = 0;
-    int32_t width = 1u << width_log2;
+    // int32_t width = 1u << width_log2;
     // Step 1: Get theta inside (-pi/2, pi/2) and flip if we need to
     theta &= 0x3FF;
     if(theta > 0x200) theta -= 0x400;
@@ -411,7 +411,7 @@ void engine_draw_blit_scale_rotate(uint16_t *pixels, int32_t x, int32_t y, uint1
     if(ysc < 0) cy -= ye;
     //Step 4: Triple shear (a, b, a);
     //blit_scale_trishear_pow2_tex_internal(fb, f_xs, tex, t_xs_log2, t_ys, x - cx, y - cy, xsc, ysc, a, b, a, flip);
-    engine_draw_blit_scale_trishear(pixels, x - cx, y - cy, width_log2, height, xsc, ysc, a, b, a, flip, transparent_color);
+    engine_draw_blit_scale_trishear(pixels, x - cx, y - cy, width, height, xsc, ysc, a, b, a, flip, transparent_color);
 }
 
 
