@@ -3,6 +3,12 @@
 #include "math.h"
 #include "debug/debug_print.h"
 
+
+float engine_math_dot_product(float x0, float y0, float x1, float y1){
+    return x0*x1 + y0*y1;
+}
+
+
 // https://stackoverflow.com/a/22491252
 void engine_math_rotate_point(float *px, float *py, float cx, float cy, float angle_radians){
     float x_centered = *px - cx;

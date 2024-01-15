@@ -5,8 +5,6 @@
 #include "utility/linked_list.h"
 #include "nodes/node_base.h"
 
-void engine_physics_init();
-
 void engine_physics_tick();
 
 

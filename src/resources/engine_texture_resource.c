@@ -118,7 +118,7 @@ STATIC void texture_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj
     texture_resource_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
 
     if(destination[0] == MP_OBJ_NULL){          // Load
-        switch(attribute) {
+        switch(attribute){
             case MP_QSTR___del__:
                 destination[0] = MP_OBJ_FROM_PTR(&texture_resource_class_del_obj);
                 destination[1] = self_in;
@@ -133,7 +133,7 @@ STATIC void texture_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj
                 return; // Fail
         }
     }else if(destination[1] != MP_OBJ_NULL){    // Store
-        switch(attribute) {
+        switch(attribute){
             default:
                 return; // Fail
         }

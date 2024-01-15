@@ -12,7 +12,7 @@ import engine_draw
 import engine_debug
 import engine_input
 import engine_physics
-from engine_physics import PhysicsShapeRectangle
+from engine_physics import CircleCollisionShape2D
 from engine_nodes import EmptyNode, Sprite2DNode, Rectangle2DNode, Circle2DNode, CameraNode, VoxelSpaceNode, Physics2DNode
 from engine_math import Vector3, Vector2, Rectangle
 from engine_resources import TextureResource
@@ -29,108 +29,159 @@ print("dir(Vector3):", dir(Vector3))
 print("dir(Rectangle):", dir(Rectangle))
 
 # engine_debug.debug_enable_all()
-# engine_debug.debug_enable_setting(engine_debug.debug_setting_warnings)
-engine_debug.debug_enable_setting(engine_debug.debug_setting_performance)
-
-background = TextureResource("128x128.bmp", True)
-engine_draw.set_background(background)
-# engine_draw.set_background_color(engine_draw.skyblue)
-
-texture0 = TextureResource("32x32.bmp", True)
-texture1 = TextureResource("sheet.bmp")
 
 
-switched = False
-just_pressed = False
-rot_speed = 0.005
-
-class MySprite(Sprite2DNode):
+class MyPhysicsNode(Physics2DNode):
     def __init__(self):
-        super().__init__(self, texture1)
-        # self.transparent_color = engine_draw.black
-        self.scale.x = 1
-        self.scale.y = 1
-    
-    def tick(self):
-        global rot_speed
-        global texture0
-        global texture1
-        global switched
-        global just_pressed
-        if engine_input.is_bumper_right_pressed():
-            rot_speed -= 0.0001
-        if engine_input.is_bumper_left_pressed():
-            rot_speed += 0.0001
-        
-        if engine_input.is_a_pressed():
-            self.scale.x += 0.01
-            self.scale.y += 0.01
-        if engine_input.is_b_pressed():
-            self.scale.x -= 0.01
-            self.scale.y -= 0.01
+        super().__init__(self)
 
-        if engine_input.is_dpad_up_pressed():
-            self.position.y -= 0.1
-        if engine_input.is_dpad_down_pressed():
-            self.position.y += 0.1
-        if engine_input.is_dpad_left_pressed():
-            self.position.x -= 0.1
-        if engine_input.is_dpad_right_pressed():
-            self.position.x += 0.1
-
-        if just_pressed == False and engine_input.is_menu_pressed():
-            just_pressed = True
-            if switched == False:
-                switched = True
-                self.texture_resource = texture1
-            else:
-                switched = False
-                self.texture_resource = texture0
-        
-        if just_pressed == True and engine_input.is_menu_pressed() == False:
-            just_pressed = False
-        # self.rotation = (3*math.pi)/4
-        self.rotation = 0
+    def collision(self, collision_contact):
+        print(collision_contact)
+        print("TEST")
 
 
-sprite = MySprite()
-sprite.position.x = 64
-sprite.position.y = 64
-sprite.fps = 0.5
-sprite.frame_count_x = 3
-sprite.frame_count_y = 3
+c0 = Circle2DNode()
+c1 = Circle2DNode()
+c2 = Circle2DNode()
 
-sprite2 = Sprite2DNode(texture0)
-sprite2.position.x = 32
-sprite2.scale.x = 0.5
-sprite2.scale.y = 0.5
-sprite2.transparent_color = engine_draw.black
-sprite.add_child(sprite2)
+p0 = Physics2DNode()
+p1 = Physics2DNode()
+p2 = MyPhysicsNode()
 
-sprite3 = Sprite2DNode(texture0)
-sprite3.position.x = -32
-sprite3.scale.x = 0.5
-sprite3.scale.y = 0.5
-sprite3.transparent_color = engine_draw.black
-sprite.add_child(sprite3)
+c0.radius = 5
+c1.radius = 5
+c2.radius = 10
 
-sprite4 = Sprite2DNode(texture0)
-sprite4.position.y = 32
-sprite4.scale.x = 0.5
-sprite4.scale.y = 0.5
-sprite4.transparent_color = engine_draw.black
-sprite.add_child(sprite4)
+c0.color = 0b1111100000000000
+c1.color = 0b1111111111111111
+c1.color = 0b0000000000011111
 
-sprite5 = Sprite2DNode(texture0)
-sprite5.position.y = -32
-sprite5.scale.x = 0.5
-sprite5.scale.y = 0.5
-sprite5.transparent_color = engine_draw.black
-sprite.add_child(sprite5)
+p0.add_child(c0)
+p1.add_child(c1)
+p2.add_child(c2)
+
+p0.collision_shape = CircleCollisionShape2D(5)
+p0.position.x = 64-32
+p0.position.y = 64
+p0.velocity.x = 1
+
+p1.collision_shape = CircleCollisionShape2D(5)
+p1.position.x = 64+32
+p1.position.y = 64
+p1.velocity.x = -1
+
+p2.collision_shape = CircleCollisionShape2D(10)
+p2.position.x = 64
+p2.position.y = 64+32
+p2.velocity.y = -1.5
 
 camera = CameraNode()
-
 engine.start()
+
+
+# # engine_debug.debug_enable_all()
+# # engine_debug.debug_enable_setting(engine_debug.debug_setting_warnings)
+# engine_debug.debug_enable_setting(engine_debug.debug_setting_performance)
+
+# background = TextureResource("128x128.bmp", True)
+# engine_draw.set_background(background)
+# # engine_draw.set_background_color(engine_draw.skyblue)
+
+# texture0 = TextureResource("32x32.bmp", True)
+# texture1 = TextureResource("sheet.bmp")
+
+
+# switched = False
+# just_pressed = False
+# rot_speed = 0.005
+
+# class MySprite(Sprite2DNode):
+#     def __init__(self):
+#         super().__init__(self, texture1)
+#         # self.transparent_color = engine_draw.black
+#         self.scale.x = 1
+#         self.scale.y = 1
+    
+#     def tick(self):
+#         global rot_speed
+#         global texture0
+#         global texture1
+#         global switched
+#         global just_pressed
+#         if engine_input.is_bumper_right_pressed():
+#             rot_speed -= 0.0001
+#         if engine_input.is_bumper_left_pressed():
+#             rot_speed += 0.0001
+        
+#         if engine_input.is_a_pressed():
+#             self.scale.x += 0.01
+#             self.scale.y += 0.01
+#         if engine_input.is_b_pressed():
+#             self.scale.x -= 0.01
+#             self.scale.y -= 0.01
+
+#         if engine_input.is_dpad_up_pressed():
+#             self.position.y -= 0.1
+#         if engine_input.is_dpad_down_pressed():
+#             self.position.y += 0.1
+#         if engine_input.is_dpad_left_pressed():
+#             self.position.x -= 0.1
+#         if engine_input.is_dpad_right_pressed():
+#             self.position.x += 0.1
+
+#         if just_pressed == False and engine_input.is_menu_pressed():
+#             just_pressed = True
+#             if switched == False:
+#                 switched = True
+#                 self.texture_resource = texture1
+#             else:
+#                 switched = False
+#                 self.texture_resource = texture0
+        
+#         if just_pressed == True and engine_input.is_menu_pressed() == False:
+#             just_pressed = False
+#         # self.rotation = (3*math.pi)/4
+#         self.rotation = 0
+
+
+# sprite = MySprite()
+# sprite.position.x = 64
+# sprite.position.y = 64
+# sprite.fps = 0.5
+# sprite.frame_count_x = 3
+# sprite.frame_count_y = 3
+
+# sprite2 = Sprite2DNode(texture0)
+# sprite2.position.x = 32
+# sprite2.scale.x = 0.5
+# sprite2.scale.y = 0.5
+# sprite2.transparent_color = engine_draw.black
+# sprite.add_child(sprite2)
+
+# sprite3 = Sprite2DNode(texture0)
+# sprite3.position.x = -32
+# sprite3.scale.x = 0.5
+# sprite3.scale.y = 0.5
+# sprite3.transparent_color = engine_draw.black
+# sprite.add_child(sprite3)
+
+# sprite4 = Sprite2DNode(texture0)
+# sprite4.position.y = 32
+# sprite4.scale.x = 0.5
+# sprite4.scale.y = 0.5
+# sprite4.transparent_color = engine_draw.black
+# sprite.add_child(sprite4)
+
+# sprite5 = Sprite2DNode(texture0)
+# sprite5.position.y = -32
+# sprite5.scale.x = 0.5
+# sprite5.scale.y = 0.5
+# sprite5.transparent_color = engine_draw.black
+# sprite.add_child(sprite5)
+
+# camera = CameraNode()
+
+# engine.start()
 
 
 # node = Rectangle2DNode()

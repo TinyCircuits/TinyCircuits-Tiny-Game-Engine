@@ -44,11 +44,8 @@ target_sources(usermod_engine INTERFACE
     ${ENGINE_MOD_DIR}/resources/engine_sound_resource.c
     ${ENGINE_MOD_DIR}/physics/engine_physics_module.c
     ${ENGINE_MOD_DIR}/physics/engine_physics.c
-    ${ENGINE_MOD_DIR}/physics/shapes/shape_test.c
-    ${ENGINE_MOD_DIR}/physics/shapes/engine_physics_shape_rectangle.c
-    ${ENGINE_MOD_DIR}/physics/shapes/engine_physics_shape_circle.c
-    ${ENGINE_MOD_DIR}/physics/shapes/engine_physics_shape_convex.c
-    ${ENGINE_MOD_DIR}/physics/shapes/engine_physics_manifold.c
+    ${ENGINE_MOD_DIR}/physics/collision_shapes/circle_collision_shape_2d.c
+    ${ENGINE_MOD_DIR}/physics/collision_contact_2d.c
 )
 
 # Add the current directory as an include directory.

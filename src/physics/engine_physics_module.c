@@ -3,19 +3,13 @@
 #include "nodes/node_base.h"
 #include "display/engine_display_common.h"
 #include "physics/engine_physics.h"
-#include "physics/shapes/engine_physics_shape_rectangle.h"
-#include "physics/shapes/engine_physics_shape_circle.h"
-#include "physics/shapes/engine_physics_shape_convex.h"
-#include "physics/shapes/engine_physics_manifold.h"
+#include "physics/collision_shapes/circle_collision_shape_2d.h"
 
 
 // Module attributes
 STATIC const mp_rom_map_elem_t engine_physics_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_physics) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_PhysicsShapeRectangle), (mp_obj_t)&physics_shape_rectangle_class_type},
-    { MP_OBJ_NEW_QSTR(MP_QSTR_PhysicsShapeCircle), (mp_obj_t)&physics_shape_circle_class_type},
-    { MP_OBJ_NEW_QSTR(MP_QSTR_PhysicsShapeConvex), (mp_obj_t)&physics_shape_convex_class_type},
-    { MP_OBJ_NEW_QSTR(MP_QSTR_PhysicsManifold), (mp_obj_t)&physics_manifold_class_type},
+    { MP_OBJ_NEW_QSTR(MP_QSTR_CircleCollisionShape2D), (mp_obj_t)&circle_collision_shape_2d_class_type},
 };
 
 // Module init
