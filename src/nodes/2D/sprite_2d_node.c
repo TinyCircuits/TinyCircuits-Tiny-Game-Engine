@@ -47,41 +47,19 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
     vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
     rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
 
-    uint16_t sprite_frame_count_x = mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_count_x);
-    uint16_t sprite_frame_count_y = mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_count_y);
-    uint16_t sprite_frame_current_x = mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_current_x);
-    uint16_t sprite_frame_current_y = mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_current_y);
+    uint16_t sprite_frame_count_x = mp_obj_get_int(mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_count_x));
+    uint16_t sprite_frame_count_y = mp_obj_get_int(mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_count_y));
+    uint16_t sprite_frame_current_x = mp_obj_get_int(mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_current_x));
+    uint16_t sprite_frame_current_y = mp_obj_get_int(mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_current_y));
 
     uint16_t transparent_color = mp_obj_get_int(mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_transparent_color));
     uint32_t spritesheet_width = sprite_texture->width;
     uint32_t spritesheet_height = sprite_texture->height;
 
     uint16_t *sprite_pixel_data = (uint16_t*)sprite_texture->data;
-    uint8_t sprite_fps = mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_fps);
-    uint16_t sprite_period = (uint16_t)((float)1.0f/(float)sprite_fps);
-
-    uint32_t current_ms_time = millis();
-    if(current_ms_time - sprite_common_data->time_at_last_animation_update_ms >= sprite_period){
-        sprite_frame_current_x++;
-
-        // If reach end of x-axis frames, go to the next line and restart x
-        if(sprite_frame_current_x >= sprite_frame_count_x){
-            sprite_frame_current_x = 0;
-            sprite_frame_current_y++;
-        }
-
-        // If reach end of y-axis frames, restart at x=0 and y=0
-        if(sprite_frame_current_y >= sprite_frame_count_y){
-            sprite_frame_count_y = 0;
-        }
-
-        // Update/store the current frame index
-        mp_store_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_current_x, mp_obj_new_int(sprite_frame_current_x));
-        mp_store_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_current_y, mp_obj_new_int(sprite_frame_current_y));
-    }
 
     uint32_t sprite_frame_width = spritesheet_width/sprite_frame_count_x;
-    uint32_t sprite_frame_height = sprite_frame_height/sprite_frame_count_y;
+    uint32_t sprite_frame_height = spritesheet_height/sprite_frame_count_y;
     uint32_t sprite_frame_abs_x = sprite_frame_width*sprite_frame_current_x;
     uint32_t sprite_frame_abs_y = sprite_frame_height*sprite_frame_current_y;
     uint32_t sprite_frame_fb_start_index = sprite_frame_abs_y * spritesheet_width + sprite_frame_abs_x;
@@ -102,12 +80,39 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
     engine_draw_blit_scale_rotate( sprite_pixel_data,
                                   (int32_t)sprite_rotated_x,
                                   (int32_t)sprite_rotated_y,
+                                  sprite_frame_fb_start_index,
                                   spritesheet_width,
-                                  spritesheet_height,
+                                  sprite_frame_width,
+                                  sprite_frame_height,
                                   (int32_t)(sprite_scale->x*65536 + 0.5),
                                   (int32_t)(sprite_scale->y*65536 + 0.5),
                                   (int16_t)(((sprite_resolved_hierarchy_rotation+(float)camera_rotation->z))*1024 / (float)(2*PI)),
                                   transparent_color);
+
+    // After drawing, go to the next frame if it is time to
+    float sprite_fps = mp_obj_get_float(mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_fps));
+    uint16_t sprite_period = (uint16_t)((1.0f/sprite_fps) * 1000.0f);
+
+    uint32_t current_ms_time = millis();
+    if(current_ms_time - sprite_common_data->time_at_last_animation_update_ms >= sprite_period){
+        sprite_frame_current_x++;
+
+        // If reach end of x-axis frames, go to the next line and restart x
+        if(sprite_frame_current_x >= sprite_frame_count_x){
+            sprite_frame_current_x = 0;
+            sprite_frame_current_y++;
+        }
+
+        // If reach end of y-axis frames, restart at x=0 and y=0
+        if(sprite_frame_current_y >= sprite_frame_count_y){
+            sprite_frame_current_y = 0;
+        }
+
+        // Update/store the current frame index
+        mp_store_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_current_x, mp_obj_new_int(sprite_frame_current_x));
+        mp_store_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_current_y, mp_obj_new_int(sprite_frame_current_y));
+        sprite_common_data->time_at_last_animation_update_ms = millis();
+    }
                                                
     return mp_const_none;
 }
@@ -146,7 +151,7 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
         common_data->draw_cb = MP_OBJ_FROM_PTR(&sprite_2d_node_class_draw_obj);
 
         sprite_2d_node->position = vector2_class_new(&vector2_class_type, 0, 0, NULL);
-        sprite_2d_node->fps = mp_obj_new_int(5);
+        sprite_2d_node->fps = mp_obj_new_float(30.0f);
         sprite_2d_node->rotation = mp_obj_new_float(0.0f);
         sprite_2d_node->scale = vector2_class_new(&vector2_class_type, 2, 0, default_scale_parameters);
         sprite_2d_node->texture_resource = args[0];
@@ -177,7 +182,7 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
         }
 
         mp_store_attr(node_base->node, MP_QSTR_position, vector2_class_new(&vector2_class_type, 0, 0, NULL));
-        mp_store_attr(node_base->node, MP_QSTR_fps, mp_obj_new_int(5));
+        mp_store_attr(node_base->node, MP_QSTR_fps, mp_obj_new_float(30.0f));
         mp_store_attr(node_base->node, MP_QSTR_rotation, mp_obj_new_float(0.0f));
         mp_store_attr(node_base->node, MP_QSTR_scale, vector2_class_new(&vector2_class_type, 2, 0, default_scale_parameters));
         mp_store_attr(node_base->node, MP_QSTR_texture_resource, args[1]);

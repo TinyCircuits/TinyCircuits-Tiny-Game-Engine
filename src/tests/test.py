@@ -90,12 +90,15 @@ class MySprite(Sprite2DNode):
         if just_pressed == True and engine_input.is_menu_pressed() == False:
             just_pressed = False
         # self.rotation = (3*math.pi)/4
-        self.rotation += rot_speed
+        self.rotation = 0
 
 
 sprite = MySprite()
 sprite.position.x = 64
 sprite.position.y = 64
+sprite.fps = 0.5
+sprite.frame_count_x = 3
+sprite.frame_count_y = 3
 
 sprite2 = Sprite2DNode(texture0)
 sprite2.position.x = 32
