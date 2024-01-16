@@ -5,7 +5,8 @@
 #include "utility/linked_list.h"
 #include "nodes/node_base.h"
 
-float engine_physics_fps;
+float engine_physics_fps_limit_period_ms;
+float engine_physics_fps_time_at_last_tick_ms;
 
 void engine_physics_tick();
 

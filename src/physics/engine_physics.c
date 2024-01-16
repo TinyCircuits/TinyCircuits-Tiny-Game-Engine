@@ -10,7 +10,9 @@
 linked_list engine_physics_nodes;
 float gravity_x = 0.0f;
 float gravity_y = -0.00981f;
-float engine_physics_fps = 15.0f;
+
+float engine_physics_fps_limit_period_ms = 33.333f;
+float engine_physics_fps_time_at_last_tick_ms = 0.0f;
 
 
 bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, engine_node_base_t *physics_node_base_b, float *collision_normal_x, float *collision_normal_y, float *collision_contact_x, float *collision_contact_y){
@@ -75,6 +77,13 @@ bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, eng
 
 
 void engine_physics_tick(){
+    // If it is not time to update physics, then don't, otherwise track when physics was updated last
+    if(millis() - engine_physics_fps_time_at_last_tick_ms < engine_physics_fps_limit_period_ms){
+        return;
+    }else{
+        engine_physics_fps_time_at_last_tick_ms = millis();
+    }
+
     // Loop through all nodes and test for collision against
     // all other nodes (not optimized checking of if nodes are
     // even possibly close to each other)

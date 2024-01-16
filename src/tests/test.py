@@ -31,6 +31,7 @@ print("dir(Rectangle):", dir(Rectangle))
 
 # engine_debug.debug_enable_all()
 engine.set_fps_limit(60)
+engine_physics.set_physics_fps_limit(60)
 # engine_debug.debug_enable_setting(engine_debug.debug_setting_performance)
 
 

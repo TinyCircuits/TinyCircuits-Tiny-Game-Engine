@@ -7,12 +7,12 @@
 #include "physics/collision_contact_2d.h"
 
 
-STATIC mp_obj_t engine_set_physics_fps(mp_obj_t fps){
-    ENGINE_INFO_PRINTF("EnginePhysics: Setting FPS");
-    engine_physics_fps = mp_obj_get_float(fps);
+STATIC mp_obj_t engine_set_physics_fps_limit(mp_obj_t fps){
+    ENGINE_INFO_PRINTF("EnginePhysics: Setting FPS Limit");
+    engine_physics_fps_limit_period_ms = (1.0f / mp_obj_get_float(fps)) * 1000.0f;
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_1(engine_set_physics_fps_obj, engine_set_physics_fps);
+MP_DEFINE_CONST_FUN_OBJ_1(engine_set_physics_fps_limit_obj, engine_set_physics_fps_limit);
 
 
 // Module attributes
@@ -20,7 +20,7 @@ STATIC const mp_rom_map_elem_t engine_physics_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_physics) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_CircleCollisionShape2D), (mp_obj_t)&circle_collision_shape_2d_class_type},
     { MP_OBJ_NEW_QSTR(MP_QSTR_CollisionContact2D), (mp_obj_t)&collision_contact_2d_class_type},
-    { MP_OBJ_NEW_QSTR(MP_QSTR_set_physics_fps), (mp_obj_t)&engine_set_physics_fps_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_set_physics_fps_limit), (mp_obj_t)&engine_set_physics_fps_limit_obj },
 };
 
 // Module init

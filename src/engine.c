@@ -23,7 +23,7 @@ float engine_fps_time_at_before_last_tick_ms = 0.0f;
 
 STATIC mp_obj_t engine_set_fps_limit(mp_obj_t fps){
     ENGINE_INFO_PRINTF("Engine: Setting FPS");
-    // engine_fps_limit_period_ms = (1.0f / mp_obj_get_float(fps)) * 1000.0f;
+    engine_fps_limit_period_ms = (1.0f / mp_obj_get_float(fps)) * 1000.0f;
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(engine_set_fps_limit_obj, engine_set_fps_limit);
