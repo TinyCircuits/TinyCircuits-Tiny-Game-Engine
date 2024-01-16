@@ -12,7 +12,7 @@ import engine_draw
 import engine_debug
 import engine_input
 import engine_physics
-from engine_physics import CircleCollisionShape2D
+from engine_physics import CircleCollisionShape2D, RectangleCollisionShape2D
 from engine_nodes import EmptyNode, Sprite2DNode, Rectangle2DNode, Circle2DNode, CameraNode, VoxelSpaceNode, Physics2DNode
 from engine_math import Vector3, Vector2, Rectangle
 from engine_resources import TextureResource
@@ -51,47 +51,64 @@ class MyPhysicsNode(Physics2DNode):
     def collision(self, collision_contact):
         # print("Collided!")
         print(collision_contact, end='')
-        print(collision_contact.position.x, collision_contact.position.y, collision_contact.normal.x, collision_contact.normal.y)
+        print(collision_contact.position.x, collision_contact.position.y, collision_contact.normal.x, collision_contact.normal.y, type(collision_contact.node))
+        contact_circle = Circle2DNode()
+        contact_circle.position = collision_contact.position
+        contact_circle.radius = 3
+        contact_circle.color = 0b1110101110111111
         # print(dir(collision_contact))
         # print(collision_contact.node)
         # print(collision_contact.node)
         # print("TEST")
 
-c0 = Circle2DNode()
-c1 = Circle2DNode()
-c2 = Circle2DNode()
+c0 = Rectangle2DNode()
+c1 = Rectangle2DNode()
+c2 = Rectangle2DNode()
+c3 = Rectangle2DNode()
 
-p0 = Physics2DNode()
-p1 = Physics2DNode()
+p0 = MyPhysicsNode()
+p1 = MyPhysicsNode()
 p2 = MyPhysicsNode()
+p3 = MyPhysicsNode()
 
-c0.radius = 5
-c1.radius = 5
-c2.radius = 10
+c0.width = 10
+c0.height = 10
+c1.width = 10
+c1.height = 10
+c2.width = 10
+c2.height = 10
+c3.width = 10
+c3.height = 10
 
 c0.color = 0b1111100000000000
 c1.color = 0b1111111111111111
-c2.color = 0b0000000000011111
+c2.color = 0b1111100000011111
+c3.color = 0b1011101110111101
 
 p0.add_child(c0)
 p1.add_child(c1)
 p2.add_child(c2)
+p3.add_child(c3)
 
-p0.collision_shape = CircleCollisionShape2D(5)
+p0.collision_shape = RectangleCollisionShape2D(10, 10)
 p0.position.x = 64-32
 p0.position.y = 64
 p0.velocity.x = 1
 
-p1.collision_shape = CircleCollisionShape2D(5)
+p1.collision_shape = RectangleCollisionShape2D(10, 10)
 p1.position.x = 64+32
 p1.position.y = 64
 p1.velocity.x = -1
 
-p2.collision_shape = CircleCollisionShape2D(10)
+p2.collision_shape = RectangleCollisionShape2D(10, 10)
 p2.position.x = 64
-p2.position.y = 64+32
-p2.velocity.y = -1.5
-p2.mass = 1
+p2.position.y = 64-33
+p2.velocity.y = 1
+
+p3.collision_shape = RectangleCollisionShape2D(10, 10)
+p3.position.x = 64
+p3.position.y = 64+33
+p3.velocity.y = -1
 
 camera = CameraNode()
 engine.start()

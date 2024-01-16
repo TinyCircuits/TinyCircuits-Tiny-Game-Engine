@@ -5,6 +5,7 @@
 #include "math/engine_math.h"
 #include "nodes/2D/physics_2d_node.h"
 #include "collision_shapes/circle_collision_shape_2d.h"
+#include "collision_shapes/rectangle_collision_shape_2d.h"
 #include "collision_contact_2d.h"
 
 linked_list engine_physics_nodes;
@@ -15,7 +16,10 @@ float engine_physics_fps_limit_period_ms = 33.333f;
 float engine_physics_fps_time_at_last_tick_ms = 0.0f;
 
 
-bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, engine_node_base_t *physics_node_base_b, float *collision_normal_x, float *collision_normal_y, float *collision_contact_x, float *collision_contact_y){
+
+
+
+bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, engine_node_base_t *physics_node_base_b, float *collision_normal_x, float *collision_normal_y, float *collision_contact_x, float *collision_contact_y, float *collision_normal_penetration){
     mp_obj_t collision_shape_obj_a = mp_load_attr(physics_node_base_a->attr_accessor, MP_QSTR_collision_shape);
     mp_obj_t collision_shape_obj_b = mp_load_attr(physics_node_base_b->attr_accessor, MP_QSTR_collision_shape);
 
@@ -24,7 +28,7 @@ bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, eng
         vector2_class_obj_t *physics_node_b_position = mp_load_attr(physics_node_base_b->attr_accessor, MP_QSTR_position);
 
         if(mp_obj_is_type(collision_shape_obj_a, &circle_collision_shape_2d_class_type) &&
-           mp_obj_is_type(collision_shape_obj_b, &circle_collision_shape_2d_class_type)){    // Circle vs Circle: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-basics-and-impulse-resolution--gamedev-6331t#:~:text=must%20be%20extended.-,Circle%20vs%20Circle,-Lets%20start%20with
+           mp_obj_is_type(collision_shape_obj_b, &circle_collision_shape_2d_class_type)){    // Circle vs. Circle: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-basics-and-impulse-resolution--gamedev-6331t#:~:text=must%20be%20extended.-,Circle%20vs%20Circle,-Lets%20start%20with
 
             circle_collision_shape_2d_class_obj_t *collision_shape_a = collision_shape_obj_a;
             circle_collision_shape_2d_class_obj_t *collision_shape_b = collision_shape_obj_b;
@@ -53,6 +57,7 @@ bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, eng
             float distance_between = sqrt(distance_between_squared);
             *collision_normal_x = 1.0f;
             *collision_normal_y = 0.0f;
+            *collision_normal_penetration = collision_shape_a->radius;
 
             *collision_contact_x = collision_shape_a_pos_x;
             *collision_contact_y = collision_shape_a_pos_y;
@@ -66,9 +71,66 @@ bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, eng
 
                 *collision_contact_x = *collision_normal_x * collision_shape_a->radius + collision_shape_a_pos_x;
                 *collision_contact_y = *collision_normal_y * collision_shape_a->radius + collision_shape_a_pos_y;
+
+                *collision_normal_penetration = distance_between_squared - distance_between;
             }
 
             return true;
+        }else if(mp_obj_is_type(collision_shape_obj_a, &rectangle_collision_shape_2d_class_type) &&
+                 mp_obj_is_type(collision_shape_obj_b, &rectangle_collision_shape_2d_class_type)){      // Rectangle vs. Rectangle: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-basics-and-impulse-resolution--gamedev-6331t#:~:text=Here%20is%20a%20full%20algorithm%20for%20AABB%20to%20AABB%20manifold%20generation%20and%20collision%20detection%3A
+
+            rectangle_collision_shape_2d_class_obj_t *collision_shape_a = collision_shape_obj_a;
+            rectangle_collision_shape_2d_class_obj_t *collision_shape_b = collision_shape_obj_b;
+
+            float collision_shape_a_half_width = collision_shape_a->width / 2;
+            float collision_shape_a_half_height = collision_shape_a->height / 2;
+
+            float collision_shape_b_half_width = collision_shape_b->width / 2;
+            float collision_shape_b_half_height = collision_shape_b->height / 2;
+
+            float collision_shape_a_pos_x = collision_shape_a->position->x + physics_node_a_position->x - collision_shape_a_half_width;
+            float collision_shape_a_pos_y = collision_shape_a->position->y + physics_node_a_position->y - collision_shape_a_half_height;
+
+            float collision_shape_b_pos_x = collision_shape_b->position->x + physics_node_b_position->x - collision_shape_b_half_width;
+            float collision_shape_b_pos_y = collision_shape_b->position->y + physics_node_b_position->y - collision_shape_b_half_height;
+
+            // Normal vector from A to B
+            float normal_x = collision_shape_b_pos_x - collision_shape_a_pos_x;
+            float normal_y = collision_shape_b_pos_y - collision_shape_a_pos_y;
+
+            // Calculate overlap on x axis 
+            float x_overlap = collision_shape_a_half_width + collision_shape_b_half_width - fabsf(normal_x);
+
+            // // SAT test on x axis
+            if(x_overlap > 0){
+                // Calculate overlap on y axis 
+                float y_overlap = collision_shape_a_half_height + collision_shape_b_half_height - fabsf(normal_y);
+
+                // SAT test on y axis
+                if(y_overlap > 0){
+                    if(x_overlap > y_overlap){
+                        if(normal_y < 0){
+                            *collision_normal_x = 0.0f;
+                            *collision_normal_y = -1.0f;
+                        }else{
+                            *collision_normal_x = 0.0f;
+                            *collision_normal_y = 1.0f;
+                        }
+                        *collision_normal_penetration = y_overlap;
+                        return true;
+                    }else{
+                        if(normal_x < 0){
+                            *collision_normal_x = -1.0f;
+                            *collision_normal_y = 0.0f;
+                        }else{
+                            *collision_normal_x = 0.0f;
+                            *collision_normal_y = 0.0f;
+                        }
+                        *collision_normal_penetration = x_overlap;
+                        return true;
+                    }
+                }
+            }
         }
     }
 
@@ -107,8 +169,9 @@ void engine_physics_tick(){
                 float collision_normal_y = 0.0f;
                 float collision_contact_x = 0.0f;
                 float collision_contact_y = 0.0f;
+                float collision_normal_penetration = 0.0f;
 
-                if(engine_physics_check_collision(physics_node_base_a, physics_node_base_b, &collision_normal_x, &collision_normal_y, &collision_contact_x, &collision_contact_y)){
+                if(engine_physics_check_collision(physics_node_base_a, physics_node_base_b, &collision_normal_x, &collision_normal_y, &collision_contact_x, &collision_contact_y, &collision_normal_penetration)){
                     engine_node_base_t *node_base;
                     engine_physics_2d_node_common_data_t *physics_2d_node_common_data;
 
@@ -177,8 +240,30 @@ void engine_physics_tick(){
                     physics_node_b_velocity->x += 1 / physics_node_b_mass * impulse_x;
                     physics_node_b_velocity->y += 1 / physics_node_b_mass * impulse_y;
 
+                    // Using the normalized collision normal, offset positions of
+                    // both nodes by the amount they were overlapping (in pixels)
+                    // when the collision was detected. Split the overlap 50/50
+                    vector2_class_obj_t *physics_node_a_position = mp_load_attr(physics_node_base_a->attr_accessor, MP_QSTR_position);
+                    vector2_class_obj_t *physics_node_b_position = mp_load_attr(physics_node_base_b->attr_accessor, MP_QSTR_position);
+
+                    physics_node_a_position->x -= collision_normal_x * collision_normal_penetration / 2;
+                    physics_node_a_position->y -= collision_normal_y * collision_normal_penetration / 2;
+
+                    physics_node_b_position->x += collision_normal_x * collision_normal_penetration / 2;
+                    physics_node_b_position->y += collision_normal_y * collision_normal_penetration / 2;
+
+                    // Depending on which objects are dynamic, save data. Don't want static nodes
+                    // to be moved by the penetration amount. This will likely mean that the one
+                    // dynamic node will be moved by half and still be colliding. The next time
+                    // it is found to be colliding means it should move some more. This will
+                    // result in lots of collision callbacks, should move the dynamic object the
+                    // full amount if there's a static object: TODO
+                    if(physics_node_a_dynamic) mp_store_attr(physics_node_base_a->attr_accessor, MP_QSTR_position, physics_node_a_position);
+                    if(physics_node_b_dynamic) mp_store_attr(physics_node_base_b->attr_accessor, MP_QSTR_position, physics_node_b_position);
+
                     if(physics_node_a_dynamic) mp_store_attr(physics_node_base_a->attr_accessor, MP_QSTR_velocity, physics_node_a_velocity);
                     if(physics_node_b_dynamic) mp_store_attr(physics_node_base_b->attr_accessor, MP_QSTR_velocity, physics_node_b_velocity);
+
 
                     collision_contact_data[0] = mp_obj_new_float(collision_contact_x);
                     collision_contact_data[1] = mp_obj_new_float(collision_contact_y);
@@ -220,8 +305,8 @@ void engine_physics_tick(){
 
         if(physics_node_dynamic){
             vector2_class_obj_t *physics_node_velocity = mp_load_attr(physics_node_base->attr_accessor, MP_QSTR_velocity);
-            physics_node_velocity->x -= gravity_x;
-            physics_node_velocity->y -= gravity_y;
+            // physics_node_velocity->x -= gravity_x;
+            // physics_node_velocity->y -= gravity_y;
 
             vector2_class_obj_t *physics_node_position = mp_load_attr(physics_node_base->attr_accessor, MP_QSTR_position);
 
@@ -234,79 +319,6 @@ void engine_physics_tick(){
 
         physics_link_node = physics_link_node->next;
     }
-
-
-    // // Update all node positions
-    // linked_list_node *current_physics_node = engine_physics_nodes.start;
-    // while(current_physics_node != NULL){
-
-    //     engine_node_base_t *node_base = current_physics_node->object;
-        
-    //     vector2_class_obj_t *vel = mp_load_attr(node_base->attr_accessor, MP_QSTR_velocity);
-    //     vector2_class_obj_t *pos = mp_load_attr(node_base->attr_accessor, MP_QSTR_position);
-    //     mp_float_t rotation = mp_obj_get_float(mp_load_attr(node_base->attr_accessor, MP_QSTR_rotation));
-    //     mp_float_t angular_vel = mp_obj_get_float(mp_load_attr(node_base->attr_accessor, MP_QSTR_angular_velocity));
-    //     vector2_class_obj_t *acceleration = mp_load_attr(node_base->attr_accessor, MP_QSTR_acceleration);
-
-    //     pos->x += vel->x;
-    //     pos->y += vel->y;
-
-    //     vel->y += gravity+acceleration->y;
-
-    //     mp_store_attr(node_base->attr_accessor, MP_QSTR_rotation, mp_obj_new_float(rotation+angular_vel));
-    //     mp_store_attr(node_base->attr_accessor, MP_QSTR_angular_velocity, mp_obj_new_float(0));
-
-    //     current_physics_node = current_physics_node->next;
-    // }
-
-    // ENGINE_INFO_PRINTF("Clearing manifolds, list length is %d\n\r", engine_physics_manifolds.count);
-    // // Clear out the manifolds
-    // linked_list_node *node_m = engine_physics_manifolds.start;
-    // int manifolds = 0;
-    // while(node_m != NULL) {
-    //     linked_list_node *next = node_m->next;
-    //     linked_list_del_list_node(&engine_physics_manifolds, node_m);
-    //     ENGINE_INFO_PRINTF("Deleted manifold\n\r\n\r");
-    //     node_m = next;
-    //     manifolds++;
-    // }
-
-    // ENGINE_INFO_PRINTF("Cleared %f manifolds, Generating manifolds...\n\r", (float)manifolds);
-    // manifolds = 0;
-    // // Generate manifolds
-    // ENGINE_INFO_PRINTF("Physics node list length is %d\n\r", engine_physics_nodes.count);
-    // linked_list_node *node_a = engine_physics_nodes.start;
-    // while(node_a != NULL){
-
-    //     //engine_node_base_t *a_physics_node_base = node_a->object;
-    //     linked_list_node *node_b = node_a->next;
-
-    //     while(node_b != NULL){
-
-    //         mp_obj_t m = physics_2d_node_class_test(node_a->object, node_b->object);
-
-    //         ((physics_manifold_class_obj_t*)MP_OBJ_TO_PTR(m))->body_a = node_a->object;
-    //         ((physics_manifold_class_obj_t*)MP_OBJ_TO_PTR(m))->body_b = node_b->object;
-
-    //         linked_list_add_obj(&engine_physics_manifolds, MP_OBJ_TO_PTR(m));
-    //         manifolds++;
-
-    //         node_b = node_b->next;
-    //     }
-    //     node_a = node_a->next;
-    // }
-
-    // ENGINE_INFO_PRINTF("Generated %f manifolds\n\r", (float)manifolds);
-
-    // ENGINE_INFO_PRINTF("Applying manifolds\n\r");
-    // // Apply manifold impulses
-    // node_m = engine_physics_manifolds.start;
-    // while(node_m != NULL) {
-    //     physics_manifold_class_obj_t* m = MP_OBJ_TO_PTR(node_m->object);
-    //     ENGINE_INFO_PRINTF("Applying manifold %p\n\r", m);
-    //     physics_2d_node_class_apply_manifold_impulse(m->body_a, m->body_b, MP_OBJ_FROM_PTR(m));
-    //     node_m = node_m->next;
-    // }
 }
 
 

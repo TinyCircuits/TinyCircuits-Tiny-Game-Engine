@@ -4,6 +4,7 @@
 #include "display/engine_display_common.h"
 #include "physics/engine_physics.h"
 #include "physics/collision_shapes/circle_collision_shape_2d.h"
+#include "physics/collision_shapes/rectangle_collision_shape_2d.h"
 #include "physics/collision_contact_2d.h"
 
 
@@ -19,6 +20,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_set_physics_fps_limit_obj, engine_set_physics_f
 STATIC const mp_rom_map_elem_t engine_physics_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_physics) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_CircleCollisionShape2D), (mp_obj_t)&circle_collision_shape_2d_class_type},
+    { MP_OBJ_NEW_QSTR(MP_QSTR_RectangleCollisionShape2D), (mp_obj_t)&rectangle_collision_shape_2d_class_type},
     { MP_OBJ_NEW_QSTR(MP_QSTR_CollisionContact2D), (mp_obj_t)&collision_contact_2d_class_type},
     { MP_OBJ_NEW_QSTR(MP_QSTR_set_physics_fps_limit), (mp_obj_t)&engine_set_physics_fps_limit_obj },
 };
