@@ -50,125 +50,48 @@ class MyPhysicsNode(Physics2DNode):
 
     def collision(self, collision_contact):
         # print("Collided!")
-        print(engine.get_running_fps())
+        print(collision_contact, end='')
+        print(collision_contact.position.x, collision_contact.position.y, collision_contact.normal.x, collision_contact.normal.y)
         # print(dir(collision_contact))
         # print(collision_contact.node)
         # print(collision_contact.node)
         # print("TEST")
 
+c0 = Circle2DNode()
+c1 = Circle2DNode()
+c2 = Circle2DNode()
 
-circles = []
-nodes = []
+p0 = Physics2DNode()
+p1 = Physics2DNode()
+p2 = MyPhysicsNode()
 
-for i in range(4):
-    p = Physics2DNode()
-    c = Circle2DNode()
-    p.add_child(c)
+c0.radius = 5
+c1.radius = 5
+c2.radius = 10
 
-    p.collision_shape = CircleCollisionShape2D(16)
-    p.bounciness = 2
-    c.radius = 16
-    p.position.x = 0
-    p.position.y = 16 + (i * 32)
-    p.dynamic = False
+c0.color = 0b1111100000000000
+c1.color = 0b1111111111111111
+c2.color = 0b0000000000011111
 
-    circles.append(c)
-    nodes.append(p)
+p0.add_child(c0)
+p1.add_child(c1)
+p2.add_child(c2)
 
-for i in range(4):
-    p = Physics2DNode()
-    c = Circle2DNode()
-    p.add_child(c)
+p0.collision_shape = CircleCollisionShape2D(5)
+p0.position.x = 64-32
+p0.position.y = 64
+p0.velocity.x = 1
 
-    p.collision_shape = CircleCollisionShape2D(16)
-    p.bounciness = 2
-    c.radius = 16
-    p.position.x = 128
-    p.position.y = 16 + (i * 32)
-    p.dynamic = False
+p1.collision_shape = CircleCollisionShape2D(5)
+p1.position.x = 64+32
+p1.position.y = 64
+p1.velocity.x = -1
 
-    circles.append(c)
-    nodes.append(p)
-
-for i in range(4):
-    p = Physics2DNode()
-    c = Circle2DNode()
-    p.add_child(c)
-
-    p.collision_shape = CircleCollisionShape2D(16)
-    p.bounciness = 2
-    c.radius = 16
-    p.position.x = 16 + (i * 32)
-    p.position.y = 0
-    p.dynamic = False
-
-    circles.append(c)
-    nodes.append(p)
-
-for i in range(4):
-    p = Physics2DNode()
-    c = Circle2DNode()
-    p.add_child(c)
-
-    p.collision_shape = CircleCollisionShape2D(16)
-    p.bounciness = 2
-    c.radius = 16
-    p.position.x = 16 + (i * 32)
-    p.position.y = 128
-    p.dynamic = False
-
-    circles.append(c)
-    nodes.append(p)
-
-
-
-for i in range(16):
-    circle = Circle2DNode()
-    circle.radius = 6
-    circle.color = random.randint(5000, 65500)
-    ball = MyPhysicsNode()
-    ball.collision_shape = CircleCollisionShape2D(6)
-    ball.add_child(circle)
-    ball.bounciness = 3
-    ball.position.x = random.randint(64-40, 64+40)
-    ball.position.y = random.randint(64-40, 64+40)
-
-    circles.append(circle)
-    nodes.append(ball)
-
-
-# p0 = Physics2DNode()
-# p1 = Physics2DNode()
-# p2 = MyPhysicsNode()
-
-# c0.radius = 5
-# c1.radius = 5
-# c2.radius = 10
-
-# c0.color = 0b1111100000000000
-# c1.color = 0b1111111111111111
-# c2.color = 0b0000000000011111
-
-# p0.add_child(c0)
-# p1.add_child(c1)
-# p2.add_child(c2)
-
-# p0.collision_shape = CircleCollisionShape2D(5)
-# p0.position.x = 64-32
-# p0.position.y = 64
-# p0.velocity.x = 1
-
-# p1.collision_shape = CircleCollisionShape2D(5)
-# p1.position.x = 64+32
-# p1.position.y = 64
-# p1.velocity.x = -1
-
-# p2.collision_shape = CircleCollisionShape2D(10)
-# p2.position.x = 64
-# p2.position.y = 64+32
-# p2.velocity.y = -1.5
-# p2.mass = 1
-# p2.dynamic = False
+p2.collision_shape = CircleCollisionShape2D(10)
+p2.position.x = 64
+p2.position.y = 64+32
+p2.velocity.y = -1.5
+p2.mass = 1
 
 camera = CameraNode()
 engine.start()

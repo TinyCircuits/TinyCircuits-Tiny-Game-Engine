@@ -3,7 +3,7 @@
 
 // Class required functions
 STATIC void collision_contact_2d_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
-    ENGINE_INFO_PRINTF("print(): CollisionContact2D");
+    ENGINE_FORCE_PRINTF("print(): CollisionContact2D");
 }
 
 
@@ -21,15 +21,15 @@ mp_obj_t collision_contact_2d_class_new(const mp_obj_type_t *type, size_t n_args
         mp_obj_t parameters[2];
         parameters[0] = args[0];
         parameters[1] = args[1];
-        self->position = vector2_class_new(&vector2_class_type, 0, 0, parameters);
+        self->position = vector2_class_new(&vector2_class_type, 2, 0, parameters);
 
         parameters[0] = args[2];
         parameters[1] = args[3];
-        self->normal = vector2_class_new(&vector2_class_type, 0, 0, parameters);
+        self->normal = vector2_class_new(&vector2_class_type, 2, 0, parameters);
 
         self->node = args[4];
     }else{
-        mp_raise_msg(MP_QSTR_RuntimeError, MP_ERROR_TEXT("CollisionContact2D: Expected 0 or 4 arguments, got something else..."));
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("CollisionContact2D: Expected 0 or 4 arguments, got something else..."));
     }
     
     return MP_OBJ_FROM_PTR(self);

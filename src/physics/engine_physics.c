@@ -180,10 +180,10 @@ void engine_physics_tick(){
                     if(physics_node_a_dynamic) mp_store_attr(physics_node_base_a->attr_accessor, MP_QSTR_velocity, physics_node_a_velocity);
                     if(physics_node_b_dynamic) mp_store_attr(physics_node_base_b->attr_accessor, MP_QSTR_velocity, physics_node_b_velocity);
 
-                    collision_contact_data[0] = mp_obj_new_float(collision_normal_x);
-                    collision_contact_data[1] = mp_obj_new_float(collision_normal_y);
-                    collision_contact_data[2] = mp_obj_new_float(collision_contact_x);
-                    collision_contact_data[3] = mp_obj_new_float(collision_contact_y);
+                    collision_contact_data[0] = mp_obj_new_float(collision_contact_x);
+                    collision_contact_data[1] = mp_obj_new_float(collision_contact_y);
+                    collision_contact_data[2] = mp_obj_new_float(collision_normal_x);
+                    collision_contact_data[3] = mp_obj_new_float(collision_normal_y);
 
                     mp_obj_t exec[3];
 
