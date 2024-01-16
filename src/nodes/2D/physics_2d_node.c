@@ -44,6 +44,7 @@ mp_obj_t physics_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
     ENGINE_INFO_PRINTF("New Physics2DNode");
 
     engine_physics_2d_node_common_data_t *common_data = malloc(sizeof(engine_physics_2d_node_common_data_t));
+    common_data->penetration = 0.0f;
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);
@@ -76,15 +77,8 @@ mp_obj_t physics_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
         physics_2d_node->velocity = vector2_class_new(&vector2_class_type, 0, 0, NULL);
         physics_2d_node->mass = mp_obj_new_float(1.0f);
         physics_2d_node->collision_shape = mp_const_none;
-        physics_2d_node->bounciness = mp_obj_new_float(1.0f);
-        // physics_2d_node->angular_velocity = mp_obj_new_float(0.0);
-        // physics_2d_node->i_mass = mp_obj_new_float(1.0);
-        // physics_2d_node->i_I = mp_obj_new_float(1.0);
-        // physics_2d_node->restitution = mp_obj_new_float(0.3);
-        // physics_2d_node->friction = mp_obj_new_float(0.3);
-        // physics_2d_node->velocity = vector2_class_new(&vector2_class_type, 0, 0, NULL);
-        // physics_2d_node->acceleration = vector2_class_new(&vector2_class_type, 0, 0, NULL);
-        // physics_2d_node->dynamic = mp_obj_new_bool(true);
+        physics_2d_node->bounciness = mp_obj_new_float(0.0f);
+        physics_2d_node->dynamic = mp_obj_new_int(1);
     }else if(n_args == 1){  // Inherited (use existing object)
         node_base->inherited = true;
         node_base->node = args[0];
@@ -118,7 +112,8 @@ mp_obj_t physics_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
         mp_store_attr(node_base->node, MP_QSTR_velocity, vector2_class_new(&vector2_class_type, 0, 0, NULL));
         mp_store_attr(node_base->node, MP_QSTR_mass, mp_obj_new_float(1.0f));
         mp_store_attr(node_base->node, MP_QSTR_collision_shape, mp_const_none);
-        mp_store_attr(node_base->node, MP_QSTR_bounciness, mp_obj_new_float(1.0f));
+        mp_store_attr(node_base->node, MP_QSTR_bounciness, mp_obj_new_float(0.0f));
+        mp_store_attr(node_base->node, MP_QSTR_dynamic, mp_obj_new_int(1));
     }else{
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Too many arguments passed to Physics2DNode constructor!"));
     }
@@ -190,6 +185,9 @@ STATIC void physics_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
             case MP_QSTR_bounciness:
                 destination[0] = self->bounciness;
             break;
+            case MP_QSTR_dynamic:
+                destination[0] = self->dynamic;
+            break;
             default:
                 return; // Fail
         }
@@ -212,6 +210,9 @@ STATIC void physics_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
             break;
             case MP_QSTR_bounciness:
                 self->bounciness = destination[1];
+            break;
+            case MP_QSTR_dynamic:
+                self->dynamic = destination[1];
             break;
             default:
                 return; // Fail

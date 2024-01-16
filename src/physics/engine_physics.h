@@ -5,8 +5,9 @@
 #include "utility/linked_list.h"
 #include "nodes/node_base.h"
 
-void engine_physics_tick();
+float engine_physics_fps;
 
+void engine_physics_tick();
 
 // Physics are nodes just like everything else but are tracked
 // new a different list that the engine can loop through quickly.

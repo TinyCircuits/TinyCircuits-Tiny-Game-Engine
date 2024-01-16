@@ -1,4 +1,5 @@
 #include "linked_list.h"
+#include "py/obj.h"
 
 void linked_list_init(linked_list *list) {
     list->start = list->end = NULL;

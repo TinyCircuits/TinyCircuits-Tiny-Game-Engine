@@ -7,16 +7,10 @@
 #include "collision_shapes/circle_collision_shape_2d.h"
 #include "collision_contact_2d.h"
 
-
-// typedef struct{
-//     engine_node_base_t *physics_node_base_a;
-//     engine_node_base_t *physics_node_base_b;
-// }collision_manifold_2d_t;
-
-
 linked_list engine_physics_nodes;
 float gravity_x = 0.0f;
 float gravity_y = -0.00981f;
+float engine_physics_fps = 15.0f;
 
 
 bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, engine_node_base_t *physics_node_base_b, float *collision_normal_x, float *collision_normal_y, float *collision_contact_x, float *collision_contact_y){
@@ -108,11 +102,26 @@ void engine_physics_tick(){
                 if(engine_physics_check_collision(physics_node_base_a, physics_node_base_b, &collision_normal_x, &collision_normal_y, &collision_contact_x, &collision_contact_y)){
                     engine_node_base_t *node_base;
                     engine_physics_2d_node_common_data_t *physics_2d_node_common_data;
-                    mp_obj_t exec[3];
+
+                    // Could use these flags to stop some calculations below: TODO
+                    bool physics_node_a_dynamic = mp_obj_get_int(mp_load_attr(physics_node_base_a->attr_accessor, MP_QSTR_dynamic));
+                    bool physics_node_b_dynamic = mp_obj_get_int(mp_load_attr(physics_node_base_b->attr_accessor, MP_QSTR_dynamic));
 
                     // Resolve collision: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-basics-and-impulse-resolution--gamedev-6331t#:~:text=more%20readable%20than%20mathematical%20notation!
                     vector2_class_obj_t *physics_node_a_velocity = mp_load_attr(physics_node_base_a->attr_accessor, MP_QSTR_velocity);
                     vector2_class_obj_t *physics_node_b_velocity = mp_load_attr(physics_node_base_b->attr_accessor, MP_QSTR_velocity);
+
+                    // If either node is not dynamic, set any velocities to zero no matter what set to
+                    if(!physics_node_a_dynamic){
+                        physics_node_a_velocity->x = 0.0f;
+                        physics_node_a_velocity->y = 0.0f;
+                    }
+
+                    if(!physics_node_b_dynamic){
+                        physics_node_b_velocity->x = 0.0f;
+                        physics_node_b_velocity->y = 0.0f;
+                    }
+
                     float relative_velocity_x = physics_node_b_velocity->x - physics_node_a_velocity->x;
                     float relative_velocity_y = physics_node_b_velocity->y - physics_node_a_velocity->y;
 
@@ -131,8 +140,24 @@ void engine_physics_tick(){
                     float physics_node_b_mass = mp_obj_get_float(mp_load_attr(physics_node_base_b->attr_accessor, MP_QSTR_mass));
                     float bounciness = fminf(physics_node_a_bounciness, physics_node_b_bounciness);
 
+                    float physics_node_a_inverse_mass = 0.0f;
+                    float physics_node_b_inverse_mass = 0.0f;
+
+                    // Avoid divide by zero for inverse mass calculation
+                    if(physics_node_a_mass == 0.0f){
+                        physics_node_a_inverse_mass = 0.0f; 
+                    }else{
+                        physics_node_a_inverse_mass = 1.0f / physics_node_a_mass;
+                    }
+
+                    if(physics_node_b_mass == 0.0f){
+                        physics_node_b_inverse_mass = 0.0f; 
+                    }else{
+                        physics_node_b_inverse_mass = 1.0f / physics_node_b_mass;
+                    }
+
                     float impulse_coefficient_j = -(1 + bounciness) * velocity_along_collision_normal;
-                    impulse_coefficient_j /= 1 / physics_node_a_mass + 1 / physics_node_b_mass;
+                    impulse_coefficient_j /= physics_node_a_inverse_mass + physics_node_b_inverse_mass;
 
                     float impulse_x = impulse_coefficient_j * collision_normal_x;
                     float impulse_y = impulse_coefficient_j * collision_normal_y;
@@ -143,13 +168,15 @@ void engine_physics_tick(){
                     physics_node_b_velocity->x += 1 / physics_node_b_mass * impulse_x;
                     physics_node_b_velocity->y += 1 / physics_node_b_mass * impulse_y;
 
-                    mp_store_attr(physics_node_base_a->attr_accessor, MP_QSTR_velocity, physics_node_a_velocity);
-                    mp_store_attr(physics_node_base_b->attr_accessor, MP_QSTR_velocity, physics_node_b_velocity);
+                    if(physics_node_a_dynamic) mp_store_attr(physics_node_base_a->attr_accessor, MP_QSTR_velocity, physics_node_a_velocity);
+                    if(physics_node_b_dynamic) mp_store_attr(physics_node_base_b->attr_accessor, MP_QSTR_velocity, physics_node_b_velocity);
 
                     collision_contact_data[0] = mp_obj_new_float(collision_normal_x);
                     collision_contact_data[1] = mp_obj_new_float(collision_normal_y);
                     collision_contact_data[2] = mp_obj_new_float(collision_contact_x);
                     collision_contact_data[3] = mp_obj_new_float(collision_contact_y);
+
+                    mp_obj_t exec[3];
 
                     // Call A callback
                     node_base = physics_link_node_a->object;
@@ -157,7 +184,7 @@ void engine_physics_tick(){
                     collision_contact_data[4] = physics_link_node_b->object;
                     exec[0] = physics_2d_node_common_data->collision_cb;
                     exec[1] = node_base->attr_accessor;
-                    exec[2] = collision_contact_2d_class_new(&collision_contact_2d_class_type, 5, 0, collision_contact_data);;
+                    exec[2] = collision_contact_2d_class_new(&collision_contact_2d_class_type, 5, 0, collision_contact_data);
                     mp_call_method_n_kw(1, 0, exec);
 
                     // Call B callback
@@ -166,7 +193,7 @@ void engine_physics_tick(){
                     collision_contact_data[4] = physics_link_node_a->object;
                     exec[0] = physics_2d_node_common_data->collision_cb;
                     exec[1] = node_base->attr_accessor;
-                    exec[2] = collision_contact_2d_class_new(&collision_contact_2d_class_type, 5, 0, collision_contact_data);;
+                    exec[2] = collision_contact_2d_class_new(&collision_contact_2d_class_type, 5, 0, collision_contact_data);
                     mp_call_method_n_kw(1, 0, exec);
                 }
             }
@@ -180,19 +207,21 @@ void engine_physics_tick(){
     while(physics_link_node != NULL){
         engine_node_base_t *physics_node_base = physics_link_node->object;
 
-        vector2_class_obj_t *physics_node_velocity = mp_load_attr(physics_node_base->attr_accessor, MP_QSTR_velocity);
-        physics_node_velocity->x -= gravity_x;
-        physics_node_velocity->y -= gravity_y;
+        bool physics_node_dynamic = mp_obj_get_int(mp_load_attr(physics_node_base->attr_accessor, MP_QSTR_dynamic));
 
-        vector2_class_obj_t *physics_node_position = mp_load_attr(physics_node_base->attr_accessor, MP_QSTR_position);
+        if(physics_node_dynamic){
+            vector2_class_obj_t *physics_node_velocity = mp_load_attr(physics_node_base->attr_accessor, MP_QSTR_velocity);
+            physics_node_velocity->x -= gravity_x;
+            physics_node_velocity->y -= gravity_y;
 
-        physics_node_position->x += physics_node_velocity->x;
-        physics_node_position->y += physics_node_velocity->y;
+            vector2_class_obj_t *physics_node_position = mp_load_attr(physics_node_base->attr_accessor, MP_QSTR_position);
 
-        mp_store_attr(physics_node_base->attr_accessor, MP_QSTR_velocity, physics_node_velocity);
-        mp_store_attr(physics_node_base->attr_accessor, MP_QSTR_position, physics_node_position);
+            physics_node_position->x += physics_node_velocity->x;
+            physics_node_position->y += physics_node_velocity->y;
 
-        // Should also apply gravity
+            mp_store_attr(physics_node_base->attr_accessor, MP_QSTR_velocity, physics_node_velocity);
+            mp_store_attr(physics_node_base->attr_accessor, MP_QSTR_position, physics_node_position);
+        }
 
         physics_link_node = physics_link_node->next;
     }

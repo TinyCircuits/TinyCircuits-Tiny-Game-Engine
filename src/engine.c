@@ -6,6 +6,7 @@
 #include "physics/engine_physics.h"
 #include "resources/engine_resource_manager.h"
 #include "engine_cameras.h"
+#include "utility/engine_time.h"
 
 // ### MODULE ###
 
@@ -15,6 +16,24 @@
 // Flag to indicate that the main engine.start() loop is running. Set
 // false to stop the engine after the current loop/tick ends
 bool is_engine_looping = false;
+float engine_fps_limit_period_ms = 16.666667f;
+float engine_fps_time_at_last_tick_ms = 0.0f;
+float engine_fps_time_at_before_last_tick_ms = 0.0f;
+
+
+STATIC mp_obj_t engine_set_fps_limit(mp_obj_t fps){
+    ENGINE_INFO_PRINTF("Engine: Setting FPS");
+    // engine_fps_limit_period_ms = (1.0f / mp_obj_get_float(fps)) * 1000.0f;
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_1(engine_set_fps_limit_obj, engine_set_fps_limit);
+
+
+STATIC mp_obj_t engine_get_running_fps(){
+    ENGINE_INFO_PRINTF("Engine: Getting FPS");
+    return mp_obj_new_float(1.0f / ((engine_fps_time_at_last_tick_ms - engine_fps_time_at_before_last_tick_ms)/1000.0f));
+}
+MP_DEFINE_CONST_FUN_OBJ_0(engine_get_running_fps_obj, engine_get_running_fps);
 
 
 STATIC mp_obj_t engine_init(){
@@ -30,26 +49,31 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_init_obj, engine_init);
 
 
 STATIC mp_obj_t engine_tick(){
-    ENGINE_PERFORMANCE_STOP(ENGINE_PERF_TIMER_1, "Loop time");
-    ENGINE_PERFORMANCE_START(ENGINE_PERF_TIMER_1);
+    if(millis() - engine_fps_time_at_last_tick_ms >= engine_fps_limit_period_ms){
+        engine_fps_time_at_before_last_tick_ms = engine_fps_time_at_last_tick_ms;
+        engine_fps_time_at_last_tick_ms = millis();
 
-    // Update/grab which buttons are pressed before calling all node callbacks
-    engine_input_update_pressed_buttons();
+        ENGINE_PERFORMANCE_STOP(ENGINE_PERF_TIMER_1, "Loop time");
+        ENGINE_PERFORMANCE_START(ENGINE_PERF_TIMER_1);
 
-    // Call every instanced node's callbacks
-    engine_invoke_all_node_callbacks();
+        // Update/grab which buttons are pressed before calling all node callbacks
+        engine_input_update_pressed_buttons();
 
-    // After every game cycle send the current active screen buffer to the display
-    engine_display_send();
+        // Call every instanced node's callbacks
+        engine_invoke_all_node_callbacks();
+
+        // After every game cycle send the current active screen buffer to the display
+        engine_display_send();
 
 
-    // Now that all the node callbacks were called and potentially moved
-    // physics nodes around, step the physics engine another tick.
-    // NOTE: Before each nodes callbacks are called the position
-    // from the physics engine is synced to the engine node. After
-    // all the callbacks for the physics nodes are done, the positions
-    // from the engine node are synced back to the physics body
-    engine_physics_tick();
+        // Now that all the node callbacks were called and potentially moved
+        // physics nodes around, step the physics engine another tick.
+        // NOTE: Before each nodes callbacks are called the position
+        // from the physics engine is synced to the engine node. After
+        // all the callbacks for the physics nodes are done, the positions
+        // from the engine node are synced back to the physics body
+        engine_physics_tick();
+    }
 
 
     return mp_const_none;
@@ -128,6 +152,8 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_module_init_obj, engine_module_init);
 STATIC const mp_rom_map_elem_t engine_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine) },
     { MP_OBJ_NEW_QSTR(MP_QSTR___init__), (mp_obj_t)&engine_module_init_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_set_fps_limit), (mp_obj_t)&engine_set_fps_limit_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_get_running_fps), (mp_obj_t)&engine_get_running_fps_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_init), (mp_obj_t)&engine_init_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_tick), (mp_obj_t)&engine_tick_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_start), (mp_obj_t)&engine_loop_obj },

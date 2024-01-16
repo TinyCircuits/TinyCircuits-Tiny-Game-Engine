@@ -13,6 +13,7 @@ typedef struct{
     mp_obj_t mass;                  // How heavy the node is
     mp_obj_t collision_shape;       // Shape definition
     mp_obj_t bounciness;            // Restitution or elasticity
+    mp_obj_t dynamic;               // Flag indicating if node is dynamic and moving around due to physics or static
     // mp_obj_t acceleration;          // Vector2 (Reference acceleration)
     // mp_obj_t angular_velocity;    // float (Angular velocity)
     // mp_obj_t i_mass;              // float (inverse mass)
@@ -27,6 +28,7 @@ typedef struct{
     mp_obj_t tick_cb;
     mp_obj_t draw_cb;
     mp_obj_t collision_cb;
+    float penetration;
     linked_list_node *physics_list_node;    // All physics 2d nodes get added to a list that is easy to traverse
 }engine_physics_2d_node_common_data_t;
 
