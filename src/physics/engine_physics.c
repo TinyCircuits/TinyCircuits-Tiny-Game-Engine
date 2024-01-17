@@ -112,13 +112,20 @@ bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, eng
                         if(normal_y < 0){
                             *collision_normal_x = 0.0f;
                             *collision_normal_y = -1.0f;
-                            *collision_contact_x = collision_shape_a_pos_x;
                             *collision_contact_y = collision_shape_a_pos_y - collision_shape_a_half_height;
                         }else{
                             *collision_normal_x = 0.0f;
                             *collision_normal_y = 1.0f;
-                            *collision_contact_x = collision_shape_a_pos_x;
                             *collision_contact_y = collision_shape_a_pos_y + collision_shape_a_half_height;
+                        }
+
+                        // Figure middle of overlapping area position by going to left
+                        // or right edge of the rectangle and subtracting half the overlapping
+                        // length
+                        if(normal_x < 0){
+                            *collision_contact_x = collision_shape_a_pos_x - collision_shape_a_half_width + x_overlap/2;
+                        }else{
+                            *collision_contact_x = collision_shape_a_pos_x + collision_shape_a_half_width - x_overlap/2;
                         }
                         *collision_normal_penetration = y_overlap;
                         return true;
@@ -127,12 +134,19 @@ bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, eng
                             *collision_normal_x = -1.0f;
                             *collision_normal_y = 0.0f;
                             *collision_contact_x = collision_shape_a_pos_x - collision_shape_a_half_width;
-                            *collision_contact_y = collision_shape_a_pos_y;
                         }else{
                             *collision_normal_x = 1.0f;
                             *collision_normal_y = 0.0f;
                             *collision_contact_x = collision_shape_a_pos_x + collision_shape_a_half_width;
-                            *collision_contact_y = collision_shape_a_pos_y;
+                        }
+
+                        // Figure middle of overlapping area position by going to top
+                        // or bottom edge of the rectangle and subtracting half the overlapping
+                        // length
+                        if(normal_y < 0){
+                            *collision_contact_y = collision_shape_a_pos_y - collision_shape_a_half_height + y_overlap/2;
+                        }else{
+                            *collision_contact_y = collision_shape_a_pos_y + collision_shape_a_half_height - y_overlap/2;
                         }
                         *collision_normal_penetration = x_overlap;
                         return true;
