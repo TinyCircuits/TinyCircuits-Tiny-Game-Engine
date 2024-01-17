@@ -38,7 +38,7 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [] Pool, tanks
 
 
-[] Turns out that we should only need to do mp_load_attr once into internal struct for each node! During physics, modifying the x and y parameters of the pointers to positions from mp_load_attr really did modify the attrs! Could also just directly create and store then load in each init!!!!!
+[] Turns out that we should only need to do mp_load_attr once into internal struct for each node! During physics, modifying the x and y parameters of the pointers to positions from mp_load_attr really did modify the attrs! Could also just directly create and store then load in each init!!!!! See Reference commit for attr loading... commit and look at commented out lines in engine_physics.c related to storing attrs that's not needed!
 [] Test that collisions work correctly (at least the contact points) in each quad of the cord system
 [] Should a flag be set in sprite2dnode to enable transparency? Or just use special color 0b0000100000100001?
 [] VoxelSapce could be rendered faster and need to incorporate node parameters like position and rotation. Implement pixel transformer callbacks

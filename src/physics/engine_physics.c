@@ -347,11 +347,6 @@ void engine_physics_tick(){
                     vector2_class_obj_t *physics_node_a_position = mp_load_attr(physics_node_base_a->attr_accessor, MP_QSTR_position);
                     vector2_class_obj_t *physics_node_b_position = mp_load_attr(physics_node_base_b->attr_accessor, MP_QSTR_position);
 
-                    physics_node_a_position->x -= collision_normal_x * collision_normal_penetration / 2;
-                    physics_node_a_position->y -= collision_normal_y * collision_normal_penetration / 2;
-
-                    physics_node_b_position->x += collision_normal_x * collision_normal_penetration / 2;
-                    physics_node_b_position->y += collision_normal_y * collision_normal_penetration / 2;
 
                     // Depending on which objects are dynamic, save data. Don't want static nodes
                     // to be moved by the penetration amount. This will likely mean that the one
@@ -359,12 +354,16 @@ void engine_physics_tick(){
                     // it is found to be colliding means it should move some more. This will
                     // result in lots of collision callbacks, should move the dynamic object the
                     // full amount if there's a static object: TODO
-                    // if(physics_node_a_dynamic) mp_store_attr(physics_node_base_a->attr_accessor, MP_QSTR_position, physics_node_a_position);
-                    // if(physics_node_b_dynamic) mp_store_attr(physics_node_base_b->attr_accessor, MP_QSTR_position, physics_node_b_position);
+                    // NOTE: DO NOT NEED TO DO mp_store_attr since we're modifying the pointers!
+                    if(physics_node_a_dynamic){
+                        physics_node_a_position->x -= collision_normal_x * collision_normal_penetration / 2;
+                        physics_node_a_position->y -= collision_normal_y * collision_normal_penetration / 2;
+                    }
 
-                    // if(physics_node_a_dynamic) mp_store_attr(physics_node_base_a->attr_accessor, MP_QSTR_velocity, physics_node_a_velocity);
-                    // if(physics_node_b_dynamic) mp_store_attr(physics_node_base_b->attr_accessor, MP_QSTR_velocity, physics_node_b_velocity);
-
+                    if(physics_node_b_dynamic){
+                        physics_node_b_position->x += collision_normal_x * collision_normal_penetration / 2;
+                        physics_node_b_position->y += collision_normal_y * collision_normal_penetration / 2;
+                    }
 
                     collision_contact_data[0] = mp_obj_new_float(collision_contact_x);
                     collision_contact_data[1] = mp_obj_new_float(collision_contact_y);
@@ -405,6 +404,7 @@ void engine_physics_tick(){
         bool physics_node_dynamic = mp_obj_get_int(mp_load_attr(physics_node_base->attr_accessor, MP_QSTR_dynamic));
 
         if(physics_node_dynamic){
+            // Modifying these directly is good enough, don't need mp_store_attr even if using classes at main level!
             vector2_class_obj_t *physics_node_velocity = mp_load_attr(physics_node_base->attr_accessor, MP_QSTR_velocity);
             // physics_node_velocity->x -= gravity_x;
             // physics_node_velocity->y -= gravity_y;
@@ -413,9 +413,6 @@ void engine_physics_tick(){
 
             physics_node_position->x += physics_node_velocity->x;
             physics_node_position->y += physics_node_velocity->y;
-
-            mp_store_attr(physics_node_base->attr_accessor, MP_QSTR_velocity, physics_node_velocity);
-            mp_store_attr(physics_node_base->attr_accessor, MP_QSTR_position, physics_node_position);
         }
 
         physics_link_node = physics_link_node->next;

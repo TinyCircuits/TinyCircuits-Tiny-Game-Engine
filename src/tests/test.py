@@ -104,19 +104,19 @@ p1.collision_shape = CircleCollisionShape2D(10)
 p1.position.x = 64+60
 p1.position.y = 64
 p1.velocity.x = -0.75
-p1.bounciness = 2
+# p1.bounciness = 2
 
 p2.collision_shape = CircleCollisionShape2D(10)
 p2.position.x = 64
 p2.position.y = 64-61
 p2.velocity.y = 0.75
-p2.bounciness = 2
+# p2.bounciness = 2
 
 p3.collision_shape = CircleCollisionShape2D(10)
 p3.position.x = 64
 p3.position.y = 64+61
 p3.velocity.y = -0.75
-p3.bounciness = 2
+# p3.bounciness = 2
 
 pmiddle.collision_shape = RectangleCollisionShape2D(40, 40)
 pmiddle.position.x = 64
