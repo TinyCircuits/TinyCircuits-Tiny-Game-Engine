@@ -9,6 +9,19 @@ float engine_math_dot_product(float x0, float y0, float x1, float y1){
 }
 
 
+// https://stackoverflow.com/a/16659263
+float engine_math_clamp(float value, float min, float max){
+    const float t = value < min ? min : value;
+    return t > max ? max : t;
+}
+
+
+// https://stackoverflow.com/a/5989243
+bool engine_math_compare_floats(float value0, float value1){
+    return fabsf(value0 - value1) < 1e-9;
+}
+
+
 // https://stackoverflow.com/a/22491252
 void engine_math_rotate_point(float *px, float *py, float cx, float cy, float angle_radians){
     float x_centered = *px - cx;

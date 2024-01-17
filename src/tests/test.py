@@ -51,7 +51,7 @@ class MyPhysicsNode(Physics2DNode):
     def collision(self, collision_contact):
         # print("Collided!")
         # print(collision_contact, end='')
-        # print(collision_contact.position.x, collision_contact.position.y, collision_contact.normal.x, collision_contact.normal.y, type(collision_contact.node))
+        print(collision_contact.position.x, collision_contact.position.y, collision_contact.normal.x, collision_contact.normal.y, type(collision_contact.node))
         contact_circle = Circle2DNode()
         contact_circle.position = collision_contact.position
         # contact_circle.position = self.position
@@ -62,7 +62,7 @@ class MyPhysicsNode(Physics2DNode):
         # print(collision_contact.node)
         # print("TEST")
 
-c0 = Rectangle2DNode()
+c0 = Circle2DNode()
 c1 = Rectangle2DNode()
 c2 = Rectangle2DNode()
 c3 = Rectangle2DNode()
@@ -74,8 +74,7 @@ p2 = MyPhysicsNode()
 p3 = MyPhysicsNode()
 pmiddle = MyPhysicsNode()
 
-c0.width = 10
-c0.height = 10
+c0.radius = 10
 c1.width = 30
 c1.height = 30
 c2.width = 30
@@ -97,11 +96,12 @@ p2.add_child(c2)
 p3.add_child(c3)
 pmiddle.add_child(middle)
 
-p0.collision_shape = RectangleCollisionShape2D(10, 10)
+p0.collision_shape = CircleCollisionShape2D(10)
 p0.position.x = 64-60
-p0.position.y = 64
+p0.position.y = 64+40
 p0.velocity.x = 0.75
-# p0.bounciness = 2
+p0.velocity.y = -0.75
+p0.bounciness = 2
 
 p1.collision_shape = RectangleCollisionShape2D(30, 30)
 p1.position.x = 64+60
@@ -112,19 +112,20 @@ p1.velocity.x = -0.75
 p2.collision_shape = RectangleCollisionShape2D(30, 30)
 p2.position.x = 64
 p2.position.y = 64-61
-p2.velocity.y = 0.75
+# p2.velocity.y = 0.75
 # p2.bounciness = 2
 
 p3.collision_shape = RectangleCollisionShape2D(30, 30)
 p3.position.x = 64
 p3.position.y = 64+61
-p3.velocity.y = -0.75
+# p3.velocity.y = -0.75
 # p3.bounciness = 2
 
 pmiddle.collision_shape = RectangleCollisionShape2D(40, 40)
 pmiddle.position.x = 64
 pmiddle.position.y = 64
 pmiddle.dynamic = False
+pmiddle.bounciness = 2
 # test = Circle2DNode()
 # test.position = p0.position
 

@@ -154,24 +154,83 @@ bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, eng
                   mp_obj_is_type(collision_shape_obj_a, &circle_collision_shape_2d_class_type) &&
                   mp_obj_is_type(collision_shape_obj_b, &rectangle_collision_shape_2d_class_type)){     // Circle vs. Rectangle or Rectangle vs. Circle
 
-            rectangle_collision_shape_2d_class_obj_t *collision_shape_a = collision_shape_obj_a;
-            rectangle_collision_shape_2d_class_obj_t *collision_shape_b = collision_shape_obj_b;
+            rectangle_collision_shape_2d_class_obj_t *collision_rectangle = NULL;
+            circle_collision_shape_2d_class_obj_t *collision_circle = NULL;
 
-            float collision_shape_a_half_width = collision_shape_a->width / 2;
-            float collision_shape_a_half_height = collision_shape_a->height / 2;
+            if(mp_obj_is_type(collision_shape_obj_a, &rectangle_collision_shape_2d_class_type)){
+                collision_rectangle = collision_shape_obj_a;
+                collision_circle = collision_shape_obj_b;
+            }else{
+                collision_rectangle = collision_shape_obj_b;
+                collision_circle = collision_shape_obj_a;
+            }
 
-            float collision_shape_b_half_width = collision_shape_b->width / 2;
-            float collision_shape_b_half_height = collision_shape_b->height / 2;
+            float collision_rectangle_half_width = collision_rectangle->width / 2;
+            float collision_rectangle_half_height = collision_rectangle->height / 2;
 
-            float collision_shape_a_pos_x = collision_shape_a->position->x + physics_node_a_position->x - collision_shape_a_half_width;
-            float collision_shape_a_pos_y = collision_shape_a->position->y + physics_node_a_position->y - collision_shape_a_half_height;
+            float collision_rectangle_pos_x = collision_rectangle->position->x + physics_node_a_position->x;
+            float collision_rectangle_pos_y = collision_rectangle->position->y + physics_node_a_position->y;
 
-            float collision_shape_b_pos_x = collision_shape_b->position->x + physics_node_b_position->x - collision_shape_b_half_width;
-            float collision_shape_b_pos_y = collision_shape_b->position->y + physics_node_b_position->y - collision_shape_b_half_height;
+            float collision_circle_pos_x = collision_circle->position->x + physics_node_b_position->x;
+            float collision_circle_pos_y = collision_circle->position->y + physics_node_b_position->y;
 
             // Normal vector from A to B
-            float normal_x = collision_shape_b_pos_x - collision_shape_a_pos_x;
-            float normal_y = collision_shape_b_pos_y - collision_shape_a_pos_y;
+            float normal_x = collision_circle_pos_x - collision_rectangle_pos_x;
+            float normal_y = collision_circle_pos_y - collision_rectangle_pos_y;
+
+            // Closest point on A to center of B
+            float closest_x = engine_math_clamp(normal_x, -collision_rectangle_half_width, collision_rectangle_half_width);
+            float closest_y = engine_math_clamp(normal_y, -collision_rectangle_half_height, collision_rectangle_half_height);
+
+            bool inside = false;
+            
+            // Floating-point equalities? Not sure what's going on here exactly: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-basics-and-impulse-resolution--gamedev-6331t#:~:text=25-,if(n%20%3D%3D%20closest),-26
+            // Circle is inside the AABB, so we need to clamp the circle's center 
+            // to the closest edge
+            if(engine_math_compare_floats(normal_x, closest_x) && engine_math_compare_floats(normal_y, closest_y)){
+                inside = true;
+
+                if(fabsf(normal_x) > fabsf(normal_y)){
+                    if(closest_x > 0){
+                        closest_x = collision_rectangle_half_width;
+                    }else{
+                        closest_x = -collision_rectangle_half_width;
+                    }
+                }else{
+                    if(closest_x > 0){
+                        closest_y = collision_rectangle_half_height;
+                    }else{
+                        closest_y = -collision_rectangle_half_height;
+                    }
+                }
+            }
+
+            // Not sure about this: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-basics-and-impulse-resolution--gamedev-6331t#:~:text=Vec2%20normal%20%3D%20n%20%2D%20closest
+            float closest_normal_x = normal_x - closest_x;
+            float closest_normal_y = normal_y - closest_y;
+            float normal_length_squared = (closest_normal_x*closest_normal_x) + (closest_normal_y*closest_normal_y);
+
+            // Early out of the radius is shorter than distance to closest point and 
+            // Circle not inside the AABB
+            if(normal_length_squared > collision_circle->radius*collision_circle->radius && !inside){
+                return false;
+            }
+
+            float normal_length = sqrt(normal_length_squared);
+
+            if(inside){
+                *collision_normal_x = -closest_normal_x / normal_length;
+                *collision_normal_y = -closest_normal_y / normal_length;
+            }else{
+                *collision_normal_x = closest_normal_x / normal_length;
+                *collision_normal_y = closest_normal_y / normal_length;
+            }
+            *collision_normal_penetration = collision_circle->radius - normal_length;
+
+            *collision_contact_x = *collision_normal_x * collision_circle->radius + collision_rectangle_pos_x;
+            *collision_contact_y = *collision_normal_y * collision_circle->radius + collision_rectangle_pos_y;
+
+            return true;
         }
     }
 
