@@ -50,8 +50,8 @@ class MyPhysicsNode(Physics2DNode):
 
     def collision(self, collision_contact):
         # print("Collided!")
-        print(collision_contact, end='')
-        print(collision_contact.position.x, collision_contact.position.y, collision_contact.normal.x, collision_contact.normal.y, type(collision_contact.node))
+        # print(collision_contact, end='')
+        # print(collision_contact.position.x, collision_contact.position.y, collision_contact.normal.x, collision_contact.normal.y, type(collision_contact.node))
         contact_circle = Circle2DNode()
         contact_circle.position = collision_contact.position
         # contact_circle.position = self.position
@@ -74,8 +74,8 @@ p2 = MyPhysicsNode()
 p3 = MyPhysicsNode()
 pmiddle = MyPhysicsNode()
 
-c0.width = 30
-c0.height = 30
+c0.width = 10
+c0.height = 10
 c1.width = 30
 c1.height = 30
 c2.width = 30
@@ -97,7 +97,7 @@ p2.add_child(c2)
 p3.add_child(c3)
 pmiddle.add_child(middle)
 
-p0.collision_shape = RectangleCollisionShape2D(30, 30)
+p0.collision_shape = RectangleCollisionShape2D(10, 10)
 p0.position.x = 64-60
 p0.position.y = 64
 p0.velocity.x = 0.75

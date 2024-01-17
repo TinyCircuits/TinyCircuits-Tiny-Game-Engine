@@ -99,16 +99,16 @@ bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, eng
             float normal_y = collision_shape_b_pos_y - collision_shape_a_pos_y;
 
             // Calculate overlap on x axis 
-            float x_overlap = collision_shape_a_half_width + collision_shape_b_half_width - fabsf(normal_x);
+            float x_overlap_length = collision_shape_a_half_width + collision_shape_b_half_width - fabsf(normal_x);
 
             // // SAT test on x axis
-            if(x_overlap > 0){
+            if(x_overlap_length > 0){
                 // Calculate overlap on y axis 
-                float y_overlap = collision_shape_a_half_height + collision_shape_b_half_height - fabsf(normal_y);
+                float y_overlap_length = collision_shape_a_half_height + collision_shape_b_half_height - fabsf(normal_y);
 
                 // SAT test on y axis
-                if(y_overlap > 0){
-                    if(x_overlap > y_overlap){
+                if(y_overlap_length > 0){
+                    if(x_overlap_length > y_overlap_length){
                         if(normal_y < 0){
                             *collision_normal_x = 0.0f;
                             *collision_normal_y = -1.0f;
@@ -118,16 +118,14 @@ bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, eng
                             *collision_normal_y = 1.0f;
                             *collision_contact_y = collision_shape_a_pos_y + collision_shape_a_half_height;
                         }
+                        *collision_normal_penetration = y_overlap_length;
 
-                        // Figure middle of overlapping area position by going to left
-                        // or right edge of the rectangle and subtracting half the overlapping
-                        // length
-                        if(normal_x < 0){
-                            *collision_contact_x = collision_shape_a_pos_x - collision_shape_a_half_width + x_overlap/2;
-                        }else{
-                            *collision_contact_x = collision_shape_a_pos_x + collision_shape_a_half_width - x_overlap/2;
-                        }
-                        *collision_normal_penetration = y_overlap;
+                        // At least in the positive x, clip x at a min and
+                        // max that reflects the actual endpoint positions
+                        // of the overlapping area
+                        float overlap_x_min = fmaxf(collision_shape_a_pos_x-collision_shape_a_half_width, collision_shape_b_pos_x-collision_shape_b_half_width);
+                        float overlap_x_max = fminf(collision_shape_a_pos_x+collision_shape_a_half_width, collision_shape_b_pos_x+collision_shape_b_half_width);
+                        *collision_contact_x = overlap_x_min + fabsf(overlap_x_min - overlap_x_max)/2;
                         return true;
                     }else{
                         if(normal_x < 0){
@@ -139,16 +137,14 @@ bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, eng
                             *collision_normal_y = 0.0f;
                             *collision_contact_x = collision_shape_a_pos_x + collision_shape_a_half_width;
                         }
+                        *collision_normal_penetration = x_overlap_length;
 
-                        // Figure middle of overlapping area position by going to top
-                        // or bottom edge of the rectangle and subtracting half the overlapping
-                        // length
-                        if(normal_y < 0){
-                            *collision_contact_y = collision_shape_a_pos_y - collision_shape_a_half_height + y_overlap/2;
-                        }else{
-                            *collision_contact_y = collision_shape_a_pos_y + collision_shape_a_half_height - y_overlap/2;
-                        }
-                        *collision_normal_penetration = x_overlap;
+                        // At least in the positive y, clip x at a min and
+                        // max that reflects the actual endpoint positions
+                        // of the overlapping area
+                        float overlap_y_min = fmaxf(collision_shape_a_pos_y-collision_shape_a_half_height, collision_shape_b_pos_y-collision_shape_b_half_height);
+                        float overlap_y_max = fminf(collision_shape_a_pos_y+collision_shape_a_half_height, collision_shape_b_pos_y+collision_shape_b_half_height);
+                        *collision_contact_y = overlap_y_min + fabsf(overlap_y_min - overlap_y_max)/2;
                         return true;
                     }
                 }
