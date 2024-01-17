@@ -54,6 +54,7 @@ class MyPhysicsNode(Physics2DNode):
         print(collision_contact.position.x, collision_contact.position.y, collision_contact.normal.x, collision_contact.normal.y, type(collision_contact.node))
         contact_circle = Circle2DNode()
         contact_circle.position = collision_contact.position
+        # contact_circle.position = self.position
         contact_circle.radius = 3
         contact_circle.color = 0b1110101110111111
         # print(dir(collision_contact))
@@ -65,50 +66,67 @@ c0 = Rectangle2DNode()
 c1 = Rectangle2DNode()
 c2 = Rectangle2DNode()
 c3 = Rectangle2DNode()
+middle = Rectangle2DNode()
 
 p0 = MyPhysicsNode()
 p1 = MyPhysicsNode()
 p2 = MyPhysicsNode()
 p3 = MyPhysicsNode()
+pmiddle = MyPhysicsNode()
 
-c0.width = 10
-c0.height = 10
-c1.width = 10
-c1.height = 10
-c2.width = 10
-c2.height = 10
-c3.width = 10
-c3.height = 10
+c0.width = 20
+c0.height = 20
+c1.width = 20
+c1.height = 20
+c2.width = 20
+c2.height = 20
+c3.width = 20
+c3.height = 20
+middle.width = 30
+middle.height = 30
 
 c0.color = 0b1111100000000000
 c1.color = 0b1111111111111111
 c2.color = 0b1111100000011111
 c3.color = 0b1011101110111101
+middle.color = 0b0011011001100110
 
 p0.add_child(c0)
 p1.add_child(c1)
 p2.add_child(c2)
 p3.add_child(c3)
+pmiddle.add_child(middle)
 
-p0.collision_shape = RectangleCollisionShape2D(10, 10)
-p0.position.x = 64-32
+p0.collision_shape = RectangleCollisionShape2D(20, 20)
+p0.position.x = 64-60
 p0.position.y = 64
-p0.velocity.x = 1
+p0.velocity.x = 0.75
+# p0.bounciness = 2
 
-p1.collision_shape = RectangleCollisionShape2D(10, 10)
-p1.position.x = 64+32
+p1.collision_shape = RectangleCollisionShape2D(20, 20)
+p1.position.x = 64+60
 p1.position.y = 64
-p1.velocity.x = -1
+p1.velocity.x = -0.75
+# p1.bounciness = 2
 
-p2.collision_shape = RectangleCollisionShape2D(10, 10)
+p2.collision_shape = RectangleCollisionShape2D(20, 20)
 p2.position.x = 64
-p2.position.y = 64-33
-p2.velocity.y = 1
+p2.position.y = 64-61
+p2.velocity.y = 0.75
+# p2.bounciness = 2
 
-p3.collision_shape = RectangleCollisionShape2D(10, 10)
+p3.collision_shape = RectangleCollisionShape2D(20, 20)
 p3.position.x = 64
-p3.position.y = 64+33
-p3.velocity.y = -1
+p3.position.y = 64+61
+p3.velocity.y = -0.75
+# p3.bounciness = 2
+
+pmiddle.collision_shape = RectangleCollisionShape2D(30, 30)
+pmiddle.position.x = 64
+pmiddle.position.y = 64
+pmiddle.dynamic = False
+# test = Circle2DNode()
+# test.position = p0.position
 
 camera = CameraNode()
 engine.start()

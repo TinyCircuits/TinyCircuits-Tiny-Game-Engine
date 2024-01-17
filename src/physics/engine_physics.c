@@ -88,11 +88,11 @@ bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, eng
             float collision_shape_b_half_width = collision_shape_b->width / 2;
             float collision_shape_b_half_height = collision_shape_b->height / 2;
 
-            float collision_shape_a_pos_x = collision_shape_a->position->x + physics_node_a_position->x - collision_shape_a_half_width;
-            float collision_shape_a_pos_y = collision_shape_a->position->y + physics_node_a_position->y - collision_shape_a_half_height;
+            float collision_shape_a_pos_x = collision_shape_a->position->x + physics_node_a_position->x;
+            float collision_shape_a_pos_y = collision_shape_a->position->y + physics_node_a_position->y;
 
-            float collision_shape_b_pos_x = collision_shape_b->position->x + physics_node_b_position->x - collision_shape_b_half_width;
-            float collision_shape_b_pos_y = collision_shape_b->position->y + physics_node_b_position->y - collision_shape_b_half_height;
+            float collision_shape_b_pos_x = collision_shape_b->position->x + physics_node_b_position->x;
+            float collision_shape_b_pos_y = collision_shape_b->position->y + physics_node_b_position->y;
 
             // Normal vector from A to B
             float normal_x = collision_shape_b_pos_x - collision_shape_a_pos_x;
@@ -112,9 +112,13 @@ bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, eng
                         if(normal_y < 0){
                             *collision_normal_x = 0.0f;
                             *collision_normal_y = -1.0f;
+                            *collision_contact_x = collision_shape_a_pos_x;
+                            *collision_contact_y = collision_shape_a_pos_y - collision_shape_a_half_height;
                         }else{
                             *collision_normal_x = 0.0f;
                             *collision_normal_y = 1.0f;
+                            *collision_contact_x = collision_shape_a_pos_x;
+                            *collision_contact_y = collision_shape_a_pos_y + collision_shape_a_half_height;
                         }
                         *collision_normal_penetration = y_overlap;
                         return true;
@@ -122,15 +126,42 @@ bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, eng
                         if(normal_x < 0){
                             *collision_normal_x = -1.0f;
                             *collision_normal_y = 0.0f;
+                            *collision_contact_x = collision_shape_a_pos_x - collision_shape_a_half_width;
+                            *collision_contact_y = collision_shape_a_pos_y;
                         }else{
-                            *collision_normal_x = 0.0f;
+                            *collision_normal_x = 1.0f;
                             *collision_normal_y = 0.0f;
+                            *collision_contact_x = collision_shape_a_pos_x + collision_shape_a_half_width;
+                            *collision_contact_y = collision_shape_a_pos_y;
                         }
                         *collision_normal_penetration = x_overlap;
                         return true;
                     }
                 }
             }
+        }else if((mp_obj_is_type(collision_shape_obj_a, &rectangle_collision_shape_2d_class_type) &&
+                  mp_obj_is_type(collision_shape_obj_b, &circle_collision_shape_2d_class_type))   ||
+                  mp_obj_is_type(collision_shape_obj_a, &circle_collision_shape_2d_class_type) &&
+                  mp_obj_is_type(collision_shape_obj_b, &rectangle_collision_shape_2d_class_type)){     // Circle vs. Rectangle or Rectangle vs. Circle
+
+            rectangle_collision_shape_2d_class_obj_t *collision_shape_a = collision_shape_obj_a;
+            rectangle_collision_shape_2d_class_obj_t *collision_shape_b = collision_shape_obj_b;
+
+            float collision_shape_a_half_width = collision_shape_a->width / 2;
+            float collision_shape_a_half_height = collision_shape_a->height / 2;
+
+            float collision_shape_b_half_width = collision_shape_b->width / 2;
+            float collision_shape_b_half_height = collision_shape_b->height / 2;
+
+            float collision_shape_a_pos_x = collision_shape_a->position->x + physics_node_a_position->x - collision_shape_a_half_width;
+            float collision_shape_a_pos_y = collision_shape_a->position->y + physics_node_a_position->y - collision_shape_a_half_height;
+
+            float collision_shape_b_pos_x = collision_shape_b->position->x + physics_node_b_position->x - collision_shape_b_half_width;
+            float collision_shape_b_pos_y = collision_shape_b->position->y + physics_node_b_position->y - collision_shape_b_half_height;
+
+            // Normal vector from A to B
+            float normal_x = collision_shape_b_pos_x - collision_shape_a_pos_x;
+            float normal_y = collision_shape_b_pos_y - collision_shape_a_pos_y;
         }
     }
 
