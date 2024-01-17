@@ -28,6 +28,7 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Animated sprites
 [] Physics: no rotation, no friction
 [] Physics: smooth: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-core-engine--gamedev-7493t#:~:text=Here%20is%20a%20full%20example%3A
+[] Camera zoom
 [] Documentation: markdown to PDF
 [] Weird sprite jumping/offset during rotation and scaling
 [] Text
@@ -37,6 +38,7 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [] Pool, tanks
 
 
+[] Turns out that we should only need to do mp_load_attr once into internal struct for each node! During physics, modifying the x and y parameters of the pointers to positions from mp_load_attr really did modify the attrs! Could also just directly create and store then load in each init!!!!!
 [] Test that collisions work correctly (at least the contact points) in each quad of the cord system
 [] Should a flag be set in sprite2dnode to enable transparency? Or just use special color 0b0000100000100001?
 [] VoxelSapce could be rendered faster and need to incorporate node parameters like position and rotation. Implement pixel transformer callbacks

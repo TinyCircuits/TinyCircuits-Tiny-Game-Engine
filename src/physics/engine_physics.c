@@ -227,6 +227,7 @@ bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, eng
             }
             *collision_normal_penetration = collision_circle->radius - normal_length;
 
+            // Why use the collision_rectangle_pos? Probably why sometimes why contact point ends up inside
             *collision_contact_x = *collision_normal_x * collision_circle->radius + collision_rectangle_pos_x;
             *collision_contact_y = *collision_normal_y * collision_circle->radius + collision_rectangle_pos_y;
 
@@ -358,11 +359,11 @@ void engine_physics_tick(){
                     // it is found to be colliding means it should move some more. This will
                     // result in lots of collision callbacks, should move the dynamic object the
                     // full amount if there's a static object: TODO
-                    if(physics_node_a_dynamic) mp_store_attr(physics_node_base_a->attr_accessor, MP_QSTR_position, physics_node_a_position);
-                    if(physics_node_b_dynamic) mp_store_attr(physics_node_base_b->attr_accessor, MP_QSTR_position, physics_node_b_position);
+                    // if(physics_node_a_dynamic) mp_store_attr(physics_node_base_a->attr_accessor, MP_QSTR_position, physics_node_a_position);
+                    // if(physics_node_b_dynamic) mp_store_attr(physics_node_base_b->attr_accessor, MP_QSTR_position, physics_node_b_position);
 
-                    if(physics_node_a_dynamic) mp_store_attr(physics_node_base_a->attr_accessor, MP_QSTR_velocity, physics_node_a_velocity);
-                    if(physics_node_b_dynamic) mp_store_attr(physics_node_base_b->attr_accessor, MP_QSTR_velocity, physics_node_b_velocity);
+                    // if(physics_node_a_dynamic) mp_store_attr(physics_node_base_a->attr_accessor, MP_QSTR_velocity, physics_node_a_velocity);
+                    // if(physics_node_b_dynamic) mp_store_attr(physics_node_base_b->attr_accessor, MP_QSTR_velocity, physics_node_b_velocity);
 
 
                     collision_contact_data[0] = mp_obj_new_float(collision_contact_x);

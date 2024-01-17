@@ -63,9 +63,9 @@ class MyPhysicsNode(Physics2DNode):
         # print("TEST")
 
 c0 = Circle2DNode()
-c1 = Rectangle2DNode()
-c2 = Rectangle2DNode()
-c3 = Rectangle2DNode()
+c1 = Circle2DNode()
+c2 = Circle2DNode()
+c3 = Circle2DNode()
 middle = Rectangle2DNode()
 
 p0 = MyPhysicsNode()
@@ -75,12 +75,9 @@ p3 = MyPhysicsNode()
 pmiddle = MyPhysicsNode()
 
 c0.radius = 10
-c1.width = 30
-c1.height = 30
-c2.width = 30
-c2.height = 30
-c3.width = 30
-c3.height = 30
+c1.radius = 10
+c2.radius = 10
+c3.radius = 10
 middle.width = 40
 middle.height = 40
 
@@ -99,27 +96,27 @@ pmiddle.add_child(middle)
 p0.collision_shape = CircleCollisionShape2D(10)
 p0.position.x = 64-60
 p0.position.y = 64+40
-p0.velocity.x = 0.75
-p0.velocity.y = -0.75
+p0.velocity.x = 0.75*2
+p0.velocity.y = -0.75*2
 p0.bounciness = 2
 
-p1.collision_shape = RectangleCollisionShape2D(30, 30)
+p1.collision_shape = CircleCollisionShape2D(10)
 p1.position.x = 64+60
 p1.position.y = 64
 p1.velocity.x = -0.75
-# p1.bounciness = 2
+p1.bounciness = 2
 
-p2.collision_shape = RectangleCollisionShape2D(30, 30)
+p2.collision_shape = CircleCollisionShape2D(10)
 p2.position.x = 64
 p2.position.y = 64-61
-# p2.velocity.y = 0.75
-# p2.bounciness = 2
+p2.velocity.y = 0.75
+p2.bounciness = 2
 
-p3.collision_shape = RectangleCollisionShape2D(30, 30)
+p3.collision_shape = CircleCollisionShape2D(10)
 p3.position.x = 64
 p3.position.y = 64+61
-# p3.velocity.y = -0.75
-# p3.bounciness = 2
+p3.velocity.y = -0.75
+p3.bounciness = 2
 
 pmiddle.collision_shape = RectangleCollisionShape2D(40, 40)
 pmiddle.position.x = 64
