@@ -227,9 +227,14 @@ bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, eng
             }
             *collision_normal_penetration = collision_circle->radius - normal_length;
 
-            // Why use the collision_rectangle_pos? Probably why sometimes why contact point ends up inside
-            *collision_contact_x = *collision_normal_x * collision_circle->radius + collision_rectangle_pos_x;
-            *collision_contact_y = *collision_normal_y * collision_circle->radius + collision_rectangle_pos_y;
+            // Figure out collision point, seems to be working
+            if(mp_obj_is_type(collision_shape_obj_a, &rectangle_collision_shape_2d_class_type)){
+                *collision_contact_x = -(*collision_normal_x) * collision_circle->radius + collision_circle_pos_x;
+                *collision_contact_y = -(*collision_normal_y) * collision_circle->radius + collision_circle_pos_y;
+            }else{
+                *collision_contact_x = *collision_normal_x * collision_circle->radius + collision_rectangle_pos_x;
+                *collision_contact_y = *collision_normal_y * collision_circle->radius + collision_rectangle_pos_y;
+            }
 
             return true;
         }
