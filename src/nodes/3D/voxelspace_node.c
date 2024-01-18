@@ -39,7 +39,7 @@ STATIC mp_obj_t voxelspace_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
     texture_resource_class_obj_t *heightmap = mp_load_attr(voxelspace_node_base->attr_accessor, MP_QSTR_heightmap_resource);
 
     // vector3_class_obj_t *voxelspace_rotation = mp_load_attr(voxelspace_node_base->attr_accessor, MP_QSTR_rotation);
-    // vector3_class_obj_t *voxelspace_position = mp_load_attr(voxelspace_node_base->attr_accessor, MP_QSTR_position);
+    vector3_class_obj_t *voxelspace_position = mp_load_attr(voxelspace_node_base->attr_accessor, MP_QSTR_position);
 
     vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
     vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
@@ -64,8 +64,8 @@ STATIC mp_obj_t voxelspace_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
         float dx = (pright_x - pleft_x) / SCREEN_WIDTH;
         float dy = (pright_y - pleft_y) / SCREEN_WIDTH;
 
-        pleft_x += camera_position->x;
-        pleft_y += camera_position->z;
+        pleft_x += camera_position->x + voxelspace_position->x;
+        pleft_y += camera_position->z + voxelspace_position->y;
 
         for(uint8_t i=0; i<SCREEN_WIDTH; i++){
             int32_t x = pleft_x;

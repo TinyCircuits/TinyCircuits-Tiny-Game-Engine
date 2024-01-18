@@ -74,7 +74,6 @@ STATIC mp_obj_t engine_tick(){
         engine_physics_tick();
     }
 
-
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_0(engine_tick_obj, engine_tick);

@@ -21,6 +21,7 @@ C18W = TextureResource("C14W.bmp")
 D18 = TextureResource("D14.bmp")
 
 vox = VoxelSpaceNode(C18W, D18)
+vox.position.x = 150/2
 
 class MyCam(CameraNode):
     def __init__(self):
