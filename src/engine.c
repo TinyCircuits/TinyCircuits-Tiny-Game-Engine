@@ -16,7 +16,7 @@
 // Flag to indicate that the main engine.start() loop is running. Set
 // false to stop the engine after the current loop/tick ends
 bool is_engine_looping = false;
-float engine_fps_limit_period_ms = 16.666667f;
+float engine_fps_limit_period_ms = 0.0f;
 float engine_fps_time_at_last_tick_ms = 0.0f;
 float engine_fps_time_at_before_last_tick_ms = 0.0f;
 
@@ -64,7 +64,6 @@ STATIC mp_obj_t engine_tick(){
 
         // After every game cycle send the current active screen buffer to the display
         engine_display_send();
-
 
         // Now that all the node callbacks were called and potentially moved
         // physics nodes around, step the physics engine another tick.

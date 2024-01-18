@@ -2,7 +2,8 @@
 #include <stddef.h>
 
 #ifdef __unix__
-    #include <sys/time.h>
+    #include <time.h>
+    struct timespec tp;
 #else
     // Last paragraph on page 9: https://datasheets.raspberrypi.com/pico/raspberry-pi-pico-c-sdk.pdf
     #include "pico/stdlib.h"
@@ -46,11 +47,10 @@
 
 uint32_t millis(){
     #ifdef __unix__
-        // https://stackoverflow.com/questions/3756323/how-to-get-the-current-time-in-milliseconds-from-c-in-linux
-        struct timeval te;
-        gettimeofday(&te, NULL);
-        uint32_t milliseconds = te.tv_sec*1000LL + te.tv_usec/1000;
-        return milliseconds;
+        // https://stackoverflow.com/a/63140531
+        // Slow? https://github.com/microsoft/WSL/issues/3697#issuecomment-457767554
+        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &tp);
+        return tp.tv_sec * 1000 + tp.tv_nsec / 1000000;
     #else
         // https://forums.raspberrypi.com/viewtopic.php?p=1817771&sid=94dff9d898f94703c9600e5378c19561#p1817771
         // https://www.raspberrypi.com/documentation/pico-sdk/high_level.html#rpip44f7b6a2c93b1f2927cd
