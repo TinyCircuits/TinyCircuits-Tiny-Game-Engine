@@ -4,9 +4,12 @@
 #include "nodes/2d/physics_2d_node.h"
 #include "utility/linked_list.h"
 #include "nodes/node_base.h"
+#include "math/vector2.h"
 
 float engine_physics_fps_limit_period_ms;
 float engine_physics_fps_time_at_last_tick_ms;
+float engine_physics_gravity_x;
+float engine_physics_gravity_y;
 
 void engine_physics_tick();
 

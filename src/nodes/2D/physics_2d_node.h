@@ -14,6 +14,7 @@ typedef struct{
     mp_obj_t collision_shape;       // Shape definition
     mp_obj_t bounciness;            // Restitution or elasticity
     mp_obj_t dynamic;               // Flag indicating if node is dynamic and moving around due to physics or static
+    mp_obj_t gravity_scale;         // Vector2 allowing scaling affects of gravity. Set to 0,0 for no gravity
     // mp_obj_t acceleration;          // Vector2 (Reference acceleration)
     // mp_obj_t angular_velocity;    // float (Angular velocity)
     // mp_obj_t i_mass;              // float (inverse mass)

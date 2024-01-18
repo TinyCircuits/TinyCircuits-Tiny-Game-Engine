@@ -16,6 +16,23 @@ STATIC mp_obj_t engine_set_physics_fps_limit(mp_obj_t fps){
 MP_DEFINE_CONST_FUN_OBJ_1(engine_set_physics_fps_limit_obj, engine_set_physics_fps_limit);
 
 
+// Could add another method that takes a vector2 to set gravity, just this for now
+STATIC mp_obj_t engine_set_physics_set_gravity(mp_obj_t x, mp_obj_t y){
+    ENGINE_INFO_PRINTF("EnginePhysics: Setting gravity");
+    engine_physics_gravity_x = mp_obj_get_float(x);
+    engine_physics_gravity_y = mp_obj_get_float(y);
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_2(engine_set_physics_set_gravity_obj, engine_set_physics_set_gravity);
+
+
+STATIC mp_obj_t engine_set_physics_get_gravity(){
+    ENGINE_INFO_PRINTF("EnginePhysics: Getting gravity");
+    return vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(engine_physics_gravity_x), mp_obj_new_float(engine_physics_gravity_y)});
+}
+MP_DEFINE_CONST_FUN_OBJ_0(engine_set_physics_get_gravity_obj, engine_set_physics_get_gravity);
+
+
 // Module attributes
 STATIC const mp_rom_map_elem_t engine_physics_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_physics) },
@@ -23,6 +40,8 @@ STATIC const mp_rom_map_elem_t engine_physics_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_RectangleCollisionShape2D), (mp_obj_t)&rectangle_collision_shape_2d_class_type},
     { MP_OBJ_NEW_QSTR(MP_QSTR_CollisionContact2D), (mp_obj_t)&collision_contact_2d_class_type},
     { MP_OBJ_NEW_QSTR(MP_QSTR_set_physics_fps_limit), (mp_obj_t)&engine_set_physics_fps_limit_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_set_gravity), (mp_obj_t)&engine_set_physics_set_gravity_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_get_gravity), (mp_obj_t)&engine_set_physics_get_gravity_obj },
 };
 
 // Module init

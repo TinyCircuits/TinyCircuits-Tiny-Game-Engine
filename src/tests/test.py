@@ -105,6 +105,8 @@ p1.position.x = 64+60
 p1.position.y = 64
 p1.velocity.x = -0.75
 # p1.bounciness = 2
+# p1.gravity_scale.x = 0
+# p1.gravity_scale.y = 0
 
 p2.collision_shape = CircleCollisionShape2D(10)
 p2.position.x = 64

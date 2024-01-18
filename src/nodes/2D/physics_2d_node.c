@@ -79,6 +79,7 @@ mp_obj_t physics_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
         physics_2d_node->collision_shape = mp_const_none;
         physics_2d_node->bounciness = mp_obj_new_float(0.0f);
         physics_2d_node->dynamic = mp_obj_new_int(1);
+        physics_2d_node->gravity_scale = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)});
     }else if(n_args == 1){  // Inherited (use existing object)
         node_base->inherited = true;
         node_base->node = args[0];
@@ -114,6 +115,7 @@ mp_obj_t physics_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
         mp_store_attr(node_base->node, MP_QSTR_collision_shape, mp_const_none);
         mp_store_attr(node_base->node, MP_QSTR_bounciness, mp_obj_new_float(0.0f));
         mp_store_attr(node_base->node, MP_QSTR_dynamic, mp_obj_new_int(1));
+        mp_store_attr(node_base->node, MP_QSTR_gravity_scale, vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)}));
     }else{
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Too many arguments passed to Physics2DNode constructor!"));
     }
@@ -188,6 +190,9 @@ STATIC void physics_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
             case MP_QSTR_dynamic:
                 destination[0] = self->dynamic;
             break;
+            case MP_QSTR_gravity_scale:
+                destination[0] = self->gravity_scale;
+            break;
             default:
                 return; // Fail
         }
@@ -213,6 +218,9 @@ STATIC void physics_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
             break;
             case MP_QSTR_dynamic:
                 self->dynamic = destination[1];
+            break;
+            case MP_QSTR_gravity_scale:
+                self->gravity_scale = destination[1];
             break;
             default:
                 return; // Fail

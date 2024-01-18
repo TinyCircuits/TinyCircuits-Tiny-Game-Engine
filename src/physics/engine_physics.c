@@ -9,14 +9,11 @@
 #include "collision_contact_2d.h"
 
 linked_list engine_physics_nodes;
-float gravity_x = 0.0f;
-float gravity_y = -0.00981f;
+float engine_physics_gravity_x = 0.0f;
+float engine_physics_gravity_y = -0.00981f;
 
 float engine_physics_fps_limit_period_ms = 33.333f;
 float engine_physics_fps_time_at_last_tick_ms = 0.0f;
-
-
-
 
 
 bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, engine_node_base_t *physics_node_base_b, float *collision_normal_x, float *collision_normal_y, float *collision_contact_x, float *collision_contact_y, float *collision_normal_penetration){
@@ -409,10 +406,12 @@ void engine_physics_tick(){
         bool physics_node_dynamic = mp_obj_get_int(mp_load_attr(physics_node_base->attr_accessor, MP_QSTR_dynamic));
 
         if(physics_node_dynamic){
+            vector2_class_obj_t *physics_node_gravity_scale = mp_load_attr(physics_node_base->attr_accessor, MP_QSTR_gravity_scale);
+
             // Modifying these directly is good enough, don't need mp_store_attr even if using classes at main level!
             vector2_class_obj_t *physics_node_velocity = mp_load_attr(physics_node_base->attr_accessor, MP_QSTR_velocity);
-            // physics_node_velocity->x -= gravity_x;
-            // physics_node_velocity->y -= gravity_y;
+            physics_node_velocity->x -= engine_physics_gravity_x * physics_node_gravity_scale->x;
+            physics_node_velocity->y -= engine_physics_gravity_y * physics_node_gravity_scale->y;
 
             vector2_class_obj_t *physics_node_position = mp_load_attr(physics_node_base->attr_accessor, MP_QSTR_position);
 
