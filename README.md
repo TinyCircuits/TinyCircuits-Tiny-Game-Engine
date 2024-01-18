@@ -26,16 +26,30 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Fix BMPs loading vertically flipped
 [X] Fix child objects rotating opposite about the parent object (occurred after fixing incorrect parent rotation)
 [X] Animated sprites
-[] Physics: no rotation, no friction
+[] Physics: Acceleration
+[] Physics: just polygons, rotation (simple init for common shapes), no friction
 [] Physics: smooth: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-core-engine--gamedev-7493t#:~:text=Here%20is%20a%20full%20example%3A
+[] Web runner
+[] Outline drawing for rects, circles, and polygons?
+[] Static nodes/screen space
 [] Camera zoom
 [] Documentation: markdown to PDF
 [] Weird sprite jumping/offset during rotation and scaling
 [] Text
 [] Audio/Music
 [] UI
+[] Reset
 [] Performance, we'll see how it goes
-[] Pool, tanks
+
+
+Game ideas
+[] ATV Gameboy game
+[] Racing, blimp
+[] Pool
+[] Tanks
+[] Platformer
+[] Golf
+[] Rocketcup
 
 
 [] Turns out that we should only need to do mp_load_attr once into internal struct for each node! During physics, modifying the x and y parameters of the pointers to positions from mp_load_attr really did modify the attrs! Could also just directly create and store then load in each init!!!!! See Reference commit for attr loading... commit and look at commented out lines in engine_physics.c related to storing attrs that's not needed!

@@ -17,11 +17,11 @@ engine_debug.debug_enable_setting(engine_debug.debug_setting_performance)
 engine_draw.set_background_color(engine_draw.skyblue)
 
 
-C18W = TextureResource("C14W.bmp")
-D18 = TextureResource("D14.bmp")
+C18W = TextureResource("C1W.bmp")
+D18 = TextureResource("D1.bmp")
 
 vox = VoxelSpaceNode(C18W, D18)
-vox.position.x = 150/2
+# vox.position.x = 150/2
 
 class MyCam(CameraNode):
     def __init__(self):

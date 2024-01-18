@@ -12,6 +12,11 @@
 #include "engine_cameras.h"
 #include "draw/engine_display_draw.h"
 
+#include <string.h>
+
+
+uint8_t height_buffer[SCREEN_WIDTH];
+
 
 // Class required functions
 STATIC void voxelspace_node_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
@@ -45,27 +50,31 @@ STATIC mp_obj_t voxelspace_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
     vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
     // rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
 
+
     const float view_horizon = 45.0f;
     const float scale_height = 30.0f;
-    const float view_distance = 24.0f;
+    const float view_distance = 128.0f;
 
-    float sinang = sin(camera_rotation->y);
-    float cosang = cos(camera_rotation->y);
+    float sinphi = sin(camera_rotation->y);
+    float cosphi = cos(camera_rotation->y);
 
-    float z = view_distance;
+    memset(height_buffer, SCREEN_HEIGHT, SCREEN_WIDTH);
 
-    while(z > 0.0f){
-        float pleft_x = -sinang * z - cosang * z;
-        float pleft_y =  cosang * z - sinang * z;
+    float dz = 1.0f;
+    float z = 1.0f;
 
-        float pright_x =  sinang * z - cosang * z;
-        float pright_y = -cosang * z - sinang * z;
+    while(z < view_distance){
+        float pleft_x = -sinphi * z - cosphi * z;
+        float pleft_y =  cosphi * z - sinphi * z;
+
+        float pright_x =  sinphi * z - cosphi * z;
+        float pright_y = -cosphi * z - sinphi * z;
 
         float dx = (pright_x - pleft_x) / SCREEN_WIDTH;
         float dy = (pright_y - pleft_y) / SCREEN_WIDTH;
 
         pleft_x += camera_position->x + voxelspace_position->x;
-        pleft_y += camera_position->z + voxelspace_position->y;
+        pleft_y += camera_position->z + voxelspace_position->y; 
 
         for(uint8_t i=0; i<SCREEN_WIDTH; i++){
             int32_t x = pleft_x;
@@ -79,22 +88,28 @@ STATIC mp_obj_t voxelspace_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
                 altitude += (heightmap->data[index] >> 5) & 0b00111111;
                 altitude += (heightmap->data[index] >> 11) & 0b00011111;
 
+                // Use camera_rotation for on x-axis for pitch (head going in up/down in 'yes' motion)
                 uint16_t height_on_screen = (camera_position->y - altitude) / z * scale_height + (view_horizon + camera_rotation->x);
 
                 if(height_on_screen < SCREEN_HEIGHT){
                     uint8_t ipx = height_on_screen;
-                    while(ipx < SCREEN_HEIGHT){
+                    while(ipx < height_buffer[i]){
                         engine_draw_pixel(texture->data[index], i, ipx);
                         ipx++;
                     }
                 }
-            }
 
-            pleft_x += dx;
-            pleft_y += dy;
+                if(height_on_screen < height_buffer[i]){
+                    height_buffer[i] = height_on_screen;
+                }
+
+                pleft_x += dx;
+                pleft_y += dy;
+            }
         }
 
-        z -= 1.0f;
+        z += dz;
+        dz += 0.1f;
     }
 
     return mp_const_none;
