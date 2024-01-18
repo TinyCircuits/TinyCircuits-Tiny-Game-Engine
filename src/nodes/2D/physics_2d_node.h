@@ -10,19 +10,17 @@ typedef struct{
     mp_obj_t position;              // Vector2: 2d xy position of this node
     mp_obj_t rotation;              // float (Current rotation angle)
     mp_obj_t velocity;              // Vector2 (Absolute velocity)
+    mp_obj_t acceleration;          // Vector2
     mp_obj_t mass;                  // How heavy the node is
     mp_obj_t collision_shape;       // Shape definition
     mp_obj_t bounciness;            // Restitution or elasticity
     mp_obj_t dynamic;               // Flag indicating if node is dynamic and moving around due to physics or static
     mp_obj_t gravity_scale;         // Vector2 allowing scaling affects of gravity. Set to 0,0 for no gravity
-    // mp_obj_t acceleration;          // Vector2 (Reference acceleration)
     // mp_obj_t angular_velocity;    // float (Angular velocity)
     // mp_obj_t i_mass;              // float (inverse mass)
     // mp_obj_t i_I;            // float (inverse inertia tensor)
     // mp_obj_t restitution;         // float (restitution coefficient)
     // mp_obj_t friction;         // float (simple friction coefficient)
-    // mp_obj_t dynamic;               // bool
-    // mp_obj_t physics_shape;         // Shape definition
 }engine_physics_2d_node_class_obj_t;
 
 typedef struct{

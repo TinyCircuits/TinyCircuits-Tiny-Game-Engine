@@ -406,15 +406,21 @@ void engine_physics_tick(){
         bool physics_node_dynamic = mp_obj_get_int(mp_load_attr(physics_node_base->attr_accessor, MP_QSTR_dynamic));
 
         if(physics_node_dynamic){
+            vector2_class_obj_t *physics_node_acceleration = mp_load_attr(physics_node_base->attr_accessor, MP_QSTR_acceleration);
+            vector2_class_obj_t *physics_node_velocity = mp_load_attr(physics_node_base->attr_accessor, MP_QSTR_velocity);
+            vector2_class_obj_t *physics_node_position = mp_load_attr(physics_node_base->attr_accessor, MP_QSTR_position);
             vector2_class_obj_t *physics_node_gravity_scale = mp_load_attr(physics_node_base->attr_accessor, MP_QSTR_gravity_scale);
 
             // Modifying these directly is good enough, don't need mp_store_attr even if using classes at main level!
-            vector2_class_obj_t *physics_node_velocity = mp_load_attr(physics_node_base->attr_accessor, MP_QSTR_velocity);
+            // Apply the user defined acceleration
+            physics_node_velocity->x += physics_node_acceleration->x;
+            physics_node_velocity->y += physics_node_acceleration->y;
+
+            // Apply engine gravity (can be modifed by the user)
             physics_node_velocity->x -= engine_physics_gravity_x * physics_node_gravity_scale->x;
             physics_node_velocity->y -= engine_physics_gravity_y * physics_node_gravity_scale->y;
 
-            vector2_class_obj_t *physics_node_position = mp_load_attr(physics_node_base->attr_accessor, MP_QSTR_position);
-
+            // Apply velocity to the position
             physics_node_position->x += physics_node_velocity->x;
             physics_node_position->y += physics_node_velocity->y;
         }

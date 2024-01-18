@@ -75,6 +75,7 @@ mp_obj_t physics_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
         physics_2d_node->position = vector2_class_new(&vector2_class_type, 0, 0, NULL);
         physics_2d_node->rotation = mp_obj_new_float(0.0);
         physics_2d_node->velocity = vector2_class_new(&vector2_class_type, 0, 0, NULL);
+        physics_2d_node->acceleration = vector2_class_new(&vector2_class_type, 0, 0, NULL);
         physics_2d_node->mass = mp_obj_new_float(1.0f);
         physics_2d_node->collision_shape = mp_const_none;
         physics_2d_node->bounciness = mp_obj_new_float(0.0f);
@@ -111,6 +112,7 @@ mp_obj_t physics_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
         mp_store_attr(node_base->node, MP_QSTR_position, vector2_class_new(&vector2_class_type, 0, 0, NULL));
         mp_store_attr(node_base->node, MP_QSTR_rotation, mp_obj_new_float(0.0f));
         mp_store_attr(node_base->node, MP_QSTR_velocity, vector2_class_new(&vector2_class_type, 0, 0, NULL));
+        mp_store_attr(node_base->node, MP_QSTR_acceleration, vector2_class_new(&vector2_class_type, 0, 0, NULL));
         mp_store_attr(node_base->node, MP_QSTR_mass, mp_obj_new_float(1.0f));
         mp_store_attr(node_base->node, MP_QSTR_collision_shape, mp_const_none);
         mp_store_attr(node_base->node, MP_QSTR_bounciness, mp_obj_new_float(0.0f));
@@ -178,6 +180,9 @@ STATIC void physics_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
             case MP_QSTR_velocity:
                 destination[0] = self->velocity;
             break;
+            case MP_QSTR_acceleration:
+                destination[0] = self->acceleration;
+            break;
             case MP_QSTR_mass:
                 destination[0] = self->mass;
             break;
@@ -206,6 +211,9 @@ STATIC void physics_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
             break;
             case MP_QSTR_velocity:
                 self->velocity = destination[1];
+            break;
+            case MP_QSTR_acceleration:
+                self->acceleration = destination[1];
             break;
             case MP_QSTR_mass:
                 self->mass = destination[1];
