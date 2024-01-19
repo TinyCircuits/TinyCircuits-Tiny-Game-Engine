@@ -42,8 +42,8 @@ bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, eng
 
             // Distances without sqrts
             float normal_length_squared = (normal_x*normal_x) + (normal_y*normal_y);
-            float distance_between_squared = collision_shape_a->radius + collision_shape_b->radius;
-            distance_between_squared *= distance_between_squared;
+            float full_radius = collision_shape_a->radius + collision_shape_b->radius;
+            float distance_between_squared = full_radius * full_radius;
 
             // If true, not colliding and should stop here
             if(normal_length_squared > distance_between_squared){
@@ -69,7 +69,7 @@ bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, eng
                 *collision_contact_x = *collision_normal_x * collision_shape_a->radius + collision_shape_a_pos_x;
                 *collision_contact_y = *collision_normal_y * collision_shape_a->radius + collision_shape_a_pos_y;
 
-                *collision_normal_penetration = distance_between_squared - distance_between;
+                *collision_normal_penetration = full_radius - distance_between;
             }
 
             return true;

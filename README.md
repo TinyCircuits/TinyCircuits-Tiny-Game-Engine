@@ -26,7 +26,7 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Fix BMPs loading vertically flipped
 [X] Fix child objects rotating opposite about the parent object (occurred after fixing incorrect parent rotation)
 [X] Animated sprites
-[] Physics: Acceleration
+[X] Physics: Acceleration
 [] Physics: just polygons, rotation (simple init for common shapes), no friction
 [] Physics: smooth: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-core-engine--gamedev-7493t#:~:text=Here%20is%20a%20full%20example%3A
 [] Web runner
