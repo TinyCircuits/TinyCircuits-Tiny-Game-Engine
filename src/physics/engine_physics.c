@@ -15,55 +15,31 @@ linked_list engine_physics_nodes;
 float engine_physics_gravity_x = 0.0f;
 float engine_physics_gravity_y = -0.00981f;
 
-float engine_physics_fps_limit_period_ms = 33.333f;
+float engine_physics_fps_limit_period_ms = 16.667f;
 float engine_physics_fps_time_at_last_tick_ms = 0.0f;
 
 
-// The extreme point along a direction within a polygon 
-void get_support(vector2_class_obj_t *vertices, uint16_t vertex_count, float direction_x, float direction_y, float *best_vertex_x, float *best_vertex_y){
-    float best_projection = -FLT_MAX;
-    for(uint16_t i = 0; i < vertex_count; ++i){
-        float projection = engine_math_dot_product(vertices[i].x, vertices[i].y, direction_x, direction_y);
-        if(projection > best_projection){
-            *best_vertex_x = vertices[i].x;
-            *best_vertex_y = vertices[i].y;
-            best_projection = projection;
+// https://textbooks.cs.ksu.edu/cis580/04-collisions/04-separating-axis-theorem/index.html#:~:text=A%20helper%20method%20to%20do%20this%20might%20be%3A
+void engine_physics_find_min_max_projection(float position_x, float position_y, vector2_class_obj_t *vertices, uint16_t vertex_count, float axis_x, float axis_y, float *min, float *max){
+    float projection = engine_math_dot_product(position_x+vertices[0].x, position_y+vertices[0].y, axis_x, axis_y);
+    *min = projection;
+    *max = projection;
+
+    for(uint16_t ivx=1; ivx<vertex_count; ivx++){
+        projection = engine_math_dot_product(position_x+vertices[ivx].x, position_y+vertices[ivx].y, axis_x, axis_y);
+        
+        if(*min < projection){
+            *min = *min;
+        }else{
+            *min = projection;
+        }
+
+        if(*max > projection){
+            *max = *max;
+        }else{
+            *max = projection;
         }
     }
-}
-
-
-// https://github.com/RandyGaul/ImpulseEngine/blob/8d5f4d9113876f91a53cfb967879406e975263d1/Collision.cpp#L167C51-L167C64
-float find_axis_least_penetration(uint16_t *face_index, polygon_collision_shape_2d_class_obj_t *polygon_shape_a, polygon_collision_shape_2d_class_obj_t *polygon_shape_b){
-    float best_distance = -FLT_MAX;
-    uint32_t best_index;
-
-    for(uint16_t ivx=0; ivx<polygon_shape_a->vertices->len; ++ivx){
-        // Retrieve a face normal from A
-        float normal_x = ((vector2_class_obj_t*)polygon_shape_a->normals->items[ivx])->x;
-        float normal_y = ((vector2_class_obj_t*)polygon_shape_a->normals->items[ivx])->y;
-
-        // Retrieve support point from B along -n
-        float support_x = 0.0f;
-        float support_y = 0.0f;
-        get_support(polygon_shape_a->vertices->items, polygon_shape_a->vertices->len, normal_x, normal_y, &support_x, &support_y);
-
-        // Retrieve vertex on face from A, transform into 
-        // B's model space
-        float vertex_x = ((vector2_class_obj_t*)polygon_shape_a->vertices->items[ivx])->x;
-        float vertex_y = ((vector2_class_obj_t*)polygon_shape_a->vertices->items[ivx])->y;
-
-        // Compute penetration distance (in B's model space) 
-        float penetration_distance =  engine_math_dot_product(normal_x, normal_y, support_x-vertex_x, support_y-vertex_y);
-
-        if(penetration_distance > best_distance){
-            best_distance = penetration_distance;
-            best_index = ivx;
-        }
-    }
-
-    *face_index = best_index;
-    return best_distance;
 }
 
 
@@ -289,6 +265,63 @@ bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, eng
                  mp_obj_is_type(collision_shape_obj_b, &polygon_collision_shape_2d_class_type)){    // Polygon vs. Polygon: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-oriented-rigid-bodies--gamedev-8032t
             polygon_collision_shape_2d_class_obj_t *polygon_shape_a = collision_shape_obj_a;
             polygon_collision_shape_2d_class_obj_t *polygon_shape_b = collision_shape_obj_b;
+
+            float collision_shape_a_pos_x = polygon_shape_a->position->x + physics_node_a_position->x;
+            float collision_shape_a_pos_y = polygon_shape_a->position->y + physics_node_a_position->y;
+
+            float collision_shape_b_pos_x = polygon_shape_b->position->x + physics_node_b_position->x;
+            float collision_shape_b_pos_y = polygon_shape_b->position->y + physics_node_b_position->y;
+
+            float axis_x = 0.0f;
+            float axis_y = 0.0f;
+            float min0 = 0.0f;
+            float max0 = 0.0f;
+            float min1 = 0.0f;
+            float max1 = 0.0f;
+            *collision_normal_penetration = FLT_MAX;
+
+            // https://textbooks.cs.ksu.edu/cis580/04-collisions/04-separating-axis-theorem/index.html#:~:text=it%20would%20look%20like%20something%20like%20this%3A
+            for(uint16_t inx=0; inx<polygon_shape_a->normals->len; inx++){
+                axis_x = ((vector2_class_obj_t*)polygon_shape_a->normals->items[inx])->x;
+                axis_y = ((vector2_class_obj_t*)polygon_shape_a->normals->items[inx])->y;
+                engine_physics_find_min_max_projection(collision_shape_a_pos_x, collision_shape_a_pos_y, polygon_shape_a->vertices->items, polygon_shape_a->vertices->len, axis_x, axis_y, &min0, &max0);
+                engine_physics_find_min_max_projection(collision_shape_b_pos_x, collision_shape_b_pos_y, polygon_shape_b->vertices->items, polygon_shape_b->vertices->len, axis_x, axis_y, &min1, &max1);
+
+                if(max0 < min1 || max1 < min0){
+                    // No collision
+                    return false;
+                }else{
+                    // https://dyn4j.org/2010/01/sat/#:~:text=MTV%20when%20the-,shapes%20intersect.,-1%0A2%0A3
+                    float overlap = fabsf(fminf(max0, max1) - fmaxf(min0, min1));
+                    if(overlap < *collision_normal_penetration){
+                        *collision_normal_penetration = overlap;
+                        *collision_normal_x = axis_x;
+                        *collision_normal_y = axis_y;
+                    }
+                }
+            }
+            for(uint16_t inx=0; inx<polygon_shape_b->normals->len; inx++){
+                axis_x = ((vector2_class_obj_t*)polygon_shape_b->normals->items[inx])->x;
+                axis_y = ((vector2_class_obj_t*)polygon_shape_b->normals->items[inx])->y;
+                engine_physics_find_min_max_projection(collision_shape_a_pos_x, collision_shape_a_pos_y, polygon_shape_a->vertices->items, polygon_shape_a->vertices->len, axis_x, axis_y, &min0, &max0);
+                engine_physics_find_min_max_projection(collision_shape_b_pos_x, collision_shape_b_pos_y, polygon_shape_b->vertices->items, polygon_shape_b->vertices->len, axis_x, axis_y, &min1, &max1);
+
+                if(max0 < min1 || max1 < min0){
+                    // No collision
+                    return false;
+                }else{
+                    // https://dyn4j.org/2010/01/sat/#:~:text=MTV%20when%20the-,shapes%20intersect.,-1%0A2%0A3
+                    float overlap = fabsf(fminf(max0, max1) - fmaxf(min0, min1));
+                    if(overlap < *collision_normal_penetration){
+                        *collision_normal_penetration = overlap;
+                        *collision_normal_x = axis_x;
+                        *collision_normal_y = axis_y;
+                    }
+                }
+            }
+
+            // ENGINE_FORCE_PRINTF("%.03f %.03f %.03f", *collision_contact_x, *collision_contact_y, *collision_normal_penetration);
+            return true;
         }
     }
 

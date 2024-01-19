@@ -14,17 +14,17 @@ engine_physics.set_physics_fps_limit(60)
 
 
 poly0 = Polygon2DNode()
-poly0.vertices.append(Vector2(-7, -7))
-poly0.vertices.append(Vector2(10, -5))
+poly0.vertices.append(Vector2(-5, -5))
+poly0.vertices.append(Vector2(5, -5))
 poly0.vertices.append(Vector2(5, 5))
-poly0.vertices.append(Vector2(-15, 9))
+poly0.vertices.append(Vector2(-5, 5))
 poly0.color = 0b1111100000011111
 
 poly1 = Polygon2DNode()
-poly1.vertices.append(Vector2(-8, -11))
+poly1.vertices.append(Vector2(-5, -5))
 poly1.vertices.append(Vector2(5, -5))
-poly1.vertices.append(Vector2(7, 9))
-poly1.vertices.append(Vector2(-6, 5))
+poly1.vertices.append(Vector2(5, 5))
+poly1.vertices.append(Vector2(-5, 5))
 poly1.color = 0b1111100000000000
 
 
