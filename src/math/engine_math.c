@@ -18,7 +18,7 @@ float engine_math_clamp(float value, float min, float max){
 
 // https://stackoverflow.com/a/5989243
 bool engine_math_compare_floats(float value0, float value1){
-    return fabsf(value0 - value1) < 1e-9;
+    return fabsf(value0 - value1) < EPSILON;
 }
 
 

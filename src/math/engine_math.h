@@ -8,6 +8,7 @@
 #define HALF_PI 1.57079632679489661923f
 #define RAD2DEG (180.0f/PI)
 #define DEG2RAD (PI/180.0f)
+#define EPSILON 1e-9
 
 float engine_math_dot_product(float x0, float y0, float x1, float y1);
 
