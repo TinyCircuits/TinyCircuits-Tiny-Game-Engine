@@ -18,12 +18,12 @@ poly.vertices.append(Vector2(-5, -5))
 poly.vertices.append(Vector2(5, -5))
 poly.vertices.append(Vector2(5, 5))
 poly.vertices.append(Vector2(-5, 5))
-poly.rotation = math.pi/4
 
 physics_poly = Physics2DNode()
 physics_poly.position = Vector2(64, 64)
 physics_poly.collision_shape = PolygonCollisionShape2D()
 physics_poly.collision_shape.vertices = poly.vertices
+physics_poly.rotation = math.pi/4
 physics_poly.add_child(poly)
 
 print(poly.vertices)

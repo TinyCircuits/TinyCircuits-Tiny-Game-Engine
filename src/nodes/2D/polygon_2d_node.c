@@ -79,7 +79,7 @@ STATIC mp_obj_t polygon_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
         // offset by node postion amount
         float last_rotated_vertex_x = ((vector2_class_obj_t*)polygon_vertex_list->items[0])->x;
         float last_rotated_vertex_y = ((vector2_class_obj_t*)polygon_vertex_list->items[0])->y;
-        engine_math_rotate_point(&last_rotated_vertex_x, &last_rotated_vertex_y, center_x, center_y, polygon_rotation);
+        engine_math_rotate_point(&last_rotated_vertex_x, &last_rotated_vertex_y, center_x, center_y, polygon_resolved_hierarchy_rotation);
         last_rotated_vertex_x += polygon_rotated_x;
         last_rotated_vertex_y += polygon_rotated_y;
 
@@ -89,7 +89,7 @@ STATIC mp_obj_t polygon_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
         
         float current_rotated_vertex_x = ((vector2_class_obj_t*)polygon_vertex_list->items[1])->x;
         float current_rotated_vertex_y = ((vector2_class_obj_t*)polygon_vertex_list->items[1])->y;
-        engine_math_rotate_point(&current_rotated_vertex_x, &current_rotated_vertex_y, center_x, center_y, polygon_rotation);
+        engine_math_rotate_point(&current_rotated_vertex_x, &current_rotated_vertex_y, center_x, center_y, polygon_resolved_hierarchy_rotation);
         current_rotated_vertex_x += polygon_rotated_x;
         current_rotated_vertex_y += polygon_rotated_y;
 
@@ -102,7 +102,7 @@ STATIC mp_obj_t polygon_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
 
             current_rotated_vertex_x = ((vector2_class_obj_t*)polygon_vertex_list->items[ivx])->x;
             current_rotated_vertex_y = ((vector2_class_obj_t*)polygon_vertex_list->items[ivx])->y;
-            engine_math_rotate_point(&current_rotated_vertex_x, &current_rotated_vertex_y, center_x, center_y, polygon_rotation);
+            engine_math_rotate_point(&current_rotated_vertex_x, &current_rotated_vertex_y, center_x, center_y, polygon_resolved_hierarchy_rotation);
             current_rotated_vertex_x += polygon_rotated_x;
             current_rotated_vertex_y += polygon_rotated_y;
         }
