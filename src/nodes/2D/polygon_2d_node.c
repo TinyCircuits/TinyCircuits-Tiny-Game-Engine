@@ -44,6 +44,21 @@ STATIC mp_obj_t polygon_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
         float polygon_rotation = mp_obj_get_float(mp_load_attr(polygon_node_base->attr_accessor, MP_QSTR_rotation));
         uint16_t polygon_color = mp_obj_get_int(mp_load_attr(polygon_node_base->attr_accessor, MP_QSTR_color));
 
+
+        // Get the absolute position of the node depending in parents
+        float camera_resolved_hierarchy_x = 0.0f;
+        float camera_resolved_hierarchy_y = 0.0f;
+        float camera_resolved_hierarchy_rotation = 0.0f;
+
+        node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, camera_node);
+
+        float camera_rotated_x = camera_resolved_hierarchy_x;
+        float camera_rotated_y = camera_resolved_hierarchy_y;
+
+        // Rotate camera origin about the camera
+        engine_math_rotate_point(&camera_rotated_x, &camera_rotated_y, (float)camera_viewport->width/2, (float)camera_viewport->height/2, (float)camera_rotation->z);
+
+
         // Calculate the average postion of all vertices and
         // rotate them about that. Afterwards offset by node
         // position (to the user, if they create a box they
@@ -68,8 +83,8 @@ STATIC mp_obj_t polygon_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
 
         node_base_get_child_absolute_xy(&polygon_resolved_hierarchy_x, &polygon_resolved_hierarchy_y, &polygon_resolved_hierarchy_rotation, self_in);
 
-        float polygon_rotated_x = polygon_resolved_hierarchy_x-((float)camera_position->x);
-        float polygon_rotated_y = polygon_resolved_hierarchy_y-((float)camera_position->y);
+        float polygon_rotated_x = polygon_resolved_hierarchy_x-((float)camera_rotated_x);
+        float polygon_rotated_y = polygon_resolved_hierarchy_y-((float)camera_rotated_y);
 
         // Rotate polygon origin about the camera
         engine_math_rotate_point(&polygon_rotated_x, &polygon_rotated_y, (float)camera_viewport->width/2, (float)camera_viewport->height/2, (float)camera_rotation->z);

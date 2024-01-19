@@ -40,6 +40,8 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [] UI
 [] Reset
 [] Performance, we'll see how it goes
+[] Make camera 0,0 render centered at 0,0
+[] In all node drawing code, allow camera to be a child of any node
 
 
 Game ideas

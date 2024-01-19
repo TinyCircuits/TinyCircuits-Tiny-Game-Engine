@@ -6,6 +6,7 @@
 #include "nodes/2D/physics_2d_node.h"
 #include "collision_shapes/circle_collision_shape_2d.h"
 #include "collision_shapes/rectangle_collision_shape_2d.h"
+#include "collision_shapes/polygon_collision_shape_2d.h"
 #include "collision_contact_2d.h"
 
 linked_list engine_physics_nodes;
@@ -234,6 +235,9 @@ bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, eng
             }
 
             return true;
+        }else if(mp_obj_is_type(collision_shape_obj_a, &polygon_collision_shape_2d_class_type) &&
+                 mp_obj_is_type(collision_shape_obj_b, &polygon_collision_shape_2d_class_type)){    // Polygon vs. Polygon: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-oriented-rigid-bodies--gamedev-8032t
+            
         }
     }
 

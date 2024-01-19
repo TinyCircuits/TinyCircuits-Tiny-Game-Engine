@@ -2,6 +2,7 @@
 #include "engine_object_layers.h"
 #include "math/engine_math.h"
 #include "math/vector2.h"
+#include "math/vector3.h"
 
 
 mp_obj_t node_base_del(mp_obj_t self_in){
@@ -107,7 +108,12 @@ void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, mp_obj
     vector2_class_obj_t *child_node_base_position = mp_load_attr(child_node_base->attr_accessor, MP_QSTR_position);
     *x = (float)child_node_base_position->x;
     *y = (float)child_node_base_position->y;
-    *rotation = (float)mp_obj_get_float(mp_load_attr(child_node_base->attr_accessor, MP_QSTR_rotation));
+    mp_obj_t rotation_obj = mp_load_attr(child_node_base->attr_accessor, MP_QSTR_rotation);
+    if(mp_obj_is_type(rotation_obj, &vector3_class_type)){
+        *rotation = ((vector3_class_obj_t*)rotation_obj)->z;
+    }else{
+        *rotation = (float)mp_obj_get_float(rotation_obj);
+    }
 
     // Before doing anything, check if this child even has a parent 
     if(child_node_base->parent_node_base != NULL){
