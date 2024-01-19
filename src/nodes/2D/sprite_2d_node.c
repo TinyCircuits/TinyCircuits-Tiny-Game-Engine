@@ -8,15 +8,11 @@
 #include "math/vector3.h"
 #include "math/rectangle.h"
 #include "draw/engine_display_draw.h"
-#include "extmod/vfs.h"
 #include "resources/engine_texture_resource.h"
-#include <fcntl.h>
 #include "utility/engine_file.h"
 #include "math/engine_math.h"
 #include "utility/engine_time.h"
 
-// #include "pico/stdlib.h"
-// #include "hardware/flash.h"
 
 // Class required functions
 STATIC void sprite_2d_node_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
@@ -38,7 +34,7 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
     // Decode and store properties about the rectangle and camera nodes
     engine_node_base_t *sprite_node_base = self_in;
     engine_node_base_t *camera_node_base = camera_node;
-    engine_sprite_2d_node_common_data_t *sprite_common_data= sprite_node_base->node_common_data;
+    engine_sprite_2d_node_common_data_t *sprite_common_data = sprite_node_base->node_common_data;
 
     vector2_class_obj_t *sprite_scale =  mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_scale);
     texture_resource_class_obj_t *sprite_texture = mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_texture_resource);

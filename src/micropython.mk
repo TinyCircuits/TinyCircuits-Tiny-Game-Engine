@@ -15,6 +15,7 @@ SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/3d/camera_node.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/3d/voxelspace_node.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/2d/sprite_2d_node.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/2d/rectangle_2d_node.c
+SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/2d/polygon_2d_node.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/2d/circle_2d_node.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/2d/physics_2d_node.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/math/vector3.c
@@ -41,6 +42,7 @@ SRC_USERMOD += $(ENGINE_MOD_DIR)/physics/engine_physics_module.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/physics/engine_physics.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/physics/collision_shapes/circle_collision_shape_2d.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/physics/collision_shapes/rectangle_collision_shape_2d.c
+SRC_USERMOD += $(ENGINE_MOD_DIR)/physics/collision_shapes/polygon_collision_shape_2d.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/physics/collision_contact_2d.c
 
 

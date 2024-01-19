@@ -49,7 +49,7 @@ STATIC mp_obj_t circle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
     float circle_rotated_y = circle_resolved_hierarchy_y-((float)camera_position->y);
 
     // Rotate rectangle origin about the camera
-    engine_math_rotate_point(&circle_rotated_x, &circle_rotated_y, (float)camera_viewport->width/2, (float)camera_viewport->height/2, (float)camera_rotation->z * (float)DEG2RAD);
+    engine_math_rotate_point(&circle_rotated_x, &circle_rotated_y, (float)camera_viewport->width/2, (float)camera_viewport->height/2, (float)camera_rotation->z);
 
     // https://stackoverflow.com/a/59211338
     for(int x=-circle_radius; x<circle_radius; x++){

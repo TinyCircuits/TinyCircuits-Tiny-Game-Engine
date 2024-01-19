@@ -4,7 +4,7 @@
 // Class required functions
 STATIC void vector2_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
     vector2_class_obj_t *self = self_in;
-    ENGINE_INFO_PRINTF("print(): Vector2 [%0.3f, %0.3f]", (double)self->x, (double)self->y);
+    ENGINE_FORCE_PRINTF("print(): Vector2 [%0.3f, %0.3f]", (double)self->x, (double)self->y);
 }
 
 

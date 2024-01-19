@@ -52,6 +52,10 @@ Game ideas
 [] Rocketcup
 
 
+[] Add scale to polygon2dnode
+[] Add outline and fill to each primitive
+[] Change node/math class prints to white with no newline and always forced
+[] Need to make sure collision normals are correct. Seem to be the same for both objects sometimes (circle vs circle).
 [] Turns out that we should only need to do mp_load_attr once into internal struct for each node! During physics, modifying the x and y parameters of the pointers to positions from mp_load_attr really did modify the attrs! Could also just directly create and store then load in each init!!!!! See Reference commit for attr loading... commit and look at commented out lines in engine_physics.c related to storing attrs that's not needed!
 [] Test that collisions work correctly (at least the contact points) in each quad of the cord system
 [] Crash log file (what to do about time? Maybe just overwrite with latest crash info?)
