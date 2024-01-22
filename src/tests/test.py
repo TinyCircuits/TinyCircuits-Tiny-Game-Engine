@@ -13,9 +13,22 @@ engine.set_fps_limit(60)
 engine_physics.set_physics_fps_limit(60)
 
 
+class MyPhysicsNode(Physics2DNode):
+    def __init__(self):
+        super().__init__(self)
+
+    def collision(self, collision_contact):
+        print(collision_contact.position.x, collision_contact.position.y, collision_contact.normal.x, collision_contact.normal.y, type(collision_contact.node))
+        contact_circle = Circle2DNode()
+        contact_circle.position = collision_contact.position
+        contact_circle.radius = 3
+        contact_circle.color = 0b1110101110111111
+
+
 poly0 = Polygon2DNode()
 poly0.vertices.append(Vector2(-5, -5))
 poly0.vertices.append(Vector2(5, -5))
+poly0.vertices.append(Vector2(7, 5))
 poly0.vertices.append(Vector2(5, 8))
 poly0.vertices.append(Vector2(-5, 5))
 poly0.color = 0b1111100000011111
@@ -28,7 +41,7 @@ poly1.vertices.append(Vector2(-5, 5))
 poly1.color = 0b1111100000000000
 
 
-physics_poly0 = Physics2DNode()
+physics_poly0 = MyPhysicsNode()
 physics_poly0.position = Vector2(64, 64-32)
 physics_poly0.collision_shape = PolygonCollisionShape2D()
 physics_poly0.collision_shape.vertices = poly0.vertices
@@ -37,7 +50,7 @@ physics_poly0.collision_shape.calculate_normals()
 physics_poly0.velocity = Vector2(0, 0.75)
 physics_poly0.add_child(poly0)
 
-physics_poly1 = Physics2DNode()
+physics_poly1 = MyPhysicsNode()
 physics_poly1.position = Vector2(64, 64+32)
 physics_poly1.collision_shape = PolygonCollisionShape2D()
 physics_poly1.collision_shape.vertices = poly1.vertices

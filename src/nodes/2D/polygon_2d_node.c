@@ -106,7 +106,7 @@ STATIC mp_obj_t polygon_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
         current_rotated_vertex_x += polygon_rotated_x;
         current_rotated_vertex_y += polygon_rotated_y;
 
-        for(uint16_t ivx=2; ivx<polygon_vertex_list->len+1; ivx++){
+        for(uint16_t ivx=2; ivx<polygon_vertex_list->len; ivx++){
             engine_draw_line(polygon_color, last_rotated_vertex_x, last_rotated_vertex_y, current_rotated_vertex_x, current_rotated_vertex_y, camera_node);
 
             // To avoid doing more rotations than needed, save the current to the last
@@ -122,7 +122,8 @@ STATIC mp_obj_t polygon_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
             current_rotated_vertex_y += polygon_rotated_y;
         }
 
-        engine_draw_line(polygon_color, last_rotated_vertex_x, last_rotated_vertex_y, first_rotated_vertex_x, first_rotated_vertex_y, camera_node);
+        engine_draw_line(polygon_color, last_rotated_vertex_x, last_rotated_vertex_y, current_rotated_vertex_x, current_rotated_vertex_y, camera_node);
+        engine_draw_line(polygon_color, current_rotated_vertex_x, current_rotated_vertex_y, first_rotated_vertex_x, first_rotated_vertex_y, camera_node);
     }
                                                
     return mp_const_none;
