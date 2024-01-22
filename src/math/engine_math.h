@@ -11,6 +11,7 @@
 #define EPSILON 1e-9
 
 float engine_math_dot_product(float x0, float y0, float x1, float y1);
+void engine_math_normalize(float *vx, float *vy);
 
 float engine_math_clamp(float value, float min, float max);
 

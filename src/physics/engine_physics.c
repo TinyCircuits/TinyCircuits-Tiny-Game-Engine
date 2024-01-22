@@ -18,6 +18,66 @@ float engine_physics_fps_limit_period_ms = 16.667f;
 float engine_physics_fps_time_at_last_tick_ms = 0.0f;
 
 
+void engine_physics_find_best_edge(mp_obj_list_t *vertices_list, float axis_x, float axis_y, vector2_class_obj_t *edge_point_0, vector2_class_obj_t *edge_point_1, vector2_class_obj_t *max_projection_vertex){
+    // step 1
+    // find the farthest vertex in
+    // the polygon along the separation normal
+    float max = -FLT_MAX;
+    vector2_class_obj_t *vertex = NULL;
+    int32_t index = 0;
+    for(uint32_t ivx=0; ivx<vertices_list->len; ivx++){
+        vertex = (vector2_class_obj_t*)vertices_list->items[ivx];
+        float projection = engine_math_dot_product(axis_x, axis_y, vertex->x, vertex->y);
+
+        if(projection > max){
+            max = projection;
+            index = ivx;
+        }
+    }
+
+    // step 2
+    // now we need to use the edge that
+    // is most perpendicular, either the
+    // right or the left
+    vector2_class_obj_t *v = vertices_list->items[index];
+    vector2_class_obj_t *v0 = NULL;
+    vector2_class_obj_t *v1 = NULL;
+    
+    if(index + 1 == vertices_list->len){
+        v1 = (vector2_class_obj_t*)vertices_list->items[0];
+    }else{
+        v1 = (vector2_class_obj_t*)vertices_list->items[index+1];
+    }
+
+    if(index - 1 == -1){
+        v0 = (vector2_class_obj_t*)vertices_list->items[vertices_list->len-1];
+    }else{
+        v0 = (vector2_class_obj_t*)vertices_list->items[index-1];
+    }
+
+    // left
+    float lx = v->x - v1->x;
+    float ly = v->y - v1->y;
+
+    // right
+    float rx = v->x - v0->x;
+    float ry = v->y - v0->y;
+
+    engine_math_normalize(&lx, &ly);
+    engine_math_normalize(&rx, &ry);
+
+    if(engine_math_dot_product(rx, ry, axis_x, axis_y) <= engine_math_dot_product(lx, ly, axis_x, axis_y)){
+        max_projection_vertex = v;
+        edge_point_0 = v0;
+        edge_point_1 = v;
+    }else{
+        max_projection_vertex = v;
+        edge_point_0 = v;
+        edge_point_1 = v1;
+    }
+}
+
+
 // https://textbooks.cs.ksu.edu/cis580/04-collisions/04-separating-axis-theorem/index.html#:~:text=A%20helper%20method%20to%20do%20this%20might%20be%3A
 void engine_physics_find_min_max_projection(float position_x, float position_y, mp_obj_list_t *vertices_list, float axis_x, float axis_y, float *min, float *max){
     vector2_class_obj_t *vertex = (vector2_class_obj_t*)vertices_list->items[0];
@@ -49,218 +109,8 @@ bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, eng
         vector2_class_obj_t *physics_node_a_position = mp_load_attr(physics_node_base_a->attr_accessor, MP_QSTR_position);
         vector2_class_obj_t *physics_node_b_position = mp_load_attr(physics_node_base_b->attr_accessor, MP_QSTR_position);
 
-        if(mp_obj_is_type(collision_shape_obj_a, &circle_collision_shape_2d_class_type) &&
-           mp_obj_is_type(collision_shape_obj_b, &circle_collision_shape_2d_class_type)){    // Circle vs. Circle: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-basics-and-impulse-resolution--gamedev-6331t#:~:text=must%20be%20extended.-,Circle%20vs%20Circle,-Lets%20start%20with
-
-            circle_collision_shape_2d_class_obj_t *collision_shape_a = collision_shape_obj_a;
-            circle_collision_shape_2d_class_obj_t *collision_shape_b = collision_shape_obj_b;
-
-            float collision_shape_a_pos_x = collision_shape_a->position->x + physics_node_a_position->x;
-            float collision_shape_a_pos_y = collision_shape_a->position->y + physics_node_a_position->y;
-
-            float collision_shape_b_pos_x = collision_shape_b->position->x + physics_node_b_position->x;
-            float collision_shape_b_pos_y = collision_shape_b->position->y + physics_node_b_position->y;
-
-            // Normal vector from A to B
-            float normal_x = collision_shape_b_pos_x - collision_shape_a_pos_x;
-            float normal_y = collision_shape_b_pos_y - collision_shape_a_pos_y;
-
-            // Distances without sqrts
-            float normal_length_squared = (normal_x*normal_x) + (normal_y*normal_y);
-            float full_radius = collision_shape_a->radius + collision_shape_b->radius;
-            float distance_between_squared = full_radius * full_radius;
-
-            // If true, not colliding and should stop here
-            if(normal_length_squared > distance_between_squared){
-                return false;
-            }
-
-            // Circles are colliding, compute information for CollisionContact2D
-            float distance_between = sqrt(distance_between_squared);
-            *collision_normal_x = 1.0f;
-            *collision_normal_y = 0.0f;
-            *collision_normal_penetration = collision_shape_a->radius;
-
-            *collision_contact_x = collision_shape_a_pos_x;
-            *collision_contact_y = collision_shape_a_pos_y;
-
-            // If not exactly in the same position, compute position and normal.
-            // Otherwise if the positions are the same, provide easy to get and
-            // default information as set above
-            if(distance_between != 0.0f){
-                *collision_normal_x = normal_x / distance_between;
-                *collision_normal_y = normal_y / distance_between;
-
-                *collision_contact_x = *collision_normal_x * collision_shape_a->radius + collision_shape_a_pos_x;
-                *collision_contact_y = *collision_normal_y * collision_shape_a->radius + collision_shape_a_pos_y;
-
-                *collision_normal_penetration = full_radius - distance_between;
-            }
-
-            return true;
-        }else if(mp_obj_is_type(collision_shape_obj_a, &rectangle_collision_shape_2d_class_type) &&
-                 mp_obj_is_type(collision_shape_obj_b, &rectangle_collision_shape_2d_class_type)){      // Rectangle vs. Rectangle: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-basics-and-impulse-resolution--gamedev-6331t#:~:text=Here%20is%20a%20full%20algorithm%20for%20AABB%20to%20AABB%20manifold%20generation%20and%20collision%20detection%3A
-
-            rectangle_collision_shape_2d_class_obj_t *collision_shape_a = collision_shape_obj_a;
-            rectangle_collision_shape_2d_class_obj_t *collision_shape_b = collision_shape_obj_b;
-
-            float collision_shape_a_half_width = collision_shape_a->width / 2;
-            float collision_shape_a_half_height = collision_shape_a->height / 2;
-
-            float collision_shape_b_half_width = collision_shape_b->width / 2;
-            float collision_shape_b_half_height = collision_shape_b->height / 2;
-
-            float collision_shape_a_pos_x = collision_shape_a->position->x + physics_node_a_position->x;
-            float collision_shape_a_pos_y = collision_shape_a->position->y + physics_node_a_position->y;
-
-            float collision_shape_b_pos_x = collision_shape_b->position->x + physics_node_b_position->x;
-            float collision_shape_b_pos_y = collision_shape_b->position->y + physics_node_b_position->y;
-
-            // Normal vector from A to B
-            float normal_x = collision_shape_b_pos_x - collision_shape_a_pos_x;
-            float normal_y = collision_shape_b_pos_y - collision_shape_a_pos_y;
-
-            // Calculate overlap on x axis 
-            float x_overlap_length = collision_shape_a_half_width + collision_shape_b_half_width - fabsf(normal_x);
-
-            // // SAT test on x axis
-            if(x_overlap_length > 0){
-                // Calculate overlap on y axis 
-                float y_overlap_length = collision_shape_a_half_height + collision_shape_b_half_height - fabsf(normal_y);
-
-                // SAT test on y axis
-                if(y_overlap_length > 0){
-                    if(x_overlap_length > y_overlap_length){
-                        if(normal_y < 0){
-                            *collision_normal_x = 0.0f;
-                            *collision_normal_y = -1.0f;
-                            *collision_contact_y = collision_shape_a_pos_y - collision_shape_a_half_height;
-                        }else{
-                            *collision_normal_x = 0.0f;
-                            *collision_normal_y = 1.0f;
-                            *collision_contact_y = collision_shape_a_pos_y + collision_shape_a_half_height;
-                        }
-                        *collision_normal_penetration = y_overlap_length;
-
-                        // At least in the positive x, clip x at a min and
-                        // max that reflects the actual endpoint positions
-                        // of the overlapping area
-                        float overlap_x_min = fmaxf(collision_shape_a_pos_x-collision_shape_a_half_width, collision_shape_b_pos_x-collision_shape_b_half_width);
-                        float overlap_x_max = fminf(collision_shape_a_pos_x+collision_shape_a_half_width, collision_shape_b_pos_x+collision_shape_b_half_width);
-                        *collision_contact_x = overlap_x_min + fabsf(overlap_x_min - overlap_x_max)/2;
-                        return true;
-                    }else{
-                        if(normal_x < 0){
-                            *collision_normal_x = -1.0f;
-                            *collision_normal_y = 0.0f;
-                            *collision_contact_x = collision_shape_a_pos_x - collision_shape_a_half_width;
-                        }else{
-                            *collision_normal_x = 1.0f;
-                            *collision_normal_y = 0.0f;
-                            *collision_contact_x = collision_shape_a_pos_x + collision_shape_a_half_width;
-                        }
-                        *collision_normal_penetration = x_overlap_length;
-
-                        // At least in the positive y, clip x at a min and
-                        // max that reflects the actual endpoint positions
-                        // of the overlapping area
-                        float overlap_y_min = fmaxf(collision_shape_a_pos_y-collision_shape_a_half_height, collision_shape_b_pos_y-collision_shape_b_half_height);
-                        float overlap_y_max = fminf(collision_shape_a_pos_y+collision_shape_a_half_height, collision_shape_b_pos_y+collision_shape_b_half_height);
-                        *collision_contact_y = overlap_y_min + fabsf(overlap_y_min - overlap_y_max)/2;
-                        return true;
-                    }
-                }
-            }
-        }else if((mp_obj_is_type(collision_shape_obj_a, &rectangle_collision_shape_2d_class_type) &&
-                  mp_obj_is_type(collision_shape_obj_b, &circle_collision_shape_2d_class_type))   ||
-                  (mp_obj_is_type(collision_shape_obj_a, &circle_collision_shape_2d_class_type) &&
-                  mp_obj_is_type(collision_shape_obj_b, &rectangle_collision_shape_2d_class_type))){     // Circle vs. Rectangle or Rectangle vs. Circle
-
-            rectangle_collision_shape_2d_class_obj_t *collision_rectangle = NULL;
-            circle_collision_shape_2d_class_obj_t *collision_circle = NULL;
-
-            if(mp_obj_is_type(collision_shape_obj_a, &rectangle_collision_shape_2d_class_type)){
-                collision_rectangle = collision_shape_obj_a;
-                collision_circle = collision_shape_obj_b;
-            }else{
-                collision_rectangle = collision_shape_obj_b;
-                collision_circle = collision_shape_obj_a;
-            }
-
-            float collision_rectangle_half_width = collision_rectangle->width / 2;
-            float collision_rectangle_half_height = collision_rectangle->height / 2;
-
-            float collision_rectangle_pos_x = collision_rectangle->position->x + physics_node_a_position->x;
-            float collision_rectangle_pos_y = collision_rectangle->position->y + physics_node_a_position->y;
-
-            float collision_circle_pos_x = collision_circle->position->x + physics_node_b_position->x;
-            float collision_circle_pos_y = collision_circle->position->y + physics_node_b_position->y;
-
-            // Normal vector from A to B
-            float normal_x = collision_circle_pos_x - collision_rectangle_pos_x;
-            float normal_y = collision_circle_pos_y - collision_rectangle_pos_y;
-
-            // Closest point on A to center of B
-            float closest_x = engine_math_clamp(normal_x, -collision_rectangle_half_width, collision_rectangle_half_width);
-            float closest_y = engine_math_clamp(normal_y, -collision_rectangle_half_height, collision_rectangle_half_height);
-
-            bool inside = false;
-            
-            // Floating-point equalities? Not sure what's going on here exactly: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-basics-and-impulse-resolution--gamedev-6331t#:~:text=25-,if(n%20%3D%3D%20closest),-26
-            // Circle is inside the AABB, so we need to clamp the circle's center 
-            // to the closest edge
-            if(engine_math_compare_floats(normal_x, closest_x) && engine_math_compare_floats(normal_y, closest_y)){
-                inside = true;
-
-                if(fabsf(normal_x) > fabsf(normal_y)){
-                    if(closest_x > 0){
-                        closest_x = collision_rectangle_half_width;
-                    }else{
-                        closest_x = -collision_rectangle_half_width;
-                    }
-                }else{
-                    if(closest_x > 0){
-                        closest_y = collision_rectangle_half_height;
-                    }else{
-                        closest_y = -collision_rectangle_half_height;
-                    }
-                }
-            }
-
-            // Not sure about this: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-basics-and-impulse-resolution--gamedev-6331t#:~:text=Vec2%20normal%20%3D%20n%20%2D%20closest
-            float closest_normal_x = normal_x - closest_x;
-            float closest_normal_y = normal_y - closest_y;
-            float normal_length_squared = (closest_normal_x*closest_normal_x) + (closest_normal_y*closest_normal_y);
-
-            // Early out of the radius is shorter than distance to closest point and 
-            // Circle not inside the AABB
-            if(normal_length_squared > collision_circle->radius*collision_circle->radius && !inside){
-                return false;
-            }
-
-            float normal_length = sqrt(normal_length_squared);
-
-            if(inside){
-                *collision_normal_x = -closest_normal_x / normal_length;
-                *collision_normal_y = -closest_normal_y / normal_length;
-            }else{
-                *collision_normal_x = closest_normal_x / normal_length;
-                *collision_normal_y = closest_normal_y / normal_length;
-            }
-            *collision_normal_penetration = collision_circle->radius - normal_length;
-
-            // Figure out collision point, seems to be working
-            if(mp_obj_is_type(collision_shape_obj_a, &rectangle_collision_shape_2d_class_type)){
-                *collision_contact_x = -(*collision_normal_x) * collision_circle->radius + collision_circle_pos_x;
-                *collision_contact_y = -(*collision_normal_y) * collision_circle->radius + collision_circle_pos_y;
-            }else{
-                *collision_contact_x = *collision_normal_x * collision_circle->radius + collision_rectangle_pos_x;
-                *collision_contact_y = *collision_normal_y * collision_circle->radius + collision_rectangle_pos_y;
-            }
-
-            return true;
-        }else if(mp_obj_is_type(collision_shape_obj_a, &polygon_collision_shape_2d_class_type) &&
-                 mp_obj_is_type(collision_shape_obj_b, &polygon_collision_shape_2d_class_type)){    // Polygon vs. Polygon: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-oriented-rigid-bodies--gamedev-8032t
+        if( mp_obj_is_type(collision_shape_obj_a, &polygon_collision_shape_2d_class_type) &&
+            mp_obj_is_type(collision_shape_obj_b, &polygon_collision_shape_2d_class_type)){    // Polygon vs. Polygon: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-oriented-rigid-bodies--gamedev-8032t
             polygon_collision_shape_2d_class_obj_t *polygon_shape_a = collision_shape_obj_a;
             polygon_collision_shape_2d_class_obj_t *polygon_shape_b = collision_shape_obj_b;
 
@@ -321,7 +171,6 @@ bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, eng
                 }
             }
 
-            // ENGINE_FORCE_PRINTF("%.03f %.03f %.03f", *collision_contact_x, *collision_contact_y, *collision_normal_penetration);
             return true;
         }
     }

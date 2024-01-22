@@ -54,6 +54,7 @@ Game ideas
 [] Rocketcup
 
 
+[] Add collision points to collision callback for polygon vs. polygon: https://dyn4j.org/2011/11/contact-points-using-clipping/
 [] Add scale to polygon2dnode
 [] Add outline and fill to each primitive
 [] Change node/math class prints to white with no newline and always forced

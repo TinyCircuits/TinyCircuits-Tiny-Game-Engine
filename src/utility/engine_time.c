@@ -7,7 +7,7 @@
 #elif defined(__unix__)
     #include <time.h>
     struct timespec tp;
-#elif defined(__arm)
+#elif defined(__arm__)
     // Last paragraph on page 9: https://datasheets.raspberrypi.com/pico/raspberry-pi-pico-c-sdk.pdf
     #include "pico/stdlib.h"
     #include "pico.h"

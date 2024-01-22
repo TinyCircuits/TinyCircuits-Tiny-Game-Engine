@@ -9,6 +9,13 @@ float engine_math_dot_product(float x0, float y0, float x1, float y1){
 }
 
 
+void engine_math_normalize(float *vx, float *vy){
+    const float factor = 1.0 / sqrtf((*vx) * (*vx) + (*vy) * (*vy));
+    *vx = (*vx) * factor;
+    *vy = (*vy) * factor;
+}
+
+
 // https://stackoverflow.com/a/16659263
 float engine_math_clamp(float value, float min, float max){
     const float t = value < min ? min : value;
