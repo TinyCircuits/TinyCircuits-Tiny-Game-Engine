@@ -41,7 +41,6 @@ STATIC mp_obj_t polygon_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
         vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
         rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
         vector2_class_obj_t *polygon_position = mp_load_attr(polygon_node_base->attr_accessor, MP_QSTR_position);
-        float polygon_rotation = mp_obj_get_float(mp_load_attr(polygon_node_base->attr_accessor, MP_QSTR_rotation));
         uint16_t polygon_color = mp_obj_get_int(mp_load_attr(polygon_node_base->attr_accessor, MP_QSTR_color));
 
 
@@ -118,6 +117,8 @@ STATIC mp_obj_t polygon_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
             current_rotated_vertex_x = ((vector2_class_obj_t*)polygon_vertex_list->items[ivx])->x;
             current_rotated_vertex_y = ((vector2_class_obj_t*)polygon_vertex_list->items[ivx])->y;
             engine_math_rotate_point(&current_rotated_vertex_x, &current_rotated_vertex_y, center_x, center_y, polygon_resolved_hierarchy_rotation);
+
+            // Incorporate the postion of the node
             current_rotated_vertex_x += polygon_rotated_x;
             current_rotated_vertex_y += polygon_rotated_y;
         }

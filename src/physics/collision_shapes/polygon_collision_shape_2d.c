@@ -27,26 +27,34 @@ STATIC mp_obj_t polygon_2d_node_class_calculate_normals(mp_obj_t self_in){
 
     polygon_collision_shape_2d_class_obj_t *self = self_in;
 
+    mp_obj_list_t *normals = self->normals;
+    mp_obj_list_t *vertices = self->vertices;
+
     // Clear the list of normals
-    self->normals->len = 0;
-    self->normals->items = m_renew(mp_obj_t, self->normals->items, self->normals->alloc, 4);
-    self->normals->alloc = 4;
-    mp_seq_clear(self->normals->items, 0, self->normals->alloc, sizeof(*self->normals->items));
+    normals->len = 0;
+    normals->items = m_renew(mp_obj_t, normals->items, normals->alloc, 4);
+    normals->alloc = 4;
+    mp_seq_clear(normals->items, 0, normals->alloc, sizeof(*normals->items));
 
     // Calculate a new list of normals (should be able to
     // know the size of the final normal list size, just use
     // append for now: TODO)
-    for(uint16_t ivx=0; ivx<self->vertices->len; ivx++){
+    for(uint32_t ivx=0; ivx<vertices->len; ivx++){
         uint16_t next_ivx = 0;
 
-        if(ivx + 1 < self->vertices->len){
+        if(ivx + 1 < vertices->len){
             next_ivx = ivx + 1;
         }else{
             next_ivx = 0;
         }
 
-        float face_normal_x = ((vector2_class_obj_t*)self->vertices->items[next_ivx])->x - ((vector2_class_obj_t*)self->vertices->items[ivx])->x;
-        float face_normal_y = ((vector2_class_obj_t*)self->vertices->items[next_ivx])->y - ((vector2_class_obj_t*)self->vertices->items[ivx])->y;
+        float temp_face_normal_x = ((vector2_class_obj_t*)vertices->items[next_ivx])->x - ((vector2_class_obj_t*)vertices->items[ivx])->x;
+        float temp_face_normal_y = ((vector2_class_obj_t*)vertices->items[next_ivx])->y - ((vector2_class_obj_t*)vertices->items[ivx])->y;
+        
+        // 2D Cross product (perpendicular vector to the direction of the edge)
+        float face_normal_x = -temp_face_normal_y;
+        float face_normal_y = temp_face_normal_x;
+
         float face_normal_length_squared = (face_normal_x*face_normal_x) + (face_normal_y*face_normal_y);
 
         if(face_normal_length_squared < EPSILON * EPSILON){
