@@ -1,5 +1,6 @@
 #include "polygon_collision_shape_2d.h"
 #include "math/engine_math.h"
+#include <string.h>
 
 
 // Class required functions

@@ -6,8 +6,8 @@
 // A basic 2d circle node
 typedef struct{
     mp_obj_t position;  // Vector2: 2d xy position of this node
-    mp_obj_t radius;    // mp_float_t
-    mp_obj_t rotation;  // mp_float_t Rotation in radians (affects child nodes)
+    mp_obj_t radius;    // float
+    mp_obj_t rotation;  // float Rotation in radians (affects child nodes)
     mp_obj_t color;     // int The color of this circle
 }engine_circle_2d_node_class_obj_t;
 

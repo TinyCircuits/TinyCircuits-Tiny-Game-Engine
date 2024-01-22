@@ -75,7 +75,7 @@ STATIC mp_obj_t vector2_class_normal(mp_obj_t self_in){
     const vector2_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
     vector2_class_obj_t* ret = m_new_obj(vector2_class_obj_t);
     ret->base.type = &vector2_class_type;
-    const mp_float_t il = 1.0 / sqrt(self->x*self->x + self->y*self->y);
+    const float il = 1.0 / sqrt(self->x*self->x + self->y*self->y);
     ret->x = self->x * il;
     ret->y = self->y * il;
     return MP_OBJ_FROM_PTR(ret);
@@ -89,7 +89,7 @@ STATIC mp_obj_t vector2_class_normalize(mp_obj_t self_in){
     }
 
     vector2_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
-    const mp_float_t il = 1.0 / sqrt(self->x*self->x + self->y*self->y);
+    const float il = 1.0 / sqrt(self->x*self->x + self->y*self->y);
     self->x = self->x * il;
     self->y = self->y * il;
     return MP_OBJ_FROM_PTR(self);
@@ -103,16 +103,16 @@ STATIC mp_obj_t vector2_class_rotateZ(mp_obj_t self_in, mp_obj_t _theta){
     }
 
     vector2_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
-    mp_float_t xp, yp;
+    float xp, yp;
 
     if(mp_obj_is_type(_theta, &vector2_class_type)){ // Rotate by vector theta (sin(t), cos(t), ~)
         const vector2_class_obj_t* b = MP_OBJ_TO_PTR(_theta);
         xp = self->x*b->y - self->y*b->x;
         yp = self->y*b->y + self->x*b->x;
     }else if(mp_obj_is_float(_theta)){ // Rotate by scalar theta
-        const mp_float_t b = mp_obj_get_float(_theta);
-        const mp_float_t s = sin(b);
-        const mp_float_t c = cos(b);
+        const float b = mp_obj_get_float(_theta);
+        const float s = sin(b);
+        const float c = cos(b);
         xp = self->x*c - self->y*s;
         yp = self->y*c + self->x*s;
     }else{
@@ -133,13 +133,13 @@ STATIC mp_obj_t vector2_class_resize(mp_obj_t self_in, mp_obj_t element_b){
     }
 
     vector2_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
-    mp_float_t f;
+    float f;
 
     if(mp_obj_is_type(element_b, &vector2_class_type)){ // Resize to match vector length
         const vector2_class_obj_t* b = MP_OBJ_TO_PTR(element_b);
         f = sqrt((b->x*b->x + b->y*b->y) / (self->x*self->x + self->y*self->y));
     }else if(mp_obj_is_float(element_b)){ // Resize to match scalar length
-        const mp_float_t b = mp_obj_get_float(element_b);
+        const float b = mp_obj_get_float(element_b);
         f = sqrt((b*b) / (self->x*self->x + self->y*self->y));
     }else{
         mp_raise_TypeError(MP_ERROR_TEXT("expected vector or scalar length"));

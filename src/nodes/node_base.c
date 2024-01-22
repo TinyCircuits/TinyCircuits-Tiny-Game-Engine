@@ -139,3 +139,43 @@ void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, mp_obj
         }
     }
 }
+
+
+bool node_base_is_visible(engine_node_base_t *node_base){
+    return BIT_GET(node_base->meta_data, NODE_BASE_VISIBLE_BIT_INDEX);
+}
+
+
+void node_base_set_if_visible(engine_node_base_t *node_base, bool is_visible){
+    if(is_visible){
+        BIT_SET_TRUE(node_base->meta_data, NODE_BASE_VISIBLE_BIT_INDEX);
+    }else{
+        BIT_SET_FALSE(node_base->meta_data, NODE_BASE_VISIBLE_BIT_INDEX);
+    }
+}
+
+
+bool node_base_is_disabled(engine_node_base_t *node_base){
+    return BIT_GET(node_base->meta_data, NODE_BASE_DISABLED_BIT_INDEX);
+}
+
+void node_base_set_if_disabled(engine_node_base_t *node_base, bool is_disabled){
+    if(is_disabled){
+        BIT_SET_TRUE(node_base->meta_data, NODE_BASE_DISABLED_BIT_INDEX);
+    }else{
+        BIT_SET_FALSE(node_base->meta_data, NODE_BASE_DISABLED_BIT_INDEX);
+    }
+}
+
+
+bool node_base_is_just_added(engine_node_base_t *node_base){
+    return BIT_GET(node_base->meta_data, NODE_BASE_JUST_ADDED_BIT_INDEX);
+}
+
+void node_base_set_if_just_added(engine_node_base_t *node_base, bool is_just_added){
+    if(is_just_added){
+        BIT_SET_TRUE(node_base->meta_data, NODE_BASE_JUST_ADDED_BIT_INDEX);
+    }else{
+        BIT_SET_FALSE(node_base->meta_data, NODE_BASE_JUST_ADDED_BIT_INDEX);
+    }
+}

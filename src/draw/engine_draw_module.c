@@ -1,4 +1,5 @@
 #include "py/obj.h"
+#include "py/runtime.h"
 #include "display/engine_display_common.h"
 #include "resources/engine_texture_resource.h"
 

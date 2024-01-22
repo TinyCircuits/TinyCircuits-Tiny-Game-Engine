@@ -62,6 +62,7 @@ Game ideas
 [] Test that collisions work correctly (at least the contact points) in each quad of the cord system
 [] Crash log file (what to do about time? Maybe just overwrite with latest crash info?)
 [] Start screen as early as possible and also make a bootloader that starts the screen too
+[] Implement file system operations for micropython webassembly
 
 [] Should a flag be set in sprite2dnode to enable transparency? Or just use special color 0b0000100000100001?
 [] VoxelSapce could be rendered faster and need to incorporate node parameters like position and rotation. Implement pixel transformer callbacks

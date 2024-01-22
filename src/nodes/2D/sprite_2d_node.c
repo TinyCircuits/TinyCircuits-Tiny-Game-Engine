@@ -178,8 +178,8 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
         }
 
         mp_store_attr(node_base->node, MP_QSTR_position, vector2_class_new(&vector2_class_type, 0, 0, NULL));
-        mp_store_attr(node_base->node, MP_QSTR_fps, mp_obj_new_float(30.0f));
-        mp_store_attr(node_base->node, MP_QSTR_rotation, mp_obj_new_float(0.0f));
+        mp_store_attr(node_base->node, MP_QSTR_fps, mp_obj_new_float((mp_float_t)30.0f));
+        mp_store_attr(node_base->node, MP_QSTR_rotation, mp_obj_new_float((mp_float_t)0.0f));
         mp_store_attr(node_base->node, MP_QSTR_scale, vector2_class_new(&vector2_class_type, 2, 0, default_scale_parameters));
         mp_store_attr(node_base->node, MP_QSTR_texture_resource, args[1]);
         mp_store_attr(node_base->node, MP_QSTR_transparent_color, mp_obj_new_int(ENGINE_NO_TRANSPARENCY_COLOR));

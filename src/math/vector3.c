@@ -34,12 +34,12 @@ mp_obj_t vector3_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw
 STATIC mp_obj_t vector3_class_dot(mp_obj_t self_in, mp_obj_t vector_b){
     const vector3_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
     const vector3_class_obj_t* b = MP_OBJ_TO_PTR(vector_b);
-    const mp_float_t ax = self->x;
-    const mp_float_t ay = self->y;
-    const mp_float_t az = self->z;
-    const mp_float_t bx = b->x;
-    const mp_float_t by = b->y;
-    const mp_float_t bz = b->z;
+    const float ax = self->x;
+    const float ay = self->y;
+    const float az = self->z;
+    const float bx = b->x;
+    const float by = b->y;
+    const float bz = b->z;
     return mp_obj_new_float(ax*bx + ay*by + az*bz);
 }
 MP_DEFINE_CONST_FUN_OBJ_2(vector3_class_dot_obj, vector3_class_dot);
@@ -54,12 +54,12 @@ STATIC mp_obj_t vector3_class_cross(mp_obj_t self_in, mp_obj_t _b){
     const vector3_class_obj_t* b = MP_OBJ_TO_PTR(_b);
     vector3_class_obj_t* ret = m_new_obj(vector3_class_obj_t);
     ret->base.type = &vector3_class_type;
-    const mp_float_t ax = self->x;
-    const mp_float_t ay = self->y;
-    const mp_float_t az = self->z;
-    const mp_float_t bx = b->x;
-    const mp_float_t by = b->y;
-    const mp_float_t bz = b->z;
+    const float ax = self->x;
+    const float ay = self->y;
+    const float az = self->z;
+    const float bx = b->x;
+    const float by = b->y;
+    const float bz = b->z;
     ret->x = ay*bz - az*by;
     ret->y = az*bx - ax*bz;
     ret->z = ax*by - ay*bx;
@@ -73,9 +73,9 @@ STATIC mp_obj_t vector3_class_len_squared(mp_obj_t self_in){
         mp_raise_TypeError(MP_ERROR_TEXT("expected vector argument"));
     }
     const vector3_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
-    const mp_float_t x = self->x;
-    const mp_float_t y = self->y;
-    const mp_float_t z = self->z;
+    const float x = self->x;
+    const float y = self->y;
+    const float z = self->z;
     return mp_obj_new_float(x*x + y*y + z*z);
 }
 MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_len_squared_obj, vector3_class_len_squared);
@@ -87,9 +87,9 @@ STATIC mp_obj_t vector3_class_len(mp_obj_t self_in){
     }
 
     const vector3_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
-    const mp_float_t x = self->x;
-    const mp_float_t y = self->y;
-    const mp_float_t z = self->z;
+    const float x = self->x;
+    const float y = self->y;
+    const float z = self->z;
     return mp_obj_new_float(sqrt(x*x + y*y + z*z));
 }
 MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_len_obj, vector3_class_len);
@@ -103,10 +103,10 @@ STATIC mp_obj_t vector3_class_normal(mp_obj_t self_in){
     const vector3_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
     vector3_class_obj_t* ret = m_new_obj(vector3_class_obj_t);
     ret->base.type = &vector3_class_type;
-    const mp_float_t x = self->x;
-    const mp_float_t y = self->y;
-    const mp_float_t z = self->z;
-    const mp_float_t il = 1.0 / sqrt(x*x + y*y + z*z);
+    const float x = self->x;
+    const float y = self->y;
+    const float z = self->z;
+    const float il = 1.0 / sqrt(x*x + y*y + z*z);
     ret->x = x * il;
     ret->y = y * il;
     ret->z = z * il;
@@ -121,10 +121,10 @@ STATIC mp_obj_t vector3_class_normalize(mp_obj_t self_in){
     }
 
     vector3_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
-    const mp_float_t x = self->x;
-    const mp_float_t y = self->y;
-    const mp_float_t z = self->z;
-    const mp_float_t il = 1.0 / sqrt(x*x + y*y + z*z);
+    const float x = self->x;
+    const float y = self->y;
+    const float z = self->z;
+    const float il = 1.0 / sqrt(x*x + y*y + z*z);
     self->x = x * il;
     self->y = y * il;
     self->z = z * il;
@@ -139,20 +139,20 @@ STATIC mp_obj_t vector3_class_rotateZ(mp_obj_t self_in, mp_obj_t _theta){
     }
 
     vector3_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
-    mp_float_t xp, yp;
-    const mp_float_t x = self->x;
-    const mp_float_t y = self->y;
+    float xp, yp;
+    const float x = self->x;
+    const float y = self->y;
 
     if(mp_obj_is_type(_theta, &vector3_class_type)){ // Rotate by vector theta (sin(t), cos(t), ~)
         const vector3_class_obj_t* b = MP_OBJ_TO_PTR(_theta);
-        const mp_float_t bx = b->x;
-        const mp_float_t by = b->y;
+        const float bx = b->x;
+        const float by = b->y;
         xp = x*by - y*bx;
         yp = y*by + x*bx;
     }else if(mp_obj_is_float(_theta)){ // Rotate by scalar theta
-        const mp_float_t b = mp_obj_get_float(_theta);
-        const mp_float_t s = sin(b);
-        const mp_float_t c = cos(b);
+        const float b = mp_obj_get_float(_theta);
+        const float s = sin(b);
+        const float c = cos(b);
         xp = x*c - y*s;
         yp = y*c + x*s;
     }else{
@@ -172,20 +172,20 @@ STATIC mp_obj_t vector3_class_rotateY(mp_obj_t self_in, mp_obj_t theta){
     }
 
     vector3_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
-    mp_float_t xp, zp;
-    const mp_float_t x = self->x;
-    const mp_float_t z = self->z;
+    float xp, zp;
+    const float x = self->x;
+    const float z = self->z;
 
     if(mp_obj_is_type(theta, &vector3_class_type)){ // Rotate by vector theta (sin(t), cos(t), ~)
         const vector3_class_obj_t* b = MP_OBJ_TO_PTR(theta);
-        const mp_float_t bx = b->x;
-        const mp_float_t by = b->y;
+        const float bx = b->x;
+        const float by = b->y;
         xp = x*by - z*bx;
         zp = z*by + x*bx;
     }else if(mp_obj_is_float(theta)){ // Rotate by scalar theta
-        const mp_float_t b = mp_obj_get_float(theta);
-        const mp_float_t s = sin(b);
-        const mp_float_t c = cos(b);
+        const float b = mp_obj_get_float(theta);
+        const float s = sin(b);
+        const float c = cos(b);
         xp = x*c - z*s;
         zp = z*c + x*s;
     }else{
@@ -205,20 +205,20 @@ STATIC mp_obj_t vector3_class_rotateX(mp_obj_t self_in, mp_obj_t theta){
     }
 
     vector3_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
-    mp_float_t yp, zp;
-    const mp_float_t y = self->y;
-    const mp_float_t z = self->z;
+    float yp, zp;
+    const float y = self->y;
+    const float z = self->z;
 
     if(mp_obj_is_type(theta, &vector3_class_type)){ // Rotate by vector theta (sin(t), cos(t), ~)
         const vector3_class_obj_t* b = MP_OBJ_TO_PTR(theta);
-        const mp_float_t bx = b->x;
-        const mp_float_t by = b->y;
+        const float bx = b->x;
+        const float by = b->y;
         yp = y*by - z*bx;
         zp = z*by + y*bx;
     }else if(mp_obj_is_float(theta)){ // Rotate by scalar theta
-        const mp_float_t b = mp_obj_get_float(theta);
-        const mp_float_t s = sin(b);
-        const mp_float_t c = cos(b);
+        const float b = mp_obj_get_float(theta);
+        const float s = sin(b);
+        const float c = cos(b);
         yp = y*c - z*s;
         zp = z*c + y*s;
     }else{
@@ -232,7 +232,7 @@ STATIC mp_obj_t vector3_class_rotateX(mp_obj_t self_in, mp_obj_t theta){
 MP_DEFINE_CONST_FUN_OBJ_2(vector3_class_rotateX_obj, vector3_class_rotateX);
 
 
-static void q_mul(const mp_float_t* q1, const mp_float_t* q2, mp_float_t* y){
+static void q_mul(const float* q1, const float* q2, float* y){
     y[0] = q1[0]*q2[0] - q1[1]*q2[1] - q1[2]*q2[2] - q1[3]*q2[3];
     y[1] = q1[0]*q2[1] + q1[1]*q2[0] - q1[2]*q2[3] + q1[3]*q2[2];
     y[2] = q1[0]*q2[2] + q1[1]*q2[3] + q1[2]*q2[0] - q1[3]*q2[1];
@@ -240,7 +240,7 @@ static void q_mul(const mp_float_t* q1, const mp_float_t* q2, mp_float_t* y){
 }
 
 
-static void q_rot_mul(const mp_float_t* q1, const mp_float_t* q2, mp_float_t* y){ // Quaternion multiply assuming real component of q2 is zero
+static void q_rot_mul(const float* q1, const float* q2, float* y){ // Quaternion multiply assuming real component of q2 is zero
     y[0] =  - q1[1]*q2[1] - q1[2]*q2[2] - q1[3]*q2[3];
     y[1] =    q1[0]*q2[1] - q1[2]*q2[3] + q1[3]*q2[2];
     y[2] =    q1[0]*q2[2] + q1[1]*q2[3] - q1[3]*q2[1];
@@ -260,23 +260,23 @@ STATIC mp_obj_t vector3_class_rotate(mp_obj_t self_in, mp_obj_t about_axis, mp_o
         mp_raise_TypeError(MP_ERROR_TEXT("expected scalar angle"));
     }
     vector3_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
-    const mp_float_t x = self->x;
-    const mp_float_t y = self->y;
-    const mp_float_t z = self->z;
+    const float x = self->x;
+    const float y = self->y;
+    const float z = self->z;
     vector3_class_obj_t* axis = MP_OBJ_TO_PTR(about_axis);
-    const mp_float_t ax = axis->x;
-    const mp_float_t ay = axis->y;
+    const float ax = axis->x;
+    const float ay = axis->y;
 
 
-    const mp_float_t az = axis->z;
+    const float az = axis->z;
 
-    const mp_float_t s = sin(mp_obj_get_float(theta)*0.5);
-    const mp_float_t qa[4] = {cos(mp_obj_get_float(theta)*0.5), ax * s, ay * s, az * s};
-    const mp_float_t qia[4] = {qa[0], -qa[1], -qa[2], -qa[3]};
-    const mp_float_t qp[4] = {0.f, x, y, z};
+    const float s = sin(mp_obj_get_float(theta)*0.5);
+    const float qa[4] = {cos(mp_obj_get_float(theta)*0.5), ax * s, ay * s, az * s};
+    const float qia[4] = {qa[0], -qa[1], -qa[2], -qa[3]};
+    const float qp[4] = {0.f, x, y, z};
 
-    mp_float_t rot1[4];
-    mp_float_t rot2[4];
+    float rot1[4];
+    float rot2[4];
 
     // p' = q^(-1) * p * q
     q_rot_mul(qia, qp, rot1);
@@ -298,19 +298,19 @@ STATIC mp_obj_t vector3_class_resize(mp_obj_t self_in, mp_obj_t element_b){
     }
 
     vector3_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
-    const mp_float_t x = self->x;
-    const mp_float_t y = self->y;
-    const mp_float_t z = self->z;
-    mp_float_t f;
+    const float x = self->x;
+    const float y = self->y;
+    const float z = self->z;
+    float f;
 
     if(mp_obj_is_type(element_b, &vector3_class_type)){ // Resize to match vector length
         const vector3_class_obj_t* b = MP_OBJ_TO_PTR(element_b);
-        const mp_float_t bx = b->x;
-        const mp_float_t by = b->y;
-        const mp_float_t bz = b->z;
+        const float bx = b->x;
+        const float by = b->y;
+        const float bz = b->z;
         f = sqrt((bx*bx + by*by + bz*bz) / (x*x + y*y + z*z));
     }else if(mp_obj_is_float(element_b)){ // Resize to match scalar length
-        const mp_float_t b = mp_obj_get_float(element_b);
+        const float b = mp_obj_get_float(element_b);
         f = sqrt((b*b) / (x*x + y*y + z*z));
     }else{
         mp_raise_TypeError(MP_ERROR_TEXT("expected vector or scalar length"));

@@ -6,7 +6,7 @@
 typedef struct{
     mp_obj_base_t base;
     unsigned char* filename;
-    mp_float_t font_size;
+    float font_size;
 }font_resource_class_obj_t;
 
 extern const mp_obj_type_t font_resource_class_type;
