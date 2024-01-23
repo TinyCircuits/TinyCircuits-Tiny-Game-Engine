@@ -57,14 +57,17 @@ STATIC mp_obj_t circle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
     node_base_get_child_absolute_xy(&circle_resolved_hierarchy_x, &circle_resolved_hierarchy_y, &circle_resolved_hierarchy_rotation, self_in);
 
     // Store the non-rotated x and y for a second
-    float circle_rotated_x = circle_resolved_hierarchy_x-((float)camera_resolved_hierarchy_x)+camera_viewport->width/2;
-    float circle_rotated_y = circle_resolved_hierarchy_y-((float)camera_resolved_hierarchy_y)+camera_viewport->height/2;
+    float circle_rotated_x = circle_resolved_hierarchy_x-camera_resolved_hierarchy_x;
+    float circle_rotated_y = circle_resolved_hierarchy_y-camera_resolved_hierarchy_y;
 
     // Scale transformation due to camera zoom
-    engine_math_scale_point(&circle_rotated_x, &circle_rotated_y, camera_position->x+camera_viewport->width/2, camera_position->y+camera_viewport->height/2, camera_zoom);
+    engine_math_scale_point(&circle_rotated_x, &circle_rotated_y, camera_position->x, camera_position->y, camera_zoom);
 
     // Rotate circle origin about the camera
-    engine_math_rotate_point(&circle_rotated_x, &circle_rotated_y, (float)camera_viewport->width/2, (float)camera_viewport->height/2, camera_resolved_hierarchy_rotation);
+    engine_math_rotate_point(&circle_rotated_x, &circle_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
+
+    circle_rotated_x += camera_viewport->width/2;
+    circle_rotated_y += camera_viewport->height/2;
 
     // https://stackoverflow.com/a/59211338
     for(int x=-circle_radius; x<circle_radius; x++){

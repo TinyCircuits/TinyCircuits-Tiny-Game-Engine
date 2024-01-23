@@ -17,22 +17,22 @@ class MySprite(Sprite2DNode):
     def __init__(self):
         super().__init__(self, texture)
     
-    def tick(self):
-        if engine_input.is_dpad_up_pressed():
-            self.position.y -= 1
-        if engine_input.is_dpad_down_pressed():
-            self.position.y += 1
+    # def tick(self):
+    #     if engine_input.is_dpad_up_pressed():
+    #         self.position.y -= 1
+    #     if engine_input.is_dpad_down_pressed():
+    #         self.position.y += 1
         
-        if engine_input.is_dpad_left_pressed():
-            self.position.x -= 1
-        if engine_input.is_dpad_right_pressed():
-            self.position.x += 1
+    #     if engine_input.is_dpad_left_pressed():
+    #         self.position.x -= 1
+    #     if engine_input.is_dpad_right_pressed():
+    #         self.position.x += 1
         
         
-        if engine_input.is_bumper_left_pressed():
-            self.rotation -= 0.25
-        if engine_input.is_bumper_right_pressed():
-            self.rotation += 0.25
+    #     if engine_input.is_bumper_left_pressed():
+    #         self.rotation += 0.1
+    #     if engine_input.is_bumper_right_pressed():
+    #         self.rotation -= 0.1
 
 
 
@@ -66,15 +66,26 @@ class MyCam(CameraNode):
         if engine_input.is_b_pressed():
             self.zoom += 0.1
         
-        # if engine_input.is_bumper_left_pressed():
-        #     self.rotation.z -= 0.25
-        # if engine_input.is_bumper_right_pressed():
-        #     self.rotation.z += 0.25
+        if engine_input.is_dpad_up_pressed():
+            self.position.y -= 1
+        if engine_input.is_dpad_down_pressed():
+            self.position.y += 1
+        
+        if engine_input.is_dpad_left_pressed():
+            self.position.x -= 1
+        if engine_input.is_dpad_right_pressed():
+            self.position.x += 1
+        
+        
+        if engine_input.is_bumper_left_pressed():
+            self.rotation.z += 0.1
+        if engine_input.is_bumper_right_pressed():
+            self.rotation.z -= 0.1
 
 
 camera = MyCam()
-camera.zoom = 1
+camera.zoom = 0.5
 camera.position = Vector2(0, 0)
-sprite.add_child(camera)
+# sprite.add_child(camera)
 
 engine.start()

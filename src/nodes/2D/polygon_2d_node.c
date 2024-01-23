@@ -60,14 +60,17 @@ STATIC mp_obj_t polygon_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
         float polygon_resolved_hierarchy_rotation = 0.0f;
         node_base_get_child_absolute_xy(&polygon_resolved_hierarchy_x, &polygon_resolved_hierarchy_y, &polygon_resolved_hierarchy_rotation, self_in);
 
-        float polygon_rotated_x = polygon_resolved_hierarchy_x-((float)camera_resolved_hierarchy_x)+camera_viewport->width/2;
-        float polygon_rotated_y = polygon_resolved_hierarchy_y-((float)camera_resolved_hierarchy_y)+camera_viewport->height/2;
+        float polygon_rotated_x = polygon_resolved_hierarchy_x-camera_resolved_hierarchy_x;
+        float polygon_rotated_y = polygon_resolved_hierarchy_y-camera_resolved_hierarchy_y;
 
         // Scale transformation due to camera zoom
-        engine_math_scale_point(&polygon_rotated_x, &polygon_rotated_y, camera_position->x+camera_viewport->width/2, camera_position->y+camera_viewport->height/2, camera_zoom);
+        engine_math_scale_point(&polygon_rotated_x, &polygon_rotated_y, camera_position->x, camera_position->y, camera_zoom);
 
         // Rotate polygon origin about the camera
-        engine_math_rotate_point(&polygon_rotated_x, &polygon_rotated_y, (float)camera_viewport->width/2, (float)camera_viewport->height/2, camera_resolved_hierarchy_rotation);
+        engine_math_rotate_point(&polygon_rotated_x, &polygon_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
+
+        polygon_rotated_x += camera_viewport->width/2;
+        polygon_rotated_y += camera_viewport->height/2;
 
         // Time to draw the polygon!
         // Calculate the average postion of all vertices and
