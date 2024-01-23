@@ -44,15 +44,19 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_n
     rectangle_width = rectangle_width*camera_zoom;
     rectangle_height = rectangle_height*camera_zoom;
 
+    float camera_resolved_hierarchy_x = 0.0f;
+    float camera_resolved_hierarchy_y = 0.0f;
+    float camera_resolved_hierarchy_rotation = 0.0f;
+    node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, camera_node);
+
     float rectangle_resolved_hierarchy_x = 0.0f;
     float rectangle_resolved_hierarchy_y = 0.0f;
     float rectangle_resolved_hierarchy_rotation = 0.0f;
-
     node_base_get_child_absolute_xy(&rectangle_resolved_hierarchy_x, &rectangle_resolved_hierarchy_y, &rectangle_resolved_hierarchy_rotation, self_in);
 
     // Store the non-rotated x and y for a second
-    float rectangle_rotated_x = rectangle_resolved_hierarchy_x-((float)camera_position->x)+camera_viewport->width/2;
-    float rectangle_rotated_y = rectangle_resolved_hierarchy_y-((float)camera_position->y)+camera_viewport->height/2;
+    float rectangle_rotated_x = rectangle_resolved_hierarchy_x-((float)camera_resolved_hierarchy_x)+camera_viewport->width/2;
+    float rectangle_rotated_y = rectangle_resolved_hierarchy_y-((float)camera_resolved_hierarchy_y)+camera_viewport->height/2;
 
     // Scale transformation due to camera zoom
     engine_math_scale_point(&rectangle_rotated_x, &rectangle_rotated_y, camera_position->x+camera_viewport->width/2, camera_position->y+camera_viewport->height/2, camera_zoom);

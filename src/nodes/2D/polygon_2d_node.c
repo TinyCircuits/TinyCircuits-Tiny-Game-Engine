@@ -48,15 +48,19 @@ STATIC mp_obj_t polygon_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
 
         uint16_t polygon_color = mp_obj_get_int(mp_load_attr(polygon_node_base->attr_accessor, MP_QSTR_color));
 
+        float camera_resolved_hierarchy_x = 0.0f;
+        float camera_resolved_hierarchy_y = 0.0f;
+        float camera_resolved_hierarchy_rotation = 0.0f;
+        node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, camera_node);
+
         // Get the absolute position of the node depending in parents
         float polygon_resolved_hierarchy_x = 0.0f;
         float polygon_resolved_hierarchy_y = 0.0f;
         float polygon_resolved_hierarchy_rotation = 0.0f;
-
         node_base_get_child_absolute_xy(&polygon_resolved_hierarchy_x, &polygon_resolved_hierarchy_y, &polygon_resolved_hierarchy_rotation, self_in);
 
-        float polygon_rotated_x = polygon_resolved_hierarchy_x-((float)camera_position->x)+camera_viewport->width/2;
-        float polygon_rotated_y = polygon_resolved_hierarchy_y-((float)camera_position->y)+camera_viewport->height/2;
+        float polygon_rotated_x = polygon_resolved_hierarchy_x-((float)camera_resolved_hierarchy_x)+camera_viewport->width/2;
+        float polygon_rotated_y = polygon_resolved_hierarchy_y-((float)camera_resolved_hierarchy_y)+camera_viewport->height/2;
 
         // Scale transformation due to camera zoom
         engine_math_scale_point(&polygon_rotated_x, &polygon_rotated_y, camera_position->x+camera_viewport->width/2, camera_position->y+camera_viewport->height/2, camera_zoom);

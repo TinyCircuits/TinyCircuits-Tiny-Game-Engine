@@ -45,15 +45,19 @@ STATIC mp_obj_t circle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
     int16_t circle_radius_sqr = circle_radius * circle_radius;
     mp_int_t circle_color = mp_obj_get_int(mp_load_attr(circle_node_base->attr_accessor, MP_QSTR_color));
 
+    float camera_resolved_hierarchy_x = 0.0f;
+    float camera_resolved_hierarchy_y = 0.0f;
+    float camera_resolved_hierarchy_rotation = 0.0f;
+    node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, camera_node);
+
     float circle_resolved_hierarchy_x = 0.0f;
     float circle_resolved_hierarchy_y = 0.0f;
     float circle_resolved_hierarchy_rotation = 0.0f;
-
     node_base_get_child_absolute_xy(&circle_resolved_hierarchy_x, &circle_resolved_hierarchy_y, &circle_resolved_hierarchy_rotation, self_in);
 
     // Store the non-rotated x and y for a second
-    float circle_rotated_x = circle_resolved_hierarchy_x-((float)camera_position->x)+camera_viewport->width/2;
-    float circle_rotated_y = circle_resolved_hierarchy_y-((float)camera_position->y)+camera_viewport->height/2;
+    float circle_rotated_x = circle_resolved_hierarchy_x-((float)camera_resolved_hierarchy_x)+camera_viewport->width/2;
+    float circle_rotated_y = circle_resolved_hierarchy_y-((float)camera_resolved_hierarchy_y)+camera_viewport->height/2;
 
     // Scale transformation due to camera zoom
     engine_math_scale_point(&circle_rotated_x, &circle_rotated_y, camera_position->x+camera_viewport->width/2, camera_position->y+camera_viewport->height/2, camera_zoom);

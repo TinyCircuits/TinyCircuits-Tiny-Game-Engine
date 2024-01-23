@@ -10,47 +10,65 @@ from engine_resources import TextureResource
 import math
 
 engine.set_fps_limit(60)
-engine_physics.set_physics_fps_limit(60)
+
+texture = TextureResource("32x32.bmp")
+
+class MySprite(Sprite2DNode):
+    def __init__(self):
+        super().__init__(self, texture)
+    
+    def tick(self):
+        if engine_input.is_dpad_up_pressed():
+            self.position.y -= 1
+        if engine_input.is_dpad_down_pressed():
+            self.position.y += 1
+        
+        if engine_input.is_dpad_left_pressed():
+            self.position.x -= 1
+        if engine_input.is_dpad_right_pressed():
+            self.position.x += 1
+        
+        
+        if engine_input.is_bumper_left_pressed():
+            self.rotation -= 0.25
+        if engine_input.is_bumper_right_pressed():
+            self.rotation += 0.25
 
 
-class MyPhysicsNode(Physics2DNode):
+
+
+circle = Circle2DNode()
+rectangle = Rectangle2DNode()
+sprite = MySprite()
+polygon = Polygon2DNode()
+polygon.vertices.append(Vector2(-10, 10))
+polygon.vertices.append(Vector2(10, 10))
+polygon.vertices.append(Vector2(10, -10))
+polygon.vertices.append(Vector2(-10, -10))
+
+circle.color = 0b1111100000000000
+rectangle.color = 0b1111101001001001
+
+circle.position = Vector2(0, -32)
+rectangle.position = Vector2(32, 0)
+sprite.position = Vector2(0, 32)
+polygon.position = Vector2(-32, 0)
+
+
+class MyCam(CameraNode):
     def __init__(self):
         super().__init__(self)
-
-    def collision(self, collision_contact):
-        print(collision_contact.position.x, collision_contact.position.y, collision_contact.normal.x, collision_contact.normal.y, type(collision_contact.node))
-
-
-
-physics_poly0 = MyPhysicsNode()
-physics_poly0.position = Vector2(64, 64-32)
-physics_poly0.collision_shape = RectanglePolyCollisionShape2D(20, 40)
-physics_poly0.collision_shape.calculate_normals()
-# physics_poly0.rotation = math.pi/4
-physics_poly0.velocity = Vector2(0, 0.75)
+    
+    def tick(self):
+        if engine_input.is_a_pressed():
+            self.zoom -= 0.1
+        if engine_input.is_b_pressed():
+            self.zoom += 0.1
 
 
-physics_poly1 = MyPhysicsNode()
-physics_poly1.position = Vector2(64, 64+32)
-physics_poly1.collision_shape = HexagonPolyCollisionShape2D(10)
-physics_poly1.collision_shape.calculate_normals()
-# physics_poly1.rotation = math.pi/4
-physics_poly1.velocity = Vector2(0, -0.75)
+camera = MyCam()
+camera.zoom = 1
 
-
-poly0 = Polygon2DNode()
-poly0.vertices = physics_poly0.collision_shape.vertices
-poly0.color = 0b1111100000011111
-
-poly1 = Polygon2DNode()
-poly1.vertices = physics_poly1.collision_shape.vertices
-poly1.color = 0b1111100000000000
-
-
-physics_poly0.add_child(poly0)
-physics_poly1.add_child(poly1)
-
-
-camera = CameraNode()
+sprite.add_child(camera)
 
 engine.start()
