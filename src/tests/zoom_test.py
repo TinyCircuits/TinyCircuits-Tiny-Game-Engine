@@ -47,9 +47,9 @@ class MyCam(CameraNode):
             self.position.x += 1
         
         if engine_input.is_a_pressed():
-            self.zoom -= 0.25
+            self.zoom -= 0.1
         if engine_input.is_b_pressed():
-            self.zoom += 0.25
+            self.zoom += 0.1
         
         if engine_input.is_bumper_left_pressed():
             self.rotation.z -= 0.25
