@@ -48,23 +48,6 @@ STATIC mp_obj_t polygon_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
 
         uint16_t polygon_color = mp_obj_get_int(mp_load_attr(polygon_node_base->attr_accessor, MP_QSTR_color));
 
-        // Calculate the average postion of all vertices and
-        // rotate them about that. Afterwards offset by node
-        // position (to the user, if they create a box they
-        // should expect that the node postion is the center
-        // of that box)
-        float center_x = 0.0f;
-        float center_y = 0.0f;
-
-        for(uint16_t ivx=0; ivx<polygon_vertex_list->len; ivx++){
-            vector2_class_obj_t *vertex = polygon_vertex_list->items[ivx];
-            center_x += vertex->x;
-            center_y += vertex->y;
-        }
-
-        center_x = center_x / polygon_vertex_list->len;
-        center_y = center_y / polygon_vertex_list->len;
-
         // Get the absolute position of the node depending in parents
         float polygon_resolved_hierarchy_x = 0.0f;
         float polygon_resolved_hierarchy_y = 0.0f;
@@ -87,6 +70,26 @@ STATIC mp_obj_t polygon_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
 
         // Rotate polygon origin about the camera
         engine_math_rotate_point(&polygon_rotated_x, &polygon_rotated_y, (float)camera_viewport->width/2, (float)camera_viewport->height/2, (float)camera_rotation->z);
+
+        engine_draw_pixel(0b0000011111100000, polygon_rotated_x, polygon_rotated_y);
+
+        // Time to draw the polygon!
+        // Calculate the average postion of all vertices and
+        // rotate them about that. Afterwards offset by node
+        // position (to the user, if they create a box they
+        // should expect that the node postion is the center
+        // of that box)
+        float center_x = 0.0f;
+        float center_y = 0.0f;
+
+        for(uint16_t ivx=0; ivx<polygon_vertex_list->len; ivx++){
+            vector2_class_obj_t *vertex = polygon_vertex_list->items[ivx];
+            center_x += vertex->x;
+            center_y += vertex->y;
+        }
+
+        center_x = center_x / polygon_vertex_list->len;
+        center_y = center_y / polygon_vertex_list->len;
 
         // With the 'center' calculated, rotate each vertex before
         // drawing the line between each pair of points. After rotating
@@ -139,7 +142,7 @@ STATIC mp_obj_t polygon_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
             current_rotated_vertex_y += center_y;
             engine_math_rotate_point(&current_rotated_vertex_x, &current_rotated_vertex_y, center_x, center_y, polygon_resolved_hierarchy_rotation+camera_rotation->z);
 
-            // Incorporate the postion of the node
+            // Incorporate the position of the node
             current_rotated_vertex_x += polygon_rotated_x;
             current_rotated_vertex_y += polygon_rotated_y;
         }
