@@ -32,13 +32,17 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_n
     engine_node_base_t *camera_node_base = camera_node;
 
     vector2_class_obj_t *rectangle_scale =  mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_scale);
-    mp_int_t rectangle_width = mp_obj_get_int(mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_width));
-    mp_int_t rectangle_height = mp_obj_get_int(mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_height));
-    mp_int_t rectangle_color = mp_obj_get_int(mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_color));
+    uint16_t rectangle_width = mp_obj_get_int(mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_width));
+    uint16_t rectangle_height = mp_obj_get_int(mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_height));
+    uint16_t rectangle_color = mp_obj_get_int(mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_color));
 
     vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
     vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
     rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
+    float camera_zoom = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_zoom));
+
+    rectangle_width = rectangle_width*camera_zoom;
+    rectangle_height = rectangle_height*camera_zoom;
 
     float rectangle_resolved_hierarchy_x = 0.0f;
     float rectangle_resolved_hierarchy_y = 0.0f;
@@ -49,6 +53,16 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_n
     // Store the non-rotated x and y for a second
     float rectangle_rotated_x = rectangle_resolved_hierarchy_x-((float)camera_position->x);
     float rectangle_rotated_y = rectangle_resolved_hierarchy_y-((float)camera_position->y);
+
+    // Scale transformation due to camera zoom: https://math.stackexchange.com/a/5808
+    // Add the camera's center viewport offset so that the scaling takes place from there
+    // and not in the top left
+    rectangle_rotated_x -= camera_position->x+camera_viewport->width/2;
+    rectangle_rotated_y -= camera_position->y+camera_viewport->height/2;
+    rectangle_rotated_x *= camera_zoom;
+    rectangle_rotated_y *= camera_zoom;
+    rectangle_rotated_x += camera_position->x+camera_viewport->width/2;
+    rectangle_rotated_y += camera_position->y+camera_viewport->height/2;
 
     // Rotate rectangle origin about the camera
     engine_math_rotate_point(&rectangle_rotated_x, &rectangle_rotated_y, (float)camera_viewport->width/2, (float)camera_viewport->height/2, (float)camera_rotation->z);

@@ -10,6 +10,7 @@ typedef struct{
     mp_obj_t position;              // Vector3: xyz position of this node
     mp_obj_t rotation;              // Vector3: rotation of this node in space
     mp_obj_t viewport;              // Rectangle: position, width and height in screen buffer
+    mp_obj_t zoom;                  // float: factor to scale drawing nodes by and also scale translation
 }engine_camera_node_class_obj_t;
 
 typedef struct{

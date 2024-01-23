@@ -40,6 +40,12 @@ STATIC mp_obj_t polygon_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
         vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
         vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
         rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
+        float camera_zoom = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_zoom));
+
+        // Get polygon scale and incorporate camera zoom
+        float polygon_scale = mp_obj_get_float(mp_load_attr(polygon_node_base->attr_accessor, MP_QSTR_scale));
+        polygon_scale = polygon_scale * camera_zoom;
+
         uint16_t polygon_color = mp_obj_get_int(mp_load_attr(polygon_node_base->attr_accessor, MP_QSTR_color));
 
 
@@ -84,6 +90,16 @@ STATIC mp_obj_t polygon_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
         float polygon_rotated_x = polygon_resolved_hierarchy_x-((float)camera_rotated_x);
         float polygon_rotated_y = polygon_resolved_hierarchy_y-((float)camera_rotated_y);
 
+        // Scale transformation due to camera zoom: https://math.stackexchange.com/a/5808
+        // Add the camera's center viewport offset so that the scaling takes place from there
+        // and not in the top left
+        polygon_rotated_x -= camera_position->x+camera_viewport->width/2;
+        polygon_rotated_y -= camera_position->y+camera_viewport->height/2;
+        polygon_rotated_x *= camera_zoom;
+        polygon_rotated_y *= camera_zoom;
+        polygon_rotated_x += camera_position->x+camera_viewport->width/2;
+        polygon_rotated_y += camera_position->y+camera_viewport->height/2;
+
         // Rotate polygon origin about the camera
         engine_math_rotate_point(&polygon_rotated_x, &polygon_rotated_y, (float)camera_viewport->width/2, (float)camera_viewport->height/2, (float)camera_rotation->z);
 
@@ -92,6 +108,13 @@ STATIC mp_obj_t polygon_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
         // offset by node postion amount
         float last_rotated_vertex_x = ((vector2_class_obj_t*)polygon_vertex_list->items[0])->x;
         float last_rotated_vertex_y = ((vector2_class_obj_t*)polygon_vertex_list->items[0])->y;
+        // Scale the vertices away from the center
+        last_rotated_vertex_x -= center_x;
+        last_rotated_vertex_y -= center_y;
+        last_rotated_vertex_x *= polygon_scale;
+        last_rotated_vertex_y *= polygon_scale;
+        last_rotated_vertex_x += center_x;
+        last_rotated_vertex_y += center_y;
         engine_math_rotate_point(&last_rotated_vertex_x, &last_rotated_vertex_y, center_x, center_y, polygon_resolved_hierarchy_rotation);
         last_rotated_vertex_x += polygon_rotated_x;
         last_rotated_vertex_y += polygon_rotated_y;
@@ -102,6 +125,13 @@ STATIC mp_obj_t polygon_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
         
         float current_rotated_vertex_x = ((vector2_class_obj_t*)polygon_vertex_list->items[1])->x;
         float current_rotated_vertex_y = ((vector2_class_obj_t*)polygon_vertex_list->items[1])->y;
+        // Scale the vertices away from the center
+        current_rotated_vertex_x -= center_x;
+        current_rotated_vertex_y -= center_y;
+        current_rotated_vertex_x *= polygon_scale;
+        current_rotated_vertex_y *= polygon_scale;
+        current_rotated_vertex_x += center_x;
+        current_rotated_vertex_y += center_y;
         engine_math_rotate_point(&current_rotated_vertex_x, &current_rotated_vertex_y, center_x, center_y, polygon_resolved_hierarchy_rotation);
         current_rotated_vertex_x += polygon_rotated_x;
         current_rotated_vertex_y += polygon_rotated_y;
@@ -115,6 +145,13 @@ STATIC mp_obj_t polygon_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
 
             current_rotated_vertex_x = ((vector2_class_obj_t*)polygon_vertex_list->items[ivx])->x;
             current_rotated_vertex_y = ((vector2_class_obj_t*)polygon_vertex_list->items[ivx])->y;
+            // Scale the vertices away from the center
+            current_rotated_vertex_x -= center_x;
+            current_rotated_vertex_y -= center_y;
+            current_rotated_vertex_x *= polygon_scale;
+            current_rotated_vertex_y *= polygon_scale;
+            current_rotated_vertex_x += center_x;
+            current_rotated_vertex_y += center_y;
             engine_math_rotate_point(&current_rotated_vertex_x, &current_rotated_vertex_y, center_x, center_y, polygon_resolved_hierarchy_rotation);
 
             // Incorporate the postion of the node
@@ -161,6 +198,7 @@ mp_obj_t polygon_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
         polygon_2d_node->color = mp_obj_new_int(0xffff);
         polygon_2d_node->rotation = mp_obj_new_float(0.0f);
         polygon_2d_node->vertices = mp_obj_new_list(0, NULL);
+        polygon_2d_node->scale = mp_obj_new_float(1.0f);
     }else if(n_args == 1){  // Inherited (use existing object)
         node_base->inherited = true;
         node_base->node = args[0];
@@ -186,6 +224,7 @@ mp_obj_t polygon_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
         mp_store_attr(node_base->node, MP_QSTR_color, mp_obj_new_int(0xffff));
         mp_store_attr(node_base->node, MP_QSTR_rotation, mp_obj_new_float(0.0f));
         mp_store_attr(node_base->node, MP_QSTR_vertices, mp_obj_new_list(0, NULL));
+        mp_store_attr(node_base->node, MP_QSTR_scale, mp_obj_new_float(1.0f));
     }else{
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Too many arguments passed to Polygon2DNode constructor!"));
     }
@@ -237,6 +276,9 @@ STATIC void polygon_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
             case MP_QSTR_vertices:
                 destination[0] = self->vertices;
             break;
+            case MP_QSTR_scale:
+                destination[0] = self->scale;
+            break;
             default:
                 return; // Fail
         }
@@ -253,6 +295,9 @@ STATIC void polygon_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
             break;
             case MP_QSTR_vertices:
                 self->vertices = destination[1];
+            break;
+            case MP_QSTR_scale:
+                self->scale = destination[1];
             break;
             default:
                 return; // Fail

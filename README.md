@@ -27,12 +27,13 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Fix child objects rotating opposite about the parent object (occurred after fixing incorrect parent rotation)
 [X] Animated sprites
 [X] Physics: Acceleration
+[] Camera zoom: add zoom parameter to camera and apply it to all draw nodes: circles, rectangles, sprites, and polygons.
+                this will mean that as the camera zooms in, all nodes get larger but also "further" away as they are drawn
 [] Physics: just polygons, rotation (simple init for common shapes), no friction
 [] Physics: smooth: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-core-engine--gamedev-7493t#:~:text=Here%20is%20a%20full%20example%3A
 [] Web runner
 [] Outline drawing for rects, circles, and polygons?
 [] Static nodes/screen space
-[] Camera zoom
 [] Documentation: markdown to PDF
 [] Weird sprite jumping/offset during rotation and scaling
 [] Text

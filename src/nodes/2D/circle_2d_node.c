@@ -30,13 +30,20 @@ STATIC mp_obj_t circle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
     engine_node_base_t *circle_node_base = self_in;
     engine_node_base_t *camera_node_base = camera_node;
 
-    int16_t circle_radius =  (uint16_t)(mp_obj_get_float(mp_load_attr(circle_node_base->attr_accessor, MP_QSTR_radius)));
-    mp_int_t circle_color = mp_obj_get_int(mp_load_attr(circle_node_base->attr_accessor, MP_QSTR_color));
-    int16_t circle_radius_sqr = circle_radius * circle_radius;
-
     vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
     vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
     rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
+    float camera_zoom = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_zoom));
+
+    float circle_scale =  mp_obj_get_float(mp_load_attr(circle_node_base->attr_accessor, MP_QSTR_scale));
+    int16_t circle_radius =  (uint16_t)(mp_obj_get_float(mp_load_attr(circle_node_base->attr_accessor, MP_QSTR_radius)));
+
+    // The final circle radius to draw the circle at is a combination of
+    // the set radius, times the set scale, times the set camera zoom
+    circle_radius = (int16_t)(circle_radius*circle_scale*camera_zoom);
+    
+    int16_t circle_radius_sqr = circle_radius * circle_radius;
+    mp_int_t circle_color = mp_obj_get_int(mp_load_attr(circle_node_base->attr_accessor, MP_QSTR_color));
 
     float circle_resolved_hierarchy_x = 0.0f;
     float circle_resolved_hierarchy_y = 0.0f;
@@ -48,7 +55,17 @@ STATIC mp_obj_t circle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
     float circle_rotated_x = circle_resolved_hierarchy_x-((float)camera_position->x);
     float circle_rotated_y = circle_resolved_hierarchy_y-((float)camera_position->y);
 
-    // Rotate rectangle origin about the camera
+    // Scale transformation due to camera zoom: https://math.stackexchange.com/a/5808
+    // Add the camera's center viewport offset so that the scaling takes place from there
+    // and not in the top left
+    circle_rotated_x -= camera_position->x+camera_viewport->width/2;
+    circle_rotated_y -= camera_position->y+camera_viewport->height/2;
+    circle_rotated_x *= camera_zoom;
+    circle_rotated_y *= camera_zoom;
+    circle_rotated_x += camera_position->x+camera_viewport->width/2;
+    circle_rotated_y += camera_position->y+camera_viewport->height/2;
+
+    // Rotate circle origin about the camera
     engine_math_rotate_point(&circle_rotated_x, &circle_rotated_y, (float)camera_viewport->width/2, (float)camera_viewport->height/2, (float)camera_rotation->z);
 
     // https://stackoverflow.com/a/59211338
@@ -97,6 +114,7 @@ mp_obj_t circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
         circle_2d_node->radius = mp_obj_new_float(5.0f);
         circle_2d_node->rotation = mp_obj_new_float(0.0f);
         circle_2d_node->color = mp_obj_new_int(0xffff);
+        circle_2d_node->scale = mp_obj_new_float(1.0f);
     }else if(n_args == 1){  // Inherited (use existing object)
         node_base->inherited = true;
         node_base->node = args[0];
@@ -122,6 +140,7 @@ mp_obj_t circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
         mp_store_attr(node_base->node, MP_QSTR_radius, mp_obj_new_float(5.0f));
         mp_store_attr(node_base->node, MP_QSTR_rotation, mp_obj_new_float(0.0f));
         mp_store_attr(node_base->node, MP_QSTR_color, mp_obj_new_int(0xffff));
+        mp_store_attr(node_base->node, MP_QSTR_scale, mp_obj_new_float(1.0f));
     }else{
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Too many arguments passed to Circle2DNode constructor!"));
     }
@@ -173,6 +192,9 @@ STATIC void circle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
             case MP_QSTR_color:
                 destination[0] = self->color;
             break;
+            case MP_QSTR_scale:
+                destination[0] = self->scale;
+            break;
             default:
                 return; // Fail
         }
@@ -189,6 +211,9 @@ STATIC void circle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
             break;
             case MP_QSTR_color:
                 self->color = destination[1];
+            break;
+            case MP_QSTR_scale:
+                self->scale = destination[1];
             break;
             default:
                 return; // Fail

@@ -42,6 +42,7 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
     vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
     vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
     rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
+    float camera_zoom = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_zoom));
 
     uint16_t sprite_frame_count_x = mp_obj_get_int(mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_count_x));
     uint16_t sprite_frame_count_y = mp_obj_get_int(mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_count_y));
@@ -70,6 +71,16 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
     float sprite_rotated_x = sprite_resolved_hierarchy_x-((float)camera_position->x);
     float sprite_rotated_y = sprite_resolved_hierarchy_y-((float)camera_position->y);
 
+    // Scale transformation due to camera zoom: https://math.stackexchange.com/a/5808
+    // Add the camera's center viewport offset so that the scaling takes place from there
+    // and not in the top left
+    sprite_rotated_x -= camera_position->x+camera_viewport->width/2;
+    sprite_rotated_y -= camera_position->y+camera_viewport->height/2;
+    sprite_rotated_x *= camera_zoom;
+    sprite_rotated_y *= camera_zoom;
+    sprite_rotated_x += camera_position->x+camera_viewport->width/2;
+    sprite_rotated_y += camera_position->y+camera_viewport->height/2;
+
     // Rotate sprite origin about the camera
     engine_math_rotate_point(&sprite_rotated_x, &sprite_rotated_y, (float)camera_viewport->width/2, (float)camera_viewport->height/2, (float)camera_rotation->z);
 
@@ -80,8 +91,8 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
                                   spritesheet_width,
                                   sprite_frame_width,
                                   sprite_frame_height,
-                                  (int32_t)(sprite_scale->x*65536 + 0.5),
-                                  (int32_t)(sprite_scale->y*65536 + 0.5),
+                                  (int32_t)((sprite_scale->x*camera_zoom)*65536 + 0.5),
+                                  (int32_t)((sprite_scale->y*camera_zoom)*65536 + 0.5),
                                   (int16_t)(((sprite_resolved_hierarchy_rotation+(float)camera_rotation->z))*1024 / (float)(2*PI)),
                                   transparent_color);
 

@@ -64,6 +64,7 @@ mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t 
         camera_node->position = vector3_class_new(&vector3_class_type, 0, 0, NULL);
         camera_node->rotation = vector3_class_new(&vector3_class_type, 0, 0, NULL);
         camera_node->viewport = rectangle_class_new(&rectangle_class_type, 4, 0, default_viewport_parameters);
+        camera_node->zoom = mp_obj_new_float(1.0f);
     }else if(n_args == 1){  // Inherited (use existing object)
         node_base->inherited = true;
         node_base->node = args[0];
@@ -81,6 +82,7 @@ mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t 
         mp_store_attr(node_base->node, MP_QSTR_position, vector3_class_new(&vector3_class_type, 0, 0, NULL));
         mp_store_attr(node_base->node, MP_QSTR_rotation, vector3_class_new(&vector3_class_type, 0, 0, NULL));
         mp_store_attr(node_base->node, MP_QSTR_viewport, rectangle_class_new(&rectangle_class_type, 4, 0, default_viewport_parameters));
+        mp_store_attr(node_base->node, MP_QSTR_zoom, mp_obj_new_float(1.0f));
     }else{
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Too many arguments passed to CameraNode constructor!"));
     }
@@ -143,6 +145,9 @@ STATIC void camera_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *d
             case MP_QSTR_viewport:
                 destination[0] = self->viewport;
             break;
+            case MP_QSTR_zoom:
+                destination[0] = self->zoom;
+            break;
             default:
                 return; // Fail
         }
@@ -156,6 +161,9 @@ STATIC void camera_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *d
             break;
             case MP_QSTR_viewport:
                 self->viewport = destination[1];
+            break;
+            case MP_QSTR_zoom:
+                self->zoom = destination[1];
             break;
             default:
                 return; // Fail
