@@ -3,8 +3,6 @@
 #include "nodes/2d/physics_2d_node.h"
 #include "math/vector2.h"
 #include "math/engine_math.h"
-#include "collision_shapes/circle_collision_shape_2d.h"
-#include "collision_shapes/rectangle_collision_shape_2d.h"
 #include "collision_shapes/polygon_collision_shape_2d.h"
 #include "collision_contact_2d.h"
 
@@ -16,66 +14,6 @@ float engine_physics_gravity_y = -0.00981f;
 
 float engine_physics_fps_limit_period_ms = 16.667f;
 float engine_physics_fps_time_at_last_tick_ms = 0.0f;
-
-
-void engine_physics_find_best_edge(mp_obj_list_t *vertices_list, float axis_x, float axis_y, vector2_class_obj_t *edge_point_0, vector2_class_obj_t *edge_point_1, vector2_class_obj_t *max_projection_vertex){
-    // step 1
-    // find the farthest vertex in
-    // the polygon along the separation normal
-    float max = -FLT_MAX;
-    vector2_class_obj_t *vertex = NULL;
-    int32_t index = 0;
-    for(uint32_t ivx=0; ivx<vertices_list->len; ivx++){
-        vertex = (vector2_class_obj_t*)vertices_list->items[ivx];
-        float projection = engine_math_dot_product(axis_x, axis_y, vertex->x, vertex->y);
-
-        if(projection > max){
-            max = projection;
-            index = ivx;
-        }
-    }
-
-    // step 2
-    // now we need to use the edge that
-    // is most perpendicular, either the
-    // right or the left
-    vector2_class_obj_t *v = vertices_list->items[index];
-    vector2_class_obj_t *v0 = NULL;
-    vector2_class_obj_t *v1 = NULL;
-    
-    if(index + 1 == vertices_list->len){
-        v1 = (vector2_class_obj_t*)vertices_list->items[0];
-    }else{
-        v1 = (vector2_class_obj_t*)vertices_list->items[index+1];
-    }
-
-    if(index - 1 == -1){
-        v0 = (vector2_class_obj_t*)vertices_list->items[vertices_list->len-1];
-    }else{
-        v0 = (vector2_class_obj_t*)vertices_list->items[index-1];
-    }
-
-    // left
-    float lx = v->x - v1->x;
-    float ly = v->y - v1->y;
-
-    // right
-    float rx = v->x - v0->x;
-    float ry = v->y - v0->y;
-
-    engine_math_normalize(&lx, &ly);
-    engine_math_normalize(&rx, &ry);
-
-    if(engine_math_dot_product(rx, ry, axis_x, axis_y) <= engine_math_dot_product(lx, ly, axis_x, axis_y)){
-        max_projection_vertex = v;
-        edge_point_0 = v0;
-        edge_point_1 = v;
-    }else{
-        max_projection_vertex = v;
-        edge_point_0 = v;
-        edge_point_1 = v1;
-    }
-}
 
 
 // https://textbooks.cs.ksu.edu/cis580/04-collisions/04-separating-axis-theorem/index.html#:~:text=A%20helper%20method%20to%20do%20this%20might%20be%3A
@@ -117,11 +55,12 @@ bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, eng
             mp_obj_list_t *a_normals = polygon_shape_a->normals;
             mp_obj_list_t *b_normals = polygon_shape_b->normals;
 
-            float collision_shape_a_pos_x = polygon_shape_a->position->x + physics_node_a_position->x;
-            float collision_shape_a_pos_y = polygon_shape_a->position->y + physics_node_a_position->y;
+            // What if these are children of other nodes? Should this be in absolute? TODO
+            float collision_shape_a_pos_x = physics_node_a_position->x;
+            float collision_shape_a_pos_y = physics_node_a_position->y;
 
-            float collision_shape_b_pos_x = polygon_shape_b->position->x + physics_node_b_position->x;
-            float collision_shape_b_pos_y = polygon_shape_b->position->y + physics_node_b_position->y;
+            float collision_shape_b_pos_x = physics_node_b_position->x;
+            float collision_shape_b_pos_y = physics_node_b_position->y;
 
             float axis_x = 0.0f;
             float axis_y = 0.0f;

@@ -9,20 +9,6 @@ STATIC void polygon_collision_shape_2d_class_print(const mp_print_t *print, mp_o
 }
 
 
-mp_obj_t polygon_collision_shape_2d_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
-    ENGINE_INFO_PRINTF("New PolygonCollisionShape2D");
-    mp_arg_check_num(n_args, n_kw, 0, 0, false);
-
-    polygon_collision_shape_2d_class_obj_t *self = m_new_obj(polygon_collision_shape_2d_class_obj_t);
-    self->base.type = &polygon_collision_shape_2d_class_type;
-    self->position = vector2_class_new(&vector2_class_type, 0, 0, NULL);
-    self->vertices = mp_obj_new_list(0, NULL);
-    self->normals = mp_obj_new_list(0, NULL);
-    
-    return MP_OBJ_FROM_PTR(self);
-}
-
-
 STATIC mp_obj_t polygon_2d_node_class_calculate_normals(mp_obj_t self_in){
     ENGINE_WARNING_PRINTF("Polygon2DNode: Calculating normals");
 
@@ -77,6 +63,83 @@ STATIC mp_obj_t polygon_2d_node_class_calculate_normals(mp_obj_t self_in){
 MP_DEFINE_CONST_FUN_OBJ_1(polygon_2d_node_class_calculate_normals_obj, polygon_2d_node_class_calculate_normals);
 
 
+mp_obj_t empty_collision_shape_2d_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
+    ENGINE_INFO_PRINTF("New Empty PolygonCollisionShape2D");
+    mp_arg_check_num(n_args, n_kw, 0, 0, false);
+
+    polygon_collision_shape_2d_class_obj_t *self = m_new_obj(polygon_collision_shape_2d_class_obj_t);
+    self->base.type = &polygon_collision_shape_2d_class_type;
+    self->vertices = mp_obj_new_list(0, NULL);
+    self->normals = mp_obj_new_list(0, NULL);
+    
+    return MP_OBJ_FROM_PTR(self);
+}
+
+
+mp_obj_t rectangle_collision_shape_2d_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
+    ENGINE_INFO_PRINTF("New Rectangle PolygonCollisionShape2D");
+    mp_arg_check_num(n_args, n_kw, 0, 2, false);
+
+    polygon_collision_shape_2d_class_obj_t *self = m_new_obj(polygon_collision_shape_2d_class_obj_t);
+    self->base.type = &polygon_collision_shape_2d_class_type;
+
+    if(n_args == 0){
+        self->vertices = mp_obj_new_list(4, (mp_obj_t[]){vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(-1.0f), mp_obj_new_float(1.0f)}),
+                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f),  mp_obj_new_float(1.0f)}),
+                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f),  mp_obj_new_float(-1.0f)}),
+                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(-1.0f), mp_obj_new_float(-1.0f)})});
+    }else if(n_args == 1){
+        float scale = mp_obj_get_float(args[0]);
+        self->vertices = mp_obj_new_list(4, (mp_obj_t[]){vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(-1.0f*scale), mp_obj_new_float(1.0f*scale)}),
+                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f*scale),  mp_obj_new_float(1.0f*scale)}),
+                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f*scale),  mp_obj_new_float(-1.0f*scale)}),
+                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(-1.0f*scale), mp_obj_new_float(-1.0f*scale)})});
+    }else if(n_args == 2){
+        float width = mp_obj_get_float(args[0]);
+        float height = mp_obj_get_float(args[1]);
+        self->vertices = mp_obj_new_list(4, (mp_obj_t[]){vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(-width/2), mp_obj_new_float(height/2)}),
+                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(width/2),  mp_obj_new_float(height/2)}),
+                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(width/2),  mp_obj_new_float(-height/2)}),
+                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(-width/2), mp_obj_new_float(-height/2)})});
+    }
+    self->normals = mp_obj_new_list(0, NULL);
+    
+    polygon_2d_node_class_calculate_normals(self);
+
+    return MP_OBJ_FROM_PTR(self);
+}
+
+
+mp_obj_t hexagon_collision_shape_2d_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
+    ENGINE_INFO_PRINTF("New Hexagon PolygonCollisionShape2D");
+    mp_arg_check_num(n_args, n_kw, 0, 1, false);
+
+    polygon_collision_shape_2d_class_obj_t *self = m_new_obj(polygon_collision_shape_2d_class_obj_t);
+    self->base.type = &polygon_collision_shape_2d_class_type;
+    if(n_args == 0){
+        self->vertices = mp_obj_new_list(6, (mp_obj_t[]){vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.0f),        mp_obj_new_float(1.0f)}),
+                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.866025f),   mp_obj_new_float(0.5f)}),
+                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.866025f),   mp_obj_new_float(-0.5f)}),
+                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.0f),        mp_obj_new_float(-1.0f)}),
+                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(-0.866025f),  mp_obj_new_float(-0.5f)}),
+                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(-0.866025f),  mp_obj_new_float(0.5f)})});
+    }else if(n_args == 1){
+        float scale = mp_obj_get_float(args[0]);
+        self->vertices = mp_obj_new_list(6, (mp_obj_t[]){vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.0f*scale),        mp_obj_new_float(1.0f*scale)}),
+                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.866025f*scale),   mp_obj_new_float(0.5f*scale)}),
+                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.866025f*scale),   mp_obj_new_float(-0.5f*scale)}),
+                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.0f*scale),        mp_obj_new_float(-1.0f*scale)}),
+                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(-0.866025f*scale),  mp_obj_new_float(-0.5f*scale)}),
+                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(-0.866025f*scale),  mp_obj_new_float(0.5f*scale)})});
+    }
+    self->normals = mp_obj_new_list(0, NULL);
+    
+    polygon_2d_node_class_calculate_normals(self);
+
+    return MP_OBJ_FROM_PTR(self);
+}
+
+
 STATIC void polygon_collision_shape_2d_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing PolygonCollisionShape2D attr");
 
@@ -87,9 +150,6 @@ STATIC void polygon_collision_shape_2d_class_attr(mp_obj_t self_in, qstr attribu
             case MP_QSTR_calculate_normals:
                 destination[0] = MP_OBJ_FROM_PTR(&polygon_2d_node_class_calculate_normals_obj);
                 destination[1] = self_in;
-            break;
-            case MP_QSTR_position:
-                destination[0] = self->position;
             break;
             case MP_QSTR_vertices:
                 destination[0] = self->vertices;
@@ -102,9 +162,6 @@ STATIC void polygon_collision_shape_2d_class_attr(mp_obj_t self_in, qstr attribu
         }
     }else if(destination[1] != MP_OBJ_NULL){    // Store
         switch(attribute){
-            case MP_QSTR_position:
-                self->position = destination[1];
-            break;
             case MP_QSTR_vertices:
                 self->vertices = destination[1];
             break;
@@ -133,7 +190,43 @@ MP_DEFINE_CONST_OBJ_TYPE(
     MP_QSTR_PolygonCollisionShape2D,
     MP_TYPE_FLAG_NONE,
 
-    make_new, polygon_collision_shape_2d_class_new,
+    make_new, empty_collision_shape_2d_class_new,
+    print, polygon_collision_shape_2d_class_print,
+    attr, polygon_collision_shape_2d_class_attr,
+    locals_dict, &polygon_collision_shape_2d_class_locals_dict
+);
+
+
+MP_DEFINE_CONST_OBJ_TYPE(
+    empty_poly_collision_shape_2d_class_type,
+    MP_QSTR_EmptyPolyCollisionShape2D,
+    MP_TYPE_FLAG_NONE,
+
+    make_new, empty_collision_shape_2d_class_new,
+    print, polygon_collision_shape_2d_class_print,
+    attr, polygon_collision_shape_2d_class_attr,
+    locals_dict, &polygon_collision_shape_2d_class_locals_dict
+);
+
+
+MP_DEFINE_CONST_OBJ_TYPE(
+    rectangle_poly_collision_shape_2d_class_type,
+    MP_QSTR_RectanglePolyCollisionShape2D,
+    MP_TYPE_FLAG_NONE,
+
+    make_new, rectangle_collision_shape_2d_class_new,
+    print, polygon_collision_shape_2d_class_print,
+    attr, polygon_collision_shape_2d_class_attr,
+    locals_dict, &polygon_collision_shape_2d_class_locals_dict
+);
+
+
+MP_DEFINE_CONST_OBJ_TYPE(
+    hexagon_poly_collision_shape_2d_class_type,
+    MP_QSTR_HexagonPolyCollisionShape2D,
+    MP_TYPE_FLAG_NONE,
+
+    make_new, hexagon_collision_shape_2d_class_new,
     print, polygon_collision_shape_2d_class_print,
     attr, polygon_collision_shape_2d_class_attr,
     locals_dict, &polygon_collision_shape_2d_class_locals_dict

@@ -40,8 +40,6 @@ SRC_USERMOD += $(ENGINE_MOD_DIR)/resources/engine_font_resource.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/resources/engine_sound_resource.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/physics/engine_physics_module.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/physics/engine_physics.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/physics/collision_shapes/circle_collision_shape_2d.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/physics/collision_shapes/rectangle_collision_shape_2d.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/physics/collision_shapes/polygon_collision_shape_2d.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/physics/collision_contact_2d.c
 
