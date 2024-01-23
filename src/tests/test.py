@@ -48,6 +48,7 @@ polygon.vertices.append(Vector2(-10, -10))
 
 circle.color = 0b1111100000000000
 rectangle.color = 0b1111101001001001
+sprite.transparent_color = engine_draw.black
 
 circle.position = Vector2(0, -32)
 rectangle.position = Vector2(32, 0)
@@ -64,11 +65,16 @@ class MyCam(CameraNode):
             self.zoom -= 0.1
         if engine_input.is_b_pressed():
             self.zoom += 0.1
+        
+        # if engine_input.is_bumper_left_pressed():
+        #     self.rotation.z -= 0.25
+        # if engine_input.is_bumper_right_pressed():
+        #     self.rotation.z += 0.25
 
 
 camera = MyCam()
 camera.zoom = 1
-
+camera.position = Vector2(0, 0)
 sprite.add_child(camera)
 
 engine.start()

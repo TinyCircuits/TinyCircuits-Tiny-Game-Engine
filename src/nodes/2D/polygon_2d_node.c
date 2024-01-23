@@ -52,6 +52,7 @@ STATIC mp_obj_t polygon_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
         float camera_resolved_hierarchy_y = 0.0f;
         float camera_resolved_hierarchy_rotation = 0.0f;
         node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, camera_node);
+        camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
 
         // Get the absolute position of the node depending in parents
         float polygon_resolved_hierarchy_x = 0.0f;
@@ -66,7 +67,7 @@ STATIC mp_obj_t polygon_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
         engine_math_scale_point(&polygon_rotated_x, &polygon_rotated_y, camera_position->x+camera_viewport->width/2, camera_position->y+camera_viewport->height/2, camera_zoom);
 
         // Rotate polygon origin about the camera
-        engine_math_rotate_point(&polygon_rotated_x, &polygon_rotated_y, (float)camera_viewport->width/2, (float)camera_viewport->height/2, (float)camera_rotation->z);
+        engine_math_rotate_point(&polygon_rotated_x, &polygon_rotated_y, (float)camera_viewport->width/2, (float)camera_viewport->height/2, camera_resolved_hierarchy_rotation);
 
         // Time to draw the polygon!
         // Calculate the average postion of all vertices and
@@ -95,7 +96,7 @@ STATIC mp_obj_t polygon_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
         // Scale the vertices away from the center
         engine_math_scale_point(&last_rotated_vertex_x, &last_rotated_vertex_y, center_x, center_y, polygon_scale);
 
-        engine_math_rotate_point(&last_rotated_vertex_x, &last_rotated_vertex_y, center_x, center_y, polygon_resolved_hierarchy_rotation+camera_rotation->z);
+        engine_math_rotate_point(&last_rotated_vertex_x, &last_rotated_vertex_y, center_x, center_y, polygon_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation);
         last_rotated_vertex_x += polygon_rotated_x;
         last_rotated_vertex_y += polygon_rotated_y;
 
@@ -109,7 +110,7 @@ STATIC mp_obj_t polygon_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
         // Scale the vertices away from the center
         engine_math_scale_point(&current_rotated_vertex_x, &current_rotated_vertex_y, center_x, center_y, polygon_scale);
 
-        engine_math_rotate_point(&current_rotated_vertex_x, &current_rotated_vertex_y, center_x, center_y, polygon_resolved_hierarchy_rotation+camera_rotation->z);
+        engine_math_rotate_point(&current_rotated_vertex_x, &current_rotated_vertex_y, center_x, center_y, polygon_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation);
         current_rotated_vertex_x += polygon_rotated_x;
         current_rotated_vertex_y += polygon_rotated_y;
 
@@ -125,7 +126,7 @@ STATIC mp_obj_t polygon_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
             // Scale the vertices away from the center
             engine_math_scale_point(&current_rotated_vertex_x, &current_rotated_vertex_y, center_x, center_y, polygon_scale);
 
-            engine_math_rotate_point(&current_rotated_vertex_x, &current_rotated_vertex_y, center_x, center_y, polygon_resolved_hierarchy_rotation+camera_rotation->z);
+            engine_math_rotate_point(&current_rotated_vertex_x, &current_rotated_vertex_y, center_x, center_y, polygon_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation);
 
             // Incorporate the position of the node
             current_rotated_vertex_x += polygon_rotated_x;

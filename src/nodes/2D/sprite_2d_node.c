@@ -65,6 +65,7 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
     float camera_resolved_hierarchy_y = 0.0f;
     float camera_resolved_hierarchy_rotation = 0.0f;
     node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, camera_node);
+    camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
 
     float sprite_resolved_hierarchy_x = 0.0f;
     float sprite_resolved_hierarchy_y = 0.0f;
@@ -79,7 +80,7 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
     engine_math_scale_point(&sprite_rotated_x, &sprite_rotated_y, camera_position->x+camera_viewport->width/2, camera_position->y+camera_viewport->height/2, camera_zoom);
 
     // Rotate sprite origin about the camera
-    engine_math_rotate_point(&sprite_rotated_x, &sprite_rotated_y, (float)camera_viewport->width/2, (float)camera_viewport->height/2, (float)camera_rotation->z);
+    engine_math_rotate_point(&sprite_rotated_x, &sprite_rotated_y, (float)camera_viewport->width/2, (float)camera_viewport->height/2, camera_resolved_hierarchy_rotation);
 
     engine_draw_blit_scale_rotate( sprite_pixel_data,
                                   (int32_t)sprite_rotated_x,
@@ -90,7 +91,7 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
                                   sprite_frame_height,
                                   (int32_t)((sprite_scale->x*camera_zoom)*65536 + 0.5),
                                   (int32_t)((sprite_scale->y*camera_zoom)*65536 + 0.5),
-                                  (int16_t)(((sprite_resolved_hierarchy_rotation+(float)camera_rotation->z))*1024 / (float)(2*PI)),
+                                  (int16_t)(((sprite_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation))*1024 / (float)(2*PI)),
                                   transparent_color);
 
     // After drawing, go to the next frame if it is time to
