@@ -25,10 +25,10 @@ polygon.vertices.append(Vector2(-10, -10))
 circle.color = 0b1111100000000000
 rectangle.color = 0b1111101001001001
 
-circle.position = Vector2(64, 64-32)
-rectangle.position = Vector2(64+32, 64)
-sprite.position = Vector2(64, 64+32)
-polygon.position = Vector2(64-32, 64)
+circle.position = Vector2(0, -32)
+rectangle.position = Vector2(32, 0)
+sprite.position = Vector2(0, 32)
+polygon.position = Vector2(-32, 0)
 
 
 class MyCam(CameraNode):
@@ -54,9 +54,11 @@ class MyCam(CameraNode):
         if engine_input.is_bumper_left_pressed():
             self.rotation.z -= 0.25
         if engine_input.is_bumper_right_pressed():
-            self.rotation.z+= 0.25
+            self.rotation.z += 0.25
+
+        print(self.position.x, self.position.y, self.zoom)
 
 
 camera = MyCam()
-camera.zoom = 2
+camera.zoom = 1
 engine.start()

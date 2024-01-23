@@ -55,23 +55,14 @@ STATIC mp_obj_t polygon_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
 
         node_base_get_child_absolute_xy(&polygon_resolved_hierarchy_x, &polygon_resolved_hierarchy_y, &polygon_resolved_hierarchy_rotation, self_in);
 
-        float polygon_rotated_x = polygon_resolved_hierarchy_x-((float)camera_position->x);
-        float polygon_rotated_y = polygon_resolved_hierarchy_y-((float)camera_position->y);
+        float polygon_rotated_x = polygon_resolved_hierarchy_x-((float)camera_position->x)+camera_viewport->width/2;
+        float polygon_rotated_y = polygon_resolved_hierarchy_y-((float)camera_position->y)+camera_viewport->height/2;
 
-        // Scale transformation due to camera zoom: https://math.stackexchange.com/a/5808
-        // Add the camera's center viewport offset so that the scaling takes place from there
-        // and not in the top left
-        polygon_rotated_x -= camera_position->x+camera_viewport->width/2;
-        polygon_rotated_y -= camera_position->y+camera_viewport->height/2;
-        polygon_rotated_x *= camera_zoom;
-        polygon_rotated_y *= camera_zoom;
-        polygon_rotated_x += camera_position->x+camera_viewport->width/2;
-        polygon_rotated_y += camera_position->y+camera_viewport->height/2;
+        // Scale transformation due to camera zoom
+        engine_math_scale_point(&polygon_rotated_x, &polygon_rotated_y, camera_position->x+camera_viewport->width/2, camera_position->y+camera_viewport->height/2, camera_zoom);
 
         // Rotate polygon origin about the camera
         engine_math_rotate_point(&polygon_rotated_x, &polygon_rotated_y, (float)camera_viewport->width/2, (float)camera_viewport->height/2, (float)camera_rotation->z);
-
-        engine_draw_pixel(0b0000011111100000, polygon_rotated_x, polygon_rotated_y);
 
         // Time to draw the polygon!
         // Calculate the average postion of all vertices and
@@ -96,13 +87,10 @@ STATIC mp_obj_t polygon_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
         // offset by node postion amount
         float last_rotated_vertex_x = ((vector2_class_obj_t*)polygon_vertex_list->items[0])->x;
         float last_rotated_vertex_y = ((vector2_class_obj_t*)polygon_vertex_list->items[0])->y;
+
         // Scale the vertices away from the center
-        last_rotated_vertex_x -= center_x;
-        last_rotated_vertex_y -= center_y;
-        last_rotated_vertex_x *= polygon_scale;
-        last_rotated_vertex_y *= polygon_scale;
-        last_rotated_vertex_x += center_x;
-        last_rotated_vertex_y += center_y;
+        engine_math_scale_point(&last_rotated_vertex_x, &last_rotated_vertex_y, center_x, center_y, polygon_scale);
+
         engine_math_rotate_point(&last_rotated_vertex_x, &last_rotated_vertex_y, center_x, center_y, polygon_resolved_hierarchy_rotation+camera_rotation->z);
         last_rotated_vertex_x += polygon_rotated_x;
         last_rotated_vertex_y += polygon_rotated_y;
@@ -113,13 +101,10 @@ STATIC mp_obj_t polygon_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
         
         float current_rotated_vertex_x = ((vector2_class_obj_t*)polygon_vertex_list->items[1])->x;
         float current_rotated_vertex_y = ((vector2_class_obj_t*)polygon_vertex_list->items[1])->y;
+
         // Scale the vertices away from the center
-        current_rotated_vertex_x -= center_x;
-        current_rotated_vertex_y -= center_y;
-        current_rotated_vertex_x *= polygon_scale;
-        current_rotated_vertex_y *= polygon_scale;
-        current_rotated_vertex_x += center_x;
-        current_rotated_vertex_y += center_y;
+        engine_math_scale_point(&current_rotated_vertex_x, &current_rotated_vertex_y, center_x, center_y, polygon_scale);
+
         engine_math_rotate_point(&current_rotated_vertex_x, &current_rotated_vertex_y, center_x, center_y, polygon_resolved_hierarchy_rotation+camera_rotation->z);
         current_rotated_vertex_x += polygon_rotated_x;
         current_rotated_vertex_y += polygon_rotated_y;
@@ -134,12 +119,8 @@ STATIC mp_obj_t polygon_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
             current_rotated_vertex_x = ((vector2_class_obj_t*)polygon_vertex_list->items[ivx])->x;
             current_rotated_vertex_y = ((vector2_class_obj_t*)polygon_vertex_list->items[ivx])->y;
             // Scale the vertices away from the center
-            current_rotated_vertex_x -= center_x;
-            current_rotated_vertex_y -= center_y;
-            current_rotated_vertex_x *= polygon_scale;
-            current_rotated_vertex_y *= polygon_scale;
-            current_rotated_vertex_x += center_x;
-            current_rotated_vertex_y += center_y;
+            engine_math_scale_point(&current_rotated_vertex_x, &current_rotated_vertex_y, center_x, center_y, polygon_scale);
+
             engine_math_rotate_point(&current_rotated_vertex_x, &current_rotated_vertex_y, center_x, center_y, polygon_resolved_hierarchy_rotation+camera_rotation->z);
 
             // Incorporate the position of the node

@@ -46,19 +46,6 @@ void engine_draw_pixel(uint16_t color, int32_t x, int32_t y){
 
 // https://en.wikipedia.org/wiki/Digital_differential_analyzer_(graphics_algorithm)
 void engine_draw_line(uint16_t color, float x_start, float y_start, float x_end, float y_end, mp_obj_t camera_node_base_in){
-    // engine_node_base_t *camera_node_base = camera_node_base_in;
-    // vector2_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
-    // vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
-    // rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
-
-    // // Viewport x and y are only used for location inside framebuffer (so not used here)
-    // float center_x = (float)camera_position->x + (float)camera_viewport->width/2.0f;
-    // float center_y = (float)camera_position->y + (float)camera_viewport->height/2.0f;
-
-    // // Rotate endpoints about camera
-    // engine_math_rotate_point(&x_start, &y_start, center_x, center_y, (float)camera_rotation->z * DEG2RAD);
-    // engine_math_rotate_point(&x_end, &y_end, center_x, center_y, (float)camera_rotation->z * DEG2RAD);
-
     // Distance difference between endpoints
     float dx = x_end - x_start;
     float dy = y_end - y_start;
