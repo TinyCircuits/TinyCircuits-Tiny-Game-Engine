@@ -29,7 +29,7 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Physics: Acceleration
 [X] Camera zoom: add zoom parameter to camera and apply it to all draw nodes: circles, rectangles, sprites, and polygons.
                 this will mean that as the camera zooms in, all nodes get larger but also "further" away as they are drawn
-[] Figure out inversion and stop at camera zoom 0.5 and below (doesn't occur camera is a child of another object)
+[X] Figure out inversion and stop at camera zoom 0.5 and below (doesn't occur camera is a child of another object)
 [X] Make camera render items centered at 0,0 so that inheritance is easier
 [] Physics: just polygons, rotation (simple init for common shapes), no friction. Need to figure out what to do when physics collision shape is rotated, cache normals?
 [] Physics: smooth: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-core-engine--gamedev-7493t#:~:text=Here%20is%20a%20full%20example%3A
@@ -56,7 +56,7 @@ Game ideas
 [] Golf
 [] Rocketcup
 
-
+[] Make voxelspace camera rotation->z correspond to line drawn at angle in radians
 [] Add collision points to collision callback for polygon vs. polygon: https://dyn4j.org/2011/11/contact-points-using-clipping/
 [] Add scale to polygon2dnode
 [] Add outline and fill to each primitive

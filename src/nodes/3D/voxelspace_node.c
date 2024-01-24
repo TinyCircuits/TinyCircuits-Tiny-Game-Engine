@@ -51,9 +51,10 @@ STATIC mp_obj_t voxelspace_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
     // rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
 
 
-    const float view_horizon = 45.0f;
+    const float view_horizon = 35.0f;
     const float scale_height = 30.0f;
-    const float view_distance = 128.0f;
+    const float view_distance = 300.0f;
+    const float fov = PI/2.0f;
 
     float sinphi = sin(camera_rotation->y);
     float cosphi = cos(camera_rotation->y);
@@ -64,24 +65,24 @@ STATIC mp_obj_t voxelspace_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
     float z = 1.0f;
 
     while(z < view_distance){
-        float pleft_x = -sinphi * z - cosphi * z;
-        float pleft_y =  cosphi * z - sinphi * z;
+        float pleft_x = z * cosf(camera_rotation->y-fov/2);
+        float pleft_y = z * sinf(camera_rotation->y-fov/2);
 
-        float pright_x =  sinphi * z - cosphi * z;
-        float pright_y = -cosphi * z - sinphi * z;
+        float pright_x = z * cosf(camera_rotation->y+fov/2);
+        float pright_y = z * sinf(camera_rotation->y+fov/2);
 
         float dx = (pright_x - pleft_x) / SCREEN_WIDTH;
         float dy = (pright_y - pleft_y) / SCREEN_WIDTH;
 
-        pleft_x += camera_position->x + voxelspace_position->x;
-        pleft_y += camera_position->z + voxelspace_position->y; 
+        pleft_x += camera_position->x;
+        pleft_y += camera_position->z;
 
         for(uint8_t i=0; i<SCREEN_WIDTH; i++){
             int32_t x = pleft_x;
             int32_t y = pleft_y;
 
-            if((x >= 0 && x < heightmap->width) && (y >= 0 && y < heightmap->height)){
-                uint32_t index = y * heightmap->width + x;
+            if((x >= voxelspace_position->x && x < voxelspace_position->x+heightmap->width) && (y >= voxelspace_position->z && y < voxelspace_position->z+heightmap->height)){
+                uint32_t index = (y-voxelspace_position->z) * heightmap->width + (x-voxelspace_position->x);
 
                 uint16_t altitude = 0;
                 altitude += (heightmap->data[index] >> 0) & 0b00011111;
@@ -89,7 +90,12 @@ STATIC mp_obj_t voxelspace_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
                 altitude += (heightmap->data[index] >> 11) & 0b00011111;
 
                 // Use camera_rotation for on x-axis for pitch (head going in up/down in 'yes' motion)
-                uint16_t height_on_screen = (camera_position->y - altitude) / z * scale_height + (view_horizon + camera_rotation->x);
+                uint16_t height_on_screen = (-voxelspace_position->y + camera_position->y - altitude) / z * scale_height + (view_horizon + camera_rotation->x);
+
+                // https://news.ycombinator.com/item?id=21945633
+                float roll = (camera_rotation->z*(((float)i)/((float)SCREEN_WIDTH)-0.5f) + 0.5f) * SCREEN_HEIGHT / 4;
+
+                height_on_screen += (uint16_t)roll;
 
                 if(height_on_screen < SCREEN_HEIGHT){
                     uint8_t ipx = height_on_screen;
@@ -102,14 +108,14 @@ STATIC mp_obj_t voxelspace_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
                 if(height_on_screen < height_buffer[i]){
                     height_buffer[i] = height_on_screen;
                 }
-
-                pleft_x += dx;
-                pleft_y += dy;
             }
+
+            pleft_x += dx;
+            pleft_y += dy;
         }
 
         z += dz;
-        dz += 0.1f;
+        dz += 0.0085f;
     }
 
     return mp_const_none;

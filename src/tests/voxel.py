@@ -17,11 +17,12 @@ engine_debug.debug_enable_setting(engine_debug.debug_setting_performance)
 engine_draw.set_background_color(engine_draw.skyblue)
 
 
-C18W = TextureResource("C1W.bmp")
-D18 = TextureResource("D1.bmp")
+C18W = TextureResource("pool_table.bmp", True)
+D18 = TextureResource("pool_table_height.bmp", True)
 
 vox = VoxelSpaceNode(C18W, D18)
-# vox.position.x = 150/2
+vox.position.x = 64
+vox.position.y = 64
 
 class MyCam(CameraNode):
     def __init__(self):
@@ -30,26 +31,26 @@ class MyCam(CameraNode):
         self.mode = 0
 
     def forward(self):
-        self.position.x -= math.cos(self.rotation.y) * self.distance
-        self.position.z -= math.sin(self.rotation.y) * self.distance
-    
-    def backward(self):
         self.position.x += math.cos(self.rotation.y) * self.distance
         self.position.z += math.sin(self.rotation.y) * self.distance
     
-    def left(self):
-        self.position.x += math.cos(self.rotation.y+(math.pi/2)) * self.distance
-        self.position.z += math.sin(self.rotation.y+(math.pi/2)) * self.distance
+    def backward(self):
+        self.position.x -= math.cos(self.rotation.y) * self.distance
+        self.position.z -= math.sin(self.rotation.y) * self.distance
     
-    def right(self):
+    def left(self):
         self.position.x -= math.cos(self.rotation.y+(math.pi/2)) * self.distance
         self.position.z -= math.sin(self.rotation.y+(math.pi/2)) * self.distance
+    
+    def right(self):
+        self.position.x += math.cos(self.rotation.y+(math.pi/2)) * self.distance
+        self.position.z += math.sin(self.rotation.y+(math.pi/2)) * self.distance
 
     def tick(self):
         if engine_input.is_bumper_right_pressed():
-            self.rotation.y += 0.05
+            self.rotation.y += 0.005
         if engine_input.is_bumper_left_pressed():
-            self.rotation.y -= 0.05
+            self.rotation.y -= 0.005
     
 
         if engine_input.is_dpad_up_pressed():
@@ -80,7 +81,7 @@ class MyCam(CameraNode):
 
 
 camera = MyCam()
-camera.position.x = 75
-camera.position.y = 50
-camera.position.z = 75
+camera.position.x = 175
+camera.position.y = 200
+camera.position.z = 175
 engine.start()
