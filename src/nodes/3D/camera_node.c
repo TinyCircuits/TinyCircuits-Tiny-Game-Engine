@@ -9,6 +9,7 @@
 #include "utility/linked_list.h"
 #include "display/engine_display_common.h"
 #include "engine_cameras.h"
+#include "math/engine_math.h"
 
 
 // Class required functions
@@ -65,6 +66,8 @@ mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t 
         camera_node->rotation = vector3_class_new(&vector3_class_type, 0, 0, NULL);
         camera_node->viewport = rectangle_class_new(&rectangle_class_type, 4, 0, default_viewport_parameters);
         camera_node->zoom = mp_obj_new_float(1.0f);
+        camera_node->fov = mp_obj_new_float(PI/2.0f);
+        camera_node->view_distance = mp_obj_new_float(256.0f);
     }else if(n_args == 1){  // Inherited (use existing object)
         node_base->inherited = true;
         node_base->node = args[0];
@@ -83,6 +86,8 @@ mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t 
         mp_store_attr(node_base->node, MP_QSTR_rotation, vector3_class_new(&vector3_class_type, 0, 0, NULL));
         mp_store_attr(node_base->node, MP_QSTR_viewport, rectangle_class_new(&rectangle_class_type, 4, 0, default_viewport_parameters));
         mp_store_attr(node_base->node, MP_QSTR_zoom, mp_obj_new_float(1.0f));
+        mp_store_attr(node_base->node, MP_QSTR_fov, mp_obj_new_float(PI/2.0f));
+        mp_store_attr(node_base->node, MP_QSTR_view_distance, mp_obj_new_float(256.0f));
     }else{
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Too many arguments passed to CameraNode constructor!"));
     }
@@ -148,6 +153,12 @@ STATIC void camera_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *d
             case MP_QSTR_zoom:
                 destination[0] = self->zoom;
             break;
+            case MP_QSTR_fov:
+                destination[0] = self->fov;
+            break;
+            case MP_QSTR_view_distance:
+                destination[0] = self->view_distance;
+            break;
             default:
                 return; // Fail
         }
@@ -164,6 +175,12 @@ STATIC void camera_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *d
             break;
             case MP_QSTR_zoom:
                 self->zoom = destination[1];
+            break;
+            case MP_QSTR_fov:
+                self->fov = destination[1];
+            break;
+            case MP_QSTR_view_distance:
+                self->view_distance = destination[1];
             break;
             default:
                 return; // Fail

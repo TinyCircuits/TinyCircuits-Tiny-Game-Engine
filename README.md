@@ -56,7 +56,8 @@ Game ideas
 [] Golf
 [] Rocketcup
 
-[] Make voxelspace camera rotation->z correspond to line drawn at angle in radians
+[] Use voxelspace rotation to render the node? Might be too slow to do that for little gain
+[] Make voxelspace camera rotation->z correspond to line drawn at angle in radians. Make camera rotation->x correspond to radians (hard one)
 [] Add collision points to collision callback for polygon vs. polygon: https://dyn4j.org/2011/11/contact-points-using-clipping/
 [] Add scale to polygon2dnode
 [] Add outline and fill to each primitive

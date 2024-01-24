@@ -11,8 +11,8 @@ cam_pos_x = 32;
 cam_pos_y = 64;
 
 
-angle = pi/4
-fov = (pi/4)
+angle = 0
+fov = pi/4
 sinphi = sin(angle)
 cosphi = cos(angle)
 
@@ -26,11 +26,12 @@ heightmap_height = 128;
 
 
 while (z < view_distance)
-    pleft_x = z * cos(angle-fov/2);
-    pleft_y = z * sin(angle-fov/2);
+    hypot = z / cos(angle-fov/2)
+    pleft_x = hypot * cos(angle-fov/2);
+    pleft_y = hypot * sin(angle-fov/2);
 
-    pright_x = z * cos(angle+fov/2);
-    pright_y = z * sin(angle+fov/2);
+    pright_x = hypot * cos(angle+fov/2);
+    pright_y = hypot * sin(angle+fov/2);
 
     dx = (pright_x - pleft_x) / SCREEN_WIDTH;
     dy = (pright_y - pleft_y) / SCREEN_WIDTH;

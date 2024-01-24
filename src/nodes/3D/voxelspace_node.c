@@ -45,31 +45,29 @@ STATIC mp_obj_t voxelspace_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
 
     // vector3_class_obj_t *voxelspace_rotation = mp_load_attr(voxelspace_node_base->attr_accessor, MP_QSTR_rotation);
     vector3_class_obj_t *voxelspace_position = mp_load_attr(voxelspace_node_base->attr_accessor, MP_QSTR_position);
+    float voxelspace_height_scale = mp_obj_get_float(mp_load_attr(voxelspace_node_base->attr_accessor, MP_QSTR_height_scale));
 
     vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
     vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
-    // rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
-
-
-    const float view_horizon = 35.0f;
-    const float scale_height = 30.0f;
-    const float view_distance = 300.0f;
-    const float fov = PI/2.0f;
-
-    float sinphi = sin(camera_rotation->y);
-    float cosphi = cos(camera_rotation->y);
+    float camera_fov = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_fov));
+    float camera_view_distance = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_view_distance));
 
     memset(height_buffer, SCREEN_HEIGHT, SCREEN_WIDTH);
 
     float dz = 1.0f;
     float z = 1.0f;
 
-    while(z < view_distance){
-        float pleft_x = z * cosf(camera_rotation->y-fov/2);
-        float pleft_y = z * sinf(camera_rotation->y-fov/2);
+    while(z < camera_view_distance){
+        // Instead of rotating the points by the stepped view_distance z,
+        // use z as the adjacent for triangle to figure out hypotenuse
+        // and then use that as the radius. This means the view distance
+        // will remain the same for every FOV
+        float hypot = z / cosf(camera_rotation->y-camera_fov/2);
+        float pleft_x = hypot * cosf(camera_rotation->y-camera_fov/2);
+        float pleft_y = hypot * sinf(camera_rotation->y-camera_fov/2);
 
-        float pright_x = z * cosf(camera_rotation->y+fov/2);
-        float pright_y = z * sinf(camera_rotation->y+fov/2);
+        float pright_x = hypot * cosf(camera_rotation->y+camera_fov/2);
+        float pright_y = hypot * sinf(camera_rotation->y+camera_fov/2);
 
         float dx = (pright_x - pleft_x) / SCREEN_WIDTH;
         float dy = (pright_y - pleft_y) / SCREEN_WIDTH;
@@ -90,7 +88,7 @@ STATIC mp_obj_t voxelspace_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
                 altitude += (heightmap->data[index] >> 11) & 0b00011111;
 
                 // Use camera_rotation for on x-axis for pitch (head going in up/down in 'yes' motion)
-                uint16_t height_on_screen = (-voxelspace_position->y + camera_position->y - altitude) / z * scale_height + (view_horizon + camera_rotation->x);
+                uint16_t height_on_screen = (-voxelspace_position->y + camera_position->y - altitude) / z * voxelspace_height_scale + (camera_rotation->x);
 
                 // https://news.ycombinator.com/item?id=21945633
                 float roll = (camera_rotation->z*(((float)i)/((float)SCREEN_WIDTH)-0.5f) + 0.5f) * SCREEN_HEIGHT / 4;
@@ -156,6 +154,7 @@ mp_obj_t voxelspace_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
         voxelspace_node->rotation = vector3_class_new(&vector3_class_type, 0, 0, NULL);
         voxelspace_node->texture_resource = args[0];
         voxelspace_node->heightmap_resource = args[1];
+        voxelspace_node->height_scale = mp_obj_new_float(1.0f);
     }else if(n_args == 3){  // Inherited (use existing object)
         node_base->inherited = true;
         node_base->node = args[0];
@@ -195,6 +194,7 @@ mp_obj_t voxelspace_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
         mp_store_attr(node_base->node, MP_QSTR_rotation, vector3_class_new(&vector3_class_type, 0, 0, NULL));
         mp_store_attr(node_base->node, MP_QSTR_texture_resource, args[1]);
         mp_store_attr(node_base->node, MP_QSTR_heightmap_resource, args[2]);
+        mp_store_attr(node_base->node, MP_QSTR_height_scale, mp_obj_new_float(1.0f));
     }else{
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Too many arguments passed to VoxelSpaceNode constructor!"));
     }
@@ -243,6 +243,9 @@ STATIC void voxelspace_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
             case MP_QSTR_heightmap_resource:
                 destination[0] = self->heightmap_resource;
             break;
+            case MP_QSTR_height_scale:
+                destination[0] = self->height_scale;
+            break;
             default:
                 return; // Fail
         }
@@ -259,6 +262,9 @@ STATIC void voxelspace_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
             break;
             case MP_QSTR_heightmap_resource:
                 self->heightmap_resource = destination[1];
+            break;
+            case MP_QSTR_height_scale:
+                self->height_scale = destination[1];
             break;
             default:
                 return; // Fail

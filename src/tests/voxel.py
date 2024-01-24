@@ -21,8 +21,9 @@ C18W = TextureResource("pool_table.bmp", True)
 D18 = TextureResource("pool_table_height.bmp", True)
 
 vox = VoxelSpaceNode(C18W, D18)
-vox.position.x = 64
-vox.position.y = 64
+vox.position.x = 200
+vox.position.y = -50
+vox.height_scale = 40
 
 class MyCam(CameraNode):
     def __init__(self):
@@ -84,4 +85,6 @@ camera = MyCam()
 camera.position.x = 175
 camera.position.y = 200
 camera.position.z = 175
+camera.view_distance = 350
+camera.fov = 70 * (math.pi/180)
 engine.start()
