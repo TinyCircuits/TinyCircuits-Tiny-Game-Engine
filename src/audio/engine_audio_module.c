@@ -1,26 +1,23 @@
 #include "py/obj.h"
 #include "engine_audio_module.h"
+#include "engine_audio_channel.h"
+#include "resources/engine_sound_resource_base.h"
 #include "debug/debug_print.h"
 #include <stdlib.h>
+#include <string.h>
 
-// The number of total audio channels that
-// can be active at a single time
-#define CHANNEL_COUNT 8
 
-// The total number of bytes dedicated to storing audio
-// can be calculated as:
-//      CHANNEL_COUNT * CHANNEL_BUFFER_SIZE * 2 (2 since each channel has dual buffers)
-//      8 * 256 * 2 = 4096 bytes
-// This buffer needs to large enough such that the target sample rate doesn't
-// rip through it before DMA can fill the other buffer. For example, if the
-// target sample rate is 44100Hz and samples take 2 bytes then it takes:
-//
-// (1/44100) * (CHANNEL_BUFFER_SIZE / BYTES_PER_SAMPLE)
-// (1/44100) * (256/2) = 2.9ms
-//
-// to get through the buffer. Hopefully DMA can take CHANNEL_BUFFER_SIZE bytes out of flash
-// and into RAM faster than that
-#define CHANNEL_BUFFER_SIZE 256
+
+// 8 audio channels. Since audio is large it has to stay in
+// flash, but flash is slow to get data from which is a problem
+// when sample retrieval time/latency needs to be small to keep
+// on track at the relatively high sample rate good audio requires.
+// DMA is used to copy data into one of the dual buffer pairs
+// each audio channel gets but there's only 12 channels on RP2040
+// and one is used for the screen
+audio_channel_class_obj_t *channels[CHANNEL_COUNT];
+
+
 
 #if defined(__unix__)
     // Nothing to do
@@ -34,54 +31,85 @@
     // https://www.raspberrypi.com/documentation/pico-sdk/hardware.html#interrupt-numbers
     struct repeating_timer repeating_audio_timer;
 
+
+    void engine_audio_handle_buffer(audio_channel_class_obj_t *channel){
+        // When 'buffer_sample_index = 0' that means the buffer hasn't been filled before, fill it (see that after this function it is immediately incremented)
+        // When 'buffer_sample_index = CHANNEL_BUFFER_SIZE' that means the index has run out of data, fill it with more
+        if(channel->buffer_sample_index == 0 || channel->buffer_sample_index >= CHANNEL_BUFFER_SIZE){
+            // Reset for the second case above
+            channel->buffer_sample_index = 0;
+
+            // Using the sound resource base, fill this channel's
+            // buffer with audio data from the source resource
+            uint32_t filled_amount = channel->source->fill_buffer(channel->buffer, channel->source_sample_index, CHANNEL_BUFFER_SIZE);
+
+            // Filled amount will always be equal to or less than to 
+            // 0 the 'size' passed to 'fill_buffer'. In the case it was
+            // with filled with something, increment to the amount filled
+            // further. In the case it is filled with nothing, that means
+            // the last fill made us reach the end of the source data,
+            // figure out if this channel should stop or loop. If loop,
+            // run again right away to fill with more data after resetting
+            // 'source_sample_index' 
+            if(filled_amount > 0){
+                channel->source_sample_index += filled_amount;
+            }else{
+                // Gets reset no matter what, whether looping or not
+                channel->source_sample_index = 0;
+
+                // If not looping, disable/remove the source and stop this
+                // channel from being played, otherwise, fill with start data
+                if(channel->looping == false){
+                    channel->source = NULL;
+                }else{
+                    // Run right away to fill buffer with starting data since looping
+                    engine_audio_handle_buffer(channel);
+                }
+            }
+        }
+    }
+
+
     // Samples each channel, adds, normalizes, and sets PWM
-    bool repeating_audio_callback(struct repeating_timer *t) {
+    bool repeating_audio_callback(struct repeating_timer *t){
+        uint32_t sample = 0;
+
+        for(uint8_t icx=0; icx<CHANNEL_COUNT; icx++){
+            // Go over every channel and check if set to something usable
+            if(channels[icx]->source != NULL){
+                // Fill buffer with data whether first time or looping
+                engine_audio_handle_buffer(channels[icx]);
+
+                // TODO: put sample from channel buffer somewhere for compressing
+                // sample = ?
+                switch(channels[icx]->source->bytes_per_sample){
+                    case 1:
+                    {
+
+                    }
+                    break;
+                    case 2:
+                    {
+
+                    }
+                    break;
+                    default:
+                        ENGINE_ERROR_PRINTF("Audio source with %d bytes per sample is not supported!", channels[icx]->source->bytes_per_sample);
+                }
+
+                // Make sure to grab the next sample next time
+                channels[icx]->buffer_sample_index++;
+            }
+            
+            // TODO, update channel time based on 'source_sample_index' and source 'total_sample_count'
+        }
+        
+
+        // TODO, compress and output duty cycle
         // pwm_set_gpio_level(512);
-
-        // On each sample interrupt, go through each channel source
-        // and get the next sample. The sample from each source
-        // will contribute to the current PWM amplitude.
-        // For each channel, if the number of samples consumed
-        // equals the total number of samples available in the buffer,
-        // switch the 'read' and 'fill' buffer indices and start filling
-        // the buffer that is now 'fill' with new data from the channel source
-
-        // https://github.com/raspberrypi/pico-examples/blob/eca13acf57916a0bd5961028314006983894fc84/dma/hello_dma/hello_dma.c#L32-L39
-        // for(uint8_t icx=0; icx<CHANNEL_COUNT; icx++){
-        //     dma_channel_configure(
-        //         channels[icx].dma_channel,  // Channel to be configured
-        //         &channels[icx].dma_config,  // The configuration we just created
-        //         dst,   // dst: The initial write address
-        //         src,                        // src: The initial read address
-        //         CHANNEL_BUFFER_SIZE,        // Number of transfers; in this case each is 1 byte.
-        //         true                        // Start immediately.
-        //     );
-        // }
-
         return true;
     }
 #endif
-
-
-typedef struct{
-    mp_obj_t channel_source;        // Can be WaveSoundResource, etc. (sources keep track of position and end)
-    bool looping;                   // If true, the 'channel_source' is never set to mp_const_none
-    int dma_channel;                // DMA channel used for pulling audio data from flash into one of two dual buffers
-    dma_channel_config dma_config;  // DMA channel config for pull data from flash
-    uint8_t *buffers[2];            // Dual buffers for this channel
-    uint8_t read_buffer_index;      // Index of the current buffer in 'buffers' to read and play samples from;
-    uint8_t fill_buffer_index;      // Index of the current buffer in 'buffers' to fill with future data from flash
-}audio_channel_t;
-
-
-// 8 audio channels. Since audio is large it has to stay in
-// flash, but flash is slow to get data from which is a problem
-// when sample retrieval time/latency needs to be small to keep
-// on track at the relatively high sample rate good audio requires.
-// DMA is used to copy data into one of the dual buffer pairs
-// each audio channel gets but there's only 12 channels on RP2040
-// and one is used for the screen
-audio_channel_t channels[CHANNEL_COUNT];
 
 
 void engine_audio_setup(){
@@ -110,21 +138,8 @@ void engine_audio_setup(){
         add_repeating_timer_us((int64_t)((1.0/44100.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer);
     #endif
 
-    // Setup audio buffers. Should make sure this doesn't happen every engine_init(): TODO
     for(uint8_t icx=0; icx<CHANNEL_COUNT; icx++){
-        channels[icx].looping = false;
-
-        // Use C heap to store these persistent buffers
-        channels[icx].buffers[0] = malloc(sizeof(uint8_t) * CHANNEL_BUFFER_SIZE);
-        channels[icx].buffers[1] = malloc(sizeof(uint8_t) * CHANNEL_BUFFER_SIZE);
-
-        // https://github.com/raspberrypi/pico-examples/blob/eca13acf57916a0bd5961028314006983894fc84/dma/hello_dma/hello_dma.c#L27-L30
-        channels[icx].dma_channel = dma_claim_unused_channel(true);
-
-        channels[icx].dma_config = dma_channel_get_default_config(channels[icx].dma_channel);
-        channel_config_set_transfer_data_size(&channels[icx].dma_config, DMA_SIZE_8);           // Samples aren't always 16-bits, could be 8-bit
-        channel_config_set_read_increment(&channels[icx].dma_config, true);                     // Automaticaly increment read position
-        channel_config_set_write_increment(&channels[icx].dma_config, true);                    // Automaticaly increment write position
+        channels[icx] = audio_channel_class_new(&audio_channel_class_type, 0, 0, NULL);
     }
 }
 
@@ -132,9 +147,9 @@ void engine_audio_setup(){
 STATIC mp_obj_t engine_audio_play(mp_obj_t sound_source_obj, mp_obj_t channel_index_obj, mp_obj_t looping_obj){
     // Should probably make sure this doesn't interfere with DMA or interrupt: TODO
     uint8_t channel_index = mp_obj_get_int(channel_index_obj);
-    channels[channel_index].channel_source = sound_source_obj;
-    channels[channel_index].looping = mp_obj_get_int(looping_obj);
-    return mp_const_none;
+    channels[channel_index]->source = sound_source_obj;
+    channels[channel_index]->looping = mp_obj_get_int(looping_obj);
+    return MP_OBJ_FROM_PTR(channels[channel_index]);
 }
 MP_DEFINE_CONST_FUN_OBJ_3(engine_audio_play_obj, engine_audio_play);
 
@@ -142,6 +157,8 @@ MP_DEFINE_CONST_FUN_OBJ_3(engine_audio_play_obj, engine_audio_play);
 // Module attributes
 STATIC const mp_rom_map_elem_t engine_audio_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_audio) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_AudioChannel), (mp_obj_t)&audio_channel_class_type },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_play), (mp_obj_t)&engine_audio_play_obj },
 };
 
 // Module init

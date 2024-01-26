@@ -15,82 +15,85 @@ mp_obj_t wave_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
     ENGINE_INFO_PRINTF("New WaveSoundResource");
     mp_arg_check_num(n_args, n_kw, 1, 1, false);
 
-    wave_sound_resource_class_obj_t *self = m_new_obj_with_finaliser(wave_sound_resource_class_obj_t);
+    sound_resource_base_class_obj_t *self = m_new_obj_with_finaliser(sound_resource_base_class_obj_t);
     self->base.type = &wave_sound_resource_class_type;
 
+    // // Wave parsing: https://truelogic.org/wordpress/2015/09/04/parsing-a-wav-file-in-c/
+    // //               https://www.aelius.com/njh/wavemetatools/doc/riffmci.pdf
+    // //               https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/WAVE.html
+    // unsigned char riff_string[5];
+    // riff_string[4] = '\0';
+    // uint32_t file_size = 0;
+    // unsigned char wave_string[5];
+    // wave_string[4] = '\0';
+    // unsigned char data_marker_string[5];
+    // data_marker_string[4] = '\0';
+    // uint32_t data_size = 0;
+    // uint16_t format_type = 0;
 
-    // Wave parsing: https://truelogic.org/wordpress/2015/09/04/parsing-a-wav-file-in-c/
-    //               https://www.aelius.com/njh/wavemetatools/doc/riffmci.pdf
-    //               https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/WAVE.html
-    unsigned char riff_string[5];
-    riff_string[4] = '\0';
-    uint32_t file_size = 0;
-    unsigned char wave_string[5];
-    wave_string[4] = '\0';
-    unsigned char data_marker_string[5];
-    data_marker_string[4] = '\0';
-    uint32_t data_size = 0;
-    uint16_t format_type = 0;
+    // engine_file_open(mp_obj_str_get_str(args[0]));
 
-    engine_file_open(mp_obj_str_get_str(args[0]));
+    // // Check that this is a riff file
+    // engine_file_read(riff_string, 4);
+    // if(strcmp(riff_string, "RIFF\0") != 0){
+    //     mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("WaveSoundResource Error: file does not start with 'RIFF', may not be a wave file"));
+    // }
 
-    // Check that this is a riff file
-    engine_file_read(riff_string, 4);
-    if(strcmp(riff_string, "RIFF\0") != 0){
-        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("WaveSoundResource Error: file does not start with 'RIFF', may not be a wave file"));
-    }
+    // file_size = engine_file_get_u32(4);
 
-    file_size = engine_file_get_u32(4);
+    // // Check that this is a wave file
+    // engine_file_read(wave_string, 4);
+    // if(strcmp(wave_string, "WAVE\0") != 0){
+    //     mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("WaveSoundResource Error: file type header is not 'WAVE', incorrect file type"));
+    // }
 
-    // Check that this is a wave file
-    engine_file_read(wave_string, 4);
-    if(strcmp(wave_string, "WAVE\0") != 0){
-        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("WaveSoundResource Error: file type header is not 'WAVE', incorrect file type"));
-    }
+    // format_type = engine_file_get_u16(20);
+    // if(format_type != 1){
+    //     mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("WaveSoundResource Error: samples are not in PCM format. Compressed formats are not supported"));
+    // }
 
-    format_type = engine_file_get_u16(20);
-    if(format_type != 1){
-        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("WaveSoundResource Error: samples are not in PCM format. Compressed formats are not supported"));
-    }
+    // self->channel_count = engine_file_get_u16(22);
+    // self->sample_rate = engine_file_get_u32(24);
+    // self->bits_per_sample = engine_file_get_u16(34);
 
-    self->channel_count = engine_file_get_u16(22);
-    self->sample_rate = engine_file_get_u32(24);
-    self->bits_per_sample = engine_file_get_u16(34);
+    // // Check for data marker
+    // engine_file_read(data_marker_string, 4);
+    // if(strcmp(data_marker_string, "data\0") != 0){
+    //     mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("WaveSoundResource Error: missing wave 'data' marker, no data?"));
+    // }
 
-    // Check for data marker
-    engine_file_read(data_marker_string, 4);
-    if(strcmp(data_marker_string, "data\0") != 0){
-        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("WaveSoundResource Error: missing wave 'data' marker, no data?"));
-    }
+    // data_size = engine_file_get_u32(40);
+    // uint32_t byte_count_per_channel = (data_size / self->channel_count);
+    // uint32_t sample_count_per_channel = byte_count_per_channel / (self->bits_per_sample / 8);
 
-    data_size = engine_file_get_u32(40);
-    uint32_t byte_count_per_channel = (data_size / self->channel_count);
-    uint32_t sample_count_per_channel = byte_count_per_channel / (self->bits_per_sample / 8);
+    // // Do some information printing:
+    // ENGINE_INFO_PRINTF("WaveSoundResource: Wave parameters parsed from '%s':", mp_obj_str_get_str(args[0]));
+    // ENGINE_INFO_PRINTF("\tbits_per_sample:\t\t%lu", self->bits_per_sample);
+    // ENGINE_INFO_PRINTF("\tfile_size:\t\t\t%lu", file_size);
+    // ENGINE_INFO_PRINTF("\tdata_size:\t\t\t%lu", data_size);
+    // ENGINE_INFO_PRINTF("\tbyte_count_per_channel:\t\t%lu", byte_count_per_channel);
+    // ENGINE_INFO_PRINTF("\tsample_count_per_channel:\t%lu", sample_count_per_channel);
+    // ENGINE_INFO_PRINTF("\tformat_type:\t\t\t%lu", format_type);
+    // ENGINE_INFO_PRINTF("\tchannel_count:\t\t\t%d", self->channel_count);
+    // ENGINE_INFO_PRINTF("\tsample_rate:\t\t\t%lu", self->sample_rate);
 
-    // Do some information printing:
-    ENGINE_INFO_PRINTF("WaveSoundResource: Wave parameters parsed from '%s':", mp_obj_str_get_str(args[0]));
-    ENGINE_INFO_PRINTF("\tbits_per_sample:\t\t%lu", self->bits_per_sample);
-    ENGINE_INFO_PRINTF("\tfile_size:\t\t\t%lu", file_size);
-    ENGINE_INFO_PRINTF("\tdata_size:\t\t\t%lu", data_size);
-    ENGINE_INFO_PRINTF("\tbyte_count_per_channel:\t\t%lu", byte_count_per_channel);
-    ENGINE_INFO_PRINTF("\tsample_count_per_channel:\t%lu", sample_count_per_channel);
-    ENGINE_INFO_PRINTF("\tformat_type:\t\t\t%lu", format_type);
-    ENGINE_INFO_PRINTF("\tchannel_count:\t\t\t%d", self->channel_count);
-    ENGINE_INFO_PRINTF("\tsample_rate:\t\t\t%lu", self->sample_rate);
+    // // Allocate space in ram for audio data, use mp heap.
+    // // Allocate space for pointers to otehr locations (the rows)
+    // self->channel_data = m_malloc(sizeof(uint8_t*) * self->channel_count);
 
-    // Allocate space in ram for audio data, use mp heap.
-    // Allocate space for pointers to otehr locations (the rows)
-    self->channel_data = m_malloc(sizeof(uint8_t*) * self->channel_count);
+    // // Allocate the space inside the rows for the actual audio data.
+    // // All audio data is stored using 16-bits of space for amplitudes
+    // // (may allow for 8-bit in the future: TODO. That would require
+    // // scaling samples at the output)
+    // for(uint16_t icx=0; icx<self->channel_count; icx++){
+    //     self->channel_data[icx] = m_malloc(byte_count_per_channel);
+    // }
 
-    // Allocate the space inside the rows for the actual audio data.
-    // All audio data is stored using 16-bits of space for amplitudes
-    // (may allow for 8-bit in the future: TODO. That would require
-    // scaling samples at the output)
-    for(uint16_t icx=0; icx<self->channel_count; icx++){
-        self->channel_data[icx] = m_malloc(byte_count_per_channel);
-    }
+    // engine_file_close();
 
-    engine_file_close();
+
+
+
 
 
     // uint16_t bitmap_id = engine_file_get_u16(0);
@@ -145,11 +148,16 @@ mp_obj_t wave_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
 }
 
 
+uint32_t wave_sound_resource_fill_destination(uint8_t *destination, uint32_t offset, uint32_t size){
+
+}
+
+
 // Class methods
 STATIC mp_obj_t wave_sound_resource_class_del(mp_obj_t self_in){
     ENGINE_INFO_PRINTF("WaveSoundResource: Deleted (freeing sound data)");
 
-    wave_sound_resource_class_obj_t *self = self_in;
+    sound_resource_base_class_obj_t *self = self_in;
 
     // m_free(self->data);
 
@@ -161,7 +169,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(wave_sound_resource_class_del_obj, wave_sound_resource
 STATIC void wave_sound_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing WaveSoundResource attr");
 
-    wave_sound_resource_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    sound_resource_base_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
 
     if(destination[0] == MP_OBJ_NULL){          // Load
         switch(attribute){

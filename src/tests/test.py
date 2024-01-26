@@ -3,6 +3,7 @@ import engine_draw
 import engine_debug
 import engine_input
 import engine_physics
+import engine_audio
 from engine_physics import EmptyPolyCollisionShape2D, RectanglePolyCollisionShape2D, HexagonPolyCollisionShape2D
 from engine_nodes import EmptyNode, Sprite2DNode, Rectangle2DNode, Polygon2DNode, Circle2DNode, CameraNode, VoxelSpaceNode, Physics2DNode
 from engine_math import Vector3, Vector2, Rectangle
@@ -12,6 +13,7 @@ import math
 engine_debug.debug_enable_all()
 wave = WaveSoundResource("cow.wav")
 
+engine_audio.play(wave, 0, False)
 
 # texture = TextureResource("32x32.bmp")
 

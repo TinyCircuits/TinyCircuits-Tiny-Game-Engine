@@ -41,7 +41,6 @@ STATIC mp_obj_t engine_init(){
     ENGINE_INFO_PRINTF("Engine init");
 
     engine_input_setup();
-    engine_audio_setup();
     engine_display_init();
     engine_display_send();
 
@@ -141,7 +140,10 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_stop_obj, engine_stop);
 STATIC mp_obj_t engine_module_init(){
     ENGINE_INFO_PRINTF("Engine init!");
 
-    // engine_resource_reset_resource_flash();
+    // Needs to be setup before hand since dynamicly inits array.
+    // Should make sure this doesn't happen more than once per
+    // lifetime. TODO
+    engine_audio_setup();
 
     return mp_const_none;
 }
