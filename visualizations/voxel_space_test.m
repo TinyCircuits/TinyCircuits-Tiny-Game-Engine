@@ -12,7 +12,7 @@ cam_pos_y = 64;
 
 
 angle = 0
-fov = pi/4
+fov = pi/2
 sinphi = sin(angle)
 cosphi = cos(angle)
 

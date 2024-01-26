@@ -33,6 +33,14 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Make camera render items centered at 0,0 so that inheritance is easier
 [] Physics: just polygons, rotation (simple init for common shapes), no friction. Need to figure out what to do when physics collision shape is rotated, cache normals?
 [] Physics: smooth: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-core-engine--gamedev-7493t#:~:text=Here%20is%20a%20full%20example%3A
+
+[] Audio: one channel wave files, data goes to contiguous flash space (lfs read() too slow)
+          still have SoundResources, return channel objects that the user can reference,
+          fixed number of channels (4 at first, maybe 8 later), play sounds by doing something
+          like engine_audio.play(source, channel_number) <- returns channel object and also
+          channel_object.play(source). Also need engine_audio.get_channel(). Add attributes
+          to channel objects like 'loop', 'running', source, duration (seconds), etc.
+
 [] Web runner
 [] Outline drawing for rects, circles, and polygons?
 [] Static nodes/screen space

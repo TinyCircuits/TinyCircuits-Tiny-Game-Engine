@@ -7,6 +7,7 @@
 #include "resources/engine_resource_manager.h"
 #include "engine_cameras.h"
 #include "utility/engine_time.h"
+#include "audio/engine_audio_module.h"
 
 // ### MODULE ###
 
@@ -40,6 +41,7 @@ STATIC mp_obj_t engine_init(){
     ENGINE_INFO_PRINTF("Engine init");
 
     engine_input_setup();
+    engine_audio_setup();
     engine_display_init();
     engine_display_send();
 

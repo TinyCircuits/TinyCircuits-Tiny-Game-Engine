@@ -6,86 +6,88 @@ import engine_physics
 from engine_physics import EmptyPolyCollisionShape2D, RectanglePolyCollisionShape2D, HexagonPolyCollisionShape2D
 from engine_nodes import EmptyNode, Sprite2DNode, Rectangle2DNode, Polygon2DNode, Circle2DNode, CameraNode, VoxelSpaceNode, Physics2DNode
 from engine_math import Vector3, Vector2, Rectangle
-from engine_resources import TextureResource
+from engine_resources import TextureResource, WaveSoundResource
 import math
 
-engine.set_fps_limit(60)
+engine_debug.debug_enable_all()
+wave = WaveSoundResource("cow.wav")
 
-texture = TextureResource("32x32.bmp")
 
-class MySprite(Sprite2DNode):
-    def __init__(self):
-        super().__init__(self, texture)
+# texture = TextureResource("32x32.bmp")
+
+# class MySprite(Sprite2DNode):
+#     def __init__(self):
+#         super().__init__(self, texture)
     
-    # def tick(self):
-    #     if engine_input.is_dpad_up_pressed():
-    #         self.position.y -= 1
-    #     if engine_input.is_dpad_down_pressed():
-    #         self.position.y += 1
+#     # def tick(self):
+#     #     if engine_input.is_dpad_up_pressed():
+#     #         self.position.y -= 1
+#     #     if engine_input.is_dpad_down_pressed():
+#     #         self.position.y += 1
         
-    #     if engine_input.is_dpad_left_pressed():
-    #         self.position.x -= 1
-    #     if engine_input.is_dpad_right_pressed():
-    #         self.position.x += 1
+#     #     if engine_input.is_dpad_left_pressed():
+#     #         self.position.x -= 1
+#     #     if engine_input.is_dpad_right_pressed():
+#     #         self.position.x += 1
         
         
-    #     if engine_input.is_bumper_left_pressed():
-    #         self.rotation += 0.1
-    #     if engine_input.is_bumper_right_pressed():
-    #         self.rotation -= 0.1
+#     #     if engine_input.is_bumper_left_pressed():
+#     #         self.rotation += 0.1
+#     #     if engine_input.is_bumper_right_pressed():
+#     #         self.rotation -= 0.1
 
 
 
 
-circle = Circle2DNode()
-rectangle = Rectangle2DNode()
-sprite = MySprite()
-polygon = Polygon2DNode()
-polygon.vertices.append(Vector2(-10, 10))
-polygon.vertices.append(Vector2(10, 10))
-polygon.vertices.append(Vector2(10, -10))
-polygon.vertices.append(Vector2(-10, -10))
+# circle = Circle2DNode()
+# rectangle = Rectangle2DNode()
+# sprite = MySprite()
+# polygon = Polygon2DNode()
+# polygon.vertices.append(Vector2(-10, 10))
+# polygon.vertices.append(Vector2(10, 10))
+# polygon.vertices.append(Vector2(10, -10))
+# polygon.vertices.append(Vector2(-10, -10))
 
-circle.color = 0b1111100000000000
-rectangle.color = 0b1111101001001001
-sprite.transparent_color = engine_draw.black
+# circle.color = 0b1111100000000000
+# rectangle.color = 0b1111101001001001
+# sprite.transparent_color = engine_draw.black
 
-circle.position = Vector2(0, -32)
-rectangle.position = Vector2(32, 0)
-sprite.position = Vector2(0, 32)
-polygon.position = Vector2(-32, 0)
+# circle.position = Vector2(0, -32)
+# rectangle.position = Vector2(32, 0)
+# sprite.position = Vector2(0, 32)
+# polygon.position = Vector2(-32, 0)
 
 
-class MyCam(CameraNode):
-    def __init__(self):
-        super().__init__(self)
+# class MyCam(CameraNode):
+#     def __init__(self):
+#         super().__init__(self)
     
-    def tick(self):
-        if engine_input.is_a_pressed():
-            self.zoom -= 0.1
-        if engine_input.is_b_pressed():
-            self.zoom += 0.1
+#     def tick(self):
+#         if engine_input.is_a_pressed():
+#             self.zoom -= 0.1
+#         if engine_input.is_b_pressed():
+#             self.zoom += 0.1
         
-        if engine_input.is_dpad_up_pressed():
-            self.position.y -= 1
-        if engine_input.is_dpad_down_pressed():
-            self.position.y += 1
+#         if engine_input.is_dpad_up_pressed():
+#             self.position.y -= 1
+#         if engine_input.is_dpad_down_pressed():
+#             self.position.y += 1
         
-        if engine_input.is_dpad_left_pressed():
-            self.position.x -= 1
-        if engine_input.is_dpad_right_pressed():
-            self.position.x += 1
+#         if engine_input.is_dpad_left_pressed():
+#             self.position.x -= 1
+#         if engine_input.is_dpad_right_pressed():
+#             self.position.x += 1
         
         
-        if engine_input.is_bumper_left_pressed():
-            self.rotation.z += 0.1
-        if engine_input.is_bumper_right_pressed():
-            self.rotation.z -= 0.1
+#         if engine_input.is_bumper_left_pressed():
+#             self.rotation.z += 0.1
+#         if engine_input.is_bumper_right_pressed():
+#             self.rotation.z -= 0.1
 
 
-camera = MyCam()
-camera.zoom = 0.5
-camera.position = Vector2(0, 0)
-# sprite.add_child(camera)
+# camera = MyCam()
+# camera.zoom = 0.5
+# camera.position = Vector2(0, 0)
+# # sprite.add_child(camera)
 
-engine.start()
+# engine.start()

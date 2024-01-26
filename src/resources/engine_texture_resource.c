@@ -39,7 +39,7 @@ mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, si
     uint32_t bitmap_bits_per_pixel = engine_file_get_u16(28);
     uint32_t bitmap_data_size = engine_file_get_u32(34);
 
-    ENGINE_INFO_PRINTF("TextureResource: BMP Parameters parsed from '%s':", mp_obj_str_get_str(args[0]));
+    ENGINE_INFO_PRINTF("TextureResource: BMP parameters parsed from '%s':", mp_obj_str_get_str(args[0]));
     ENGINE_INFO_PRINTF("\tbitmap_id:\t\t\t%d", bitmap_id);
     ENGINE_INFO_PRINTF("\tbitmap_pixel_data_offset:\t%lu", bitmap_pixel_data_offset);
     ENGINE_INFO_PRINTF("\tbitmap_width:\t\t\t%lu", bitmap_width);
