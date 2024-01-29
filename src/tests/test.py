@@ -13,7 +13,7 @@ import math
 engine_debug.debug_enable_all()
 wave = WaveSoundResource("cow.wav")
 
-engine_audio.play(wave, 0, False)
+engine_audio.play(wave, 0, True)
 
 # texture = TextureResource("32x32.bmp")
 
@@ -92,4 +92,4 @@ engine_audio.play(wave, 0, False)
 # camera.position = Vector2(0, 0)
 # # sprite.add_child(camera)
 
-# engine.start()
+engine.start()

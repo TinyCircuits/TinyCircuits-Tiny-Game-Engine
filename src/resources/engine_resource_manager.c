@@ -113,6 +113,39 @@ void engine_resource_start_storing(uint8_t *location, bool in_ram){
 }
 
 
+void engine_resource_store_u8(uint8_t to_store){
+    if(storing_in_ram){
+        // Convert to u16 array
+        uint8_t *u8_current_storing_location = (uint8_t*)current_storing_location;
+        u8_current_storing_location[index_in_storing_location] = to_store;
+    }else{
+        #if defined(__arm__)
+            uint8_t *u8_page_prog = (uint8_t*)page_prog;
+
+            // Store the 'to_byte' byte in a buffer in ram for now
+            u8_page_prog[page_prog_index] = to_store;
+
+            // Once buffer is full, write it to flash and
+            // reset indices to start filling again
+            page_prog_index++;
+            if(page_prog_index >= FLASH_PAGE_SIZE){
+                uint32_t address_offset = ((uint32_t)current_storing_location) - XIP_BASE;
+                uint32_t paused_interrupts = save_and_disable_interrupts();
+                flash_range_program(address_offset + (page_prog_count*FLASH_PAGE_SIZE), page_prog, FLASH_PAGE_SIZE);
+                restore_interrupts(paused_interrupts);
+
+                page_prog_index = 0;
+                page_prog_count++;
+            }
+        #else
+            ENGINE_FORCE_PRINTF("EngineResourceManager: ERROR, no none ram programmer implemented on this platform! Resources will not work!");
+        #endif
+    }
+    
+    index_in_storing_location++;
+}
+
+
 void engine_resource_store_u16(uint16_t to_store){
     if(storing_in_ram){
         // Convert to u16 array

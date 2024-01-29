@@ -5,6 +5,7 @@
 #include "debug/debug_print.h"
 #include <stdlib.h>
 #include <string.h>
+#include "math/engine_math.h"
 
 
 
@@ -24,6 +25,7 @@ audio_channel_class_obj_t *channels[CHANNEL_COUNT];
 #elif defined(__arm__)
     #include "pico/stdlib.h"
     #include "hardware/dma.h"
+    #include "hardware/pwm.h"
 
     // pg. 542: https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf
     // https://github.com/raspberrypi/pico-examples/blob/master/timer/hello_timer/hello_timer.c#L11-L57
@@ -34,14 +36,14 @@ audio_channel_class_obj_t *channels[CHANNEL_COUNT];
 
     void engine_audio_handle_buffer(audio_channel_class_obj_t *channel){
         // When 'buffer_sample_index = 0' that means the buffer hasn't been filled before, fill it (see that after this function it is immediately incremented)
-        // When 'buffer_sample_index = CHANNEL_BUFFER_SIZE' that means the index has run out of data, fill it with more
+        // When 'buffer_sample_index >= CHANNEL_BUFFER_SIZE' that means the index has run out of data, fill it with more
         if(channel->buffer_sample_index == 0 || channel->buffer_sample_index >= CHANNEL_BUFFER_SIZE){
             // Reset for the second case above
             channel->buffer_sample_index = 0;
 
             // Using the sound resource base, fill this channel's
             // buffer with audio data from the source resource
-            uint32_t filled_amount = channel->source->fill_buffer(channel->buffer, channel->source_sample_index, CHANNEL_BUFFER_SIZE);
+            uint32_t filled_amount = channel->source->fill_buffer(channel->source, channel->buffer, channel->source_sample_index, CHANNEL_BUFFER_SIZE);
 
             // Filled amount will always be equal to or less than to 
             // 0 the 'size' passed to 'fill_buffer'. In the case it was
@@ -85,7 +87,8 @@ audio_channel_class_obj_t *channels[CHANNEL_COUNT];
                 switch(channels[icx]->source->bytes_per_sample){
                     case 1:
                     {
-
+                        sample = (engine_math_clamp((((float)channels[icx]->buffer[channels[icx]->buffer_sample_index]) / 255.0f) * 1.0f, 0.0f, 1.0f) * 512.0f);
+                        ENGINE_FORCE_PRINTF("%lu", sample);
                     }
                     break;
                     case 2:
@@ -104,9 +107,8 @@ audio_channel_class_obj_t *channels[CHANNEL_COUNT];
             // TODO, update channel time based on 'source_sample_index' and source 'total_sample_count'
         }
         
-
-        // TODO, compress and output duty cycle
-        // pwm_set_gpio_level(512);
+        // TODO, compress samples and output duty cycle
+        pwm_set_gpio_level(23, sample);
         return true;
     }
 #endif
@@ -128,16 +130,19 @@ void engine_audio_setup(){
         gpio_set_function(23, GPIO_FUNC_PWM);
         pwm_config audio_pwm_pin_config = pwm_get_default_config();
         pwm_config_set_clkdiv_int(&audio_pwm_pin_config, 1);
-        pwm_config_set_wrap(&audio_pwm_pin_config, 1024);   // 125MHz / 1024 = 122kHz
+        pwm_config_set_wrap(&audio_pwm_pin_config, 512);   // 125MHz / 1024 = 122kHz
         pwm_init(audio_pwm_pin_slice, &audio_pwm_pin_config, true);
 
         // Now allow sound to play by enabling the amplifier
         gpio_put(26, 1);
 
         // Setup timer ISR. Set sampling rate to 44100
-        add_repeating_timer_us((int64_t)((1.0/44100.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer);
+        // add_repeating_timer_us((int64_t)((1.0/44100.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer);
+        add_repeating_timer_us((int64_t)((1.0/11025.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer);
+        // add_repeating_timer_us((int64_t)((1.0/22050.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer);
     #endif
 
+    // Fill channels array with channels
     for(uint8_t icx=0; icx<CHANNEL_COUNT; icx++){
         channels[icx] = audio_channel_class_new(&audio_channel_class_type, 0, 0, NULL);
     }

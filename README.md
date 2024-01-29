@@ -53,7 +53,9 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [] Performance, we'll see how it goes
 [] Make camera 0,0 render centered at 0,0
 [] In all node drawing code, allow camera to be a child of any node
-
+[] Allow for audio sources to play at different sample rates. This will mean
+   knowing where we are in the time of the file and interpolating between samples
+   if not exactly on a sample
 
 Game ideas
 [] ATV Gameboy game
@@ -64,6 +66,10 @@ Game ideas
 [] Golf
 [] Rocketcup
 
+[] Second core could be used to run draw functions while physics is run at the same time.
+   Use a queue and block when full to run draw functions to make more room. Would help
+   all games but especially those that only draw a small amount of nodes
+[] When core frequency is changed, wrap value of fractional PWM divisor needs to be adjusted
 [] Use voxelspace rotation to render the node? Might be too slow to do that for little gain
 [] Make voxelspace camera rotation->z correspond to line drawn at angle in radians. Make camera rotation->x correspond to radians (hard one)
 [] Add collision points to collision callback for polygon vs. polygon: https://dyn4j.org/2011/11/contact-points-using-clipping/
