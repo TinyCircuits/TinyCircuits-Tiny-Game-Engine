@@ -17,13 +17,13 @@ mp_obj_t audio_channel_class_new(const mp_obj_type_t *type, size_t n_args, size_
     self->base.type = &audio_channel_class_type;
 
     self->source = NULL;   // Set to NULL to indicate that source/channel not active
-    self->source_sample_index = 0;
-    self->volume = 1.0f;
+    self->source_byte_offset = 0;
+    self->volume = 0.5f;
     self->time = 0.0f;
     self->looping = false;
     self->done = true;
     self->buffer = (uint8_t*)malloc(CHANNEL_BUFFER_SIZE);
-    self->buffer_sample_index = UINT16_MAX;
+    self->buffer_byte_offset = UINT16_MAX;
     
     return MP_OBJ_FROM_PTR(self);
 }

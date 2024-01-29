@@ -35,15 +35,15 @@ audio_channel_class_obj_t *channels[CHANNEL_COUNT];
 
 
     void engine_audio_handle_buffer(audio_channel_class_obj_t *channel){
-        // When 'buffer_sample_index = 0' that means the buffer hasn't been filled before, fill it (see that after this function it is immediately incremented)
-        // When 'buffer_sample_index >= CHANNEL_BUFFER_SIZE' that means the index has run out of data, fill it with more
-        if(channel->buffer_sample_index == 0 || channel->buffer_sample_index >= CHANNEL_BUFFER_SIZE){
+        // When 'buffer_byte_offset = 0' that means the buffer hasn't been filled before, fill it (see that after this function it is immediately incremented)
+        // When 'buffer_byte_offset >= CHANNEL_BUFFER_SIZE' that means the index has run out of data, fill it with more
+        if(channel->buffer_byte_offset == 0 || channel->buffer_byte_offset >= CHANNEL_BUFFER_SIZE){
             // Reset for the second case above
-            channel->buffer_sample_index = 0;
+            channel->buffer_byte_offset = 0;
 
             // Using the sound resource base, fill this channel's
             // buffer with audio data from the source resource
-            uint32_t filled_amount = channel->source->fill_buffer(channel->source, channel->buffer, channel->source_sample_index, CHANNEL_BUFFER_SIZE);
+            uint32_t filled_amount = channel->source->fill_buffer(channel->source, channel->buffer, channel->source_byte_offset, CHANNEL_BUFFER_SIZE);
 
             // Filled amount will always be equal to or less than to 
             // 0 the 'size' passed to 'fill_buffer'. In the case it was
@@ -52,12 +52,12 @@ audio_channel_class_obj_t *channels[CHANNEL_COUNT];
             // the last fill made us reach the end of the source data,
             // figure out if this channel should stop or loop. If loop,
             // run again right away to fill with more data after resetting
-            // 'source_sample_index' 
+            // 'source_byte_offset' 
             if(filled_amount > 0){
-                channel->source_sample_index += filled_amount;
+                channel->source_byte_offset += filled_amount;
             }else{
                 // Gets reset no matter what, whether looping or not
-                channel->source_sample_index = 0;
+                channel->source_byte_offset = 0;
 
                 // If not looping, disable/remove the source and stop this
                 // channel from being played, otherwise, fill with start data
@@ -74,7 +74,7 @@ audio_channel_class_obj_t *channels[CHANNEL_COUNT];
 
     // Samples each channel, adds, normalizes, and sets PWM
     bool repeating_audio_callback(struct repeating_timer *t){
-        uint32_t sample = 0;
+        float sample = 0;
 
         for(uint8_t icx=0; icx<CHANNEL_COUNT; icx++){
             // Go over every channel and check if set to something usable
@@ -82,18 +82,27 @@ audio_channel_class_obj_t *channels[CHANNEL_COUNT];
                 // Fill buffer with data whether first time or looping
                 engine_audio_handle_buffer(channels[icx]);
 
-                // TODO: put sample from channel buffer somewhere for compressing
-                // sample = ?
+                // TODO: Mix samples!
                 switch(channels[icx]->source->bytes_per_sample){
                     case 1:
                     {
-                        sample = (engine_math_clamp((((float)channels[icx]->buffer[channels[icx]->buffer_sample_index]) / 255.0f) * 1.0f, 0.0f, 1.0f) * 512.0f);
-                        ENGINE_FORCE_PRINTF("%lu", sample);
+                        sample = (float)channels[icx]->buffer[channels[icx]->buffer_byte_offset];   // Get 8-bit sample
+                        sample = sample / (float)UINT8_MAX;                                         // Scale from 0 ~ 255 to 0.0 ~ 1.0
+                        sample = sample * channels[icx]->volume;                                    // Scale sample by channel volume
+                        sample = (engine_math_clamp(sample, 0.0f, 1.0f) * 512.0f);                  // Clamp volume scaled sample and scale from 0.0 ~ 1.0 to 0.0 to 512.0
                     }
                     break;
                     case 2:
-                    {
-
+                    {   
+                        int32_t temp = 0;
+                        int32_t b0 = channels[icx]->buffer[channels[icx]->buffer_byte_offset+1];
+                        int32_t b1 = channels[icx]->buffer[channels[icx]->buffer_byte_offset];
+                        temp = temp | (b0 << 8);
+                        temp = temp | (b1);
+                        sample = temp;                                              // Get 16-bit sample
+                        sample = sample / (float)UINT16_MAX;                        // Scale from 0 ~ 65535 to 0.0 ~ 1.0
+                        sample = sample * channels[icx]->volume;                    // Scale sample by channel volume
+                        sample = (engine_math_clamp(sample, 0.0f, 1.0f) * 512.0f);  // Clamp volume scaled sample and scale from 0.0 ~ 1.0 to 0.0 to 512.0
                     }
                     break;
                     default:
@@ -101,14 +110,14 @@ audio_channel_class_obj_t *channels[CHANNEL_COUNT];
                 }
 
                 // Make sure to grab the next sample next time
-                channels[icx]->buffer_sample_index++;
+                channels[icx]->buffer_byte_offset += channels[icx]->source->bytes_per_sample;
             }
             
-            // TODO, update channel time based on 'source_sample_index' and source 'total_sample_count'
+            // TODO, update channel time based on 'source_byte_offset' and source 'total_sample_count'
         }
         
         // TODO, compress samples and output duty cycle
-        pwm_set_gpio_level(23, sample);
+        pwm_set_gpio_level(23, (uint32_t)sample);
         return true;
     }
 #endif
@@ -138,7 +147,9 @@ void engine_audio_setup(){
 
         // Setup timer ISR. Set sampling rate to 44100
         // add_repeating_timer_us((int64_t)((1.0/44100.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer);
-        add_repeating_timer_us((int64_t)((1.0/11025.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer);
+        if(add_repeating_timer_us((int64_t)((1.0/11025.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer) == false){
+            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("AudioModule: No timer slots available, could not audio callback!"));
+        }
         // add_repeating_timer_us((int64_t)((1.0/22050.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer);
     #endif
 

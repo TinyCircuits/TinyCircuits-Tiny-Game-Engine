@@ -10,8 +10,9 @@ from engine_math import Vector3, Vector2, Rectangle
 from engine_resources import TextureResource, WaveSoundResource
 import math
 
-engine_debug.debug_enable_all()
-wave = WaveSoundResource("cow.wav")
+# engine_debug.debug_enable_all()
+wave = WaveSoundResource("cow_s16.wav")
+# engine_debug.debug_enable_setting(engine_debug.debug_setting_performance)
 
 engine_audio.play(wave, 0, True)
 

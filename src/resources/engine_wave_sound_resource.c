@@ -93,8 +93,6 @@ mp_obj_t wave_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
     ENGINE_INFO_PRINTF("\ttotal_sample_count:\t\t%lu", self->total_sample_count);
     ENGINE_INFO_PRINTF("\tbytes_per_sample:\t\t%lu", self->bytes_per_sample);
 
-    self->extra_data = (uint8_t*)m_malloc(self->total_data_size);
-
     // Get space in continuous flash area (stored in extra data for this type 'wave_sound_resource_class_type')
     self->extra_data = (uint8_t*)engine_resource_get_space(self->total_data_size, false);
     engine_resource_start_storing(self->extra_data, false);
