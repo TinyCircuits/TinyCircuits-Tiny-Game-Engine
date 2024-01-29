@@ -94,15 +94,10 @@ audio_channel_class_obj_t *channels[CHANNEL_COUNT];
                     break;
                     case 2:
                     {   
-                        int32_t temp = 0;
-                        int32_t b0 = channels[icx]->buffer[channels[icx]->buffer_byte_offset+1];
-                        int32_t b1 = channels[icx]->buffer[channels[icx]->buffer_byte_offset];
-                        temp = temp | (b0 << 8);
-                        temp = temp | (b1);
-                        sample = temp;                                              // Get 16-bit sample
-                        sample = sample / (float)UINT16_MAX;                        // Scale from 0 ~ 65535 to 0.0 ~ 1.0
-                        sample = sample * channels[icx]->volume;                    // Scale sample by channel volume
-                        sample = (engine_math_clamp(sample, 0.0f, 1.0f) * 512.0f);  // Clamp volume scaled sample and scale from 0.0 ~ 1.0 to 0.0 to 512.0
+                        sample = (int16_t)(channels[icx]->buffer[channels[icx]->buffer_byte_offset+1] << 8) + channels[icx]->buffer[channels[icx]->buffer_byte_offset];   // Get 16-bit sample
+                        sample = sample / (float)UINT16_MAX;                                                                                                              // Scale from 0 ~ 65535 to 0.0 ~ 1.0
+                        sample = sample * channels[icx]->volume;                                                                                                          // Scale sample by channel volume
+                        sample = (engine_math_clamp(sample, 0.0f, 1.0f) * 512.0f);                                                                                        // Clamp volume scaled sample and scale from 0.0 ~ 1.0 to 0.0 to 512.0
                     }
                     break;
                     default:
@@ -118,6 +113,7 @@ audio_channel_class_obj_t *channels[CHANNEL_COUNT];
         
         // TODO, compress samples and output duty cycle
         pwm_set_gpio_level(23, (uint32_t)sample);
+
         return true;
     }
 #endif

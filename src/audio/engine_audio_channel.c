@@ -18,7 +18,7 @@ mp_obj_t audio_channel_class_new(const mp_obj_type_t *type, size_t n_args, size_
 
     self->source = NULL;   // Set to NULL to indicate that source/channel not active
     self->source_byte_offset = 0;
-    self->volume = 0.5f;
+    self->volume = 1.0f;
     self->time = 0.0f;
     self->looping = false;
     self->done = true;
