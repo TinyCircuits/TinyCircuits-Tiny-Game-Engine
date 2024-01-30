@@ -15,8 +15,11 @@
 // on track at the relatively high sample rate good audio requires.
 // DMA is used to copy data into one of the dual buffer pairs
 // each audio channel gets but there's only 12 channels on RP2040
-// and one is used for the screen
-audio_channel_class_obj_t *channels[CHANNEL_COUNT];
+// and one is used for the screen.
+//
+// Audio channels need to be stored in root pointers so
+// they are not collected by gc
+MP_REGISTER_ROOT_POINTER(mp_obj_t channels[CHANNEL_COUNT]);
 
 // The master volume that all mixed samples are scaled by
 float master_volume = 1.0f;
@@ -28,6 +31,7 @@ float master_volume = 1.0f;
     #include "pico/stdlib.h"
     #include "hardware/dma.h"
     #include "hardware/pwm.h"
+    #include "pico/multicore.h"
 
     // pg. 542: https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf
     // https://github.com/raspberrypi/pico-examples/blob/master/timer/hello_timer/hello_timer.c#L11-L57
@@ -82,7 +86,7 @@ float master_volume = 1.0f;
 
         for(uint8_t icx=0; icx<CHANNEL_COUNT; icx++){
 
-            audio_channel_class_obj_t *channel = channels[icx];
+            audio_channel_class_obj_t *channel = MP_STATE_PORT(channels[icx]);
             sound_resource_base_class_obj_t *source = channel->source;
 
             // Go over every channel and check if set to something usable
@@ -139,12 +143,26 @@ float master_volume = 1.0f;
 #endif
 
 
+void engine_audio_setup_playback(){
+    #if defined(__unix__)
+        // Nothing to do
+    #elif defined(__arm__)
+        // Setup timer ISR. Set sampling rate to 44100
+        // add_repeating_timer_us((int64_t)((1.0/44100.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer);
+        if(add_repeating_timer_us((int64_t)((1.0/11025.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer) == false){
+            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("AudioModule: No timer slots available, could not audio callback!"));
+        }
+        // add_repeating_timer_us((int64_t)((1.0/22050.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer);
+    #endif
+}
+
+
 void engine_audio_setup(){
     // Fill channels array with channels. This has to be done
     // before any callbacks try to access the channels array
     // (otherwise it would be trying to access all NULLs)
     for(uint8_t icx=0; icx<CHANNEL_COUNT; icx++){
-        channels[icx] = audio_channel_class_new(&audio_channel_class_type, 0, 0, NULL);
+        MP_STATE_PORT(channels[icx]) = audio_channel_class_new(&audio_channel_class_type, 0, 0, NULL);
     }
 
     #if defined(__unix__)
@@ -168,12 +186,11 @@ void engine_audio_setup(){
         // Now allow sound to play by enabling the amplifier
         gpio_put(26, 1);
 
-        // Setup timer ISR. Set sampling rate to 44100
-        // add_repeating_timer_us((int64_t)((1.0/44100.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer);
-        if(add_repeating_timer_us((int64_t)((1.0/11025.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer) == false){
-            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("AudioModule: No timer slots available, could not audio callback!"));
-        }
-        // add_repeating_timer_us((int64_t)((1.0/22050.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer);
+        // Launch timer setup on other core. All audio playback
+        // is done on the other core. This means that access
+        // to channels and sources will need to be protected...
+        // https://github.com/raspberrypi/pico-examples/blob/master/multicore/hello_multicore/multicore.c
+        multicore_launch_core1(engine_audio_setup_playback);
     #endif
 }
 
@@ -181,9 +198,10 @@ void engine_audio_setup(){
 STATIC mp_obj_t engine_audio_play(mp_obj_t sound_source_obj, mp_obj_t channel_index_obj, mp_obj_t looping_obj){
     // Should probably make sure this doesn't interfere with DMA or interrupt: TODO
     uint8_t channel_index = mp_obj_get_int(channel_index_obj);
-    channels[channel_index]->source = sound_source_obj;
-    channels[channel_index]->looping = mp_obj_get_int(looping_obj);
-    return MP_OBJ_FROM_PTR(channels[channel_index]);
+    audio_channel_class_obj_t *channel = MP_STATE_PORT(channels[channel_index]);
+    channel->source = sound_source_obj;
+    channel->looping = mp_obj_get_int(looping_obj);
+    return MP_OBJ_FROM_PTR(channel);
 }
 MP_DEFINE_CONST_FUN_OBJ_3(engine_audio_play_obj, engine_audio_play);
 

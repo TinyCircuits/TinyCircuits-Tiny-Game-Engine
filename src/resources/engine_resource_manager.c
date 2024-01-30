@@ -138,7 +138,7 @@ void engine_resource_store_u8(uint8_t to_store){
                 page_prog_count++;
             }
         #else
-            ENGINE_FORCE_PRINTF("EngineResourceManager: ERROR, no none ram programmer implemented on this platform! Resources will not work!");
+            ENGINE_ERROR_PRINTF("EngineResourceManager: ERROR, no none ram programmer implemented on this platform! Resources will not work!");
         #endif
     }
     
@@ -171,7 +171,7 @@ void engine_resource_store_u16(uint16_t to_store){
                 page_prog_count++;
             }
         #else
-            ENGINE_FORCE_PRINTF("EngineResourceManager: ERROR, no none ram programmer implemented on this platform! Resources will not work!");
+            ENGINE_ERROR_PRINTF("EngineResourceManager: ERROR, no none ram programmer implemented on this platform! Resources will not work!");
         #endif
     }
     

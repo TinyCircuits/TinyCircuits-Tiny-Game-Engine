@@ -13,7 +13,7 @@ mp_obj_t audio_channel_class_new(const mp_obj_type_t *type, size_t n_args, size_
     ENGINE_INFO_PRINTF("New AudioChannel");
     mp_arg_check_num(n_args, n_kw, 0, 0, false);
 
-    audio_channel_class_obj_t *self = m_new_obj(audio_channel_class_obj_t);
+    audio_channel_class_obj_t *self = m_new_obj_with_finaliser(audio_channel_class_obj_t);
     self->base.type = &audio_channel_class_type;
 
     self->source = NULL;   // Set to NULL to indicate that source/channel not active
@@ -40,6 +40,16 @@ mp_obj_t audio_channel_class_new_dummy(const mp_obj_type_t *type, size_t n_args,
 }
 
 
+STATIC mp_obj_t audio_channel_class_del(mp_obj_t self_in){
+    ENGINE_INFO_PRINTF("AudioChannel: Deleted");
+
+    audio_channel_class_obj_t *self = self_in;
+
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_1(audio_channel_class_del_obj, audio_channel_class_del);
+
+
 STATIC void audio_channel_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing AudioChannel attr");
 
@@ -47,6 +57,10 @@ STATIC void audio_channel_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t 
 
     if(destination[0] == MP_OBJ_NULL){          // Load
         switch(attribute){
+            case MP_QSTR___del__:
+                destination[0] = MP_OBJ_FROM_PTR(&audio_channel_class_del_obj);
+                destination[1] = self_in;
+            break;
             case MP_QSTR_source:
                 destination[0] = self->source;
             break;
@@ -73,15 +87,15 @@ STATIC void audio_channel_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t 
             case MP_QSTR_gain:
                 self->gain = mp_obj_get_float(destination[1]);
             break;
-            case MP_QSTR_time:
-                self->time = mp_obj_get_float(destination[1]);
-            break;
+            // case MP_QSTR_time:
+            //     self->time = mp_obj_get_float(destination[1]);
+            // break;
             case MP_QSTR_looping:
                 self->looping = mp_obj_get_int(destination[1]);
             break;
-            case MP_QSTR_done:
-                self->done = mp_obj_get_int(destination[1]);
-            break;
+            // case MP_QSTR_done:
+            //     self->done = mp_obj_get_int(destination[1]);
+            // break;
             default:
                 return; // Fail
         }

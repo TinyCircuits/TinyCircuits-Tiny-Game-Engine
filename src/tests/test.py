@@ -9,44 +9,46 @@ from engine_nodes import EmptyNode, Sprite2DNode, Rectangle2DNode, Polygon2DNode
 from engine_math import Vector3, Vector2, Rectangle
 from engine_resources import TextureResource, WaveSoundResource
 import math
+import gc
 
 # engine_debug.debug_enable_all()
 wave0 = WaveSoundResource("cow_s16.wav")
 wave1 = WaveSoundResource("piano.wav")
 # engine_debug.debug_enable_setting(engine_debug.debug_setting_performance)
 
-engine_audio.play(wave0, 0, True)
-engine_audio.play(wave1, 1, True)
+c0 = engine_audio.play(wave0, 0, True)
+c1 = engine_audio.play(wave1, 1, True)
 
-# texture = TextureResource("32x32.bmp")
+texture = TextureResource("32x32.bmp")
 
-# class MySprite(Sprite2DNode):
-#     def __init__(self):
-#         super().__init__(self, texture)
+class MySprite(Sprite2DNode):
+    def __init__(self):
+        super().__init__(self, texture)
     
-#     # def tick(self):
-#     #     if engine_input.is_dpad_up_pressed():
-#     #         self.position.y -= 1
-#     #     if engine_input.is_dpad_down_pressed():
-#     #         self.position.y += 1
+    # def tick(self):
+        # print(c1.time)
+    #     if engine_input.is_dpad_up_pressed():
+    #         self.position.y -= 1
+    #     if engine_input.is_dpad_down_pressed():
+    #         self.position.y += 1
         
-#     #     if engine_input.is_dpad_left_pressed():
-#     #         self.position.x -= 1
-#     #     if engine_input.is_dpad_right_pressed():
-#     #         self.position.x += 1
+    #     if engine_input.is_dpad_left_pressed():
+    #         self.position.x -= 1
+    #     if engine_input.is_dpad_right_pressed():
+    #         self.position.x += 1
         
         
-#     #     if engine_input.is_bumper_left_pressed():
-#     #         self.rotation += 0.1
-#     #     if engine_input.is_bumper_right_pressed():
-#     #         self.rotation -= 0.1
+    #     if engine_input.is_bumper_left_pressed():
+    #         self.rotation += 0.1
+    #     if engine_input.is_bumper_right_pressed():
+    #         self.rotation -= 0.1
 
 
 
 
 # circle = Circle2DNode()
 # rectangle = Rectangle2DNode()
-# sprite = MySprite()
+sprite = MySprite()
 # polygon = Polygon2DNode()
 # polygon.vertices.append(Vector2(-10, 10))
 # polygon.vertices.append(Vector2(10, 10))
@@ -63,36 +65,38 @@ engine_audio.play(wave1, 1, True)
 # polygon.position = Vector2(-32, 0)
 
 
-# class MyCam(CameraNode):
-#     def __init__(self):
-#         super().__init__(self)
+class MyCam(CameraNode):
+    def __init__(self):
+        super().__init__(self)
     
-#     def tick(self):
-#         if engine_input.is_a_pressed():
-#             self.zoom -= 0.1
-#         if engine_input.is_b_pressed():
-#             self.zoom += 0.1
+    def tick(self):
+        if engine_input.is_a_pressed():
+            self.zoom -= 0.1
+        if engine_input.is_b_pressed():
+            self.zoom += 0.1
         
-#         if engine_input.is_dpad_up_pressed():
-#             self.position.y -= 1
-#         if engine_input.is_dpad_down_pressed():
-#             self.position.y += 1
+        if engine_input.is_dpad_up_pressed():
+            self.position.y -= 1
+        if engine_input.is_dpad_down_pressed():
+            self.position.y += 1
         
-#         if engine_input.is_dpad_left_pressed():
-#             self.position.x -= 1
-#         if engine_input.is_dpad_right_pressed():
-#             self.position.x += 1
+        if engine_input.is_dpad_left_pressed():
+            self.position.x -= 1
+        if engine_input.is_dpad_right_pressed():
+            self.position.x += 1
         
         
-#         if engine_input.is_bumper_left_pressed():
-#             self.rotation.z += 0.1
-#         if engine_input.is_bumper_right_pressed():
-#             self.rotation.z -= 0.1
+        if engine_input.is_bumper_left_pressed():
+            self.rotation.z += 0.1
+        if engine_input.is_bumper_right_pressed():
+            self.rotation.z -= 0.1
 
 
-# camera = MyCam()
-# camera.zoom = 0.5
+camera = MyCam()
+camera.zoom = 1
 # camera.position = Vector2(0, 0)
 # # sprite.add_child(camera)
+
+gc.collect()
 
 engine.start()
