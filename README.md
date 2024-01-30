@@ -34,12 +34,6 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [] Physics: just polygons, rotation (simple init for common shapes), no friction. Need to figure out what to do when physics collision shape is rotated, cache normals?
 [] Physics: smooth: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-core-engine--gamedev-7493t#:~:text=Here%20is%20a%20full%20example%3A
 
-[] Audio: one channel wave files, data goes to contiguous flash space (lfs read() too slow)
-          still have SoundResources, return channel objects that the user can reference,
-          fixed number of channels (4 at first, maybe 8 later), play sounds by doing something
-          like engine_audio.play(source, channel_number) <- returns channel object and also
-          channel_object.play(source). Also need engine_audio.get_channel(). Add attributes
-          to channel objects like 'loop', 'running', source, duration (seconds), etc.
 [] Audio: since the playback timer is on the other core, the following needs to be taken care of
          1.   When setting 'source', 'gain', or 'looping' on an audio channel from core0, make sure
                core1 isn't also reading/setting those values
@@ -74,6 +68,10 @@ Game ideas
 [] Golf
 [] Rocketcup
 
+[] In the future, probably in a soft atomic API for the cases where a sound resource
+   gets deleted on core0 and is still being used by core1. It would just be copies
+   of the data that get switched out when assigned. Reading will just the one active copy
+   while the other is free to be assigned to
 [] Second core could be used to run draw functions while physics is run at the same time.
    Use a queue and block when full to run draw functions to make more room. Would help
    all games but especially those that only draw a small amount of nodes
@@ -124,3 +122,9 @@ Game ideas
 
 [X] Reimplement __del__ for cameras, physics nodes, and engine nodes (was handled) (eventually GUI nodes too) to delete themselves from their respective linked lists: added custom __del__ for physics and camera nodes
 [x] Hierarchy translation bug in node_base when a child is an inherited class: seems to be fixed after adding node_base qstr attr to all nodes and using that to lookup the node base for the child node.
+[X] Audio: one channel wave files, data goes to contiguous flash space (lfs read() too slow)
+          still have SoundResources, return channel objects that the user can reference,
+          fixed number of channels (4 at first, maybe 8 later), play sounds by doing something
+          like engine_audio.play(source, channel_number) <- returns channel object and also
+          channel_object.play(source). Also need engine_audio.get_channel(). Add attributes
+          to channel objects like 'loop', 'running', source, duration (seconds), etc.

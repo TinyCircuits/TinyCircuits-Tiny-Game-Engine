@@ -117,9 +117,9 @@ mp_obj_t wave_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
 STATIC mp_obj_t wave_sound_resource_class_del(mp_obj_t self_in){
     ENGINE_INFO_PRINTF("WaveSoundResource: Deleted (freeing sound data)");
 
-    sound_resource_base_class_obj_t *self = self_in;
-
-    // m_free(self->data);
+    // sound_resource_base_class_obj_t *self = self_in;
+    // Since this is stored in contigious flash space and
+    // nothing exists to get rid of it, yet, do nothing
 
     return mp_const_none;
 }

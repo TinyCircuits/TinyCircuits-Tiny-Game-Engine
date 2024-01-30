@@ -97,13 +97,14 @@ float master_volume = 1.0f;
 
             sound_resource_base_class_obj_t *source = channel->source;
 
-            // For each source, make sure we have access to it now
-            // and not core0 (which may be reading/writing to any
-            // of the used attributes)
-            mp_thread_mutex_lock(&source->mutex, true);
-
             // Go over every channel and check if set to something usable
             if(source != NULL){
+
+                // For each source, make sure we have access to it now
+                // and not core0 (which may be reading/writing to any
+                // of the used attributes)
+                mp_thread_mutex_lock(&source->mutex, true);
+
                 // Another active channel
                 active_channel_count += 1;
 
