@@ -23,7 +23,25 @@ mp_obj_t audio_channel_class_new(const mp_obj_type_t *type, size_t n_args, size_
     self->looping = false;
     self->done = true;
     self->buffer = (uint8_t*)malloc(CHANNEL_BUFFER_SIZE);   // Use C heap. Easier to avoid gc and we have a consistent number of buffers anyways
+    self->buffer_end = CHANNEL_BUFFER_SIZE;
     self->buffer_byte_offset = UINT16_MAX;
+
+    // https://github.com/raspberrypi/pico-examples/blob/eca13acf57916a0bd5961028314006983894fc84/dma/hello_dma/hello_dma.c#L21-L30
+    // https://github.com/raspberrypi/pico-examples/blob/master/flash/xip_stream/flash_xip_stream.c#L58-L70 (see pg. 127 of rp2040 datasheet)
+    // Get a free DMA channel and panic if there isn't one,
+    // get a default DMA config, and set the transfer size
+    // to 8-bits since smallest audio sample bit-depth is 8
+    // (using 16 would mean we'd copy too much data in 8-bit case)
+    self->dma_channel = dma_claim_unused_channel(true);
+    self->dma_config = dma_channel_get_default_config(self->dma_channel);
+    channel_config_set_transfer_data_size(&self->dma_config, DMA_SIZE_8);
+
+    // Do not want to automaticaly increment the read source
+    // location and write destination, will keep track of that
+    // and manually set it ourselves
+    channel_config_set_read_increment(&self->dma_config, false);
+    channel_config_set_write_increment(&self->dma_config, false);
+    channel_config_set_dreq(&self->dma_config, DREQ_XIP_STREAM);
 
     // Init mutex used to sync cores between core0 (user Python code)
     // and core1 (audio playback)

@@ -51,18 +51,32 @@ float master_volume = 1.0f;
 
             // Using the sound resource base, fill this channel's
             // buffer with audio data from the source resource
-            uint32_t filled_amount = channel->source->fill_buffer(channel->source, channel->buffer, channel->source_byte_offset, CHANNEL_BUFFER_SIZE);
+            uint8_t *data_buffer_source;
+            uint32_t to_fill_amount = channel->source->get_data_buffer(channel->source, data_buffer_source, channel->source_byte_offset, CHANNEL_BUFFER_SIZE);
+            // uint32_t filled_amount = channel->source->get_data_buffer(channel->source, channel->buffer, channel->source_byte_offset, CHANNEL_BUFFER_SIZE);
+
+            // https://github.com/raspberrypi/pico-examples/blob/master/flash/xip_stream/flash_xip_stream.c#L58-L70
+            dma_channel_configure(
+                channel->dma_channel,   // Channel to be configured
+                &channel->dma_config,   // The configuration we just created
+                channel->buffer,        // The initial write address
+                data_buffer_source,     // The initial read address
+                to_fill_amount,         // Number of transfers; in this case each is 1 byte.
+                true                    // Start immediately.
+            );
+
+            dma_channel_wait_for_finish_blocking(channel->dma_channel);
 
             // Filled amount will always be equal to or less than to 
             // 0 the 'size' passed to 'fill_buffer'. In the case it was
-            // with filled with something, increment to the amount filled
+            // filled with something, increment to the amount filled
             // further. In the case it is filled with nothing, that means
             // the last fill made us reach the end of the source data,
             // figure out if this channel should stop or loop. If loop,
             // run again right away to fill with more data after resetting
             // 'source_byte_offset' 
-            if(filled_amount > 0){
-                channel->source_byte_offset += filled_amount;
+            if(to_fill_amount > 0){
+                channel->source_byte_offset += to_fill_amount;
             }else{
                 // Gets reset no matter what, whether looping or not
                 channel->source_byte_offset = 0;

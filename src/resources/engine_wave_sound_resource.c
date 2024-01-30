@@ -12,10 +12,10 @@ STATIC void wave_sound_resource_class_print(const mp_print_t *print, mp_obj_t se
 }
 
 
-uint32_t wave_sound_resource_fill_destination(void *self_in, uint8_t *destination, uint32_t offset, uint32_t size){
+uint32_t wave_sound_resource_fill_destination(void *self_in, uint8_t *data_buffer_out, uint32_t offset, uint32_t size){
     sound_resource_base_class_obj_t *self = self_in;
     uint32_t size_max = fminf(self->total_data_size-offset, size);
-    memcpy((uint8_t*)destination, ((uint8_t*)self->extra_data)+offset, size_max);
+    data_buffer_out = ((uint8_t*)self->extra_data)+offset;
     return size_max;
 }
 
@@ -26,7 +26,7 @@ mp_obj_t wave_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
 
     sound_resource_base_class_obj_t *self = m_new_obj_with_finaliser(sound_resource_base_class_obj_t);
     self->base.type = &wave_sound_resource_class_type;
-    self->fill_buffer = &wave_sound_resource_fill_destination;
+    self->get_data_buffer = &wave_sound_resource_fill_destination;
 
     // Init mutex used to sync cores between core0 (user Python code)
     // and core1 (audio playback)
