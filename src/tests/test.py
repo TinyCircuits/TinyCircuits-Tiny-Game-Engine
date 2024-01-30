@@ -11,10 +11,12 @@ from engine_resources import TextureResource, WaveSoundResource
 import math
 
 # engine_debug.debug_enable_all()
-wave = WaveSoundResource("cow_s16.wav")
+wave0 = WaveSoundResource("cow_s16.wav")
+wave1 = WaveSoundResource("piano.wav")
 # engine_debug.debug_enable_setting(engine_debug.debug_setting_performance)
 
-engine_audio.play(wave, 0, True)
+engine_audio.play(wave0, 0, True)
+engine_audio.play(wave1, 1, True)
 
 # texture = TextureResource("32x32.bmp")
 

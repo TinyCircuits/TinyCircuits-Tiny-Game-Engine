@@ -18,7 +18,7 @@ mp_obj_t audio_channel_class_new(const mp_obj_type_t *type, size_t n_args, size_
 
     self->source = NULL;   // Set to NULL to indicate that source/channel not active
     self->source_byte_offset = 0;
-    self->volume = 1.0f;
+    self->gain = 1.0f;
     self->time = 0.0f;
     self->looping = false;
     self->done = true;
@@ -50,8 +50,8 @@ STATIC void audio_channel_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t 
             case MP_QSTR_source:
                 destination[0] = self->source;
             break;
-            case MP_QSTR_volume:
-                destination[0] = mp_obj_new_float(self->volume);
+            case MP_QSTR_gain:
+                destination[0] = mp_obj_new_float(self->gain);
             break;
             case MP_QSTR_time:
                 destination[0] = mp_obj_new_float(self->time);
@@ -70,8 +70,8 @@ STATIC void audio_channel_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t 
             case MP_QSTR_source:
                 self->source = destination[1];
             break;
-            case MP_QSTR_volume:
-                self->volume = mp_obj_get_float(destination[1]);
+            case MP_QSTR_gain:
+                self->gain = mp_obj_get_float(destination[1]);
             break;
             case MP_QSTR_time:
                 self->time = mp_obj_get_float(destination[1]);

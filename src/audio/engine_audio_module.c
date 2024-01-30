@@ -18,6 +18,8 @@
 // and one is used for the screen
 audio_channel_class_obj_t *channels[CHANNEL_COUNT];
 
+// The master volume that all mixed samples are scaled by
+float master_volume = 1.0f;
 
 
 #if defined(__unix__)
@@ -74,45 +76,63 @@ audio_channel_class_obj_t *channels[CHANNEL_COUNT];
 
     // Samples each channel, adds, normalizes, and sets PWM
     bool repeating_audio_callback(struct repeating_timer *t){
-        float sample = 0;
+        float temp_sample = 0;
+        float total_sample = 0;
+        uint8_t active_channel_count = 0;
 
         for(uint8_t icx=0; icx<CHANNEL_COUNT; icx++){
-            // Go over every channel and check if set to something usable
-            if(channels[icx]->source != NULL){
-                // Fill buffer with data whether first time or looping
-                engine_audio_handle_buffer(channels[icx]);
 
-                // TODO: Mix samples!
-                switch(channels[icx]->source->bytes_per_sample){
+            audio_channel_class_obj_t *channel = channels[icx];
+            sound_resource_base_class_obj_t *source = channel->source;
+
+            // Go over every channel and check if set to something usable
+            if(source != NULL){
+                // Another active channel
+                active_channel_count += 1;
+
+                // Fill buffer with data whether first time or looping
+                engine_audio_handle_buffer(channel);
+
+                // Add samples to total
+                switch(source->bytes_per_sample){
                     case 1:
                     {
-                        sample = (float)channels[icx]->buffer[channels[icx]->buffer_byte_offset];   // Get 8-bit sample
-                        sample = sample / (float)UINT8_MAX;                                         // Scale from 0 ~ 255 to 0.0 ~ 1.0
-                        sample = sample * channels[icx]->volume;                                    // Scale sample by channel volume
-                        sample = (engine_math_clamp(sample, 0.0f, 1.0f) * 512.0f);                  // Clamp volume scaled sample and scale from 0.0 ~ 1.0 to 0.0 to 512.0
+                        temp_sample = (float)channel->buffer[channel->buffer_byte_offset];                      // Get 8-bit sample
+                        temp_sample = temp_sample / (float)UINT8_MAX;                                           // Scale from 0 ~ 255 to 0.0 ~ 1.0
+                        temp_sample = temp_sample * channel->gain;                                              // Scale sample by channel gain
+                        temp_sample = (engine_math_clamp(temp_sample, 0.0f, 1.0f) * 512.0f * master_volume);    // Clamp volume scaled sample and scale from 0.0 ~ 1.0 to 0.0 to 512.0 (512 scaled by master_volume)
                     }
                     break;
                     case 2:
                     {   
-                        sample = (int16_t)(channels[icx]->buffer[channels[icx]->buffer_byte_offset+1] << 8) + channels[icx]->buffer[channels[icx]->buffer_byte_offset];   // Get 16-bit sample
-                        sample = sample / (float)UINT16_MAX;                                                                                                              // Scale from 0 ~ 65535 to 0.0 ~ 1.0
-                        sample = sample * channels[icx]->volume;                                                                                                          // Scale sample by channel volume
-                        sample = (engine_math_clamp(sample, 0.0f, 1.0f) * 512.0f);                                                                                        // Clamp volume scaled sample and scale from 0.0 ~ 1.0 to 0.0 to 512.0
+                        temp_sample = (int16_t)(channel->buffer[channel->buffer_byte_offset+1] << 8) + channel->buffer[channel->buffer_byte_offset];    // Get 16-bit sample
+                        temp_sample = temp_sample / (float)UINT16_MAX;                                                                                  // Scale from 0 ~ 65535 to 0.0 ~ 1.0
+                        temp_sample = temp_sample * channel->gain;                                                                                      // Scale sample by channel gain
+                        temp_sample = (engine_math_clamp(temp_sample, 0.0f, 1.0f) * 512.0f * master_volume);                                            // Clamp volume scaled sample and scale from 0.0 ~ 1.0 to 0.0 to 512.0 (512 scaled by master_volume)
                     }
                     break;
                     default:
-                        ENGINE_ERROR_PRINTF("Audio source with %d bytes per sample is not supported!", channels[icx]->source->bytes_per_sample);
+                        ENGINE_ERROR_PRINTF("Audio source with %d bytes per sample is not supported!", source->bytes_per_sample);
                 }
 
+                // Add the sample to the total
+                total_sample += temp_sample;
+
                 // Make sure to grab the next sample next time
-                channels[icx]->buffer_byte_offset += channels[icx]->source->bytes_per_sample;
+                channel->buffer_byte_offset += source->bytes_per_sample;
+
+                // Calculate the current time that we're at in the channel's source
+                // t_current =  (1 / sample_rate [1/s]) * (source_byte_offset / bytes_per_sample)
+                channel->time = (1.0f / source->sample_rate) * (channel->source_byte_offset / source->bytes_per_sample);
             }
-            
-            // TODO, update channel time based on 'source_byte_offset' and source 'total_sample_count'
         }
         
-        // TODO, compress samples and output duty cycle
-        pwm_set_gpio_level(23, (uint32_t)sample);
+        // https://dsp.stackexchange.com/questions/3581/algorithms-to-mix-audio-signals-without-clipping: Viktor was wrong!
+        // https://www.google.com/search?q=mixing+n+number+of+channels+audio+stackexchange&rlz=1C1GCEA_enUS850US850&oq=mixing+n+number+of+channels+audio+stackexchange&gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIJCAEQIRgKGKABMgcIAhAhGKsC0gEINjk5OWowajeoAgCwAgA&sourceid=chrome&ie=UTF-8
+        // https://electronics.stackexchange.com/questions/193983/mixing-audio-in-a-microprocessor       
+        if(active_channel_count > 0){
+            pwm_set_gpio_level(23, (uint32_t)(total_sample / active_channel_count));
+        }
 
         return true;
     }
@@ -120,6 +140,13 @@ audio_channel_class_obj_t *channels[CHANNEL_COUNT];
 
 
 void engine_audio_setup(){
+    // Fill channels array with channels. This has to be done
+    // before any callbacks try to access the channels array
+    // (otherwise it would be trying to access all NULLs)
+    for(uint8_t icx=0; icx<CHANNEL_COUNT; icx++){
+        channels[icx] = audio_channel_class_new(&audio_channel_class_type, 0, 0, NULL);
+    }
+
     #if defined(__unix__)
         // Nothing to do
     #elif defined(__arm__)
@@ -148,11 +175,6 @@ void engine_audio_setup(){
         }
         // add_repeating_timer_us((int64_t)((1.0/22050.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer);
     #endif
-
-    // Fill channels array with channels
-    for(uint8_t icx=0; icx<CHANNEL_COUNT; icx++){
-        channels[icx] = audio_channel_class_new(&audio_channel_class_type, 0, 0, NULL);
-    }
 }
 
 
@@ -166,11 +188,27 @@ STATIC mp_obj_t engine_audio_play(mp_obj_t sound_source_obj, mp_obj_t channel_in
 MP_DEFINE_CONST_FUN_OBJ_3(engine_audio_play_obj, engine_audio_play);
 
 
+// Set new master volume but clamped to 0.0 ~ 1.0 (no boosting allowed)
+STATIC mp_obj_t engine_audio_set_volume(mp_obj_t new_volume){
+    master_volume = engine_math_clamp(mp_obj_get_float(new_volume), 0.0f, 1.0f);
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_1(engine_audio_set_volume_obj, engine_audio_set_volume);
+
+
+STATIC mp_obj_t engine_audio_get_volume(){
+    return mp_obj_new_float(master_volume);
+}
+MP_DEFINE_CONST_FUN_OBJ_0(engine_audio_get_volume_obj, engine_audio_get_volume);
+
+
 // Module attributes
 STATIC const mp_rom_map_elem_t engine_audio_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_audio) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_AudioChannel), (mp_obj_t)&audio_channel_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_play), (mp_obj_t)&engine_audio_play_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_set_volume), (mp_obj_t)&engine_audio_set_volume_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_get_volume), (mp_obj_t)&engine_audio_get_volume_obj },
 };
 
 // Module init

@@ -31,12 +31,12 @@ typedef struct{
     mp_obj_base_t base;
     sound_resource_base_class_obj_t *source;    // Source of the audio for the channel, currently
     uint32_t source_byte_offset;                // The total byte position inside the source that the ISR is using to start filling from
-    float volume;                               // How loud this channel is, from 0.0 to 1.0
+    float gain;                                 // Multiplier on each sample, 1.0 changes nothing
     float time;                                 // Where in the 'channel_source' the audio is being played from
     bool looping;                               // Loop back to the start of the 'channel_source' at the end or set it to mp_const_none
     bool done;                                  // After starting a sound on this channel, this is set to true and then false when the end is reached (never set false in the case of 'looping' being true)
     uint8_t *buffer;                            // Buffer to hold data from other locations (flash or generated)
-    uint16_t buffer_byte_offset;               // Where we are in the buffer pointed to by 'fill_buffer_index'. Loop back to 0 when reach sample count stored in 'source'
+    uint16_t buffer_byte_offset;                // Where we are in the buffer pointed to by 'fill_buffer_index'. Loop back to 0 when reach sample count stored in 'source'
 }audio_channel_class_obj_t;
 
 extern const mp_obj_type_t audio_channel_class_type;
