@@ -2,6 +2,7 @@
 #define ENGINE_AUDIO_CHANNEL_H
 
 #include "py/obj.h"
+#include "py/mpthread.h"
 #include <stdint.h>
 #include "resources/engine_sound_resource_base.h"
 
@@ -37,6 +38,7 @@ typedef struct{
     bool done;                                  // After starting a sound on this channel, this is set to true and then false when the end is reached (never set false in the case of 'looping' being true)
     uint8_t *buffer;                            // Buffer to hold data from other locations (flash or generated)
     uint16_t buffer_byte_offset;                // Where we are in the buffer pointed to by 'fill_buffer_index'. Loop back to 0 when reach sample count stored in 'source'
+    mp_thread_mutex_t mutex;                    // Use MicroPython mutex abstraction since it handles each port already (so we don't have to!)
 }audio_channel_class_obj_t;
 
 extern const mp_obj_type_t audio_channel_class_type;

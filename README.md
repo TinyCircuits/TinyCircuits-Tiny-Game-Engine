@@ -40,6 +40,15 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
           like engine_audio.play(source, channel_number) <- returns channel object and also
           channel_object.play(source). Also need engine_audio.get_channel(). Add attributes
           to channel objects like 'loop', 'running', source, duration (seconds), etc.
+[] Audio: since the playback timer is on the other core, the following needs to be taken care of
+         1.   When setting 'source', 'gain', or 'looping' on an audio channel from core0, make sure
+               core1 isn't also reading/setting those values
+         2. If an audio source (wave, tone) is collected, make sure the other core using that does not
+            crash. Maybe when a source is set, copy the source to the other core. When an attribute on
+            the source is changed, change the copy. When deleted, mark the copy for deletion on the other
+            core
+         3. Eventually, ToneSoundResource will be able to be regenerated. At that point each sound resource
+            accessed by the each core should be safely locked behind mutexes too.
 
 [] Web runner
 [] Outline drawing for rects, circles, and polygons?
@@ -47,7 +56,6 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [] Documentation: markdown to PDF
 [] Weird sprite jumping/offset during rotation and scaling
 [] Text
-[] Audio/Music
 [] UI
 [] Reset
 [] Performance, we'll see how it goes

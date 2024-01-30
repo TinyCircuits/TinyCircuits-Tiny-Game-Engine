@@ -1,4 +1,5 @@
 #include "py/obj.h"
+#include "py/mpthread.h"
 #include "engine_audio_module.h"
 #include "engine_audio_channel.h"
 #include "resources/engine_sound_resource_base.h"
@@ -19,6 +20,8 @@
 //
 // Audio channels need to be stored in root pointers so
 // they are not collected by gc
+// https://github.com/orgs/micropython/discussions/9312#discussioncomment-3644172
+// Use MP_STATE_PORT to get the objects from root pointers
 MP_REGISTER_ROOT_POINTER(mp_obj_t channels[CHANNEL_COUNT]);
 
 // The master volume that all mixed samples are scaled by
@@ -38,7 +41,6 @@ float master_volume = 1.0f;
     // https://www.raspberrypi.com/documentation/pico-sdk/high_level.html#rpipdb65a0bdce0635d95877
     // https://www.raspberrypi.com/documentation/pico-sdk/hardware.html#interrupt-numbers
     struct repeating_timer repeating_audio_timer;
-
 
     void engine_audio_handle_buffer(audio_channel_class_obj_t *channel){
         // When 'buffer_byte_offset = 0' that means the buffer hasn't been filled before, fill it (see that after this function it is immediately incremented)
@@ -87,7 +89,18 @@ float master_volume = 1.0f;
         for(uint8_t icx=0; icx<CHANNEL_COUNT; icx++){
 
             audio_channel_class_obj_t *channel = MP_STATE_PORT(channels[icx]);
+
+            // For each channel, make sure we have access to it now
+            // and not core0 (which may be reading/writing to any
+            // of the used attributes)
+            mp_thread_mutex_lock(&channel->mutex, true);
+
             sound_resource_base_class_obj_t *source = channel->source;
+
+            // For each source, make sure we have access to it now
+            // and not core0 (which may be reading/writing to any
+            // of the used attributes)
+            mp_thread_mutex_lock(&source->mutex, true);
 
             // Go over every channel and check if set to something usable
             if(source != NULL){
@@ -129,6 +142,9 @@ float master_volume = 1.0f;
                 // t_current =  (1 / sample_rate [1/s]) * (source_byte_offset / bytes_per_sample)
                 channel->time = (1.0f / source->sample_rate) * (channel->source_byte_offset / source->bytes_per_sample);
             }
+
+            mp_thread_mutex_unlock(&channel->mutex);
+            mp_thread_mutex_unlock(&source->mutex);
         }
         
         // https://dsp.stackexchange.com/questions/3581/algorithms-to-mix-audio-signals-without-clipping: Viktor was wrong!
@@ -161,6 +177,7 @@ void engine_audio_setup(){
     // Fill channels array with channels. This has to be done
     // before any callbacks try to access the channels array
     // (otherwise it would be trying to access all NULLs)
+    // Setup should be run once per lifetime, shouldn't need a mutex
     for(uint8_t icx=0; icx<CHANNEL_COUNT; icx++){
         MP_STATE_PORT(channels[icx]) = audio_channel_class_new(&audio_channel_class_type, 0, 0, NULL);
     }

@@ -22,8 +22,12 @@ mp_obj_t audio_channel_class_new(const mp_obj_type_t *type, size_t n_args, size_
     self->time = 0.0f;
     self->looping = false;
     self->done = true;
-    self->buffer = (uint8_t*)malloc(CHANNEL_BUFFER_SIZE);
+    self->buffer = (uint8_t*)malloc(CHANNEL_BUFFER_SIZE);   // Use C heap. Easier to avoid gc and we have a consistent number of buffers anyways
     self->buffer_byte_offset = UINT16_MAX;
+
+    // Init mutex used to sync cores between core0 (user Python code)
+    // and core1 (audio playback)
+    mp_thread_mutex_init(&self->mutex);
     
     return MP_OBJ_FROM_PTR(self);
 }
@@ -55,6 +59,16 @@ STATIC void audio_channel_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t 
 
     audio_channel_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
 
+    // Only user code on core0 should invoke this function (don't see a reason
+    // why during playback we would need to use something like mp_load_attr/
+    // mp_store_attr). Since that's the case, if we want to load a value
+    // on core0, core1 could be writing to mostly any of the channel
+    // attributes, so safely wait for core1 to stop using this channel's mutex.
+    // If we want to store a value in the channel from core0, core1 could be
+    // reading or writing to most any attributes, also wait safely to lock
+    // so that core1 will have to wait too.
+    mp_thread_mutex_lock(&self->mutex, true);
+
     if(destination[0] == MP_OBJ_NULL){          // Load
         switch(attribute){
             case MP_QSTR___del__:
@@ -77,6 +91,7 @@ STATIC void audio_channel_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t 
                 destination[0] = mp_obj_new_bool(self->done);
             break;
             default:
+                mp_thread_mutex_unlock(&self->mutex);    // Unlock before returning
                 return; // Fail
         }
     }else if(destination[1] != MP_OBJ_NULL){    // Store
@@ -97,12 +112,15 @@ STATIC void audio_channel_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t 
             //     self->done = mp_obj_get_int(destination[1]);
             // break;
             default:
+                mp_thread_mutex_unlock(&self->mutex);    // Unlock before returning
                 return; // Fail
         }
 
         // Success
         destination[0] = MP_OBJ_NULL;
     }
+
+    mp_thread_mutex_unlock(&self->mutex);
 }
 
 

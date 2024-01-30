@@ -28,6 +28,10 @@ mp_obj_t wave_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
     self->base.type = &wave_sound_resource_class_type;
     self->fill_buffer = &wave_sound_resource_fill_destination;
 
+    // Init mutex used to sync cores between core0 (user Python code)
+    // and core1 (audio playback)
+    mp_thread_mutex_init(&self->mutex);
+
     // Wave parsing: https://truelogic.org/wordpress/2015/09/04/parsing-a-wav-file-in-c/
     //               https://www.aelius.com/njh/wavemetatools/doc/riffmci.pdf
     //               https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/WAVE.html
