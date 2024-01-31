@@ -49,15 +49,15 @@ float master_volume = 1.0f;
     void __no_inline_not_in_flash_func(engine_audio_handle_buffer)(audio_channel_class_obj_t *channel){
         // When 'buffer_byte_offset = 0' that means the buffer hasn't been filled before, fill it (see that after this function it is immediately incremented)
         // When 'buffer_byte_offset >= channel->buffer_end' that means the index has run out of data, fill it with more
-        if(channel->buffer_byte_offset == 0 || channel->buffer_byte_offset >= channel->buffer_end){
+        if(channel->buffers_byte_offsets[channel->reading_buffer_index] == 0 || channel->buffers_byte_offsets[channel->reading_buffer_index] >= channel->buffers_ends[channel->reading_buffer_index]){
             // Reset for the second case above
-            channel->buffer_byte_offset = 0;
+            channel->buffers_byte_offsets[channel->reading_buffer_index] = 0;
 
             // Using the sound resource base, fill this channel's
             // buffer with audio data from the source resource
             // channel->buffer_end = channel->source->fill_buffer(channel->source, channel->buffer, channel->source_byte_offset, CHANNEL_BUFFER_SIZE);
 
-            uint8_t *current_source_data = channel->source->get_data(channel, CHANNEL_BUFFER_SIZE, &channel->buffer_end);
+            uint8_t *current_source_data = channel->source->get_data(channel, CHANNEL_BUFFER_SIZE, &channel->buffers_ends[channel->reading_buffer_index]);
 
             // memcpy((uint8_t*)channel->buffer, (uint8_t*)current_source_data, channel->buffer_end);
 
@@ -67,17 +67,24 @@ float master_volume = 1.0f;
             // xip_ctrl_hw->stream_addr = (uint32_t)current_source_data;
             // xip_ctrl_hw->stream_ctr = channel->buffer_end;
 
+            // Just in case we were too quick, wait while previous DMA might still be active
+            if(dma_channel_is_busy(channel->dma_channel)){
+                ENGINE_WARNING_PRINTF("AudioModule: Waiting on previous DMA transfer to complete, this ideally shouldn't happen");
+                dma_channel_wait_for_finish_blocking(channel->dma_channel);
+            }
+
+            channel->reading_buffer_index = 1 - channel->reading_buffer_index;
+            channel->filling_buffer_index = 1 - channel->filling_buffer_index;
+
             // https://github.com/raspberrypi/pico-examples/blob/master/flash/xip_stream/flash_xip_stream.c#L58-L70
             dma_channel_configure(
-                channel->dma_channel,     // Channel to be configured
-                &channel->dma_config,     // The configuration we just created
-                channel->buffer,          // The initial write address
-                current_source_data,      // The initial read address
-                channel->buffer_end,      // Number of transfers; in this case each is 1 byte
-                true                      // Start immediately
+                channel->dma_channel,                                   // Channel to be configured
+                &channel->dma_config,                                   // The configuration we just created
+                channel->buffers[channel->filling_buffer_index],        // The initial write address
+                current_source_data,                                    // The initial read address
+                channel->buffers_ends[channel->filling_buffer_index],   // Number of transfers; in this case each is 1 byte
+                true                                                    // Start immediately
             );
-
-            dma_channel_wait_for_finish_blocking(channel->dma_channel);
 
             // Filled amount will always be equal to or less than to 
             // 0 the 'size' passed to 'fill_buffer'. In the case it was
@@ -87,8 +94,8 @@ float master_volume = 1.0f;
             // figure out if this channel should stop or loop. If loop,
             // run again right away to fill with more data after resetting
             // 'source_byte_offset' 
-            if(channel->buffer_end > 0){
-                channel->source_byte_offset += channel->buffer_end;
+            if(channel->buffers_ends[channel->filling_buffer_index] > 0){
+                channel->source_byte_offset += channel->buffers_ends[channel->filling_buffer_index];
             }else{
                 // Gets reset no matter what, whether looping or not
                 channel->source_byte_offset = 0;
@@ -97,10 +104,26 @@ float master_volume = 1.0f;
                 // channel from being played, otherwise, fill with start data
                 if(channel->looping == false){
                     channel->source = NULL;
+                    channel->reading_buffer_index = 0;
+                    channel->filling_buffer_index = 0;
                 }else{
                     // Run right away to fill buffer with starting data since looping
                     engine_audio_handle_buffer(channel);
                 }
+            }
+
+            // Not the best solution but when these are both 1 that means
+            // no data has been loaded yet, block until data is loaded into
+            // 1 then load the other buffer while not blocking so that it
+            // can be switched to next time for reading
+            if(channel->reading_buffer_index == channel->filling_buffer_index){
+                dma_channel_wait_for_finish_blocking(channel->dma_channel);
+
+                // Flip only the buffer to fill since we're going to fill it now
+                channel->filling_buffer_index = 1 - channel->filling_buffer_index;
+
+                // Fill the other buffer right now
+                engine_audio_handle_buffer(channel);
             }
         }
     }
@@ -137,11 +160,14 @@ float master_volume = 1.0f;
                 // Fill buffer with data whether first time or looping
                 engine_audio_handle_buffer(channel);
 
+                uint8_t buffer_index = channel->reading_buffer_index;
+                uint16_t buffer_byte_offset = channel->buffers_byte_offsets[buffer_index];
+
                 // Add samples to total
                 switch(source->bytes_per_sample){
                     case 1:
                     {
-                        temp_sample = (float)channel->buffer[channel->buffer_byte_offset];                      // Get 8-bit sample
+                        temp_sample = (float)channel->buffers[buffer_index][buffer_byte_offset];                // Get 8-bit sample
                         temp_sample = temp_sample / (float)UINT8_MAX;                                           // Scale from 0 ~ 255 to 0.0 ~ 1.0
                         temp_sample = temp_sample * channel->gain;                                              // Scale sample by channel gain
                         temp_sample = (engine_math_clamp(temp_sample, 0.0f, 1.0f) * 512.0f * master_volume);    // Clamp volume scaled sample and scale from 0.0 ~ 1.0 to 0.0 to 512.0 (512 scaled by master_volume)
@@ -149,21 +175,21 @@ float master_volume = 1.0f;
                     break;
                     case 2:
                     {   
-                        temp_sample = (int16_t)(channel->buffer[channel->buffer_byte_offset+1] << 8) + channel->buffer[channel->buffer_byte_offset];    // Get 16-bit sample
-                        temp_sample = temp_sample / (float)UINT16_MAX;                                                                                  // Scale from 0 ~ 65535 to 0.0 ~ 1.0
-                        temp_sample = temp_sample * channel->gain;                                                                                      // Scale sample by channel gain
-                        temp_sample = (engine_math_clamp(temp_sample, 0.0f, 1.0f) * 512.0f * master_volume);                                            // Clamp volume scaled sample and scale from 0.0 ~ 1.0 to 0.0 to 512.0 (512 scaled by master_volume)
+                        temp_sample = (int16_t)(channel->buffers[buffer_index][buffer_byte_offset+1] << 8) + channel->buffers[buffer_index][buffer_byte_offset];  // Get 16-bit sample
+                        temp_sample = temp_sample / (float)UINT16_MAX;                                                                                            // Scale from 0 ~ 65535 to 0.0 ~ 1.0
+                        temp_sample = temp_sample * channel->gain;                                                                                                // Scale sample by channel gain
+                        temp_sample = (engine_math_clamp(temp_sample, 0.0f, 1.0f) * 512.0f * master_volume);                                                      // Clamp volume scaled sample and scale from 0.0 ~ 1.0 to 0.0 to 512.0 (512 scaled by master_volume)
                     }
                     break;
                     default:
-                        ENGINE_ERROR_PRINTF("Audio source with %d bytes per sample is not supported!", source->bytes_per_sample);
+                        ENGINE_ERROR_PRINTF("AudioModule: Audio source with %d bytes per sample is not supported!", source->bytes_per_sample);
                 }
 
                 // Add the sample to the total
                 total_sample += temp_sample;
 
                 // Make sure to grab the next sample next time
-                channel->buffer_byte_offset += source->bytes_per_sample;
+                channel->buffers_byte_offsets[buffer_index] += source->bytes_per_sample;
 
                 // Calculate the current time that we're at in the channel's source
                 // t_current =  (1 / sample_rate [1/s]) * (source_byte_offset / bytes_per_sample)

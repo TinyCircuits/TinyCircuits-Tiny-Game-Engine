@@ -22,9 +22,14 @@ mp_obj_t audio_channel_class_new(const mp_obj_type_t *type, size_t n_args, size_
     self->time = 0.0f;
     self->looping = false;
     self->done = true;
-    self->buffer = (uint8_t*)malloc(CHANNEL_BUFFER_SIZE);   // Use C heap. Easier to avoid gc and we have a consistent number of buffers anyways
-    self->buffer_end = CHANNEL_BUFFER_SIZE;
-    self->buffer_byte_offset = 0;
+    self->buffers[0] = (uint8_t*)malloc(CHANNEL_BUFFER_SIZE);   // Use C heap. Easier to avoid gc and we have a consistent number of buffers anyways
+    self->buffers[1] = (uint8_t*)malloc(CHANNEL_BUFFER_SIZE);   // Use C heap. Easier to avoid gc and we have a consistent number of buffers anyways
+    self->buffers_ends[0] = CHANNEL_BUFFER_SIZE;
+    self->buffers_ends[1] = CHANNEL_BUFFER_SIZE;
+    self->buffers_byte_offsets[0] = 0;
+    self->buffers_byte_offsets[1] = 0;
+    self->reading_buffer_index = 0;
+    self->filling_buffer_index = 0;
 
     // https://github.com/raspberrypi/pico-examples/blob/eca13acf57916a0bd5961028314006983894fc84/dma/hello_dma/hello_dma.c#L21-L30
     // https://github.com/raspberrypi/pico-examples/blob/master/flash/xip_stream/flash_xip_stream.c#L58-L70 (see pg. 127 of rp2040 datasheet: https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf)
@@ -69,6 +74,30 @@ STATIC mp_obj_t audio_channel_class_del(mp_obj_t self_in){
 MP_DEFINE_CONST_FUN_OBJ_1(audio_channel_class_del_obj, audio_channel_class_del);
 
 
+STATIC mp_obj_t audio_channel_stop(mp_obj_t self_in){
+    ENGINE_INFO_PRINTF("AudioChannel: Stopping!");
+    audio_channel_class_obj_t *channel = self_in;
+
+    // Make sure this core has access to this channel
+    mp_thread_mutex_lock(&channel->mutex, true);
+
+    channel->time = 0.0f;
+    channel->done = true;
+    channel->looping = false;
+    channel->buffers_ends[0] = CHANNEL_BUFFER_SIZE;
+    channel->buffers_ends[1] = CHANNEL_BUFFER_SIZE;
+    channel->buffers_byte_offsets[0] = 0;
+    channel->buffers_byte_offsets[1] = 0;
+    channel->reading_buffer_index = 0;
+    channel->filling_buffer_index = 0;
+
+    mp_thread_mutex_unlock(&channel->mutex);
+
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_1(audio_channel_stop_obj, audio_channel_stop);
+
+
 STATIC void audio_channel_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing AudioChannel attr");
 
@@ -88,6 +117,10 @@ STATIC void audio_channel_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t 
         switch(attribute){
             case MP_QSTR___del__:
                 destination[0] = MP_OBJ_FROM_PTR(&audio_channel_class_del_obj);
+                destination[1] = self_in;
+            break;
+            case MP_QSTR_stop:
+                destination[0] = MP_OBJ_FROM_PTR(&audio_channel_stop_obj);
                 destination[1] = self_in;
             break;
             case MP_QSTR_source:

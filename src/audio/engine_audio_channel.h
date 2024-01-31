@@ -41,9 +41,11 @@ typedef struct{
     float time;                                 // Where in the 'channel_source' the audio is being played from
     bool looping;                               // Loop back to the start of the 'channel_source' at the end or set it to mp_const_none
     bool done;                                  // After starting a sound on this channel, this is set to true and then false when the end is reached (never set false in the case of 'looping' being true)
-    uint8_t *buffer;                            // Buffer to hold data from other locations (flash or generated)
-    uint16_t buffer_end;                        // End of the data in the buffer
-    uint16_t buffer_byte_offset;                // Where we are in the buffer pointed to by 'fill_buffer_index'. Loop back to 0 when reach sample count stored in 'source'
+    uint8_t *buffers[2];                        // Dual buffers for audio, one gets DMA'ed to while to other is read from
+    uint16_t buffers_ends[2];                   // Current of each buffer
+    uint16_t buffers_byte_offsets[2];           // Current offset inside each buffer
+    uint8_t reading_buffer_index;               // Index in 'buffers' of where audio samples should be picked from
+    uint8_t filling_buffer_index;               // Index in 'buffers' of where audio samples should be taken from FLASH and stored in RAM
     mp_thread_mutex_t mutex;                    // Use MicroPython mutex abstraction since it handles each port already (so we don't have to!)
 
     #if defined(__unix__)
