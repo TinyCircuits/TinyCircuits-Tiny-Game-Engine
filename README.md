@@ -31,20 +31,18 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
                 this will mean that as the camera zooms in, all nodes get larger but also "further" away as they are drawn
 [X] Figure out inversion and stop at camera zoom 0.5 and below (doesn't occur camera is a child of another object)
 [X] Make camera render items centered at 0,0 so that inheritance is easier
-[] Physics: just polygons, rotation (simple init for common shapes), no friction. Need to figure out what to do when physics collision shape is rotated, cache normals?
+[X] Make camera 0,0 render centered at 0,0
+[X] Reimplement __del__ for cameras, physics nodes, and engine nodes (was handled) (eventually GUI nodes too) to delete themselves from their respective linked lists: added custom __del__ for physics and camera nodes
+[x] Hierarchy translation bug in node_base when a child is an inherited class: seems to be fixed after adding node_base qstr attr to all nodes and using that to lookup the node base for the child node.
+[X] Audio: one channel wave files, data goes to contiguous flash space (lfs read() too slow)
+          still have SoundResources, return channel objects that the user can reference,
+          fixed number of channels (4 at first, maybe 8 later), play sounds by doing something
+          like engine_audio.play(source, channel_number) <- returns channel object and also
+          channel_object.play(source). Also need engine_audio.get_channel(). Add attributes
+          to channel objects like 'loop', 'running', source, duration (seconds), etc.
+
+[.] Physics: just polygons, rotation (simple init for common shapes), no friction. Need to figure out what to do when physics collision shape is rotated, cache normals?
 [] Physics: smooth: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-core-engine--gamedev-7493t#:~:text=Here%20is%20a%20full%20example%3A
-
-[] Audio: since the playback timer is on the other core, the following needs to be taken care of
-         1.   When setting 'source', 'gain', or 'looping' on an audio channel from core0, make sure
-               core1 isn't also reading/setting those values
-         2. If an audio source (wave, tone) is collected, make sure the other core using that does not
-            crash. Maybe when a source is set, copy the source to the other core. When an attribute on
-            the source is changed, change the copy. When deleted, mark the copy for deletion on the other
-            core
-         3. Eventually, ToneSoundResource will be able to be regenerated. At that point each sound resource
-            accessed by the each core should be safely locked behind mutexes too.
-
-[] Web runner
 [] Outline drawing for rects, circles, and polygons?
 [] Static nodes/screen space
 [] Documentation: markdown to PDF
@@ -53,7 +51,6 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [] UI
 [] Reset
 [] Performance, we'll see how it goes
-[] Make camera 0,0 render centered at 0,0
 [] In all node drawing code, allow camera to be a child of any node
 [] Allow for audio sources to play at different sample rates. This will mean
    knowing where we are in the time of the file and interpolating between samples
@@ -68,6 +65,18 @@ Game ideas
 [] Golf
 [] Rocketcup
 
+
+[] Implement audio on unix (need to break up implementation of unix and rp3 audio)
+[] Need to revisit Audio to get it working on the other core and with dual DMA (sort of working now)
+[] Audio: since the playback timer is on the other core, the following needs to be taken care of
+         1.   When setting 'source', 'gain', or 'looping' on an audio channel from core0, make sure
+               core1 isn't also reading/setting those values
+         2. If an audio source (wave, tone) is collected, make sure the other core using that does not
+            crash. Maybe when a source is set, copy the source to the other core. When an attribute on
+            the source is changed, change the copy. When deleted, mark the copy for deletion on the other
+            core
+         3. Eventually, ToneSoundResource will be able to be regenerated. At that point each sound resource
+            accessed by the each core should be safely locked behind mutexes too.
 [] In the future, probably in a soft atomic API for the cases where a sound resource
    gets deleted on core0 and is still being used by core1. It would just be copies
    of the data that get switched out when assigned. Reading will just the one active copy
@@ -119,12 +128,3 @@ Game ideas
 [] If we went back to PIO DMA for SPI to the screen, could we do per-pixel operations are they are being sent out? Would PIO be flexible enough to support a very very simple shading language (most for changing pixel based on screen position)
 [] Listen to serial for commands like button inputs or stop
 [] When a child is being added, make sure that child doesn't already have a parent!
-
-[X] Reimplement __del__ for cameras, physics nodes, and engine nodes (was handled) (eventually GUI nodes too) to delete themselves from their respective linked lists: added custom __del__ for physics and camera nodes
-[x] Hierarchy translation bug in node_base when a child is an inherited class: seems to be fixed after adding node_base qstr attr to all nodes and using that to lookup the node base for the child node.
-[X] Audio: one channel wave files, data goes to contiguous flash space (lfs read() too slow)
-          still have SoundResources, return channel objects that the user can reference,
-          fixed number of channels (4 at first, maybe 8 later), play sounds by doing something
-          like engine_audio.play(source, channel_number) <- returns channel object and also
-          channel_object.play(source). Also need engine_audio.get_channel(). Add attributes
-          to channel objects like 'loop', 'running', source, duration (seconds), etc.

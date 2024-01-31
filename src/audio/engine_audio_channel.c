@@ -37,12 +37,16 @@ mp_obj_t audio_channel_class_new(const mp_obj_type_t *type, size_t n_args, size_
     // get a default DMA config, and set the transfer size
     // to 8-bits since smallest audio sample bit-depth is 8
     // (using 16 would mean we'd copy too much data in 8-bit case)
-    self->dma_channel = dma_claim_unused_channel(true);
-    self->dma_config = dma_channel_get_default_config(self->dma_channel);
-    channel_config_set_transfer_data_size(&self->dma_config, DMA_SIZE_8);
-    channel_config_set_read_increment(&self->dma_config, true);
-    channel_config_set_write_increment(&self->dma_config, true);
-    // channel_config_set_dreq(&self->dma_config, DREQ_XIP_STREAM); // When this is set DMA never finishes (see pg. 127 of rp2040 datasheet: https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf)
+    #if defined(__unix__)
+
+    #elif defined(__arm__)
+        self->dma_channel = dma_claim_unused_channel(true);
+        self->dma_config = dma_channel_get_default_config(self->dma_channel);
+        channel_config_set_transfer_data_size(&self->dma_config, DMA_SIZE_8);
+        channel_config_set_read_increment(&self->dma_config, true);
+        channel_config_set_write_increment(&self->dma_config, true);
+        // channel_config_set_dreq(&self->dma_config, DREQ_XIP_STREAM); // When this is set DMA never finishes (see pg. 127 of rp2040 datasheet: https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf)
+    #endif
 
     // Init mutex used to sync cores between core0 (user Python code)
     // and core1 (audio playback)

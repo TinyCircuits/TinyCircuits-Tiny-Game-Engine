@@ -12,6 +12,13 @@ import math
 import gc
 
 # engine_debug.debug_enable_all()
+wave0 = WaveSoundResource("cow_s16.wav")
+wave1 = WaveSoundResource("piano.wav")
+engine_debug.debug_enable_setting(engine_debug.debug_setting_warnings)
+
+c0 = engine_audio.play(wave0, 0, True)
+c1 = engine_audio.play(wave1, 1, True)
+
 texture = TextureResource("32x32.bmp")
 
 class MySprite(Sprite2DNode):
@@ -39,23 +46,23 @@ class MySprite(Sprite2DNode):
 
 
 
-circle = Circle2DNode()
-rectangle = Rectangle2DNode()
+# circle = Circle2DNode()
+# rectangle = Rectangle2DNode()
 sprite = MySprite()
-polygon = Polygon2DNode()
-polygon.vertices.append(Vector2(-10, 10))
-polygon.vertices.append(Vector2(10, 10))
-polygon.vertices.append(Vector2(10, -10))
-polygon.vertices.append(Vector2(-10, -10))
+# polygon = Polygon2DNode()
+# polygon.vertices.append(Vector2(-10, 10))
+# polygon.vertices.append(Vector2(10, 10))
+# polygon.vertices.append(Vector2(10, -10))
+# polygon.vertices.append(Vector2(-10, -10))
 
-circle.color = 0b1111100000000000
-rectangle.color = 0b1111101001001001
-sprite.transparent_color = engine_draw.black
+# circle.color = 0b1111100000000000
+# rectangle.color = 0b1111101001001001
+# sprite.transparent_color = engine_draw.black
 
-circle.position = Vector2(0, -32)
-rectangle.position = Vector2(32, 0)
-sprite.position = Vector2(0, 32)
-polygon.position = Vector2(-32, 0)
+# circle.position = Vector2(0, -32)
+# rectangle.position = Vector2(32, 0)
+# sprite.position = Vector2(0, 32)
+# polygon.position = Vector2(-32, 0)
 
 
 class MyCam(CameraNode):
