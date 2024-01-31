@@ -46,6 +46,7 @@ mp_obj_t audio_channel_class_new(const mp_obj_type_t *type, size_t n_args, size_
     // Init mutex used to sync cores between core0 (user Python code)
     // and core1 (audio playback)
     mp_thread_mutex_init(&self->mutex);
+    mp_thread_mutex_unlock(&self->mutex);
     
     return MP_OBJ_FROM_PTR(self);
 }

@@ -33,16 +33,20 @@ float master_volume = 1.0f;
 #elif defined(__arm__)
     #include "pico/stdlib.h"
     #include "hardware/dma.h"
+    #include "hardware/structs/xip_ctrl.h"
     #include "hardware/pwm.h"
+    #include "hardware/clocks.h"
     #include "pico/multicore.h"
+
+    // alarm_pool_t *core1_alarm_pool = NULL;
 
     // pg. 542: https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf
     // https://github.com/raspberrypi/pico-examples/blob/master/timer/hello_timer/hello_timer.c#L11-L57
     // https://www.raspberrypi.com/documentation/pico-sdk/high_level.html#rpipdb65a0bdce0635d95877
     // https://www.raspberrypi.com/documentation/pico-sdk/hardware.html#interrupt-numbers
-    struct repeating_timer repeating_audio_timer;
+    // struct repeating_timer repeating_audio_timer;
 
-    void engine_audio_handle_buffer(audio_channel_class_obj_t *channel){
+    void __no_inline_not_in_flash_func(engine_audio_handle_buffer)(audio_channel_class_obj_t *channel){
         // When 'buffer_byte_offset = 0' that means the buffer hasn't been filled before, fill it (see that after this function it is immediately incremented)
         // When 'buffer_byte_offset >= channel->buffer_end' that means the index has run out of data, fill it with more
         if(channel->buffer_byte_offset == 0 || channel->buffer_byte_offset >= channel->buffer_end){
@@ -51,20 +55,25 @@ float master_volume = 1.0f;
 
             // Using the sound resource base, fill this channel's
             // buffer with audio data from the source resource
-            channel->buffer_end = channel->source->fill_buffer(channel->source, channel->buffer, channel->source_byte_offset, CHANNEL_BUFFER_SIZE);
+            // channel->buffer_end = channel->source->fill_buffer(channel->source, channel->buffer, channel->source_byte_offset, CHANNEL_BUFFER_SIZE);
 
-            // uint8_t *data_buffer_source;
-            // uint32_t to_fill_amount = channel->source->get_data_buffer(channel->source, data_buffer_source, channel->source_byte_offset, CHANNEL_BUFFER_SIZE);
-            // // uint32_t filled_amount = channel->source->get_data_buffer(channel->source, channel->buffer, channel->source_byte_offset, CHANNEL_BUFFER_SIZE);
+            uint8_t *current_source_data = channel->source->get_data(channel, CHANNEL_BUFFER_SIZE, &channel->buffer_end);
+
+            memcpy((uint8_t*)channel->buffer, (uint8_t*)current_source_data, channel->buffer_end);
+
+            // while (!(xip_ctrl_hw->stat & XIP_STAT_FIFO_EMPTY))
+            //     (void) xip_ctrl_hw->stream_fifo;
+            // xip_ctrl_hw->stream_addr = (uint32_t) &current_source_data[0];
+            // xip_ctrl_hw->stream_ctr = channel->buffer_end;
 
             // // https://github.com/raspberrypi/pico-examples/blob/master/flash/xip_stream/flash_xip_stream.c#L58-L70
             // dma_channel_configure(
-            //     channel->dma_channel,   // Channel to be configured
-            //     &channel->dma_config,   // The configuration we just created
-            //     channel->buffer,        // The initial write address
-            //     data_buffer_source,     // The initial read address
-            //     to_fill_amount,         // Number of transfers; in this case each is 1 byte.
-            //     true                    // Start immediately.
+            //     channel->dma_channel,     // Channel to be configured
+            //     &channel->dma_config,     // The configuration we just created
+            //     channel->buffer,          // The initial write address
+            //     current_source_data,      // The initial read address
+            //     channel->buffer_end,      // Number of transfers; in this case each is 1 byte
+            //     true                      // Start immediately
             // );
 
             // dma_channel_wait_for_finish_blocking(channel->dma_channel);
@@ -97,7 +106,9 @@ float master_volume = 1.0f;
 
 
     // Samples each channel, adds, normalizes, and sets PWM
-    bool repeating_audio_callback(struct repeating_timer *t){
+    void repeating_audio_callback(){
+        pwm_clear_irq(pwm_gpio_to_slice_num(9));
+
         float temp_sample = 0;
         float total_sample = 0;
         uint8_t active_channel_count = 0;
@@ -109,9 +120,12 @@ float master_volume = 1.0f;
             // For each channel, make sure we have access to it now
             // and not core0 (which may be reading/writing to any
             // of the used attributes)
-            mp_thread_mutex_lock(&channel->mutex, true);
+            ENGINE_FORCE_PRINTF("TEST1");
+            // mp_thread_mutex_lock(&channel->mutex, true);
+            ENGINE_FORCE_PRINTF("TEST2");
 
             sound_resource_base_class_obj_t *source = channel->source;
+            ENGINE_FORCE_PRINTF("TEST3");
 
             // Go over every channel and check if set to something usable
             if(source != NULL){
@@ -119,7 +133,9 @@ float master_volume = 1.0f;
                 // For each source, make sure we have access to it now
                 // and not core0 (which may be reading/writing to any
                 // of the used attributes)
+                ENGINE_FORCE_PRINTF("TEST4");
                 mp_thread_mutex_lock(&source->mutex, true);
+                ENGINE_FORCE_PRINTF("TEST5");
 
                 // Another active channel
                 active_channel_count += 1;
@@ -171,22 +187,51 @@ float master_volume = 1.0f;
             pwm_set_gpio_level(23, (uint32_t)(total_sample / active_channel_count));
         }
 
-        return true;
+        // return true;
     }
 #endif
 
+size_t stack_size = 4096;
+uint audio_callback_pwm_pin_slice;
+pwm_config audio_callback_pwm_pin_config;
 
-void engine_audio_setup_playback(){
+static void *engine_audio_setup_playback(void *args){
     #if defined(__unix__)
         // Nothing to do
     #elif defined(__arm__)
-        // Setup timer ISR. Set sampling rate to 44100
-        // add_repeating_timer_us((int64_t)((1.0/44100.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer);
-        if(add_repeating_timer_us((int64_t)((1.0/11025.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer) == false){
-            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("AudioModule: No timer slots available, could not audio callback!"));
-        }
+        ENGINE_FORCE_PRINTF("Setting up audio playback callback...");
+
+
+        audio_callback_pwm_pin_slice = pwm_gpio_to_slice_num(9);
+        gpio_set_function(9, GPIO_FUNC_PWM);
+
+        pwm_clear_irq(audio_callback_pwm_pin_slice);
+        pwm_set_irq_enabled(audio_callback_pwm_pin_slice, true);
+        irq_set_exclusive_handler(PWM_IRQ_WRAP_0, repeating_audio_callback);
+        irq_set_priority(PWM_IRQ_WRAP_0, 1);
+        irq_set_enabled(PWM_IRQ_WRAP_0, true);
+
+        audio_callback_pwm_pin_config = pwm_get_default_config();
+        pwm_config_set_clkdiv_int(&audio_callback_pwm_pin_config, 1);
+        // pwm_config_set_wrap(&audio_callback_pwm_pin_config, (clock_get_hz(clk_sys) / 11025) - 1);
+        pwm_config_set_wrap(&audio_callback_pwm_pin_config, 11336);
+        pwm_init(audio_callback_pwm_pin_slice, &audio_callback_pwm_pin_config, true);
+
+
+        ENGINE_FORCE_PRINTF("Done setting up audio playback callback!");
+
+        // // Need to make new alarm pool for timers on this core
+        // core1_alarm_pool = alarm_pool_create_with_unused_hardware_alarm(CHANNEL_COUNT);
+
+        // // Setup timer ISR. Set sampling rate to 44100
+        // // add_repeating_timer_us((int64_t)((1.0/44100.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer);
+        // if(alarm_pool_add_repeating_timer_us(core1_alarm_pool, (int64_t)((1.0/11025.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer) != false){
+        //     mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("AudioModule: No timer slots available, could not make audio callback!"));
+        // }
         // add_repeating_timer_us((int64_t)((1.0/22050.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer);
     #endif
+
+    return NULL;
 }
 
 
@@ -222,9 +267,15 @@ void engine_audio_setup(){
 
         // Launch timer setup on other core. All audio playback
         // is done on the other core. This means that access
-        // to channels and sources will need to be protected...
+        // to channels and sources need to be protected...
         // https://github.com/raspberrypi/pico-examples/blob/master/multicore/hello_multicore/multicore.c
-        multicore_launch_core1(engine_audio_setup_playback);
+        // multicore_launch_core1(engine_audio_setup_playback);
+        engine_audio_setup_playback(NULL);
+        // mp_thread_create(engine_audio_setup_playback, NULL, &stack_size);
+        // engine_audio_setup_playback();
+        // if(add_repeating_timer_us((int64_t)((1.0/11025.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer) == false){
+        //     mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("AudioModule: No timer slots available, could not audio callback!"));
+        // }
     #endif
 }
 

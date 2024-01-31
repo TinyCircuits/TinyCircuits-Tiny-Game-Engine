@@ -1,4 +1,5 @@
 #include "engine_wave_sound_resource.h"
+#include "audio/engine_audio_channel.h"
 #include "debug/debug_print.h"
 #include "resources/engine_resource_manager.h"
 #include <stdlib.h>
@@ -12,11 +13,12 @@ STATIC void wave_sound_resource_class_print(const mp_print_t *print, mp_obj_t se
 }
 
 
-uint32_t wave_sound_resource_fill_destination(void *self_in, uint8_t *destination, uint32_t offset, uint32_t size){
-    sound_resource_base_class_obj_t *self = self_in;
-    uint32_t size_max = fminf(self->total_data_size-offset, size);
-    memcpy((uint8_t*)destination, ((uint8_t*)self->extra_data)+offset, size_max);
-    return size_max;
+uint8_t *wave_sound_resource_fill_destination(void *channel_in, uint16_t max_buffer_size, uint16_t *leftover_size){
+    audio_channel_class_obj_t *channel = channel_in;
+    sound_resource_base_class_obj_t *source = channel->source;
+
+    *leftover_size = fminf(source->total_data_size - channel->source_byte_offset, max_buffer_size);
+    return ((uint8_t*)source->extra_data) + channel->source_byte_offset;
 }
 
 
@@ -26,7 +28,7 @@ mp_obj_t wave_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
 
     sound_resource_base_class_obj_t *self = m_new_obj_with_finaliser(sound_resource_base_class_obj_t);
     self->base.type = &wave_sound_resource_class_type;
-    self->fill_buffer = &wave_sound_resource_fill_destination;
+    self->get_data = &wave_sound_resource_fill_destination;
 
     // Init mutex used to sync cores between core0 (user Python code)
     // and core1 (audio playback)

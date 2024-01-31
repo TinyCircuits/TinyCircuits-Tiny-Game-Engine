@@ -14,7 +14,7 @@ typedef struct {
     uint32_t total_data_size;
     uint32_t sample_rate;                                           // Value used by playback engine to know how often to fetch new samples
     uint16_t bytes_per_sample;                                      // Value used by playback engine to know how many bytes are in a sample
-    uint32_t (*fill_buffer)(void*, uint8_t*, uint32_t, uint32_t);   // Function used by playback engine to fill audio buffer
+    uint8_t *(*get_data)(void*, uint32_t, uint16_t*);               // Function used by playback engine to fill audio buffer
     void *extra_data;                                               // Each individual sound resource can attach extra data for its own use (not by the playback engine directly)
     mp_thread_mutex_t mutex;                                        // Since audio playback is done on another core (core1), and some resources change their attributes based on user code, need to wait for each core to do their thing with each resource, per access
 }sound_resource_base_class_obj_t;
