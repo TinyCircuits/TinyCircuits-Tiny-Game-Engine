@@ -20,7 +20,7 @@ mp_obj_t audio_channel_class_new(const mp_obj_type_t *type, size_t n_args, size_
     self->source_byte_offset = 0;
     self->gain = 1.0f;
     self->time = 0.0f;
-    self->looping = false;
+    self->loop = false;
     self->done = true;
     self->buffers[0] = (uint8_t*)malloc(CHANNEL_BUFFER_SIZE);   // Use C heap. Easier to avoid gc and we have a consistent number of buffers anyways
     self->buffers[1] = (uint8_t*)malloc(CHANNEL_BUFFER_SIZE);   // Use C heap. Easier to avoid gc and we have a consistent number of buffers anyways
@@ -78,6 +78,11 @@ STATIC mp_obj_t audio_channel_class_del(mp_obj_t self_in){
 MP_DEFINE_CONST_FUN_OBJ_1(audio_channel_class_del_obj, audio_channel_class_del);
 
 
+/*  --- doc ---
+    NAME: stop
+    DESC: Stops audio playing on channel
+    RETURN: None
+*/ 
 STATIC mp_obj_t audio_channel_stop(mp_obj_t self_in){
     ENGINE_INFO_PRINTF("AudioChannel: Stopping!");
     audio_channel_class_obj_t *channel = self_in;
@@ -87,7 +92,7 @@ STATIC mp_obj_t audio_channel_stop(mp_obj_t self_in){
 
     channel->time = 0.0f;
     channel->done = true;
-    channel->looping = false;
+    channel->loop = false;
     channel->buffers_ends[0] = CHANNEL_BUFFER_SIZE;
     channel->buffers_ends[1] = CHANNEL_BUFFER_SIZE;
     channel->buffers_byte_offsets[0] = 0;
@@ -102,6 +107,11 @@ STATIC mp_obj_t audio_channel_stop(mp_obj_t self_in){
 MP_DEFINE_CONST_FUN_OBJ_1(audio_channel_stop_obj, audio_channel_stop);
 
 
+/*  --- doc ---
+    NAME: AudioChannel
+    DESC: Object for controller audio on one of the 4 available channels
+    ATTR: [type=function]   [name={ref_link:stop}]          [value=function]
+*/ 
 STATIC void audio_channel_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing AudioChannel attr");
 
@@ -136,8 +146,8 @@ STATIC void audio_channel_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t 
             case MP_QSTR_time:
                 destination[0] = mp_obj_new_float(self->time);
             break;
-            case MP_QSTR_looping:
-                destination[0] = mp_obj_new_bool(self->looping);
+            case MP_QSTR_loop:
+                destination[0] = mp_obj_new_bool(self->loop);
             break;
             case MP_QSTR_done:
                 destination[0] = mp_obj_new_bool(self->done);
@@ -157,7 +167,7 @@ STATIC void audio_channel_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t 
             // case MP_QSTR_time:
             //     self->time = mp_obj_get_float(destination[1]);
             // break;
-            case MP_QSTR_looping:
+            case MP_QSTR_loop:
                 self->looping = mp_obj_get_int(destination[1]);
             break;
             // case MP_QSTR_done:

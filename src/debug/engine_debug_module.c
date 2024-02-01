@@ -53,7 +53,14 @@ STATIC mp_obj_t engine_enable_debug_setting(mp_obj_t debug_setting){
 MP_DEFINE_CONST_FUN_OBJ_1(engine_enable_debug_setting_obj, engine_enable_debug_setting);
 
 
-// Module attributes
+/*  --- doc ---
+    NAME: engine_audio
+    DESC: Module for controlling/playing audio through four channels.
+    ATTR: [type=object]     [name={ref_link:AudioChannel}]  [value=function]
+    ATTR: [type=function]   [name={ref_link:play}]          [value=function] 
+    ATTR: [type=function]   [name={ref_link:set_volume}]    [value=function]
+    ATTR: [type=function]   [name={ref_link:get_volume}]    [value=function]
+*/ 
 STATIC const mp_rom_map_elem_t engine_debug_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_debug) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_debug_enable_all), (mp_obj_t)&engine_debug_enable_all_obj },

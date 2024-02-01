@@ -128,6 +128,11 @@ STATIC mp_obj_t wave_sound_resource_class_del(mp_obj_t self_in){
 MP_DEFINE_CONST_FUN_OBJ_1(wave_sound_resource_class_del_obj, wave_sound_resource_class_del);
 
 
+/*  --- doc ---
+    NAME: WaveSoundResource
+    DESC: Holds audio data from a .wav file
+    PARAM:  [type=string]   [name=filepath] [value=string]                                                                                                                                                                   
+*/ 
 STATIC void wave_sound_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing WaveSoundResource attr");
 

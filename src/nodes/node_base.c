@@ -45,6 +45,12 @@ mp_obj_t node_base_del(mp_obj_t self_in){
 }
 
 
+/*  --- doc ---
+    NAME: add_child
+    DESC: Adds child to the node this is being called on
+    PARAM: [type=Node] [name=child] [value=any node]                                                                                                         
+    RETURN: None
+*/ 
 mp_obj_t node_base_add_child(mp_obj_t self_parent_in, mp_obj_t child_in){
     engine_node_base_t *parent_node_base = self_parent_in;
 
@@ -63,6 +69,12 @@ mp_obj_t node_base_add_child(mp_obj_t self_parent_in, mp_obj_t child_in){
 }
 
 
+/*  --- doc ---
+    NAME: remove_child
+    DESC: Removes child from the node this is being called on
+    PARAM: [type=Node] [name=child] [value=any node]                                                                                                        
+    RETURN: None
+*/ 
 mp_obj_t node_base_remove_child(mp_obj_t self_parent_in, mp_obj_t child_in){
     ENGINE_INFO_PRINTF("Node Base: Removing child...");
 
@@ -82,6 +94,12 @@ mp_obj_t node_base_remove_child(mp_obj_t self_parent_in, mp_obj_t child_in){
 }
 
 
+/*  --- doc ---
+    NAME: set_layer
+    DESC: Sets the node to a different render layer
+    PARAM: [type=int] [name=layer] [value=0 ~ 7]                                                                                                        
+    RETURN: None
+*/ 
 mp_obj_t node_base_set_layer(mp_obj_t self_in, mp_obj_t layer){
     ENGINE_INFO_PRINTF("Node Base: Setting object to layer %d", mp_obj_get_int(layer));
 
@@ -94,6 +112,11 @@ mp_obj_t node_base_set_layer(mp_obj_t self_in, mp_obj_t layer){
 }
 
 
+/*  --- doc ---
+    NAME: get_layer
+    DESC: Gets the render layer the node is currently on                                                                                                     
+    RETURN: 0 ~ 7
+*/ 
 mp_obj_t node_base_get_layer(mp_obj_t self_in){
     ENGINE_INFO_PRINTF("Node Base: Getting object layer...");
 

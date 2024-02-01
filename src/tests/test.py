@@ -12,6 +12,13 @@ import math
 import gc
 
 # engine_debug.debug_enable_all()
+wave0 = WaveSoundResource("cow_s16.wav")
+wave1 = WaveSoundResource("piano.wav")
+engine_debug.debug_enable_setting(engine_debug.debug_setting_performance)
+
+c0 = engine_audio.play(wave0, 0, True)
+c1 = engine_audio.play(wave1, 1, True)
+
 texture = TextureResource("32x32.bmp")
 
 class MySprite(Sprite2DNode):

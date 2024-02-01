@@ -152,10 +152,14 @@ STATIC mp_obj_t vector2_class_resize(mp_obj_t self_in, mp_obj_t element_b){
 MP_DEFINE_CONST_FUN_OBJ_2(vector2_class_resize_obj, vector2_class_resize);
 
 
-// Function called when accessing like print(my_node.position.x) (load 'x')
-// my_node.position.x = 0 (store 'x').
-// See https://micropython-usermod.readthedocs.io/en/latest/usermods_09.html#properties
-// See https://github.com/micropython/micropython/blob/91a3f183916e1514fbb8dc58ca5b77acc59d4346/extmod/modasyncio.c#L227
+/*  --- doc ---
+    NAME: Vector2
+    DESC: Holds an X and Y value. Typically used for position
+    PARAM: [type=float]  [name=x]    [value=any]
+    PARAM: [type=float]  [name=y]    [value=any]                                                                                         
+    ATTR: [type=float]  [name=x]    [value=any]                                
+    ATTR: [type=float]  [name=y]    [value=any]                                                                             
+*/ 
 STATIC void vector2_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Vector2 attr");
 

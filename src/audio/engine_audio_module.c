@@ -102,7 +102,7 @@ float master_volume = 1.0f;
 
                 // If not looping, disable/remove the source and stop this
                 // channel from being played, otherwise, fill with start data
-                if(channel->looping == false){
+                if(channel->loop == false){
                     channel->source = NULL;
                     channel->reading_buffer_index = 0;
                     channel->filling_buffer_index = 0;
@@ -278,18 +278,31 @@ void engine_audio_setup(){
 }
 
 
-STATIC mp_obj_t engine_audio_play(mp_obj_t sound_source_obj, mp_obj_t channel_index_obj, mp_obj_t looping_obj){
+/*  --- doc ---
+    NAME: play
+    DESC: Starts playing an audio source on a given channel and looping or not
+    PARAM: [type=object]    [name=sound_resource] [value={ref_link:WaveSoundResource}]
+    PARAM: [type=int]       [name=channel_index]  [value=0 ~ 3]                                                          
+    PARAM: [type=boolean]   [name=loop]           [value=True or False]                                                  
+    RETURN: ref_link:AudioChannel
+*/ 
+STATIC mp_obj_t engine_audio_play(mp_obj_t sound_resource_obj, mp_obj_t channel_index_obj, mp_obj_t loop_obj){
     // Should probably make sure this doesn't interfere with DMA or interrupt: TODO
     uint8_t channel_index = mp_obj_get_int(channel_index_obj);
     audio_channel_class_obj_t *channel = MP_STATE_PORT(channels[channel_index]);
-    channel->source = sound_source_obj;
-    channel->looping = mp_obj_get_int(looping_obj);
+    channel->source = sound_resource_obj;
+    channel->loop = mp_obj_get_int(loop_obj);
     return MP_OBJ_FROM_PTR(channel);
 }
 MP_DEFINE_CONST_FUN_OBJ_3(engine_audio_play_obj, engine_audio_play);
 
 
-// Set new master volume but clamped to 0.0 ~ 1.0 (no boosting allowed)
+/*  --- doc ---
+    NAME: set_volume
+    DESC: Sets the master volume clamped between 0.0 and 1.0. In the future, this will be persistent and stored/restored using a settings file (TODO)
+    PARAM: [type=float] [name=set_volume] [value=0.0 ~ 1.0]
+    RETURN: None
+*/ 
 STATIC mp_obj_t engine_audio_set_volume(mp_obj_t new_volume){
     master_volume = engine_math_clamp(mp_obj_get_float(new_volume), 0.0f, 1.0f);
     return mp_const_none;
@@ -297,13 +310,25 @@ STATIC mp_obj_t engine_audio_set_volume(mp_obj_t new_volume){
 MP_DEFINE_CONST_FUN_OBJ_1(engine_audio_set_volume_obj, engine_audio_set_volume);
 
 
+/*  --- doc ---
+    NAME: get_volume
+    DESC: Returns the currently set master volume between 0.0 and 1.0
+    RETURN: None
+*/ 
 STATIC mp_obj_t engine_audio_get_volume(){
     return mp_obj_new_float(master_volume);
 }
 MP_DEFINE_CONST_FUN_OBJ_0(engine_audio_get_volume_obj, engine_audio_get_volume);
 
 
-// Module attributes
+/*  --- doc ---
+    NAME: engine_audio
+    DESC: Module for controlling/playing audio through four channels.
+    ATTR: [type=object]     [name={ref_link:AudioChannel}]  [value=function]
+    ATTR: [type=function]   [name={ref_link:play}]          [value=function] 
+    ATTR: [type=function]   [name={ref_link:set_volume}]    [value=function]
+    ATTR: [type=function]   [name={ref_link:get_volume}]    [value=function]
+*/ 
 STATIC const mp_rom_map_elem_t engine_audio_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_audio) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_AudioChannel), (mp_obj_t)&audio_channel_class_type },
