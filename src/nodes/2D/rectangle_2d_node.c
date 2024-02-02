@@ -35,6 +35,7 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_n
     uint16_t rectangle_width = mp_obj_get_int(mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_width));
     uint16_t rectangle_height = mp_obj_get_int(mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_height));
     uint16_t rectangle_color = mp_obj_get_int(mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_color));
+    uint16_t rectangle_outlined = mp_obj_get_int(mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_outline));
 
     vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
     vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
@@ -68,19 +69,49 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_n
     rectangle_rotated_x += camera_viewport->width/2;
     rectangle_rotated_y += camera_viewport->height/2;
 
-    engine_draw_fillrect_scale_rotate_viewport(rectangle_color,
-                                               (int32_t)rectangle_rotated_x,
-                                               (int32_t)rectangle_rotated_y,
-                                               rectangle_width, 
-                                               rectangle_height,
-                                               (int32_t)(rectangle_scale->x*65536 + 0.5),
-                                               (int32_t)(rectangle_scale->y*65536 + 0.5),
-                                               (int16_t)(((rectangle_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation))*1024 / (float)(2*PI)),
-                                               (int32_t)camera_viewport->x,
-                                               (int32_t)camera_viewport->y,
-                                               (int32_t)camera_viewport->width,
-                                               (int32_t)camera_viewport->height);
-                                               
+    if(rectangle_outlined == false){
+        engine_draw_fillrect_scale_rotate_viewport(rectangle_color,
+                                                (int32_t)rectangle_rotated_x,
+                                                (int32_t)rectangle_rotated_y,
+                                                rectangle_width, 
+                                                rectangle_height,
+                                                (int32_t)(rectangle_scale->x*65536 + 0.5),
+                                                (int32_t)(rectangle_scale->y*65536 + 0.5),
+                                                (int16_t)(((rectangle_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation))*1024 / (float)(2*PI)),
+                                                (int32_t)camera_viewport->x,
+                                                (int32_t)camera_viewport->y,
+                                                (int32_t)camera_viewport->width,
+                                                (int32_t)camera_viewport->height);
+    }else{
+        float rectangle_half_width = rectangle_width/2;
+        float rectangle_half_height = rectangle_height/2;
+
+        // Calculate the coordinates of the 4 corners of the rectangle, not rotated
+        // NOTE: positive y is down
+        float tlx = rectangle_rotated_x - rectangle_half_width;
+        float tly = rectangle_rotated_y - rectangle_half_height;
+
+        float trx = rectangle_rotated_x + rectangle_half_width;
+        float try = rectangle_rotated_y - rectangle_half_height;
+
+        float brx = rectangle_rotated_x + rectangle_half_width;
+        float bry = rectangle_rotated_y + rectangle_half_height;
+
+        float blx = rectangle_rotated_x - rectangle_half_width;
+        float bly = rectangle_rotated_y + rectangle_half_height;
+
+        // Rotate the points and then draw lines between them
+        float angle = rectangle_resolved_hierarchy_rotation + camera_resolved_hierarchy_rotation;
+        engine_math_rotate_point(&tlx, &tly, rectangle_rotated_x, rectangle_rotated_y, angle);
+        engine_math_rotate_point(&trx, &try, rectangle_rotated_x, rectangle_rotated_y, angle);
+        engine_math_rotate_point(&brx, &bry, rectangle_rotated_x, rectangle_rotated_y, angle);
+        engine_math_rotate_point(&blx, &bly, rectangle_rotated_x, rectangle_rotated_y, angle);
+
+        engine_draw_line(rectangle_color, tlx, tly, trx, try, camera_node);
+        engine_draw_line(rectangle_color, trx, try, brx, bry, camera_node);
+        engine_draw_line(rectangle_color, brx, bry, blx, bly, camera_node);
+        engine_draw_line(rectangle_color, blx, bly, tlx, tly, camera_node);
+    }
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_2(rectangle_2d_node_class_draw_obj, rectangle_2d_node_class_draw);
@@ -122,6 +153,7 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
         rectangle_2d_node->height = mp_obj_new_int(5);
         rectangle_2d_node->color = mp_obj_new_int(0xffff);
         rectangle_2d_node->rotation = mp_obj_new_float(0.0f);
+        rectangle_2d_node->outline = mp_obj_new_bool(false);
     }else if(n_args == 1){  // Inherited (use existing object)
         node_base->inherited = true;
         node_base->node = args[0];
@@ -149,6 +181,7 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
         mp_store_attr(node_base->node, MP_QSTR_height, mp_obj_new_int(5));
         mp_store_attr(node_base->node, MP_QSTR_color, mp_obj_new_int(0xffff));
         mp_store_attr(node_base->node, MP_QSTR_rotation, mp_obj_new_float(0.0f));
+        mp_store_attr(node_base->node, MP_QSTR_outline, mp_obj_new_bool(false));
     }else{
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Too many arguments passed to Rectangle2DNode constructor!"));
     }
@@ -172,7 +205,7 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
     ATTR:   [type=float]                      [name=width]                      [value=any]
     ATTR:   [type=float]                      [name=height]                     [value=any]
     ATTR:   [type=int]                        [name=color]                      [value=any 16-bit RGB565 integer]
-    ATTR:   [type=float]                      [name=outline]                    [value=any 16-bit RGB565 integer]
+    ATTR:   [type=bool]                       [name=outline]                    [value=True or False]
 */
 STATIC void rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Rectangle2DNode attr");
@@ -222,6 +255,9 @@ STATIC void rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_ob
             case MP_QSTR_rotation:
                 destination[0] = self->rotation;
             break;
+            case MP_QSTR_outline:
+                destination[0] = self->outline;
+            break;
             default:
                 return; // Fail
         }
@@ -244,6 +280,9 @@ STATIC void rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_ob
             break;
             case MP_QSTR_rotation:
                 self->rotation = destination[1];
+            break;
+            case MP_QSTR_outline:
+                self->outline = destination[1];
             break;
             default:
                 return; // Fail

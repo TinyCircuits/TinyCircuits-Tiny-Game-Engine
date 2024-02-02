@@ -48,8 +48,11 @@ class MySprite(Sprite2DNode):
 
 circle = Circle2DNode()
 circle.outline = True
-circle.radius = 50
+circle.radius = 25
 rectangle = Rectangle2DNode()
+rectangle.width = 30
+rectangle.height = 15
+rectangle.outline = True
 sprite = MySprite()
 polygon = Polygon2DNode()
 polygon.vertices.append(Vector2(-10, 10))
@@ -89,9 +92,9 @@ class MyCam(CameraNode):
         
         
         if engine_input.check_pressed(engine_input.BUMPER_LEFT):
-            self.rotation.z += 0.1
+            self.rotation.z += 0.01
         if engine_input.check_pressed(engine_input.BUMPER_RIGHT):
-            self.rotation.z -= 0.1
+            self.rotation.z -= 0.01
 
 
 camera = MyCam()
