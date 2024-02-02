@@ -52,6 +52,18 @@ STATIC mp_obj_t rectangle_class_overlapping(mp_obj_t self_in, mp_obj_t b_in){
 MP_DEFINE_CONST_FUN_OBJ_2(rectangle_class_overlapping_obj, rectangle_class_overlapping);
 
 
+/*  --- doc ---
+    NAME: Rectangle
+    DESC: Holds an X and Y plus width and height
+    PARAM:  [type=float]  [name=x]      [value=any]
+    PARAM:  [type=float]  [name=y]      [value=any]
+    PARAM:  [type=float]  [name=width]  [value=any]
+    PARAM:  [type=float]  [name=height] [value=any]                                                                                   
+    ATTR:   [type=float]  [name=x]      [value=any]                                
+    ATTR:   [type=float]  [name=y]      [value=any]
+    ATTR:   [type=float]  [name=width]  [value=any]
+    ATTR:   [type=float]  [name=height] [value=any]                                                             
+*/ 
 STATIC void rectangle_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     rectangle_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
 

@@ -27,6 +27,12 @@ void engine_input_update_pressed_buttons(){
 }
 
 
+/*  --- doc ---
+    NAME: check_pressed
+    DESC: Module for checking the button presses
+    PARAM: [type=int]   [name=button_mask]  [value=single or OR'ed together enum/ints (e.g. 'engine_input.A | engine_input.B')]
+    RETURN: None
+*/ 
 STATIC mp_obj_t engine_input_check_pressed(mp_obj_t button_mask_u16){
     uint16_t button_mask = mp_obj_get_int(button_mask_u16);
 
@@ -37,7 +43,20 @@ STATIC mp_obj_t engine_input_check_pressed(mp_obj_t button_mask_u16){
 MP_DEFINE_CONST_FUN_OBJ_1(engine_input_check_pressed_obj, engine_input_check_pressed);
 
 
-// Module attributes
+/*  --- doc ---
+    NAME: engine_input
+    DESC: Module for checking the button presses
+    ATTR: [type=function]   [name={ref_link:check_pressed}]  [value=function] 
+    ATTR: [type=enum/int]   [name=A]                         [value=0b0000000000000001]
+    ATTR: [type=enum/int]   [name=B]                         [value=0b0000000000000010]
+    ATTR: [type=enum/int]   [name=DPAD_UP]                   [value=0b0000000000000100]
+    ATTR: [type=enum/int]   [name=DPAD_DOWN]                 [value=0b0000000000001000]
+    ATTR: [type=enum/int]   [name=DPAD_LEFT]                 [value=0b0000000000010000]
+    ATTR: [type=enum/int]   [name=DPAD_RIGHT]                [value=0b0000000000100000]
+    ATTR: [type=enum/int]   [name=BUMPER_LEFT]               [value=0b0000000001000000]
+    ATTR: [type=enum/int]   [name=BUMPER_RIGHT]              [value=0b0000000010000000]
+    ATTR: [type=enum/int]   [name=MENU]                      [value=0b0000000100000000]
+*/ 
 STATIC const mp_rom_map_elem_t engine_input_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_input) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_check_pressed), (mp_obj_t)&engine_input_check_pressed_obj },

@@ -324,6 +324,16 @@ STATIC mp_obj_t vector3_class_resize(mp_obj_t self_in, mp_obj_t element_b){
 MP_DEFINE_CONST_FUN_OBJ_2(vector3_class_resize_obj, vector3_class_resize);
 
 
+/*  --- doc ---
+    NAME: Vector3
+    DESC: Holds an X, Y, and Z value. Typically used for position
+    PARAM: [type=float]  [name=x]    [value=any]
+    PARAM: [type=float]  [name=y]    [value=any]
+    PARAM: [type=float]  [name=z]    [value=any]                                                                                      
+    ATTR: [type=float]  [name=x]    [value=any]                                
+    ATTR: [type=float]  [name=y]    [value=any]
+    ATTR: [type=float]  [name=z]    [value=any]                                                               
+*/ 
 STATIC void vector3_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Vector3 attr");
 

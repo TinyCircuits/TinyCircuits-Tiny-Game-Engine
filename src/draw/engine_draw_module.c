@@ -65,7 +65,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_draw_set_background_obj, engine_draw_set_backgr
     ATTR: [type=enum/int]   [name=silver]                           [value=0xC618]
     ATTR: [type=enum/int]   [name=skyblue]                          [value=0x867D]
     ATTR: [type=enum/int]   [name=violet]                           [value=0x915C]
-*/ 
+*/
 STATIC const mp_rom_map_elem_t engine_draw_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_draw) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_set_background_color), (mp_obj_t)&engine_draw_set_background_color_obj },

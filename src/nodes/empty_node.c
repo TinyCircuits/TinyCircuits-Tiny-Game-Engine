@@ -69,7 +69,15 @@ STATIC mp_obj_t empty_node_class_new(const mp_obj_type_t *type, size_t n_args, s
 }
 
 
-// Class methods
+/*  --- doc ---
+    NAME: EmptyNode
+    DESC: Node that does nothing except expose overrides for user implementation
+    ATTR: [type=function]   [name={ref_link:add_child}]  [value=function] 
+    ATTR: [type=function]   [name={ref_link:remove_child}]        [value=function]
+    ATTR: [type=function]   [name={ref_link:set_layer}]        [value=function]
+    ATTR: [type=function]   [name={ref_link:get_layer}]        [value=function]
+    ATTR: [type=function]   [name={ref_link:remove_child}]        [value=function]
+*/
 STATIC void empty_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing EmptyNode attr");
 

@@ -63,7 +63,11 @@ STATIC mp_obj_t polygon_2d_node_class_calculate_normals(mp_obj_t self_in){
 MP_DEFINE_CONST_FUN_OBJ_1(polygon_2d_node_class_calculate_normals_obj, polygon_2d_node_class_calculate_normals);
 
 
-mp_obj_t empty_collision_shape_2d_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
+/* --- doc ---
+   NAME: EmptyPolyCollisionShape2D
+   DESC: Dissolves into a {ref_link:PolygonCollisionShape2D} object that contains no vertices or normals (this is the default for {ref_link:PolygonCollisionShape2D})
+*/
+mp_obj_t empty_poly_collision_shape_2d_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Empty PolygonCollisionShape2D");
     mp_arg_check_num(n_args, n_kw, 0, 0, false);
 
@@ -76,7 +80,11 @@ mp_obj_t empty_collision_shape_2d_class_new(const mp_obj_type_t *type, size_t n_
 }
 
 
-mp_obj_t rectangle_collision_shape_2d_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
+/* --- doc ---
+   NAME: RectanglePolyCollisionShape2D
+   DESC: A basic polygon used to describe the shape of collision for a {ref_link:Physics2DNode}. This constructor dissolves into a {ref_link:PolygonCollisionShape2D} object but instead of being empty, it is filled with vertices and normals for a rectangle
+*/
+mp_obj_t rectangle_poly_collision_shape_2d_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Rectangle PolygonCollisionShape2D");
     mp_arg_check_num(n_args, n_kw, 0, 2, false);
 
@@ -110,7 +118,11 @@ mp_obj_t rectangle_collision_shape_2d_class_new(const mp_obj_type_t *type, size_
 }
 
 
-mp_obj_t hexagon_collision_shape_2d_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
+/* --- doc ---
+   NAME: HexagonPolyCollisionShape2D
+   DESC: A basic polygon used to describe the shape of collision for a {ref_link:Physics2DNode}. This constructor dissolves into a {ref_link:PolygonCollisionShape2D} object but instead of being empty, it is filled with vertices and normals for a hexagon
+*/
+mp_obj_t hexagon_poly_collision_shape_2d_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Hexagon PolygonCollisionShape2D");
     mp_arg_check_num(n_args, n_kw, 0, 1, false);
 
@@ -140,6 +152,13 @@ mp_obj_t hexagon_collision_shape_2d_class_new(const mp_obj_type_t *type, size_t 
 }
 
 
+/* --- doc ---
+   NAME: PolygonCollisionShape2D
+   DESC: A polygon used to describe the shape of collision for a {ref_link:Physics2DNode}. Uses {ref_link:EmptyPolyCollisionShape2D} by default, but other basic shapes are available: {ref_link:RectanglePolyCollisionShape2D} and {ref_link:HexagonPolyCollisionShape2D}
+   ATTR: [type=function]    [name=calculate_normals]    [value=function]
+   ATTR: [type=list]        [name=vertices]             [value=list of {ref_link:Vector2}s]
+   ATTR: [type=list]        [name=normals]              [value=list of {ref_link:Vector2}s]
+*/
 STATIC void polygon_collision_shape_2d_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing PolygonCollisionShape2D attr");
 
@@ -190,7 +209,7 @@ MP_DEFINE_CONST_OBJ_TYPE(
     MP_QSTR_PolygonCollisionShape2D,
     MP_TYPE_FLAG_NONE,
 
-    make_new, empty_collision_shape_2d_class_new,
+    make_new, empty_poly_collision_shape_2d_class_new,
     print, polygon_collision_shape_2d_class_print,
     attr, polygon_collision_shape_2d_class_attr,
     locals_dict, &polygon_collision_shape_2d_class_locals_dict
@@ -202,7 +221,7 @@ MP_DEFINE_CONST_OBJ_TYPE(
     MP_QSTR_EmptyPolyCollisionShape2D,
     MP_TYPE_FLAG_NONE,
 
-    make_new, empty_collision_shape_2d_class_new,
+    make_new, empty_poly_collision_shape_2d_class_new,
     print, polygon_collision_shape_2d_class_print,
     attr, polygon_collision_shape_2d_class_attr,
     locals_dict, &polygon_collision_shape_2d_class_locals_dict
@@ -214,7 +233,7 @@ MP_DEFINE_CONST_OBJ_TYPE(
     MP_QSTR_RectanglePolyCollisionShape2D,
     MP_TYPE_FLAG_NONE,
 
-    make_new, rectangle_collision_shape_2d_class_new,
+    make_new, rectangle_poly_collision_shape_2d_class_new,
     print, polygon_collision_shape_2d_class_print,
     attr, polygon_collision_shape_2d_class_attr,
     locals_dict, &polygon_collision_shape_2d_class_locals_dict
@@ -226,7 +245,7 @@ MP_DEFINE_CONST_OBJ_TYPE(
     MP_QSTR_HexagonPolyCollisionShape2D,
     MP_TYPE_FLAG_NONE,
 
-    make_new, hexagon_collision_shape_2d_class_new,
+    make_new, hexagon_poly_collision_shape_2d_class_new,
     print, polygon_collision_shape_2d_class_print,
     attr, polygon_collision_shape_2d_class_attr,
     locals_dict, &polygon_collision_shape_2d_class_locals_dict

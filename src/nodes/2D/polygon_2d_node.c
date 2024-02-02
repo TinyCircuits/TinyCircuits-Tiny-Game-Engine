@@ -210,7 +210,20 @@ mp_obj_t polygon_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
 }
 
 
-// Class methods
+/*  --- doc ---
+    NAME: Polygon2DNode
+    DESC: Node for drawing, currently, outlined polygons (TODO: filled) given a list of vertices
+    ATTR:   [type=function]                   [name={ref_link:add_child}]       [value=function] 
+    ATTR:   [type=function]                   [name={ref_link:remove_child}]    [value=function]
+    ATTR:   [type=function]                   [name={ref_link:set_layer}]       [value=function]
+    ATTR:   [type=function]                   [name={ref_link:get_layer}]       [value=function]
+    ATTR:   [type=function]                   [name={ref_link:remove_child}]    [value=function]
+    ATTR:   [type={ref_link:Vector3}]         [name=position]                   [value={ref_link:Vector3}]
+    ATTR:   [type=int]                        [name=color]                      [value={any 16-bit RGB565 integer]
+    ATTR:   [type={ref_link:Vector3}]         [name=rotation]                   [value={ref_link:Vector3}]
+    ATTR:   [type=list]                       [name=vertices]                   [value=list of {ref_link:Vector2}s]
+    ATTR:   [type=float]                      [name=scale]                      [value=any (TODO: make this a Vector2?)]
+*/
 STATIC void polygon_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Polygon2DNode attr");
 

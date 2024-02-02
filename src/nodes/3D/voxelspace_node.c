@@ -40,8 +40,8 @@ STATIC mp_obj_t voxelspace_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
     // engine_voxelspace_node_common_data_t *common_data = voxelspace_node_base->node_common_data;
     engine_node_base_t *camera_node_base = camera_node;
 
-    texture_resource_class_obj_t *texture = mp_load_attr(voxelspace_node_base->attr_accessor, MP_QSTR_texture_resource);
-    texture_resource_class_obj_t *heightmap = mp_load_attr(voxelspace_node_base->attr_accessor, MP_QSTR_heightmap_resource);
+    texture_resource_class_obj_t *texture = mp_load_attr(voxelspace_node_base->attr_accessor, MP_QSTR_texture);
+    texture_resource_class_obj_t *heightmap = mp_load_attr(voxelspace_node_base->attr_accessor, MP_QSTR_heightmap);
 
     // vector3_class_obj_t *voxelspace_rotation = mp_load_attr(voxelspace_node_base->attr_accessor, MP_QSTR_rotation);
     vector3_class_obj_t *voxelspace_position = mp_load_attr(voxelspace_node_base->attr_accessor, MP_QSTR_position);
@@ -192,8 +192,8 @@ mp_obj_t voxelspace_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
 
         mp_store_attr(node_base->node, MP_QSTR_position, vector3_class_new(&vector3_class_type, 0, 0, NULL));
         mp_store_attr(node_base->node, MP_QSTR_rotation, vector3_class_new(&vector3_class_type, 0, 0, NULL));
-        mp_store_attr(node_base->node, MP_QSTR_texture_resource, args[1]);
-        mp_store_attr(node_base->node, MP_QSTR_heightmap_resource, args[2]);
+        mp_store_attr(node_base->node, MP_QSTR_texture, args[1]);
+        mp_store_attr(node_base->node, MP_QSTR_heightmap, args[2]);
         mp_store_attr(node_base->node, MP_QSTR_height_scale, mp_obj_new_float(1.0f));
     }else{
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Too many arguments passed to VoxelSpaceNode constructor!"));
@@ -203,7 +203,22 @@ mp_obj_t voxelspace_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
 }
 
 
-// Class methods
+/*  --- doc ---
+    NAME: VoxelSpaceNode
+    DESC: Node that gets rendered in a semi-3D fashion. See https://github.com/s-macke/VoxelSpace
+    PARAM:  [type={ref_link:TextureResource}] [name=texture]                    [value={ref_link:TextureResource}]
+    PARAM:  [type={ref_link:TextureResource}] [name=heightmap]                  [value={ref_link:TextureResource}]
+    ATTR:   [type=function]                   [name={ref_link:add_child}]       [value=function] 
+    ATTR:   [type=function]                   [name={ref_link:remove_child}]    [value=function]
+    ATTR:   [type=function]                   [name={ref_link:set_layer}]       [value=function]
+    ATTR:   [type=function]                   [name={ref_link:get_layer}]       [value=function]
+    ATTR:   [type=function]                   [name={ref_link:remove_child}]    [value=function]
+    ATTR:   [type={ref_link:Vector3}]         [name=position]                   [value={ref_link:Vector3}]
+    ATTR:   [type={ref_link:Vector3}]         [name=rotation]                   [value={ref_link:Vector3}]
+    ATTR:   [type={ref_link:TextureResource}] [name=texture]                    [value={ref_link:TextureResource}]
+    ATTR:   [type={ref_link:TextureResource}] [name=heightmap]                  [value={ref_link:TextureResource}]
+    ATTR:   [type=float]                      [name=heigh_scale]                [value=any]
+*/
 STATIC void voxelspace_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing VoxelSapceNode attr");
 
@@ -237,10 +252,10 @@ STATIC void voxelspace_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
             case MP_QSTR_rotation:
                 destination[0] = self->rotation;
             break;
-            case MP_QSTR_texture_resource:
+            case MP_QSTR_texture:
                 destination[0] = self->texture_resource;
             break;
-            case MP_QSTR_heightmap_resource:
+            case MP_QSTR_heightmap:
                 destination[0] = self->heightmap_resource;
             break;
             case MP_QSTR_height_scale:
@@ -257,10 +272,10 @@ STATIC void voxelspace_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
             case MP_QSTR_rotation:
                 self->rotation = destination[1];
             break;
-            case MP_QSTR_texture_resource:
+            case MP_QSTR_texture:
                 self->texture_resource = destination[1];
             break;
-            case MP_QSTR_heightmap_resource:
+            case MP_QSTR_heightmap:
                 self->heightmap_resource = destination[1];
             break;
             case MP_QSTR_height_scale:

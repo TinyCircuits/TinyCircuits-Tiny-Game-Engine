@@ -157,7 +157,22 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
 }
 
 
-// Class methods
+/*  --- doc ---
+    NAME: Rectangle2DNode
+    DESC: Simple 2D rectangle node
+    ATTR:   [type=function]                   [name={ref_link:add_child}]       [value=function] 
+    ATTR:   [type=function]                   [name={ref_link:remove_child}]    [value=function]
+    ATTR:   [type=function]                   [name={ref_link:set_layer}]       [value=function]
+    ATTR:   [type=function]                   [name={ref_link:get_layer}]       [value=function]
+    ATTR:   [type=function]                   [name={ref_link:remove_child}]    [value=function]
+    ATTR:   [type={ref_link:Vector3}]         [name=position]                   [value={ref_link:Vector3}]
+    ATTR:   [type=float]                      [name=fps]                        [value=any]
+    ATTR:   [type=float]                      [name=rotation]                   [value=any (radians)]
+    ATTR:   [type={ref_link:Vector2}]         [name=scale]                      [value={ref_link:Vector2}]
+    ATTR:   [type=float]                      [name=width]                      [value=any]
+    ATTR:   [type=float]                      [name=height]                     [value=any]
+    ATTR:   [type=int]                        [name=color]                      [value=any 16-bit RGB565 integer]
+*/
 STATIC void rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Rectangle2DNode attr");
 

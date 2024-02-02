@@ -4,7 +4,14 @@
 #include "vector3.h"
 #include "rectangle.h"
 
-// Module attributes
+
+/*  --- doc ---
+    NAME: engine_math
+    DESC: Module for common math operations and objects
+    ATTR: [type=object]   [name={ref_link:Vector2}]     [value=object]
+    ATTR: [type=object]   [name={ref_link:Vector3}]     [value=object]
+    ATTR: [type=object]   [name={ref_link:Rectangle}]   [value=object]
+*/
 STATIC const mp_rom_map_elem_t engine_math_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_math) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Vector2), (mp_obj_t)&vector2_class_type },

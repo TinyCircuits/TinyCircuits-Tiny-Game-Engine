@@ -140,7 +140,24 @@ mp_obj_t physics_2d_node_class_del(mp_obj_t self_in){
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(physics_2d_node_class_del_obj, physics_2d_node_class_del);
 
 
-// Class methods
+/*  --- doc ---
+    NAME: Physics2DNode
+    DESC: Node that is affected by physics. Usually other nodes are added as children to this node
+    ATTR: [type=function]                               [name={ref_link:add_child}]     [value=function] 
+    ATTR: [type=function]                               [name={ref_link:remove_child}]  [value=function]
+    ATTR: [type=function]                               [name={ref_link:set_layer}]     [value=function]
+    ATTR: [type=function]                               [name={ref_link:get_layer}]     [value=function]
+    ATTR: [type=function]                               [name={ref_link:remove_child}]  [value=function]
+    ATTR: [type={ref_link:Vector2}]                     [name=position]                 [value={ref_link:Vector2}]
+    ATTR: [type=float]                                  [name=rotation]                 [value=any]
+    ATTR: [type={ref_link:Vector2}]                     [name=velocity]                 [value={ref_link:Vector2}]
+    ATTR: [type={ref_link:Vector2}]                     [name=acceleration]             [value={ref_link:Vector2}]
+    ATTR: [type=float]                                  [name=mass]                     [value=any]
+    ATTR: [type={ref_link:PolygonCollisionShape2D}]     [name=collision_shape]          [value={ref_link:PolygonCollisionShape2D}]
+    ATTR: [type=float]                                  [name=bounciness]               [value=any]
+    ATTR: [type=boolean]                                [name=dynamic]                  [value=True or False]
+    ATTR: [type={ref_link:Vector2}]                     [name=gravity_scale]            [value={ref_link:Vector2}]
+*/
 STATIC void physics_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Physics2DNode attr");
 

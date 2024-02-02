@@ -7,32 +7,67 @@
 #include "physics/collision_contact_2d.h"
 
 
-STATIC mp_obj_t engine_set_physics_fps_limit(mp_obj_t fps){
+/* --- doc ---
+   NAME: set_physics_fps_limit
+   DESC: Sets the limit at which physics tick occur. This could be set lower than the frame rate to make the average game framerate higher if physics is impacting it, of course then objects affected by physic will move a lower framerate
+   PARAM: [type=float] [name=fps] [value=any positive floats]
+   RETURN: None
+*/
+STATIC mp_obj_t engine_set_physics_fps_limit(mp_obj_t fps_obj){
     ENGINE_INFO_PRINTF("EnginePhysics: Setting FPS Limit");
-    engine_physics_fps_limit_period_ms = (1.0f / mp_obj_get_float(fps)) * 1000.0f;
+
+    float fps = mp_obj_get_float(fps);
+
+    if(fps < 0){
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EnginePhysics: ERROR: Tried to set physics fps limit to negative number!"))
+    }
+
+    engine_physics_fps_limit_period_ms = (1.0f / fps) * 1000.0f;
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(engine_set_physics_fps_limit_obj, engine_set_physics_fps_limit);
 
 
 // Could add another method that takes a vector2 to set gravity, just this for now
-STATIC mp_obj_t engine_set_physics_set_gravity(mp_obj_t x, mp_obj_t y){
+/* --- doc ---
+   NAME: set_gravity
+   DESC: Sets the gravity that all objects are affected by. TODO: lighter objects do not fall slower currently...
+   PARAM: [type=float] [name=x] [value=any]
+   PARAM: [type=float] [name=y] [value=any]
+   RETURN: None
+*/
+STATIC mp_obj_t engine_physics_set_gravity(mp_obj_t x, mp_obj_t y){
     ENGINE_INFO_PRINTF("EnginePhysics: Setting gravity");
     engine_physics_gravity_x = mp_obj_get_float(x);
     engine_physics_gravity_y = mp_obj_get_float(y);
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_2(engine_set_physics_set_gravity_obj, engine_set_physics_set_gravity);
+MP_DEFINE_CONST_FUN_OBJ_2(engine_physics_set_gravity_obj, engine_physics_set_gravity);
 
 
-STATIC mp_obj_t engine_set_physics_get_gravity(){
+/* --- doc ---
+   NAME: get_gravity
+   DESC: Gets the gravity that all objects are affected by
+   RETURN: {ref_link:Vector2}
+*/
+STATIC mp_obj_t engine_physics_get_gravity(){
     ENGINE_INFO_PRINTF("EnginePhysics: Getting gravity");
     return vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(engine_physics_gravity_x), mp_obj_new_float(engine_physics_gravity_y)});
 }
-MP_DEFINE_CONST_FUN_OBJ_0(engine_set_physics_get_gravity_obj, engine_set_physics_get_gravity);
+MP_DEFINE_CONST_FUN_OBJ_0(engine_physics_get_gravity_obj, engine_physics_get_gravity);
 
 
-// Module attributes
+/* --- doc ---
+   NAME: engine_physics
+   DESC: Module for controlling physics and for common physics collision shapes
+   ATTR: [type=object]   [name={ref_link:EmptyPolyCollisionShape2D}]       [value=object]
+   ATTR: [type=object]   [name={ref_link:HexagonPolyCollisionShape2D}]     [value=object]
+   ATTR: [type=object]   [name={ref_link:RectanglePolyCollisionShape2D}]   [value=object]
+   ATTR: [type=object]   [name={ref_link:CollisionContact2D}]              [value=object]
+   ATTR: [type=function] [name={ref_link:set_physics_fps_limit}]           [value=function]
+   ATTR: [type=function] [name={ref_link:set_gravity}]                     [value=function]
+   ATTR: [type=function] [name={ref_link:get_gravity}]                     [value=function]
+*/
 STATIC const mp_rom_map_elem_t engine_physics_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_physics) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_EmptyPolyCollisionShape2D), (mp_obj_t)&empty_poly_collision_shape_2d_class_type},
@@ -40,8 +75,8 @@ STATIC const mp_rom_map_elem_t engine_physics_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_RectanglePolyCollisionShape2D), (mp_obj_t)&rectangle_poly_collision_shape_2d_class_type},
     { MP_OBJ_NEW_QSTR(MP_QSTR_CollisionContact2D), (mp_obj_t)&collision_contact_2d_class_type},
     { MP_OBJ_NEW_QSTR(MP_QSTR_set_physics_fps_limit), (mp_obj_t)&engine_set_physics_fps_limit_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_set_gravity), (mp_obj_t)&engine_set_physics_set_gravity_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_get_gravity), (mp_obj_t)&engine_set_physics_get_gravity_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_set_gravity), (mp_obj_t)&engine_physics_set_gravity_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_get_gravity), (mp_obj_t)&engine_physics_get_gravity_obj },
 };
 
 // Module init

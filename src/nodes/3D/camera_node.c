@@ -110,7 +110,21 @@ mp_obj_t camera_node_class_del(mp_obj_t self_in){
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(camera_node_class_del_obj, camera_node_class_del);
 
 
-// Class methods
+/*  --- doc ---
+    NAME: CameraNode
+    DESC: Node that is affected by physics. Usually other nodes are added as children to this node
+    ATTR: [type=function]                       [name={ref_link:add_child}]     [value=function] 
+    ATTR: [type=function]                       [name={ref_link:remove_child}]  [value=function]
+    ATTR: [type=function]                       [name={ref_link:set_layer}]     [value=function]
+    ATTR: [type=function]                       [name={ref_link:get_layer}]     [value=function]
+    ATTR: [type=function]                       [name={ref_link:remove_child}]  [value=function]
+    ATTR: [type={ref_link:Vector3}]             [name=position]                 [value={ref_link:Vector3}]
+    ATTR: [type={ref_link:Vector3}]             [name=rotation]                 [value={ref_link:Vector3}]
+    ATTR: [type={ref_link:Rectangle}]           [name=viewport]                 [value={ref_link:Rectangle} (not used currently, TODO)]
+    ATTR: [type=float]                          [name=zoom]                     [value=any (scales all nodes by this factor, 1.0 by default)]
+    ATTR: [type=float]                          [name=fov]                      [value=any (sets the field fo view for rendering some nodes, not all nodes use this)]
+    ATTR: [type=float]                          [name=view_distance]            [value=any (sets the view distance for some nodes, not all nodes use this)]
+*/
 STATIC void camera_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing CameraNode attr");
 

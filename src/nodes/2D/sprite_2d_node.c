@@ -37,7 +37,7 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
     engine_sprite_2d_node_common_data_t *sprite_common_data = sprite_node_base->node_common_data;
 
     vector2_class_obj_t *sprite_scale =  mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_scale);
-    texture_resource_class_obj_t *sprite_texture = mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_texture_resource);
+    texture_resource_class_obj_t *sprite_texture = mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_texture);
 
     vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
     vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
@@ -193,7 +193,7 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
         mp_store_attr(node_base->node, MP_QSTR_fps, mp_obj_new_float((mp_float_t)30.0f));
         mp_store_attr(node_base->node, MP_QSTR_rotation, mp_obj_new_float((mp_float_t)0.0f));
         mp_store_attr(node_base->node, MP_QSTR_scale, vector2_class_new(&vector2_class_type, 2, 0, default_scale_parameters));
-        mp_store_attr(node_base->node, MP_QSTR_texture_resource, args[1]);
+        mp_store_attr(node_base->node, MP_QSTR_texture, args[1]);
         mp_store_attr(node_base->node, MP_QSTR_transparent_color, mp_obj_new_int(ENGINE_NO_TRANSPARENCY_COLOR));
         mp_store_attr(node_base->node, MP_QSTR_frame_count_x, mp_obj_new_int(1));
         mp_store_attr(node_base->node, MP_QSTR_frame_count_y, mp_obj_new_int(1));
@@ -207,7 +207,26 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
 }
 
 
-// Class methods
+/*  --- doc ---
+    NAME: Sprite2DNode
+    DESC: Simple 2D sprite node that can be animated or static
+    PARAM:  [type={ref_link:TextureResource}] [name=texture]                    [value={ref_link:TextureResource}]
+    ATTR:   [type=function]                   [name={ref_link:add_child}]       [value=function] 
+    ATTR:   [type=function]                   [name={ref_link:remove_child}]    [value=function]
+    ATTR:   [type=function]                   [name={ref_link:set_layer}]       [value=function]
+    ATTR:   [type=function]                   [name={ref_link:get_layer}]       [value=function]
+    ATTR:   [type=function]                   [name={ref_link:remove_child}]    [value=function]
+    ATTR:   [type={ref_link:Vector2}]         [name=position]                   [value={ref_link:Vector2}]
+    ATTR:   [type=float]                      [name=fps]                        [value=any]
+    ATTR:   [type=float]                      [name=rotation]                   [value=any (radians)]
+    ATTR:   [type={ref_link:Vector2}]         [name=scale]                      [value={ref_link:Vector2}]
+    ATTR:   [type={ref_link:TextureResource}] [name=texture]                    [value={ref_link:TextureResource}]
+    ATTR:   [type=int]                        [name=transparent_color]          [value=any 16-bit RGB565 color]
+    ATTR:   [type=int]                        [name=frame_count_x]              [value=any positive integer]
+    ATTR:   [type=int]                        [name=frame_count_y]              [value=any positive integer]
+    ATTR:   [type=int]                        [name=frame_current_x]            [value=any positive integer]
+    ATTR:   [type=int]                        [name=frame_current_y]            [value=any positive integer]
+*/
 STATIC void sprite_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Sprite2DNode attr");
 
@@ -250,7 +269,7 @@ STATIC void sprite_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
             case MP_QSTR_scale:
                 destination[0] = self->scale;
             break;
-            case MP_QSTR_texture_resource:
+            case MP_QSTR_texture:
                 destination[0] = self->texture_resource;
             break;
             case MP_QSTR_transparent_color:
@@ -285,7 +304,7 @@ STATIC void sprite_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
             case MP_QSTR_scale:
                 self->scale = destination[1];
             break;
-            case MP_QSTR_texture_resource:
+            case MP_QSTR_texture:
                 self->texture_resource = destination[1];
             break;
             case MP_QSTR_transparent_color:

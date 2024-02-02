@@ -22,14 +22,31 @@ float engine_fps_time_at_last_tick_ms = 0.0f;
 float engine_fps_time_at_before_last_tick_ms = 0.0f;
 
 
-STATIC mp_obj_t engine_set_fps_limit(mp_obj_t fps){
+/* --- doc ---
+   NAME: set_fps_limit
+   DESC: Sets the FPS limit that the game engine can run at. If the game runs fast enough to reach this, engine busy waits until it is time for the next frame
+   PARAM: [type=float] [name=fps] [value=any positive value]
+   RETURN: None
+*/
+STATIC mp_obj_t engine_set_fps_limit(mp_obj_t fps_obj){
     ENGINE_INFO_PRINTF("Engine: Setting FPS");
-    engine_fps_limit_period_ms = (1.0f / mp_obj_get_float(fps)) * 1000.0f;
+    float fps = mp_obj_get_float(fps_obj);
+    
+    if(fps < 0){
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Engine: ERROR: Tried to set fps limit to negative value"))
+    }
+    
+    engine_fps_limit_period_ms = (1.0f / fps) * 1000.0f;
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(engine_set_fps_limit_obj, engine_set_fps_limit);
 
 
+/* --- doc ---
+   NAME: get_running_fps
+   DESC: Gets the actual FPS that the game loop is running at
+   RETURN: float
+*/
 STATIC mp_obj_t engine_get_running_fps(){
     ENGINE_INFO_PRINTF("Engine: Getting FPS");
     return mp_obj_new_float((mp_float_t)(1.0f / ((engine_fps_time_at_last_tick_ms - engine_fps_time_at_before_last_tick_ms)/1000.0f)));
@@ -37,18 +54,11 @@ STATIC mp_obj_t engine_get_running_fps(){
 MP_DEFINE_CONST_FUN_OBJ_0(engine_get_running_fps_obj, engine_get_running_fps);
 
 
-STATIC mp_obj_t engine_init(){
-    ENGINE_INFO_PRINTF("Engine init");
-
-    engine_input_setup();
-    engine_display_init();
-    engine_display_send();
-
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_0(engine_init_obj, engine_init);
-
-
+/* --- doc ---
+   NAME: tick
+   DESC: Runs the main tick function of the engine. This is called in a loop when doing 'engine.start()' but can also be called manually if needed
+   RETURN: None
+*/
 STATIC mp_obj_t engine_tick(){
     if(millis() - engine_fps_time_at_last_tick_ms >= engine_fps_limit_period_ms){
         engine_fps_time_at_before_last_tick_ms = engine_fps_time_at_last_tick_ms;
@@ -82,6 +92,11 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_tick_obj, engine_tick);
 
 // Mostly used internally when engine.stop() is called
 // but exposed anyway to MicroPython
+/* --- doc ---
+   NAME: reset
+   DESC: Resets internal state of engine (TODO: make sure all state is cleared, run when games end or go back to REPL or launcher)
+   RETURN: None
+*/
 STATIC mp_obj_t engine_reset(){
     ENGINE_INFO_PRINTF("Resetting engine...");
 
@@ -93,7 +108,12 @@ STATIC mp_obj_t engine_reset(){
 MP_DEFINE_CONST_FUN_OBJ_0(engine_reset_obj, engine_reset);
 
 
-STATIC mp_obj_t engine_loop(){
+/* --- doc ---
+   NAME: start
+   DESC: Starts the main engine loop to start calling 'engine.tick()'
+   RETURN: None
+*/
+STATIC mp_obj_t engine_start(){
     engine_init();
     ENGINE_INFO_PRINTF("Engine loop starting...");
 
@@ -107,15 +127,14 @@ STATIC mp_obj_t engine_loop(){
 
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_0(engine_loop_obj, engine_loop);
+MP_DEFINE_CONST_FUN_OBJ_0(engine_start_obj, engine_start);
 
 
-STATIC mp_obj_t engine_total_object_count(){
-    return mp_obj_new_int(engine_get_total_object_count());
-}
-MP_DEFINE_CONST_FUN_OBJ_0(engine_total_object_count_obj, engine_total_object_count);
-
-
+/* --- doc ---
+   NAME: stop
+   DESC: Stops the main loop if it is running, otherwise resets the internal engine state right away (fro the case someone is calling engine.tick() themselves)
+   RETURN: None
+*/
 STATIC mp_obj_t engine_stop(){
     ENGINE_INFO_PRINTF("Stopping engine...");
 
@@ -140,6 +159,10 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_stop_obj, engine_stop);
 STATIC mp_obj_t engine_module_init(){
     ENGINE_INFO_PRINTF("Engine init!");
 
+    engine_input_setup();
+    engine_display_init();
+    engine_display_send();
+
     // Needs to be setup before hand since dynamicly inits array.
     // Should make sure this doesn't happen more than once per
     // lifetime. TODO
@@ -150,18 +173,25 @@ STATIC mp_obj_t engine_module_init(){
 MP_DEFINE_CONST_FUN_OBJ_0(engine_module_init_obj, engine_module_init);
 
 
-// Module attributes
+/* --- doc ---
+   NAME: engine
+   DESC: Main component for controlling vital engine features
+   ATTR: [type=function] [name={ref_link:set_fps_limit}]        [value=function]
+   ATTR: [type=function] [name={ref_link:get_running_fps}]      [value=function]
+   ATTR: [type=function] [name={ref_link:tick}]                 [value=function]
+   ATTR: [type=function] [name={ref_link:start}]                [value=function]
+   ATTR: [type=function] [name={ref_link:stop}]                 [value=function]
+   ATTR: [type=function] [name={ref_link:reset}]                [value=function]
+*/
 STATIC const mp_rom_map_elem_t engine_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine) },
     { MP_OBJ_NEW_QSTR(MP_QSTR___init__), (mp_obj_t)&engine_module_init_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_set_fps_limit), (mp_obj_t)&engine_set_fps_limit_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_get_running_fps), (mp_obj_t)&engine_get_running_fps_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_init), (mp_obj_t)&engine_init_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_tick), (mp_obj_t)&engine_tick_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_start), (mp_obj_t)&engine_loop_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_start), (mp_obj_t)&engine_start_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_stop), (mp_obj_t)&engine_stop_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_reset), (mp_obj_t)&engine_reset_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_get_total_object_count), (mp_obj_t)&engine_total_object_count_obj },
 };
 
 // Module init
