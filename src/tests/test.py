@@ -14,7 +14,7 @@ import gc
 # engine_debug.debug_enable_all()
 wave0 = WaveSoundResource("cow_s16.wav")
 wave1 = WaveSoundResource("piano.wav")
-engine_debug.debug_enable_setting(engine_debug.debug_setting_performance)
+# engine_debug.debug_enable_setting(engine_debug.debug_setting_performance)
 
 c0 = engine_audio.play(wave0, 0, True)
 c1 = engine_audio.play(wave1, 1, True)
@@ -70,25 +70,25 @@ class MyCam(CameraNode):
         super().__init__(self)
     
     def tick(self):
-        if engine_input.is_a_pressed():
+        if engine_input.check_pressed(engine_input.A):
             self.zoom -= 0.1
-        if engine_input.is_b_pressed():
+        if engine_input.check_pressed(engine_input.B):
             self.zoom += 0.1
         
-        if engine_input.is_dpad_up_pressed():
+        if engine_input.check_pressed(engine_input.DPAD_UP):
             self.position.y -= 1
-        if engine_input.is_dpad_down_pressed():
+        if engine_input.check_pressed(engine_input.DPAD_DOWN):
             self.position.y += 1
         
-        if engine_input.is_dpad_left_pressed():
+        if engine_input.check_pressed(engine_input.DPAD_LEFT):
             self.position.x -= 1
-        if engine_input.is_dpad_right_pressed():
+        if engine_input.check_pressed(engine_input.DPAD_RIGHT):
             self.position.x += 1
         
         
-        if engine_input.is_bumper_left_pressed():
+        if engine_input.check_pressed(engine_input.BUMPER_LEFT):
             self.rotation.z += 0.1
-        if engine_input.is_bumper_right_pressed():
+        if engine_input.check_pressed(engine_input.BUMPER_RIGHT):
             self.rotation.z -= 0.1
 
 

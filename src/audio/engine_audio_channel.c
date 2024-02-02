@@ -168,7 +168,7 @@ STATIC void audio_channel_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t 
             //     self->time = mp_obj_get_float(destination[1]);
             // break;
             case MP_QSTR_loop:
-                self->looping = mp_obj_get_int(destination[1]);
+                self->loop = mp_obj_get_int(destination[1]);
             break;
             // case MP_QSTR_done:
             //     self->done = mp_obj_get_int(destination[1]);

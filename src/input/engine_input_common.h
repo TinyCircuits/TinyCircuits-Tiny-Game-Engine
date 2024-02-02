@@ -4,15 +4,15 @@
 #include <stdint.h>
 #include "utility/bits.h"
 
-#define BUTTON_A            0
-#define BUTTON_B            1
-#define BUTTON_DPAD_UP      2
-#define BUTTON_DPAD_DOWN    3
-#define BUTTON_DPAD_LEFT    4
-#define BUTTON_DPAD_RIGHT   5
-#define BUTTON_BUMPER_LEFT  6
-#define BUTTON_BUMPER_RIGHT 7
-#define BUTTON_MENU         8
+#define BUTTON_A            0b0000000000000001
+#define BUTTON_B            0b0000000000000010
+#define BUTTON_DPAD_UP      0b0000000000000100
+#define BUTTON_DPAD_DOWN    0b0000000000001000
+#define BUTTON_DPAD_LEFT    0b0000000000010000
+#define BUTTON_DPAD_RIGHT   0b0000000000100000
+#define BUTTON_BUMPER_LEFT  0b0000000001000000
+#define BUTTON_BUMPER_RIGHT 0b0000000010000000
+#define BUTTON_MENU         0b0000000100000000
 
 extern uint16_t engine_input_pressed_buttons;
 

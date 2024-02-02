@@ -4,6 +4,12 @@
 #include "resources/engine_texture_resource.h"
 
 
+/*  --- doc ---
+    NAME: set_background_color
+    DESC: Sets the background (the data that clears the framebuffer) to a color
+    PARAM: [type=enum/int]   [name=background_color]  [value=enum/int]
+    RETURN: None
+*/ 
 STATIC mp_obj_t engine_draw_set_background_color(mp_obj_t background_color){
     engine_fill_color = mp_obj_get_int(background_color);
     return mp_const_none;
@@ -11,6 +17,12 @@ STATIC mp_obj_t engine_draw_set_background_color(mp_obj_t background_color){
 MP_DEFINE_CONST_FUN_OBJ_1(engine_draw_set_background_color_obj, engine_draw_set_background_color);
 
 
+/*  --- doc ---
+    NAME: set_background
+    DESC: Sets the background (the data that clears the framebuffer) to a {ref_link:TextureResource}
+    PARAM: [type=object]   [name=background]  [value={ref_link:TextureResource}]
+    RETURN: None
+*/ 
 STATIC mp_obj_t engine_draw_set_background(mp_obj_t background){
     texture_resource_class_obj_t *background_texture_resource = background;
 
@@ -24,13 +36,42 @@ STATIC mp_obj_t engine_draw_set_background(mp_obj_t background){
 MP_DEFINE_CONST_FUN_OBJ_1(engine_draw_set_background_obj, engine_draw_set_background);
 
 
-// Module attributes
+/*  --- doc ---
+    NAME: engine_draw
+    DESC: Module for drawing to the framebuffer
+    ATTR: [type=function]   [name={ref_link:set_background_color}]  [value=function] 
+    ATTR: [type=function]   [name={ref_link:set_background}]        [value=function]
+    ATTR: [type=enum/int]   [name=black]                            [value=0x0000]
+    ATTR: [type=enum/int]   [name=navy]                             [value=0x000F]
+    ATTR: [type=enum/int]   [name=darkgreen]                        [value=0x03E0]
+    ATTR: [type=enum/int]   [name=darkcyan]                         [value=0x03EF]
+    ATTR: [type=enum/int]   [name=maroon]                           [value=0x7800]
+    ATTR: [type=enum/int]   [name=purple]                           [value=0x780F]
+    ATTR: [type=enum/int]   [name=olive]                            [value=0x7BE0]
+    ATTR: [type=enum/int]   [name=lightgrey]                        [value=0xD69A]
+    ATTR: [type=enum/int]   [name=darkgrey]                         [value=0x7BEF]
+    ATTR: [type=enum/int]   [name=blue]                             [value=0x001F]
+    ATTR: [type=enum/int]   [name=green]                            [value=0x07E0]
+    ATTR: [type=enum/int]   [name=cyan]                             [value=0x07FF]
+    ATTR: [type=enum/int]   [name=red]                              [value=0xF800]
+    ATTR: [type=enum/int]   [name=magenta]                          [value=magenta]
+    ATTR: [type=enum/int]   [name=yellow]                           [value=yellow]
+    ATTR: [type=enum/int]   [name=white]                            [value=white]
+    ATTR: [type=enum/int]   [name=orange]                           [value=orange]
+    ATTR: [type=enum/int]   [name=greenyellow]                      [value=greenyellow]
+    ATTR: [type=enum/int]   [name=pink]                             [value=0xFE19]
+    ATTR: [type=enum/int]   [name=brown]                            [value=0x9A60]
+    ATTR: [type=enum/int]   [name=gold]                             [value=0xFEA0]
+    ATTR: [type=enum/int]   [name=silver]                           [value=0xC618]
+    ATTR: [type=enum/int]   [name=skyblue]                          [value=0x867D]
+    ATTR: [type=enum/int]   [name=violet]                           [value=0x915C]
+*/ 
 STATIC const mp_rom_map_elem_t engine_draw_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_draw) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_set_background_color), (mp_obj_t)&engine_draw_set_background_color_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_set_background), (mp_obj_t)&engine_draw_set_background_obj },
 
-    // // https://github.com/Bodmer/TFT_eSPI/blob/cbf06d7a214938d884b21d5aeb465241c25ce774/TFT_eSPI.h#L304-L328
+    // https://github.com/Bodmer/TFT_eSPI/blob/cbf06d7a214938d884b21d5aeb465241c25ce774/TFT_eSPI.h#L304-L328
     { MP_ROM_QSTR(MP_QSTR_black), MP_ROM_INT(0x0000) },
     { MP_ROM_QSTR(MP_QSTR_navy), MP_ROM_INT(0x000F) },
     { MP_ROM_QSTR(MP_QSTR_darkgreen), MP_ROM_INT(0x03E0) },

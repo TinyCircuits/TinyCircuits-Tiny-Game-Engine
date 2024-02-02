@@ -3,6 +3,7 @@
 
 #include "pico/stdlib.h"
 #include "hardware/gpio.h"
+#include <stdbool.h>
 
 
 #define GPIO_BUTTON_DPAD_UP         1
@@ -50,13 +51,19 @@ void engine_input_rp3_setup(){
 
 
 void engine_input_rp3_update_pressed_mask(){
-    BIT_SET(engine_input_pressed_buttons, BUTTON_DPAD_UP, !gpio_get(GPIO_BUTTON_DPAD_UP));
-    BIT_SET(engine_input_pressed_buttons, BUTTON_DPAD_LEFT, !gpio_get(GPIO_BUTTON_DPAD_LEFT));
-    BIT_SET(engine_input_pressed_buttons, BUTTON_DPAD_DOWN, !gpio_get(GPIO_BUTTON_DPAD_DOWN));
-    BIT_SET(engine_input_pressed_buttons, BUTTON_DPAD_RIGHT, !gpio_get(GPIO_BUTTON_DPAD_RIGHT));
-    BIT_SET(engine_input_pressed_buttons, BUTTON_A, !gpio_get(GPIO_BUTTON_A));
-    BIT_SET(engine_input_pressed_buttons, BUTTON_B, !gpio_get(GPIO_BUTTON_B));
-    BIT_SET(engine_input_pressed_buttons, BUTTON_BUMPER_LEFT, !gpio_get(GPIO_BUTTON_BUMPER_LEFT));
-    BIT_SET(engine_input_pressed_buttons, BUTTON_BUMPER_RIGHT, !gpio_get(GPIO_BUTTON_BUMPER_RIGHT));
-    BIT_SET(engine_input_pressed_buttons, BUTTON_MENU, !gpio_get(GPIO_BUTTON_MENU));
+    // Reset this to all unpressed before checking if pressed
+    engine_input_pressed_buttons = 0;
+
+    if(gpio_get(GPIO_BUTTON_DPAD_UP) == false) engine_input_pressed_buttons |= BUTTON_DPAD_UP;
+    if(gpio_get(GPIO_BUTTON_DPAD_LEFT) == false) engine_input_pressed_buttons |= BUTTON_DPAD_LEFT;
+    if(gpio_get(GPIO_BUTTON_DPAD_DOWN) == false) engine_input_pressed_buttons |= BUTTON_DPAD_DOWN;
+    if(gpio_get(GPIO_BUTTON_DPAD_RIGHT) == false) engine_input_pressed_buttons |= BUTTON_DPAD_RIGHT;
+
+    if(gpio_get(GPIO_BUTTON_A) == false) engine_input_pressed_buttons |= BUTTON_A;
+    if(gpio_get(GPIO_BUTTON_B) == false) engine_input_pressed_buttons |= BUTTON_B;
+
+    if(gpio_get(GPIO_BUTTON_BUMPER_LEFT) == false) engine_input_pressed_buttons |= BUTTON_BUMPER_LEFT;
+    if(gpio_get(GPIO_BUTTON_BUMPER_RIGHT) == false) engine_input_pressed_buttons |= BUTTON_BUMPER_RIGHT;
+
+    if(gpio_get(GPIO_BUTTON_MENU) == false) engine_input_pressed_buttons |= BUTTON_MENU;
 }
