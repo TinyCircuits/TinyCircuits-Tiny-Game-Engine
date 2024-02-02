@@ -30,9 +30,9 @@ void engine_input_update_pressed_buttons(){
 STATIC mp_obj_t engine_input_check_pressed(mp_obj_t button_mask_u16){
     uint16_t button_mask = mp_obj_get_int(button_mask_u16);
 
-    // Check that the OR'ed button mask exactly matches the
-    // internally updated currently pressed button mask exactly
-    return mp_obj_new_bool(engine_input_pressed_buttons == button_mask);
+    // Check that the bits in the input button mask and the bits
+    // in the internal button mask are all exactly on.
+    return mp_obj_new_bool((engine_input_pressed_buttons & button_mask) == button_mask);
 }
 MP_DEFINE_CONST_FUN_OBJ_1(engine_input_check_pressed_obj, engine_input_check_pressed);
 

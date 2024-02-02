@@ -38,6 +38,10 @@ void engine_input_sdl_update_pressed_mask(){
                 break;
             }
         }else if(event.type == SDL_KEYUP){
+            // Only get an event when keydown/keyup happens at that time. Can't
+            // sample its state all the time like rp3 port to see if currently
+            // pressed or not. Need to set bits manually on or off
+
             switch(event.key.keysym.sym){
                 case SDLK_w:        // DPAD UP
                     engine_input_pressed_buttons = engine_input_pressed_buttons & ~(BUTTON_DPAD_UP);
