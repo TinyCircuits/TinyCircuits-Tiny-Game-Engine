@@ -83,12 +83,32 @@ STATIC mp_obj_t circle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
         }
     }else{
         // https://stackoverflow.com/a/58629898
-        float angle_increment = acos(1 - 1/circle_radius);
+        float angle_increment = acosf(1 - 1/circle_radius) * 2.0f;   // Multiply by 2.0 since care about speed and not accuracy as much
 
-        for(float angle = 0; angle <= 360; angle += angle_increment){
-                float cx = circle_radius * cos(angle);
-                float cy = circle_radius * sin(angle);
-                engine_draw_pixel(circle_color, circle_rotated_x + cx, circle_rotated_y + cy);
+        for(float angle = 0; angle <= 90; angle += angle_increment){
+                float cx = circle_radius * cosf(angle);
+                float cy = circle_radius * sinf(angle);
+                
+                // Bottom right quadrant of the circle
+                int brx = circle_rotated_x+cx;
+                int bry = circle_rotated_y+cy;
+
+                // Bottom left quadrant of the circle
+                int blx = circle_rotated_x-cx;
+                int bly = circle_rotated_y+cy;
+
+                // Top right quadrant of the circle
+                int trx = circle_rotated_x+cx;
+                int try = circle_rotated_y-cy;
+
+                // Top left quadrant of the circle
+                int tlx = circle_rotated_x-cx;
+                int tly = circle_rotated_y-cy;
+
+                engine_draw_pixel(circle_color, brx, bry);
+                engine_draw_pixel(circle_color, blx, bly);
+                engine_draw_pixel(circle_color, trx, try);
+                engine_draw_pixel(circle_color, tlx, tly);
         }
     }
                                                

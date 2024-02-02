@@ -172,6 +172,7 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
     ATTR:   [type=float]                      [name=width]                      [value=any]
     ATTR:   [type=float]                      [name=height]                     [value=any]
     ATTR:   [type=int]                        [name=color]                      [value=any 16-bit RGB565 integer]
+    ATTR:   [type=float]                      [name=outline]                    [value=any 16-bit RGB565 integer]
 */
 STATIC void rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Rectangle2DNode attr");
