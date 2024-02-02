@@ -16,10 +16,10 @@
 STATIC mp_obj_t engine_set_physics_fps_limit(mp_obj_t fps_obj){
     ENGINE_INFO_PRINTF("EnginePhysics: Setting FPS Limit");
 
-    float fps = mp_obj_get_float(fps);
+    float fps = mp_obj_get_float(fps_obj);
 
     if(fps < 0){
-        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EnginePhysics: ERROR: Tried to set physics fps limit to negative number!"))
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EnginePhysics: ERROR: Tried to set physics fps limit to negative number!"));
     }
 
     engine_physics_fps_limit_period_ms = (1.0f / fps) * 1000.0f;

@@ -47,6 +47,8 @@ class MySprite(Sprite2DNode):
 
 
 circle = Circle2DNode()
+circle.outline = True
+circle.radius = 10
 rectangle = Rectangle2DNode()
 sprite = MySprite()
 polygon = Polygon2DNode()

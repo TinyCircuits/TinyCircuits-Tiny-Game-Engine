@@ -41,11 +41,15 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
           channel_object.play(source). Also need engine_audio.get_channel(). Add attributes
           to channel objects like 'loop', 'running', source, duration (seconds), etc.
 
+[] Outline drawing for rects, circles, and polygons, what about filled polygons?
+[] Add keyword arguments for all constructors
+[] Documentation: markdown to PDF
+[] Documentation: add callbacks for nodes to each
+[] Expose low level drawing functions through engine_draw
+[] Fix camera viewports not being taken into account
+
 [.] Physics: just polygons, rotation (simple init for common shapes), no friction. Need to figure out what to do when physics collision shape is rotated, cache normals?
 [] Physics: smooth: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-core-engine--gamedev-7493t#:~:text=Here%20is%20a%20full%20example%3A
-[] Outline drawing for rects, circles, and polygons?
-[] Static nodes/screen space
-[] Documentation: markdown to PDF
 [] Weird sprite jumping/offset during rotation and scaling
 [] Text
 [] UI

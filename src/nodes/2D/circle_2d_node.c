@@ -36,13 +36,14 @@ STATIC mp_obj_t circle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
     float camera_zoom = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_zoom));
 
     float circle_scale =  mp_obj_get_float(mp_load_attr(circle_node_base->attr_accessor, MP_QSTR_scale));
-    int16_t circle_radius =  (uint16_t)(mp_obj_get_float(mp_load_attr(circle_node_base->attr_accessor, MP_QSTR_radius)));
+    float circle_radius =  (mp_obj_get_float(mp_load_attr(circle_node_base->attr_accessor, MP_QSTR_radius)));
+    bool circle_outlined = mp_obj_get_int(mp_load_attr(circle_node_base->attr_accessor, MP_QSTR_outline));
 
     // The final circle radius to draw the circle at is a combination of
     // the set radius, times the set scale, times the set camera zoom
-    circle_radius = (int16_t)(circle_radius*circle_scale*camera_zoom);
+    circle_radius = (circle_radius*circle_scale*camera_zoom);
     
-    int16_t circle_radius_sqr = circle_radius * circle_radius;
+    float circle_radius_sqr = circle_radius * circle_radius;
     mp_int_t circle_color = mp_obj_get_int(mp_load_attr(circle_node_base->attr_accessor, MP_QSTR_color));
 
     float camera_resolved_hierarchy_x = 0.0f;
@@ -69,14 +70,25 @@ STATIC mp_obj_t circle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
     circle_rotated_x += camera_viewport->width/2;
     circle_rotated_y += camera_viewport->height/2;
 
-    // https://stackoverflow.com/a/59211338
-    for(int x=-circle_radius; x<circle_radius; x++){
-        int hh = (int)sqrt(circle_radius_sqr - x * x);
-        int rx = (int)circle_rotated_x + x;
-        int ph = (int)circle_rotated_y + hh;
+    if(circle_outlined == false){
+        // https://stackoverflow.com/a/59211338
+        for(int x=-circle_radius; x<(int)circle_radius; x++){
+            int hh = (int)sqrt(circle_radius_sqr - x * x);
+            int rx = (int)circle_rotated_x + x;
+            int ph = (int)circle_rotated_y + hh;
 
-        for(int y=(int)circle_rotated_y-hh; y<ph; y++){
-            engine_draw_pixel(circle_color, rx, y);
+            for(int y=(int)circle_rotated_y-hh; y<ph; y++){
+                engine_draw_pixel(circle_color, rx, y);
+            }
+        }
+    }else{
+        // https://stackoverflow.com/a/58629898
+        float angle_increment = acos(1 - 1/circle_radius);
+
+        for(float angle = 0; angle <= 360; angle += angle_increment){
+                float cx = circle_radius * cos(angle);
+                float cy = circle_radius * sin(angle);
+                engine_draw_pixel(circle_color, circle_rotated_x + cx, circle_rotated_y + cy);
         }
     }
                                                
@@ -116,6 +128,7 @@ mp_obj_t circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
         circle_2d_node->rotation = mp_obj_new_float(0.0f);
         circle_2d_node->color = mp_obj_new_int(0xffff);
         circle_2d_node->scale = mp_obj_new_float(1.0f);
+        circle_2d_node->outline = mp_obj_new_bool(false);
     }else if(n_args == 1){  // Inherited (use existing object)
         node_base->inherited = true;
         node_base->node = args[0];
@@ -142,6 +155,7 @@ mp_obj_t circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
         mp_store_attr(node_base->node, MP_QSTR_rotation, mp_obj_new_float(0.0f));
         mp_store_attr(node_base->node, MP_QSTR_color, mp_obj_new_int(0xffff));
         mp_store_attr(node_base->node, MP_QSTR_scale, mp_obj_new_float(1.0f));
+        mp_store_attr(node_base->node, MP_QSTR_outline, mp_obj_new_bool(false));
     }else{
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Too many arguments passed to Circle2DNode constructor!"));
     }
@@ -161,7 +175,8 @@ mp_obj_t circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
    ATTR: [type=float]               [name=radius]                      [value=any]                                             
    ATTR: [type=float]               [name=rotation]                    [value=any]                                             
    ATTR: [type=int]                 [name=color]                       [value=0 ~ 65535 (16-bit RGB565 0bRRRRRGGGGGGBBBBB)]    
-   ATTR: [type=float]               [name=scale]                       [value=any]                                             
+   ATTR: [type=float]               [name=scale]                       [value=any]           
+   ATTR: [type=bool]                [name=outline]                     [value=True or False]                                   
 */ 
 STATIC void circle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Circle2DNode attr");
@@ -208,6 +223,9 @@ STATIC void circle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
             case MP_QSTR_scale:
                 destination[0] = self->scale;
             break;
+            case MP_QSTR_outline:
+                destination[0] = self->outline;
+            break;
             default:
                 return; // Fail
         }
@@ -227,6 +245,9 @@ STATIC void circle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
             break;
             case MP_QSTR_scale:
                 self->scale = destination[1];
+            break;
+            case MP_QSTR_outline:
+                self->outline = destination[1];
             break;
             default:
                 return; // Fail

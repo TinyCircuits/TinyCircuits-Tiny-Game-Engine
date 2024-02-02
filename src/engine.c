@@ -33,7 +33,7 @@ STATIC mp_obj_t engine_set_fps_limit(mp_obj_t fps_obj){
     float fps = mp_obj_get_float(fps_obj);
     
     if(fps < 0){
-        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Engine: ERROR: Tried to set fps limit to negative value"))
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Engine: ERROR: Tried to set fps limit to negative value"));
     }
     
     engine_fps_limit_period_ms = (1.0f / fps) * 1000.0f;
@@ -114,7 +114,6 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_reset_obj, engine_reset);
    RETURN: None
 */
 STATIC mp_obj_t engine_start(){
-    engine_init();
     ENGINE_INFO_PRINTF("Engine loop starting...");
 
     is_engine_looping = true;
