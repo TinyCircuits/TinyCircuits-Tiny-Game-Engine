@@ -157,6 +157,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(physics_2d_node_class_del_obj, physics_2d_node_
     ATTR: [type=float]                                  [name=bounciness]               [value=any]
     ATTR: [type=boolean]                                [name=dynamic]                  [value=True or False]
     ATTR: [type={ref_link:Vector2}]                     [name=gravity_scale]            [value={ref_link:Vector2}]
+    OVRR: [type=function]                               [name={ref_link:tick}]          [value=function]
 */
 STATIC void physics_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Physics2DNode attr");

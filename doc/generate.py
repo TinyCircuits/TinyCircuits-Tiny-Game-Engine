@@ -2,10 +2,10 @@ import os
 import shutil
 import glob
 import codecs
-from generate_common import get_attr_or_param_name_type_value, get_docstring_properties, header_marker, name_marker, desc_marker, return_marker, attr_marker, param_marker
+from generate_common import get_attr_or_param_name_type_value, get_docstring_properties, header_marker, name_marker, desc_marker, return_marker, attr_marker, param_marker, ovrr_marker
 
 
-def create_fragment_html_file(path, name, desc, ret, attrs, params):
+def create_fragment_html_file(path, name, desc, ret, attrs, params, ovrrs):
     file = open('build/' + name + '.html', 'w')
 
     # Start HTML file
@@ -62,6 +62,17 @@ def create_fragment_html_file(path, name, desc, ret, attrs, params):
     
     if ret != None: file.write('<h><b>Return Value</b>: <code>' + ret + "</code></h><br>")
 
+    if ovrrs != None and len(ovrrs) != 0:
+        file.write("<b>Overrides</b>:" + "<br>")
+        for ovrr in ovrrs:
+            name, value, type = get_attr_or_param_name_type_value(ovrr)
+
+            if name == -1:
+                return -1
+
+            file.write("<h>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>" + name + "</code> [value: " + value + ", type: " + type + "]" + "</h><br>")
+    
+
     file.write("<br><h> file: " + path[3:] + "</h>")
 
     # End HTML file
@@ -89,6 +100,7 @@ def extract_markdown(path, file_contents:str):
         ret = get_docstring_properties(docstring, return_marker, False)
         attrs = get_docstring_properties(docstring, attr_marker, False)
         params = get_docstring_properties(docstring, param_marker, False)
+        ovrrs = get_docstring_properties(docstring, ovrr_marker, False)
         
         if desc != None:
             desc = desc[0]
@@ -100,7 +112,7 @@ def extract_markdown(path, file_contents:str):
             print("ERROR: No name in docstring (all docstrings are required to have a name): " + docstring)
             return -1
         
-        if create_fragment_html_file(path, name, desc, ret, attrs, params) == -1:
+        if create_fragment_html_file(path, name, desc, ret, attrs, params, ovrrs) == -1:
             return -1
 
         # Find the next docstring to make a markdown file out of

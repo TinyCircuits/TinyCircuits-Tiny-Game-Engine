@@ -10,6 +10,7 @@ desc_marker = "DESC: "
 return_marker = "RETURN: "
 param_marker = "PARAM: "
 attr_marker = "ATTR: "
+ovrr_marker = "OVRR: "
 
 
 def find_nearest_newline(str, start_index):

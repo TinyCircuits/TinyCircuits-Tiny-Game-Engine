@@ -5,6 +5,19 @@
 #include "math/vector3.h"
 
 
+/*  --- doc ---
+    NAME: tick
+    DESC: Overridable tick callback                                                                                                         
+    RETURN: None
+*/ 
+/*  --- doc ---
+    NAME: draw
+    DESC: Overridable draw callback 
+    PARAM: [type=Node] [name=camera] [value=one of the camera nodes in the scene]                                                                                                         
+    RETURN: None
+*/ 
+
+
 mp_obj_t node_base_del(mp_obj_t self_in){
     ENGINE_INFO_PRINTF("Node Base: Deleted (garbage collected, removing self from active engine objects)");
 

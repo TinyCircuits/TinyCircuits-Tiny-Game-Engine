@@ -226,6 +226,8 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
     ATTR:   [type=int]                        [name=frame_count_y]              [value=any positive integer]
     ATTR:   [type=int]                        [name=frame_current_x]            [value=any positive integer]
     ATTR:   [type=int]                        [name=frame_current_y]            [value=any positive integer]
+    OVRR:   [type=function]                   [name={ref_link:tick}]            [value=function]
+    OVRR:   [type=function]                   [name={ref_link:draw}]            [value=function]
 */
 STATIC void sprite_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Sprite2DNode attr");

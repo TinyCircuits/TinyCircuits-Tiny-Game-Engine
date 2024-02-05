@@ -217,7 +217,9 @@ mp_obj_t voxelspace_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
     ATTR:   [type={ref_link:Vector3}]         [name=rotation]                   [value={ref_link:Vector3}]
     ATTR:   [type={ref_link:TextureResource}] [name=texture]                    [value={ref_link:TextureResource}]
     ATTR:   [type={ref_link:TextureResource}] [name=heightmap]                  [value={ref_link:TextureResource}]
-    ATTR:   [type=float]                      [name=heigh_scale]                [value=any]
+    ATTR:   [type=float]                      [name=height_scale]               [value=any]
+    OVRR:   [type=function]                   [name={ref_link:tick}]            [value=function]
+    OVRR:   [type=function]                   [name={ref_link:draw}]            [value=function]
 */
 STATIC void voxelspace_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing VoxelSapceNode attr");

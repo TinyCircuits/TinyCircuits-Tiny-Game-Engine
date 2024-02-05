@@ -231,6 +231,8 @@ mp_obj_t polygon_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
     ATTR:   [type=list]                       [name=vertices]                   [value=list of {ref_link:Vector2}s]
     ATTR:   [type=float]                      [name=scale]                      [value=any (TODO: make this a Vector2?)]
     ATTR:   [type=boolean]                    [name=outline]                    [value=True or False]
+    OVRR:   [type=function]                   [name={ref_link:tick}]            [value=function]
+    OVRR:   [type=function]                   [name={ref_link:draw}]            [value=function]
 */
 STATIC void polygon_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Polygon2DNode attr");

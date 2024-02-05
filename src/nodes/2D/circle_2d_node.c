@@ -196,7 +196,9 @@ mp_obj_t circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
    ATTR: [type=float]               [name=rotation]                    [value=any]                                             
    ATTR: [type=int]                 [name=color]                       [value=0 ~ 65535 (16-bit RGB565 0bRRRRRGGGGGGBBBBB)]    
    ATTR: [type=float]               [name=scale]                       [value=any]           
-   ATTR: [type=bool]                [name=outline]                     [value=True or False]                                   
+   ATTR: [type=bool]                [name=outline]                     [value=True or False]     
+   OVRR: [type=function]            [name={ref_link:tick}]             [value=function]
+   OVRR: [type=function]            [name={ref_link:draw}]             [value=function]                              
 */ 
 STATIC void circle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Circle2DNode attr");

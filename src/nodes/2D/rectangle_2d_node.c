@@ -206,6 +206,8 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
     ATTR:   [type=float]                      [name=height]                     [value=any]
     ATTR:   [type=int]                        [name=color]                      [value=any 16-bit RGB565 integer]
     ATTR:   [type=bool]                       [name=outline]                    [value=True or False]
+    OVRR:   [type=function]                   [name={ref_link:tick}]            [value=function]
+    OVRR:   [type=function]                   [name={ref_link:draw}]            [value=function]
 */
 STATIC void rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Rectangle2DNode attr");
