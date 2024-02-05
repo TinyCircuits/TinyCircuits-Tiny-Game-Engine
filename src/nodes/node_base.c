@@ -132,6 +132,8 @@ void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, mp_obj
     *x = (float)child_node_base_position->x;
     *y = (float)child_node_base_position->y;
     mp_obj_t rotation_obj = mp_load_attr(child_node_base->attr_accessor, MP_QSTR_rotation);
+
+    // Use z-axis rotation for 2D rotations from 3D vectors
     if(mp_obj_is_type(rotation_obj, &vector3_class_type)){
         *rotation = ((vector3_class_obj_t*)rotation_obj)->z;
     }else{

@@ -12,7 +12,7 @@
 
 /*  --- doc ---
     NAME: engine_nodes
-    DESC: Module for drawing to the framebuffer
+    DESC: Module containing nodes that get drawn to the framebuffer. Each node also has a tick function that can be overridden to run code every game loop.
     ATTR: [type=object]   [name={ref_link:EmptyNode}]           [value=object] 
     ATTR: [type=object]   [name={ref_link:CameraNode}]          [value=object]
     ATTR: [type=object]   [name={ref_link:VoxelSpaceNode}]      [value=object]

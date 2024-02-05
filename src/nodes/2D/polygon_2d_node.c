@@ -43,6 +43,7 @@ STATIC mp_obj_t polygon_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
         float camera_zoom = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_zoom));
 
         // Get polygon scale and incorporate camera zoom
+        bool polygon_outlined = mp_obj_get_float(mp_load_attr(polygon_node_base->attr_accessor, MP_QSTR_outline));
         float polygon_scale = mp_obj_get_float(mp_load_attr(polygon_node_base->attr_accessor, MP_QSTR_scale));
         polygon_scale = polygon_scale * camera_zoom;
 
@@ -117,27 +118,31 @@ STATIC mp_obj_t polygon_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
         current_rotated_vertex_x += polygon_rotated_x;
         current_rotated_vertex_y += polygon_rotated_y;
 
-        for(uint16_t ivx=2; ivx<polygon_vertex_list->len; ivx++){
+        if(polygon_outlined == false){
+            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Polygon2DNode: ERROR: Filled rendering is not implemented yet, please set 'outline' to True"));
+        }else{
+            for(uint16_t ivx=2; ivx<polygon_vertex_list->len; ivx++){
+                engine_draw_line(polygon_color, last_rotated_vertex_x, last_rotated_vertex_y, current_rotated_vertex_x, current_rotated_vertex_y, camera_node);
+
+                // To avoid doing more rotations than needed, save the current to the last
+                last_rotated_vertex_x = current_rotated_vertex_x;
+                last_rotated_vertex_y = current_rotated_vertex_y;
+
+                current_rotated_vertex_x = ((vector2_class_obj_t*)polygon_vertex_list->items[ivx])->x;
+                current_rotated_vertex_y = ((vector2_class_obj_t*)polygon_vertex_list->items[ivx])->y;
+                // Scale the vertices away from the center
+                engine_math_scale_point(&current_rotated_vertex_x, &current_rotated_vertex_y, center_x, center_y, polygon_scale);
+
+                engine_math_rotate_point(&current_rotated_vertex_x, &current_rotated_vertex_y, center_x, center_y, polygon_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation);
+
+                // Incorporate the position of the node
+                current_rotated_vertex_x += polygon_rotated_x;
+                current_rotated_vertex_y += polygon_rotated_y;
+            }
+
             engine_draw_line(polygon_color, last_rotated_vertex_x, last_rotated_vertex_y, current_rotated_vertex_x, current_rotated_vertex_y, camera_node);
-
-            // To avoid doing more rotations than needed, save the current to the last
-            last_rotated_vertex_x = current_rotated_vertex_x;
-            last_rotated_vertex_y = current_rotated_vertex_y;
-
-            current_rotated_vertex_x = ((vector2_class_obj_t*)polygon_vertex_list->items[ivx])->x;
-            current_rotated_vertex_y = ((vector2_class_obj_t*)polygon_vertex_list->items[ivx])->y;
-            // Scale the vertices away from the center
-            engine_math_scale_point(&current_rotated_vertex_x, &current_rotated_vertex_y, center_x, center_y, polygon_scale);
-
-            engine_math_rotate_point(&current_rotated_vertex_x, &current_rotated_vertex_y, center_x, center_y, polygon_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation);
-
-            // Incorporate the position of the node
-            current_rotated_vertex_x += polygon_rotated_x;
-            current_rotated_vertex_y += polygon_rotated_y;
+            engine_draw_line(polygon_color, current_rotated_vertex_x, current_rotated_vertex_y, first_rotated_vertex_x, first_rotated_vertex_y, camera_node);
         }
-
-        engine_draw_line(polygon_color, last_rotated_vertex_x, last_rotated_vertex_y, current_rotated_vertex_x, current_rotated_vertex_y, camera_node);
-        engine_draw_line(polygon_color, current_rotated_vertex_x, current_rotated_vertex_y, first_rotated_vertex_x, first_rotated_vertex_y, camera_node);
     }
                                                
     return mp_const_none;
@@ -176,6 +181,7 @@ mp_obj_t polygon_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
         polygon_2d_node->rotation = mp_obj_new_float(0.0f);
         polygon_2d_node->vertices = mp_obj_new_list(0, NULL);
         polygon_2d_node->scale = mp_obj_new_float(1.0f);
+        polygon_2d_node->outline = mp_obj_new_bool(true);   // TODO: this should be false by default but don't have a filled renderer yet...
     }else if(n_args == 1){  // Inherited (use existing object)
         node_base->inherited = true;
         node_base->node = args[0];
@@ -202,6 +208,7 @@ mp_obj_t polygon_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
         mp_store_attr(node_base->node, MP_QSTR_rotation, mp_obj_new_float(0.0f));
         mp_store_attr(node_base->node, MP_QSTR_vertices, mp_obj_new_list(0, NULL));
         mp_store_attr(node_base->node, MP_QSTR_scale, mp_obj_new_float(1.0f));
+        mp_store_attr(node_base->node, MP_QSTR_outline, mp_obj_new_bool(true));
     }else{
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Too many arguments passed to Polygon2DNode constructor!"));
     }
@@ -223,6 +230,7 @@ mp_obj_t polygon_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
     ATTR:   [type={ref_link:Vector3}]         [name=rotation]                   [value={ref_link:Vector3}]
     ATTR:   [type=list]                       [name=vertices]                   [value=list of {ref_link:Vector2}s]
     ATTR:   [type=float]                      [name=scale]                      [value=any (TODO: make this a Vector2?)]
+    ATTR:   [type=boolean]                    [name=outline]                    [value=True or False]
 */
 STATIC void polygon_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Polygon2DNode attr");
@@ -269,6 +277,9 @@ STATIC void polygon_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
             case MP_QSTR_scale:
                 destination[0] = self->scale;
             break;
+            case MP_QSTR_outline:
+                destination[0] = self->outline;
+            break;
             default:
                 return; // Fail
         }
@@ -288,6 +299,9 @@ STATIC void polygon_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
             break;
             case MP_QSTR_scale:
                 self->scale = destination[1];
+            break;
+            case MP_QSTR_outline:
+                self->outline = destination[1];
             break;
             default:
                 return; // Fail

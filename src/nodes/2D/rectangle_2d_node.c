@@ -35,7 +35,7 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_n
     uint16_t rectangle_width = mp_obj_get_int(mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_width));
     uint16_t rectangle_height = mp_obj_get_int(mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_height));
     uint16_t rectangle_color = mp_obj_get_int(mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_color));
-    uint16_t rectangle_outlined = mp_obj_get_int(mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_outline));
+    bool rectangle_outlined = mp_obj_get_int(mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_outline));
 
     vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
     vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);

@@ -14,7 +14,8 @@ attr_marker = "ATTR: "
 
 def find_nearest_newline(str, start_index):
     index_lf = str.find('\n', start_index)
-    return index_lf
+    index_br = str.find('<br>', start_index)
+    return max(index_lf, index_br)
 
 
 def get_docstring_properties(docstring, marker, required=True):

@@ -29,7 +29,7 @@ void engine_input_update_pressed_buttons(){
 
 /*  --- doc ---
     NAME: check_pressed
-    DESC: Module for checking the button presses
+    DESC: For checking button presses
     PARAM: [type=int]   [name=button_mask]  [value=single or OR'ed together enum/ints (e.g. 'engine_input.A | engine_input.B')]
     RETURN: None
 */ 
@@ -45,7 +45,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_input_check_pressed_obj, engine_input_check_pre
 
 /*  --- doc ---
     NAME: engine_input
-    DESC: Module for checking the button presses
+    DESC: Module for checking button presses
     ATTR: [type=function]   [name={ref_link:check_pressed}]  [value=function] 
     ATTR: [type=enum/int]   [name=A]                         [value=0b0000000000000001]
     ATTR: [type=enum/int]   [name=B]                         [value=0b0000000000000010]

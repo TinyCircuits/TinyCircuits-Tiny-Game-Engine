@@ -30,14 +30,14 @@ for path in paths:
 
             # Need to check if the ref_link is a function, if
             # so, need return type and parameters with types too
-            fragment_path = "build/" + link_name + ".md"
+            fragment_path = "build/" + link_name + ".html"
             if os.path.isfile(fragment_path):
                 file_fragment = codecs.open(fragment_path, 'r', 'utf-8', errors='replace')
                 file_fragments_content = file_fragment.read()
                 file_fragment.close()
 
                 # If there is a return value, then must be a function
-                ret = get_docstring_properties(file_fragments_content, "**Return Value**: ", False)
+                ret = get_docstring_properties(file_fragments_content, "<b>Return Value</b>: ", False)
                 if ret != None:
                     link_name = file_fragments_content[0:find_nearest_newline(file_fragments_content, 0)]
                     link_name = link_name.replace("\r", "")
@@ -46,7 +46,8 @@ for path in paths:
                 print("ERROR: Looking for fragment: " + fragment_path + " from " + path)
                 raise "ERROR: Could not find fragment"
 
-            link_contents = "[" + link_name + "]" + "(" + link_dest  + ".md)" + link_after
+            # link_contents = "[" + link_name + "]" + "(" + link_dest  + ".html)" + link_after
+            link_contents = "<a href=\"" + link_dest + ".html\">" + link_name + "</a>" + link_after
             file_contents = file_contents.replace(file_contents[last_ref_link_index:link_end_index+1], link_contents)
 
             last_ref_link_index += len(ref_link)
@@ -55,5 +56,7 @@ for path in paths:
         file.close()
 
         file = codecs.open(path, 'w', 'utf-8', errors='replace')
+        
         file.write(file_contents)
+        file.write("<br><br><a href=\"../landing.html\">landing</a>")
         file.close()

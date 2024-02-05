@@ -284,7 +284,7 @@ void engine_audio_setup(){
     PARAM: [type=object]    [name=sound_resource] [value={ref_link:WaveSoundResource}]
     PARAM: [type=int]       [name=channel_index]  [value=0 ~ 3]                                                          
     PARAM: [type=boolean]   [name=loop]           [value=True or False]                                                  
-    RETURN: ref_link:AudioChannel
+    RETURN: {ref_link:AudioChannel}
 */ 
 STATIC mp_obj_t engine_audio_play(mp_obj_t sound_resource_obj, mp_obj_t channel_index_obj, mp_obj_t loop_obj){
     // Should probably make sure this doesn't interfere with DMA or interrupt: TODO

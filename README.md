@@ -30,6 +30,7 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Camera zoom: add zoom parameter to camera and apply it to all draw nodes: circles, rectangles, sprites, and polygons.
                 this will mean that as the camera zooms in, all nodes get larger but also "further" away as they are drawn
 [X] Figure out inversion and stop at camera zoom 0.5 and below (doesn't occur camera is a child of another object)
+[X] Add scale to polygon2dnode
 [X] Make camera render items centered at 0,0 so that inheritance is easier
 [X] Make camera 0,0 render centered at 0,0
 [X] Reimplement __del__ for cameras, physics nodes, and engine nodes (was handled) (eventually GUI nodes too) to delete themselves from their respective linked lists: added custom __del__ for physics and camera nodes
@@ -40,14 +41,22 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
           like engine_audio.play(source, channel_number) <- returns channel object and also
           channel_object.play(source). Also need engine_audio.get_channel(). Add attributes
           to channel objects like 'loop', 'running', source, duration (seconds), etc.
+[X] In all node drawing code, allow camera to be a child of any node
+[X] Add way to look into sprite data on flash to get pixels when needed. Sprite/texture data should be read from flash since not enough ram to store lots of RGB565 bitmaps in SRAM. Instead of dedicating a portion of flash to aligned texture/sprite data, make a fast_file module that uses lfs/unix read that will be used to load up 32x32 portions of sprites. Sprite files will be data aligned into grids (this doesn't work for fonts though...). Tested 100 x 32x32 sprite 2d node drawing at 40ms game loop, that should be fast enough.
+[X] Outline drawing for rects, circles, and polygons
+[X] Add outline parameter to Polygon2DNode but make it default to outline and not draw + error if set to true
+[] Add Line2DNode that draws a rectangle between two points, Allow filled and outline modes
 
-[] Outline drawing for rects, circles, and polygons, what about filled polygons?
 [] Add keyword arguments for all constructors
-[] Documentation: markdown to PDF
+[] Documentation: markdown to HTML
 [] Documentation: add callbacks for nodes to each
 [] Expose low level drawing functions through engine_draw
-[] Fix camera viewports not being taken into account
-
+[] Fix camera view ports not being taken into account when drawing. Defines offset and then clip. Need to think about how view ports should really work, offset and clip into destination buffer (camera destinations should be able to be set to other buffers other than screen buffer if want to render one camera to a texture and then the next camera renders that node with that texture (TV!))
+[] Filled polygons
+[] Basic culling per node that can be drawn. Two things can be done here
+   1. Each node has a bounding box (scaled by node scale and camera zoom), quickly check if that box at all overlaps the camera view before doing the draw algorithm. This doesn't have to be perfect, if the node still gets drawn if close to the camera, that's alright, same for if the node is very big and that technically blank area overlaps the camera view. This will lead to a small performance penalty for games that always draw in bounds, but it provides a much higher flexibility of games to have the culling handled for them
+   2. For each drawing algorithm we currently have per-pixel checks for bounds, if the algorithms drawing bounds could quickly be cropped that would be perfect, very very hard though..
+[] Have some way to generate typical polygon shapes like rectangle and hexagon without using decomposing PolygonCollisionShape2D classes
 [.] Physics: just polygons, rotation (simple init for common shapes), no friction. Need to figure out what to do when physics collision shape is rotated, cache normals?
 [] Physics: smooth: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-core-engine--gamedev-7493t#:~:text=Here%20is%20a%20full%20example%3A
 [] Weird sprite jumping/offset during rotation and scaling
@@ -55,10 +64,10 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [] UI
 [] Reset
 [] Performance, we'll see how it goes
-[] In all node drawing code, allow camera to be a child of any node
 [] Allow for audio sources to play at different sample rates. This will mean
    knowing where we are in the time of the file and interpolating between samples
    if not exactly on a sample
+[] Round end caps for Line2DNode
 
 Game ideas
 [] ATV Gameboy game
@@ -92,7 +101,6 @@ Game ideas
 [] Use voxelspace rotation to render the node? Might be too slow to do that for little gain
 [] Make voxelspace camera rotation->z correspond to line drawn at angle in radians. Make camera rotation->x correspond to radians (hard one)
 [] Add collision points to collision callback for polygon vs. polygon: https://dyn4j.org/2011/11/contact-points-using-clipping/
-[] Add scale to polygon2dnode
 [] Add outline and fill to each primitive
 [] Change node/math class prints to white with no newline and always forced
 [] Need to make sure collision normals are correct. Seem to be the same for both objects sometimes (circle vs circle).
@@ -104,7 +112,6 @@ Game ideas
 
 [] Should a flag be set in sprite2dnode to enable transparency? Or just use special color 0b0000100000100001?
 [] VoxelSapce could be rendered faster and need to incorporate node parameters like position and rotation. Implement pixel transformer callbacks
-[] Add way to look into sprite data on flash to get pixels when needed. Sprite/texture data should be read from flash since not enough ram to store lots of RGB565 bitmaps in SRAM. Instead of dedicating a portion of flash to aligned texture/sprite data, make a fast_file module that uses lfs/unix read that will be used to load up 32x32 portions of sprites. Sprite files will be data aligned into grids (this doesn't work for fonts though...). Tested 100 x 32x32 sprite 2d node drawing at 40ms game loop, that should be fast enough.
 [.] Make child nodes rotate and be positioned correctly about parent (what about scale?)(need to handle all types when getting position and rotation since not all have those and some have 3D structures)
 [] Implement PhysicsShapes that are used by Physics2dNodes to define size and shape of collision box/polygon/circle
 [.] Figure out how to clear all linked lists at game startup, game end (engine.stop(), so repl is clean), and when wanted on the repl (engine.stop()). Added engine.stop and reset but still need to figure out game start and back to repl
@@ -115,20 +122,12 @@ Game ideas
 [] Look into MICROPY_MODULE_ATTR_DELEGATION
 [] To avoid mp_load_attr calls, at the start of the game loop collect all node attributes into some local structure then load the local structure back into the Micropython object (only really matters if inherited because of weird MicroPython attr storage for that case)
 [] Add options to give names to each node and then get nodes by name (gives list of nodes if more than one have the same name)
-[] Text/font (maybe scalable but scaled to bitmap/file in flash and then streamed after scale changed once (will need a text resource to act as a ledger))
-[] Sound/music
-[] Line segment 2d node with bezier curve drawer option as for stroke/pen with collision
 [] Main menu and utility scalable UI elements with element traversal based on inputs with UI is active (make best guess on next element to go to based on position). Good for consistency
 [] Saving games
-[] Outline and filled polygon renderer (textured too?)
 [] Grid renderer (with offset and cell scale)
-[] Vector renderer? For all shapes?
 [] Game format?
 [] Fast sin/cos/tan lookups to replace math functions (only need to be fast, not accurate)
 [] Tests for different configurations of child/parent relations (physics objects colliding with child physics objects, cameras are children of nodes, empty nodes without positions, etc.)
-[] Add outline flag to draw primitives such as Circle2DNode, Rectangle2DNode, Oval2DNode (future, slower), Polygon2DNode (future, slow), etc
-[] Add better draw line function that completes line fully
 [] Particle node that keeps track of a bunch of different particles and allows users to define velocity, direction, and duration
 [] If we went back to PIO DMA for SPI to the screen, could we do per-pixel operations are they are being sent out? Would PIO be flexible enough to support a very very simple shading language (most for changing pixel based on screen position)
 [] Listen to serial for commands like button inputs or stop
-[] When a child is being added, make sure that child doesn't already have a parent!

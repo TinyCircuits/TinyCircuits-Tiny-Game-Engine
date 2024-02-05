@@ -112,7 +112,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(camera_node_class_del_obj, camera_node_class_de
 
 /*  --- doc ---
     NAME: CameraNode
-    DESC: Node that is affected by physics. Usually other nodes are added as children to this node
+    DESC: Node that defines the perspective the scene is draw at. There can be multiple but this will impact performance if rendering the same scene twice. To make other nodes not move when the camera moves, make the other nodes children of the camera.
     ATTR: [type=function]                       [name={ref_link:add_child}]     [value=function] 
     ATTR: [type=function]                       [name={ref_link:remove_child}]  [value=function]
     ATTR: [type=function]                       [name={ref_link:set_layer}]     [value=function]

@@ -10,6 +10,7 @@ typedef struct{
     mp_obj_t rotation;  // polygon rotation in radians
     mp_obj_t vertices;  // List of vertices
     mp_obj_t scale;     // float: how much to scale up the polygon (uses average postion of verts for origin)
+    mp_obj_t outline;   // bool: draw outlined if True (default), otherwise filled (TODO: implement filled, hard...)
 }engine_polygon_2d_node_class_obj_t;
 
 typedef struct{

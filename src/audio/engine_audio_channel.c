@@ -109,8 +109,13 @@ MP_DEFINE_CONST_FUN_OBJ_1(audio_channel_stop_obj, audio_channel_stop);
 
 /*  --- doc ---
     NAME: AudioChannel
-    DESC: Object for controller audio on one of the 4 available channels
+    DESC: Object for controlling audio on one of the 4 available channels
     ATTR: [type=function]   [name={ref_link:stop}]          [value=function]
+    ATTR: [type=object]     [name=source]                   [value={ref_link:WaveSoundResource}]
+    ATTR: [type=float]      [name=gain]                     [value=any (default is 1.0)]
+    ATTR: [type=float]      [name=time]                     [value=0.0 to end of sound (read-only)]
+    ATTR: [type=boolean]    [name=loop]                     [value=True or False (whether to loop audio or not)]
+    ATTR: [type=boolean]    [name=done]                     [value=True or False (set True when audio finishes playing if not looping, read-only)]
 */ 
 STATIC void audio_channel_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing AudioChannel attr");

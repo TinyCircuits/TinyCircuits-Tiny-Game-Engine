@@ -5,10 +5,23 @@ import codecs
 from generate_common import get_attr_or_param_name_type_value, get_docstring_properties, header_marker, name_marker, desc_marker, return_marker, attr_marker, param_marker
 
 
-def create_fragment_markdown_file(name, desc, ret, attrs, params):
-    file = open('build/' + name + '.md', 'w')
+def create_fragment_html_file(path, name, desc, ret, attrs, params):
+    file = open('build/' + name + '.html', 'w')
 
-    file.write("**" + name + "(")
+    # Start HTML file
+    file.write("<!DOCTYPE html>")
+    file.write("<html>")
+
+    file.write("<style>")
+    file.write("b{color:white; line-height: 1.8}")
+    file.write("h{color:white; line-height: 1.8}")
+    file.write("code{color:white; line-height: 1.8}")
+    file.write("a{color:lightblue; line-height: 1.8}")
+    file.write("</style>")
+
+    file.write("<body style=background-color:black>")
+
+    file.write("<code><b>" + name + "(")
     if params != None and len(params) != 0:
         for i in range(len(params)):
             name, value, type = get_attr_or_param_name_type_value(params[i])
@@ -20,22 +33,22 @@ def create_fragment_markdown_file(name, desc, ret, attrs, params):
                 file.write(name + ", ")
             else:
                 file.write(name)
-    file.write(")**\r\n")
+    file.write(")</b></code><br>")
 
-    file.write('&nbsp;&nbsp;&nbsp;' + desc + "\r\n")
+    file.write('<h>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + desc + "</h><br>")
     
     if params != None and len(params) != 0:
-        file.write("**Parameters**:" + "\r\n")
+        file.write("<b>Parameters</b>:" + "<br>")
         for param in params:
             name, value, type = get_attr_or_param_name_type_value(param)
 
             if name == -1:
                 return -1
 
-            file.write("&nbsp;&nbsp;&nbsp;" + name + " [values: " + value + "]" + "\r\n")
+            file.write("<h>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>" + name + "</code> [value: " + value + ", type: " + type + "]" + "</h><br>")
 
     if attrs != None and len(attrs) != 0:
-        file.write("**Attributes**:" + "\r\n")
+        file.write("<b>Attributes</b>:" + "<br>")
         for attr in attrs:
             name, value, type = get_attr_or_param_name_type_value(attr)
 
@@ -43,16 +56,21 @@ def create_fragment_markdown_file(name, desc, ret, attrs, params):
                 return -1
 
             if type.find("function") != -1:
-                file.write("&nbsp;&nbsp;&nbsp;" + name + "\r\n")
+                file.write("<h>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>" + name + "</code></h><br>")
             else:
-                file.write("&nbsp;&nbsp;&nbsp;" + name + " [values: " + value + "]" + "\r\n")
+                file.write("<h>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>" + name + "</code> [value: " + value + ", type: " + type + "]" + "</h><br>")
     
-    if ret != None: file.write('**Return Value**: ' + ret + "\r\n")
+    if ret != None: file.write('<h><b>Return Value</b>: <code>' + ret + "</code></h><br>")
 
+    file.write("<br><h> file: " + path[3:] + "</h>")
+
+    # End HTML file
+    file.write("</body>")
+    file.write("</html>")
     file.close()
 
 
-def extract_markdown(file_contents:str):
+def extract_markdown(path, file_contents:str):
     # Look for any docstrings that may exist
     last_index = 0
     last_index = file_contents.find(header_marker)
@@ -82,7 +100,7 @@ def extract_markdown(file_contents:str):
             print("ERROR: No name in docstring (all docstrings are required to have a name): " + docstring)
             return -1
         
-        if create_fragment_markdown_file(name, desc, ret, attrs, params) == -1:
+        if create_fragment_html_file(path, name, desc, ret, attrs, params) == -1:
             return -1
 
         # Find the next docstring to make a markdown file out of
@@ -110,7 +128,7 @@ for path in paths:
         file_contents = file.read()
         file.close()
 
-        if extract_markdown(file_contents) == -1:
+        if extract_markdown(path, file_contents) == -1:
             print("ERROR occurred in file: '" + path + "'")
             exit()
 

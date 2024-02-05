@@ -59,6 +59,7 @@ polygon.vertices.append(Vector2(-10, 10))
 polygon.vertices.append(Vector2(10, 10))
 polygon.vertices.append(Vector2(10, -10))
 polygon.vertices.append(Vector2(-10, -10))
+polygon.outline = True
 
 circle.color = 0b1111100000000000
 rectangle.color = 0b1111101001001001

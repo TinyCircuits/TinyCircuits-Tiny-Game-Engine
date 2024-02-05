@@ -29,6 +29,12 @@ bool engine_math_compare_floats(float value0, float value1){
 }
 
 
+// https://stackoverflow.com/a/2339510
+float engine_math_angle_between(float px0, float py0, float px1, float py1){
+    return atan2f(py0 - py1, px0 - px1);
+}
+
+
 // https://stackoverflow.com/a/22491252
 void engine_math_rotate_point(float *px, float *py, float cx, float cy, float angle_radians){
     float x_centered = *px - cx;
