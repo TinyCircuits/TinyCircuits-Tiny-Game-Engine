@@ -114,6 +114,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(camera_node_class_del_obj, camera_node_class_de
     NAME: CameraNode
     DESC: Node that defines the perspective the scene is draw at. There can be multiple but this will impact performance if rendering the same scene twice. To make other nodes not move when the camera moves, make the other nodes children of the camera.
     ATTR: [type=function]                       [name={ref_link:add_child}]     [value=function] 
+    ATTR: [type=function]                       [name={ref_link:get_child}]     [value=function] 
     ATTR: [type=function]                       [name={ref_link:remove_child}]  [value=function]
     ATTR: [type=function]                       [name={ref_link:set_layer}]     [value=function]
     ATTR: [type=function]                       [name={ref_link:get_layer}]     [value=function]
@@ -139,6 +140,10 @@ STATIC void camera_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *d
             break;
             case MP_QSTR_add_child:
                 destination[0] = MP_OBJ_FROM_PTR(&node_base_add_child_obj);
+                destination[1] = self_in;
+            break;
+            case MP_QSTR_get_child:
+                destination[0] = MP_OBJ_FROM_PTR(&node_base_get_child_obj);
                 destination[1] = self_in;
             break;
             case MP_QSTR_remove_child:

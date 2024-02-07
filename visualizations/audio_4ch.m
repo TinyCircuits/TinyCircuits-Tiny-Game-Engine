@@ -26,7 +26,7 @@
 
 % sine lookup table generation
 global lookup_table_size;
-lookup_table_size = 1024;
+lookup_table_size = 64;
 
 lookup_table_bits = 16
 lookup_table_max_fixed_point_amplitude = (((2^lookup_table_bits))/2)-1
@@ -89,7 +89,7 @@ dt = 1/fs;
 x = 0:dt:1;
 
 A = (0.5 + 0.5 * fast_sin(2 * pi * 200 .* x) / lookup_table_max_fixed_point_amplitude);
-B = (0.5 + 0.5 * fast_sin(2 * pi * 13000 .* x) / lookup_table_max_fixed_point_amplitude) * 0.0;
+B = (0.5 + 0.5 * fast_sin(2 * pi * 1300 .* x) / lookup_table_max_fixed_point_amplitude);
 
 y = A + B - (A.*B);
 

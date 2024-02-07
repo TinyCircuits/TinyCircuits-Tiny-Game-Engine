@@ -220,7 +220,8 @@ mp_obj_t polygon_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
 /*  --- doc ---
     NAME: Polygon2DNode
     DESC: Node for drawing, currently, outlined polygons (TODO: filled) given a list of vertices
-    ATTR:   [type=function]                   [name={ref_link:add_child}]       [value=function] 
+    ATTR:   [type=function]                   [name={ref_link:add_child}]       [value=function]
+    ATTR:   [type=function]                   [name={ref_link:get_child}]       [value=function] 
     ATTR:   [type=function]                   [name={ref_link:remove_child}]    [value=function]
     ATTR:   [type=function]                   [name={ref_link:set_layer}]       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_layer}]       [value=function]
@@ -247,6 +248,10 @@ STATIC void polygon_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
             break;
             case MP_QSTR_add_child:
                 destination[0] = MP_OBJ_FROM_PTR(&node_base_add_child_obj);
+                destination[1] = self_in;
+            break;
+            case MP_QSTR_get_child:
+                destination[0] = MP_OBJ_FROM_PTR(&node_base_get_child_obj);
                 destination[1] = self_in;
             break;
             case MP_QSTR_remove_child:

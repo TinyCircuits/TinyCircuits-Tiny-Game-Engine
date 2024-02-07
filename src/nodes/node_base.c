@@ -83,6 +83,34 @@ mp_obj_t node_base_add_child(mp_obj_t self_parent_in, mp_obj_t child_in){
 
 
 /*  --- doc ---
+    NAME: get_child
+    DESC: Gets child
+    PARAM: [type=int] [name=index] [value=any positive integer]                                                                                                        
+    RETURN: None
+*/ 
+mp_obj_t node_base_get_child(mp_obj_t self_parent_in, mp_obj_t index_obj){
+    ENGINE_INFO_PRINTF("Node Base: Getting child...");
+
+    engine_node_base_t *parent_node_base = self_parent_in;
+    uint16_t child_index = mp_obj_get_int(index_obj);
+
+    uint16_t current_index = 0;
+    linked_list_node *current_child_node = parent_node_base->children_node_bases.start;
+    while(current_index < child_index){
+        current_index++;
+
+        if(current_child_node->next == NULL){
+            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: Tried to access a child node out of bounds!"));
+        }
+
+        current_child_node = current_child_node->next;
+    }
+
+    return current_child_node->object;
+}
+
+
+/*  --- doc ---
     NAME: remove_child
     DESC: Removes child from the node this is being called on
     PARAM: [type=Node] [name=child] [value=any node]                                                                                                        

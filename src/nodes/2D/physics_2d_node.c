@@ -143,7 +143,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(physics_2d_node_class_del_obj, physics_2d_node_
 /*  --- doc ---
     NAME: Physics2DNode
     DESC: Node that is affected by physics. Usually other nodes are added as children to this node
-    ATTR: [type=function]                               [name={ref_link:add_child}]     [value=function] 
+    ATTR: [type=function]                               [name={ref_link:add_child}]     [value=function]
+    ATTR: [type=function]                               [name={ref_link:get_child}]     [value=function] 
     ATTR: [type=function]                               [name={ref_link:remove_child}]  [value=function]
     ATTR: [type=function]                               [name={ref_link:set_layer}]     [value=function]
     ATTR: [type=function]                               [name={ref_link:get_layer}]     [value=function]
@@ -172,6 +173,10 @@ STATIC void physics_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
             break;
             case MP_QSTR_add_child:
                 destination[0] = MP_OBJ_FROM_PTR(&node_base_add_child_obj);
+                destination[1] = self_in;
+            break;
+            case MP_QSTR_get_child:
+                destination[0] = MP_OBJ_FROM_PTR(&node_base_get_child_obj);
                 destination[1] = self_in;
             break;
             case MP_QSTR_remove_child:

@@ -45,11 +45,13 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Add way to look into sprite data on flash to get pixels when needed. Sprite/texture data should be read from flash since not enough ram to store lots of RGB565 bitmaps in SRAM. Instead of dedicating a portion of flash to aligned texture/sprite data, make a fast_file module that uses lfs/unix read that will be used to load up 32x32 portions of sprites. Sprite files will be data aligned into grids (this doesn't work for fonts though...). Tested 100 x 32x32 sprite 2d node drawing at 40ms game loop, that should be fast enough.
 [X] Outline drawing for rects, circles, and polygons
 [X] Add outline parameter to Polygon2DNode but make it default to outline and not draw + error if set to true
-[] Add Line2DNode that draws a rectangle between two points, Allow filled and outline modes
+[X] Documentation: markdown to HTML
+[X] Documentation: add callbacks for nodes to each
 
+[] Add get_child to each node that gets children based on index and errors if out of bounds
+[] Fix Circle2DNode being drawn at different scales
+[.] Add Line2DNode that draws a rectangle between two points, Allow filled and outline modes
 [] Add keyword arguments for all constructors
-[] Documentation: markdown to HTML
-[] Documentation: add callbacks for nodes to each
 [] Expose low level drawing functions through engine_draw
 [] Fix camera view ports not being taken into account when drawing. Defines offset and then clip. Need to think about how view ports should really work, offset and clip into destination buffer (camera destinations should be able to be set to other buffers other than screen buffer if want to render one camera to a texture and then the next camera renders that node with that texture (TV!))
 [] Filled polygons

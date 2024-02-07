@@ -31,6 +31,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(node_base_del_obj, node_base_del);
 mp_obj_t node_base_add_child(mp_obj_t self_parent_in, mp_obj_t child_in);
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(node_base_add_child_obj, node_base_add_child);
 
+mp_obj_t node_base_get_child(mp_obj_t self_parent_in, mp_obj_t index_obj);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(node_base_get_child_obj, node_base_get_child);
+
 mp_obj_t node_base_remove_child(mp_obj_t self_parent_in, mp_obj_t child_in);
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(node_base_remove_child_obj, node_base_remove_child);
 

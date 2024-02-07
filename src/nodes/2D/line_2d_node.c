@@ -115,7 +115,8 @@ mp_obj_t line_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
 /*  --- doc ---
     NAME: Line2DNode
     DESC: Simple 2D rectangle node (DO NOT USE: not fully implemented yet)
-    ATTR:   [type=function]                   [name={ref_link:add_child}]       [value=function] 
+    ATTR:   [type=function]                   [name={ref_link:add_child}]       [value=function]
+    ATTR:   [type=function]                   [name={ref_link:get_child}]       [value=function] 
     ATTR:   [type=function]                   [name={ref_link:remove_child}]    [value=function]
     ATTR:   [type=function]                   [name={ref_link:set_layer}]       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_layer}]       [value=function]
@@ -141,6 +142,10 @@ STATIC void line_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *
             break;
             case MP_QSTR_add_child:
                 destination[0] = MP_OBJ_FROM_PTR(&node_base_add_child_obj);
+                destination[1] = self_in;
+            break;
+            case MP_QSTR_get_child:
+                destination[0] = MP_OBJ_FROM_PTR(&node_base_get_child_obj);
                 destination[1] = self_in;
             break;
             case MP_QSTR_remove_child:
