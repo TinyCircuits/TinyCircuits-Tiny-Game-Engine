@@ -12,7 +12,7 @@ import math
 import gc
 
 # engine_debug.enable_all()
-# engine_debug.enable_setting(engine_debug.performance)
+engine_debug.enable_setting(engine_debug.performance)
 
 
 pool_ball_radius = 2.25 / 2
@@ -28,7 +28,7 @@ class PlayBall(Circle2DNode):
         # Due to MicroPython limitations, cannot use keyword arguments in direct call to __init__
         # https://github.com/orgs/micropython/discussions/10236#discussioncomment-4415329
         # https://github.com/micropython/micropython/blob/2bdaa1bedede63ee2380aa5de67802cb5d2cfcd1/py/objtype.c#L91
-        super().__init__(self, pos, radius, engine_draw.white, True)
+        super().__init__(self, pos, radius, engine_draw.white, outline)
         self.hitting = False
     
     def tick(self):
@@ -80,5 +80,6 @@ pool_stick.color = engine_draw.brown
 white_ball = PlayBall(Vector2(0, pool_table.height/2 * (2/3)), pool_ball_radius, True)
 white_ball.add_child(pool_stick)
 white_ball.add_child(camera)
+print(white_ball.radius)
 
 engine.start()

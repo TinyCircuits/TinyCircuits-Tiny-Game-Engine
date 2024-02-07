@@ -84,5 +84,5 @@ camera.position.x = 175
 camera.position.y = 200
 camera.position.z = 175
 camera.view_distance = 350
-camera.fov = 70 * (math.pi/180)
+camera.fov = 90 * (math.pi/180)
 engine.start()

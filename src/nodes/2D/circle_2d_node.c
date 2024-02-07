@@ -83,11 +83,12 @@ STATIC mp_obj_t circle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
         }
     }else{
         // https://stackoverflow.com/a/58629898
-        float angle_increment = acosf(1 - 1/circle_radius) * 2.0f;   // Multiply by 2.0 since care about speed and not accuracy as much
+        float distance = circle_radius / 2.0f;
+        float angle_increment = acosf(1 - 1/distance) * 2.0f;   // Multiply by 2.0 since care about speed and not accuracy as much
 
         for(float angle = 0; angle <= 90; angle += angle_increment){
-                float cx = circle_radius * cosf(angle);
-                float cy = circle_radius * sinf(angle);
+                float cx = distance * cosf(angle);
+                float cy = distance * sinf(angle);
                 
                 // Bottom right quadrant of the circle
                 int brx = circle_rotated_x+cx;
