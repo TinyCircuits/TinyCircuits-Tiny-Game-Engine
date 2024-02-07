@@ -11,8 +11,6 @@ import math
 import os
 import time
 
-engine_debug.debug_enable_setting(engine_debug.debug_setting_performance)
-
 
 engine_draw.set_background_color(engine_draw.skyblue)
 
@@ -20,7 +18,7 @@ engine_draw.set_background_color(engine_draw.skyblue)
 C18W = TextureResource("pool_table.bmp", True)
 D18 = TextureResource("pool_table_height.bmp", True)
 
-vox = VoxelSpaceNode(C18W, D18)
+vox = VoxelSpaceNode(texture=C18W, heightmap=D18)
 vox.position.x = 200
 vox.position.y = -50
 vox.height_scale = 40
@@ -48,33 +46,33 @@ class MyCam(CameraNode):
         self.position.z += math.sin(self.rotation.y+(math.pi/2)) * self.distance
 
     def tick(self):
-        if engine_input.is_bumper_right_pressed():
+        if engine_input.check_pressed(engine_input.BUMPER_RIGHT):
             self.rotation.y += 0.005
-        if engine_input.is_bumper_left_pressed():
+        if engine_input.check_pressed(engine_input.BUMPER_LEFT):
             self.rotation.y -= 0.005
     
 
-        if engine_input.is_dpad_up_pressed():
+        if engine_input.check_pressed(engine_input.DPAD_UP):
             self.forward()
-        if engine_input.is_dpad_down_pressed():
+        if engine_input.check_pressed(engine_input.DPAD_DOWN):
             self.backward()
-        if engine_input.is_dpad_left_pressed():
+        if engine_input.check_pressed(engine_input.DPAD_LEFT):
             self.left()
-        if engine_input.is_dpad_right_pressed():
+        if engine_input.check_pressed(engine_input.DPAD_RIGHT):
             self.right()
         
-        if engine_input.is_a_pressed():
+        if engine_input.check_pressed(engine_input.A):
             if self.mode == 0:
                 self.position.y -= 1
             else:
                 self.rotation.x -= 0.5
-        if engine_input.is_b_pressed():
+        if engine_input.check_pressed(engine_input.B):
             if self.mode == 0:
                 self.position.y += 1
             else:
                 self.rotation.x += 0.5
         
-        if engine_input.is_menu_pressed():
+        if engine_input.check_pressed(engine_input.MENU):
             if self.mode == 0:
                 self.mode = 1
             else:
@@ -86,5 +84,5 @@ camera.position.x = 175
 camera.position.y = 200
 camera.position.z = 175
 camera.view_distance = 350
-camera.fov = 70 * (math.pi/180)
+camera.fov = 90 * (math.pi/180)
 engine.start()

@@ -26,8 +26,68 @@ STATIC mp_obj_t camera_node_class_tick(mp_obj_t self_in){
 MP_DEFINE_CONST_FUN_OBJ_1(camera_node_class_tick_obj, camera_node_class_tick);
 
 
+/*  --- doc ---
+    NAME: CameraNode
+    DESC: Node that defines the perspective the scene is draw at. There can be multiple but this will impact performance if rendering the same scene twice. To make other nodes not move when the camera moves, make the other nodes children of the camera.
+    PARAM: [type={ref_link:Vector3}]             [name=position]                 [value={ref_link:Vector3}]
+    PARAM: [type=float]                          [name=zoom]                     [value=any (scales all nodes by this factor, 1.0 by default)]
+    PARAM: [type={ref_link:Rectangle}]           [name=viewport]                 [value={ref_link:Rectangle} (not used currently, TODO)]
+    PARAM: [type={ref_link:Vector3}]             [name=rotation]                 [value={ref_link:Vector3}]
+    PARAM: [type=float]                          [name=fov]                      [value=any (sets the field fo view for rendering some nodes, not all nodes use this)]
+    PARAM: [type=float]                          [name=view_distance]            [value=any (sets the view distance for some nodes, not all nodes use this)]
+    ATTR:  [type=function]                       [name={ref_link:add_child}]     [value=function] 
+    ATTR:  [type=function]                       [name={ref_link:get_child}]     [value=function] 
+    ATTR:  [type=function]                       [name={ref_link:remove_child}]  [value=function]
+    ATTR:  [type=function]                       [name={ref_link:set_layer}]     [value=function]
+    ATTR:  [type=function]                       [name={ref_link:get_layer}]     [value=function]
+    ATTR:  [type=function]                       [name={ref_link:remove_child}]  [value=function]
+    ATTR:  [type={ref_link:Vector3}]             [name=position]                 [value={ref_link:Vector3}]
+    ATTR:  [type={ref_link:Vector3}]             [name=rotation]                 [value={ref_link:Vector3}]
+    ATTR:  [type=float]                          [name=zoom]                     [value=any (scales all nodes by this factor, 1.0 by default)]
+    ATTR:  [type={ref_link:Rectangle}]           [name=viewport]                 [value={ref_link:Rectangle} (not used currently, TODO)]
+    ATTR:  [type=float]                          [name=fov]                      [value=any (sets the field fo view for rendering some nodes, not all nodes use this)]
+    ATTR:  [type=float]                          [name=view_distance]            [value=any (sets the view distance for some nodes, not all nodes use this)]
+    OVRR:  [type=function]                       [name={ref_link:tick}]          [value=function]
+*/
 mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Sprite2DNode");
+
+    static const mp_arg_t allowed_args[] = {
+        { MP_QSTR_child_class,      MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_position,         MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_rotation,         MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_zoom,             MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_viewport,         MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_fov,              MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_view_distance,    MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+    };
+    mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
+    enum arg_ids {child_class, position, rotation, zoom, viewport, fov, view_distance};
+    bool inherited = false;
+
+    // If there is one positional argument and it isn't the first 
+    // expected argument (as is expected when using positional
+    // arguments) then define which way to parse the arguments
+    if(n_args >= 1 && mp_obj_get_type(args[0]) != &vector3_class_type){
+        // Using positional arguments but the type of the first one isn't
+        // as expected. Must be the child class
+        mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args), allowed_args, parsed_args);
+        inherited = true;
+    }else{
+        // Whether we're using positional arguments or not, prase them this
+        // way. It's a requirement that the child class be passed using position.
+        // Adjust what and where the arguments are parsed, since not inherited based
+        // on the first argument
+        mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args)-1, allowed_args+1, parsed_args+1);
+        inherited = false;
+    }
+
+    if(parsed_args[position].u_obj == MP_OBJ_NULL) parsed_args[position].u_obj = vector3_class_new(&vector3_class_type, 0, 0, NULL);
+    if(parsed_args[zoom].u_obj == MP_OBJ_NULL) parsed_args[zoom].u_obj = mp_obj_new_float(1.0f);
+    if(parsed_args[viewport].u_obj == MP_OBJ_NULL) parsed_args[viewport].u_obj = rectangle_class_new(&rectangle_class_type, 4, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(0.0f), mp_obj_new_float((float)SCREEN_WIDTH), mp_obj_new_float((float)SCREEN_HEIGHT)});
+    if(parsed_args[rotation].u_obj == MP_OBJ_NULL) parsed_args[rotation].u_obj = vector3_class_new(&vector3_class_type, 0, 0, NULL);
+    if(parsed_args[fov].u_obj == MP_OBJ_NULL) parsed_args[fov].u_obj = mp_obj_new_float(PI/2.0f);
+    if(parsed_args[view_distance].u_obj == MP_OBJ_NULL) parsed_args[view_distance].u_obj = mp_obj_new_float(256.0f);
     
     engine_camera_node_common_data_t *common_data = malloc(sizeof(engine_camera_node_common_data_t));
 
@@ -47,13 +107,7 @@ mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t 
     // and then atributes looked up and used for drawing
     common_data->camera_list_node = engine_camera_track(node_base);
 
-    mp_obj_t default_viewport_parameters[4];
-    default_viewport_parameters[0] = mp_obj_new_float(0.0f);
-    default_viewport_parameters[1] = mp_obj_new_float(0.0f);
-    default_viewport_parameters[2] = mp_obj_new_float((float)SCREEN_WIDTH);
-    default_viewport_parameters[3] = mp_obj_new_float((float)SCREEN_HEIGHT);
-
-    if(n_args == 0){        // Non-inherited (create a new object)
+    if(inherited == false){        // Non-inherited (create a new object)
         node_base->inherited = false;
 
         engine_camera_node_class_obj_t *camera_node = m_malloc(sizeof(engine_camera_node_class_obj_t));
@@ -62,15 +116,15 @@ mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t 
 
         common_data->tick_cb = MP_OBJ_FROM_PTR(&camera_node_class_tick_obj);
 
-        camera_node->position = vector3_class_new(&vector3_class_type, 0, 0, NULL);
-        camera_node->rotation = vector3_class_new(&vector3_class_type, 0, 0, NULL);
-        camera_node->viewport = rectangle_class_new(&rectangle_class_type, 4, 0, default_viewport_parameters);
-        camera_node->zoom = mp_obj_new_float(1.0f);
-        camera_node->fov = mp_obj_new_float(PI/2.0f);
-        camera_node->view_distance = mp_obj_new_float(256.0f);
-    }else if(n_args == 1){  // Inherited (use existing object)
+        camera_node->position = parsed_args[position].u_obj;
+        camera_node->zoom = parsed_args[zoom].u_obj;
+        camera_node->viewport = parsed_args[viewport].u_obj;
+        camera_node->rotation = parsed_args[rotation].u_obj;
+        camera_node->fov = parsed_args[fov].u_obj;
+        camera_node->view_distance = parsed_args[view_distance].u_obj;
+    }else if(inherited = true){  // Inherited (use existing object)
         node_base->inherited = true;
-        node_base->node = args[0];
+        node_base->node = parsed_args[child_class].u_obj;
         node_base->attr_accessor = node_base->node;
 
         // Look for function overrides otherwise use the defaults
@@ -82,14 +136,12 @@ mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t 
             common_data->tick_cb = dest[0];
         }
 
-        mp_store_attr(node_base->node, MP_QSTR_position, vector3_class_new(&vector3_class_type, 0, 0, NULL));
-        mp_store_attr(node_base->node, MP_QSTR_rotation, vector3_class_new(&vector3_class_type, 0, 0, NULL));
-        mp_store_attr(node_base->node, MP_QSTR_viewport, rectangle_class_new(&rectangle_class_type, 4, 0, default_viewport_parameters));
-        mp_store_attr(node_base->node, MP_QSTR_zoom, mp_obj_new_float(1.0f));
-        mp_store_attr(node_base->node, MP_QSTR_fov, mp_obj_new_float(PI/2.0f));
-        mp_store_attr(node_base->node, MP_QSTR_view_distance, mp_obj_new_float(256.0f));
-    }else{
-        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Too many arguments passed to CameraNode constructor!"));
+        mp_store_attr(node_base->node, MP_QSTR_position, parsed_args[position].u_obj);
+        mp_store_attr(node_base->node, MP_QSTR_zoom, parsed_args[zoom].u_obj);
+        mp_store_attr(node_base->node, MP_QSTR_viewport, parsed_args[viewport].u_obj);
+        mp_store_attr(node_base->node, MP_QSTR_rotation, parsed_args[rotation].u_obj);
+        mp_store_attr(node_base->node, MP_QSTR_fov, parsed_args[fov].u_obj);
+        mp_store_attr(node_base->node, MP_QSTR_view_distance, parsed_args[view_distance].u_obj);
     }
 
     return MP_OBJ_FROM_PTR(node_base);
@@ -110,23 +162,6 @@ mp_obj_t camera_node_class_del(mp_obj_t self_in){
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(camera_node_class_del_obj, camera_node_class_del);
 
 
-/*  --- doc ---
-    NAME: CameraNode
-    DESC: Node that defines the perspective the scene is draw at. There can be multiple but this will impact performance if rendering the same scene twice. To make other nodes not move when the camera moves, make the other nodes children of the camera.
-    ATTR: [type=function]                       [name={ref_link:add_child}]     [value=function] 
-    ATTR: [type=function]                       [name={ref_link:get_child}]     [value=function] 
-    ATTR: [type=function]                       [name={ref_link:remove_child}]  [value=function]
-    ATTR: [type=function]                       [name={ref_link:set_layer}]     [value=function]
-    ATTR: [type=function]                       [name={ref_link:get_layer}]     [value=function]
-    ATTR: [type=function]                       [name={ref_link:remove_child}]  [value=function]
-    ATTR: [type={ref_link:Vector3}]             [name=position]                 [value={ref_link:Vector3}]
-    ATTR: [type={ref_link:Vector3}]             [name=rotation]                 [value={ref_link:Vector3}]
-    ATTR: [type={ref_link:Rectangle}]           [name=viewport]                 [value={ref_link:Rectangle} (not used currently, TODO)]
-    ATTR: [type=float]                          [name=zoom]                     [value=any (scales all nodes by this factor, 1.0 by default)]
-    ATTR: [type=float]                          [name=fov]                      [value=any (sets the field fo view for rendering some nodes, not all nodes use this)]
-    ATTR: [type=float]                          [name=view_distance]            [value=any (sets the view distance for some nodes, not all nodes use this)]
-    OVRR: [type=function]                       [name={ref_link:tick}]          [value=function]
-*/
 STATIC void camera_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing CameraNode attr");
 
@@ -164,14 +199,14 @@ STATIC void camera_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *d
             case MP_QSTR_position:
                 destination[0] = self->position;
             break;
-            case MP_QSTR_rotation:
-                destination[0] = self->rotation;
+            case MP_QSTR_zoom:
+                destination[0] = self->zoom;
             break;
             case MP_QSTR_viewport:
                 destination[0] = self->viewport;
             break;
-            case MP_QSTR_zoom:
-                destination[0] = self->zoom;
+            case MP_QSTR_rotation:
+                destination[0] = self->rotation;
             break;
             case MP_QSTR_fov:
                 destination[0] = self->fov;
@@ -187,14 +222,14 @@ STATIC void camera_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *d
             case MP_QSTR_position:
                 self->position = destination[1];
             break;
-            case MP_QSTR_rotation:
-                self->rotation = destination[1];
+            case MP_QSTR_zoom:
+                self->zoom = destination[1];
             break;
             case MP_QSTR_viewport:
                 self->viewport = destination[1];
             break;
-            case MP_QSTR_zoom:
-                self->zoom = destination[1];
+            case MP_QSTR_rotation:
+                self->rotation = destination[1];
             break;
             case MP_QSTR_fov:
                 self->fov = destination[1];

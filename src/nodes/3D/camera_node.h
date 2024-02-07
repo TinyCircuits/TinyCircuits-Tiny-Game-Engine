@@ -9,8 +9,8 @@
 typedef struct{
     mp_obj_t position;              // Vector3: xyz position of this node
     mp_obj_t rotation;              // Vector3: rotation of this node in space
-    mp_obj_t viewport;              // Rectangle: position, width and height in screen buffer
     mp_obj_t zoom;                  // float: factor to scale drawing nodes by and also scale translation
+    mp_obj_t viewport;              // Rectangle: position, width and height in screen buffer
     mp_obj_t fov;                   // Only applies to certain nodes, like voxelspace (units are radians in that case)
     mp_obj_t view_distance;         // Only applies to certain nodes, like voxelspace (units are pixels in that case)
 }engine_camera_node_class_obj_t;

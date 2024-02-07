@@ -127,8 +127,79 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
 MP_DEFINE_CONST_FUN_OBJ_2(sprite_2d_node_class_draw_obj, sprite_2d_node_class_draw);
 
 
+/*  --- doc ---
+    NAME: Sprite2DNode
+    DESC: Simple 2D sprite node that can be animated or static
+    PARAM:  [type={ref_link:Vector2}]         [name=position]                   [value={ref_link:Vector2}]
+    PARAM:  [type={ref_link:TextureResource}] [name=texture]                    [value={ref_link:TextureResource}]
+    PARAM:  [type=int]                        [name=transparent_color]          [value=any 16-bit RGB565 color]
+    PARAM:  [type=float]                      [name=fps]                        [value=any]
+    PARAM:  [type=int]                        [name=frame_count_x]              [value=any positive integer]
+    PARAM:  [type=int]                        [name=frame_count_y]              [value=any positive integer]
+    PARAM:  [type=float]                      [name=rotation]                   [value=any (radians)]
+    PARAM:  [type={ref_link:Vector2}]         [name=scale]                      [value={ref_link:Vector2}]
+    ATTR:   [type=function]                   [name={ref_link:add_child}]       [value=function] 
+    ATTR:   [type=function]                   [name={ref_link:get_child}]       [value=function] 
+    ATTR:   [type=function]                   [name={ref_link:remove_child}]    [value=function]
+    ATTR:   [type=function]                   [name={ref_link:set_layer}]       [value=function]
+    ATTR:   [type=function]                   [name={ref_link:get_layer}]       [value=function]
+    ATTR:   [type=function]                   [name={ref_link:remove_child}]    [value=function]
+    ATTR:   [type={ref_link:Vector2}]         [name=position]                   [value={ref_link:Vector2}]
+    ATTR:   [type={ref_link:TextureResource}] [name=texture]                    [value={ref_link:TextureResource}]
+    ATTR:   [type=int]                        [name=transparent_color]          [value=any 16-bit RGB565 color]
+    ATTR:   [type=float]                      [name=fps]                        [value=any]
+    ATTR:   [type=int]                        [name=frame_count_x]              [value=any positive integer]
+    ATTR:   [type=int]                        [name=frame_count_y]              [value=any positive integer]
+    ATTR:   [type=float]                      [name=rotation]                   [value=any (radians)]
+    ATTR:   [type={ref_link:Vector2}]         [name=scale]                      [value={ref_link:Vector2}]
+    ATTR:   [type=int]                        [name=frame_current_x]            [value=any positive integer]
+    ATTR:   [type=int]                        [name=frame_current_y]            [value=any positive integer]
+    OVRR:   [type=function]                   [name={ref_link:tick}]            [value=function]
+    OVRR:   [type=function]                   [name={ref_link:draw}]            [value=function]
+*/
 mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Sprite2DNode");
+
+    static const mp_arg_t allowed_args[] = {
+        { MP_QSTR_child_class,          MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_position,             MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_texture,              MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_transparent_color,    MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_fps,                  MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_frame_count_x,        MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_frame_count_y,        MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_rotation,             MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_scale,                MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+    };
+    mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
+    enum arg_ids {child_class, position, texture, transparent_color, fps, frame_count_x, frame_count_y, rotation, scale};
+    bool inherited = false;
+
+    // If there is one positional argument and it isn't the first 
+    // expected argument (as is expected when using positional
+    // arguments) then define which way to parse the arguments
+    if(n_args >= 1 && mp_obj_get_type(args[0]) != &vector2_class_type){
+        // Using positional arguments but the type of the first one isn't
+        // as expected. Must be the child class
+        mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args), allowed_args, parsed_args);
+        inherited = true;
+    }else{
+        // Whether we're using positional arguments or not, prase them this
+        // way. It's a requirement that the child class be passed using position.
+        // Adjust what and where the arguments are parsed, since not inherited based
+        // on the first argument
+        mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args)-1, allowed_args+1, parsed_args+1);
+        inherited = false;
+    }
+
+    if(parsed_args[position].u_obj == MP_OBJ_NULL) parsed_args[position].u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL);
+    if(parsed_args[texture].u_obj == MP_OBJ_NULL) parsed_args[texture].u_obj = mp_const_none;
+    if(parsed_args[transparent_color].u_obj == MP_OBJ_NULL) parsed_args[transparent_color].u_obj = mp_obj_new_int(ENGINE_NO_TRANSPARENCY_COLOR);
+    if(parsed_args[fps].u_obj == MP_OBJ_NULL) parsed_args[fps].u_obj = mp_obj_new_float(30.0f);
+    if(parsed_args[frame_count_x].u_obj == MP_OBJ_NULL) parsed_args[frame_count_x].u_obj = mp_obj_new_int(1);
+    if(parsed_args[frame_count_y].u_obj == MP_OBJ_NULL) parsed_args[frame_count_y].u_obj = mp_obj_new_int(1);
+    if(parsed_args[rotation].u_obj == MP_OBJ_NULL) parsed_args[rotation].u_obj = mp_obj_new_float(0.0f);
+    if(parsed_args[scale].u_obj == MP_OBJ_NULL) parsed_args[scale].u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)});
 
     engine_sprite_2d_node_common_data_t *common_data = malloc(sizeof(engine_sprite_2d_node_common_data_t));
     common_data->time_at_last_animation_update_ms = millis();
@@ -144,11 +215,7 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
     node_base_set_if_disabled(node_base, false);
     node_base_set_if_just_added(node_base, true);
 
-    mp_obj_t default_scale_parameters[2];
-    default_scale_parameters[0] = mp_obj_new_float(1.0f);
-    default_scale_parameters[1] = mp_obj_new_float(1.0f);
-
-    if(n_args == 1){        // Non-inherited (create a new object)
+    if(inherited == false){        // Non-inherited (create a new object)
         node_base->inherited = false;
 
         engine_sprite_2d_node_class_obj_t *sprite_2d_node = m_malloc(sizeof(engine_sprite_2d_node_class_obj_t));
@@ -158,19 +225,19 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
         common_data->tick_cb = MP_OBJ_FROM_PTR(&sprite_2d_node_class_tick_obj);
         common_data->draw_cb = MP_OBJ_FROM_PTR(&sprite_2d_node_class_draw_obj);
 
-        sprite_2d_node->position = vector2_class_new(&vector2_class_type, 0, 0, NULL);
-        sprite_2d_node->fps = mp_obj_new_float(30.0f);
-        sprite_2d_node->rotation = mp_obj_new_float(0.0f);
-        sprite_2d_node->scale = vector2_class_new(&vector2_class_type, 2, 0, default_scale_parameters);
-        sprite_2d_node->texture_resource = args[0];
-        sprite_2d_node->transparent_color = mp_obj_new_int(ENGINE_NO_TRANSPARENCY_COLOR);
-        sprite_2d_node->frame_count_x = mp_obj_new_int(1);
-        sprite_2d_node->frame_count_y = mp_obj_new_int(1);
+        sprite_2d_node->position = parsed_args[position].u_obj;
+        sprite_2d_node->texture_resource = parsed_args[texture].u_obj;
+        sprite_2d_node->transparent_color = parsed_args[transparent_color].u_obj;
+        sprite_2d_node->fps = parsed_args[fps].u_obj;
+        sprite_2d_node->frame_count_x = parsed_args[frame_count_x].u_obj;
+        sprite_2d_node->frame_count_y = parsed_args[frame_count_y].u_obj;
+        sprite_2d_node->rotation = parsed_args[rotation].u_obj;
+        sprite_2d_node->scale = parsed_args[scale].u_obj;
         sprite_2d_node->frame_current_x = mp_obj_new_int(0);
         sprite_2d_node->frame_current_y = mp_obj_new_int(0);
-    }else if(n_args == 2){  // Inherited (use existing object)
+    }else if(inherited == true){  // Inherited (use existing object)
         node_base->inherited = true;
-        node_base->node = args[0];
+        node_base->node = parsed_args[child_class].u_obj;;
         node_base->attr_accessor = node_base->node;
 
         // Look for function overrides otherwise use the defaults
@@ -189,47 +256,22 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
             common_data->draw_cb = dest[0];
         }
 
-        mp_store_attr(node_base->node, MP_QSTR_position, vector2_class_new(&vector2_class_type, 0, 0, NULL));
-        mp_store_attr(node_base->node, MP_QSTR_fps, mp_obj_new_float((mp_float_t)30.0f));
-        mp_store_attr(node_base->node, MP_QSTR_rotation, mp_obj_new_float((mp_float_t)0.0f));
-        mp_store_attr(node_base->node, MP_QSTR_scale, vector2_class_new(&vector2_class_type, 2, 0, default_scale_parameters));
-        mp_store_attr(node_base->node, MP_QSTR_texture, args[1]);
-        mp_store_attr(node_base->node, MP_QSTR_transparent_color, mp_obj_new_int(ENGINE_NO_TRANSPARENCY_COLOR));
-        mp_store_attr(node_base->node, MP_QSTR_frame_count_x, mp_obj_new_int(1));
-        mp_store_attr(node_base->node, MP_QSTR_frame_count_y, mp_obj_new_int(1));
+        mp_store_attr(node_base->node, MP_QSTR_position, parsed_args[position].u_obj);
+        mp_store_attr(node_base->node, MP_QSTR_texture, parsed_args[texture].u_obj);
+        mp_store_attr(node_base->node, MP_QSTR_transparent_color, parsed_args[transparent_color].u_obj);
+        mp_store_attr(node_base->node, MP_QSTR_fps, parsed_args[fps].u_obj);
+        mp_store_attr(node_base->node, MP_QSTR_frame_count_x, parsed_args[frame_count_x].u_obj);
+        mp_store_attr(node_base->node, MP_QSTR_frame_count_y, parsed_args[frame_count_y].u_obj);
+        mp_store_attr(node_base->node, MP_QSTR_rotation, parsed_args[rotation].u_obj);
+        mp_store_attr(node_base->node, MP_QSTR_scale, parsed_args[scale].u_obj);
         mp_store_attr(node_base->node, MP_QSTR_frame_current_x, mp_obj_new_int(0));
         mp_store_attr(node_base->node, MP_QSTR_frame_current_y, mp_obj_new_int(0));
-    }else{
-        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Too many arguments passed to Sprite2DNode constructor!"));
     }
 
     return MP_OBJ_FROM_PTR(node_base);
 }
 
 
-/*  --- doc ---
-    NAME: Sprite2DNode
-    DESC: Simple 2D sprite node that can be animated or static
-    PARAM:  [type={ref_link:TextureResource}] [name=texture]                    [value={ref_link:TextureResource}]
-    ATTR:   [type=function]                   [name={ref_link:add_child}]       [value=function] 
-    ATTR:   [type=function]                   [name={ref_link:get_child}]       [value=function] 
-    ATTR:   [type=function]                   [name={ref_link:remove_child}]    [value=function]
-    ATTR:   [type=function]                   [name={ref_link:set_layer}]       [value=function]
-    ATTR:   [type=function]                   [name={ref_link:get_layer}]       [value=function]
-    ATTR:   [type=function]                   [name={ref_link:remove_child}]    [value=function]
-    ATTR:   [type={ref_link:Vector2}]         [name=position]                   [value={ref_link:Vector2}]
-    ATTR:   [type=float]                      [name=fps]                        [value=any]
-    ATTR:   [type=float]                      [name=rotation]                   [value=any (radians)]
-    ATTR:   [type={ref_link:Vector2}]         [name=scale]                      [value={ref_link:Vector2}]
-    ATTR:   [type={ref_link:TextureResource}] [name=texture]                    [value={ref_link:TextureResource}]
-    ATTR:   [type=int]                        [name=transparent_color]          [value=any 16-bit RGB565 color]
-    ATTR:   [type=int]                        [name=frame_count_x]              [value=any positive integer]
-    ATTR:   [type=int]                        [name=frame_count_y]              [value=any positive integer]
-    ATTR:   [type=int]                        [name=frame_current_x]            [value=any positive integer]
-    ATTR:   [type=int]                        [name=frame_current_y]            [value=any positive integer]
-    OVRR:   [type=function]                   [name={ref_link:tick}]            [value=function]
-    OVRR:   [type=function]                   [name={ref_link:draw}]            [value=function]
-*/
 STATIC void sprite_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Sprite2DNode attr");
 
@@ -267,26 +309,26 @@ STATIC void sprite_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
             case MP_QSTR_position:
                 destination[0] = self->position;
             break;
-            case MP_QSTR_fps:
-                destination[0] = self->fps;
-            break;
-            case MP_QSTR_rotation:
-                destination[0] = self->rotation;
-            break;
-            case MP_QSTR_scale:
-                destination[0] = self->scale;
-            break;
             case MP_QSTR_texture:
                 destination[0] = self->texture_resource;
             break;
             case MP_QSTR_transparent_color:
                 destination[0] = self->transparent_color;
             break;
+            case MP_QSTR_fps:
+                destination[0] = self->fps;
+            break;
             case MP_QSTR_frame_count_x:
                 destination[0] = self->frame_count_x;
             break;
             case MP_QSTR_frame_count_y:
                 destination[0] = self->frame_count_y;
+            break;
+            case MP_QSTR_rotation:
+                destination[0] = self->rotation;
+            break;
+            case MP_QSTR_scale:
+                destination[0] = self->scale;
             break;
             case MP_QSTR_frame_current_x:
                 destination[0] = self->frame_current_x;
@@ -302,26 +344,26 @@ STATIC void sprite_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
             case MP_QSTR_position:
                 self->position = destination[1];
             break;
-            case MP_QSTR_fps:
-                self->fps = destination[1];
-            break;
-            case MP_QSTR_rotation:
-                self->rotation = destination[1];
-            break;
-            case MP_QSTR_scale:
-                self->scale = destination[1];
-            break;
             case MP_QSTR_texture:
                 self->texture_resource = destination[1];
             break;
             case MP_QSTR_transparent_color:
                 self->transparent_color = destination[1];
             break;
+            case MP_QSTR_fps:
+                self->fps = destination[1];
+            break;
             case MP_QSTR_frame_count_x:
                 self->frame_count_x = destination[1];
             break;
             case MP_QSTR_frame_count_y:
                 self->frame_count_y = destination[1];
+            break;
+            case MP_QSTR_rotation:
+                self->rotation = destination[1];
+            break;
+            case MP_QSTR_scale:
+                self->scale = destination[1];
             break;
             case MP_QSTR_frame_current_x:
                 self->frame_current_x = destination[1];

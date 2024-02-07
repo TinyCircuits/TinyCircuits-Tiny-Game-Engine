@@ -117,8 +117,74 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_n
 MP_DEFINE_CONST_FUN_OBJ_2(rectangle_2d_node_class_draw_obj, rectangle_2d_node_class_draw);
 
 
+/*  --- doc ---
+    NAME: Rectangle2DNode
+    DESC: Simple 2D rectangle node
+    PARAM:  [type={ref_link:Vector3}]         [name=position]                   [value={ref_link:Vector3}]
+    PARAM:  [type=float]                      [name=width]                      [value=any]
+    PARAM:  [type=float]                      [name=height]                     [value=any]
+    PARAM:  [type=int]                        [name=color]                      [value=any 16-bit RGB565 integer]
+    PARAM:  [type=bool]                       [name=outline]                    [value=True or False]
+    PARAM:  [type=float]                      [name=rotation]                   [value=any (radians)]
+    PARAM:  [type={ref_link:Vector2}]         [name=scale]                      [value={ref_link:Vector2}]
+    ATTR:   [type=function]                   [name={ref_link:add_child}]       [value=function]
+    ATTR:   [type=function]                   [name={ref_link:get_child}]       [value=function] 
+    ATTR:   [type=function]                   [name={ref_link:remove_child}]    [value=function]
+    ATTR:   [type=function]                   [name={ref_link:set_layer}]       [value=function]
+    ATTR:   [type=function]                   [name={ref_link:get_layer}]       [value=function]
+    ATTR:   [type=function]                   [name={ref_link:remove_child}]    [value=function]
+    ATTR:   [type={ref_link:Vector3}]         [name=position]                   [value={ref_link:Vector3}]
+    ATTR:   [type=float]                      [name=width]                      [value=any]
+    ATTR:   [type=float]                      [name=height]                     [value=any]
+    ATTR:   [type=int]                        [name=color]                      [value=any 16-bit RGB565 integer]
+    ATTR:   [type=bool]                       [name=outline]                    [value=True or False]
+    ATTR:   [type=float]                      [name=rotation]                   [value=any (radians)]
+    ATTR:   [type={ref_link:Vector2}]         [name=scale]                      [value={ref_link:Vector2}]
+
+    OVRR:   [type=function]                   [name={ref_link:tick}]            [value=function]
+    OVRR:   [type=function]                   [name={ref_link:draw}]            [value=function]
+*/
 mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Rectangle2DNode");
+
+    static const mp_arg_t allowed_args[] = {
+        { MP_QSTR_child_class,  MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_position,     MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_width,        MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_height,       MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_color,        MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_outline,      MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_rotation,     MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_scale,        MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+    };
+    mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
+    enum arg_ids {child_class, position, width, height, color, outline, rotation, scale};
+    bool inherited = false;
+
+    // If there is one positional argument and it isn't the first 
+    // expected argument (as is expected when using positional
+    // arguments) then define which way to parse the arguments
+    if(n_args >= 1 && mp_obj_get_type(args[0]) != &vector2_class_type){
+        // Using positional arguments but the type of the first one isn't
+        // as expected. Must be the child class
+        mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args), allowed_args, parsed_args);
+        inherited = true;
+    }else{
+        // Whether we're using positional arguments or not, prase them this
+        // way. It's a requirement that the child class be passed using position.
+        // Adjust what and where the arguments are parsed, since not inherited based
+        // on the first argument
+        mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args)-1, allowed_args+1, parsed_args+1);
+        inherited = false;
+    }
+
+    if(parsed_args[position].u_obj == MP_OBJ_NULL) parsed_args[position].u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL);
+    if(parsed_args[width].u_obj == MP_OBJ_NULL) parsed_args[width].u_obj = mp_obj_new_float(15.0f);
+    if(parsed_args[height].u_obj == MP_OBJ_NULL) parsed_args[height].u_obj = mp_obj_new_float(5.0f);
+    if(parsed_args[color].u_obj == MP_OBJ_NULL) parsed_args[color].u_obj = mp_obj_new_int(0xffff);
+    if(parsed_args[outline].u_obj == MP_OBJ_NULL) parsed_args[outline].u_obj = mp_obj_new_bool(false);
+    if(parsed_args[rotation].u_obj == MP_OBJ_NULL) parsed_args[rotation].u_obj = mp_obj_new_float(0.0f);
+    if(parsed_args[scale].u_obj == MP_OBJ_NULL) parsed_args[scale].u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)});
 
     engine_rectangle_2d_node_common_data_t *common_data = malloc(sizeof(engine_rectangle_2d_node_common_data_t));
 
@@ -133,11 +199,7 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
     node_base_set_if_disabled(node_base, false);
     node_base_set_if_just_added(node_base, true);
 
-    mp_obj_t default_scale_parameters[2];
-    default_scale_parameters[0] = mp_obj_new_float(1.0f);
-    default_scale_parameters[1] = mp_obj_new_float(1.0f);
-
-    if(n_args == 0){        // Non-inherited (create a new object)
+    if(inherited == false){        // Non-inherited (create a new object)
         node_base->inherited = false;
 
         engine_rectangle_2d_node_class_obj_t *rectangle_2d_node = m_malloc(sizeof(engine_rectangle_2d_node_class_obj_t));
@@ -147,16 +209,16 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
         common_data->tick_cb = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_tick_obj);
         common_data->draw_cb = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_draw_obj);
 
-        rectangle_2d_node->position = vector2_class_new(&vector2_class_type, 0, 0, NULL);
-        rectangle_2d_node->scale = vector2_class_new(&vector2_class_type, 2, 0, default_scale_parameters);
-        rectangle_2d_node->width = mp_obj_new_int(15);
-        rectangle_2d_node->height = mp_obj_new_int(5);
-        rectangle_2d_node->color = mp_obj_new_int(0xffff);
-        rectangle_2d_node->rotation = mp_obj_new_float(0.0f);
-        rectangle_2d_node->outline = mp_obj_new_bool(false);
-    }else if(n_args == 1){  // Inherited (use existing object)
+        rectangle_2d_node->position = parsed_args[position].u_obj;
+        rectangle_2d_node->width = parsed_args[width].u_obj;
+        rectangle_2d_node->height = parsed_args[height].u_obj;
+        rectangle_2d_node->color = parsed_args[color].u_obj;
+        rectangle_2d_node->outline = parsed_args[outline].u_obj;
+        rectangle_2d_node->rotation = parsed_args[rotation].u_obj;
+        rectangle_2d_node->scale = parsed_args[scale].u_obj;
+    }else if(inherited == true){  // Inherited (use existing object)
         node_base->inherited = true;
-        node_base->node = args[0];
+        node_base->node = parsed_args[child_class].u_obj;
         node_base->attr_accessor = node_base->node;
 
         // Look for function overrides otherwise use the defaults
@@ -175,41 +237,19 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
             common_data->draw_cb = dest[0];
         }
 
-        mp_store_attr(node_base->node, MP_QSTR_position, vector2_class_new(&vector2_class_type, 0, 0, NULL));
-        mp_store_attr(node_base->node, MP_QSTR_scale, vector2_class_new(&vector2_class_type, 2, 0, default_scale_parameters));
-        mp_store_attr(node_base->node, MP_QSTR_width, mp_obj_new_int(15));
-        mp_store_attr(node_base->node, MP_QSTR_height, mp_obj_new_int(5));
-        mp_store_attr(node_base->node, MP_QSTR_color, mp_obj_new_int(0xffff));
-        mp_store_attr(node_base->node, MP_QSTR_rotation, mp_obj_new_float(0.0f));
-        mp_store_attr(node_base->node, MP_QSTR_outline, mp_obj_new_bool(false));
-    }else{
-        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Too many arguments passed to Rectangle2DNode constructor!"));
+        mp_store_attr(node_base->node, MP_QSTR_position, parsed_args[position].u_obj);
+        mp_store_attr(node_base->node, MP_QSTR_width, parsed_args[width].u_obj);
+        mp_store_attr(node_base->node, MP_QSTR_height, parsed_args[height].u_obj);
+        mp_store_attr(node_base->node, MP_QSTR_color, parsed_args[color].u_obj);
+        mp_store_attr(node_base->node, MP_QSTR_outline, parsed_args[outline].u_obj);
+        mp_store_attr(node_base->node, MP_QSTR_rotation, parsed_args[rotation].u_obj);
+        mp_store_attr(node_base->node, MP_QSTR_scale, parsed_args[scale].u_obj);
     }
 
     return MP_OBJ_FROM_PTR(node_base);
 }
 
 
-/*  --- doc ---
-    NAME: Rectangle2DNode
-    DESC: Simple 2D rectangle node
-    ATTR:   [type=function]                   [name={ref_link:add_child}]       [value=function]
-    ATTR:   [type=function]                   [name={ref_link:get_child}]       [value=function] 
-    ATTR:   [type=function]                   [name={ref_link:remove_child}]    [value=function]
-    ATTR:   [type=function]                   [name={ref_link:set_layer}]       [value=function]
-    ATTR:   [type=function]                   [name={ref_link:get_layer}]       [value=function]
-    ATTR:   [type=function]                   [name={ref_link:remove_child}]    [value=function]
-    ATTR:   [type={ref_link:Vector3}]         [name=position]                   [value={ref_link:Vector3}]
-    ATTR:   [type=float]                      [name=fps]                        [value=any]
-    ATTR:   [type=float]                      [name=rotation]                   [value=any (radians)]
-    ATTR:   [type={ref_link:Vector2}]         [name=scale]                      [value={ref_link:Vector2}]
-    ATTR:   [type=float]                      [name=width]                      [value=any]
-    ATTR:   [type=float]                      [name=height]                     [value=any]
-    ATTR:   [type=int]                        [name=color]                      [value=any 16-bit RGB565 integer]
-    ATTR:   [type=bool]                       [name=outline]                    [value=True or False]
-    OVRR:   [type=function]                   [name={ref_link:tick}]            [value=function]
-    OVRR:   [type=function]                   [name={ref_link:draw}]            [value=function]
-*/
 STATIC void rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Rectangle2DNode attr");
 
@@ -247,9 +287,6 @@ STATIC void rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_ob
             case MP_QSTR_position:
                 destination[0] = self->position;
             break;
-            case MP_QSTR_scale:
-                destination[0] = self->scale;
-            break;
             case MP_QSTR_width:
                 destination[0] = self->width;
             break;
@@ -259,11 +296,14 @@ STATIC void rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_ob
             case MP_QSTR_color:
                 destination[0] = self->color;
             break;
+            case MP_QSTR_outline:
+                destination[0] = self->outline;
+            break;
             case MP_QSTR_rotation:
                 destination[0] = self->rotation;
             break;
-            case MP_QSTR_outline:
-                destination[0] = self->outline;
+            case MP_QSTR_scale:
+                destination[0] = self->scale;
             break;
             default:
                 return; // Fail
@@ -272,9 +312,6 @@ STATIC void rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_ob
         switch(attribute){
             case MP_QSTR_position:
                 self->position = destination[1];
-            break;
-            case MP_QSTR_scale:
-                self->scale = destination[1];
             break;
             case MP_QSTR_width:
                 self->width = destination[1];
@@ -285,11 +322,14 @@ STATIC void rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_ob
             case MP_QSTR_color:
                 self->color = destination[1];
             break;
+            case MP_QSTR_outline:
+                self->outline = destination[1];
+            break;
             case MP_QSTR_rotation:
                 self->rotation = destination[1];
             break;
-            case MP_QSTR_outline:
-                self->outline = destination[1];
+            case MP_QSTR_scale:
+                self->scale = destination[1];
             break;
             default:
                 return; // Fail

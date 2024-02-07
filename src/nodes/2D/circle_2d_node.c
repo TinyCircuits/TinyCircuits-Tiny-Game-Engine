@@ -120,19 +120,25 @@ MP_DEFINE_CONST_FUN_OBJ_2(circle_2d_node_class_draw_obj, circle_2d_node_class_dr
 /* --- doc ---
    NAME: Circle2DNode
    DESC: Simple node that draws a colored circle given a radius
-   ATTR: [type=function]            [name={ref_link:add_child}]        [value=function]
-   ATTR: [type=function]            [name={ref_link:get_child}]        [value=function]                                     
-   ATTR: [type=function]            [name={ref_link:remove_child}]     [value=function]                                        
-   ATTR: [type=function]            [name={ref_link:set_layer}]        [value=function]                                        
-   ATTR: [type=function]            [name={ref_link:get_layer}]        [value=function]                                        
-   ATTR: [type={ref_link:Vector2}]  [name=position]                    [value={ref_link:Vector2}]                                
-   ATTR: [type=float]               [name=radius]                      [value=any]                                             
-   ATTR: [type=float]               [name=rotation]                    [value=any]                                             
-   ATTR: [type=int]                 [name=color]                       [value=0 ~ 65535 (16-bit RGB565 0bRRRRRGGGGGGBBBBB)]    
-   ATTR: [type=float]               [name=scale]                       [value=any]           
-   ATTR: [type=bool]                [name=outline]                     [value=True or False]     
-   OVRR: [type=function]            [name={ref_link:tick}]             [value=function]
-   OVRR: [type=function]            [name={ref_link:draw}]             [value=function]                           
+   PARAM:   [type={ref_link:Vector2}]  [name=position]                    [value={ref_link:Vector2}]
+   PARAM:   [type=float]               [name=radius]                      [value=any]
+   PARAM:   [type=int]                 [name=color]                       [value=0 ~ 65535 (16-bit RGB565 0bRRRRRGGGGGGBBBBB)]
+   PARAM:   [type=bool]                [name=outline]                     [value=True or False]
+   PARAM:   [type=float]               [name=rotation]                    [value=any] 
+   PARAM:   [type=float]               [name=scale]                       [value=any] 
+   ATTR:    [type=function]            [name={ref_link:add_child}]        [value=function]
+   ATTR:    [type=function]            [name={ref_link:get_child}]        [value=function]                                     
+   ATTR:    [type=function]            [name={ref_link:remove_child}]     [value=function]                                        
+   ATTR:    [type=function]            [name={ref_link:set_layer}]        [value=function]                                        
+   ATTR:    [type=function]            [name={ref_link:get_layer}]        [value=function]                                        
+   ATTR:    [type={ref_link:Vector2}]  [name=position]                    [value={ref_link:Vector2}]                                
+   ATTR:    [type=float]               [name=radius]                      [value=any]                                             
+   ATTR:    [type=float]               [name=rotation]                    [value=any]                                             
+   ATTR:    [type=int]                 [name=color]                       [value=0 ~ 65535 (16-bit RGB565 0bRRRRRGGGGGGBBBBB)]    
+   ATTR:    [type=float]               [name=scale]                       [value=any]           
+   ATTR:    [type=bool]                [name=outline]                     [value=True or False]     
+   OVRR:    [type=function]            [name={ref_link:tick}]             [value=function]
+   OVRR:    [type=function]            [name={ref_link:draw}]             [value=function]                           
 */
 mp_obj_t circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Circle2DNode");
@@ -160,19 +166,19 @@ mp_obj_t circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
         inherited = true;
     }else{
         // Whether we're using positional arguments or not, prase them this
-        // way. It's a requirement that the child class be passed using position
+        // way. It's a requirement that the child class be passed using position.
+        // Adjust what and where the arguments are parsed, since not inherited based
+        // on the first argument
         mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args)-1, allowed_args+1, parsed_args+1);
         inherited = false;
     }
 
-    // For anything that uses a u_obj, set it to a default dynamicly
     if(parsed_args[position].u_obj == MP_OBJ_NULL) parsed_args[position].u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL);
     if(parsed_args[radius].u_obj == MP_OBJ_NULL) parsed_args[radius].u_obj = mp_obj_new_float(5.0f);
     if(parsed_args[color].u_obj == MP_OBJ_NULL) parsed_args[color].u_obj = mp_obj_new_int(0xffff);
     if(parsed_args[outline].u_obj == MP_OBJ_NULL) parsed_args[outline].u_obj = mp_obj_new_bool(false);
     if(parsed_args[rotation].u_obj == MP_OBJ_NULL) parsed_args[rotation].u_obj = mp_obj_new_float(0.0f);
     if(parsed_args[scale].u_obj == MP_OBJ_NULL) parsed_args[scale].u_obj = mp_obj_new_float(1.0f);
-
 
     engine_circle_2d_node_common_data_t *common_data = malloc(sizeof(engine_circle_2d_node_common_data_t));
 
@@ -207,8 +213,6 @@ mp_obj_t circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
         node_base->inherited = true;
         node_base->node = parsed_args[child_class].u_obj;
         node_base->attr_accessor = node_base->node;
-
-        ENGINE_FORCE_PRINTF("TEST");
 
         // Look for function overrides otherwise use the defaults
         mp_obj_t dest[2];

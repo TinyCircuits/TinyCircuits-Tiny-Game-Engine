@@ -8,11 +8,11 @@
 
 typedef struct{
     mp_obj_t position;              // Vector2: 2d xy position of this node
-    mp_obj_t rotation;              // float (Current rotation angle)
+    mp_obj_t collision_shape;       // Shape definition
     mp_obj_t velocity;              // Vector2 (Absolute velocity)
     mp_obj_t acceleration;          // Vector2
+    mp_obj_t rotation;              // float (Current rotation angle)
     mp_obj_t mass;                  // How heavy the node is
-    mp_obj_t collision_shape;       // Shape definition
     mp_obj_t bounciness;            // Restitution or elasticity
     mp_obj_t dynamic;               // Flag indicating if node is dynamic and moving around due to physics or static
     mp_obj_t gravity_scale;         // Vector2 allowing scaling affects of gravity. Set to 0,0 for no gravity

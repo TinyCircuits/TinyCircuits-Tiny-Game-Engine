@@ -9,9 +9,9 @@ typedef struct{
     mp_obj_t width;     // Rectangle width in px
     mp_obj_t height;    // Rectangle height in px
     mp_obj_t color;     // The color of this rectangle
-    mp_obj_t scale;     // Vector2: 2d scale of the rectangle
-    mp_obj_t rotation;  // Rectangle rotation in radians
     mp_obj_t outline;   // bool: if true, rectangle drawn as outline, if false, drawn filled (false by default)
+    mp_obj_t rotation;  // Rectangle rotation in radians
+    mp_obj_t scale;     // Vector2: 2d scale of the rectangle
 }engine_rectangle_2d_node_class_obj_t;
 
 typedef struct{
