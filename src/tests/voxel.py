@@ -15,8 +15,8 @@ import time
 engine_draw.set_background_color(engine_draw.skyblue)
 
 
-C18W = TextureResource("pool_table.bmp", True)
-D18 = TextureResource("pool_table_height.bmp", True)
+C18W = TextureResource("C18W.bmp", True)
+D18 = TextureResource("D18.bmp", True)
 
 vox = VoxelSpaceNode(texture=C18W, heightmap=D18)
 vox.position.x = 200
@@ -84,5 +84,5 @@ camera.position.x = 175
 camera.position.y = 200
 camera.position.z = 175
 camera.view_distance = 350
-camera.fov = 90 * (math.pi/180)
+camera.fov = 70 * (math.pi/180)
 engine.start()

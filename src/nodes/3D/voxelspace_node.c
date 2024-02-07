@@ -62,12 +62,21 @@ STATIC mp_obj_t voxelspace_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
         // use z as the adjacent for triangle to figure out hypotenuse
         // and then use that as the radius. This means the view distance
         // will remain the same for every FOV
-        float hypot = z / cosf(camera_rotation->y-camera_fov/2);
-        float pleft_x = hypot * cosf(camera_rotation->y-camera_fov/2);
-        float pleft_y = hypot * sinf(camera_rotation->y-camera_fov/2);
+        // float hypot = z / cosf(camera_rotation->y-camera_fov/2); // Not working?
+        float pleft_x = z * cosf(camera_rotation->y-camera_fov/2);
+        float pleft_y = z * sinf(camera_rotation->y-camera_fov/2);
 
-        float pright_x = hypot * cosf(camera_rotation->y+camera_fov/2);
-        float pright_y = hypot * sinf(camera_rotation->y+camera_fov/2);
+        float pright_x = z * cosf(camera_rotation->y+camera_fov/2);
+        float pright_y = z * sinf(camera_rotation->y+camera_fov/2);
+
+        // float sinphi = sinf(camera_rotation->y);
+        // float cosphi = cosf(camera_rotation->y);
+
+        // float pleft_x = -cosphi*z - sinphi*z;
+        // float pleft_y =  sinphi*z - cosphi*z;
+
+        // float pright_x =  cosphi*z - sinphi*z;
+        // float pright_y = -sinphi*z - cosphi*z;
 
         float dx = (pright_x - pleft_x) / SCREEN_WIDTH;
         float dy = (pright_y - pleft_y) / SCREEN_WIDTH;
