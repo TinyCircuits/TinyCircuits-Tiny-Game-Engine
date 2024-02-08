@@ -84,9 +84,9 @@ void engine_draw_filled_rectangle(uint16_t color, int32_t x_top_left, int32_t y_
 }
 
 
-void engine_draw_blit(uint16_t *buffer, int32_t x_top_left, int32_t y_top_left, int32_t width, int32_t height, uint16_t key, bool mirror_x, bool mirror_y){
+// void engine_draw_blit(uint16_t *buffer, int32_t x_top_left, int32_t y_top_left, int32_t width, int32_t height, uint16_t key, bool mirror_x, bool mirror_y){
 
-}
+// }
 
 
 
@@ -246,7 +246,7 @@ void engine_draw_rect_scale_trishear_viewport(uint16_t color, int32_t x, int32_t
 }
 
 
-void engine_draw_blit_scale_trishear(uint16_t *pixels, int32_t x, int32_t y, uint32_t data_offset, uint32_t stride, int32_t width, uint16_t height, int32_t xsc, int32_t ysc, int32_t xsr, int32_t ysr, int32_t xsr2, int flip, uint16_t transparent_color){
+void engine_draw_blit_scale_trishear(uint16_t *pixels, int32_t x, int32_t y, uint32_t stride, int32_t width, uint16_t height, int32_t xsc, int32_t ysc, int32_t xsr, int32_t ysr, int32_t xsr2, int flip, uint16_t transparent_color){
     // #ifndef __unix__
     //     init_interp(width_log2);
     // #endif
@@ -299,7 +299,7 @@ void engine_draw_blit_scale_trishear(uint16_t *pixels, int32_t x, int32_t y, uin
                 int32_t abs_x_pos = x+cx+(xshift >> 16)+(xshift2 >> 16);
                 int32_t abs_y_pos = y+cy+(yshift >> 16);
                 if(abs_x_pos >= 0 && abs_x_pos < SCREEN_WIDTH && abs_y_pos >= 0 && abs_y_pos < SCREEN_HEIGHT){
-                    uint16_t pixel = pixels[data_offset + (stride * height - 1 - ((ty >> 16) * stride + (tx >> 16)))];
+                    uint16_t pixel = pixels[(stride * height - 1 - ((ty >> 16) * stride + (tx >> 16)))];
                     if(transparent_color == ENGINE_NO_TRANSPARENCY_COLOR || pixel != transparent_color){
                         screen_buffer[index] = pixel;
                     }
@@ -318,7 +318,7 @@ void engine_draw_blit_scale_trishear(uint16_t *pixels, int32_t x, int32_t y, uin
                 int32_t abs_x_pos = x+cx+(xshift >> 16)+(xshift2 >> 16);
                 int32_t abs_y_pos = y+cy+(yshift >> 16);
                 if(abs_x_pos >= 0 && abs_x_pos < SCREEN_WIDTH && abs_y_pos >= 0 && abs_y_pos < SCREEN_HEIGHT){
-                    uint16_t pixel = pixels[data_offset + ((ty >> 16) * stride + (tx >> 16))];
+                    uint16_t pixel = pixels[((ty >> 16) * stride + (tx >> 16))];
                     if(transparent_color == ENGINE_NO_TRANSPARENCY_COLOR || pixel != transparent_color){
                         screen_buffer[index] = pixel;
                     }
@@ -337,24 +337,8 @@ void engine_draw_blit_scale_trishear(uint16_t *pixels, int32_t x, int32_t y, uin
 }
 
 
-void engine_draw_blit_scale_rotate(uint16_t *pixels, int32_t x, int32_t y, uint32_t data_offset, uint32_t stride, int32_t width, uint16_t height, int32_t xsc, int32_t ysc, int16_t theta, uint16_t transparent_color){
-    /*  https://cohost.org/tomforsyth/post/891823-rotation-with-three#:~:text=But%20the%20TL%3BDR%20is%20you%20do%20three%20shears%3A
-        https://stackoverflow.com/questions/65909025/rotating-a-bitmap-with-3-shears    Lots of inspiration from here
-        https://computergraphics.stackexchange.com/questions/10599/rotate-a-bitmap-with-shearing
-        https://news.ycombinator.com/item?id=34485871 lots of sources
-        https://graphicsinterface.org/wp-content/uploads/gi1986-15.pdf
-        https://gautamnagrawal.medium.com/rotating-image-by-any-angle-shear-transformation-using-only-numpy-d28d16eb5076
-        https://datagenetics.com/blog/august32013/index.html
-        https://www.ocf.berkeley.edu/~fricke/projects/israel/paeth/rotation_by_shearing.html
-        https://www.ocf.berkeley.edu/~fricke/projects/israel/paeth/rotation_by_shearing.html#:~:text=To%20do%20a%20shear%20operation%20on%20a%20raster%20image%20(that%20is%20to%20say%2C%20a%20bitmap)%2C%20we%20just%20shift%20all%20the%20pixels%20in%20a%20given%20row%20(column)%20by%20an%20easy%2Dto%2Dcalculate%20displacement
-
-        The last link above highlights the most important part about doing rotations by shears:
-        "To do a shear operation on a raster image (that is to say, a bitmap), we just shift all
-        the pixels in a given row (column) by an easy-to-calculate displacement"
-
-        As that link mentions, we'll do the rotation by doing three shears/displacements per-pixel per column.
-        The displacements are performed twice on the x-axis and once on the y axis in x y x order.
-    */
+void engine_draw_blit_scale_rotate(uint16_t *pixels, int32_t x, int32_t y, uint32_t stride, int32_t width, uint16_t height, int32_t xsc, int32_t ysc, int16_t theta, uint16_t transparent_color){
+    ENGINE_PERFORMANCE_CYCLES_START();
 
     int flip = 0;
     // int32_t width = 1u << width_log2;
@@ -398,7 +382,9 @@ void engine_draw_blit_scale_rotate(uint16_t *pixels, int32_t x, int32_t y, uint3
     if(ysc < 0) cy -= ye;
     //Step 4: Triple shear (a, b, a);
     //blit_scale_trishear_pow2_tex_internal(fb, f_xs, tex, t_xs_log2, t_ys, x - cx, y - cy, xsc, ysc, a, b, a, flip);
-    engine_draw_blit_scale_trishear(pixels, x - cx, y - cy, data_offset, stride, width, height, xsc, ysc, a, b, a, flip, transparent_color);
+    engine_draw_blit_scale_trishear(pixels, x - cx, y - cy, stride, width, height, xsc, ysc, a, b, a, flip, transparent_color);
+
+    ENGINE_PERFORMANCE_CYCLES_STOP();
 }
 
 
@@ -442,4 +428,77 @@ void engine_draw_fillrect_scale_rotate_viewport(uint16_t color, int32_t x, int32
     //Step 4: Triple shear (a, b, a);
     //blit_scale_trishear_pow2_tex_internal(fb, f_xs, tex, t_xs_log2, t_ys, x - cx, y - cy, xsc, ysc, a, b, a, flip);
     engine_draw_fillrect_scale_trishear_viewport(color, x - cx, y - cy, width, height, xsc, ysc, a, b, a, vx, vy, vw, vh);
+}
+
+
+void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t window_width, uint32_t window_height, uint32_t pixels_stride, float rotation_radians){
+    /*  https://cohost.org/tomforsyth/post/891823-rotation-with-three#:~:text=But%20the%20TL%3BDR%20is%20you%20do%20three%20shears%3A
+        https://stackoverflow.com/questions/65909025/rotating-a-bitmap-with-3-shears    Lots of inspiration from here
+        https://computergraphics.stackexchange.com/questions/10599/rotate-a-bitmap-with-shearing
+        https://news.ycombinator.com/item?id=34485871 lots of sources
+        https://graphicsinterface.org/wp-content/uploads/gi1986-15.pdf
+        https://gautamnagrawal.medium.com/rotating-image-by-any-angle-shear-transformation-using-only-numpy-d28d16eb5076
+        https://datagenetics.com/blog/august32013/index.html
+        https://www.ocf.berkeley.edu/~fricke/projects/israel/paeth/rotation_by_shearing.html
+        https://www.ocf.berkeley.edu/~fricke/projects/israel/paeth/rotation_by_shearing.html#:~:text=To%20do%20a%20shear%20operation%20on%20a%20raster%20image%20(that%20is%20to%20say%2C%20a%20bitmap)%2C%20we%20just%20shift%20all%20the%20pixels%20in%20a%20given%20row%20(column)%20by%20an%20easy%2Dto%2Dcalculate%20displacement
+
+        The last link above highlights the most important part about doing rotations by shears:
+        "To do a shear operation on a raster image (that is to say, a bitmap), we just shift all
+        the pixels in a given row (column) by an easy-to-calculate displacement"
+
+        As that link mentions, we'll do the rotation by doing three shears/displacements per-pixel per column.
+        The displacements are performed twice on the x-axis and once on the y axis in x y x order.
+    */
+
+    ENGINE_PERFORMANCE_CYCLES_START();
+
+    uint16_t *screen_buffer = engine_get_active_screen_buffer();
+
+    uint32_t half_width = window_width >> 1;
+    uint32_t half_height = window_height >> 1;
+
+    // Cache these calculations
+    float tri_shear_tan = tanf(rotation_radians * 0.5f);
+    float tri_shear_sin = sinf(rotation_radians);
+
+    float sheared_x = 0;
+    float sheared_y = 0;
+
+    // Now we need to go over each column and displace the pixels
+    for(int16_t src_pixel_x=0; src_pixel_x<window_width; src_pixel_x++){
+        for(int16_t src_pixel_y=0; src_pixel_y<window_height; src_pixel_y++){
+            float src_pixel_centered_x = src_pixel_x;
+            float src_pixel_centered_y = src_pixel_y;
+
+            src_pixel_centered_x -= half_width;
+            src_pixel_centered_y -= half_height;
+
+            // Shear #1
+            sheared_x = src_pixel_centered_x - src_pixel_centered_y * tri_shear_tan;
+            sheared_y = src_pixel_centered_y;
+
+            // Shear #2
+            sheared_y = sheared_x * tri_shear_sin + sheared_y;
+
+            // Shear #3
+            sheared_x = sheared_x - sheared_y * tri_shear_tan;
+            sheared_x += half_width;
+            sheared_y += half_height;
+
+            if((sheared_x >= 0 && sheared_x < window_width) && (sheared_y >= 0 && sheared_y < window_height)){
+                uint16_t src_pixel_index = ((uint16_t)sheared_y) * pixels_stride + ((uint16_t)sheared_x);
+
+                src_pixel_centered_x += center_x;
+                src_pixel_centered_y += center_y;
+
+                if((src_pixel_centered_x >= 0 && src_pixel_centered_x < SCREEN_WIDTH) && (src_pixel_centered_y >= 0 && src_pixel_centered_y < SCREEN_HEIGHT)){
+                    uint16_t output_pixel_index = ((uint16_t)src_pixel_centered_y) * SCREEN_WIDTH + ((uint16_t)src_pixel_centered_x);
+
+                    screen_buffer[output_pixel_index] = pixels[src_pixel_index];
+                }
+            }
+        }
+    }
+
+    ENGINE_PERFORMANCE_CYCLES_STOP();
 }

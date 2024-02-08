@@ -7,6 +7,7 @@
 #include "nodes/2d/polygon_2d_node.h"
 #include "nodes/2d/circle_2d_node.h"
 #include "nodes/2d/sprite_2d_node.h"
+#include "nodes/2d/text_2d_node.h"
 #include "nodes/2d/physics_2d_node.h"
 #include "nodes/node_types.h"
 #include "nodes/node_base.h"
@@ -147,6 +148,18 @@ void engine_invoke_all_node_callbacks(){
                         mp_call_method_n_kw(0, 0, exec);
 
                         exec[0] = sprite_2d_node_common_data->draw_cb;
+                        exec[1] = node_base;
+                        engine_camera_draw_for_each(exec);
+                    }
+                    break;
+                    case NODE_TYPE_TEXT_2D:
+                    {
+                        engine_text_2d_node_common_data_t *text_2d_node_common_data = node_base->node_common_data;
+                        exec[0] = text_2d_node_common_data->tick_cb;
+                        exec[1] = node_base->attr_accessor;
+                        mp_call_method_n_kw(0, 0, exec);
+
+                        exec[0] = text_2d_node_common_data->draw_cb;
                         exec[1] = node_base;
                         engine_camera_draw_for_each(exec);
                     }

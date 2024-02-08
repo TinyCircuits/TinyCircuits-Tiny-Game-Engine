@@ -31,6 +31,7 @@ mp_obj_t font_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_
     uint16_t current_pixel_index = 0;
     uint16_t last_width_signifier_color = texture_resource_get_pixel(self->texture_resource, engine_math_2d_to_1d_index(current_pixel_index, self->glyph_height, bitmap_width));
     uint16_t glyph_index = 0;
+    self->glyph_x_offsets[0] = 0;
 
     while(glyph_index < ENGINE_FONT_MAX_CHAR_COUNT){
         current_pixel_index++;
@@ -42,6 +43,7 @@ mp_obj_t font_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_
         if(last_width_signifier_color != next_width_signifier_color){
             glyph_index++;
             last_width_signifier_color = next_width_signifier_color;
+            self->glyph_x_offsets[glyph_index] = current_pixel_index+1;
         }
         
         // When we get to the end of the font bitmap,
@@ -60,6 +62,18 @@ mp_obj_t font_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_
 }
 
 
+uint8_t font_resource_get_glyph_width(font_resource_class_obj_t *font, char codepoint){
+    // ASCII space is 32 but mapped to index 0 in the array
+    return font->glyph_widths[codepoint - 33];
+}
+
+
+uint8_t font_resource_get_glyph_x_offset(font_resource_class_obj_t *font, char codepoint){
+    // ASCII space is 32 but mapped to index 0 in the array
+    return font->glyph_x_offsets[codepoint - 33];
+}
+
+
 // Class methods
 STATIC mp_obj_t font_resource_class_del(mp_obj_t self_in){
     ENGINE_INFO_PRINTF("FontResource: Deleted");
@@ -69,6 +83,15 @@ STATIC mp_obj_t font_resource_class_del(mp_obj_t self_in){
 MP_DEFINE_CONST_FUN_OBJ_1(font_resource_class_del_obj, font_resource_class_del);
 
 
+/*  --- doc ---
+    NAME: FontResource
+    DESC: Object that holds information about a font
+    PARAM:  [type=string]                       [name=filepath] [value=string]
+    PARAM:  [type=boolean]                      [name=in_ram]   [value=True of False (False by default)]
+    ATTR:   [type={ref_link:TextureResource}]   [name=texture]  [value={ref_link:TextureResource}]
+    ATTR:   [type=bytearray]                    [name=widths]   [value=bytearray (read-only)]
+    ATTR:   [type=int]                          [name=height]   [value=any (read-only)]
+*/ 
 STATIC void font_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing FontResource attr");
 

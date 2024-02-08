@@ -13,8 +13,9 @@
 #define NODE_TYPE_CIRCLE_2D         5
 #define NODE_TYPE_SPRITE_2D         6
 #define NODE_TYPE_POLYGON_2D        7
+#define NODE_TYPE_TEXT_2D           8
 
-#define NODE_TYPE_VOXELSPACE        8   // https://github.com/s-macke/VoxelSpace
+#define NODE_TYPE_VOXELSPACE        9   // https://github.com/s-macke/VoxelSpace
 
 
 #endif  // NODE_TYPES_H

@@ -5,48 +5,19 @@ import engine_input
 import engine_physics
 import engine_audio
 from engine_physics import EmptyPolyCollisionShape2D, RectanglePolyCollisionShape2D, HexagonPolyCollisionShape2D
-from engine_nodes import EmptyNode, Sprite2DNode, Rectangle2DNode, Polygon2DNode, Circle2DNode, CameraNode, VoxelSpaceNode, Physics2DNode
+from engine_nodes import EmptyNode, Sprite2DNode, Rectangle2DNode, Polygon2DNode, Circle2DNode, CameraNode, VoxelSpaceNode, Physics2DNode, Text2DNode
 from engine_math import Vector3, Vector2, Rectangle
 from engine_resources import TextureResource, WaveSoundResource, FontResource
 import math
 import gc
 
-engine_debug.enable_all()
-font = FontResource("9pt-roboto-font.bmp")
-
-# # engine_debug.debug_enable_all()
-# wave0 = WaveSoundResource("cow_s16.wav")
-# wave1 = WaveSoundResource("piano.wav")
-# # engine_debug.debug_enable_setting(engine_debug.debug_setting_performance)
-
-# # c0 = engine_audio.play(wave0, 0, True)
-# # c1 = engine_audio.play(wave1, 1, True)
-
-# texture = TextureResource("32x32.bmp")
-
-# class MySprite(Sprite2DNode):
-#     def __init__(self):
-#         super().__init__(self, texture)
-    
-#     # def tick(self):
-#         # print(c1.time)
-#     #     if engine_input.is_dpad_up_pressed():
-#     #         self.position.y -= 1
-#     #     if engine_input.is_dpad_down_pressed():
-#     #         self.position.y += 1
-        
-#     #     if engine_input.is_dpad_left_pressed():
-#     #         self.position.x -= 1
-#     #     if engine_input.is_dpad_right_pressed():
-#     #         self.position.x += 1
-        
-        
-#     #     if engine_input.is_bumper_left_pressed():
-#     #         self.rotation += 0.1
-#     #     if engine_input.is_bumper_right_pressed():
-#     #         self.rotation -= 0.1
+# engine_debug.enable_all()
+engine_debug.enable_setting(engine_debug.performance)
+# font = FontResource("9pt-roboto-font.bmp")
+# text = Text2DNode(text="H", font=font)
 
 
+texture = TextureResource("32x32.bmp")
 
 
 # circle = Circle2DNode()
@@ -56,7 +27,7 @@ font = FontResource("9pt-roboto-font.bmp")
 # rectangle.width = 30
 # rectangle.height = 15
 # rectangle.outline = True
-# sprite = MySprite()
+sprite = Sprite2DNode(texture=texture)
 # polygon = Polygon2DNode()
 # polygon.vertices.append(Vector2(-10, 10))
 # polygon.vertices.append(Vector2(10, 10))
@@ -74,38 +45,35 @@ font = FontResource("9pt-roboto-font.bmp")
 # polygon.position = Vector2(-32, 0)
 
 
-# class MyCam(CameraNode):
-#     def __init__(self):
-#         super().__init__(self)
+class MyCam(CameraNode):
+    def __init__(self):
+        super().__init__(self)
     
-#     def tick(self):
-#         if engine_input.check_pressed(engine_input.A):
-#             self.zoom -= 0.1
-#         if engine_input.check_pressed(engine_input.B):
-#             self.zoom += 0.1
+    def tick(self):
+        if engine_input.check_pressed(engine_input.A):
+            self.zoom -= 0.01
+        if engine_input.check_pressed(engine_input.B):
+            self.zoom += 0.01
         
-#         if engine_input.check_pressed(engine_input.DPAD_UP):
-#             self.position.y -= 1
-#         if engine_input.check_pressed(engine_input.DPAD_DOWN):
-#             self.position.y += 1
+        if engine_input.check_pressed(engine_input.DPAD_UP):
+            self.position.y -= 0.25
+        if engine_input.check_pressed(engine_input.DPAD_DOWN):
+            self.position.y += 0.25
         
-#         if engine_input.check_pressed(engine_input.DPAD_LEFT):
-#             self.position.x -= 1
-#         if engine_input.check_pressed(engine_input.DPAD_RIGHT):
-#             self.position.x += 1
+        if engine_input.check_pressed(engine_input.DPAD_LEFT):
+            self.position.x -= 0.25
+        if engine_input.check_pressed(engine_input.DPAD_RIGHT):
+            self.position.x += 0.25
         
         
-#         if engine_input.check_pressed(engine_input.BUMPER_LEFT):
-#             self.rotation.z += 0.01
-#         if engine_input.check_pressed(engine_input.BUMPER_RIGHT):
-#             self.rotation.z -= 0.01
+        if engine_input.check_pressed(engine_input.BUMPER_LEFT):
+            self.rotation.z += 0.01
+        if engine_input.check_pressed(engine_input.BUMPER_RIGHT):
+            self.rotation.z -= 0.01
 
 
-# camera = MyCam()
-# camera.zoom = 1
-# # camera.position = Vector2(0, 0)
-# # # sprite.add_child(camera)
+camera = MyCam()
+camera.zoom = 1
 
-# gc.collect()
 
-# engine.start()
+engine.start()

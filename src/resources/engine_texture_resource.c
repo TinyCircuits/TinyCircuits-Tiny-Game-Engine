@@ -116,7 +116,8 @@ uint16_t texture_resource_get_pixel(texture_resource_class_obj_t *texture, uint3
 /*  --- doc ---
     NAME: TextureResource
     DESC: Object that holds information about bitmaps
-    PARAM:  [type=string]  [name=file_path] [value=string]
+    PARAM:  [type=string]  [name=filepath]  [value=string]
+    PARAM:  [type=boolean] [name=in_ram]    [value=True of False (False by default)]
     ATTR:   [type=float]   [name=width]     [value=any]
     ATTR:   [type=float]   [name=height]    [value=any]
 */ 

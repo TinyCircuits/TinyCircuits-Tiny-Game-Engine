@@ -85,17 +85,22 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
     sprite_rotated_x += camera_viewport->width/2;
     sprite_rotated_y += camera_viewport->height/2;
 
-    engine_draw_blit_scale_rotate( sprite_pixel_data,
-                                  (int32_t)sprite_rotated_x,
-                                  (int32_t)sprite_rotated_y,
-                                  sprite_frame_fb_start_index,
-                                  spritesheet_width,
-                                  sprite_frame_width,
-                                  sprite_frame_height,
-                                  (int32_t)((sprite_scale->x*camera_zoom)*65536 + 0.5),
-                                  (int32_t)((sprite_scale->y*camera_zoom)*65536 + 0.5),
-                                  (int16_t)(((sprite_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation))*1024 / (float)(2*PI)),
-                                  transparent_color);
+    engine_draw_blit(sprite_pixel_data+sprite_frame_fb_start_index,
+                     sprite_rotated_x, sprite_rotated_y,
+                     sprite_frame_width, sprite_frame_height,
+                     spritesheet_width,
+                     -(sprite_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation));
+
+    // engine_draw_blit_scale_rotate( sprite_pixel_data+sprite_frame_fb_start_index,
+    //                               (int32_t)sprite_rotated_x,
+    //                               (int32_t)sprite_rotated_y,
+    //                               spritesheet_width,
+    //                               sprite_frame_width,
+    //                               sprite_frame_height,
+    //                               (int32_t)((sprite_scale->x*camera_zoom)*65536 + 0.5),
+    //                               (int32_t)((sprite_scale->y*camera_zoom)*65536 + 0.5),
+    //                               (int16_t)(((sprite_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation))*1024 / (float)(2*PI)),
+    //                               transparent_color);
 
     // After drawing, go to the next frame if it is time to
     float sprite_fps = mp_obj_get_float(mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_fps));
