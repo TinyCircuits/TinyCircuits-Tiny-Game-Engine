@@ -9,6 +9,11 @@ STATIC void polygon_collision_shape_2d_class_print(const mp_print_t *print, mp_o
 }
 
 
+/* --- doc ---
+   NAME: calculate_normals
+   DESC: Recalculates normals for the shape
+   RETURN: None
+*/
 STATIC mp_obj_t polygon_2d_node_class_calculate_normals(mp_obj_t self_in){
     ENGINE_WARNING_PRINTF("Polygon2DNode: Calculating normals");
 
@@ -155,9 +160,9 @@ mp_obj_t hexagon_poly_collision_shape_2d_class_new(const mp_obj_type_t *type, si
 /* --- doc ---
    NAME: PolygonCollisionShape2D
    DESC: A polygon used to describe the shape of collision for a {ref_link:Physics2DNode}. Uses {ref_link:EmptyPolyCollisionShape2D} by default, but other basic shapes are available: {ref_link:RectanglePolyCollisionShape2D} and {ref_link:HexagonPolyCollisionShape2D}
-   ATTR: [type=function]    [name=calculate_normals]    [value=function]
-   ATTR: [type=list]        [name=vertices]             [value=list of {ref_link:Vector2}s]
-   ATTR: [type=list]        [name=normals]              [value=list of {ref_link:Vector2}s]
+   ATTR: [type=function]    [name={ref_link:calculate_normals}]     [value=function]
+   ATTR: [type=list]        [name=vertices]                         [value=list of {ref_link:Vector2}s]
+   ATTR: [type=list]        [name=normals]                          [value=list of {ref_link:Vector2}s]
 */
 STATIC void polygon_collision_shape_2d_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing PolygonCollisionShape2D attr");

@@ -47,11 +47,13 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Add outline parameter to Polygon2DNode but make it default to outline and not draw + error if set to true
 [X] Documentation: markdown to HTML
 [X] Documentation: add callbacks for nodes to each
+[X] Add get_child to each node that gets children based on index and errors if out of bounds
+[X] Fix Circle2DNode being drawn at different scales
+[X] Add keyword arguments for all constructors
 
-[] Add get_child to each node that gets children based on index and errors if out of bounds
-[] Fix Circle2DNode being drawn at different scales
+[] Text that can display ` !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~`
+[] Blending colors for partially transparent pixels in some sources (don't ahve any yet)
 [.] Add Line2DNode that draws a rectangle between two points, Allow filled and outline modes
-[] Add keyword arguments for all constructors
 [] Expose low level drawing functions through engine_draw
 [] Fix camera view ports not being taken into account when drawing. Defines offset and then clip. Need to think about how view ports should really work, offset and clip into destination buffer (camera destinations should be able to be set to other buffers other than screen buffer if want to render one camera to a texture and then the next camera renders that node with that texture (TV!))
 [] Filled polygons
@@ -62,7 +64,6 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [.] Physics: just polygons, rotation (simple init for common shapes), no friction. Need to figure out what to do when physics collision shape is rotated, cache normals?
 [] Physics: smooth: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-core-engine--gamedev-7493t#:~:text=Here%20is%20a%20full%20example%3A
 [] Weird sprite jumping/offset during rotation and scaling
-[] Text
 [] UI
 [] Reset
 [] Performance, we'll see how it goes

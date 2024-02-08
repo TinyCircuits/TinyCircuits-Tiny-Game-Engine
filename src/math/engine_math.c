@@ -35,6 +35,11 @@ float engine_math_angle_between(float px0, float py0, float px1, float py1){
 }
 
 
+uint32_t engine_math_2d_to_1d_index(uint32_t x, uint32_t y, uint32_t width){
+    return y * width + x;
+}
+
+
 // https://stackoverflow.com/a/22491252
 void engine_math_rotate_point(float *px, float *py, float cx, float cy, float angle_radians){
     float x_centered = *px - cx;

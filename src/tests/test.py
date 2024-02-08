@@ -7,102 +7,105 @@ import engine_audio
 from engine_physics import EmptyPolyCollisionShape2D, RectanglePolyCollisionShape2D, HexagonPolyCollisionShape2D
 from engine_nodes import EmptyNode, Sprite2DNode, Rectangle2DNode, Polygon2DNode, Circle2DNode, CameraNode, VoxelSpaceNode, Physics2DNode
 from engine_math import Vector3, Vector2, Rectangle
-from engine_resources import TextureResource, WaveSoundResource
+from engine_resources import TextureResource, WaveSoundResource, FontResource
 import math
 import gc
 
-# engine_debug.debug_enable_all()
-wave0 = WaveSoundResource("cow_s16.wav")
-wave1 = WaveSoundResource("piano.wav")
-# engine_debug.debug_enable_setting(engine_debug.debug_setting_performance)
+engine_debug.enable_all()
+font = FontResource("9pt-roboto-font.bmp")
 
-# c0 = engine_audio.play(wave0, 0, True)
-# c1 = engine_audio.play(wave1, 1, True)
+# # engine_debug.debug_enable_all()
+# wave0 = WaveSoundResource("cow_s16.wav")
+# wave1 = WaveSoundResource("piano.wav")
+# # engine_debug.debug_enable_setting(engine_debug.debug_setting_performance)
 
-texture = TextureResource("32x32.bmp")
+# # c0 = engine_audio.play(wave0, 0, True)
+# # c1 = engine_audio.play(wave1, 1, True)
 
-class MySprite(Sprite2DNode):
-    def __init__(self):
-        super().__init__(self, texture)
+# texture = TextureResource("32x32.bmp")
+
+# class MySprite(Sprite2DNode):
+#     def __init__(self):
+#         super().__init__(self, texture)
     
-    # def tick(self):
-        # print(c1.time)
-    #     if engine_input.is_dpad_up_pressed():
-    #         self.position.y -= 1
-    #     if engine_input.is_dpad_down_pressed():
-    #         self.position.y += 1
+#     # def tick(self):
+#         # print(c1.time)
+#     #     if engine_input.is_dpad_up_pressed():
+#     #         self.position.y -= 1
+#     #     if engine_input.is_dpad_down_pressed():
+#     #         self.position.y += 1
         
-    #     if engine_input.is_dpad_left_pressed():
-    #         self.position.x -= 1
-    #     if engine_input.is_dpad_right_pressed():
-    #         self.position.x += 1
+#     #     if engine_input.is_dpad_left_pressed():
+#     #         self.position.x -= 1
+#     #     if engine_input.is_dpad_right_pressed():
+#     #         self.position.x += 1
         
         
-    #     if engine_input.is_bumper_left_pressed():
-    #         self.rotation += 0.1
-    #     if engine_input.is_bumper_right_pressed():
-    #         self.rotation -= 0.1
+#     #     if engine_input.is_bumper_left_pressed():
+#     #         self.rotation += 0.1
+#     #     if engine_input.is_bumper_right_pressed():
+#     #         self.rotation -= 0.1
 
 
 
 
-circle = Circle2DNode()
-circle.outline = True
-circle.radius = 25
-rectangle = Rectangle2DNode()
-rectangle.width = 30
-rectangle.height = 15
-rectangle.outline = True
-sprite = MySprite()
-polygon = Polygon2DNode()
-polygon.vertices.append(Vector2(-10, 10))
-polygon.vertices.append(Vector2(10, 10))
-polygon.vertices.append(Vector2(10, -10))
-polygon.vertices.append(Vector2(-10, -10))
-polygon.outline = True
+# circle = Circle2DNode()
+# circle.outline = True
+# circle.radius = 25
+# rectangle = Rectangle2DNode()
+# rectangle.width = 30
+# rectangle.height = 15
+# rectangle.outline = True
+# sprite = MySprite()
+# polygon = Polygon2DNode()
+# polygon.vertices.append(Vector2(-10, 10))
+# polygon.vertices.append(Vector2(10, 10))
+# polygon.vertices.append(Vector2(10, -10))
+# polygon.vertices.append(Vector2(-10, -10))
+# polygon.outline = True
 
-circle.color = 0b1111100000000000
-rectangle.color = 0b1111101001001001
-sprite.transparent_color = engine_draw.black
+# circle.color = 0b1111100000000000
+# rectangle.color = 0b1111101001001001
+# sprite.transparent_color = engine_draw.black
 
-circle.position = Vector2(0, -32)
-rectangle.position = Vector2(32, 0)
-sprite.position = Vector2(0, 32)
-polygon.position = Vector2(-32, 0)
+# circle.position = Vector2(0, -32)
+# rectangle.position = Vector2(32, 0)
+# sprite.position = Vector2(0, 32)
+# polygon.position = Vector2(-32, 0)
 
 
-class MyCam(CameraNode):
-    def __init__(self):
-        super().__init__(self)
+# class MyCam(CameraNode):
+#     def __init__(self):
+#         super().__init__(self)
     
-    def tick(self):
-        if engine_input.check_pressed(engine_input.A):
-            self.zoom -= 0.1
-        if engine_input.check_pressed(engine_input.B):
-            self.zoom += 0.1
+#     def tick(self):
+#         if engine_input.check_pressed(engine_input.A):
+#             self.zoom -= 0.1
+#         if engine_input.check_pressed(engine_input.B):
+#             self.zoom += 0.1
         
-        if engine_input.check_pressed(engine_input.DPAD_UP):
-            self.position.y -= 1
-        if engine_input.check_pressed(engine_input.DPAD_DOWN):
-            self.position.y += 1
+#         if engine_input.check_pressed(engine_input.DPAD_UP):
+#             self.position.y -= 1
+#         if engine_input.check_pressed(engine_input.DPAD_DOWN):
+#             self.position.y += 1
         
-        if engine_input.check_pressed(engine_input.DPAD_LEFT):
-            self.position.x -= 1
-        if engine_input.check_pressed(engine_input.DPAD_RIGHT):
-            self.position.x += 1
+#         if engine_input.check_pressed(engine_input.DPAD_LEFT):
+#             self.position.x -= 1
+#         if engine_input.check_pressed(engine_input.DPAD_RIGHT):
+#             self.position.x += 1
         
         
-        if engine_input.check_pressed(engine_input.BUMPER_LEFT):
-            self.rotation.z += 0.01
-        if engine_input.check_pressed(engine_input.BUMPER_RIGHT):
-            self.rotation.z -= 0.01
+#         if engine_input.check_pressed(engine_input.BUMPER_LEFT):
+#             self.rotation.z += 0.01
+#         if engine_input.check_pressed(engine_input.BUMPER_RIGHT):
+#             self.rotation.z -= 0.01
 
 
-camera = MyCam()
-camera.zoom = 1
-# camera.position = Vector2(0, 0)
-# # sprite.add_child(camera)
+# camera = MyCam()
+# camera.zoom = 1
+# # camera.position = Vector2(0, 0)
+# # # sprite.add_child(camera)
 
-gc.collect()
+# gc.collect()
 
-engine.start()
+# engine.start()

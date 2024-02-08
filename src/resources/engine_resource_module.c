@@ -4,7 +4,12 @@
 #include "engine_font_resource.h"
 
 
-// Module attributes
+/*  --- doc ---
+    NAME: engine_resources
+    DESC: Resources are objects that are used as references to certain data (textures/bitmaps, audio, fonts, etc.)
+    ATTR: [type=object]   [name={ref_link:TextureResource}]     [value=object] 
+    ATTR: [type=object]   [name={ref_link:WaveSoundResource}]   [value=object]
+*/
 STATIC const mp_rom_map_elem_t engine_resources_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_resources) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_TextureResource), (mp_obj_t)&texture_resource_class_type },

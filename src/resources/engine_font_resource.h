@@ -2,11 +2,18 @@
 #define ENGINE_FONT_RESOURCE_H
 
 #include "py/obj.h"
+#include "resources/engine_texture_resource.h"
+
+// Default mapping is: ` !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~`
+// where glyph_widths[0] refers to width of the space character, for example
+#define ENGINE_FONT_MAX_CHAR_COUNT 125 - 32
 
 typedef struct{
     mp_obj_base_t base;
-    unsigned char* filename;
-    float font_size;
+    texture_resource_class_obj_t *texture_resource;
+    uint8_t glyph_widths[ENGINE_FONT_MAX_CHAR_COUNT];
+    mp_obj_t glyph_widths_bytearray_ref;
+    uint8_t glyph_height;
 }font_resource_class_obj_t;
 
 extern const mp_obj_type_t font_resource_class_type;

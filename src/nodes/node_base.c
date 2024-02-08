@@ -86,7 +86,7 @@ mp_obj_t node_base_add_child(mp_obj_t self_parent_in, mp_obj_t child_in){
     NAME: get_child
     DESC: Gets child
     PARAM: [type=int] [name=index] [value=any positive integer]                                                                                                        
-    RETURN: None
+    RETURN: Node
 */ 
 mp_obj_t node_base_get_child(mp_obj_t self_parent_in, mp_obj_t index_obj){
     ENGINE_INFO_PRINTF("Node Base: Getting child...");
