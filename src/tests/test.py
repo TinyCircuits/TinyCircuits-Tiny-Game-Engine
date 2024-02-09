@@ -27,7 +27,7 @@ texture = TextureResource("32x32.bmp")
 # rectangle.width = 30
 # rectangle.height = 15
 # rectangle.outline = True
-sprite = Sprite2DNode(texture=texture)
+sprite = Sprite2DNode(texture=texture, position=Vector2(0, 0))
 # polygon = Polygon2DNode()
 # polygon.vertices.append(Vector2(-10, 10))
 # polygon.vertices.append(Vector2(10, 10))

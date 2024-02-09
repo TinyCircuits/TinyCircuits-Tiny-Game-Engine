@@ -85,6 +85,8 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
     sprite_rotated_x += camera_viewport->width/2;
     sprite_rotated_y += camera_viewport->height/2;
 
+    // engine_draw_pixel(0xffff, sprite_rotated_x, sprite_rotated_y);
+
     engine_draw_blit(sprite_pixel_data+sprite_frame_fb_start_index,
                      sprite_rotated_x, sprite_rotated_y,
                      sprite_frame_width, sprite_frame_height,

@@ -453,51 +453,52 @@ void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t
     ENGINE_PERFORMANCE_CYCLES_START();
 
     uint16_t *screen_buffer = engine_get_active_screen_buffer();
+    
 
-    uint32_t half_width = window_width >> 1;
-    uint32_t half_height = window_height >> 1;
+    float sin_angle = sinf(rotation_radians);
+    float cos_angle = cosf(rotation_radians);
 
-    // Cache these calculations
-    float tri_shear_tan = tanf(rotation_radians * 0.5f);
-    float tri_shear_sin = sinf(rotation_radians);
+    float midX = window_width / 2.0f;
+    float midY = window_height / 2.0f;
 
-    float sheared_x = 0;
-    float sheared_y = 0;
+    uint32_t i, j;
 
-    // Now we need to go over each column and displace the pixels
-    for(int16_t src_pixel_x=0; src_pixel_x<window_width; src_pixel_x++){
-        for(int16_t src_pixel_y=0; src_pixel_y<window_height; src_pixel_y++){
-            float src_pixel_centered_x = src_pixel_x;
-            float src_pixel_centered_y = src_pixel_y;
+    int32_t top_left_x = center_x - midX;
+    int32_t top_left_y = center_y - midY;
 
-            src_pixel_centered_x -= half_width;
-            src_pixel_centered_y -= half_height;
+    const uint32_t center_pixel_offset = top_left_y * SCREEN_WIDTH + top_left_x;
+    uint32_t dest_offset = center_pixel_offset;
+    uint32_t next_dest_row_offset = SCREEN_WIDTH - window_width;
 
-            // Shear #1
-            sheared_x = src_pixel_centered_x - src_pixel_centered_y * tri_shear_tan;
-            sheared_y = src_pixel_centered_y;
+    for(j=0; j<window_height; j++){
+        float deltaY = j - midY;
+        float deltaX = 0 - midX;
 
-            // Shear #2
-            sheared_y = sheared_x * tri_shear_sin + sheared_y;
+        float x = midX + deltaX * cos_angle + deltaY * sin_angle;
+        float y = midY - deltaX * sin_angle + deltaY * cos_angle;
 
-            // Shear #3
-            sheared_x = sheared_x - sheared_y * tri_shear_tan;
-            sheared_x += half_width;
-            sheared_y += half_height;
+        for(i=0; i<window_width; i++){
+            // Floor these otherwise get artifacts (don't exactly know why).
+            // Floor + int seems to be faster than comparing floats
+            int32_t rotX = floorf(x);
+            int32_t rotY = floorf(y);
 
-            if((sheared_x >= 0 && sheared_x < window_width) && (sheared_y >= 0 && sheared_y < window_height)){
-                uint16_t src_pixel_index = ((uint16_t)sheared_y) * pixels_stride + ((uint16_t)sheared_x);
+            int32_t abs_index_y = top_left_y + j;
+            int32_t abs_index_x = top_left_x + i;
 
-                src_pixel_centered_x += center_x;
-                src_pixel_centered_y += center_y;
-
-                if((src_pixel_centered_x >= 0 && src_pixel_centered_x < SCREEN_WIDTH) && (src_pixel_centered_y >= 0 && src_pixel_centered_y < SCREEN_HEIGHT)){
-                    uint16_t output_pixel_index = ((uint16_t)src_pixel_centered_y) * SCREEN_WIDTH + ((uint16_t)src_pixel_centered_x);
-
-                    screen_buffer[output_pixel_index] = pixels[src_pixel_index];
-                }
+            // These if statements are expensive!
+            if((rotX >= 0 && rotX < window_width) && (rotY >= 0 && rotY < window_height) &&
+               (abs_index_x >= 0 && abs_index_x < SCREEN_WIDTH) && (abs_index_y >= 0 && abs_index_y < SCREEN_HEIGHT)){
+                uint32_t src_offset = rotY * pixels_stride + rotX;
+                screen_buffer[dest_offset] = pixels[src_offset];
             }
+
+            x += cos_angle;
+            y -= sin_angle;
+            dest_offset += 1;
         }
+
+        dest_offset += next_dest_row_offset;
     }
 
     ENGINE_PERFORMANCE_CYCLES_STOP();
