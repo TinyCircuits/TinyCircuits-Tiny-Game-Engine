@@ -432,7 +432,7 @@ void engine_draw_fillrect_scale_rotate_viewport(uint16_t color, int32_t x, int32
 }
 
 
-void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t window_width, uint32_t window_height, uint32_t pixels_stride, float x_scale, float y_scale, float rotation_radians){
+void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t window_width, uint32_t window_height, uint32_t pixels_stride, float x_scale, float y_scale, float rotation_radians, uint16_t transparent_color){
     /*  https://cohost.org/tomforsyth/post/891823-rotation-with-three#:~:text=But%20the%20TL%3BDR%20is%20you%20do%20three%20shears%3A
         https://stackoverflow.com/questions/65909025/rotating-a-bitmap-with-3-shears    Lots of inspiration from here
         https://computergraphics.stackexchange.com/questions/10599/rotate-a-bitmap-with-shearing
@@ -442,6 +442,8 @@ void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t
         https://datagenetics.com/blog/august32013/index.html
         https://www.ocf.berkeley.edu/~fricke/projects/israel/paeth/rotation_by_shearing.html
         https://www.ocf.berkeley.edu/~fricke/projects/israel/paeth/rotation_by_shearing.html#:~:text=To%20do%20a%20shear%20operation%20on%20a%20raster%20image%20(that%20is%20to%20say%2C%20a%20bitmap)%2C%20we%20just%20shift%20all%20the%20pixels%20in%20a%20given%20row%20(column)%20by%20an%20easy%2Dto%2Dcalculate%20displacement
+
+        https://codereview.stackexchange.com/a/86546 <- Not trishear but might be good enough, it's what is used below
 
         The last link above highlights the most important part about doing rotations by shears:
         "To do a shear operation on a raster image (that is to say, a bitmap), we just shift all
@@ -463,7 +465,7 @@ void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t
     float cos_angle = cosf(rotation_radians);
 
     // Used to traverse about rotation
-    float sin_angle_inv_scaled = sin_angle * inverse_x_scale;
+    float sin_angle_inv_scaled = sin_angle * inverse_y_scale;
     float cos_angle_inv_scaled = cos_angle * inverse_x_scale;
 
     // Controls the scale of the destination rectangle,
@@ -536,24 +538,22 @@ void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t
             // if so, stop drawing the destination row early and
             // move on to the next
             if(top_left_x+i < SCREEN_WIDTH){
-                // Uncomment to see background (crashes if goes out of bounds)
-                // Draw sprites that are thin could be optimized
-                screen_buffer[dest_offset] = 0xffff;
+                // Uncomment to see background. Drawing 
+                // sprites that are thin could be optimized
+                // screen_buffer[dest_offset] = 0xffff;
 
                 // Floor these otherwise get artifacts (don't exactly know why).
                 // Floor + int seems to be faster than comparing floats
                 int32_t rotX = floorf(x);
                 int32_t rotY = floorf(y);
 
-                // Calculate and store just for checking withing bounds of camera view
-                int32_t abs_index_y = top_left_y + j;
-                int32_t abs_index_x = top_left_x + i;
-
-                // These if statements are expensive!
+                // If statements are expensive! Don't need to check if withing screen
+                // bounds since those dimensions are clipped (destination rect)
                 if((rotX >= 0 && rotX < window_width) && (rotY >= 0 && rotY < window_height)){
                     uint32_t src_offset = rotY * pixels_stride + rotX;
+                    uint16_t src_color = pixels[src_offset];
 
-                    screen_buffer[dest_offset] = pixels[src_offset];
+                    if(src_color != transparent_color) screen_buffer[dest_offset] = src_color;
                 }
 
                 // While in row, keep traversing about rotation

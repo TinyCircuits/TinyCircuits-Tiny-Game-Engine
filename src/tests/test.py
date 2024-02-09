@@ -13,36 +13,36 @@ import gc
 
 # engine_debug.enable_all()
 engine_debug.enable_setting(engine_debug.performance)
-# font = FontResource("9pt-roboto-font.bmp")
-# text = Text2DNode(text="H", font=font)
+font = FontResource("9pt-roboto-font.bmp")
+text = Text2DNode(text="H", font=font)
 
 
 texture = TextureResource("32x32.bmp")
 
 
-# circle = Circle2DNode()
-# circle.outline = True
-# circle.radius = 25
-# rectangle = Rectangle2DNode()
-# rectangle.width = 30
-# rectangle.height = 15
-# rectangle.outline = True
-sprite = Sprite2DNode(texture=texture, position=Vector2(0, 0), scale=Vector2(0.5, 1.5))
-# polygon = Polygon2DNode()
-# polygon.vertices.append(Vector2(-10, 10))
-# polygon.vertices.append(Vector2(10, 10))
-# polygon.vertices.append(Vector2(10, -10))
-# polygon.vertices.append(Vector2(-10, -10))
-# polygon.outline = True
+circle = Circle2DNode()
+circle.outline = True
+circle.radius = 25
+rectangle = Rectangle2DNode()
+rectangle.width = 30
+rectangle.height = 15
+rectangle.outline = True
+sprite = Sprite2DNode(texture=texture, position=Vector2(0, 0), scale=Vector2(1.0, 1.0))
+polygon = Polygon2DNode()
+polygon.vertices.append(Vector2(-10, 10))
+polygon.vertices.append(Vector2(10, 10))
+polygon.vertices.append(Vector2(10, -10))
+polygon.vertices.append(Vector2(-10, -10))
+polygon.outline = True
 
-# circle.color = 0b1111100000000000
-# rectangle.color = 0b1111101001001001
-# sprite.transparent_color = engine_draw.black
+circle.color = 0b1111100000000000
+rectangle.color = 0b1111101001001001
+sprite.transparent_color = engine_draw.black
 
-# circle.position = Vector2(0, -32)
-# rectangle.position = Vector2(32, 0)
-# sprite.position = Vector2(0, 32)
-# polygon.position = Vector2(-32, 0)
+circle.position = Vector2(0, -32)
+rectangle.position = Vector2(32, 0)
+sprite.position = Vector2(0, 32)
+polygon.position = Vector2(-32, 0)
 
 
 class MyCam(CameraNode):

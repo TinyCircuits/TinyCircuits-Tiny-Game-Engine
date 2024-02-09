@@ -101,7 +101,8 @@ STATIC mp_obj_t text_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
                         text_font_bitmap_width,
                         x_scale,
                         y_scale,
-                        0.0f);
+                        0.0f,
+                        0);
 
         // engine_draw_blit_scale_rotate(  text_pixel_data+engine_math_2d_to_1d_index(char_x_offset, 0, text_font_bitmap_width),
         //                                 (int32_t)char_center_x,
