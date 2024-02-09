@@ -10,6 +10,14 @@
 #define DEG2RAD (PI/180.0f)
 #define EPSILON 1e-9
 
+#ifndef max
+#define max(a,b)            (((a) > (b)) ? (a) : (b))
+#endif
+
+#ifndef min
+#define min(a,b)            (((a) < (b)) ? (a) : (b))
+#endif
+
 float engine_math_dot_product(float x0, float y0, float x1, float y1);
 void engine_math_normalize(float *vx, float *vy);
 

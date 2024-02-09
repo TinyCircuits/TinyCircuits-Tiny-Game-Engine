@@ -91,6 +91,8 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
                      sprite_rotated_x, sprite_rotated_y,
                      sprite_frame_width, sprite_frame_height,
                      spritesheet_width,
+                     sprite_scale->x*camera_zoom,
+                     sprite_scale->y*camera_zoom,
                      -(sprite_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation));
 
     // engine_draw_blit_scale_rotate( sprite_pixel_data+sprite_frame_fb_start_index,

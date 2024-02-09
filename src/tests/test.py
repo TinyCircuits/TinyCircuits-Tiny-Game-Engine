@@ -27,7 +27,7 @@ texture = TextureResource("32x32.bmp")
 # rectangle.width = 30
 # rectangle.height = 15
 # rectangle.outline = True
-sprite = Sprite2DNode(texture=texture, position=Vector2(0, 0))
+sprite = Sprite2DNode(texture=texture, position=Vector2(0, 0), scale=Vector2(0.5, 1.5))
 # polygon = Polygon2DNode()
 # polygon.vertices.append(Vector2(-10, 10))
 # polygon.vertices.append(Vector2(10, 10))
@@ -67,9 +67,9 @@ class MyCam(CameraNode):
         
         
         if engine_input.check_pressed(engine_input.BUMPER_LEFT):
-            self.rotation.z += 0.01
+            self.rotation.z += 0.005
         if engine_input.check_pressed(engine_input.BUMPER_RIGHT):
-            self.rotation.z -= 0.01
+            self.rotation.z -= 0.005
 
 
 camera = MyCam()

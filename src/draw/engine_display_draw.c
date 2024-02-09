@@ -3,6 +3,7 @@
 #include "debug/debug_print.h"
 #include "math/trig_tables.h"
 #include <string.h>
+#include <stdlib.h>
 
 #include "nodes/node_base.h"
 #include "math/vector2.h"
@@ -431,7 +432,7 @@ void engine_draw_fillrect_scale_rotate_viewport(uint16_t color, int32_t x, int32
 }
 
 
-void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t window_width, uint32_t window_height, uint32_t pixels_stride, float rotation_radians){
+void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t window_width, uint32_t window_height, uint32_t pixels_stride, float x_scale, float y_scale, float rotation_radians){
     /*  https://cohost.org/tomforsyth/post/891823-rotation-with-three#:~:text=But%20the%20TL%3BDR%20is%20you%20do%20three%20shears%3A
         https://stackoverflow.com/questions/65909025/rotating-a-bitmap-with-3-shears    Lots of inspiration from here
         https://computergraphics.stackexchange.com/questions/10599/rotate-a-bitmap-with-shearing
@@ -453,51 +454,125 @@ void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t
     ENGINE_PERFORMANCE_CYCLES_START();
 
     uint16_t *screen_buffer = engine_get_active_screen_buffer();
-    
 
+    float inverse_x_scale = 1.0f / x_scale;
+    float inverse_y_scale = 1.0f / y_scale;
+    
+    // https://codereview.stackexchange.com/a/86546
     float sin_angle = sinf(rotation_radians);
     float cos_angle = cosf(rotation_radians);
 
-    float midX = window_width / 2.0f;
-    float midY = window_height / 2.0f;
+    // Used to traverse about rotation
+    float sin_angle_inv_scaled = sin_angle * inverse_x_scale;
+    float cos_angle_inv_scaled = cos_angle * inverse_x_scale;
 
-    uint32_t i, j;
+    // Controls the scale of the destination rectangle,
+    // which in turn defines the total scale of the bitmap
+    uint32_t scaled_window_width = window_width * x_scale;
+    uint32_t scaled_window_height = window_height * y_scale;
 
-    int32_t top_left_x = center_x - midX;
-    int32_t top_left_y = center_y - midY;
+    float half_scaled_window_width = scaled_window_width * 0.5f;
+    float half_scaled_window_height = scaled_window_height * 0.5f;
 
-    const uint32_t center_pixel_offset = top_left_y * SCREEN_WIDTH + top_left_x;
+    // Add 1 so that sprite doesn't get cut off at bottom and right.
+    // Need bounding-box that contains the rotated sprite so that it
+    // does not get clipped
+    uint32_t dim = max(scaled_window_width, scaled_window_height)+1;
+    float dim_half = max(half_scaled_window_width, half_scaled_window_height);
+
+    // The top-left of the bitmap destination
+    int32_t top_left_x = center_x - dim_half;
+    int32_t top_left_y = center_y - dim_half;
+
+    // If the top-left is above the viewport but
+    // the bitmap may eventually showup, clip the
+    // top of the destination rectangle
+    int32_t j_start = 0;
+    if(top_left_y < 0){
+        j_start = abs(top_left_y);
+    }
+
+    // If the top-left is left of the viewport
+    // but the bitmap may eventually showup, clip
+    // the left of the destination rectangle
+    int32_t i_start = 0;
+    if(top_left_x < 0){
+        i_start = abs(top_left_x);
+    }
+
+    // 1D index into the screen buffer of where the bitmap will go
+    const uint32_t center_pixel_offset = (top_left_y+j_start) * SCREEN_WIDTH + (top_left_x+i_start);
+
+    // Used for tracking where we are in the screen_buffer
     uint32_t dest_offset = center_pixel_offset;
-    uint32_t next_dest_row_offset = SCREEN_WIDTH - window_width;
 
-    for(j=0; j<window_height; j++){
-        float deltaY = j - midY;
-        float deltaX = 0 - midX;
+    // The stride to the next row usually consists of just the
+    // screen width, however, subtract the dimensions of the 
+    // destination rect so that we end up at the next row
+    // in the rect. Also proceed forward on the next row
+    // by the amount we are left clipping the dest rect
+    uint32_t next_dest_row_offset = SCREEN_WIDTH - dim + i_start;
 
-        float x = midX + deltaX * cos_angle + deltaY * sin_angle;
-        float y = midY - deltaX * sin_angle + deltaY * cos_angle;
+    int32_t i, j;
 
-        for(i=0; i<window_width; i++){
-            // Floor these otherwise get artifacts (don't exactly know why).
-            // Floor + int seems to be faster than comparing floats
-            int32_t rotX = floorf(x);
-            int32_t rotY = floorf(y);
+    // Start from clipped top and go until max destination rectangle
+    // height (bounding-box) or until the start drawing out of bounds
+    // (clip bottom)
+    for(j=j_start; j<dim && top_left_y+j < SCREEN_HEIGHT; j++){
+        // Center inside destination rectangle.
+        // Offset where we are in the src bitmap
+        // by left-clip amount
+        float deltaY = j - dim_half;
+        float deltaX = 0 - dim_half + i_start;
 
-            int32_t abs_index_y = top_left_y + j;
-            int32_t abs_index_x = top_left_x + i;
+        // Calculate the location of the SRC pixel. If the destination
+        // gets scaled larger then we need to inversely scale into the
+        // src, and vice versa
+        float x = (half_scaled_window_width + deltaX * cos_angle + deltaY * sin_angle) * inverse_x_scale;
+        float y = (half_scaled_window_height - deltaX * sin_angle + deltaY * cos_angle) * inverse_y_scale;
 
-            // These if statements are expensive!
-            if((rotX >= 0 && rotX < window_width) && (rotY >= 0 && rotY < window_height) &&
-               (abs_index_x >= 0 && abs_index_x < SCREEN_WIDTH) && (abs_index_y >= 0 && abs_index_y < SCREEN_HEIGHT)){
-                uint32_t src_offset = rotY * pixels_stride + rotX;
-                screen_buffer[dest_offset] = pixels[src_offset];
+        for(i=i_start; i<dim; i++){
+            // Check if drawing to draw out of bounds to the right,
+            // if so, stop drawing the destination row early and
+            // move on to the next
+            if(top_left_x+i < SCREEN_WIDTH){
+                // Uncomment to see background (crashes if goes out of bounds)
+                // Draw sprites that are thin could be optimized
+                screen_buffer[dest_offset] = 0xffff;
+
+                // Floor these otherwise get artifacts (don't exactly know why).
+                // Floor + int seems to be faster than comparing floats
+                int32_t rotX = floorf(x);
+                int32_t rotY = floorf(y);
+
+                // Calculate and store just for checking withing bounds of camera view
+                int32_t abs_index_y = top_left_y + j;
+                int32_t abs_index_x = top_left_x + i;
+
+                // These if statements are expensive!
+                if((rotX >= 0 && rotX < window_width) && (rotY >= 0 && rotY < window_height)){
+                    uint32_t src_offset = rotY * pixels_stride + rotX;
+
+                    screen_buffer[dest_offset] = pixels[src_offset];
+                }
+
+                // While in row, keep traversing about rotation
+                x += cos_angle_inv_scaled;
+                y -= sin_angle_inv_scaled;
+
+                // Go to next pixel next time to set it
+                dest_offset += 1;
+            }else{
+                // After this will be a subtraction by 'dim'
+                // but we need to be at the end of the row
+                // for that to work, set 'dest_offset' to end
+                // See 'next_dest_row_offset'
+                dest_offset += dim-i;
+                break;
             }
-
-            x += cos_angle;
-            y -= sin_angle;
-            dest_offset += 1;
         }
 
+        // Go to next row but at the left of it (SCREEN_WIDTH - dim)
         dest_offset += next_dest_row_offset;
     }
 
