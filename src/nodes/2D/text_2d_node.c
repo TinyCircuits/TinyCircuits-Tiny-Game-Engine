@@ -83,40 +83,35 @@ STATIC mp_obj_t text_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
     // Get length of string: https://github.com/v923z/micropython-usermod/blob/master/snippets/stringarg/stringarg.c
     GET_STR_DATA_LEN(text_obj, str, str_len);
 
-    float char_center_x = text_rotated_x;
-    float char_center_y = text_rotated_y;
-
     float x_scale = text_scale->x*camera_zoom;
     float y_scale = text_scale->y*camera_zoom;
+
+    // Get starting top left position based on dimensions of
+    // first character since blit draws centered rectangles
+    float char_top_left_x = text_rotated_x + (font_resource_get_glyph_width(text_font, ((char *)str)[0]) / 2.0f) * x_scale;
+    float char_top_left_y = text_rotated_y + (char_height / 2.0f) * y_scale;
 
     for(uint16_t icx=0; icx<str_len; icx++){
         char current_char = ((char *)str)[icx];
 
         uint8_t char_width = font_resource_get_glyph_width(text_font, current_char);
-        uint8_t char_x_offset = font_resource_get_glyph_x_offset(text_font, current_char);
+        uint16_t char_x_offset = font_resource_get_glyph_x_offset(text_font, current_char);
 
         engine_draw_blit(text_pixel_data+engine_math_2d_to_1d_index(char_x_offset, 0, text_font_bitmap_width),
-                        char_center_x, char_center_y,
-                        char_width, char_height-1,
+                        char_top_left_x, char_top_left_y,
+                        char_width, char_height,
                         text_font_bitmap_width,
                         x_scale,
                         y_scale,
                         0.0f,
                         0);
-
-        // engine_draw_blit_scale_rotate(  text_pixel_data+engine_math_2d_to_1d_index(char_x_offset, 0, text_font_bitmap_width),
-        //                                 (int32_t)char_center_x,
-        //                                 (int32_t)char_center_y,
-        //                                 text_font_bitmap_width,
-        //                                 char_width,
-        //                                 char_height-1,
-        //                                 (int32_t)(x_scale*65536 + 0.5),
-        //                                 (int32_t)(y_scale*65536 + 0.5),
-        //                                 (int16_t)(((text_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation))*1024 / (float)(2*PI)),
-        //                                 0x0000);
         
-        char_center_x += char_width * x_scale;
+        char_top_left_x += char_width * x_scale;
     }
+
+    engine_draw_pixel(0b11111100000000000, text_rotated_x, text_rotated_y);
+
+    // ENGINE_FORCE_PRINTF(" ");
 
     return mp_const_none;
 }

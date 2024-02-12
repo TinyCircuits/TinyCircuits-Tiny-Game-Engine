@@ -6,7 +6,7 @@
 
 // Default mapping is: ` !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~`
 // where glyph_widths[0] refers to width of the space character, for example
-#define ENGINE_FONT_MAX_CHAR_COUNT 125 - 32
+#define ENGINE_FONT_MAX_CHAR_COUNT 126 - 32
 
 typedef struct{
     mp_obj_base_t base;
@@ -21,6 +21,6 @@ extern const mp_obj_type_t font_resource_class_type;
 
 mp_obj_t font_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args);
 uint8_t font_resource_get_glyph_width(font_resource_class_obj_t *font, char codepoint);
-uint8_t font_resource_get_glyph_x_offset(font_resource_class_obj_t *font, char codepoint);
+uint16_t font_resource_get_glyph_x_offset(font_resource_class_obj_t *font, char codepoint);
 
 #endif  // ENGINE_FONT_RESOURCE_H

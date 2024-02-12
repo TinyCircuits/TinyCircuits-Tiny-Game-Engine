@@ -23,38 +23,52 @@ mp_obj_t font_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_
     self->texture_resource = texture_resource_class_new(&texture_resource_class_type, n_args, 0, args);
 
     uint32_t bitmap_width = self->texture_resource->width;
+    uint32_t bitmap_height = self->texture_resource->height;
 
     // The bottom row of pixels is used for defining the width
     // of each character using alternating colors
-    self->glyph_height = self->texture_resource->height-1;
+    self->glyph_height = bitmap_height-1;
 
-    uint16_t current_pixel_index = 0;
-    uint16_t last_width_signifier_color = texture_resource_get_pixel(self->texture_resource, engine_math_2d_to_1d_index(current_pixel_index, self->glyph_height, bitmap_width));
-    uint16_t glyph_index = 0;
-    self->glyph_x_offsets[0] = 0;
+    // Used to traverse pixels in bottom row to determine character widths
+    uint16_t alternating_pixel_x = 0;
+    uint16_t alternating_pixel_y = self->glyph_height;
 
-    while(glyph_index < ENGINE_FONT_MAX_CHAR_COUNT){
-        current_pixel_index++;
+    // Start tracking the initial width color, what 
+    // character we're on, and set the first offset to 0
+    uint16_t last_width_signifier_color = texture_resource_get_pixel(self->texture_resource, engine_math_2d_to_1d_index(alternating_pixel_x, alternating_pixel_y, bitmap_width));
+    uint16_t current_glyph_index = 0;
 
-        uint16_t next_width_signifier_color = texture_resource_get_pixel(self->texture_resource, engine_math_2d_to_1d_index(current_pixel_index, self->glyph_height, bitmap_width));
+    // Loop until end of bitmap width is reached
+    while(true){
+        // Increase to get the next pixel
+        alternating_pixel_x++;
 
-        self->glyph_widths[glyph_index]++;
-
-        if(last_width_signifier_color != next_width_signifier_color){
-            glyph_index++;
-            last_width_signifier_color = next_width_signifier_color;
-            self->glyph_x_offsets[glyph_index] = current_pixel_index+1;
-        }
-        
-        // When we get to the end of the font bitmap,
-        // make sure we collected enough entries for
-        // all characters, otherwise error out
-        if(current_pixel_index >= self->texture_resource->width){
-            if(glyph_index != ENGINE_FONT_MAX_CHAR_COUNT){
+        // If at the end of the bitmap, error if did not collect
+        // enough chars, otherwise, end loop
+        if(alternating_pixel_x >= bitmap_width){
+            if(current_glyph_index != ENGINE_FONT_MAX_CHAR_COUNT){
                 mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineFont: Did not collect enough character entries in font BMP!"));
+            }else{
+                break;
             }
         }
+
+        // Get the next pixel, and since we got another pixel,
+        // increase the width of the current character
+        uint16_t next_width_signifier_color = texture_resource_get_pixel(self->texture_resource, engine_math_2d_to_1d_index(alternating_pixel_x, self->glyph_height, bitmap_width));
+        self->glyph_widths[current_glyph_index]++;
+
+        // If the pixel to the left of this one is not the same, 
+        // we're moving on to a new character
+        if(last_width_signifier_color != next_width_signifier_color){
+            current_glyph_index++;
+            last_width_signifier_color = next_width_signifier_color;
+            self->glyph_x_offsets[current_glyph_index] = alternating_pixel_x;
+        }
     }
+
+    // First offset always at 0
+    self->glyph_x_offsets[0] = 0;
 
     self->glyph_widths_bytearray_ref = mp_obj_new_bytearray_by_ref(ENGINE_FONT_MAX_CHAR_COUNT, self->glyph_widths);
 
@@ -64,13 +78,13 @@ mp_obj_t font_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_
 
 uint8_t font_resource_get_glyph_width(font_resource_class_obj_t *font, char codepoint){
     // ASCII space is 32 but mapped to index 0 in the array
-    return font->glyph_widths[codepoint - 33];
+    return font->glyph_widths[codepoint - 32];
 }
 
 
-uint8_t font_resource_get_glyph_x_offset(font_resource_class_obj_t *font, char codepoint){
+uint16_t font_resource_get_glyph_x_offset(font_resource_class_obj_t *font, char codepoint){
     // ASCII space is 32 but mapped to index 0 in the array
-    return font->glyph_x_offsets[codepoint - 33];
+    return font->glyph_x_offsets[codepoint - 32];
 }
 
 

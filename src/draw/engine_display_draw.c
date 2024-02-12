@@ -453,7 +453,7 @@ void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t
         The displacements are performed twice on the x-axis and once on the y axis in x y x order.
     */
 
-    ENGINE_PERFORMANCE_CYCLES_START();
+    // ENGINE_PERFORMANCE_CYCLES_START();
 
     uint16_t *screen_buffer = engine_get_active_screen_buffer();
 
@@ -576,5 +576,5 @@ void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t
         dest_offset += next_dest_row_offset;
     }
 
-    ENGINE_PERFORMANCE_CYCLES_STOP();
+    // ENGINE_PERFORMANCE_CYCLES_STOP();
 }

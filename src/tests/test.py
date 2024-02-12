@@ -12,9 +12,11 @@ import math
 import gc
 
 # engine_debug.enable_all()
+# engine.set_fps_limit(30)
 engine_debug.enable_setting(engine_debug.performance)
-font = FontResource("9pt-roboto-font.bmp")
-text = Text2DNode(text="H", font=font)
+font9 = FontResource("9pt-roboto-font.bmp")
+# font12 = FontResource("12pt-roboto-font.bmp")
+text = Text2DNode(text="Hello World!", font=font9)
 
 
 texture = TextureResource("32x32.bmp")
