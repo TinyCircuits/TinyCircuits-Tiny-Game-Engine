@@ -16,7 +16,7 @@ import gc
 engine_debug.enable_setting(engine_debug.performance)
 font9 = FontResource("9pt-roboto-font.bmp")
 # font12 = FontResource("12pt-roboto-font.bmp")
-text = Text2DNode(text="Hello World!", font=font9)
+text = Text2DNode(text="Hello World!", font=font9, scale=Vector2(1.0, 1.0))
 
 
 texture = TextureResource("32x32.bmp")

@@ -86,30 +86,73 @@ STATIC mp_obj_t text_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
     float x_scale = text_scale->x*camera_zoom;
     float y_scale = text_scale->y*camera_zoom;
 
-    // Get starting top left position based on dimensions of
-    // first character since blit draws centered rectangles
-    float char_top_left_x = text_rotated_x + (font_resource_get_glyph_width(text_font, ((char *)str)[0]) / 2.0f) * x_scale;
-    float char_top_left_y = text_rotated_y + (char_height / 2.0f) * y_scale;
+    // `engine_draw_blit` draws bitmaps centered at a position, move
+    // the center of all characters by half the height of the first
+    // character to shift into a left-top positioned 'text-box'
+    float top_left_offset_x = (font_resource_get_glyph_width(text_font, ((char *)str)[0]) / 2.0f) * x_scale;
+    float top_left_offset_y = (char_height / 2.0f) * y_scale;
+
+    // https://codereview.stackexchange.com/a/86546
+    float rotation = (text_resolved_hierarchy_rotation + camera_resolved_hierarchy_rotation);
+    float sin_angle = sinf(rotation);
+    float cos_angle = cosf(rotation);
+
+    float sin_angle_scaled = sin_angle * y_scale;
+    float cos_angle_scaled = cos_angle * x_scale;
+
+    float char_x = text_rotated_x;
+    float char_y = text_rotated_y;
 
     for(uint16_t icx=0; icx<str_len; icx++){
         char current_char = ((char *)str)[icx];
 
+        // The width of this character, all heights are defined by bitmap font height-1
         uint8_t char_width = font_resource_get_glyph_width(text_font, current_char);
-        uint16_t char_x_offset = font_resource_get_glyph_x_offset(text_font, current_char);
 
-        engine_draw_blit(text_pixel_data+engine_math_2d_to_1d_index(char_x_offset, 0, text_font_bitmap_width),
-                        char_top_left_x, char_top_left_y,
+        // Offset inside the ASCII font bitmap (not into where we're drawing)
+        uint16_t char_bitmap_x_offset = font_resource_get_glyph_x_offset(text_font, current_char);
+
+        engine_draw_blit(text_pixel_data+engine_math_2d_to_1d_index(char_bitmap_x_offset, 0, text_font_bitmap_width),
+                        (char_x), (char_y),
                         char_width, char_height,
                         text_font_bitmap_width,
                         x_scale,
                         y_scale,
-                        0.0f,
+                        -rotation,
                         0);
-        
-        char_top_left_x += char_width * x_scale;
+
+        char_x += cos_angle_scaled * char_width;
+        char_y -= sin_angle_scaled * char_width;
     }
 
     engine_draw_pixel(0b11111100000000000, text_rotated_x, text_rotated_y);
+
+
+
+    // // Get starting top left position based on dimensions of
+    // // first character since blit draws centered rectangles
+    // float char_top_left_x = text_rotated_x + (font_resource_get_glyph_width(text_font, ((char *)str)[0]) / 2.0f) * x_scale;
+    // float char_top_left_y = text_rotated_y + (char_height / 2.0f) * y_scale;
+
+    // for(uint16_t icx=0; icx<str_len; icx++){
+    //     char current_char = ((char *)str)[icx];
+
+    //     uint8_t char_width = font_resource_get_glyph_width(text_font, current_char);
+    //     uint16_t char_x_offset = font_resource_get_glyph_x_offset(text_font, current_char);
+
+    //     engine_draw_blit(text_pixel_data+engine_math_2d_to_1d_index(char_x_offset, 0, text_font_bitmap_width),
+    //                     char_top_left_x, char_top_left_y,
+    //                     char_width, char_height,
+    //                     text_font_bitmap_width,
+    //                     x_scale,
+    //                     y_scale,
+    //                     0.0f,
+    //                     0);
+        
+    //     char_top_left_x += char_width * x_scale;
+    // }
+
+    // engine_draw_pixel(0b11111100000000000, text_rotated_x, text_rotated_y);
 
     // ENGINE_FORCE_PRINTF(" ");
 
