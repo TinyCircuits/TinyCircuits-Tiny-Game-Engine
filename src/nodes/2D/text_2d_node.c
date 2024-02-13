@@ -296,7 +296,7 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
 
 
 STATIC void text_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
-    ENGINE_INFO_PRINTF("Accessing Text2DNode attr");
+    ENGINE_FORCE_PRINTF("Accessing Text2DNode attr");
 
     engine_text_2d_node_class_obj_t *self = ((engine_node_base_t*)(self_in))->node;
 

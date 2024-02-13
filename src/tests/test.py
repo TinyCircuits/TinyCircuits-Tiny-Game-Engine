@@ -25,7 +25,7 @@ class MyText(Text2DNode):
 # text = Text2DNode(text="Hello World!\nLine 2\nLine 3", font=font9, scale=Vector2(1.0, 1.0), position=Vector2(0, -0))
 text = MyText()
 # text.text = "Test"
-print(text.width)
+# print(text.width)
 
 
 texture = TextureResource("32x32.bmp")
