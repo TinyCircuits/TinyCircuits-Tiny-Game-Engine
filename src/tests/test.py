@@ -20,7 +20,7 @@ font9 = FontResource("9pt-roboto-font.bmp")
 class MyText(Text2DNode):
     def __init__(self):
         super().__init__(self, Vector2(0, 0), font9)
-        self.text = "Yo"
+        self.text = "Hello World!\nLine 2"
 
 # text = Text2DNode(text="Hello World!\nLine 2\nLine 3", font=font9, scale=Vector2(1.0, 1.0), position=Vector2(0, -0))
 text = MyText()

@@ -175,6 +175,23 @@ STATIC mp_obj_t text_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
 MP_DEFINE_CONST_FUN_OBJ_2(text_2d_node_class_draw_obj, text_2d_node_class_draw);
 
 
+void (*default_text_2d_node_class_set)(mp_obj_t self_in, qstr attribute, mp_obj_t *destination);
+
+
+STATIC void text_2d_node_class_set(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+    if(destination[0] == MP_OBJ_NULL){  // Load
+        
+    }else{                              // Store
+        switch(attribute){
+            case MP_QSTR_text:
+                ENGINE_FORCE_PRINTF("Setting text on object instance! I could do stuff here!!!");
+            break;
+        }
+    }
+
+    default_text_2d_node_class_set(self_in, attribute, destination);
+}
+
 /*  --- doc ---
     NAME: Text2DNode
     DESC: Simple 2D sprite node that displays text
@@ -265,7 +282,7 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
         text_2d_node->scale = parsed_args[scale].u_obj;
     }else if(inherited == true){  // Inherited (use existing object)
         node_base->inherited = true;
-        node_base->node = parsed_args[child_class].u_obj;;
+        node_base->node = parsed_args[child_class].u_obj;
         node_base->attr_accessor = node_base->node;
 
         // Look for function overrides otherwise use the defaults
@@ -289,6 +306,9 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
         mp_store_attr(node_base->node, MP_QSTR_text, parsed_args[text].u_obj);
         mp_store_attr(node_base->node, MP_QSTR_rotation, parsed_args[rotation].u_obj);
         mp_store_attr(node_base->node, MP_QSTR_scale, parsed_args[scale].u_obj);
+
+        default_text_2d_node_class_set = MP_OBJ_TYPE_GET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_base->node)->type, attr);
+        MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_base->node)->type, attr, text_2d_node_class_set, 5);
     }
 
     return MP_OBJ_FROM_PTR(node_base);
@@ -296,7 +316,7 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
 
 
 STATIC void text_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
-    ENGINE_FORCE_PRINTF("Accessing Text2DNode attr");
+    ENGINE_INFO_PRINTF("Accessing Text2DNode attr");
 
     engine_text_2d_node_class_obj_t *self = ((engine_node_base_t*)(self_in))->node;
 
