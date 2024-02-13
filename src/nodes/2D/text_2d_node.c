@@ -79,16 +79,16 @@ STATIC mp_obj_t text_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
 
         // Check if newline, otherwise any other character contributes to text box width
         if(current_char == 10){
-            // Trying to find row with the most width
-            // which will define total text box size
-            if(temp_text_box_width > text_box_width){
-                text_box_width = temp_text_box_width;
-            }
-            
             text_box_height += char_height;
             temp_text_box_width = 0.0f;
         }else{
             temp_text_box_width += font_resource_get_glyph_width(text_font, current_char);
+        }
+
+        // Trying to find row with the most width
+        // which will define total text box size
+        if(temp_text_box_width > text_box_width){
+            text_box_width = temp_text_box_width;
         }
     }
 
