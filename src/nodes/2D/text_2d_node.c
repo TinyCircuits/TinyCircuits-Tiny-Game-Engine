@@ -67,12 +67,48 @@ STATIC mp_obj_t text_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
     float text_resolved_hierarchy_rotation = 0.0f;
     node_base_get_child_absolute_xy(&text_resolved_hierarchy_x, &text_resolved_hierarchy_y, &text_resolved_hierarchy_rotation, self_in);
 
+    // Get length of string: https://github.com/v923z/micropython-usermod/blob/master/snippets/stringarg/stringarg.c
+    GET_STR_DATA_LEN(text_obj, str, str_len);
+
+    // Figure out the size of the text box, considering newlines
+    float text_box_width = 0.0f;
+    float text_box_height = 0.0f;
+    float temp_text_box_width = 0.0f;
+    for(uint16_t icx=0; icx<str_len; icx++){
+        char current_char = ((char *)str)[icx];
+
+        // Check if newline, otherwise any other character contributes to text box width
+        if(current_char == 10){
+            // Trying to find row with the most width
+            // which will define total text box size
+            if(temp_text_box_width > text_box_width){
+                text_box_width = temp_text_box_width;
+            }
+            
+            text_box_height += char_height;
+            temp_text_box_width = 0.0f;
+        }else{
+            temp_text_box_width += font_resource_get_glyph_width(text_font, current_char);
+        }
+    }
+
+    float x_scale = text_scale->x*camera_zoom;
+    float y_scale = text_scale->y*camera_zoom;
+
+    // Scale the total widths and heights due to node scale
+    text_box_width *= x_scale;
+    text_box_height *= y_scale;
+
     // Store the non-rotated x and y for a second
-    float text_rotated_x = text_resolved_hierarchy_x-camera_resolved_hierarchy_x;
-    float text_rotated_y = text_resolved_hierarchy_y-camera_resolved_hierarchy_y;
+    float text_rotated_x = text_resolved_hierarchy_x - camera_resolved_hierarchy_x;
+    float text_rotated_y = text_resolved_hierarchy_y - camera_resolved_hierarchy_y;
 
     // Scale transformation due to camera zoom
     engine_math_scale_point(&text_rotated_x, &text_rotated_y, camera_position->x, camera_position->y, camera_zoom);
+
+    // Offset by scaled total width and height of the text box
+    text_rotated_x -= text_box_width/2.0f;
+    text_rotated_y -= text_box_height/2.0f;
 
     // Rotate text origin about the camera
     engine_math_rotate_point(&text_rotated_x, &text_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
@@ -80,31 +116,39 @@ STATIC mp_obj_t text_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
     text_rotated_x += camera_viewport->width/2;
     text_rotated_y += camera_viewport->height/2;
 
-    // Get length of string: https://github.com/v923z/micropython-usermod/blob/master/snippets/stringarg/stringarg.c
-    GET_STR_DATA_LEN(text_obj, str, str_len);
-
-    float x_scale = text_scale->x*camera_zoom;
-    float y_scale = text_scale->y*camera_zoom;
-
-    // `engine_draw_blit` draws bitmaps centered at a position, move
-    // the center of all characters by half the height of the first
-    // character to shift into a left-top positioned 'text-box'
-    float top_left_offset_x = (font_resource_get_glyph_width(text_font, ((char *)str)[0]) / 2.0f) * x_scale;
-    float top_left_offset_y = (char_height / 2.0f) * y_scale;
-
     // https://codereview.stackexchange.com/a/86546
     float rotation = (text_resolved_hierarchy_rotation + camera_resolved_hierarchy_rotation);
+    
     float sin_angle = sinf(rotation);
     float cos_angle = cosf(rotation);
+
+    float sin_angle_perp = sinf(rotation + (PI/2.0f));
+    float cos_angle_perp = cosf(rotation + (PI/2.0f));
 
     float sin_angle_scaled = sin_angle * y_scale;
     float cos_angle_scaled = cos_angle * x_scale;
 
+    float sin_angle_perp_scaled = sin_angle_perp * y_scale;
+    float cos_angle_perp_scaled = cos_angle_perp * x_scale;
+
     float char_x = text_rotated_x;
     float char_y = text_rotated_y;
+    float current_row_width = 0.0f;
 
     for(uint16_t icx=0; icx<str_len; icx++){
         char current_char = ((char *)str)[icx];
+
+        // Check if newline, otherwise any other character contributes to text box width
+        if(current_char == 10){
+            char_x += (-cos_angle_perp_scaled * char_height);
+            char_y -= (-sin_angle_perp_scaled * char_height);
+
+            char_x += (-cos_angle_scaled * current_row_width);
+            char_y -= (-sin_angle_scaled * current_row_width);
+
+            current_row_width = 0.0f;
+            continue;
+        }
 
         // The width of this character, all heights are defined by bitmap font height-1
         uint8_t char_width = font_resource_get_glyph_width(text_font, current_char);
@@ -121,40 +165,10 @@ STATIC mp_obj_t text_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
                         -rotation,
                         0);
 
-        char_x += cos_angle_scaled * char_width;
-        char_y -= sin_angle_scaled * char_width;
+        char_x += (cos_angle_scaled * char_width);
+        char_y -= (sin_angle_scaled * char_width);
+        current_row_width += char_width;
     }
-
-    engine_draw_pixel(0b11111100000000000, text_rotated_x, text_rotated_y);
-
-
-
-    // // Get starting top left position based on dimensions of
-    // // first character since blit draws centered rectangles
-    // float char_top_left_x = text_rotated_x + (font_resource_get_glyph_width(text_font, ((char *)str)[0]) / 2.0f) * x_scale;
-    // float char_top_left_y = text_rotated_y + (char_height / 2.0f) * y_scale;
-
-    // for(uint16_t icx=0; icx<str_len; icx++){
-    //     char current_char = ((char *)str)[icx];
-
-    //     uint8_t char_width = font_resource_get_glyph_width(text_font, current_char);
-    //     uint16_t char_x_offset = font_resource_get_glyph_x_offset(text_font, current_char);
-
-    //     engine_draw_blit(text_pixel_data+engine_math_2d_to_1d_index(char_x_offset, 0, text_font_bitmap_width),
-    //                     char_top_left_x, char_top_left_y,
-    //                     char_width, char_height,
-    //                     text_font_bitmap_width,
-    //                     x_scale,
-    //                     y_scale,
-    //                     0.0f,
-    //                     0);
-        
-    //     char_top_left_x += char_width * x_scale;
-    // }
-
-    // engine_draw_pixel(0b11111100000000000, text_rotated_x, text_rotated_y);
-
-    // ENGINE_FORCE_PRINTF(" ");
 
     return mp_const_none;
 }
@@ -329,6 +343,9 @@ STATIC void text_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *
             break;
             case MP_QSTR_scale:
                 destination[0] = self->scale;
+            break;
+            case MP_QSTR_width:
+                destination[0] = mp_obj_new_int(10);
             break;
             default:
                 return; // Fail

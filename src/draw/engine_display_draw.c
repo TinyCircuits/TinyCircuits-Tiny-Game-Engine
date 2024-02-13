@@ -540,7 +540,7 @@ void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t
             if(top_left_x+i < SCREEN_WIDTH){
                 // Uncomment to see background. Drawing 
                 // sprites that are thin could be optimized
-                // screen_buffer[dest_offset] = 0xffff;
+                // screen_buffer[dest_offset] = 0b11111000000000;
 
                 // Floor these otherwise get artifacts (don't exactly know why).
                 // Floor + int seems to be faster than comparing floats

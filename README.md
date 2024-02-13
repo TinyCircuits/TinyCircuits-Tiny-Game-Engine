@@ -52,6 +52,7 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Add keyword arguments for all constructors
 
 [] Text that can display ` !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~`
+[] Fix blit so that it does not cut off some sprites (like 'W' in Text2DNode)
 [] Blending colors for partially transparent pixels in some sources (don't ahve any yet)
 [.] Add Line2DNode that draws a rectangle between two points, Allow filled and outline modes
 [] Expose low level drawing functions through engine_draw
