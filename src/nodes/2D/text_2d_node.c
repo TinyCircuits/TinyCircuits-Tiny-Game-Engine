@@ -206,18 +206,15 @@ STATIC void text_2d_node_class_calculate_dimensions(mp_obj_t attr_accessor){
 }
 
 
-void (*default_text_2d_node_class_set)(mp_obj_t self_in, qstr attribute, mp_obj_t *destination);
-
-
 STATIC void text_2d_node_class_set(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Text2DNode: Accessing attr on inherited instance class");
 
     if(destination[0] == MP_OBJ_NULL){  // Load
         // Call this after the if statement we're in
-        default_text_2d_node_class_set(self_in, attribute, destination);
+        default_instance_attr_func(self_in, attribute, destination);
     }else{                              // Store
         // Call this after the if statement we're in                     
-        default_text_2d_node_class_set(self_in, attribute, destination);
+        default_instance_attr_func(self_in, attribute, destination);
         switch(attribute){
             case MP_QSTR_text:
             {
@@ -347,7 +344,10 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
         mp_store_attr(node_base->node, MP_QSTR_width, mp_obj_new_int(0));
         mp_store_attr(node_base->node, MP_QSTR_height, mp_obj_new_int(0));
 
-        default_text_2d_node_class_set = MP_OBJ_TYPE_GET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_base->node)->type, attr);
+        // Store default Python class instance attr function
+        // and override with custom intercept attr function
+        // so that certain callbacks/code can run
+        default_instance_attr_func = MP_OBJ_TYPE_GET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_base->node)->type, attr);
         MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_base->node)->type, attr, text_2d_node_class_set, 5);
     }
 
