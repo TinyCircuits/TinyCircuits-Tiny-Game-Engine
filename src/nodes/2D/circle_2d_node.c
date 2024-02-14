@@ -38,10 +38,6 @@ STATIC mp_obj_t circle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
     float circle_scale =  mp_obj_get_float(mp_load_attr(circle_node_base->attr_accessor, MP_QSTR_scale));
     float circle_radius =  (mp_obj_get_float(mp_load_attr(circle_node_base->attr_accessor, MP_QSTR_radius)));
     bool circle_outlined = mp_obj_get_int(mp_load_attr(circle_node_base->attr_accessor, MP_QSTR_outline));
-
-    // The final circle radius to draw the circle at is a combination of
-    // the set radius, times the set scale, times the set camera zoom
-    circle_radius = (circle_radius*circle_scale*camera_zoom);
     
     float circle_radius_sqr = circle_radius * circle_radius;
     mp_int_t circle_color = mp_obj_get_int(mp_load_attr(circle_node_base->attr_accessor, MP_QSTR_color));
@@ -49,20 +45,31 @@ STATIC mp_obj_t circle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
     float camera_resolved_hierarchy_x = 0.0f;
     float camera_resolved_hierarchy_y = 0.0f;
     float camera_resolved_hierarchy_rotation = 0.0f;
-    node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, camera_node);
+    node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
     camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
 
     float circle_resolved_hierarchy_x = 0.0f;
     float circle_resolved_hierarchy_y = 0.0f;
     float circle_resolved_hierarchy_rotation = 0.0f;
-    node_base_get_child_absolute_xy(&circle_resolved_hierarchy_x, &circle_resolved_hierarchy_y, &circle_resolved_hierarchy_rotation, self_in);
+    bool circle_is_child_of_camera = false;
+    node_base_get_child_absolute_xy(&circle_resolved_hierarchy_x, &circle_resolved_hierarchy_y, &circle_resolved_hierarchy_rotation, &circle_is_child_of_camera, self_in);
 
     // Store the non-rotated x and y for a second
     float circle_rotated_x = circle_resolved_hierarchy_x-camera_resolved_hierarchy_x;
     float circle_rotated_y = circle_resolved_hierarchy_y-camera_resolved_hierarchy_y;
 
     // Scale transformation due to camera zoom
-    engine_math_scale_point(&circle_rotated_x, &circle_rotated_y, camera_position->x, camera_position->y, camera_zoom);
+    if(circle_is_child_of_camera == false){
+        engine_math_scale_point(&circle_rotated_x, &circle_rotated_y, camera_position->x, camera_position->y, camera_zoom);
+    }else{
+        camera_zoom = 1.0f;
+    }
+
+    // The final circle radius to draw the circle at is a combination of
+    // the set radius, times the set scale, times the set camera zoom.
+    // Do this after determining if a child of a camera at any point
+    // since in that case zoom shouldn't have an effect
+    circle_radius = (circle_radius*circle_scale*camera_zoom);
 
     // Rotate circle origin about the camera
     engine_math_rotate_point(&circle_rotated_x, &circle_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);

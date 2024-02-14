@@ -68,10 +68,6 @@ sprite.position = Vector2(0, 32)
 polygon.position = Vector2(-32, 0)
 text.position = Vector2(0, -36)
 
-circle.add_child(rectangle)
-circle.add_child(sprite)
-circle.add_child(polygon)
-circle.add_child(text)
 
 class MyCam(CameraNode):
     def __init__(self):
@@ -102,6 +98,12 @@ class MyCam(CameraNode):
 
 camera = MyCam()
 camera.zoom = 1
-# camera.add_child(polygon)
+
+# circle.add_child(rectangle)
+circle.add_child(sprite)
+circle.add_child(polygon)
+circle.add_child(text)
+
+camera.add_child(circle)
 
 engine.start()

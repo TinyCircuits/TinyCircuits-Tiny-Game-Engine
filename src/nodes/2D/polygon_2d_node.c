@@ -45,27 +45,34 @@ STATIC mp_obj_t polygon_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
         // Get polygon scale and incorporate camera zoom
         bool polygon_outlined = mp_obj_get_float(mp_load_attr(polygon_node_base->attr_accessor, MP_QSTR_outline));
         float polygon_scale = mp_obj_get_float(mp_load_attr(polygon_node_base->attr_accessor, MP_QSTR_scale));
-        polygon_scale = polygon_scale * camera_zoom;
 
         uint16_t polygon_color = mp_obj_get_int(mp_load_attr(polygon_node_base->attr_accessor, MP_QSTR_color));
 
         float camera_resolved_hierarchy_x = 0.0f;
         float camera_resolved_hierarchy_y = 0.0f;
         float camera_resolved_hierarchy_rotation = 0.0f;
-        node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, camera_node);
+        node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
         camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
 
         // Get the absolute position of the node depending in parents
         float polygon_resolved_hierarchy_x = 0.0f;
         float polygon_resolved_hierarchy_y = 0.0f;
         float polygon_resolved_hierarchy_rotation = 0.0f;
-        node_base_get_child_absolute_xy(&polygon_resolved_hierarchy_x, &polygon_resolved_hierarchy_y, &polygon_resolved_hierarchy_rotation, self_in);
+        bool polygon_is_child_of_camera = false;
+        node_base_get_child_absolute_xy(&polygon_resolved_hierarchy_x, &polygon_resolved_hierarchy_y, &polygon_resolved_hierarchy_rotation, &polygon_is_child_of_camera, self_in);
 
         float polygon_rotated_x = polygon_resolved_hierarchy_x-camera_resolved_hierarchy_x;
         float polygon_rotated_y = polygon_resolved_hierarchy_y-camera_resolved_hierarchy_y;
 
         // Scale transformation due to camera zoom
-        engine_math_scale_point(&polygon_rotated_x, &polygon_rotated_y, camera_position->x, camera_position->y, camera_zoom);
+        if(polygon_is_child_of_camera == false){
+            engine_math_scale_point(&polygon_rotated_x, &polygon_rotated_y, camera_position->x, camera_position->y, camera_zoom);
+        }else{
+            camera_zoom = 1.0f;
+        }
+
+        // Scale after determining if a child of a camera where zoom should have no effect
+        polygon_scale = polygon_scale * camera_zoom;
 
         // Rotate polygon origin about the camera
         engine_math_rotate_point(&polygon_rotated_x, &polygon_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);

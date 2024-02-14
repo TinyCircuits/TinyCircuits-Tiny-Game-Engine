@@ -60,12 +60,6 @@ void engine_math_rotate_point(float *px, float *py, float cx, float cy, float an
 // https://math.stackexchange.com/a/5808
 // https://math.stackexchange.com/a/234631
 void engine_math_scale_point(float *px, float *py, float cx, float cy, float scale){
-    // *px -= cx;
-    // *py -= cy;
-    // *px *= scale;
-    // *py *= scale;
-    // *px += cx;
-    // *py += cy;
     *px = scale * ((*px)-cx);
     *py = scale * ((*py)-cy);
 }

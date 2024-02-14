@@ -1,6 +1,7 @@
 #include "node_base.h"
 #include "engine_object_layers.h"
 #include "math/engine_math.h"
+#include "node_types.h"
 #include "math/vector2.h"
 #include "math/vector3.h"
 
@@ -166,8 +167,9 @@ mp_obj_t node_base_get_layer(mp_obj_t self_in){
 }
 
 
-void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, mp_obj_t child_node_base_in){
+void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, bool *is_child_of_camera, mp_obj_t child_node_base_in){
     engine_node_base_t *child_node_base = child_node_base_in;
+    if(is_child_of_camera != NULL) *is_child_of_camera = false;
 
     vector2_class_obj_t *child_node_base_position = mp_load_attr(child_node_base->attr_accessor, MP_QSTR_position);
     *x = (float)child_node_base_position->x;
@@ -189,6 +191,12 @@ void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, mp_obj
             engine_node_base_t *seeking_parent_node_base = seeking_node_base->parent_node_base;
 
             if(seeking_parent_node_base != NULL){
+                // Need to know if a child of a camera so that 
+                // certain scaling and translations do not occur
+                if(is_child_of_camera != NULL && seeking_parent_node_base->type == NODE_TYPE_CAMERA){
+                    *is_child_of_camera = true;
+                }
+
                 mp_obj_t parent_position_obj = mp_load_attr(seeking_parent_node_base->attr_accessor, MP_QSTR_position);
                 mp_obj_t parent_rotation_obj = mp_load_attr(seeking_parent_node_base->attr_accessor, MP_QSTR_rotation);
 

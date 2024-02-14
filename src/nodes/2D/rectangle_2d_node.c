@@ -48,20 +48,25 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_n
     float camera_resolved_hierarchy_x = 0.0f;
     float camera_resolved_hierarchy_y = 0.0f;
     float camera_resolved_hierarchy_rotation = 0.0f;
-    node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, camera_node);
+    node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
     camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
 
     float rectangle_resolved_hierarchy_x = 0.0f;
     float rectangle_resolved_hierarchy_y = 0.0f;
     float rectangle_resolved_hierarchy_rotation = 0.0f;
-    node_base_get_child_absolute_xy(&rectangle_resolved_hierarchy_x, &rectangle_resolved_hierarchy_y, &rectangle_resolved_hierarchy_rotation, self_in);
+    bool rectangle_is_child_of_camera = false;
+    node_base_get_child_absolute_xy(&rectangle_resolved_hierarchy_x, &rectangle_resolved_hierarchy_y, &rectangle_resolved_hierarchy_rotation, &rectangle_is_child_of_camera, self_in);
 
     // Store the non-rotated x and y for a second
     float rectangle_rotated_x = rectangle_resolved_hierarchy_x-camera_resolved_hierarchy_x;
     float rectangle_rotated_y = rectangle_resolved_hierarchy_y-camera_resolved_hierarchy_y;
 
     // Scale transformation due to camera zoom
-    engine_math_scale_point(&rectangle_rotated_x, &rectangle_rotated_y, camera_position->x, camera_position->y, camera_zoom);
+    if(rectangle_is_child_of_camera == false){
+        engine_math_scale_point(&rectangle_rotated_x, &rectangle_rotated_y, camera_position->x, camera_position->y, camera_zoom);
+    }else{
+        camera_zoom = 1.0f;
+    }
 
     // Rotate rectangle origin about the camera
     engine_math_rotate_point(&rectangle_rotated_x, &rectangle_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
