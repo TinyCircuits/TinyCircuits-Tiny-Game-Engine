@@ -17,15 +17,16 @@ import gc
 font9 = FontResource("9pt-roboto-font.bmp")
 # font12 = FontResource("12pt-roboto-font.bmp")
 
-class MyText(Text2DNode):
-    def __init__(self):
-        super().__init__(self, Vector2(0, 0), font9)
-        self.text = "Hello World!\nLine 2\nLine 3\nLine 4                       hi"
+# class MyText(Text2DNode):
+#     def __init__(self):
+#         super().__init__(self, Vector2(0, 0), font9)
+#         self.text = "Hello World!\nLine 2\nLine 3\nLine 4                       hi"
 
 
 
-# text = Text2DNode(text="Hello World!\nLine 2\nLine 3", font=font9, scale=Vector2(1.0, 1.0), position=Vector2(0, -0))
-text = MyText()
+text = Text2DNode(text="Hello World!\nLine 2\nLine 3", font=font9, scale=Vector2(1.0, 1.0), position=Vector2(0, -0))
+# text = MyText()
+# text.rotation = math.pi/4
 # print(text.width)
 # text.width = 1
 
@@ -33,7 +34,15 @@ text = MyText()
 texture = TextureResource("32x32.bmp")
 
 
-circle = Circle2DNode()
+class MyCircle(Circle2DNode):
+    def __init__(self):
+        super().__init__(self)
+    
+    def tick(self):
+        self.rotation += 0.001
+
+
+circle = MyCircle()
 circle.outline = True
 circle.radius = 25
 rectangle = Rectangle2DNode()
@@ -42,20 +51,27 @@ rectangle.height = 15
 rectangle.outline = True
 sprite = Sprite2DNode(texture=texture, position=Vector2(0, 0), scale=Vector2(1.0, 1.0))
 polygon = Polygon2DNode()
-polygon.vertices.append(Vector2(-10, 10))
+polygon.vertices.append(Vector2(-15, 10))
 polygon.vertices.append(Vector2(10, 10))
+polygon.vertices.append(Vector2(-5, 15))
 polygon.vertices.append(Vector2(10, -10))
-polygon.vertices.append(Vector2(-10, -10))
+polygon.vertices.append(Vector2(-10, -15))
 polygon.outline = True
 
 circle.color = 0b1111100000000000
 rectangle.color = 0b1111101001001001
 sprite.transparent_color = engine_draw.black
 
-circle.position = Vector2(0, -32)
+circle.position = Vector2(0, 0)
 rectangle.position = Vector2(32, 0)
 sprite.position = Vector2(0, 32)
 polygon.position = Vector2(-32, 0)
+text.position = Vector2(0, -36)
+
+circle.add_child(rectangle)
+circle.add_child(sprite)
+circle.add_child(polygon)
+circle.add_child(text)
 
 class MyCam(CameraNode):
     def __init__(self):
@@ -86,6 +102,6 @@ class MyCam(CameraNode):
 
 camera = MyCam()
 camera.zoom = 1
-# camera.add_child(text)
+# camera.add_child(polygon)
 
 engine.start()

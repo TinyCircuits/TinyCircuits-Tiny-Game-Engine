@@ -73,8 +73,8 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
     node_base_get_child_absolute_xy(&sprite_resolved_hierarchy_x, &sprite_resolved_hierarchy_y, &sprite_resolved_hierarchy_rotation, self_in);
 
     // Store the non-rotated x and y for a second
-    float sprite_rotated_x = sprite_resolved_hierarchy_x-camera_resolved_hierarchy_x;
-    float sprite_rotated_y = sprite_resolved_hierarchy_y-camera_resolved_hierarchy_y;
+    float sprite_rotated_x = sprite_resolved_hierarchy_x - camera_resolved_hierarchy_x;
+    float sprite_rotated_y = sprite_resolved_hierarchy_y - camera_resolved_hierarchy_y;
 
     // Scale transformation due to camera zoom
     engine_math_scale_point(&sprite_rotated_x, &sprite_rotated_y, camera_position->x, camera_position->y, camera_zoom);

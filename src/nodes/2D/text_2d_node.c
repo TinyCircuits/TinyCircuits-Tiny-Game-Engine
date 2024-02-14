@@ -68,13 +68,6 @@ STATIC mp_obj_t text_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
     float text_resolved_hierarchy_rotation = 0.0f;
     node_base_get_child_absolute_xy(&text_resolved_hierarchy_x, &text_resolved_hierarchy_y, &text_resolved_hierarchy_rotation, self_in);
 
-    float x_scale = text_scale->x*camera_zoom;
-    float y_scale = text_scale->y*camera_zoom;
-
-    // Scale the total widths and heights due to node scale
-    text_box_width *= x_scale;
-    text_box_height *= y_scale;
-
     // Store the non-rotated x and y for a second
     float text_rotated_x = text_resolved_hierarchy_x - camera_resolved_hierarchy_x;
     float text_rotated_y = text_resolved_hierarchy_y - camera_resolved_hierarchy_y;
@@ -82,15 +75,21 @@ STATIC mp_obj_t text_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
     // Scale transformation due to camera zoom
     engine_math_scale_point(&text_rotated_x, &text_rotated_y, camera_position->x, camera_position->y, camera_zoom);
 
-    // Offset by scaled total width and height of the text box
-    text_rotated_x -= text_box_width/2.0f;
-    text_rotated_y -= text_box_height/2.0f;
-
     // Rotate text origin about the camera
     engine_math_rotate_point(&text_rotated_x, &text_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
 
     text_rotated_x += camera_viewport->width/2;
     text_rotated_y += camera_viewport->height/2;
+
+    float x_scale = text_scale->x*camera_zoom;
+    float y_scale = text_scale->y*camera_zoom;
+
+    // Scale the total widths and heights due to node scale
+    text_box_width *= x_scale;
+    text_box_height *= y_scale;
+
+    float text_box_width_half = text_box_width * 0.5f;
+    float text_box_height_half = text_box_height * 0.5f;
 
     // https://codereview.stackexchange.com/a/86546
     float rotation = (text_resolved_hierarchy_rotation + camera_resolved_hierarchy_rotation);
@@ -107,8 +106,19 @@ STATIC mp_obj_t text_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
     float sin_angle_perp_scaled = sin_angle_perp * y_scale;
     float cos_angle_perp_scaled = cos_angle_perp * x_scale;
 
+    // Set starting point to text box origin then translate to
+    // starting in top-left by column and row shifts (while rotated).
+    // This way, the text box rotates about its origin position set
+    // by the user
     float char_x = text_rotated_x;
     float char_y = text_rotated_y;
+
+    char_x -= (cos_angle_scaled * text_box_width_half);
+    char_y -= (-sin_angle_scaled * text_box_width_half);
+
+    char_x += (cos_angle_perp_scaled * text_box_height_half);
+    char_y += (-sin_angle_perp_scaled * text_box_height_half);
+
     float current_row_width = 0.0f;
 
     // Get length of string: https://github.com/v923z/micropython-usermod/blob/master/snippets/stringarg/stringarg.c
