@@ -1,6 +1,7 @@
 #include "text_2d_node.h"
 
 #include "py/objstr.h"
+#include "py/objtype.h"
 #include "nodes/node_types.h"
 #include "nodes/node_base.h"
 #include "debug/debug_print.h"
@@ -42,16 +43,16 @@ STATIC mp_obj_t text_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
     }
 
     engine_node_base_t *camera_node_base = camera_node;
-    engine_text_2d_node_common_data_t *text_common_data = text_node_base->node_common_data;
 
     vector2_class_obj_t *text_scale =  mp_load_attr(text_node_base->attr_accessor, MP_QSTR_scale);
     font_resource_class_obj_t *text_font = mp_load_attr(text_node_base->attr_accessor, MP_QSTR_font);
+    float text_box_width = mp_obj_get_float(mp_load_attr(text_node_base->attr_accessor, MP_QSTR_width));
+    float text_box_height = mp_obj_get_float(mp_load_attr(text_node_base->attr_accessor, MP_QSTR_height));
     uint16_t text_font_bitmap_width = text_font->texture_resource->width;
 
     uint16_t *text_pixel_data = (uint16_t*)text_font->texture_resource->data;
     uint8_t char_height = text_font->glyph_height;
 
-    vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
     vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
     rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
     float camera_zoom = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_zoom));
@@ -66,31 +67,6 @@ STATIC mp_obj_t text_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
     float text_resolved_hierarchy_y = 0.0f;
     float text_resolved_hierarchy_rotation = 0.0f;
     node_base_get_child_absolute_xy(&text_resolved_hierarchy_x, &text_resolved_hierarchy_y, &text_resolved_hierarchy_rotation, self_in);
-
-    // Get length of string: https://github.com/v923z/micropython-usermod/blob/master/snippets/stringarg/stringarg.c
-    GET_STR_DATA_LEN(text_obj, str, str_len);
-
-    // Figure out the size of the text box, considering newlines
-    float text_box_width = 0.0f;
-    float text_box_height = 0.0f;
-    float temp_text_box_width = 0.0f;
-    for(uint16_t icx=0; icx<str_len; icx++){
-        char current_char = ((char *)str)[icx];
-
-        // Check if newline, otherwise any other character contributes to text box width
-        if(current_char == 10){
-            text_box_height += char_height;
-            temp_text_box_width = 0.0f;
-        }else{
-            temp_text_box_width += font_resource_get_glyph_width(text_font, current_char);
-        }
-
-        // Trying to find row with the most width
-        // which will define total text box size
-        if(temp_text_box_width > text_box_width){
-            text_box_width = temp_text_box_width;
-        }
-    }
 
     float x_scale = text_scale->x*camera_zoom;
     float y_scale = text_scale->y*camera_zoom;
@@ -135,14 +111,19 @@ STATIC mp_obj_t text_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
     float char_y = text_rotated_y;
     float current_row_width = 0.0f;
 
+    // Get length of string: https://github.com/v923z/micropython-usermod/blob/master/snippets/stringarg/stringarg.c
+    GET_STR_DATA_LEN(text_obj, str, str_len);
+
     for(uint16_t icx=0; icx<str_len; icx++){
         char current_char = ((char *)str)[icx];
 
         // Check if newline, otherwise any other character contributes to text box width
         if(current_char == 10){
+            // Move to next line
             char_x += (-cos_angle_perp_scaled * char_height);
             char_y -= (-sin_angle_perp_scaled * char_height);
 
+            // Go back to start of line
             char_x += (-cos_angle_scaled * current_row_width);
             char_y -= (-sin_angle_scaled * current_row_width);
 
@@ -175,21 +156,76 @@ STATIC mp_obj_t text_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
 MP_DEFINE_CONST_FUN_OBJ_2(text_2d_node_class_draw_obj, text_2d_node_class_draw);
 
 
+STATIC void text_2d_node_class_calculate_dimensions(mp_obj_t attr_accessor){
+
+    mp_obj_instance_t *self = MP_OBJ_TO_PTR(attr_accessor);
+
+    mp_map_elem_t *text_elem = mp_map_lookup(&self->members, MP_OBJ_NEW_QSTR(MP_QSTR_text), MP_MAP_LOOKUP);
+    mp_map_elem_t *text_font_elem = mp_map_lookup(&self->members, MP_OBJ_NEW_QSTR(MP_QSTR_font), MP_MAP_LOOKUP);
+    mp_map_elem_t *text_width_elem = mp_map_lookup(&self->members, MP_OBJ_NEW_QSTR(MP_QSTR_width), MP_MAP_LOOKUP);
+    mp_map_elem_t *text_height_elem = mp_map_lookup(&self->members, MP_OBJ_NEW_QSTR(MP_QSTR_height), MP_MAP_LOOKUP);
+
+    // Get the text and early out if none set
+    if(text_elem == NULL || text_elem->value == mp_const_none || text_font_elem == NULL || text_width_elem == NULL || text_height_elem == NULL){
+        text_width_elem->value = mp_obj_new_int(0);
+        text_height_elem->value = mp_obj_new_int(0);
+        return;
+    }
+
+    font_resource_class_obj_t *text_font = text_font_elem->value;
+    uint8_t char_height = text_font->glyph_height;
+
+    // Get length of string: https://github.com/v923z/micropython-usermod/blob/master/snippets/stringarg/stringarg.c
+    GET_STR_DATA_LEN(text_elem->value, str, str_len);
+
+    // Figure out the size of the text box, considering newlines
+    float text_box_width = 0.0f;
+    float text_box_height = 0.0f;
+    float temp_text_box_width = 0.0f;
+    for(uint16_t icx=0; icx<str_len; icx++){
+        char current_char = ((char *)str)[icx];
+
+        // Check if newline, otherwise any other character contributes to text box width
+        if(current_char == 10){
+            text_box_height += char_height;
+            temp_text_box_width = 0.0f;
+        }else{
+            temp_text_box_width += font_resource_get_glyph_width(text_font, current_char);
+        }
+
+        // Trying to find row with the most width
+        // which will define total text box size
+        if(temp_text_box_width > text_box_width){
+            text_box_width = temp_text_box_width;
+        }
+    }
+
+    // Set the 'width' and 'height' attributes of the instance
+    text_width_elem->value = mp_obj_new_int((uint32_t)text_box_width);
+    text_height_elem->value = mp_obj_new_int((uint32_t)text_box_height);
+}
+
+
 void (*default_text_2d_node_class_set)(mp_obj_t self_in, qstr attribute, mp_obj_t *destination);
 
 
 STATIC void text_2d_node_class_set(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+    ENGINE_INFO_PRINTF("Text2DNode: Accessing attr on inherited instance class");
+
     if(destination[0] == MP_OBJ_NULL){  // Load
-        
+        // Call this after the if statement we're in
+        default_text_2d_node_class_set(self_in, attribute, destination);
     }else{                              // Store
+        // Call this after the if statement we're in                     
+        default_text_2d_node_class_set(self_in, attribute, destination);
         switch(attribute){
             case MP_QSTR_text:
-                ENGINE_FORCE_PRINTF("Setting text on object instance! I could do stuff here!!!");
+            {
+                text_2d_node_class_calculate_dimensions(self_in);
+            }
             break;
         }
     }
-
-    default_text_2d_node_class_set(self_in, attribute, destination);
 }
 
 /*  --- doc ---
@@ -280,6 +316,8 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
         text_2d_node->text = parsed_args[text].u_obj;
         text_2d_node->rotation = parsed_args[rotation].u_obj;
         text_2d_node->scale = parsed_args[scale].u_obj;
+        text_2d_node->width = mp_obj_new_int(0);
+        text_2d_node->height = mp_obj_new_int(0);
     }else if(inherited == true){  // Inherited (use existing object)
         node_base->inherited = true;
         node_base->node = parsed_args[child_class].u_obj;
@@ -306,10 +344,14 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
         mp_store_attr(node_base->node, MP_QSTR_text, parsed_args[text].u_obj);
         mp_store_attr(node_base->node, MP_QSTR_rotation, parsed_args[rotation].u_obj);
         mp_store_attr(node_base->node, MP_QSTR_scale, parsed_args[scale].u_obj);
+        mp_store_attr(node_base->node, MP_QSTR_width, mp_obj_new_int(0));
+        mp_store_attr(node_base->node, MP_QSTR_height, mp_obj_new_int(0));
 
         default_text_2d_node_class_set = MP_OBJ_TYPE_GET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_base->node)->type, attr);
         MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_base->node)->type, attr, text_2d_node_class_set, 5);
     }
+
+    text_2d_node_class_calculate_dimensions(node_base->attr_accessor);
 
     return MP_OBJ_FROM_PTR(node_base);
 }
@@ -365,7 +407,10 @@ STATIC void text_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *
                 destination[0] = self->scale;
             break;
             case MP_QSTR_width:
-                destination[0] = mp_obj_new_int(10);
+                destination[0] = self->width;
+            break;
+            case MP_QSTR_height:
+                destination[0] = self->height;
             break;
             default:
                 return; // Fail
