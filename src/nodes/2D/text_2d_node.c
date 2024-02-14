@@ -46,8 +46,12 @@ STATIC mp_obj_t text_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
 
     vector2_class_obj_t *text_scale =  mp_load_attr(text_node_base->attr_accessor, MP_QSTR_scale);
     font_resource_class_obj_t *text_font = mp_load_attr(text_node_base->attr_accessor, MP_QSTR_font);
+
     float text_box_width = mp_obj_get_float(mp_load_attr(text_node_base->attr_accessor, MP_QSTR_width));
     float text_box_height = mp_obj_get_float(mp_load_attr(text_node_base->attr_accessor, MP_QSTR_height));
+    float text_box_width_half = text_box_width * 0.5f;
+    float text_box_height_half = text_box_height * 0.5f;
+
     uint16_t text_font_bitmap_width = text_font->texture_resource->width;
 
     uint16_t *text_pixel_data = (uint16_t*)text_font->texture_resource->data;
@@ -83,13 +87,6 @@ STATIC mp_obj_t text_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
 
     float x_scale = text_scale->x*camera_zoom;
     float y_scale = text_scale->y*camera_zoom;
-
-    // Scale the total widths and heights due to node scale
-    text_box_width *= x_scale;
-    text_box_height *= y_scale;
-
-    float text_box_width_half = text_box_width * 0.5f;
-    float text_box_height_half = text_box_height * 0.5f;
 
     // https://codereview.stackexchange.com/a/86546
     float rotation = (text_resolved_hierarchy_rotation + camera_resolved_hierarchy_rotation);
