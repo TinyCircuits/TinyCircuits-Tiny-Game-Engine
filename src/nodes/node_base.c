@@ -189,13 +189,31 @@ void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, mp_obj
             engine_node_base_t *seeking_parent_node_base = seeking_node_base->parent_node_base;
 
             if(seeking_parent_node_base != NULL){
-                vector2_class_obj_t *parent_position = mp_load_attr(seeking_parent_node_base->attr_accessor, MP_QSTR_position);
-                float parent_rotation_radian = (float)mp_obj_get_float(mp_load_attr(seeking_parent_node_base->attr_accessor, MP_QSTR_rotation));
+                mp_obj_t parent_position_obj = mp_load_attr(seeking_parent_node_base->attr_accessor, MP_QSTR_position);
+                mp_obj_t parent_rotation_obj = mp_load_attr(seeking_parent_node_base->attr_accessor, MP_QSTR_rotation);
 
-                *x += (float)parent_position->x;
-                *y += (float)parent_position->y;
-                *rotation += parent_rotation_radian;
-                engine_math_rotate_point(x, y, (float)parent_position->x, (float)parent_position->y, parent_rotation_radian);
+                float parent_x = 0.0f;
+                float parent_y = 0.0f;
+                float parent_rotation_radians = 0.0f;
+
+                if(mp_obj_is_type(parent_position_obj, &vector3_class_type)){
+                    parent_x = ((vector3_class_obj_t*)parent_position_obj)->x;
+                    parent_y = ((vector3_class_obj_t*)parent_position_obj)->y;
+                }else{
+                    parent_x = ((vector2_class_obj_t*)parent_position_obj)->x;
+                    parent_y = ((vector2_class_obj_t*)parent_position_obj)->y;
+                }
+
+                if(mp_obj_is_type(parent_rotation_obj, &vector3_class_type)){
+                    parent_rotation_radians = ((vector3_class_obj_t*)parent_rotation_obj)->z;
+                }else{
+                    parent_rotation_radians = (float)mp_obj_get_float(parent_rotation_obj);
+                }
+
+                *x += parent_x;
+                *y += parent_y;
+                *rotation += parent_rotation_radians;
+                engine_math_rotate_point(x, y, parent_x, parent_y, parent_rotation_radians);
             }else{
                 // Done, reached top-most parent
                 break;

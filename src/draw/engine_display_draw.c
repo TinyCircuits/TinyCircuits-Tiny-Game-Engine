@@ -470,17 +470,16 @@ void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t
 
     // Controls the scale of the destination rectangle,
     // which in turn defines the total scale of the bitmap
-    uint32_t scaled_window_width = window_width * x_scale;
-    uint32_t scaled_window_height = window_height * y_scale;
+    float scaled_window_width = window_width * x_scale;
+    float scaled_window_height = window_height * y_scale;
 
     float half_scaled_window_width = scaled_window_width * 0.5f;
     float half_scaled_window_height = scaled_window_height * 0.5f;
 
-    // Add 1 so that sprite doesn't get cut off at bottom and right.
-    // Need bounding-box that contains the rotated sprite so that it
-    // does not get clipped
-    uint32_t dim = max(scaled_window_width, scaled_window_height)+1;
-    float dim_half = max(half_scaled_window_width, half_scaled_window_height);
+    // When rotated at 45 degrees, make sure corners don't get cut
+    // off: https://math.stackexchange.com/questions/2915935/radius-of-a-circle-touching-a-rectangle-both-of-which-are-inside-a-square
+    uint32_t dim = (uint32_t)sqrtf((scaled_window_width*scaled_window_width) + (scaled_window_height*scaled_window_height));
+    float dim_half = (dim / 2.0f);
 
     // The top-left of the bitmap destination
     int32_t top_left_x = center_x - dim_half;
@@ -523,7 +522,7 @@ void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t
     for(j=j_start; j<dim && top_left_y+j < SCREEN_HEIGHT; j++){
         // Center inside destination rectangle.
         // Offset where we are in the src bitmap
-        // by left-clip amount
+        // by left-clip amount ('i_start')
         float deltaY = j - dim_half;
         float deltaX = 0 - dim_half + i_start;
 
@@ -538,7 +537,7 @@ void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t
             // if so, stop drawing the destination row early and
             // move on to the next
             if(top_left_x+i < SCREEN_WIDTH){
-                // Uncomment to see background. Drawing 
+                // Uncomment to see background. Drawing
                 // sprites that are thin could be optimized
                 // screen_buffer[dest_offset] = 0b11111000000000;
 

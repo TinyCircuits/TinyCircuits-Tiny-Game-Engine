@@ -27,7 +27,6 @@ class MyText(Text2DNode):
 
 # text = Text2DNode(text="Hello World!\nLine 2\nLine 3", font=font9, scale=Vector2(1.0, 1.0), position=Vector2(0, -0))
 text = MyText()
-print(text.text)
 # text.text = "Test"
 # print(text.width)
 
@@ -58,7 +57,6 @@ circle.position = Vector2(0, -32)
 rectangle.position = Vector2(32, 0)
 sprite.position = Vector2(0, 32)
 polygon.position = Vector2(-32, 0)
-
 
 class MyCam(CameraNode):
     def __init__(self):
