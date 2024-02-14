@@ -50,9 +50,11 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Add get_child to each node that gets children based on index and errors if out of bounds
 [X] Fix Circle2DNode being drawn at different scales
 [X] Add keyword arguments for all constructors
+[X] Text that can display ` !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~`
+[X] Fix blit so that it does not cut off some sprites (like 'W' in Text2DNode)
 
-[] Text that can display ` !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~`
-[] Fix blit so that it does not cut off some sprites (like 'W' in Text2DNode)
+[] Fix positioning and rotation for nodes that are children of the camera
+
 [] Blending colors for partially transparent pixels in some sources (don't ahve any yet)
 [.] Add Line2DNode that draws a rectangle between two points, Allow filled and outline modes
 [] Expose low level drawing functions through engine_draw

@@ -156,27 +156,41 @@ STATIC mp_obj_t text_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
 MP_DEFINE_CONST_FUN_OBJ_2(text_2d_node_class_draw_obj, text_2d_node_class_draw);
 
 
-STATIC void text_2d_node_class_calculate_dimensions(mp_obj_t attr_accessor){
+STATIC void text_2d_node_class_calculate_dimensions(mp_obj_t attr_accessor, bool is_instance_not_native){
 
-    mp_obj_instance_t *self = MP_OBJ_TO_PTR(attr_accessor);
+    mp_obj_t text_obj;
+    mp_obj_t text_font_obj;
 
-    mp_map_elem_t *text_elem = mp_map_lookup(&self->members, MP_OBJ_NEW_QSTR(MP_QSTR_text), MP_MAP_LOOKUP);
-    mp_map_elem_t *text_font_elem = mp_map_lookup(&self->members, MP_OBJ_NEW_QSTR(MP_QSTR_font), MP_MAP_LOOKUP);
-    mp_map_elem_t *text_width_elem = mp_map_lookup(&self->members, MP_OBJ_NEW_QSTR(MP_QSTR_width), MP_MAP_LOOKUP);
-    mp_map_elem_t *text_height_elem = mp_map_lookup(&self->members, MP_OBJ_NEW_QSTR(MP_QSTR_height), MP_MAP_LOOKUP);
+    if(is_instance_not_native){
+        mp_obj_instance_t *self = MP_OBJ_TO_PTR(attr_accessor);
+        text_obj = mp_map_lookup(&self->members, MP_OBJ_NEW_QSTR(MP_QSTR_text), MP_MAP_LOOKUP)->value;
+        text_font_obj = mp_map_lookup(&self->members, MP_OBJ_NEW_QSTR(MP_QSTR_font), MP_MAP_LOOKUP)->value;
+    }else{
+        text_obj = mp_load_attr(attr_accessor, MP_QSTR_text);
+        text_font_obj = mp_load_attr(attr_accessor, MP_QSTR_font);
+    }
+
+    
 
     // Get the text and early out if none set
-    if(text_elem == NULL || text_elem->value == mp_const_none || text_font_elem == NULL || text_width_elem == NULL || text_height_elem == NULL){
-        text_width_elem->value = mp_obj_new_int(0);
-        text_height_elem->value = mp_obj_new_int(0);
+    if(text_obj == mp_const_none || text_font_obj == mp_const_none){
+        if(is_instance_not_native){
+            mp_obj_instance_t *self = MP_OBJ_TO_PTR(attr_accessor);
+            mp_map_lookup(&self->members, MP_OBJ_NEW_QSTR(MP_QSTR_width), MP_MAP_LOOKUP)->value = mp_obj_new_int(0);
+            mp_map_lookup(&self->members, MP_OBJ_NEW_QSTR(MP_QSTR_height), MP_MAP_LOOKUP)->value = mp_obj_new_int(0);
+        }else{
+            ((engine_text_2d_node_class_obj_t*)((engine_node_base_t*)attr_accessor)->node)->width = mp_obj_new_int(0);
+            ((engine_text_2d_node_class_obj_t*)((engine_node_base_t*)attr_accessor)->node)->height = mp_obj_new_int(0);
+        }
         return;
     }
 
-    font_resource_class_obj_t *text_font = text_font_elem->value;
+
+    font_resource_class_obj_t *text_font = text_font_obj;
     uint8_t char_height = text_font->glyph_height;
 
     // Get length of string: https://github.com/v923z/micropython-usermod/blob/master/snippets/stringarg/stringarg.c
-    GET_STR_DATA_LEN(text_elem->value, str, str_len);
+    GET_STR_DATA_LEN(text_obj, str, str_len);
 
     // Figure out the size of the text box, considering newlines
     float text_box_width = 0.0f;
@@ -201,8 +215,14 @@ STATIC void text_2d_node_class_calculate_dimensions(mp_obj_t attr_accessor){
     }
 
     // Set the 'width' and 'height' attributes of the instance
-    text_width_elem->value = mp_obj_new_int((uint32_t)text_box_width);
-    text_height_elem->value = mp_obj_new_int((uint32_t)text_box_height);
+    if(is_instance_not_native){
+        mp_obj_instance_t *self = MP_OBJ_TO_PTR(attr_accessor);
+        mp_map_lookup(&self->members, MP_OBJ_NEW_QSTR(MP_QSTR_width), MP_MAP_LOOKUP)->value = mp_obj_new_int((uint32_t)text_box_width);
+        mp_map_lookup(&self->members, MP_OBJ_NEW_QSTR(MP_QSTR_height), MP_MAP_LOOKUP)->value = mp_obj_new_int((uint32_t)text_box_height);
+    }else{
+        ((engine_text_2d_node_class_obj_t*)((engine_node_base_t*)attr_accessor)->node)->width = mp_obj_new_int((uint32_t)text_box_width);
+        ((engine_text_2d_node_class_obj_t*)((engine_node_base_t*)attr_accessor)->node)->height = mp_obj_new_int((uint32_t)text_box_height);
+    }
 }
 
 
@@ -218,7 +238,7 @@ STATIC void text_2d_node_class_set(mp_obj_t self_in, qstr attribute, mp_obj_t *d
         switch(attribute){
             case MP_QSTR_text:
             {
-                text_2d_node_class_calculate_dimensions(self_in);
+                text_2d_node_class_calculate_dimensions(self_in, true);
             }
             break;
         }
@@ -315,6 +335,8 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
         text_2d_node->scale = parsed_args[scale].u_obj;
         text_2d_node->width = mp_obj_new_int(0);
         text_2d_node->height = mp_obj_new_int(0);
+
+        text_2d_node_class_calculate_dimensions(node_base, false);
     }else if(inherited == true){  // Inherited (use existing object)
         node_base->inherited = true;
         node_base->node = parsed_args[child_class].u_obj;
@@ -349,9 +371,9 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
         // so that certain callbacks/code can run
         default_instance_attr_func = MP_OBJ_TYPE_GET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_base->node)->type, attr);
         MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_base->node)->type, attr, text_2d_node_class_set, 5);
-    }
 
-    text_2d_node_class_calculate_dimensions(node_base->attr_accessor);
+        text_2d_node_class_calculate_dimensions(node_base->attr_accessor, true);
+    }
 
     return MP_OBJ_FROM_PTR(node_base);
 }
@@ -425,6 +447,7 @@ STATIC void text_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *
             break;
             case MP_QSTR_text:
                 self->text = destination[1];
+                text_2d_node_class_calculate_dimensions(self_in, false);
             break;
             case MP_QSTR_rotation:
                 self->rotation = destination[1];
