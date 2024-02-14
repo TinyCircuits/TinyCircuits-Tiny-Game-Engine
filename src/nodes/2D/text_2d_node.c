@@ -241,6 +241,16 @@ STATIC void text_2d_node_class_set(mp_obj_t self_in, qstr attribute, mp_obj_t *d
                 text_2d_node_class_calculate_dimensions(self_in, true);
             }
             break;
+            case MP_QSTR_width:
+            {
+                mp_raise_msg(&mp_type_AttributeError, MP_ERROR_TEXT("Text2DNode: ERROR: 'width' is read-only, it is not allowed to be set!"));
+            }
+            break;
+            case MP_QSTR_height:
+            {
+                mp_raise_msg(&mp_type_AttributeError, MP_ERROR_TEXT("Text2DNode: ERROR: 'height' is read-only, it is not allowed to be set!"));
+            }
+            break;
         }
     }
 }
@@ -454,6 +464,12 @@ STATIC void text_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *
             break;
             case MP_QSTR_scale:
                 self->scale = destination[1];
+            break;
+            case MP_QSTR_width:
+                mp_raise_msg(&mp_type_AttributeError, MP_ERROR_TEXT("Text2DNode: ERROR: 'width' is read-only, it is not allowed to be set!"));
+            break;
+            case MP_QSTR_height:
+                mp_raise_msg(&mp_type_AttributeError, MP_ERROR_TEXT("Text2DNode: ERROR: 'height' is read-only, it is not allowed to be set!"));
             break;
             default:
                 return; // Fail
