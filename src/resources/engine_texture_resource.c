@@ -115,11 +115,11 @@ uint16_t texture_resource_get_pixel(texture_resource_class_obj_t *texture, uint3
 
 /*  --- doc ---
     NAME: TextureResource
-    DESC: Object that holds information about bitmaps
+    DESC: Object that holds information about bitmaps. The file needs to be a 16-bit RGB565 .bmp file
     PARAM:  [type=string]  [name=filepath]  [value=string]
     PARAM:  [type=boolean] [name=in_ram]    [value=True of False (False by default)]
-    ATTR:   [type=float]   [name=width]     [value=any]
-    ATTR:   [type=float]   [name=height]    [value=any]
+    ATTR:   [type=float]   [name=width]     [value=any (read-only)]
+    ATTR:   [type=float]   [name=height]    [value=any (read-only)]
 */ 
 STATIC void texture_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing TextureResource attr");

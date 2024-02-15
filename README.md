@@ -58,6 +58,7 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
    * Nodes
    * Audio
    * Resources/Flash
+[] Figure out why physics doesn't always work on pong example
 [] Fix non square scale not positioning Text2DNode correctly
 [] Blending colors for partially transparent pixels in some sources (don't ahve any yet)
 [.] Add Line2DNode that draws a rectangle between two points, Allow filled and outline modes

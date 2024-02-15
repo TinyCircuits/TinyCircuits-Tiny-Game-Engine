@@ -4,7 +4,6 @@ import engine_debug
 import engine_input
 import engine_physics
 import engine_audio
-from engine_physics import PolyCollisionShape2D
 from engine_nodes import EmptyNode, Sprite2DNode, Rectangle2DNode, Polygon2DNode, Circle2DNode, CameraNode, VoxelSpaceNode, Physics2DNode, Text2DNode
 from engine_math import Vector3, Vector2, Rectangle
 from engine_resources import TextureResource, WaveSoundResource, FontResource
@@ -24,7 +23,7 @@ font9 = FontResource("9pt-roboto-font.bmp")
 
 
 
-text = Text2DNode(text="Hello World!\nLine 2\nLine 3", font=font9, scale=Vector2(1.5, 1.0), position=Vector2(0, -0))
+text = Text2DNode(text="Hello World!\nLine 2\nLine 3", font=font9, scale=Vector2(1.0, 1.0), position=Vector2(0, -0))
 # text = MyText()
 # text.rotation = math.pi/4
 # print(text.width)
@@ -49,7 +48,7 @@ rectangle = Rectangle2DNode()
 rectangle.width = 30
 rectangle.height = 15
 rectangle.outline = True
-sprite = Sprite2DNode(texture=texture, position=Vector2(0, 0), scale=Vector2(2.0, 1.0))
+sprite = Sprite2DNode(texture=texture, position=Vector2(0, 0), scale=Vector2(1.0, 1.0))
 polygon = Polygon2DNode()
 polygon.vertices.append(Vector2(-15, 10))
 polygon.vertices.append(Vector2(10, 10))
@@ -75,20 +74,19 @@ class MyCam(CameraNode):
     
     def tick(self):
         if engine_input.check_pressed(engine_input.A):
-            self.zoom -= 0.05
+            self.zoom -= 0.0025
         if engine_input.check_pressed(engine_input.B):
-            self.zoom += 0.05
+            self.zoom += 0.0025
         
         if engine_input.check_pressed(engine_input.DPAD_UP):
-            self.position.y -= 0.5
+            self.position.y -= 0.25
         if engine_input.check_pressed(engine_input.DPAD_DOWN):
-            self.position.y += 0.5
+            self.position.y += 0.25
         
         if engine_input.check_pressed(engine_input.DPAD_LEFT):
-            self.position.x -= 0.5
+            self.position.x -= 0.25
         if engine_input.check_pressed(engine_input.DPAD_RIGHT):
-            self.position.x += 0.5
-        
+            self.position.x += 0.25
         
         if engine_input.check_pressed(engine_input.BUMPER_LEFT):
             self.rotation.z += 0.005

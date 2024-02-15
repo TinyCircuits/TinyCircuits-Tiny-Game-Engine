@@ -72,7 +72,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_physics_get_gravity_obj, engine_physics_get_gra
 
 STATIC const mp_rom_map_elem_t engine_physics_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_physics) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_PolyCollisionShape2D), (mp_obj_t)&polygon_collision_shape_2d_class_type},
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PolygonCollisionShape2D), (mp_obj_t)&polygon_collision_shape_2d_class_type},
     // { MP_OBJ_NEW_QSTR(MP_QSTR_EmptyPolyCollisionShape2D), (mp_obj_t)&empty_poly_collision_shape_2d_class_type},
     // { MP_OBJ_NEW_QSTR(MP_QSTR_HexagonPolyCollisionShape2D), (mp_obj_t)&hexagon_poly_collision_shape_2d_class_type},
     // { MP_OBJ_NEW_QSTR(MP_QSTR_RectanglePolyCollisionShape2D), (mp_obj_t)&rectangle_poly_collision_shape_2d_class_type},

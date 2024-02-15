@@ -7,7 +7,7 @@
 /*  --- doc ---
     NAME: set_background_color
     DESC: Sets the background (the data that clears the framebuffer) to a color
-    PARAM: [type=enum/int]   [name=background_color]  [value=enum/int]
+    PARAM: [type=enum/int]   [name=background_color]  [value=enum/int (16-bit RGB565)]
     RETURN: None
 */ 
 STATIC mp_obj_t engine_draw_set_background_color(mp_obj_t background_color){

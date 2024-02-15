@@ -99,7 +99,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(font_resource_class_del_obj, font_resource_class_del);
 
 /*  --- doc ---
     NAME: FontResource
-    DESC: Object that holds information about a font
+    DESC: Object that holds information about a font. The file needs to be a 16-bit RGB565 .bmp file consisting of characters all of the same height. Widths of the characters are marked by any alternating colors in the bottom row of pixels of the bitmap. Characters should be in one large row.
     PARAM:  [type=string]                       [name=filepath] [value=string]
     PARAM:  [type=boolean]                      [name=in_ram]   [value=True of False (False by default)]
     ATTR:   [type={ref_link:TextureResource}]   [name=texture]  [value={ref_link:TextureResource}]
