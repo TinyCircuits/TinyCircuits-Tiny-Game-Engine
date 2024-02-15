@@ -59,5 +59,6 @@ typedef struct{
 extern const mp_obj_type_t audio_channel_class_type;
 
 mp_obj_t audio_channel_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args);
+mp_obj_t audio_channel_stop(mp_obj_t self_in);
 
 #endif  // ENGINE_AUDIO_CHANNEL_H

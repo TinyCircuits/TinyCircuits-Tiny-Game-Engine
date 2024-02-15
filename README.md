@@ -54,6 +54,10 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Fix blit so that it does not cut off some sprites (like 'W' in Text2DNode)
 [X] Fix positioning and rotation for nodes that are children of the camera
 
+[] Figure out resetting engine when main loop ends
+   * Nodes
+   * Audio
+   * Resources/Flash
 [] Fix non square scale not positioning Text2DNode correctly
 [] Blending colors for partially transparent pixels in some sources (don't ahve any yet)
 [.] Add Line2DNode that draws a rectangle between two points, Allow filled and outline modes

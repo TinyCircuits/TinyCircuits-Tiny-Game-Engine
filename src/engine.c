@@ -89,6 +89,18 @@ STATIC mp_obj_t engine_tick(){
         engine_display_send();
     }
 
+    // // See ports/rp2/mphalport.h, ports/rp2/mphalport.c, py/mphal.h, shared/runtime/sys_stdio_mphal.c
+    // Can get chars from REPL and do stuff with them!
+    // if(mp_hal_stdio_poll(MP_STREAM_POLL_RD)){
+    //     int received = mp_hal_stdin_rx_chr();
+
+    //     if(received == 4){
+    //         break;
+    //     }
+
+    //     ENGINE_FORCE_PRINTF("%d", received);
+    // }
+
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_0(engine_tick_obj, engine_tick);
@@ -104,6 +116,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_tick_obj, engine_tick);
 STATIC mp_obj_t engine_reset(){
     ENGINE_INFO_PRINTF("Resetting engine...");
 
+    engine_audio_stop();
     engine_camera_clear_all();
     engine_physics_clear_all();
 
@@ -128,22 +141,15 @@ STATIC mp_obj_t engine_start(){
         if (MP_STATE_THREAD(mp_pending_exception) != MP_OBJ_NULL) {
             break;
         }
-
-        // // See ports/rp2/mphalport.h, ports/rp2/mphalport.c, py/mphal.h, shared/runtime/sys_stdio_mphal.c
-        // Can get chars from REPL and do stuff with them!
-        // if(mp_hal_stdio_poll(MP_STREAM_POLL_RD)){
-        //     int received = mp_hal_stdin_rx_chr();
-
-        //     if(received == 4){
-        //         break;
-        //     }
-
-        //     ENGINE_FORCE_PRINTF("%d", received);
-        // }
     }
 
     // Reset the engine after the main loop ends
     engine_reset();
+
+    // Can only break out of loop if there's
+    // an exception, handle it fully after
+    // resetting engine
+    mp_handle_pending(true);
 
     return mp_const_none;
 }

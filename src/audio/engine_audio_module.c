@@ -26,6 +26,7 @@ MP_REGISTER_ROOT_POINTER(mp_obj_t channels[CHANNEL_COUNT]);
 
 // The master volume that all mixed samples are scaled by
 float master_volume = 1.0f;
+bool initialized = false;
 
 
 #if defined(__unix__)
@@ -235,6 +236,11 @@ void engine_audio_setup_playback(){
 size_t stack_size = 4096*2;
 
 void engine_audio_setup(){
+    // Don't set this up again if it already was before
+    if(initialized == true){
+        return;
+    }
+
     // Fill channels array with channels. This has to be done
     // before any callbacks try to access the channels array
     // (otherwise it would be trying to access all NULLs)
@@ -275,6 +281,17 @@ void engine_audio_setup(){
         //     mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("AudioModule: No timer slots available, could not audio callback!"));
         // }
     #endif
+
+    initialized = true;
+}
+
+
+void engine_audio_stop(){
+    ENGINE_INFO_PRINTF('EngineAudio: Stopping all channels...');
+
+    for(uint8_t icx=0; icx<CHANNEL_COUNT; icx++){
+        audio_channel_stop(MP_STATE_PORT(channels[icx]));
+    }
 }
 
 
