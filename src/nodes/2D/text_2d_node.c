@@ -96,25 +96,20 @@ STATIC mp_obj_t text_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
     text_rotated_x += camera_viewport->width/2;
     text_rotated_y += camera_viewport->height/2;
 
-    engine_draw_pixel(0b11111100000000000, text_rotated_x, text_rotated_y);
+    float bitmap_x_scale = text_scale->x*camera_zoom;
+    float bitmap_y_scale = text_scale->y*camera_zoom;
 
-    float x_scale = text_scale->x;
-    float y_scale = text_scale->y;
+    // Used to traverse about rotation using unit circle sin/cos offsets
+    float traversal_scale = sqrtf(text_scale->x*text_scale->x + text_scale->y*text_scale->y) * camera_zoom;
 
     // https://codereview.stackexchange.com/a/86546
     float rotation = (text_resolved_hierarchy_rotation + camera_resolved_hierarchy_rotation);
     
-    float sin_angle = sinf(rotation);
-    float cos_angle = cosf(rotation);
+    float sin_angle = sinf(rotation) * traversal_scale;
+    float cos_angle = cosf(rotation) * traversal_scale;
 
-    float sin_angle_perp = sinf(rotation + (PI/2.0f));
-    float cos_angle_perp = cosf(rotation + (PI/2.0f));
-
-    // float sin_angle_scaled = sin_angle * y_scale;
-    // float cos_angle_scaled = cos_angle * x_scale;
-
-    // float sin_angle_perp_scaled = sin_angle_perp * y_scale;
-    // float cos_angle_perp_scaled = cos_angle_perp * x_scale;
+    float sin_angle_perp = sinf(rotation + (PI/2.0f)) * traversal_scale;
+    float cos_angle_perp = cosf(rotation + (PI/2.0f)) * traversal_scale;
 
     // // Set starting point to text box origin then translate to
     // // starting in top-left by column and row shifts (while rotated).
@@ -123,21 +118,11 @@ STATIC mp_obj_t text_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
     float char_x = text_rotated_x;
     float char_y = text_rotated_y;
 
-    // char_x -= (cos_angle_scaled * text_box_width_half);
-    // char_y += (sin_angle_scaled * text_box_width_half);
+    char_x -= (cos_angle * text_box_width_half);
+    char_y += (sin_angle * text_box_width_half);
 
-    // char_x += (cos_angle_perp_scaled * text_box_height_half);
-    // char_y -= (sin_angle_perp_scaled * text_box_height_half);
-
-    char_x -= (cos_angle * text_box_width_half * x_scale * y_scale * camera_zoom);
-    char_y += (sin_angle * text_box_width_half * x_scale * y_scale * camera_zoom);
-
-    char_x += (cos_angle_perp * text_box_height_half * x_scale * y_scale * camera_zoom);
-    char_y -= (sin_angle_perp * text_box_height_half * x_scale * y_scale * camera_zoom);
-
-
-    engine_draw_pixel(0b11111100000011111, char_x, char_y);
-
+    char_x += (cos_angle_perp * text_box_height_half);
+    char_y -= (sin_angle_perp * text_box_height_half);
 
     float current_row_width = 0.0f;
 
@@ -149,19 +134,13 @@ STATIC mp_obj_t text_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
 
         // Check if newline, otherwise any other character contributes to text box width
         if(current_char == 10){
+            // Move to start of line
+            char_x -= (cos_angle * current_row_width);
+            char_y += (sin_angle * current_row_width);
+
             // Move to next line
-            // char_x -= (cos_angle_perp_scaled * char_height);
-            // char_y += (sin_angle_perp_scaled * char_height);
-
-            // // Go back to start of line
-            // char_x -= (cos_angle_scaled * current_row_width);
-            // char_y += (sin_angle_scaled * current_row_width);
-
-            char_x -= (cos_angle * current_row_width * x_scale * y_scale * camera_zoom);
-            char_y += (sin_angle * current_row_width * x_scale * y_scale * camera_zoom);
-
-            char_x -= (cos_angle_perp * char_height * x_scale * y_scale * camera_zoom);
-            char_y += (sin_angle_perp * char_height * x_scale * y_scale * camera_zoom);
+            char_x -= (cos_angle_perp * char_height);
+            char_y += (sin_angle_perp * char_height);
 
             current_row_width = 0.0f;
             continue;
@@ -177,15 +156,13 @@ STATIC mp_obj_t text_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
                         (char_x), (char_y),
                         char_width, char_height,
                         text_font_bitmap_width,
-                        x_scale * camera_zoom,
-                        y_scale * camera_zoom,
+                        bitmap_x_scale,
+                        bitmap_y_scale,
                         -rotation,
                         0);
 
-        // char_x += (cos_angle_scaled * char_width);
-        // char_y -= (sin_angle_scaled * char_width);
-        char_x += (cos_angle * char_width * x_scale * y_scale * camera_zoom);
-        char_y -= (sin_angle * char_width * x_scale * y_scale * camera_zoom);
+        char_x += (cos_angle * char_width);
+        char_y -= (sin_angle * char_width);
         current_row_width += char_width;
     }
 

@@ -23,7 +23,8 @@ font9 = FontResource("9pt-roboto-font.bmp")
 
 
 
-text = Text2DNode(text="Hello World!\nLine 2\nLine 3", font=font9, scale=Vector2(1.0, 1.0), position=Vector2(0, -0))
+text = Text2DNode(text="Hello World!\nLine 2\nLine 3", font=font9, scale=Vector2(5.0, 2.0), position=Vector2(0, -0))
+text0 = Text2DNode(text="Hello World!\nLine 2\nLine 3", font=font9, scale=Vector2(1.0, 1.0), position=Vector2(0, -0))
 # text = MyText()
 # text.rotation = math.pi/4
 # print(text.width)
@@ -66,6 +67,7 @@ rectangle.position = Vector2(32, 0)
 sprite.position = Vector2(0, 32)
 polygon.position = Vector2(-32, 0)
 text.position = Vector2(0, -36)
+text0.position = Vector2(0, -36)
 
 
 class MyCam(CameraNode):
@@ -116,6 +118,7 @@ circle.add_child(rectangle)
 circle.add_child(sprite)
 circle.add_child(polygon)
 circle.add_child(text)
+circle.add_child(text0)
 
 cursor = Circle2DNode(radius=5, color=engine_draw.green, outline=True)
 
