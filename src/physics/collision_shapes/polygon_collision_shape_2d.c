@@ -11,7 +11,7 @@ STATIC void polygon_collision_shape_2d_class_print(const mp_print_t *print, mp_o
 
 /* --- doc ---
    NAME: calculate_normals
-   DESC: Recalculates normals for the shape
+   DESC: Recalculates normals for the shape. Automaticaly called when instance of this is created and when list of vertices is directly changed. Does not get automaticaly called when appending/inserting/deleting points from 'vertices'
    RETURN: None
 */
 STATIC mp_obj_t polygon_2d_node_class_calculate_normals(mp_obj_t self_in){
@@ -69,101 +69,128 @@ MP_DEFINE_CONST_FUN_OBJ_1(polygon_2d_node_class_calculate_normals_obj, polygon_2
 
 
 /* --- doc ---
-   NAME: EmptyPolyCollisionShape2D
-   DESC: Dissolves into a {ref_link:PolygonCollisionShape2D} object that contains no vertices or normals (this is the default for {ref_link:PolygonCollisionShape2D})
-*/
-mp_obj_t empty_poly_collision_shape_2d_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
-    ENGINE_INFO_PRINTF("New Empty PolygonCollisionShape2D");
-    mp_arg_check_num(n_args, n_kw, 0, 0, false);
-
-    polygon_collision_shape_2d_class_obj_t *self = m_new_obj(polygon_collision_shape_2d_class_obj_t);
-    self->base.type = &polygon_collision_shape_2d_class_type;
-    self->vertices = mp_obj_new_list(0, NULL);
-    self->normals = mp_obj_new_list(0, NULL);
-    
-    return MP_OBJ_FROM_PTR(self);
-}
-
-
-/* --- doc ---
-   NAME: RectanglePolyCollisionShape2D
-   DESC: A basic polygon used to describe the shape of collision for a {ref_link:Physics2DNode}. This constructor dissolves into a {ref_link:PolygonCollisionShape2D} object but instead of being empty, it is filled with vertices and normals for a rectangle
-*/
-mp_obj_t rectangle_poly_collision_shape_2d_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
-    ENGINE_INFO_PRINTF("New Rectangle PolygonCollisionShape2D");
-    mp_arg_check_num(n_args, n_kw, 0, 2, false);
-
-    polygon_collision_shape_2d_class_obj_t *self = m_new_obj(polygon_collision_shape_2d_class_obj_t);
-    self->base.type = &polygon_collision_shape_2d_class_type;
-
-    if(n_args == 0){
-        self->vertices = mp_obj_new_list(4, (mp_obj_t[]){vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(-1.0f), mp_obj_new_float(1.0f)}),
-                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f),  mp_obj_new_float(1.0f)}),
-                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f),  mp_obj_new_float(-1.0f)}),
-                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(-1.0f), mp_obj_new_float(-1.0f)})});
-    }else if(n_args == 1){
-        float scale = mp_obj_get_float(args[0]);
-        self->vertices = mp_obj_new_list(4, (mp_obj_t[]){vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(-1.0f*scale), mp_obj_new_float(1.0f*scale)}),
-                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f*scale),  mp_obj_new_float(1.0f*scale)}),
-                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f*scale),  mp_obj_new_float(-1.0f*scale)}),
-                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(-1.0f*scale), mp_obj_new_float(-1.0f*scale)})});
-    }else if(n_args == 2){
-        float width = mp_obj_get_float(args[0]);
-        float height = mp_obj_get_float(args[1]);
-        self->vertices = mp_obj_new_list(4, (mp_obj_t[]){vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(-width/2), mp_obj_new_float(height/2)}),
-                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(width/2),  mp_obj_new_float(height/2)}),
-                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(width/2),  mp_obj_new_float(-height/2)}),
-                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(-width/2), mp_obj_new_float(-height/2)})});
-    }
-    self->normals = mp_obj_new_list(0, NULL);
-    
-    polygon_2d_node_class_calculate_normals(self);
-
-    return MP_OBJ_FROM_PTR(self);
-}
-
-
-/* --- doc ---
-   NAME: HexagonPolyCollisionShape2D
-   DESC: A basic polygon used to describe the shape of collision for a {ref_link:Physics2DNode}. This constructor dissolves into a {ref_link:PolygonCollisionShape2D} object but instead of being empty, it is filled with vertices and normals for a hexagon
-*/
-mp_obj_t hexagon_poly_collision_shape_2d_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
-    ENGINE_INFO_PRINTF("New Hexagon PolygonCollisionShape2D");
-    mp_arg_check_num(n_args, n_kw, 0, 1, false);
-
-    polygon_collision_shape_2d_class_obj_t *self = m_new_obj(polygon_collision_shape_2d_class_obj_t);
-    self->base.type = &polygon_collision_shape_2d_class_type;
-    if(n_args == 0){
-        self->vertices = mp_obj_new_list(6, (mp_obj_t[]){vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.0f),        mp_obj_new_float(1.0f)}),
-                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.866025f),   mp_obj_new_float(0.5f)}),
-                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.866025f),   mp_obj_new_float(-0.5f)}),
-                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.0f),        mp_obj_new_float(-1.0f)}),
-                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(-0.866025f),  mp_obj_new_float(-0.5f)}),
-                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(-0.866025f),  mp_obj_new_float(0.5f)})});
-    }else if(n_args == 1){
-        float scale = mp_obj_get_float(args[0]);
-        self->vertices = mp_obj_new_list(6, (mp_obj_t[]){vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.0f*scale),        mp_obj_new_float(1.0f*scale)}),
-                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.866025f*scale),   mp_obj_new_float(0.5f*scale)}),
-                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.866025f*scale),   mp_obj_new_float(-0.5f*scale)}),
-                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.0f*scale),        mp_obj_new_float(-1.0f*scale)}),
-                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(-0.866025f*scale),  mp_obj_new_float(-0.5f*scale)}),
-                                                        vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(-0.866025f*scale),  mp_obj_new_float(0.5f*scale)})});
-    }
-    self->normals = mp_obj_new_list(0, NULL);
-    
-    polygon_2d_node_class_calculate_normals(self);
-
-    return MP_OBJ_FROM_PTR(self);
-}
-
-
-/* --- doc ---
    NAME: PolygonCollisionShape2D
-   DESC: A polygon used to describe the shape of collision for a {ref_link:Physics2DNode}. Uses {ref_link:EmptyPolyCollisionShape2D} by default, but other basic shapes are available: {ref_link:RectanglePolyCollisionShape2D} and {ref_link:HexagonPolyCollisionShape2D}
-   ATTR: [type=function]    [name={ref_link:calculate_normals}]     [value=function]
-   ATTR: [type=list]        [name=vertices]                         [value=list of {ref_link:Vector2}s]
-   ATTR: [type=list]        [name=normals]                          [value=list of {ref_link:Vector2}s]
+   DESC: A polygon used to describe the shape of collision for a {ref_link:Physics2DNode}.
+   PARAM:  [type=list of {ref_link:Vector2}]         [name=vertices]                         [value=list of {ref_link:Vector2}]
+   PARAM:  [type=list of {ref_link:FontResource}]    [name=normals]                          [value=list of {ref_link:FontResource}]
+   ATTR:   [type=function]                           [name={ref_link:calculate_normals}]     [value=function]
+   ATTR:   [type=list]                               [name=vertices]                         [value=list of {ref_link:Vector2}s]
+   ATTR:   [type=list]                               [name=normals]                          [value=list of {ref_link:Vector2}s]
 */
+mp_obj_t poly_collision_shape_2d_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
+    ENGINE_INFO_PRINTF("New Empty PolygonCollisionShape2D");
+    
+    static const mp_arg_t allowed_args[] = {
+        { MP_QSTR_vertices,             MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_normals,              MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+    };
+    mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
+    enum arg_ids {vertices, normals};
+    mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args), allowed_args, parsed_args);
+
+    if(parsed_args[vertices].u_obj == MP_OBJ_NULL) parsed_args[vertices].u_obj = mp_obj_new_list(0, NULL);
+    if(parsed_args[normals].u_obj == MP_OBJ_NULL) parsed_args[normals].u_obj = mp_obj_new_list(0, NULL);
+
+    polygon_collision_shape_2d_class_obj_t *self = m_new_obj(polygon_collision_shape_2d_class_obj_t);
+    self->base.type = &polygon_collision_shape_2d_class_type;
+    self->vertices = parsed_args[vertices].u_obj;
+    self->normals = parsed_args[normals].u_obj;
+
+    polygon_2d_node_class_calculate_normals(self);
+
+    return MP_OBJ_FROM_PTR(self);
+}
+
+
+// /* 
+//    NAME: EmptyPolyCollisionShape2D
+//    DESC: Dissolves into a {ref_link:PolygonCollisionShape2D} object that contains no vertices or normals (this is the default for {ref_link:PolygonCollisionShape2D})
+// */
+// mp_obj_t empty_poly_collision_shape_2d_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
+//     ENGINE_INFO_PRINTF("New Empty PolygonCollisionShape2D");
+//     mp_arg_check_num(n_args, n_kw, 0, 0, false);
+
+//     polygon_collision_shape_2d_class_obj_t *self = m_new_obj(polygon_collision_shape_2d_class_obj_t);
+//     self->base.type = &polygon_collision_shape_2d_class_type;
+//     self->vertices = mp_obj_new_list(0, NULL);
+//     self->normals = mp_obj_new_list(0, NULL);
+    
+//     return MP_OBJ_FROM_PTR(self);
+// }
+
+
+// /* 
+//    NAME: RectanglePolyCollisionShape2D
+//    DESC: A basic polygon used to describe the shape of collision for a {ref_link:Physics2DNode}. This constructor dissolves into a {ref_link:PolygonCollisionShape2D} object but instead of being empty, it is filled with vertices and normals for a rectangle
+// */
+// mp_obj_t rectangle_poly_collision_shape_2d_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
+//     ENGINE_INFO_PRINTF("New Rectangle PolygonCollisionShape2D");
+//     mp_arg_check_num(n_args, n_kw, 0, 2, false);
+
+//     polygon_collision_shape_2d_class_obj_t *self = m_new_obj(polygon_collision_shape_2d_class_obj_t);
+//     self->base.type = &polygon_collision_shape_2d_class_type;
+
+//     if(n_args == 0){
+//         self->vertices = mp_obj_new_list(4, (mp_obj_t[]){vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(-1.0f), mp_obj_new_float(1.0f)}),
+//                                                         vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f),  mp_obj_new_float(1.0f)}),
+//                                                         vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f),  mp_obj_new_float(-1.0f)}),
+//                                                         vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(-1.0f), mp_obj_new_float(-1.0f)})});
+//     }else if(n_args == 1){
+//         float scale = mp_obj_get_float(args[0]);
+//         self->vertices = mp_obj_new_list(4, (mp_obj_t[]){vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(-1.0f*scale), mp_obj_new_float(1.0f*scale)}),
+//                                                         vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f*scale),  mp_obj_new_float(1.0f*scale)}),
+//                                                         vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f*scale),  mp_obj_new_float(-1.0f*scale)}),
+//                                                         vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(-1.0f*scale), mp_obj_new_float(-1.0f*scale)})});
+//     }else if(n_args == 2){
+//         float width = mp_obj_get_float(args[0]);
+//         float height = mp_obj_get_float(args[1]);
+//         self->vertices = mp_obj_new_list(4, (mp_obj_t[]){vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(-width/2), mp_obj_new_float(height/2)}),
+//                                                         vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(width/2),  mp_obj_new_float(height/2)}),
+//                                                         vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(width/2),  mp_obj_new_float(-height/2)}),
+//                                                         vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(-width/2), mp_obj_new_float(-height/2)})});
+//     }
+//     self->normals = mp_obj_new_list(0, NULL);
+    
+//     polygon_2d_node_class_calculate_normals(self);
+
+//     return MP_OBJ_FROM_PTR(self);
+// }
+
+
+// /* 
+//    NAME: HexagonPolyCollisionShape2D
+//    DESC: A basic polygon used to describe the shape of collision for a {ref_link:Physics2DNode}. This constructor dissolves into a {ref_link:PolygonCollisionShape2D} object but instead of being empty, it is filled with vertices and normals for a hexagon
+// */
+// mp_obj_t hexagon_poly_collision_shape_2d_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
+//     ENGINE_INFO_PRINTF("New Hexagon PolygonCollisionShape2D");
+//     mp_arg_check_num(n_args, n_kw, 0, 1, false);
+
+//     polygon_collision_shape_2d_class_obj_t *self = m_new_obj(polygon_collision_shape_2d_class_obj_t);
+//     self->base.type = &polygon_collision_shape_2d_class_type;
+//     if(n_args == 0){
+//         self->vertices = mp_obj_new_list(6, (mp_obj_t[]){vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.0f),        mp_obj_new_float(1.0f)}),
+//                                                         vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.866025f),   mp_obj_new_float(0.5f)}),
+//                                                         vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.866025f),   mp_obj_new_float(-0.5f)}),
+//                                                         vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.0f),        mp_obj_new_float(-1.0f)}),
+//                                                         vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(-0.866025f),  mp_obj_new_float(-0.5f)}),
+//                                                         vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(-0.866025f),  mp_obj_new_float(0.5f)})});
+//     }else if(n_args == 1){
+//         float scale = mp_obj_get_float(args[0]);
+//         self->vertices = mp_obj_new_list(6, (mp_obj_t[]){vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.0f*scale),        mp_obj_new_float(1.0f*scale)}),
+//                                                         vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.866025f*scale),   mp_obj_new_float(0.5f*scale)}),
+//                                                         vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.866025f*scale),   mp_obj_new_float(-0.5f*scale)}),
+//                                                         vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.0f*scale),        mp_obj_new_float(-1.0f*scale)}),
+//                                                         vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(-0.866025f*scale),  mp_obj_new_float(-0.5f*scale)}),
+//                                                         vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(-0.866025f*scale),  mp_obj_new_float(0.5f*scale)})});
+//     }
+//     self->normals = mp_obj_new_list(0, NULL);
+    
+//     polygon_2d_node_class_calculate_normals(self);
+
+//     return MP_OBJ_FROM_PTR(self);
+// }
+
+
 STATIC void polygon_collision_shape_2d_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing PolygonCollisionShape2D attr");
 
@@ -188,6 +215,7 @@ STATIC void polygon_collision_shape_2d_class_attr(mp_obj_t self_in, qstr attribu
         switch(attribute){
             case MP_QSTR_vertices:
                 self->vertices = destination[1];
+                polygon_2d_node_class_calculate_normals(self);
             break;
             case MP_QSTR_normals:
                 self->normals = destination[1];
@@ -214,44 +242,44 @@ MP_DEFINE_CONST_OBJ_TYPE(
     MP_QSTR_PolygonCollisionShape2D,
     MP_TYPE_FLAG_NONE,
 
-    make_new, empty_poly_collision_shape_2d_class_new,
+    make_new, poly_collision_shape_2d_class_new,
     print, polygon_collision_shape_2d_class_print,
     attr, polygon_collision_shape_2d_class_attr,
     locals_dict, &polygon_collision_shape_2d_class_locals_dict
 );
 
 
-MP_DEFINE_CONST_OBJ_TYPE(
-    empty_poly_collision_shape_2d_class_type,
-    MP_QSTR_EmptyPolyCollisionShape2D,
-    MP_TYPE_FLAG_NONE,
+// MP_DEFINE_CONST_OBJ_TYPE(
+//     empty_poly_collision_shape_2d_class_type,
+//     MP_QSTR_EmptyPolyCollisionShape2D,
+//     MP_TYPE_FLAG_NONE,
 
-    make_new, empty_poly_collision_shape_2d_class_new,
-    print, polygon_collision_shape_2d_class_print,
-    attr, polygon_collision_shape_2d_class_attr,
-    locals_dict, &polygon_collision_shape_2d_class_locals_dict
-);
-
-
-MP_DEFINE_CONST_OBJ_TYPE(
-    rectangle_poly_collision_shape_2d_class_type,
-    MP_QSTR_RectanglePolyCollisionShape2D,
-    MP_TYPE_FLAG_NONE,
-
-    make_new, rectangle_poly_collision_shape_2d_class_new,
-    print, polygon_collision_shape_2d_class_print,
-    attr, polygon_collision_shape_2d_class_attr,
-    locals_dict, &polygon_collision_shape_2d_class_locals_dict
-);
+//     make_new, empty_poly_collision_shape_2d_class_new,
+//     print, polygon_collision_shape_2d_class_print,
+//     attr, polygon_collision_shape_2d_class_attr,
+//     locals_dict, &polygon_collision_shape_2d_class_locals_dict
+// );
 
 
-MP_DEFINE_CONST_OBJ_TYPE(
-    hexagon_poly_collision_shape_2d_class_type,
-    MP_QSTR_HexagonPolyCollisionShape2D,
-    MP_TYPE_FLAG_NONE,
+// MP_DEFINE_CONST_OBJ_TYPE(
+//     rectangle_poly_collision_shape_2d_class_type,
+//     MP_QSTR_RectanglePolyCollisionShape2D,
+//     MP_TYPE_FLAG_NONE,
 
-    make_new, hexagon_poly_collision_shape_2d_class_new,
-    print, polygon_collision_shape_2d_class_print,
-    attr, polygon_collision_shape_2d_class_attr,
-    locals_dict, &polygon_collision_shape_2d_class_locals_dict
-);
+//     make_new, rectangle_poly_collision_shape_2d_class_new,
+//     print, polygon_collision_shape_2d_class_print,
+//     attr, polygon_collision_shape_2d_class_attr,
+//     locals_dict, &polygon_collision_shape_2d_class_locals_dict
+// );
+
+
+// MP_DEFINE_CONST_OBJ_TYPE(
+//     hexagon_poly_collision_shape_2d_class_type,
+//     MP_QSTR_HexagonPolyCollisionShape2D,
+//     MP_TYPE_FLAG_NONE,
+
+//     make_new, hexagon_poly_collision_shape_2d_class_new,
+//     print, polygon_collision_shape_2d_class_print,
+//     attr, polygon_collision_shape_2d_class_attr,
+//     locals_dict, &polygon_collision_shape_2d_class_locals_dict
+// );

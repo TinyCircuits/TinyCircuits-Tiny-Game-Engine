@@ -9,6 +9,10 @@
 #include "utility/engine_time.h"
 #include "audio/engine_audio_module.h"
 
+#include "py/mpstate.h"
+#include "py/mphal.h"
+#include "py/stream.h"
+
 // ### MODULE ###
 
 // Module functions
@@ -119,6 +123,23 @@ STATIC mp_obj_t engine_start(){
     is_engine_looping = true;
     while(is_engine_looping){
         engine_tick();
+
+        // Allow exceptions to stop main loop, like ctrl-c/keyboard interrupt
+        if (MP_STATE_THREAD(mp_pending_exception) != MP_OBJ_NULL) {
+            break;
+        }
+
+        // // See ports/rp2/mphalport.h, ports/rp2/mphalport.c, py/mphal.h, shared/runtime/sys_stdio_mphal.c
+        // Can get chars from REPL and do stuff with them!
+        // if(mp_hal_stdio_poll(MP_STREAM_POLL_RD)){
+        //     int received = mp_hal_stdin_rx_chr();
+
+        //     if(received == 4){
+        //         break;
+        //     }
+
+        //     ENGINE_FORCE_PRINTF("%d", received);
+        // }
     }
 
     // Reset the engine after the main loop ends

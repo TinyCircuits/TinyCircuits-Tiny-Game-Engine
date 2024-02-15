@@ -49,6 +49,12 @@ STATIC mp_obj_t text_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
 
     float text_box_width = mp_obj_get_float(mp_load_attr(text_node_base->attr_accessor, MP_QSTR_width));
     float text_box_height = mp_obj_get_float(mp_load_attr(text_node_base->attr_accessor, MP_QSTR_height));
+
+    // Since sprites are centered by default and the text box height includes the
+    // height of the first line, get rid of one line's worth of height to center
+    // it correctly
+    text_box_height -= (float)text_font->glyph_height;
+
     float text_box_width_half = text_box_width * 0.5f;
     float text_box_height_half = text_box_height * 0.5f;
 
@@ -116,10 +122,10 @@ STATIC mp_obj_t text_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
     float char_y = text_rotated_y;
 
     char_x -= (cos_angle_scaled * text_box_width_half);
-    char_y -= (-sin_angle_scaled * text_box_width_half);
+    char_y += (sin_angle_scaled * text_box_width_half);
 
     char_x += (cos_angle_perp_scaled * text_box_height_half);
-    char_y += (-sin_angle_perp_scaled * text_box_height_half);
+    char_y -= (sin_angle_perp_scaled * text_box_height_half);
 
     float current_row_width = 0.0f;
 
@@ -132,12 +138,12 @@ STATIC mp_obj_t text_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
         // Check if newline, otherwise any other character contributes to text box width
         if(current_char == 10){
             // Move to next line
-            char_x += (-cos_angle_perp_scaled * char_height);
-            char_y -= (-sin_angle_perp_scaled * char_height);
+            char_x -= (cos_angle_perp_scaled * char_height);
+            char_y += (sin_angle_perp_scaled * char_height);
 
             // Go back to start of line
-            char_x += (-cos_angle_scaled * current_row_width);
-            char_y -= (-sin_angle_scaled * current_row_width);
+            char_x -= (cos_angle_scaled * current_row_width);
+            char_y += (sin_angle_scaled * current_row_width);
 
             current_row_width = 0.0f;
             continue;
@@ -182,8 +188,6 @@ STATIC void text_2d_node_class_calculate_dimensions(mp_obj_t attr_accessor, bool
         text_font_obj = mp_load_attr(attr_accessor, MP_QSTR_font);
     }
 
-    
-
     // Get the text and early out if none set
     if(text_obj == mp_const_none || text_font_obj == mp_const_none){
         if(is_instance_not_native){
@@ -197,7 +201,6 @@ STATIC void text_2d_node_class_calculate_dimensions(mp_obj_t attr_accessor, bool
         return;
     }
 
-
     font_resource_class_obj_t *text_font = text_font_obj;
     uint8_t char_height = text_font->glyph_height;
 
@@ -206,7 +209,7 @@ STATIC void text_2d_node_class_calculate_dimensions(mp_obj_t attr_accessor, bool
 
     // Figure out the size of the text box, considering newlines
     float text_box_width = 0.0f;
-    float text_box_height = 0.0f;
+    float text_box_height = char_height;
     float temp_text_box_width = 0.0f;
     for(uint16_t icx=0; icx<str_len; icx++){
         char current_char = ((char *)str)[icx];

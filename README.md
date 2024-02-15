@@ -52,9 +52,9 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Add keyword arguments for all constructors
 [X] Text that can display ` !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~`
 [X] Fix blit so that it does not cut off some sprites (like 'W' in Text2DNode)
+[X] Fix positioning and rotation for nodes that are children of the camera
 
-[] Fix positioning and rotation for nodes that are children of the camera
-
+[] Fix non square scale not positioning Text2DNode correctly
 [] Blending colors for partially transparent pixels in some sources (don't ahve any yet)
 [.] Add Line2DNode that draws a rectangle between two points, Allow filled and outline modes
 [] Expose low level drawing functions through engine_draw
@@ -74,6 +74,7 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
    knowing where we are in the time of the file and interpolating between samples
    if not exactly on a sample
 [] Round end caps for Line2DNode
+[] Should the scale of a parent node affect the position and scales of child nodes? Sounds more useful
 
 Game ideas
 [] ATV Gameboy game

@@ -4,7 +4,7 @@ import engine_debug
 import engine_input
 import engine_physics
 import engine_audio
-from engine_physics import EmptyPolyCollisionShape2D, RectanglePolyCollisionShape2D, HexagonPolyCollisionShape2D
+from engine_physics import PolyCollisionShape2D
 from engine_nodes import EmptyNode, Sprite2DNode, Rectangle2DNode, Polygon2DNode, Circle2DNode, CameraNode, VoxelSpaceNode, Physics2DNode, Text2DNode
 from engine_math import Vector3, Vector2, Rectangle
 from engine_resources import TextureResource, WaveSoundResource, FontResource
@@ -12,7 +12,7 @@ import math
 import gc
 
 # engine_debug.enable_all()
-# engine.set_fps_limit(30)
+# engine.set_fps_limit(60)
 # engine_debug.enable_setting(engine_debug.performance)
 font9 = FontResource("9pt-roboto-font.bmp")
 # font12 = FontResource("12pt-roboto-font.bmp")
@@ -24,7 +24,7 @@ font9 = FontResource("9pt-roboto-font.bmp")
 
 
 
-text = Text2DNode(text="Hello World!\nLine 2\nLine 3", font=font9, scale=Vector2(1.0, 1.0), position=Vector2(0, -0))
+text = Text2DNode(text="Hello World!\nLine 2\nLine 3", font=font9, scale=Vector2(1.5, 1.0), position=Vector2(0, -0))
 # text = MyText()
 # text.rotation = math.pi/4
 # print(text.width)
@@ -49,7 +49,7 @@ rectangle = Rectangle2DNode()
 rectangle.width = 30
 rectangle.height = 15
 rectangle.outline = True
-sprite = Sprite2DNode(texture=texture, position=Vector2(0, 0), scale=Vector2(1.0, 1.0))
+sprite = Sprite2DNode(texture=texture, position=Vector2(0, 0), scale=Vector2(2.0, 1.0))
 polygon = Polygon2DNode()
 polygon.vertices.append(Vector2(-15, 10))
 polygon.vertices.append(Vector2(10, 10))
@@ -75,19 +75,19 @@ class MyCam(CameraNode):
     
     def tick(self):
         if engine_input.check_pressed(engine_input.A):
-            self.zoom -= 0.01
+            self.zoom -= 0.05
         if engine_input.check_pressed(engine_input.B):
-            self.zoom += 0.01
+            self.zoom += 0.05
         
         if engine_input.check_pressed(engine_input.DPAD_UP):
-            self.position.y -= 0.25
+            self.position.y -= 0.5
         if engine_input.check_pressed(engine_input.DPAD_DOWN):
-            self.position.y += 0.25
+            self.position.y += 0.5
         
         if engine_input.check_pressed(engine_input.DPAD_LEFT):
-            self.position.x -= 0.25
+            self.position.x -= 0.5
         if engine_input.check_pressed(engine_input.DPAD_RIGHT):
-            self.position.x += 0.25
+            self.position.x += 0.5
         
         
         if engine_input.check_pressed(engine_input.BUMPER_LEFT):
@@ -99,11 +99,30 @@ class MyCam(CameraNode):
 camera = MyCam()
 camera.zoom = 1
 
-# circle.add_child(rectangle)
+
+# class FPSText(Text2DNode):
+#     def __init__(self):
+#         super().__init__(self)
+#         self.font = font9
+#         self.text = "0 FPS"
+    
+#     def tick(self):
+#         self.text = str(int(engine.get_running_fps())) + " FPS"
+#         self.position.x = -camera.viewport.width / 2 + self.width / 2 + 2
+#         self.position.y = -camera.viewport.height / 2 + self.height / 2 + 1
+
+
+# fps = FPSText()
+
+circle.add_child(rectangle)
 circle.add_child(sprite)
 circle.add_child(polygon)
 circle.add_child(text)
 
-camera.add_child(circle)
+cursor = Circle2DNode(radius=5, color=engine_draw.green, outline=True)
+
+# camera.add_child(circle)
+# camera.add_child(fps)
+camera.add_child(cursor)
 
 engine.start()
