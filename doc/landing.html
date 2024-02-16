@@ -22,23 +22,27 @@
         <a href="build/engine_debug.html">engine_debug</a><br>
         <a href="build/engine_utilities.html">engine_utilities</a><br>
 
+        <br>
+        <hr>
+        <br>
+
         <h3>Examples:</h3>
         
         <b><h>Hello World!</h></b>
         <br>
         <pre><code>
-            import engine
-            import engine_draw
-            from engine_nodes import Rectangle2DNode, CameraNode
+import engine
+import engine_draw
+from engine_nodes import Rectangle2DNode, CameraNode
 
-            # By default, nodes are at center of screen at 0,0
-            rectangle = Rectangle2DNode(width=25, height=25, color=engine_draw.red)
+# By default, nodes are at center of screen at 0,0
+rectangle = Rectangle2DNode(width=25, height=25, color=engine_draw.red)
 
-            # Make a camera to render the scene
-            camera = CameraNode()
+# Make a camera to render the scene
+camera = CameraNode()
 
-            # Start rendering the scene
-            engine.start()
+# Start rendering the scene
+engine.start()
         </code></pre>
 
 
@@ -50,7 +54,7 @@
             
         </code></pre>
 
-        <b><h>#2 Using engine loop</h></b>
+        <b><h>#2 Using custom engine loop</h></b>
         <pre><code>
             
         </code></pre>

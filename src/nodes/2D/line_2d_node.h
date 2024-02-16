@@ -7,6 +7,7 @@
 typedef struct{
     mp_obj_t start;     // Vector2: start 2d xy position of this node
     mp_obj_t end;       // Vector2: end 2d xy position of this node
+    mp_obj_t position;  // Vector2: midpoint between start and end
     mp_obj_t thickness; // How thick the line should be, in pixels (ceil to clamp up)
     mp_obj_t color;     // int The color of this line
     mp_obj_t outline;   // bool: if true, line is drawn as an outline, false by default

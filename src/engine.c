@@ -114,11 +114,13 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_tick_obj, engine_tick);
    RETURN: None
 */
 STATIC mp_obj_t engine_reset(){
-    ENGINE_INFO_PRINTF("Resetting engine...");
+    ENGINE_FORCE_PRINTF("Resetting engine...");
 
-    engine_audio_stop();
+    // engine_audio_stop();
     engine_camera_clear_all();
     engine_physics_clear_all();
+    engine_objects_clear_all();
+    engine_resource_reset();
 
     return mp_const_none;
 }
@@ -137,10 +139,25 @@ STATIC mp_obj_t engine_start(){
     while(is_engine_looping){
         engine_tick();
 
-        // Allow exceptions to stop main loop, like ctrl-c/keyboard interrupt
-        if (MP_STATE_THREAD(mp_pending_exception) != MP_OBJ_NULL) {
-            break;
+        // // Allow exceptions to stop main loop, like ctrl-c/keyboard interrupt
+        // if (MP_STATE_THREAD(mp_pending_exception) != MP_OBJ_NULL) {
+        //     break;
+        // }
+
+        // See ports/rp2/mphalport.h, ports/rp2/mphalport.c, py/mphal.h, shared/runtime/sys_stdio_mphal.c
+        // Can get chars from REPL and do stuff with them!
+        if(mp_hal_stdio_poll(MP_STREAM_POLL_RD)){
+            int received = mp_hal_stdin_rx_chr();
+
+            if(received == 3){
+                break;
+            }
         }
+
+        // Can only break out of loop if there's
+        // an exception, handle it fully after
+        // resetting engine (gives time to reset)
+        // mp_handle_pending(false);
     }
 
     // Reset the engine after the main loop ends
@@ -148,8 +165,8 @@ STATIC mp_obj_t engine_start(){
 
     // Can only break out of loop if there's
     // an exception, handle it fully after
-    // resetting engine
-    mp_handle_pending(true);
+    // resetting engine (gives time to reset)
+    // mp_handle_pending(true);
 
     return mp_const_none;
 }
@@ -184,6 +201,9 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_stop_obj, engine_stop);
 
 STATIC mp_obj_t engine_module_init(){
     ENGINE_INFO_PRINTF("Engine init!");
+
+    // Disable interrupt char, we'll handle it ourselves
+    mp_hal_set_interrupt_char(-1);
 
     engine_input_setup();
     engine_display_init();

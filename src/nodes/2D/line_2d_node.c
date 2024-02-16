@@ -47,6 +47,38 @@ STATIC mp_obj_t line_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
 MP_DEFINE_CONST_FUN_OBJ_2(line_2d_node_class_draw_obj, line_2d_node_class_draw);
 
 
+STATIC void line_2d_node_class_set(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+    ENGINE_INFO_PRINTF("Line2DNode: Accessing attr on inherited instance class");
+
+    default_instance_attr_func(self_in, attribute, destination);
+
+    // if(destination[0] == MP_OBJ_NULL){  // Load
+    //     // Call this after the if statement we're in
+    //     default_instance_attr_func(self_in, attribute, destination);
+    // }else{                              // Store
+    //     // Call this after the if statement we're in                     
+    //     default_instance_attr_func(self_in, attribute, destination);
+    //     switch(attribute){
+    //         case MP_QSTR_text:
+    //         {
+    //             text_2d_node_class_calculate_dimensions(self_in, true);
+    //         }
+    //         break;
+    //         case MP_QSTR_width:
+    //         {
+    //             mp_raise_msg(&mp_type_AttributeError, MP_ERROR_TEXT("Text2DNode: ERROR: 'width' is read-only, it is not allowed to be set!"));
+    //         }
+    //         break;
+    //         case MP_QSTR_height:
+    //         {
+    //             mp_raise_msg(&mp_type_AttributeError, MP_ERROR_TEXT("Text2DNode: ERROR: 'height' is read-only, it is not allowed to be set!"));
+    //         }
+    //         break;
+    //     }
+    // }
+}
+
+
 /*  --- doc ---
     NAME: Line2DNode
     DESC: Simple 2D rectangle node (DO NOT USE: not fully implemented yet)
@@ -63,6 +95,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(line_2d_node_class_draw_obj, line_2d_node_class_draw);
     ATTR:   [type=function]                   [name={ref_link:remove_child}]    [value=function]
     ATTR:   [type={ref_link:Vector2}]         [name=start]                      [value={ref_link:Vector2}]
     ATTR:   [type={ref_link:Vector2}]         [name=end]                        [value={ref_link:Vector2}]
+    ATTR:   [type={ref_link:Vector2}]         [name=position]                   [value={ref_link:Vector2}]
     ATTR:   [type=float]                      [name=thickness]                  [value=any]
     ATTR:   [type=int]                        [name=color]                      [value=0 ~ 65535 (16-bit RGB565 0bRRRRRGGGGGGBBBBB)]   
     ATTR:   [type=bool]                       [name=outline]                    [value=True or False]
@@ -132,6 +165,7 @@ mp_obj_t line_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
 
         line_2d_node->start = parsed_args[start].u_obj;
         line_2d_node->end = parsed_args[end].u_obj;
+        line_2d_node->position = vector2_class_new(&vector2_class_type, 0, 0, NULL);
         line_2d_node->thickness = parsed_args[thickness].u_obj;
         line_2d_node->color = parsed_args[color].u_obj;
         line_2d_node->outline = parsed_args[outline].u_obj;
@@ -157,10 +191,17 @@ mp_obj_t line_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
         }
 
         mp_store_attr(node_base->node, MP_QSTR_start, parsed_args[start].u_obj);
-        mp_store_attr(node_base->node, MP_QSTR_end, parsed_args[end].u_obj );
+        mp_store_attr(node_base->node, MP_QSTR_end, parsed_args[end].u_obj);
+        mp_store_attr(node_base->node, MP_QSTR_position, vector2_class_new(&vector2_class_type, 0, 0, NULL));
         mp_store_attr(node_base->node, MP_QSTR_thickness, parsed_args[thickness].u_obj);
         mp_store_attr(node_base->node, MP_QSTR_color, parsed_args[color].u_obj);
         mp_store_attr(node_base->node, MP_QSTR_outline, parsed_args[outline].u_obj);
+
+        // Store default Python class instance attr function
+        // and override with custom intercept attr function
+        // so that certain callbacks/code can run
+        default_instance_attr_func = MP_OBJ_TYPE_GET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_base->node)->type, attr);
+        MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_base->node)->type, attr, line_2d_node_class_set, 5);
     }
 
     return MP_OBJ_FROM_PTR(node_base);
@@ -207,6 +248,9 @@ STATIC void line_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *
             case MP_QSTR_end:
                 destination[0] = self->end;
             break;
+            case MP_QSTR_position:
+                destination[0] = self->position;
+            break;
             case MP_QSTR_thickness:
                 destination[0] = self->thickness;
             break;
@@ -226,6 +270,9 @@ STATIC void line_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *
             break;
             case MP_QSTR_end:
                 self->end = destination[1];
+            break;
+            case MP_QSTR_position:
+                self->position = destination[1];
             break;
             case MP_QSTR_thickness:
                 self->thickness = destination[1];

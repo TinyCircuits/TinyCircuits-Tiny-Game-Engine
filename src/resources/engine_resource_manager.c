@@ -31,6 +31,16 @@ uint32_t index_in_storing_location = 0;
 bool storing_in_ram = false;
 
 
+void engine_resource_reset(){
+    page_prog_index = 0;
+    page_prog_count = 0;
+    used_pages_count = 0;
+    current_storing_location = NULL;
+    index_in_storing_location = 0;
+    storing_in_ram = false;
+}
+
+
 // uint8_t *engine_resource_get_space_and_fill(const char *filename, uint32_t space_size, bool fast_space, uint32_t offset){
 uint8_t *engine_resource_get_space(uint32_t space_size, bool fast_space){    
     uint8_t *space = NULL;

@@ -4,7 +4,7 @@ import engine_debug
 import engine_input
 import engine_physics
 import engine_audio
-from engine_nodes import EmptyNode, Sprite2DNode, Rectangle2DNode, Polygon2DNode, Circle2DNode, CameraNode, VoxelSpaceNode, Physics2DNode, Text2DNode
+from engine_nodes import EmptyNode, Sprite2DNode, Rectangle2DNode, Polygon2DNode, Circle2DNode, CameraNode, VoxelSpaceNode, Physics2DNode, Text2DNode, Line2DNode
 from engine_math import Vector3, Vector2, Rectangle
 from engine_resources import TextureResource, WaveSoundResource, FontResource
 import math
@@ -23,7 +23,7 @@ font9 = FontResource("9pt-roboto-font.bmp")
 
 
 
-text = Text2DNode(text="Hello World!\nLine 2\nLine 3", font=font9, scale=Vector2(5.0, 2.0), position=Vector2(0, -0))
+text = Text2DNode(text="Hello World!\nLine 2\nLine 3", font=font9, scale=Vector2(2.0, 2.0), position=Vector2(0, -0))
 text0 = Text2DNode(text="Hello World!\nLine 2\nLine 3", font=font9, scale=Vector2(1.0, 1.0), position=Vector2(0, -0))
 # text = MyText()
 # text.rotation = math.pi/4

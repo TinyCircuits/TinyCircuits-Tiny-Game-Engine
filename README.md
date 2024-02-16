@@ -53,25 +53,27 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Text that can display ` !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~`
 [X] Fix blit so that it does not cut off some sprites (like 'W' in Text2DNode)
 [X] Fix positioning and rotation for nodes that are children of the camera
+[X] Fix non square scale not positioning Text2DNode correctly
+[X] Have some way to generate typical polygon shapes like rectangle and hexagon without using decomposing PolygonCollisionShape2D classes
+[X] Weird sprite jumping/offset during rotation and scaling
+
+[.] Add Line2DNode that draws a rectangle between two points, Allow filled and outline modes
 
 [] Figure out resetting engine when main loop ends
    * Nodes
    * Audio
    * Resources/Flash
+
 [] Figure out why physics doesn't always work on pong example
-[] Fix non square scale not positioning Text2DNode correctly
-[] Blending colors for partially transparent pixels in some sources (don't ahve any yet)
-[.] Add Line2DNode that draws a rectangle between two points, Allow filled and outline modes
+[] Blending colors for partially transparent pixels in some sources (don't have any yet)
 [] Expose low level drawing functions through engine_draw
 [] Fix camera view ports not being taken into account when drawing. Defines offset and then clip. Need to think about how view ports should really work, offset and clip into destination buffer (camera destinations should be able to be set to other buffers other than screen buffer if want to render one camera to a texture and then the next camera renders that node with that texture (TV!))
 [] Filled polygons
 [] Basic culling per node that can be drawn. Two things can be done here
    1. Each node has a bounding box (scaled by node scale and camera zoom), quickly check if that box at all overlaps the camera view before doing the draw algorithm. This doesn't have to be perfect, if the node still gets drawn if close to the camera, that's alright, same for if the node is very big and that technically blank area overlaps the camera view. This will lead to a small performance penalty for games that always draw in bounds, but it provides a much higher flexibility of games to have the culling handled for them
    2. For each drawing algorithm we currently have per-pixel checks for bounds, if the algorithms drawing bounds could quickly be cropped that would be perfect, very very hard though..
-[] Have some way to generate typical polygon shapes like rectangle and hexagon without using decomposing PolygonCollisionShape2D classes
 [.] Physics: just polygons, rotation (simple init for common shapes), no friction. Need to figure out what to do when physics collision shape is rotated, cache normals?
 [] Physics: smooth: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-core-engine--gamedev-7493t#:~:text=Here%20is%20a%20full%20example%3A
-[] Weird sprite jumping/offset during rotation and scaling
 [] UI
 [] Reset
 [] Performance, we'll see how it goes

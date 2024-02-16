@@ -4,6 +4,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+// Resets counters and positions so that assets can be written to flash
+// from the start, again
+void engine_resource_reset();
+
 // Return pointer to space to store resources like sprite data, font, sound, etc.
 // On the rp3 platform this can be flash or ram if fast. On unix, it will only
 // ever be in ram

@@ -17,6 +17,14 @@ uint16_t engine_object_layer_count = 8;
 linked_list engine_object_layers[8];
 
 
+void engine_objects_clear_all(){
+    ENGINE_INFO_PRINTF("Untracking all nodes...");
+    for(uint8_t inx=0; inx<engine_object_layer_count; inx++){
+        linked_list_clear(&engine_object_layers[inx]);
+    }
+}
+
+
 uint16_t engine_get_total_object_count(){
     uint16_t count = 0;
     for(uint8_t ilx=0; ilx<engine_object_layer_count; ilx++){
