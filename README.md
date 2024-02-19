@@ -61,7 +61,7 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 
 [] Figure out resetting engine when main loop ends
    * Nodes
-   * Audio
+   * Audio <- Needs special attention!
    * Resources/Flash
 
 [] Figure out why physics doesn't always work on pong example

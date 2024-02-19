@@ -26,9 +26,50 @@
         <hr>
         <br>
 
+        <h>
+            NOTE: The engine is still under development and the API may change in some spots, we'll try to help convert any code in the future.
+            <br>
+            NOTE: <b>Physics</b> and <b>Audio</b> are still under development and partially function. The API and functionality still need worked on.
+        </h>
+
+
+        <h3>Getting Started:</h3>
+        <h>
+            The Thonny IDE can be used to upload files and run scripts, it can be downloaded from <a href="https://thonny.org/">here</a>.
+            <br>
+            <br>
+            <b>Uploading an asset/file using Thonny:</b>
+            <br>1. Plug Thumby Color in
+            <br>2. If it's ON, toggle it OFF and then back ON
+            <br>3. Press the red stop sign button in Thonny
+            <br>4. Wait for the Thonny shell to print something like "Type "help()" for more information"
+            <br>5. In the top-left `Files` panel navigate to the folder containing your files/assets you want to upload
+            <br>6. Right-click the file/asset and left-click "Upload to /"
+            <br>
+            Now your file should be on the device.
+            <br>
+            <br>
+            <b>Running a script using Thonny:</b>
+            <br>1. Plug Thumby Color in
+            <br>2. If it's ON, toggle it OFF and then back ON
+            <br>3. Press the red stop sign button in Thonny
+            <br>4. Type code into the Thonny editor or open a Python file
+            <br>5. Press the green play/run button in the top, the script should start running.
+            <br>
+            <br>
+            <b>Common errors:</b>
+            <br>* Pressing the green `run` button twice will not work currently. Toggle the power off and back on each time (working on fixing this)
+            <br>* If an exception occurs at the line where `engine.start()` is, that probably means something in the engine tried to cast some type of data to another type that is not supported. Let Jason know
+        </h>
+
+        <br>
+        <hr>
+        <br>
+
         <h3>Examples:</h3>
         
-        <b><h>Hello World!</h></b>
+
+        <b><h>Example #1: Hello World!</h></b>
         <br>
         <pre><code>
 import engine
@@ -46,17 +87,61 @@ engine.start()
         </code></pre>
 
 
-        <h>There are two ways you can format your game code.<h>
-        <br>
-
-        <b><h>#1 Using node callbacks</h></b>
+        <b><h>Example #2: Using node callbacks</h></b>
         <pre><code>
-            
+import engine
+import engine_draw
+import engine_input
+from engine_nodes import Sprite2DNode, CameraNode
+from engine_resources import TextureResource
+
+# Set the FPS limit so that game code doesn't run too fast
+engine.set_fps_limit(60)
+
+# All BMPs need to be saved in RGB565 16-bit (no alpha)
+background_texture = TextureResource("background.bmp")
+player_texture = TextureResource("player.bmp")
+
+# Set a static background. Zoom and scaling will not apply to it,
+# use a sprite for that. Backgrounds are required to be 128x128px
+engine_draw.set_background(background_texture)
+
+# Create a `Player` class that inherits from `Sprite2DNode`
+class Player(Sprite2DNode):
+    def __init__(self):
+        # Required, links the parent class to this one we're creating
+        super().__init__(self)
+        self.texture = player_texture
+        self.frame_count_x = 2
+        self.frame_count_y = 2
+        self.fps = 5
+        self.playing = False
+        self.transparent_color = engine_draw.black
+    
+    # Define a callback that the engine will invoke every game tick
+    def tick(self):
+        # NOTE: Game coordinate system is -y = to top of screen, +y = to bottom of screen
+        if engine_input.check_pressed(engine_input.DPAD_UP):
+            self.position.y -= 1
+        elif engine_input.check_pressed(engine_input.DPAD_DOWN):
+            self.position.y += 1
+        
+        # X axis works how it should
+        if engine_input.check_pressed(engine_input.DPAD_LEFT):
+            self.position.x -= 1
+        elif engine_input.check_pressed(engine_input.DPAD_RIGHT):
+            self.position.x += 1
+
+# Make an instance of our class
+player = Player()
+
+# Make a camera to render the scene
+camera = CameraNode()
+
+# Start rendering the scene
+engine.start()
         </code></pre>
 
-        <b><h>#2 Using custom engine loop</h></b>
-        <pre><code>
-            
-        </code></pre>
+
     </body>
 </html>

@@ -130,7 +130,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(wave_sound_resource_class_del_obj, wave_sound_resource
 
 /*  --- doc ---
     NAME: WaveSoundResource
-    DESC: Holds audio data from a .wav file
+    DESC: Holds audio data from a .wav file. `.wav` files can be 8 or 16-bit PCM but only at 22050KHz
     PARAM:  [type=string]   [name=filepath] [value=string]                                                                                                                                                                   
 */ 
 STATIC void wave_sound_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){

@@ -12,6 +12,7 @@
 #include "py/mpstate.h"
 #include "py/mphal.h"
 #include "py/stream.h"
+#include "py/gc.h"
 
 // ### MODULE ###
 
@@ -116,11 +117,13 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_tick_obj, engine_tick);
 STATIC mp_obj_t engine_reset(){
     ENGINE_FORCE_PRINTF("Resetting engine...");
 
-    // engine_audio_stop();
+    engine_audio_stop();
     engine_camera_clear_all();
     engine_physics_clear_all();
     engine_objects_clear_all();
     engine_resource_reset();
+
+    gc_sweep_all();
 
     return mp_const_none;
 }
@@ -161,7 +164,7 @@ STATIC mp_obj_t engine_start(){
     }
 
     // Reset the engine after the main loop ends
-    engine_reset();
+    // engine_reset();
 
     // Can only break out of loop if there's
     // an exception, handle it fully after

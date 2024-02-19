@@ -68,7 +68,7 @@ elif clean:
     exit()
 
 
-# Dot the rest of the procedure depending on the port
+# Do the rest of the procedure depending on the port
 if port == 'unix':
     print("##### Building unix port #####")
     execute(['wsl', '-e', 'make', '-C', '../../../ports/unix', '-j8', 'USER_C_MODULES=../../examples/usercmodule/TinyCircuits-Tiny-Game-Engine', 'DEBUG=1'])
