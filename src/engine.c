@@ -9,6 +9,9 @@
 #include "utility/engine_time.h"
 #include "audio/engine_audio_module.h"
 
+#include "display/engine_display.h"
+#include "draw/engine_display_draw.h"
+
 #include "py/mpstate.h"
 #include "py/mphal.h"
 #include "py/stream.h"
@@ -59,12 +62,64 @@ STATIC mp_obj_t engine_get_running_fps(){
 MP_DEFINE_CONST_FUN_OBJ_0(engine_get_running_fps_obj, engine_get_running_fps);
 
 
+// Mostly used internally when engine.stop() is called
+// but exposed anyway to MicroPython
+/* --- doc ---
+   NAME: reset
+   DESC: Resets internal state of engine (TODO: make sure all state is cleared, run when games end or go back to REPL or launcher)
+   RETURN: None
+*/
+STATIC mp_obj_t engine_reset(){
+    ENGINE_FORCE_PRINTF("Resetting engine...");
+
+    engine_audio_stop();
+    engine_camera_clear_all();
+    engine_physics_clear_all();
+    engine_objects_clear_all();
+    engine_resource_reset();
+
+    // gc_sweep_all();
+    gc_collect();
+
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_0(engine_reset_obj, engine_reset);
+
+
+/* --- doc ---
+   NAME: stop
+   DESC: Stops the main loop if it is running, otherwise resets the internal engine state right away (for the case someone is calling engine.tick() themselves)
+   RETURN: None
+*/
+STATIC mp_obj_t engine_end(){
+    ENGINE_INFO_PRINTF("Stopping engine...");
+
+    // If the engine is looping because of engine.start(), stop it
+    is_engine_looping = false;
+
+    // Reset the engine after the main loop ends
+    engine_reset();
+
+    // Now handle the exception correctly since the engine is reset
+    mp_handle_pending(true);
+
+    ENGINE_INFO_PRINTF("Engine stopped!");
+
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_0(engine_end_obj, engine_end);
+
+
 /* --- doc ---
    NAME: tick
    DESC: Runs the main tick function of the engine. This is called in a loop when doing 'engine.start()' but can also be called manually if needed
    RETURN: None
 */
 STATIC mp_obj_t engine_tick(){
+    // Not sure why this is needed exactly for handling ctrl-c 
+    // correctly, just replicating what happens in modutime.c
+    MP_THREAD_GIL_EXIT();
+
     if(millis() - engine_fps_time_at_last_tick_ms >= engine_fps_limit_period_ms){
         engine_fps_time_at_before_last_tick_ms = engine_fps_time_at_last_tick_ms;
         engine_fps_time_at_last_tick_ms = millis();
@@ -90,44 +145,23 @@ STATIC mp_obj_t engine_tick(){
         engine_display_send();
     }
 
-    // // See ports/rp2/mphalport.h, ports/rp2/mphalport.c, py/mphal.h, shared/runtime/sys_stdio_mphal.c
-    // Can get chars from REPL and do stuff with them!
-    // if(mp_hal_stdio_poll(MP_STREAM_POLL_RD)){
-    //     int received = mp_hal_stdin_rx_chr();
+    // Not sure why this is needed exactly for handling ctrl-c 
+    // correctly, just replicating what happens in modutime.c
+    MP_THREAD_GIL_ENTER();
 
-    //     if(received == 4){
-    //         break;
-    //     }
+    // This needs to be called for handling interrupts, but we
+    // won't let it raise an exception since the engine needs
+    // reset
+    mp_handle_pending(false);
 
-    //     ENGINE_FORCE_PRINTF("%d", received);
-    // }
+    // If there's an exception, reset everything
+    if(MP_STATE_THREAD(mp_pending_exception) != MP_OBJ_NULL){
+        engine_end();
+    }
 
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_0(engine_tick_obj, engine_tick);
-
-
-// Mostly used internally when engine.stop() is called
-// but exposed anyway to MicroPython
-/* --- doc ---
-   NAME: reset
-   DESC: Resets internal state of engine (TODO: make sure all state is cleared, run when games end or go back to REPL or launcher)
-   RETURN: None
-*/
-STATIC mp_obj_t engine_reset(){
-    ENGINE_FORCE_PRINTF("Resetting engine...");
-
-    engine_audio_stop();
-    engine_camera_clear_all();
-    engine_physics_clear_all();
-    engine_objects_clear_all();
-    engine_resource_reset();
-
-    gc_sweep_all();
-
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_0(engine_reset_obj, engine_reset);
 
 
 /* --- doc ---
@@ -140,73 +174,27 @@ STATIC mp_obj_t engine_start(){
 
     is_engine_looping = true;
     while(is_engine_looping){
+        
         engine_tick();
+        // // See ports/rp2/mphalport.h, ports/rp2/mphalport.c, py/mphal.h, shared/runtime/sys_stdio_mphal.c
+        // // Can get chars from REPL and do stuff with them!
+        // if(mp_hal_stdio_poll(MP_STREAM_POLL_RD)){
+        //     int received = mp_hal_stdin_rx_chr();
 
-        // // Allow exceptions to stop main loop, like ctrl-c/keyboard interrupt
-        // if (MP_STATE_THREAD(mp_pending_exception) != MP_OBJ_NULL) {
-        //     break;
+        //     if(received == 3){
+        //         break;
+        //     }
         // }
-
-        // See ports/rp2/mphalport.h, ports/rp2/mphalport.c, py/mphal.h, shared/runtime/sys_stdio_mphal.c
-        // Can get chars from REPL and do stuff with them!
-        if(mp_hal_stdio_poll(MP_STREAM_POLL_RD)){
-            int received = mp_hal_stdin_rx_chr();
-
-            if(received == 3){
-                break;
-            }
-        }
-
-        // Can only break out of loop if there's
-        // an exception, handle it fully after
-        // resetting engine (gives time to reset)
-        // mp_handle_pending(false);
     }
 
-    // Reset the engine after the main loop ends
-    // engine_reset();
-
-    // Can only break out of loop if there's
-    // an exception, handle it fully after
-    // resetting engine (gives time to reset)
-    // mp_handle_pending(true);
 
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_0(engine_start_obj, engine_start);
 
 
-/* --- doc ---
-   NAME: stop
-   DESC: Stops the main loop if it is running, otherwise resets the internal engine state right away (fro the case someone is calling engine.tick() themselves)
-   RETURN: None
-*/
-STATIC mp_obj_t engine_stop(){
-    ENGINE_INFO_PRINTF("Stopping engine...");
-
-    // In the case that the main loop is not running and someone
-    // might be calling engine.tick() in their own loop, call the
-    // reset now since there's nothing to wait on for the main loop
-    if(!is_engine_looping){
-        engine_reset();
-    }else{
-        // Looks like the main loop is running, the reset
-        // will be called when the current tick is over
-        is_engine_looping = false;
-    }
-
-    ENGINE_INFO_PRINTF("Engine stopped!");
-
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_0(engine_stop_obj, engine_stop);
-
-
 STATIC mp_obj_t engine_module_init(){
     ENGINE_INFO_PRINTF("Engine init!");
-
-    // Disable interrupt char, we'll handle it ourselves
-    mp_hal_set_interrupt_char(-1);
 
     engine_input_setup();
     engine_display_init();
@@ -229,7 +217,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_module_init_obj, engine_module_init);
    ATTR: [type=function] [name={ref_link:get_running_fps}]      [value=function]
    ATTR: [type=function] [name={ref_link:tick}]                 [value=function]
    ATTR: [type=function] [name={ref_link:start}]                [value=function]
-   ATTR: [type=function] [name={ref_link:stop}]                 [value=function]
+   ATTR: [type=function] [name={ref_link:end}]                  [value=function]
    ATTR: [type=function] [name={ref_link:reset}]                [value=function]
 */
 STATIC const mp_rom_map_elem_t engine_globals_table[] = {
@@ -239,7 +227,7 @@ STATIC const mp_rom_map_elem_t engine_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_get_running_fps), (mp_obj_t)&engine_get_running_fps_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_tick), (mp_obj_t)&engine_tick_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_start), (mp_obj_t)&engine_start_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_stop), (mp_obj_t)&engine_stop_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_end), (mp_obj_t)&engine_end_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_reset), (mp_obj_t)&engine_reset_obj },
 };
 

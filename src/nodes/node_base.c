@@ -138,7 +138,7 @@ mp_obj_t node_base_remove_child(mp_obj_t self_parent_in, mp_obj_t child_in){
 
 /*  --- doc ---
     NAME: set_layer
-    DESC: Sets the node to a different render layer
+    DESC: Sets the node to a different render layer. Draws layer 0 first and up to 7 last.
     PARAM: [type=int] [name=layer] [value=0 ~ 7]                                                                                                        
     RETURN: None
 */ 

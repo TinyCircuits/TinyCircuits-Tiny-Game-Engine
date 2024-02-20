@@ -59,11 +59,14 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 
 [.] Add Line2DNode that draws a rectangle between two points, Allow filled and outline modes
 
+[] Add main.py that waits for button press to launch any scripts, like game.py after button press
+
 [] Figure out resetting engine when main loop ends
    * Nodes
    * Audio <- Needs special attention!
    * Resources/Flash
 
+[] With lots of sprites on screen and big background, drawing or rotating slows down when rotated 90 degrees into the big 128x128 texture
 [] Figure out why physics doesn't always work on pong example
 [] Blending colors for partially transparent pixels in some sources (don't have any yet)
 [] Expose low level drawing functions through engine_draw
