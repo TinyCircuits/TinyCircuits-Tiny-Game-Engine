@@ -26,7 +26,6 @@ MP_REGISTER_ROOT_POINTER(mp_obj_t channels[CHANNEL_COUNT]);
 
 // The master volume that all mixed samples are scaled by
 float master_volume = 1.0f;
-bool initialized = false;
 
 
 #if defined(__unix__)
@@ -143,7 +142,7 @@ bool initialized = false;
             // For each channel, make sure we have access to it now
             // and not core0 (which may be reading/writing to any
             // of the used attributes)
-            mp_thread_mutex_lock(&channel->mutex, true);
+            // mp_thread_mutex_lock(&channel->mutex, true);
 
             sound_resource_base_class_obj_t *source = channel->source;
 
@@ -153,7 +152,7 @@ bool initialized = false;
                 // For each source, make sure we have access to it now
                 // and not core0 (which may be reading/writing to any
                 // of the used attributes)
-                mp_thread_mutex_lock(&source->mutex, true);
+                // mp_thread_mutex_lock(&source->mutex, true);
 
                 // Another active channel
                 active_channel_count += 1;
@@ -197,8 +196,8 @@ bool initialized = false;
                 channel->time = (1.0f / source->sample_rate) * (channel->source_byte_offset / source->bytes_per_sample);
             }
 
-            mp_thread_mutex_unlock(&channel->mutex);
-            mp_thread_mutex_unlock(&source->mutex);
+            // mp_thread_mutex_unlock(&channel->mutex);
+            // mp_thread_mutex_unlock(&source->mutex);
         }
         
         // https://dsp.stackexchange.com/questions/3581/algorithms-to-mix-audio-signals-without-clipping: Viktor was wrong!
@@ -236,10 +235,7 @@ void engine_audio_setup_playback(){
 size_t stack_size = 4096*2;
 
 void engine_audio_setup(){
-    // Don't set this up again if it already was before
-    if(initialized == true){
-        return;
-    }
+    ENGINE_FORCE_PRINTF("EngineAudio: Setting up...");
 
     // Fill channels array with channels. This has to be done
     // before any callbacks try to access the channels array
@@ -281,16 +277,20 @@ void engine_audio_setup(){
         //     mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("AudioModule: No timer slots available, could not audio callback!"));
         // }
     #endif
-
-    initialized = true;
 }
 
 
 void engine_audio_stop(){
     ENGINE_INFO_PRINTF('EngineAudio: Stopping all channels...');
 
+    cancel_repeating_timer(&repeating_audio_timer);
+
     for(uint8_t icx=0; icx<CHANNEL_COUNT; icx++){
-        audio_channel_stop(MP_STATE_PORT(channels[icx]));
+        // Check that each channel is not NULL since reset
+        // can be called before hardware init
+        if(MP_STATE_PORT(channels[icx]) != NULL){
+            audio_channel_stop(MP_STATE_PORT(channels[icx]));
+        }
     }
 }
 

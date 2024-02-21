@@ -25,6 +25,7 @@
 // Flag to indicate that the main engine.start() loop is running. Set
 // false to stop the engine after the current loop/tick ends
 bool is_engine_looping = false;
+bool is_engine_initialized = false;
 float engine_fps_limit_period_ms = 0.0f;
 float engine_fps_time_at_last_tick_ms = 0.0f;
 float engine_fps_time_at_before_last_tick_ms = 0.0f;
@@ -72,14 +73,16 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_get_running_fps_obj, engine_get_running_fps);
 STATIC mp_obj_t engine_reset(){
     ENGINE_FORCE_PRINTF("Resetting engine...");
 
-    engine_audio_stop();
-    engine_camera_clear_all();
-    engine_physics_clear_all();
-    engine_objects_clear_all();
     engine_resource_reset();
 
+    // engine_audio_stop();
+    // engine_camera_clear_all();
+    // engine_physics_clear_all();
+    // engine_objects_clear_all();
+    // engine_resource_reset();
+
     // gc_sweep_all();
-    gc_collect();
+    // gc_collect();
 
     return mp_const_none;
 }
@@ -87,7 +90,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_reset_obj, engine_reset);
 
 
 /* --- doc ---
-   NAME: stop
+   NAME: end
    DESC: Stops the main loop if it is running, otherwise resets the internal engine state right away (for the case someone is calling engine.tick() themselves)
    RETURN: None
 */
@@ -97,7 +100,6 @@ STATIC mp_obj_t engine_end(){
     // If the engine is looping because of engine.start(), stop it
     is_engine_looping = false;
 
-    // Reset the engine after the main loop ends
     engine_reset();
 
     // Now handle the exception correctly since the engine is reset
@@ -151,10 +153,10 @@ STATIC mp_obj_t engine_tick(){
 
     // This needs to be called for handling interrupts, but we
     // won't let it raise an exception since the engine needs
-    // reset
+    // to end
     mp_handle_pending(false);
 
-    // If there's an exception, reset everything
+    // If there's an exception, make sure the engine loop ends (reset happens on `engine` import)
     if(MP_STATE_THREAD(mp_pending_exception) != MP_OBJ_NULL){
         engine_end();
     }
@@ -194,16 +196,24 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_start_obj, engine_start);
 
 
 STATIC mp_obj_t engine_module_init(){
-    ENGINE_INFO_PRINTF("Engine init!");
+    if(is_engine_initialized == true){
+        // Always do a engine reset on import since there are
+        // cases when we can't catch the end of the script
+        engine_reset();
 
-    engine_input_setup();
-    engine_display_init();
-    engine_display_send();
+        return mp_const_none;
+    }
+    is_engine_initialized = true;
+
+    ENGINE_FORCE_PRINTF("Engine init!");
 
     // Needs to be setup before hand since dynamicly inits array.
     // Should make sure this doesn't happen more than once per
     // lifetime. TODO
-    engine_audio_setup();
+    // engine_audio_setup();
+    engine_input_setup();
+    engine_display_init();
+    engine_display_send();
 
     return mp_const_none;
 }

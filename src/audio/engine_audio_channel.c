@@ -88,7 +88,7 @@ mp_obj_t audio_channel_stop(mp_obj_t self_in){
     audio_channel_class_obj_t *channel = self_in;
 
     // Make sure this core has access to this channel
-    mp_thread_mutex_lock(&channel->mutex, true);
+    // mp_thread_mutex_lock(&channel->mutex, true);
 
     channel->source = NULL;
     channel->time = 0.0f;
@@ -101,7 +101,7 @@ mp_obj_t audio_channel_stop(mp_obj_t self_in){
     channel->reading_buffer_index = 0;
     channel->filling_buffer_index = 0;
 
-    mp_thread_mutex_unlock(&channel->mutex);
+    // mp_thread_mutex_unlock(&channel->mutex);
 
     return mp_const_none;
 }

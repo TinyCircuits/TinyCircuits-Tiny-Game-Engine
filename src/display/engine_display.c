@@ -1,9 +1,7 @@
 #include "engine_display.h"
 #include "engine_display_common.h"
 #include "draw/engine_display_draw.h"
-
-
-static bool is_initialzed = false;
+#include "debug/debug_print.h"
 
 
 // https://stackoverflow.com/questions/43287103/predefined-macro-to-distinguish-arm-none-eabi-gcc-from-gcc
@@ -16,9 +14,7 @@ static bool is_initialzed = false;
 
 
 void engine_display_init(){
-    if(is_initialzed == true){
-        return;
-    }
+    ENGINE_FORCE_PRINTF("EngineDisplay: Setting up...");
 
     engine_init_screen_buffers();
 
@@ -28,8 +24,6 @@ void engine_display_init(){
         engine_display_gc9107_init();
         // engine_display_st7789_init();
     #endif
-
-    is_initialzed = true;
 }
 
 

@@ -1,5 +1,6 @@
 #include "engine_input_rp3.h"
 #include "engine_input_common.h"
+#include "debug/debug_print.h"
 
 #include "pico/stdlib.h"
 #include "hardware/gpio.h"
@@ -18,6 +19,8 @@
 
 
 void engine_input_rp3_setup(){
+    ENGINE_FORCE_PRINTF("EngineInput: Setting up...");
+
     gpio_init(GPIO_BUTTON_DPAD_UP);
     gpio_init(GPIO_BUTTON_DPAD_LEFT);
     gpio_init(GPIO_BUTTON_DPAD_DOWN);
