@@ -34,7 +34,6 @@ volatile float master_volume = 1.0f;
     #include "hardware/timer.h"
     #include "pico/multicore.h"
 
-    // alarm_pool_t *core1_alarm_pool = NULL;
 
     // pg. 542: https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf
     // https://github.com/raspberrypi/pico-examples/blob/master/timer/hello_timer/hello_timer.c#L11-L57
@@ -190,8 +189,6 @@ volatile float master_volume = 1.0f;
             pwm_set_gpio_level(23, (uint32_t)(total_sample / active_channel_count));
         }
 
-        // pwm_set_gpio_level(23, 0.5f + 0.5f * sinf(millis()) * 256.0f);
-
         return true;
     }
 #endif
@@ -201,16 +198,6 @@ void engine_audio_setup_playback(){
     #if defined(__unix__)
         // Nothing to do
     #elif defined(__arm__)
-        // Need to make new alarm pool for timers on this core
-        // core1_alarm_pool = alarm_pool_create_with_unused_hardware_alarm(CHANNEL_COUNT);
-
-        // Setup timer ISR. Set sampling rate to 44100
-        // add_repeating_timer_us((int64_t)((1.0/44100.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer);
-        // if(alarm_pool_add_repeating_timer_us(core1_alarm_pool, (int64_t)((1.0/11025.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer) != false){
-        //     mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("AudioModule: No timer slots available, could not start audio callback!"));
-        // }
-        // add_repeating_timer_us((int64_t)((1.0/22050.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer);
-
         // Setup amplifier but make sure it is disabled while PWM is being setup
         gpio_init(26);
         gpio_set_dir(26, GPIO_OUT);
@@ -247,24 +234,6 @@ void engine_audio_setup(){
     #if defined(__unix__)
         // Nothing to do
     #elif defined(__arm__)
-        // // Setup amplifier but make sure it is disabled while PWM is being setup
-        // gpio_init(26);
-        // gpio_set_dir(26, GPIO_OUT);
-        // gpio_put(26, 0);
-
-        // // Setup PWM audio pin, bit-depth, and frequency. Duty cycle
-        // // is only adjusted PWM parameter as samples are retrievd from
-        // // channel sources
-        // uint audio_pwm_pin_slice = pwm_gpio_to_slice_num(23);
-        // gpio_set_function(23, GPIO_FUNC_PWM);
-        // pwm_config audio_pwm_pin_config = pwm_get_default_config();
-        // pwm_config_set_clkdiv_int(&audio_pwm_pin_config, 1);
-        // pwm_config_set_wrap(&audio_pwm_pin_config, 512);   // 125MHz / 1024 = 122kHz
-        // pwm_init(audio_pwm_pin_slice, &audio_pwm_pin_config, true);
-
-        // // Now allow sound to play by enabling the amplifier
-        // gpio_put(26, 1);
-
         // Launch timer setup on other core. All audio playback
         // is done on the other core. This means that access
         // to channels and sources will need to be protected...

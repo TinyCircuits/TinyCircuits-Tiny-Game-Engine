@@ -75,6 +75,13 @@ mp_obj_t audio_channel_stop(mp_obj_t self_in){
     ENGINE_INFO_PRINTF("AudioChannel: Stopping!");
     audio_channel_class_obj_t *channel = self_in;
 
+    // Make sure that if this channel has a source, that
+    // the reference from that source to this channel is
+    // unlinked. Took care of it here anyway
+    if(channel->source != NULL && channel->source->channel != NULL){
+        channel->source->channel = NULL;
+    }
+
     channel->source = NULL;
     channel->source_byte_offset = 0;
     channel->gain = 1.0f;
