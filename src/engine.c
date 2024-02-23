@@ -73,16 +73,9 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_get_running_fps_obj, engine_get_running_fps);
 STATIC mp_obj_t engine_reset(){
     ENGINE_FORCE_PRINTF("Resetting engine...");
 
+    // Reset contigious flash space manager
+    engine_audio_stop();
     engine_resource_reset();
-
-    // engine_audio_stop();
-    // engine_camera_clear_all();
-    // engine_physics_clear_all();
-    // engine_objects_clear_all();
-    // engine_resource_reset();
-
-    // gc_sweep_all();
-    // gc_collect();
 
     return mp_const_none;
 }
@@ -100,9 +93,7 @@ STATIC mp_obj_t engine_end(){
     // If the engine is looping because of engine.start(), stop it
     is_engine_looping = false;
 
-    engine_reset();
-
-    // Now handle the exception correctly since the engine is reset
+    // Now handle the exception correctly
     mp_handle_pending(true);
 
     ENGINE_INFO_PRINTF("Engine stopped!");
@@ -200,6 +191,7 @@ STATIC mp_obj_t engine_module_init(){
         // Always do a engine reset on import since there are
         // cases when we can't catch the end of the script
         engine_reset();
+        engine_audio_setup_playback();
 
         return mp_const_none;
     }
@@ -210,7 +202,9 @@ STATIC mp_obj_t engine_module_init(){
     // Needs to be setup before hand since dynamicly inits array.
     // Should make sure this doesn't happen more than once per
     // lifetime. TODO
-    // engine_audio_setup();
+    engine_audio_setup();
+    engine_audio_setup_playback();
+
     engine_input_setup();
     engine_display_init();
     engine_display_send();

@@ -29,10 +29,7 @@ mp_obj_t wave_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
     sound_resource_base_class_obj_t *self = m_new_obj_with_finaliser(sound_resource_base_class_obj_t);
     self->base.type = &wave_sound_resource_class_type;
     self->get_data = &wave_sound_resource_fill_destination;
-
-    // Init mutex used to sync cores between core0 (user Python code)
-    // and core1 (audio playback)
-    mp_thread_mutex_init(&self->mutex);
+    self->channel = NULL;
 
     // Wave parsing: https://truelogic.org/wordpress/2015/09/04/parsing-a-wav-file-in-c/
     //               https://www.aelius.com/njh/wavemetatools/doc/riffmci.pdf
@@ -117,9 +114,18 @@ mp_obj_t wave_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
 
 // Class methods
 STATIC mp_obj_t wave_sound_resource_class_del(mp_obj_t self_in){
-    ENGINE_INFO_PRINTF("WaveSoundResource: Deleted (freeing sound data)");
+    ENGINE_FORCE_PRINTF("WaveSoundResource: Deleted (freeing sound data)");
 
-    // sound_resource_base_class_obj_t *self = self_in;
+    sound_resource_base_class_obj_t *self = self_in;
+    audio_channel_class_obj_t *channel = self->channel;
+
+    // This is very important! Need to make sure to set channel source this source is
+    // related to NULL. Otherwise, even though this source gets collected it will not
+    // be set to NULL and the audio ISR will try to access invalid memory!!!
+    if(channel != NULL){
+        audio_channel_stop(channel);
+    }
+
     // Since this is stored in contigious flash space and
     // nothing exists to get rid of it, yet, do nothing
 

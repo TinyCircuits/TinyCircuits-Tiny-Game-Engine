@@ -13,15 +13,18 @@ mp_obj_t audio_channel_class_new(const mp_obj_type_t *type, size_t n_args, size_
     ENGINE_INFO_PRINTF("New AudioChannel");
     mp_arg_check_num(n_args, n_kw, 0, 0, false);
 
-    audio_channel_class_obj_t *self = m_new_obj_with_finaliser(audio_channel_class_obj_t);
+    // Allocate on C heap so it doesn't get collected. Each channel lives for as long as the device is on.
+    // This was verified to work by disabling the audio interrupts and printing out `print((dir(chan)))` of
+    // a channel started by `chan = engine_audio.play(...)`
+    audio_channel_class_obj_t *self = (audio_channel_class_obj_t*)malloc(sizeof(audio_channel_class_obj_t));
     self->base.type = &audio_channel_class_type;
 
     self->source = NULL;   // Set to NULL to indicate that source/channel not active
     self->source_byte_offset = 0;
     self->gain = 1.0f;
     self->time = 0.0f;
-    self->loop = false;
     self->done = true;
+    self->loop = false;
     self->buffers[0] = (uint8_t*)malloc(CHANNEL_BUFFER_SIZE);   // Use C heap. Easier to avoid gc and we have a consistent number of buffers anyways
     self->buffers[1] = (uint8_t*)malloc(CHANNEL_BUFFER_SIZE);   // Use C heap. Easier to avoid gc and we have a consistent number of buffers anyways
     self->buffers_ends[0] = CHANNEL_BUFFER_SIZE;
@@ -47,11 +50,6 @@ mp_obj_t audio_channel_class_new(const mp_obj_type_t *type, size_t n_args, size_
         channel_config_set_write_increment(&self->dma_config, true);
         // channel_config_set_dreq(&self->dma_config, DREQ_XIP_STREAM); // When this is set DMA never finishes (see pg. 127 of rp2040 datasheet: https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf)
     #endif
-
-    // Init mutex used to sync cores between core0 (user Python code)
-    // and core1 (audio playback)
-    mp_thread_mutex_init(&self->mutex);
-    mp_thread_mutex_unlock(&self->mutex);
     
     return MP_OBJ_FROM_PTR(self);
 }
@@ -68,16 +66,6 @@ mp_obj_t audio_channel_class_new_dummy(const mp_obj_type_t *type, size_t n_args,
 }
 
 
-STATIC mp_obj_t audio_channel_class_del(mp_obj_t self_in){
-    ENGINE_INFO_PRINTF("AudioChannel: Deleted");
-
-    audio_channel_class_obj_t *self = self_in;
-
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_1(audio_channel_class_del_obj, audio_channel_class_del);
-
-
 /*  --- doc ---
     NAME: stop
     DESC: Stops audio playing on channel
@@ -87,10 +75,9 @@ mp_obj_t audio_channel_stop(mp_obj_t self_in){
     ENGINE_INFO_PRINTF("AudioChannel: Stopping!");
     audio_channel_class_obj_t *channel = self_in;
 
-    // Make sure this core has access to this channel
-    // mp_thread_mutex_lock(&channel->mutex, true);
-
     channel->source = NULL;
+    channel->source_byte_offset = 0;
+    channel->gain = 1.0f;
     channel->time = 0.0f;
     channel->done = true;
     channel->loop = false;
@@ -101,7 +88,7 @@ mp_obj_t audio_channel_stop(mp_obj_t self_in){
     channel->reading_buffer_index = 0;
     channel->filling_buffer_index = 0;
 
-    // mp_thread_mutex_unlock(&channel->mutex);
+    ENGINE_FORCE_PRINTF("Done stopping!");
 
     return mp_const_none;
 }
@@ -123,22 +110,8 @@ STATIC void audio_channel_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t 
 
     audio_channel_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
 
-    // Only user code on core0 should invoke this function (don't see a reason
-    // why during playback we would need to use something like mp_load_attr/
-    // mp_store_attr). Since that's the case, if we want to load a value
-    // on core0, core1 could be writing to mostly any of the channel
-    // attributes, so safely wait for core1 to stop using this channel's mutex.
-    // If we want to store a value in the channel from core0, core1 could be
-    // reading or writing to most any attributes, also wait safely to lock
-    // so that core1 will have to wait too.
-    mp_thread_mutex_lock(&self->mutex, true);
-
     if(destination[0] == MP_OBJ_NULL){          // Load
         switch(attribute){
-            case MP_QSTR___del__:
-                destination[0] = MP_OBJ_FROM_PTR(&audio_channel_class_del_obj);
-                destination[1] = self_in;
-            break;
             case MP_QSTR_stop:
                 destination[0] = MP_OBJ_FROM_PTR(&audio_channel_stop_obj);
                 destination[1] = self_in;
@@ -159,7 +132,6 @@ STATIC void audio_channel_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t 
                 destination[0] = mp_obj_new_bool(self->done);
             break;
             default:
-                mp_thread_mutex_unlock(&self->mutex);    // Unlock before returning
                 return; // Fail
         }
     }else if(destination[1] != MP_OBJ_NULL){    // Store
@@ -180,15 +152,12 @@ STATIC void audio_channel_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t 
             //     self->done = mp_obj_get_int(destination[1]);
             // break;
             default:
-                mp_thread_mutex_unlock(&self->mutex);    // Unlock before returning
                 return; // Fail
         }
 
         // Success
         destination[0] = MP_OBJ_NULL;
     }
-
-    mp_thread_mutex_unlock(&self->mutex);
 }
 
 

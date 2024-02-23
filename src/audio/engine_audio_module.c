@@ -7,25 +7,21 @@
 #include <stdlib.h>
 #include <string.h>
 #include "math/engine_math.h"
+#include "utility/engine_time.h"
 
 
 
-// 8 audio channels. Since audio is large it has to stay in
+// 4 audio channels. Since audio is large it has to stay in
 // flash, but flash is slow to get data from which is a problem
 // when sample retrieval time/latency needs to be small to keep
 // on track at the relatively high sample rate good audio requires.
 // DMA is used to copy data into one of the dual buffer pairs
 // each audio channel gets but there's only 12 channels on RP2040
-// and one is used for the screen.
-//
-// Audio channels need to be stored in root pointers so
-// they are not collected by gc
-// https://github.com/orgs/micropython/discussions/9312#discussioncomment-3644172
-// Use MP_STATE_PORT to get the objects from root pointers
-MP_REGISTER_ROOT_POINTER(mp_obj_t channels[CHANNEL_COUNT]);
+// and one is used for the screen
+volatile mp_obj_t channels[CHANNEL_COUNT];
 
-// The master volume that all mixed samples are scaled by
-float master_volume = 1.0f;
+// The master volume that all mixed samples are scaled by (0.0 ~ 1.0)
+volatile float master_volume = 1.0f;
 
 
 #if defined(__unix__)
@@ -137,22 +133,12 @@ float master_volume = 1.0f;
 
         for(uint8_t icx=0; icx<CHANNEL_COUNT; icx++){
 
-            audio_channel_class_obj_t *channel = MP_STATE_PORT(channels[icx]);
-
-            // For each channel, make sure we have access to it now
-            // and not core0 (which may be reading/writing to any
-            // of the used attributes)
-            // mp_thread_mutex_lock(&channel->mutex, true);
+            audio_channel_class_obj_t *channel = channels[icx];
 
             sound_resource_base_class_obj_t *source = channel->source;
 
             // Go over every channel and check if set to something usable
             if(source != NULL){
-
-                // For each source, make sure we have access to it now
-                // and not core0 (which may be reading/writing to any
-                // of the used attributes)
-                // mp_thread_mutex_lock(&source->mutex, true);
 
                 // Another active channel
                 active_channel_count += 1;
@@ -195,9 +181,6 @@ float master_volume = 1.0f;
                 // t_current =  (1 / sample_rate [1/s]) * (source_byte_offset / bytes_per_sample)
                 channel->time = (1.0f / source->sample_rate) * (channel->source_byte_offset / source->bytes_per_sample);
             }
-
-            // mp_thread_mutex_unlock(&channel->mutex);
-            // mp_thread_mutex_unlock(&source->mutex);
         }
         
         // https://dsp.stackexchange.com/questions/3581/algorithms-to-mix-audio-signals-without-clipping: Viktor was wrong!
@@ -206,6 +189,8 @@ float master_volume = 1.0f;
         if(active_channel_count > 0){
             pwm_set_gpio_level(23, (uint32_t)(total_sample / active_channel_count));
         }
+
+        // pwm_set_gpio_level(23, 0.5f + 0.5f * sinf(millis()) * 256.0f);
 
         return true;
     }
@@ -226,28 +211,6 @@ void engine_audio_setup_playback(){
         // }
         // add_repeating_timer_us((int64_t)((1.0/22050.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer);
 
-        if(add_repeating_timer_us((int64_t)((1.0/11025.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer) == false){
-            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("AudioModule: No timer slots available, could not start audio callback!"));
-        }
-    #endif
-}
-
-size_t stack_size = 4096*2;
-
-void engine_audio_setup(){
-    ENGINE_FORCE_PRINTF("EngineAudio: Setting up...");
-
-    // Fill channels array with channels. This has to be done
-    // before any callbacks try to access the channels array
-    // (otherwise it would be trying to access all NULLs)
-    // Setup should be run once per lifetime, shouldn't need a mutex
-    for(uint8_t icx=0; icx<CHANNEL_COUNT; icx++){
-        MP_STATE_PORT(channels[icx]) = audio_channel_class_new(&audio_channel_class_type, 0, 0, NULL);
-    }
-
-    #if defined(__unix__)
-        // Nothing to do
-    #elif defined(__arm__)
         // Setup amplifier but make sure it is disabled while PWM is being setup
         gpio_init(26);
         gpio_set_dir(26, GPIO_OUT);
@@ -265,6 +228,42 @@ void engine_audio_setup(){
 
         // Now allow sound to play by enabling the amplifier
         gpio_put(26, 1);
+    #endif
+}
+
+size_t stack_size = 4096*2;
+
+void engine_audio_setup(){
+    ENGINE_FORCE_PRINTF("EngineAudio: Setting up...");
+
+    // Fill channels array with channels. This has to be done
+    // before any callbacks try to access the channels array
+    // (otherwise it would be trying to access all NULLs)
+    // Setup should be run once per lifetime
+    for(uint8_t icx=0; icx<CHANNEL_COUNT; icx++){
+        channels[icx] = audio_channel_class_new(&audio_channel_class_type, 0, 0, NULL);
+    }
+
+    #if defined(__unix__)
+        // Nothing to do
+    #elif defined(__arm__)
+        // // Setup amplifier but make sure it is disabled while PWM is being setup
+        // gpio_init(26);
+        // gpio_set_dir(26, GPIO_OUT);
+        // gpio_put(26, 0);
+
+        // // Setup PWM audio pin, bit-depth, and frequency. Duty cycle
+        // // is only adjusted PWM parameter as samples are retrievd from
+        // // channel sources
+        // uint audio_pwm_pin_slice = pwm_gpio_to_slice_num(23);
+        // gpio_set_function(23, GPIO_FUNC_PWM);
+        // pwm_config audio_pwm_pin_config = pwm_get_default_config();
+        // pwm_config_set_clkdiv_int(&audio_pwm_pin_config, 1);
+        // pwm_config_set_wrap(&audio_pwm_pin_config, 512);   // 125MHz / 1024 = 122kHz
+        // pwm_init(audio_pwm_pin_slice, &audio_pwm_pin_config, true);
+
+        // // Now allow sound to play by enabling the amplifier
+        // gpio_put(26, 1);
 
         // Launch timer setup on other core. All audio playback
         // is done on the other core. This means that access
@@ -272,10 +271,10 @@ void engine_audio_setup(){
         // https://github.com/raspberrypi/pico-examples/blob/master/multicore/hello_multicore/multicore.c
         // multicore_reset_core1();
         // multicore_launch_core1(engine_audio_setup_playback);
-        engine_audio_setup_playback();
-        // if(add_repeating_timer_us((int64_t)((1.0/11025.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer) == false){
-        //     mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("AudioModule: No timer slots available, could not audio callback!"));
-        // }
+        // engine_audio_setup_playback();
+        if(add_repeating_timer_us((int64_t)((1.0/11025.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer) == false){
+            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("AudioModule: No timer slots available, could not audio callback!"));
+        }
     #endif
 }
 
@@ -283,13 +282,11 @@ void engine_audio_setup(){
 void engine_audio_stop(){
     ENGINE_INFO_PRINTF('EngineAudio: Stopping all channels...');
 
-    cancel_repeating_timer(&repeating_audio_timer);
-
     for(uint8_t icx=0; icx<CHANNEL_COUNT; icx++){
         // Check that each channel is not NULL since reset
         // can be called before hardware init
-        if(MP_STATE_PORT(channels[icx]) != NULL){
-            audio_channel_stop(MP_STATE_PORT(channels[icx]));
+        if(channels[icx] != NULL){
+            audio_channel_stop(channels[icx]);
         }
     }
 }
@@ -306,9 +303,20 @@ void engine_audio_stop(){
 STATIC mp_obj_t engine_audio_play(mp_obj_t sound_resource_obj, mp_obj_t channel_index_obj, mp_obj_t loop_obj){
     // Should probably make sure this doesn't interfere with DMA or interrupt: TODO
     uint8_t channel_index = mp_obj_get_int(channel_index_obj);
-    audio_channel_class_obj_t *channel = MP_STATE_PORT(channels[channel_index]);
-    channel->source = sound_resource_obj;
+    audio_channel_class_obj_t *channel = channels[channel_index];
+    sound_resource_base_class_obj_t *source = sound_resource_obj;
+
+    // Before anything, make sure to stop the channel incase of two `.play(...)` calls in a row
+    audio_channel_stop(channel);
+
+    channel->source = source;
     channel->loop = mp_obj_get_int(loop_obj);
+    channel->done = false;
+
+    // Very important to set this link! The source needs access to the channel that
+    // is playing it (if one is) so that it can remove itself from the linked channel's
+    // source
+    source->channel = channel;
     return MP_OBJ_FROM_PTR(channel);
 }
 MP_DEFINE_CONST_FUN_OBJ_3(engine_audio_play_obj, engine_audio_play);

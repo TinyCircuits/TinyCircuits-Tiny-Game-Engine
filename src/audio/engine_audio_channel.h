@@ -32,8 +32,10 @@
 // and into RAM faster than that
 #define CHANNEL_BUFFER_SIZE 1024
 
+// Forward declare since `resources/engine_sound_resource_base.h` and this file include each other
+typedef struct sound_resource_base_class_obj_t sound_resource_base_class_obj_t;
 
-typedef struct{
+typedef struct audio_channel_class_obj_t{
     mp_obj_base_t base;
     sound_resource_base_class_obj_t *source;    // Source of the audio for the channel, currently
     uint32_t source_byte_offset;                // The total byte position inside the source that the ISR is using to start filling from
@@ -46,7 +48,6 @@ typedef struct{
     uint16_t buffers_byte_offsets[2];           // Current offset inside each buffer
     uint8_t reading_buffer_index;               // Index in 'buffers' of where audio samples should be picked from
     uint8_t filling_buffer_index;               // Index in 'buffers' of where audio samples should be taken from FLASH and stored in RAM
-    mp_thread_mutex_t mutex;                    // Use MicroPython mutex abstraction since it handles each port already (so we don't have to!)
 
     #if defined(__unix__)
 
