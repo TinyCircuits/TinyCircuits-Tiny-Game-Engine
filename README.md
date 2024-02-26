@@ -63,7 +63,7 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 
 [] Figure out resetting engine when main loop ends
    * Nodes
-   * Audio <- Needs special attention!
+   * Audio <- Needs special attention! (still has an error where if text played quickly on same channel at start up that it crashes the device in the ISR while calling `get_data`)
    * Resources/Flash
 
 [] With lots of sprites on screen and big background, drawing or rotating slows down when rotated 90 degrees into the big 128x128 texture

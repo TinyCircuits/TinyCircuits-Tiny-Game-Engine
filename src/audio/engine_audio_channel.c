@@ -33,6 +33,7 @@ mp_obj_t audio_channel_class_new(const mp_obj_type_t *type, size_t n_args, size_
     self->buffers_byte_offsets[1] = 0;
     self->reading_buffer_index = 0;
     self->filling_buffer_index = 0;
+    self->busy = false;
 
     // https://github.com/raspberrypi/pico-examples/blob/eca13acf57916a0bd5961028314006983894fc84/dma/hello_dma/hello_dma.c#L21-L30
     // https://github.com/raspberrypi/pico-examples/blob/master/flash/xip_stream/flash_xip_stream.c#L58-L70 (see pg. 127 of rp2040 datasheet: https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf)
@@ -73,12 +74,17 @@ mp_obj_t audio_channel_class_new_dummy(const mp_obj_type_t *type, size_t n_args,
 */ 
 mp_obj_t audio_channel_stop(mp_obj_t self_in){
     ENGINE_INFO_PRINTF("AudioChannel: Stopping!");
+
     audio_channel_class_obj_t *channel = self_in;
+
+    // Set true, busy adjusting source, don't want the ISR doing
+    // anything with this channel when in the middle of it
+    channel->busy = true;
 
     // Make sure that if this channel has a source, that
     // the reference from that source to this channel is
     // unlinked. Took care of it here anyway
-    if(channel->source != NULL && channel->source->channel != NULL){
+    if(channel->source != NULL){
         channel->source->channel = NULL;
     }
 
@@ -95,7 +101,10 @@ mp_obj_t audio_channel_stop(mp_obj_t self_in){
     channel->reading_buffer_index = 0;
     channel->filling_buffer_index = 0;
 
-    ENGINE_FORCE_PRINTF("Done stopping!");
+    // Set back to false now that we're done readjusting the channel
+    channel->busy = false;
+
+    ENGINE_INFO_PRINTF("Done stopping!");
 
     return mp_const_none;
 }

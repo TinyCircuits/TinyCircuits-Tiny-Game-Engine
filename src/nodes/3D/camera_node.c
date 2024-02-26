@@ -28,7 +28,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(camera_node_class_tick_obj, camera_node_class_tick);
 
 /*  --- doc ---
     NAME: CameraNode
-    DESC: Node that defines the perspective the scene is draw at. There can be multiple but this will impact performance if rendering the same scene twice. To make other nodes not move when the camera moves, make the other nodes children of the camera.
+    DESC: Node that defines the perspective the scene is drawn at. There can be multiple but this will impact performance if rendering the same scene twice. To make other nodes not move when the camera moves, make the other nodes children of the camera.
     PARAM: [type={ref_link:Vector3}]             [name=position]                 [value={ref_link:Vector3}]
     PARAM: [type=float]                          [name=zoom]                     [value=any (scales all nodes by this factor, 1.0 by default)]
     PARAM: [type={ref_link:Rectangle}]           [name=viewport]                 [value={ref_link:Rectangle} (not used currently, TODO)]

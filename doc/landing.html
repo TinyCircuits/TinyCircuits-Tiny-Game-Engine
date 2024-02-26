@@ -21,7 +21,7 @@
         <a href="build/engine_math.html">engine_math</a><br>
         <a href="build/engine_debug.html">engine_debug</a><br>
         <a href="build/engine_utilities.html">engine_utilities</a><br>
-
+        
         <br>
         <hr>
         <br>
@@ -40,9 +40,16 @@
             The Thonny IDE can be used to upload files and run scripts, it can be downloaded from <a href="https://thonny.org/">here</a>.
             <br>
             <br>
+            <b>Setting up Thonny:</b>
+            <br>1. Plug Thumby Color in and flip switch to On (to the right when looking at the screen)
+            <br>2. In the bottom-right of Thonny, click the `no backend` or `Local Python 3` text
+            <br>3. Select `MicroPython (generic) * Board CDC COMXX` (may need to press the red stop sign in the top-left)
+
+            <br>
+            <br>
             <b>Uploading an asset/file using Thonny:</b>
             <br>1. Plug Thumby Color in
-            <br>2. If it's ON, toggle it OFF and then back ON
+            <br>2. Turn it ON
             <br>3. Press the red stop sign button in Thonny
             <br>4. Wait for the Thonny shell to print something like "Type "help()" for more information"
             <br>5. In the top-left `Files` panel navigate to the folder containing your files/assets you want to upload
@@ -53,14 +60,13 @@
             <br>
             <b>Running a script using Thonny:</b>
             <br>1. Plug Thumby Color in
-            <br>2. If it's ON, toggle it OFF and then back ON
+            <br>2. Turn it ON
             <br>3. Press the red stop sign button in Thonny
             <br>4. Type code into the Thonny editor or open a Python file
             <br>5. Press the green play/run button in the top, the script should start running.
             <br>
             <br>
             <b>Common errors:</b>
-            <br>* Pressing the green `run` button twice will not work currently. Toggle the power off and back on each time (working on fixing this)
             <br>* If an exception occurs at the line where `engine.start()` is, that probably means something in the engine tried to cast some type of data to another type that is not supported. Let Jason know
         </h>
 
@@ -143,6 +149,14 @@ camera = CameraNode()
 # Start rendering the scene
 engine.start()
         </code></pre>
+
+
+        <br>
+        <hr>
+        <br>
+
+        <h3>Version History:</h3>
+        <h>02-26-2024: Updated firmware to hopefully allow for pressing the green run button multiple times <b>without</b> turning off and on</h>
 
 
     </body>

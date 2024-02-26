@@ -125,7 +125,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(rectangle_2d_node_class_draw_obj, rectangle_2d_node_cl
 /*  --- doc ---
     NAME: Rectangle2DNode
     DESC: Simple 2D rectangle node
-    PARAM:  [type={ref_link:Vector3}]         [name=position]                   [value={ref_link:Vector3}]
+    PARAM:  [type={ref_link:Vector2}]         [name=position]                   [value={ref_link:Vector2}]
     PARAM:  [type=float]                      [name=width]                      [value=any]
     PARAM:  [type=float]                      [name=height]                     [value=any]
     PARAM:  [type=int]                        [name=color]                      [value=any 16-bit RGB565 integer]
@@ -138,7 +138,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(rectangle_2d_node_class_draw_obj, rectangle_2d_node_cl
     ATTR:   [type=function]                   [name={ref_link:set_layer}]       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_layer}]       [value=function]
     ATTR:   [type=function]                   [name={ref_link:remove_child}]    [value=function]
-    ATTR:   [type={ref_link:Vector3}]         [name=position]                   [value={ref_link:Vector3}]
+    ATTR:   [type={ref_link:Vector2}]         [name=position]                   [value={ref_link:Vector2}]
     ATTR:   [type=float]                      [name=width]                      [value=any]
     ATTR:   [type=float]                      [name=height]                     [value=any]
     ATTR:   [type=int]                        [name=color]                      [value=any 16-bit RGB565 integer]

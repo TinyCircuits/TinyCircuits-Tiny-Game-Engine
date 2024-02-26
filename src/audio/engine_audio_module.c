@@ -39,7 +39,7 @@ volatile float master_volume = 1.0f;
     // https://github.com/raspberrypi/pico-examples/blob/master/timer/hello_timer/hello_timer.c#L11-L57
     // https://www.raspberrypi.com/documentation/pico-sdk/high_level.html#rpipdb65a0bdce0635d95877
     // https://www.raspberrypi.com/documentation/pico-sdk/hardware.html#interrupt-numbers
-    struct repeating_timer repeating_audio_timer;
+    static struct repeating_timer repeating_audio_timer;
 
     void __no_inline_not_in_flash_func(engine_audio_handle_buffer)(audio_channel_class_obj_t *channel){
         // When 'buffer_byte_offset = 0' that means the buffer hasn't been filled before, fill it (see that after this function it is immediately incremented)
@@ -51,6 +51,10 @@ volatile float master_volume = 1.0f;
             // Using the sound resource base, fill this channel's
             // buffer with audio data from the source resource
             // channel->buffer_end = channel->source->fill_buffer(channel->source, channel->buffer, channel->source_byte_offset, CHANNEL_BUFFER_SIZE);
+
+            if(channel->source == NULL){
+                return;
+            }
 
             uint8_t *current_source_data = channel->source->get_data(channel, CHANNEL_BUFFER_SIZE, &channel->buffers_ends[channel->reading_buffer_index]);
 
@@ -98,9 +102,7 @@ volatile float master_volume = 1.0f;
                 // If not looping, disable/remove the source and stop this
                 // channel from being played, otherwise, fill with start data
                 if(channel->loop == false){
-                    channel->source = NULL;
-                    channel->reading_buffer_index = 0;
-                    channel->filling_buffer_index = 0;
+                    audio_channel_stop(channel);
                 }else{
                     // Run right away to fill buffer with starting data since looping
                     engine_audio_handle_buffer(channel);
@@ -133,6 +135,10 @@ volatile float master_volume = 1.0f;
         for(uint8_t icx=0; icx<CHANNEL_COUNT; icx++){
 
             audio_channel_class_obj_t *channel = channels[icx];
+
+            if(channel->busy){
+                continue;
+            }
 
             sound_resource_base_class_obj_t *source = channel->source;
 
@@ -278,6 +284,8 @@ STATIC mp_obj_t engine_audio_play(mp_obj_t sound_resource_obj, mp_obj_t channel_
     // Before anything, make sure to stop the channel incase of two `.play(...)` calls in a row
     audio_channel_stop(channel);
 
+    channel->busy = true;
+
     channel->source = source;
     channel->loop = mp_obj_get_int(loop_obj);
     channel->done = false;
@@ -286,6 +294,9 @@ STATIC mp_obj_t engine_audio_play(mp_obj_t sound_resource_obj, mp_obj_t channel_
     // is playing it (if one is) so that it can remove itself from the linked channel's
     // source
     source->channel = channel;
+
+    channel->busy = false;
+
     return MP_OBJ_FROM_PTR(channel);
 }
 MP_DEFINE_CONST_FUN_OBJ_3(engine_audio_play_obj, engine_audio_play);

@@ -48,6 +48,7 @@ typedef struct audio_channel_class_obj_t{
     uint16_t buffers_byte_offsets[2];           // Current offset inside each buffer
     uint8_t reading_buffer_index;               // Index in 'buffers' of where audio samples should be picked from
     uint8_t filling_buffer_index;               // Index in 'buffers' of where audio samples should be taken from FLASH and stored in RAM
+    bool busy;                                  // Used to indicate to the ISR that this channel shouldn't be used currently in the ISR
 
     #if defined(__unix__)
 
