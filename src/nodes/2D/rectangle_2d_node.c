@@ -42,9 +42,6 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_n
     rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
     float camera_zoom = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_zoom));
 
-    rectangle_width = rectangle_width*camera_zoom;
-    rectangle_height = rectangle_height*camera_zoom;
-
     float camera_resolved_hierarchy_x = 0.0f;
     float camera_resolved_hierarchy_y = 0.0f;
     float camera_resolved_hierarchy_rotation = 0.0f;
@@ -67,6 +64,9 @@ STATIC mp_obj_t rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_n
     }else{
         camera_zoom = 1.0f;
     }
+
+    rectangle_width = rectangle_width*camera_zoom;
+    rectangle_height = rectangle_height*camera_zoom;
 
     // Rotate rectangle origin about the camera
     engine_math_rotate_point(&rectangle_rotated_x, &rectangle_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);

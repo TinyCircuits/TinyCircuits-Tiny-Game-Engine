@@ -59,13 +59,13 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 
 [.] Add Line2DNode that draws a rectangle between two points, Allow filled and outline modes
 
-[] Add main.py that waits for button press to launch any scripts, like game.py after button press
 
-[] Figure out resetting engine when main loop ends
-   * Nodes
-   * Audio <- Needs special attention! (still has an error where if text played quickly on same channel at start up that it crashes the device in the ISR while calling `get_data`)
-   * Resources/Flash
+[.] Figure out resetting engine when main loop ends
+   * [X] Nodes
+   * [.] Audio <- Needs special attention! (still has an error where if text played quickly on same channel at start up that it crashes the device in the ISR while calling `get_data`)
+   * [X] Resources/Flash
 
+[] Weird shaking on UNIX when line is a child of camera and the camera is rotating
 [] With lots of sprites on screen and big background, drawing or rotating slows down when rotated 90 degrees into the big 128x128 texture
 [] Figure out why physics doesn't always work on pong example
 [] Blending colors for partially transparent pixels in some sources (don't have any yet)

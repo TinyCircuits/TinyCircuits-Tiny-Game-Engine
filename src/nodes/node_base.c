@@ -4,6 +4,7 @@
 #include "node_types.h"
 #include "math/vector2.h"
 #include "math/vector3.h"
+#include "utility/engine_mp.h"
 
 
 /*  --- doc ---
@@ -174,10 +175,13 @@ void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, bool *
     vector2_class_obj_t *child_node_base_position = mp_load_attr(child_node_base->attr_accessor, MP_QSTR_position);
     *x = (float)child_node_base_position->x;
     *y = (float)child_node_base_position->y;
-    mp_obj_t rotation_obj = mp_load_attr(child_node_base->attr_accessor, MP_QSTR_rotation);
+    mp_obj_t rotation_obj = engine_mp_load_attr_maybe(child_node_base->attr_accessor, MP_QSTR_rotation);
 
     // Use z-axis rotation for 2D rotations from 3D vectors
-    if(mp_obj_is_type(rotation_obj, &vector3_class_type)){
+    if(rotation_obj == MP_OBJ_NULL){
+        // In the case that the rotation attribute does not exist on this node, set rotation to 0
+        *rotation = 0.0f;
+    }else if(mp_obj_is_type(rotation_obj, &vector3_class_type)){
         *rotation = ((vector3_class_obj_t*)rotation_obj)->z;
     }else{
         *rotation = (float)mp_obj_get_float(rotation_obj);
@@ -198,7 +202,7 @@ void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, bool *
                 }
 
                 mp_obj_t parent_position_obj = mp_load_attr(seeking_parent_node_base->attr_accessor, MP_QSTR_position);
-                mp_obj_t parent_rotation_obj = mp_load_attr(seeking_parent_node_base->attr_accessor, MP_QSTR_rotation);
+                mp_obj_t parent_rotation_obj = engine_mp_load_attr_maybe(seeking_parent_node_base->attr_accessor, MP_QSTR_rotation);
 
                 float parent_x = 0.0f;
                 float parent_y = 0.0f;
@@ -212,7 +216,10 @@ void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, bool *
                     parent_y = ((vector2_class_obj_t*)parent_position_obj)->y;
                 }
 
-                if(mp_obj_is_type(parent_rotation_obj, &vector3_class_type)){
+                if(parent_rotation_obj == MP_OBJ_NULL){
+                    // In the case that the rotation attribute does not exist on this node, set rotation to 0
+                    parent_rotation_radians = 0.0f;
+                }else if(mp_obj_is_type(parent_rotation_obj, &vector3_class_type)){
                     parent_rotation_radians = ((vector3_class_obj_t*)parent_rotation_obj)->z;
                 }else{
                     parent_rotation_radians = (float)mp_obj_get_float(parent_rotation_obj);

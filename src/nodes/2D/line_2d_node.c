@@ -1,5 +1,7 @@
 #include "line_2d_node.h"
 
+#include "py/objstr.h"
+#include "py/objtype.h"
 #include "nodes/node_types.h"
 #include "nodes/node_base.h"
 #include "debug/debug_print.h"
@@ -9,6 +11,7 @@
 #include "math/rectangle.h"
 #include "draw/engine_display_draw.h"
 #include "math/engine_math.h"
+
 
 // Class required functions
 STATIC void line_2d_node_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
@@ -37,51 +40,196 @@ STATIC mp_obj_t line_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
     uint16_t line_color = mp_obj_get_float(mp_load_attr(line_node_base->attr_accessor, MP_QSTR_color));
     bool line_outlined = mp_obj_get_int(mp_load_attr(line_node_base->attr_accessor, MP_QSTR_outline));
 
-    float angle_between = engine_math_angle_between(line_start->x, line_start->y, line_end->x, line_end->y);
+    // The line is drawn as a rectangle since we have a nice algorithm for doing that:
+    float line_length = engine_math_distance_between(line_start->x, line_start->y, line_end->x, line_end->y);
+    float line_rotation = engine_math_angle_between(line_start->x, line_start->y, line_end->x, line_end->y) + HALF_PI;
 
-    // Handling line transforms would be weird, not implemented yet
-    // node_base_get_child_absolute_xy
+    // Grab camera
+    vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
+    vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
+    rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
+    float camera_zoom = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_zoom));
+
+    // Get camera transformation if it is a child
+    float camera_resolved_hierarchy_x = 0.0f;
+    float camera_resolved_hierarchy_y = 0.0f;
+    float camera_resolved_hierarchy_rotation = 0.0f;
+    node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
+    camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
+
+    // Get line transformation if it is a child
+    float line_resolved_hierarchy_x = 0.0f;
+    float line_resolved_hierarchy_y = 0.0f;
+    float line_resolved_hierarchy_rotation = 0.0f;
+    bool line_is_child_of_camera = false;
+    node_base_get_child_absolute_xy(&line_resolved_hierarchy_x, &line_resolved_hierarchy_y, &line_resolved_hierarchy_rotation, &line_is_child_of_camera, self_in);
+
+    // Store the non-rotated x and y for a second
+    float line_rotated_x = line_resolved_hierarchy_x-camera_resolved_hierarchy_x;
+    float line_rotated_y = line_resolved_hierarchy_y-camera_resolved_hierarchy_y;
+
+    // Scale transformation due to camera zoom
+    if(line_is_child_of_camera == false){
+        engine_math_scale_point(&line_rotated_x, &line_rotated_y, camera_position->x, camera_position->y, camera_zoom);
+    }else{
+        camera_zoom = 1.0f;
+    }
+
+    // Scale by camera
+    line_thickness = line_thickness*camera_zoom;
+    line_length = line_length*camera_zoom;
+
+    // Rotate rectangle origin about the camera
+    engine_math_rotate_point(&line_rotated_x, &line_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
+
+    line_rotated_x += camera_viewport->width/2;
+    line_rotated_y += camera_viewport->height/2;
+
+    if(line_outlined == false){
+        engine_draw_fillrect_scale_rotate_viewport(line_color,
+                                                (int32_t)line_rotated_x,
+                                                (int32_t)line_rotated_y,
+                                                line_thickness, 
+                                                line_length,
+                                                (int32_t)(1.0f*65536 + 0.5),
+                                                (int32_t)(1.0f*65536 + 0.5),
+                                                (int16_t)(((line_resolved_hierarchy_rotation+line_rotation+camera_resolved_hierarchy_rotation))*1024 / (float)(2*PI)),
+                                                (int32_t)camera_viewport->x,
+                                                (int32_t)camera_viewport->y,
+                                                (int32_t)camera_viewport->width,
+                                                (int32_t)camera_viewport->height);
+    }else{
+        float line_half_width = line_thickness/2;
+        float line_half_height = line_length/2;
+
+        // Calculate the coordinates of the 4 corners of the line, not rotated
+        // NOTE: positive y is down
+        float tlx = line_rotated_x - line_half_width;
+        float tly = line_rotated_y - line_half_height;
+
+        float trx = line_rotated_x + line_half_width;
+        float try = line_rotated_y - line_half_height;
+
+        float brx = line_rotated_x + line_half_width;
+        float bry = line_rotated_y + line_half_height;
+
+        float blx = line_rotated_x - line_half_width;
+        float bly = line_rotated_y + line_half_height;
+
+        // Rotate the points and then draw lines between them
+        float angle = line_resolved_hierarchy_rotation + camera_resolved_hierarchy_rotation;
+        engine_math_rotate_point(&tlx, &tly, line_rotated_x, line_rotated_y, angle);
+        engine_math_rotate_point(&trx, &try, line_rotated_x, line_rotated_y, angle);
+        engine_math_rotate_point(&brx, &bry, line_rotated_x, line_rotated_y, angle);
+        engine_math_rotate_point(&blx, &bly, line_rotated_x, line_rotated_y, angle);
+
+        engine_draw_line(line_color, tlx, tly, trx, try, camera_node);
+        engine_draw_line(line_color, trx, try, brx, bry, camera_node);
+        engine_draw_line(line_color, brx, bry, blx, bly, camera_node);
+        engine_draw_line(line_color, blx, bly, tlx, tly, camera_node);
+    }
 
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_2(line_2d_node_class_draw_obj, line_2d_node_class_draw);
 
 
+
+
+
+// The line is always from from start to end, however because every node
+// is required to have a `position` and that `start`, `end`, and `position`
+// are all absolute positions, the below code needs to be run every time
+// one of them is called
+// `native`     == instance of this built-in type (`Line2DNode`)
+// `not native` == instance of a Python class that inherits this built-in type (`Line2DNode`)
+void line_2d_recalculate(mp_obj_t attr_accessor, bool is_instance_native, vector2_class_obj_t *new_position){
+    vector2_class_obj_t *start = NULL;
+    vector2_class_obj_t *position = NULL;   // <- really the midpoint! Needs to be called `position` for engine qstr
+    vector2_class_obj_t *end = NULL;
+
+    // Get atrributes
+    if(is_instance_native == false){
+        mp_obj_instance_t *self = MP_OBJ_TO_PTR(attr_accessor);
+        start = mp_map_lookup(&self->members, MP_OBJ_NEW_QSTR(MP_QSTR_start), MP_MAP_LOOKUP)->value;
+        position = mp_map_lookup(&self->members, MP_OBJ_NEW_QSTR(MP_QSTR_position), MP_MAP_LOOKUP)->value;
+        end = mp_map_lookup(&self->members, MP_OBJ_NEW_QSTR(MP_QSTR_end), MP_MAP_LOOKUP)->value;
+    }else{
+        start = mp_load_attr(attr_accessor, MP_QSTR_start);
+        position = mp_load_attr(attr_accessor, MP_QSTR_position);
+        end = mp_load_attr(attr_accessor, MP_QSTR_end);
+    }
+
+    // Same thing happens if an endpoint is changed, recalculate the midpoint/position.
+    // If the position is changed, need to translate the end points by the amount the
+    // position changed
+    if(new_position == NULL){
+        engine_math_2d_midpoint(start->x, start->y, end->x, end->y, &position->x, &position->y);
+    }else{
+        float dx = new_position->x - position->x;
+        float dy = new_position->y - position->y;
+
+        start->x += dx;
+        end->x += dx;
+
+        start->y += dy;
+        end->y += dy;
+    }
+
+    // Do not need to re-store values, changed by reference/pointer
+}
+
+
 STATIC void line_2d_node_class_set(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Line2DNode: Accessing attr on inherited instance class");
 
-    default_instance_attr_func(self_in, attribute, destination);
+    if(destination[0] == MP_OBJ_NULL){  // Load
+        // Call this after the if statement we're in
+        default_instance_attr_func(self_in, attribute, destination);
+    }else{                              // Store                    
+        switch(attribute){
+            case MP_QSTR_start:
+            {
+                // Set then recalculate
+                default_instance_attr_func(self_in, attribute, destination);
+                line_2d_recalculate(self_in, false, NULL);
+            }
+            break;
+            case MP_QSTR_position:
+            {
+                // Recalculate `start` and `end` then set `position` to new
+                line_2d_recalculate(self_in, false, destination[1]);
+                default_instance_attr_func(self_in, attribute, destination);
+            }
+            break;
+            case MP_QSTR_end:
+            {
+                // Set then recalculate
+                default_instance_attr_func(self_in, attribute, destination);
+                line_2d_recalculate(self_in, false, NULL);
+            }
+            break;
+        }
+    }
+}
 
-    // if(destination[0] == MP_OBJ_NULL){  // Load
-    //     // Call this after the if statement we're in
-    //     default_instance_attr_func(self_in, attribute, destination);
-    // }else{                              // Store
-    //     // Call this after the if statement we're in                     
-    //     default_instance_attr_func(self_in, attribute, destination);
-    //     switch(attribute){
-    //         case MP_QSTR_text:
-    //         {
-    //             text_2d_node_class_calculate_dimensions(self_in, true);
-    //         }
-    //         break;
-    //         case MP_QSTR_width:
-    //         {
-    //             mp_raise_msg(&mp_type_AttributeError, MP_ERROR_TEXT("Text2DNode: ERROR: 'width' is read-only, it is not allowed to be set!"));
-    //         }
-    //         break;
-    //         case MP_QSTR_height:
-    //         {
-    //             mp_raise_msg(&mp_type_AttributeError, MP_ERROR_TEXT("Text2DNode: ERROR: 'height' is read-only, it is not allowed to be set!"));
-    //         }
-    //         break;
-    //     }
-    // }
+
+// When the `x` or `y` on `start`, `end`, or `position` is changed
+// we may need to recalculate the midpoint (`position`) or translate
+// `start` and `end`
+void on_change_native(){
+
+}
+
+
+void in_change_instance(){
+
 }
 
 
 /*  --- doc ---
     NAME: Line2DNode
-    DESC: Simple 2D rectangle node (DO NOT USE: not fully implemented yet)
+    DESC: Simple 2D rectangle node
     PARAM:  [type={ref_link:Vector2}]         [name=start]                      [value={ref_link:Vector2}]
     PARAM:  [type={ref_link:Vector2}]         [name=end]                        [value={ref_link:Vector2}]
     PARAM:  [type=float]                      [name=thickness]                  [value=any]
@@ -169,6 +317,9 @@ mp_obj_t line_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
         line_2d_node->thickness = parsed_args[thickness].u_obj;
         line_2d_node->color = parsed_args[color].u_obj;
         line_2d_node->outline = parsed_args[outline].u_obj;
+
+        // Calculate midpoint/position based on endpoints (only positions that can be set in the constructor)
+        line_2d_recalculate(node_base, true, NULL);
     }else if(inherited == true){  // Inherited (use existing object)
         node_base->inherited = true;
         node_base->node = parsed_args[child_class].u_obj;
@@ -202,6 +353,9 @@ mp_obj_t line_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
         // so that certain callbacks/code can run
         default_instance_attr_func = MP_OBJ_TYPE_GET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_base->node)->type, attr);
         MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_base->node)->type, attr, line_2d_node_class_set, 5);
+
+        // Calculate midpoint/position based on endpoints (only positions that can be set in the constructor)
+        line_2d_recalculate(node_base, false, NULL);
     }
 
     return MP_OBJ_FROM_PTR(node_base);
@@ -267,11 +421,15 @@ STATIC void line_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *
         switch(attribute){
             case MP_QSTR_start:
                 self->start = destination[1];
+                line_2d_recalculate(self_in, true, NULL);
             break;
             case MP_QSTR_end:
                 self->end = destination[1];
+                line_2d_recalculate(self_in, true, NULL);
             break;
             case MP_QSTR_position:
+                // Offset `start` and `end` based on new position
+                line_2d_recalculate(self_in, true, destination[1]);
                 self->position = destination[1];
             break;
             case MP_QSTR_thickness:

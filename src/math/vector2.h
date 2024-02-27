@@ -8,6 +8,7 @@ typedef struct{
     mp_obj_base_t base;
     float x;
     float y;
+    void (*on_change)();    // <- Function pointer that's called when x or y is changed
 }vector2_class_obj_t;
 
 extern const mp_obj_type_t vector2_class_type;

@@ -35,8 +35,21 @@ float engine_math_angle_between(float px0, float py0, float px1, float py1){
 }
 
 
+float engine_math_distance_between(float px0, float py0, float px1, float py1){
+    float dx = px1 - px0;
+    float dy = py1 - py0;
+    return sqrtf((dx*dx) + (dy*dy));
+}
+
+
 uint32_t engine_math_2d_to_1d_index(uint32_t x, uint32_t y, uint32_t width){
     return y * width + x;
+}
+
+
+void engine_math_2d_midpoint(float x0, float y0, float x1, float y1, float *mx, float *my){
+    *mx = (x0 + x1) / 2.0f;
+    *my = (y0 + y1) / 2.0f;
 }
 
 

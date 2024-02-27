@@ -10,6 +10,14 @@ from engine_resources import TextureResource, WaveSoundResource, FontResource
 import math
 import gc
 
+
+
+
+import engine
+import engine_draw
+from engine_nodes import Rectangle2DNode, CameraNode
+
+# By default, nodes are at center of screen at 0,0
 # engine_debug.enable_all()
 # engine.set_fps_limit(60)
 # engine_debug.enable_setting(engine_debug.performance)
@@ -22,52 +30,69 @@ font9 = FontResource("9pt-roboto-font.bmp")
 #         self.text = "Hello World!\nLine 2\nLine 3\nLine 4                       hi"
 
 
+line = Line2DNode(color=engine_draw.yellow)
+# line.start.x = 20
+# line.start.y = 0
+# line.end.x = -20
+# line.end.y = 0
+# line.start.x = 64
+# line.start.y = 20
+# line.end.x = 64
+# line.end.y = -20
 
-text = Text2DNode(text="Hello World!\nLine 2\nLine 3", font=font9, scale=Vector2(2.0, 2.0), position=Vector2(0, -0))
-text0 = Text2DNode(text="Hello World!\nLine 2\nLine 3", font=font9, scale=Vector2(1.0, 1.0), position=Vector2(0, -0))
-# text = MyText()
-# text.rotation = math.pi/4
-# print(text.width)
-# text.width = 1
+line.start = Vector2(20, -10)
+line.end = Vector2(20, 10)
+
+line.thickness = 1
+# line.outline = True
 
 
-texture = TextureResource("32x32.bmp")
+
+# text = Text2DNode(text="Hello World!\nLine 2\nLine 3", font=font9, scale=Vector2(2.0, 2.0), position=Vector2(0, -0))
+# text0 = Text2DNode(text="Hello World!\nLine 2\nLine 3", font=font9, scale=Vector2(1.0, 1.0), position=Vector2(0, -0))
+# # text = MyText()
+# # text.rotation = math.pi/4
+# # print(text.width)
+# # text.width = 1
 
 
-class MyCircle(Circle2DNode):
-    def __init__(self):
-        super().__init__(self)
+# texture = TextureResource("32x32.bmp")
+
+
+# class MyCircle(Circle2DNode):
+#     def __init__(self):
+#         super().__init__(self)
     
-    def tick(self):
-        self.rotation += 0.001
+#     def tick(self):
+#         self.rotation += 0.001
 
 
-circle = MyCircle()
-circle.outline = True
-circle.radius = 25
-rectangle = Rectangle2DNode()
-rectangle.width = 30
-rectangle.height = 15
-rectangle.outline = True
-sprite = Sprite2DNode(texture=texture, position=Vector2(0, 0), scale=Vector2(1.0, 1.0))
-polygon = Polygon2DNode()
-polygon.vertices.append(Vector2(-15, 10))
-polygon.vertices.append(Vector2(10, 10))
-polygon.vertices.append(Vector2(-5, 15))
-polygon.vertices.append(Vector2(10, -10))
-polygon.vertices.append(Vector2(-10, -15))
-polygon.outline = True
+# circle = MyCircle()
+# circle.outline = True
+# circle.radius = 25
+# rectangle = Rectangle2DNode()
+# rectangle.width = 30
+# rectangle.height = 15
+# rectangle.outline = True
+# sprite = Sprite2DNode(texture=texture, position=Vector2(0, 0), scale=Vector2(1.0, 1.0))
+# polygon = Polygon2DNode()
+# polygon.vertices.append(Vector2(-15, 10))
+# polygon.vertices.append(Vector2(10, 10))
+# polygon.vertices.append(Vector2(-5, 15))
+# polygon.vertices.append(Vector2(10, -10))
+# polygon.vertices.append(Vector2(-10, -15))
+# polygon.outline = True
 
-circle.color = 0b1111100000000000
-rectangle.color = 0b1111101001001001
-sprite.transparent_color = engine_draw.black
+# circle.color = 0b1111100000000000
+# rectangle.color = 0b1111101001001001
+# sprite.transparent_color = engine_draw.black
 
-circle.position = Vector2(0, 0)
-rectangle.position = Vector2(32, 0)
-sprite.position = Vector2(0, 32)
-polygon.position = Vector2(-32, 0)
-text.position = Vector2(0, -36)
-text0.position = Vector2(0, -36)
+# circle.position = Vector2(0, 0)
+# rectangle.position = Vector2(32, 0)
+# sprite.position = Vector2(0, 32)
+# polygon.position = Vector2(-32, 0)
+# text.position = Vector2(0, -36)
+# text0.position = Vector2(0, -36)
 
 
 class MyCam(CameraNode):
@@ -99,7 +124,6 @@ class MyCam(CameraNode):
 camera = MyCam()
 camera.zoom = 1
 
-
 # class FPSText(Text2DNode):
 #     def __init__(self):
 #         super().__init__(self)
@@ -114,16 +138,17 @@ camera.zoom = 1
 
 # fps = FPSText()
 
-circle.add_child(rectangle)
-circle.add_child(sprite)
-circle.add_child(polygon)
-circle.add_child(text)
-circle.add_child(text0)
+# circle.add_child(rectangle)
+# circle.add_child(sprite)
+# circle.add_child(polygon)
+# circle.add_child(text)
+# circle.add_child(text0)
+# circle.add_child(line)
 
-cursor = Circle2DNode(radius=5, color=engine_draw.green, outline=True)
+# cursor = Circle2DNode(radius=5, color=engine_draw.green, outline=True)
 
 # camera.add_child(circle)
 # camera.add_child(fps)
-camera.add_child(cursor)
+# camera.add_child(cursor)
 
 engine.start()

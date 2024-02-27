@@ -33,12 +33,14 @@ bool storing_in_ram = false;
 
 void engine_resource_reset(){
     ENGINE_FORCE_PRINTF("EngineResourceManager: Resetting...");
-    page_prog_index = 0;
-    page_prog_count = 0;
-    used_pages_count = 0;
-    current_storing_location = NULL;
-    index_in_storing_location = 0;
-    storing_in_ram = false;
+    #if defined(__arm__)
+        page_prog_index = 0;
+        page_prog_count = 0;
+        used_pages_count = 0;
+        current_storing_location = NULL;
+        index_in_storing_location = 0;
+        storing_in_ram = false;
+    #endif
 }
 
 
