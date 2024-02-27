@@ -180,36 +180,170 @@ void line_2d_recalculate(mp_obj_t attr_accessor, bool is_instance_native, vector
 }
 
 
-STATIC void line_2d_node_class_set(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
-    ENGINE_INFO_PRINTF("Line2DNode: Accessing attr on inherited instance class");
+// STATIC void line_2d_node_class_set(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+//     ENGINE_INFO_PRINTF("Line2DNode: Accessing attr on inherited instance class");
 
-    if(destination[0] == MP_OBJ_NULL){  // Load
-        // Call this after the if statement we're in
+//     if(destination[0] == MP_OBJ_NULL){  // Load
+//         // Call this after the if statement we're in
+//         default_instance_attr_func(self_in, attribute, destination);
+//     }else{                              // Store                    
+//         switch(attribute){
+//             case MP_QSTR_start:
+//             {
+//                 // Set then recalculate
+//                 default_instance_attr_func(self_in, attribute, destination);
+//                 line_2d_recalculate(self_in, false, NULL);
+//             }
+//             break;
+//             case MP_QSTR_position:
+//             {
+//                 // Recalculate `start` and `end` then set `position` to new
+//                 line_2d_recalculate(self_in, false, destination[1]);
+//                 default_instance_attr_func(self_in, attribute, destination);
+//             }
+//             break;
+//             case MP_QSTR_end:
+//             {
+//                 // Set then recalculate
+//                 default_instance_attr_func(self_in, attribute, destination);
+//                 line_2d_recalculate(self_in, false, NULL);
+//             }
+//             break;
+//         }
+//     }
+// }
+
+
+// Return `true` if handled loading the attr from internal structure, `false` otherwise
+bool line_2d_load_attr(engine_line_2d_node_class_obj_t *self, qstr attribute, mp_obj_t *destination){
+    switch(attribute){
+        case MP_QSTR___del__:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_del_obj);
+            destination[1] = self;
+            return true;
+        break;
+        case MP_QSTR_add_child:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_add_child_obj);
+            destination[1] = self;
+            return true;
+        break;
+        case MP_QSTR_get_child:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_child_obj);
+            destination[1] = self;
+            return true;
+        break;
+        case MP_QSTR_remove_child:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_remove_child_obj);
+            destination[1] = self;
+            return true;
+        break;
+        case MP_QSTR_set_layer:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_set_layer_obj);
+            destination[1] = self;
+            return true;
+        break;
+        case MP_QSTR_get_layer:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_layer_obj);
+            destination[1] = self;
+            return true;
+        break;
+        case MP_QSTR_node_base:
+            destination[0] = self;
+            return true;
+        break;
+        case MP_QSTR_start:
+            destination[0] = self->start;
+            return true;
+        break;
+        case MP_QSTR_end:
+            destination[0] = self->end;
+            return true;
+        break;
+        case MP_QSTR_position:
+            destination[0] = self->position;
+            return true;
+        break;
+        case MP_QSTR_thickness:
+            destination[0] = self->thickness;
+            return true;
+        break;
+        case MP_QSTR_color:
+            destination[0] = self->color;
+            return true;
+        break;
+        case MP_QSTR_outline:
+            destination[0] = self->outline;
+            return true;
+        break;
+        default:
+            return false; // Fail
+    }
+}
+
+
+// Return `true` if handled storing the attr from internal structure, `false` otherwise
+bool line_2d_store_attr(engine_line_2d_node_class_obj_t *self, qstr attribute, mp_obj_t *destination){
+    switch(attribute){
+        case MP_QSTR_start:
+            self->start = destination[1];
+            line_2d_recalculate(self, true, NULL);
+            return true;
+        break;
+        case MP_QSTR_end:
+            self->end = destination[1];
+            line_2d_recalculate(self, true, NULL);
+            return true;
+        break;
+        case MP_QSTR_position:
+            // Offset `start` and `end` based on new position
+            line_2d_recalculate(self, true, destination[1]);
+            self->position = destination[1];
+            return true;
+        break;
+        case MP_QSTR_thickness:
+            self->thickness = destination[1];
+            return true;
+        break;
+        case MP_QSTR_color:
+            self->color = destination[1];
+            return true;
+        break;
+        case MP_QSTR_outline:
+            self->outline = destination[1];
+            return true;
+        break;
+        default:
+            return false; // Fail
+    }
+}
+
+
+STATIC void line_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+    ENGINE_FORCE_PRINTF("Accessing Line2DNode attr");
+
+    bool is_obj_instance = false;
+    engine_node_base_t *node_base = node_base_get(self_in, &is_obj_instance);
+
+    // See if this access is from a Python class instance or native built-in instance object
+    engine_line_2d_node_class_obj_t *self = node_base->node;
+
+    // Used for telling if custom load/store functions handled the attr
+    bool attr_handled = false;
+
+    if(destination[0] == MP_OBJ_NULL){          // Load
+        attr_handled = line_2d_load_attr(self, attribute, destination);
+    }else if(destination[1] != MP_OBJ_NULL){    // Store
+        attr_handled = line_2d_store_attr(self, attribute, destination);
+
+        // If handled, mark as successful store
+        if(attr_handled) destination[0] = MP_OBJ_NULL;
+    }
+
+    // If this is a Python class instance and the attr was NOT
+    // handled by the above, defer the attr to the instance attr
+    // handler
+    if(is_obj_instance && attr_handled == false){
         default_instance_attr_func(self_in, attribute, destination);
-    }else{                              // Store                    
-        switch(attribute){
-            case MP_QSTR_start:
-            {
-                // Set then recalculate
-                default_instance_attr_func(self_in, attribute, destination);
-                line_2d_recalculate(self_in, false, NULL);
-            }
-            break;
-            case MP_QSTR_position:
-            {
-                // Recalculate `start` and `end` then set `position` to new
-                line_2d_recalculate(self_in, false, destination[1]);
-                default_instance_attr_func(self_in, attribute, destination);
-            }
-            break;
-            case MP_QSTR_end:
-            {
-                // Set then recalculate
-                default_instance_attr_func(self_in, attribute, destination);
-                line_2d_recalculate(self_in, false, NULL);
-            }
-            break;
-        }
     }
 }
 
@@ -229,7 +363,7 @@ void in_change_instance(){
 
 /*  --- doc ---
     NAME: Line2DNode
-    DESC: Simple 2D rectangle node
+    DESC: Draws a line from `start` to `end`. Changing `position` (the midpoint of the line) automaticaly translates `end` and `start`
     PARAM:  [type={ref_link:Vector2}]         [name=start]                      [value={ref_link:Vector2}]
     PARAM:  [type={ref_link:Vector2}]         [name=end]                        [value={ref_link:Vector2}]
     PARAM:  [type=float]                      [name=thickness]                  [value=any]
@@ -292,38 +426,26 @@ mp_obj_t line_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);
-    node_base->node_common_data = common_data;
-    node_base->base.type = &engine_line_2d_node_class_type;
-    node_base->layer = 0;
-    node_base->type = NODE_TYPE_LINE_2D;
-    node_base->object_list_node = engine_add_object_to_layer(node_base, node_base->layer);
-    node_base_set_if_visible(node_base, true);
-    node_base_set_if_disabled(node_base, false);
-    node_base_set_if_just_added(node_base, true);
+    node_base_init(node_base, common_data, &engine_line_2d_node_class_type, NODE_TYPE_LINE_2D);
 
-    if(inherited == false){        // Non-inherited (create a new object)
-        node_base->inherited = false;
+    engine_line_2d_node_class_obj_t *line_2d_node = m_malloc(sizeof(engine_line_2d_node_class_obj_t));
+    node_base->node = line_2d_node;
+    node_base->attr_accessor = node_base;
 
-        engine_line_2d_node_class_obj_t *line_2d_node = m_malloc(sizeof(engine_line_2d_node_class_obj_t));
-        node_base->node = line_2d_node;
-        node_base->attr_accessor = node_base;
+    common_data->tick_cb = MP_OBJ_FROM_PTR(&line_2d_node_class_tick_obj);
+    common_data->draw_cb = MP_OBJ_FROM_PTR(&line_2d_node_class_draw_obj);
 
-        common_data->tick_cb = MP_OBJ_FROM_PTR(&line_2d_node_class_tick_obj);
-        common_data->draw_cb = MP_OBJ_FROM_PTR(&line_2d_node_class_draw_obj);
+    line_2d_node->start = parsed_args[start].u_obj;
+    line_2d_node->end = parsed_args[end].u_obj;
+    line_2d_node->position = vector2_class_new(&vector2_class_type, 0, 0, NULL);
+    line_2d_node->thickness = parsed_args[thickness].u_obj;
+    line_2d_node->color = parsed_args[color].u_obj;
+    line_2d_node->outline = parsed_args[outline].u_obj;
 
-        line_2d_node->start = parsed_args[start].u_obj;
-        line_2d_node->end = parsed_args[end].u_obj;
-        line_2d_node->position = vector2_class_new(&vector2_class_type, 0, 0, NULL);
-        line_2d_node->thickness = parsed_args[thickness].u_obj;
-        line_2d_node->color = parsed_args[color].u_obj;
-        line_2d_node->outline = parsed_args[outline].u_obj;
+    // Calculate midpoint/position based on endpoints (only positions that can be set in the constructor)
+    // line_2d_recalculate(node_base, true, NULL);
 
-        // Calculate midpoint/position based on endpoints (only positions that can be set in the constructor)
-        line_2d_recalculate(node_base, true, NULL);
-    }else if(inherited == true){  // Inherited (use existing object)
-        node_base->inherited = true;
-        node_base->node = parsed_args[child_class].u_obj;
-        node_base->attr_accessor = node_base->node;
+    if(inherited == true){
 
         // Look for function overrides otherwise use the defaults
         mp_obj_t dest[2];
@@ -341,113 +463,22 @@ mp_obj_t line_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
             common_data->draw_cb = dest[0];
         }
 
-        mp_store_attr(node_base->node, MP_QSTR_start, parsed_args[start].u_obj);
-        mp_store_attr(node_base->node, MP_QSTR_end, parsed_args[end].u_obj);
-        mp_store_attr(node_base->node, MP_QSTR_position, vector2_class_new(&vector2_class_type, 0, 0, NULL));
-        mp_store_attr(node_base->node, MP_QSTR_thickness, parsed_args[thickness].u_obj);
-        mp_store_attr(node_base->node, MP_QSTR_color, parsed_args[color].u_obj);
-        mp_store_attr(node_base->node, MP_QSTR_outline, parsed_args[outline].u_obj);
+        // Get the Python class instance
+        mp_obj_t node_instance = parsed_args[child_class].u_obj;
+
+        // Store one pointer on the instance. Need to be able to get the
+        // node base that contains a pointer the engine specific data we
+        // care about
+        mp_store_attr(node_instance, MP_QSTR_node_base, node_base);
 
         // Store default Python class instance attr function
         // and override with custom intercept attr function
         // so that certain callbacks/code can run
-        default_instance_attr_func = MP_OBJ_TYPE_GET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_base->node)->type, attr);
-        MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_base->node)->type, attr, line_2d_node_class_set, 5);
-
-        // Calculate midpoint/position based on endpoints (only positions that can be set in the constructor)
-        line_2d_recalculate(node_base, false, NULL);
+        default_instance_attr_func = MP_OBJ_TYPE_GET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr);
+        MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr, line_2d_node_class_attr, 5);
     }
 
     return MP_OBJ_FROM_PTR(node_base);
-}
-
-
-STATIC void line_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
-    ENGINE_INFO_PRINTF("Accessing Line2DNode attr");
-
-    engine_line_2d_node_class_obj_t *self = ((engine_node_base_t*)(self_in))->node;
-
-    if(destination[0] == MP_OBJ_NULL){          // Load
-        switch(attribute){
-            case MP_QSTR___del__:
-                destination[0] = MP_OBJ_FROM_PTR(&node_base_del_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_add_child:
-                destination[0] = MP_OBJ_FROM_PTR(&node_base_add_child_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_get_child:
-                destination[0] = MP_OBJ_FROM_PTR(&node_base_get_child_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_remove_child:
-                destination[0] = MP_OBJ_FROM_PTR(&node_base_remove_child_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_set_layer:
-                destination[0] = MP_OBJ_FROM_PTR(&node_base_set_layer_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_get_layer:
-                destination[0] = MP_OBJ_FROM_PTR(&node_base_get_layer_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_node_base:
-                destination[0] = self_in;
-            break;
-            case MP_QSTR_start:
-                destination[0] = self->start;
-            break;
-            case MP_QSTR_end:
-                destination[0] = self->end;
-            break;
-            case MP_QSTR_position:
-                destination[0] = self->position;
-            break;
-            case MP_QSTR_thickness:
-                destination[0] = self->thickness;
-            break;
-            case MP_QSTR_color:
-                destination[0] = self->color;
-            break;
-            case MP_QSTR_outline:
-                destination[0] = self->outline;
-            break;
-            default:
-                return; // Fail
-        }
-    }else if(destination[1] != MP_OBJ_NULL){    // Store
-        switch(attribute){
-            case MP_QSTR_start:
-                self->start = destination[1];
-                line_2d_recalculate(self_in, true, NULL);
-            break;
-            case MP_QSTR_end:
-                self->end = destination[1];
-                line_2d_recalculate(self_in, true, NULL);
-            break;
-            case MP_QSTR_position:
-                // Offset `start` and `end` based on new position
-                line_2d_recalculate(self_in, true, destination[1]);
-                self->position = destination[1];
-            break;
-            case MP_QSTR_thickness:
-                self->thickness = destination[1];
-            break;
-            case MP_QSTR_color:
-                self->color = destination[1];
-            break;
-            case MP_QSTR_outline:
-                self->outline = destination[1];
-            break;
-            default:
-                return; // Fail
-        }
-
-        // Success
-        destination[0] = MP_OBJ_NULL;
-    }
 }
 
 

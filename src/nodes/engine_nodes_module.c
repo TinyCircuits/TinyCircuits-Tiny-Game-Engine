@@ -20,6 +20,7 @@
     ATTR: [type=object]   [name={ref_link:VoxelSpaceNode}]      [value=object]
     ATTR: [type=object]   [name={ref_link:Sprite2DNode}]        [value=object]
     ATTR: [type=object]   [name={ref_link:Rectangle2DNode}]     [value=object]
+    ATTR: [type=object]   [name={ref_link:Line2DNode}]          [value=object]
     ATTR: [type=object]   [name={ref_link:Polygon2DNode}]       [value=object]
     ATTR: [type=object]   [name={ref_link:Circle2DNode}]        [value=object]
     ATTR: [type=object]   [name={ref_link:Physics2DNode}]       [value=object]

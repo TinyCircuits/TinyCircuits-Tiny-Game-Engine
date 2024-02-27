@@ -108,8 +108,6 @@ mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t 
     common_data->camera_list_node = engine_camera_track(node_base);
 
     if(inherited == false){        // Non-inherited (create a new object)
-        node_base->inherited = false;
-
         engine_camera_node_class_obj_t *camera_node = m_malloc(sizeof(engine_camera_node_class_obj_t));
         node_base->node = camera_node;
         node_base->attr_accessor = node_base;
@@ -123,7 +121,6 @@ mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t 
         camera_node->fov = parsed_args[fov].u_obj;
         camera_node->view_distance = parsed_args[view_distance].u_obj;
     }else if(inherited = true){  // Inherited (use existing object)
-        node_base->inherited = true;
         node_base->node = parsed_args[child_class].u_obj;
         node_base->attr_accessor = node_base->node;
 

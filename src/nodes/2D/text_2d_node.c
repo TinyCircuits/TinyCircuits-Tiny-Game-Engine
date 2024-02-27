@@ -343,8 +343,6 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
     node_base_set_if_just_added(node_base, true);
 
     if(inherited == false){        // Non-inherited (create a new object)
-        node_base->inherited = false;
-
         engine_text_2d_node_class_obj_t *text_2d_node = m_malloc(sizeof(engine_text_2d_node_class_obj_t));
         node_base->node = text_2d_node;
         node_base->attr_accessor = node_base;
@@ -362,7 +360,6 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
 
         text_2d_node_class_calculate_dimensions(node_base, true);
     }else if(inherited == true){  // Inherited (use existing object)
-        node_base->inherited = true;
         node_base->node = parsed_args[child_class].u_obj;
         node_base->attr_accessor = node_base->node;
 

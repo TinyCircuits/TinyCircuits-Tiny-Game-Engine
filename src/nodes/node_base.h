@@ -25,7 +25,6 @@ void (*default_instance_attr_func)(mp_obj_t self_in, qstr attribute, mp_obj_t *d
 typedef struct{
     mp_obj_base_t base;                 // All nodes get defined by what is placed in this
     linked_list_node *object_list_node; // Pointer to where this node is stored in the layers of linked lists the engine tracks (used for easy linked list deletion)
-    bool inherited;                     // Indicator for if this node is part of a Python subclass
     uint16_t layer;                     // The layer index of the linked list the 'object_list_node' lives in (used for easy deletion)
     uint8_t meta_data;                  // Holds bits related to if this node is visible (not shown or shown but callbacks still called), disabled (callbacks not called but still shown), or just added
     uint8_t type;                       // The type of this node (see 'node_types.h')
@@ -59,13 +58,17 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(node_base_get_layer_obj, node_base_get_layer);
 
 void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, bool *is_child_of_camera, mp_obj_t child_node_base);
 
-
+void node_base_init(engine_node_base_t *node_base, void *common_data, mp_obj_type_t *mp_type, uint8_t node_type);
 bool node_base_is_visible(engine_node_base_t *node_base);
 void node_base_set_if_visible(engine_node_base_t *node_base, bool is_visible);
 bool node_base_is_disabled(engine_node_base_t *node_base);
 void node_base_set_if_disabled(engine_node_base_t *node_base, bool is_disabled);
 bool node_base_is_just_added(engine_node_base_t *node_base);
 void node_base_set_if_just_added(engine_node_base_t *node_base, bool is_just_added);
+
+// Given an object that may be a Python class instance or the node_base itself,
+// get the node_base from it. Returns `true` if instance and `false` if not
+engine_node_base_t *node_base_get(mp_obj_t object, bool *is_obj_instance);
 
 
 #endif  // NODE_BASE_H

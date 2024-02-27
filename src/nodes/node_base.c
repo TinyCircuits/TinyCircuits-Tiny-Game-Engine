@@ -1,3 +1,5 @@
+#include "py/objtype.h"
+
 #include "node_base.h"
 #include "engine_object_layers.h"
 #include "math/engine_math.h"
@@ -240,6 +242,18 @@ void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, bool *
 }
 
 
+void node_base_init(engine_node_base_t *node_base, void *common_data, mp_obj_type_t *mp_type, uint8_t node_type){
+    node_base->node_common_data = common_data;
+    node_base->base.type = mp_type;
+    node_base->layer = 0;
+    node_base->type = node_type;
+    node_base->object_list_node = engine_add_object_to_layer(node_base, node_base->layer);
+    node_base_set_if_visible(node_base, true);
+    node_base_set_if_disabled(node_base, false);
+    node_base_set_if_just_added(node_base, true);
+}
+
+
 bool node_base_is_visible(engine_node_base_t *node_base){
     return BIT_GET(node_base->meta_data, NODE_BASE_VISIBLE_BIT_INDEX);
 }
@@ -276,5 +290,18 @@ void node_base_set_if_just_added(engine_node_base_t *node_base, bool is_just_add
         BIT_SET_TRUE(node_base->meta_data, NODE_BASE_JUST_ADDED_BIT_INDEX);
     }else{
         BIT_SET_FALSE(node_base->meta_data, NODE_BASE_JUST_ADDED_BIT_INDEX);
+    }
+}
+
+
+engine_node_base_t *node_base_get(mp_obj_t object, bool *is_obj_instance){
+    *is_obj_instance = mp_obj_is_instance_type(((mp_obj_base_t*)object)->type);
+
+    if(*is_obj_instance){
+        mp_obj_t dest[2];
+        default_instance_attr_func(object, MP_QSTR_node_base, dest);
+        return dest[1];
+    }else{
+        return object;
     }
 }

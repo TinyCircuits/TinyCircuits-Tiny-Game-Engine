@@ -148,3 +148,4 @@ Game ideas
 [] Particle node that keeps track of a bunch of different particles and allows users to define velocity, direction, and duration
 [] If we went back to PIO DMA for SPI to the screen, could we do per-pixel operations are they are being sent out? Would PIO be flexible enough to support a very very simple shading language (most for changing pixel based on screen position)
 [] Listen to serial for commands like button inputs or stop
+[] Battery indicator and soft shutoff when close to minimum useful voltage

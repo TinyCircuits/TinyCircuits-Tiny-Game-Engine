@@ -45,12 +45,10 @@ STATIC mp_obj_t empty_node_class_new(const mp_obj_type_t *type, size_t n_args, s
     node_base_set_if_just_added(node_base, true);
 
     if(n_args == 0){        // Non-inherited (create a new object)
-        node_base->inherited = false;
         node_base->node = NULL;
         node_base->attr_accessor = NULL;
         common_data->tick_cb = MP_OBJ_FROM_PTR(&empty_node_class_tick_obj);
     }else if(n_args == 1){  // Inherited (use existing object)
-        node_base->inherited = true;
         node_base->node = args[0];
         node_base->attr_accessor = node_base->node;
 

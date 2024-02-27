@@ -238,8 +238,6 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
     node_base_set_if_just_added(node_base, true);
 
     if(inherited == false){        // Non-inherited (create a new object)
-        node_base->inherited = false;
-
         engine_sprite_2d_node_class_obj_t *sprite_2d_node = m_malloc(sizeof(engine_sprite_2d_node_class_obj_t));
         node_base->node = sprite_2d_node;
         node_base->attr_accessor = node_base;
@@ -259,7 +257,6 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
         sprite_2d_node->frame_current_x = mp_obj_new_int(0);
         sprite_2d_node->frame_current_y = mp_obj_new_int(0);
     }else if(inherited == true){  // Inherited (use existing object)
-        node_base->inherited = true;
         node_base->node = parsed_args[child_class].u_obj;;
         node_base->attr_accessor = node_base->node;
 

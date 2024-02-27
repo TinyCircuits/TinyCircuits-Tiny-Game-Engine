@@ -134,8 +134,6 @@ mp_obj_t physics_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
     common_data->physics_list_node = engine_physics_track_node(node_base);
 
     if(inherited == false){        // Non-inherited (create a new object)
-        node_base->inherited = false;
-
         engine_physics_2d_node_class_obj_t *physics_2d_node = m_malloc(sizeof(engine_physics_2d_node_class_obj_t));
         node_base->node = physics_2d_node;
         node_base->attr_accessor = node_base;
@@ -154,7 +152,6 @@ mp_obj_t physics_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
         physics_2d_node->dynamic = parsed_args[dynamic].u_obj;
         physics_2d_node->gravity_scale = parsed_args[gravity_scale].u_obj;
     }else if(inherited == true){  // Inherited (use existing object)
-        node_base->inherited = true;
         node_base->node = parsed_args[child_class].u_obj;
         node_base->attr_accessor = node_base->node;
 
