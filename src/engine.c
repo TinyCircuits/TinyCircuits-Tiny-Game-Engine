@@ -58,7 +58,14 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_set_fps_limit_obj, engine_set_fps_limit);
 */
 STATIC mp_obj_t engine_get_running_fps(){
     ENGINE_INFO_PRINTF("Engine: Getting FPS");
-    return mp_obj_new_float((mp_float_t)(1.0f / ((engine_fps_time_at_last_tick_ms - engine_fps_time_at_before_last_tick_ms)/1000.0f)));
+    float period = (engine_fps_time_at_last_tick_ms - engine_fps_time_at_before_last_tick_ms) / 1000.0f;    // Seconds
+    float fps = 1.0f / period;
+
+    if(engine_math_compare_floats(fps, 0.0f) == true){
+        return mp_obj_new_float(99999);
+    }else{
+        return mp_obj_new_float(fps);
+    }
 }
 MP_DEFINE_CONST_FUN_OBJ_0(engine_get_running_fps_obj, engine_get_running_fps);
 

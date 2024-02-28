@@ -2,6 +2,7 @@
 #define LINE_2D_NODE_H
 
 #include "py/obj.h"
+#include "math/vector2.h"
 
 // A basic 2d line node
 typedef struct{

@@ -13,7 +13,9 @@ mp_obj_t vector2_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw
     vector2_class_obj_t *self = m_new_obj(vector2_class_obj_t);
 
     self->base.type = &vector2_class_type;
-    self->on_change = NULL;
+    self->on_change_user_ptr = NULL;
+    self->on_changing = NULL;
+    self->on_changed = NULL;
 
     if(n_args == 0){
         self->base.type = &vector2_class_type;
@@ -213,12 +215,20 @@ STATIC void vector2_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *desti
         switch(attribute) {
             // When `x` or `y` is changed call the `on_change` function in case something is watching for changes
             case MP_QSTR_x:
-                self->x = mp_obj_get_float(destination[1]);
-                if(self->on_change != NULL) self->on_change();
+            {
+                float new_x = mp_obj_get_float(destination[1]);
+                if(self->on_changing != NULL) self->on_changing(self->on_change_user_ptr, new_x, self->y);
+                self->x = new_x;
+                if(self->on_changed != NULL) self->on_changed(self->on_change_user_ptr);
+            }
             break;
             case MP_QSTR_y:
+            {
+                float new_y = mp_obj_get_float(destination[1]);
+                if(self->on_changing != NULL) self->on_changing(self->on_change_user_ptr, self->x, new_y);
                 self->y = mp_obj_get_float(destination[1]);
-                if(self->on_change != NULL)self->on_change();
+                if(self->on_changed != NULL)self->on_changed(self->on_change_user_ptr);
+            }
             break;
         default:
             return; // Fail

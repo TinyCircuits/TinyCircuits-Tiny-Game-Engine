@@ -6,7 +6,6 @@
 #include "nodes/node_base.h"
 #include "debug/debug_print.h"
 #include "engine_object_layers.h"
-#include "math/vector2.h"
 #include "math/vector3.h"
 #include "math/rectangle.h"
 #include "draw/engine_display_draw.h"
@@ -31,21 +30,23 @@ STATIC mp_obj_t line_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("Line2DNode: Drawing");
     
     // Decode and store properties about the line and camera nodes
-    engine_node_base_t *line_node_base = self_in;
+    engine_node_base_t *line_node_base = self_in;   // Do not need `node_base_get` since the draw function is always fed an engine_node_base (unlike the attr functions)
+    engine_line_2d_node_class_obj_t *line_2d = line_node_base->node;
+
     engine_node_base_t *camera_node_base = camera_node;
 
-    vector2_class_obj_t *line_start = mp_load_attr(line_node_base->attr_accessor, MP_QSTR_start);
-    vector2_class_obj_t *line_end = mp_load_attr(line_node_base->attr_accessor, MP_QSTR_end);
-    float line_thickness = mp_obj_get_float(mp_load_attr(line_node_base->attr_accessor, MP_QSTR_thickness));
-    uint16_t line_color = mp_obj_get_float(mp_load_attr(line_node_base->attr_accessor, MP_QSTR_color));
-    bool line_outlined = mp_obj_get_int(mp_load_attr(line_node_base->attr_accessor, MP_QSTR_outline));
+    vector2_class_obj_t *line_start = line_2d->start;
+    vector2_class_obj_t *line_end = line_2d->end;
+    float line_thickness = mp_obj_get_float(line_2d->thickness);
+    uint16_t line_color = mp_obj_get_float(line_2d->color);
+    bool line_outlined = mp_obj_get_int(line_2d->outline);
 
     // The line is drawn as a rectangle since we have a nice algorithm for doing that:
     float line_length = engine_math_distance_between(line_start->x, line_start->y, line_end->x, line_end->y);
-    float line_rotation = engine_math_angle_between(line_start->x, line_start->y, line_end->x, line_end->y) + HALF_PI;
+    float line_rotation = engine_math_angle_between(line_start->x, line_start->y, line_end->x, line_end->y) - HALF_PI;
+    line_rotation *= -1.0f; // https://stackoverflow.com/a/62486304
 
     // Grab camera
-    vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
     vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
     rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
     float camera_zoom = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_zoom));
@@ -137,81 +138,29 @@ MP_DEFINE_CONST_FUN_OBJ_2(line_2d_node_class_draw_obj, line_2d_node_class_draw);
 
 
 
-// The line is always from from start to end, however because every node
-// is required to have a `position` and that `start`, `end`, and `position`
-// are all absolute positions, the below code needs to be run every time
-// one of them is called
-// `native`     == instance of this built-in type (`Line2DNode`)
-// `not native` == instance of a Python class that inherits this built-in type (`Line2DNode`)
-void line_2d_recalculate(mp_obj_t attr_accessor, bool is_instance_native, vector2_class_obj_t *new_position){
-    vector2_class_obj_t *start = NULL;
-    vector2_class_obj_t *position = NULL;   // <- really the midpoint! Needs to be called `position` for engine qstr
-    vector2_class_obj_t *end = NULL;
+void line_2d_recalculate_midpoint(engine_line_2d_node_class_obj_t *line){
+    vector2_class_obj_t *start = line->start;
+    vector2_class_obj_t *position = line->position;
+    vector2_class_obj_t *end = line->end;
 
-    // Get atrributes
-    if(is_instance_native == false){
-        mp_obj_instance_t *self = MP_OBJ_TO_PTR(attr_accessor);
-        start = mp_map_lookup(&self->members, MP_OBJ_NEW_QSTR(MP_QSTR_start), MP_MAP_LOOKUP)->value;
-        position = mp_map_lookup(&self->members, MP_OBJ_NEW_QSTR(MP_QSTR_position), MP_MAP_LOOKUP)->value;
-        end = mp_map_lookup(&self->members, MP_OBJ_NEW_QSTR(MP_QSTR_end), MP_MAP_LOOKUP)->value;
-    }else{
-        start = mp_load_attr(attr_accessor, MP_QSTR_start);
-        position = mp_load_attr(attr_accessor, MP_QSTR_position);
-        end = mp_load_attr(attr_accessor, MP_QSTR_end);
-    }
-
-    // Same thing happens if an endpoint is changed, recalculate the midpoint/position.
-    // If the position is changed, need to translate the end points by the amount the
-    // position changed
-    if(new_position == NULL){
-        engine_math_2d_midpoint(start->x, start->y, end->x, end->y, &position->x, &position->y);
-    }else{
-        float dx = new_position->x - position->x;
-        float dy = new_position->y - position->y;
-
-        start->x += dx;
-        end->x += dx;
-
-        start->y += dy;
-        end->y += dy;
-    }
-
-    // Do not need to re-store values, changed by reference/pointer
+    engine_math_2d_midpoint(start->x, start->y, end->x, end->y, &position->x, &position->y);
 }
 
 
-// STATIC void line_2d_node_class_set(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
-//     ENGINE_INFO_PRINTF("Line2DNode: Accessing attr on inherited instance class");
+void line_2d_translate_endpoints(engine_line_2d_node_class_obj_t *line, float nx, float ny){
+    vector2_class_obj_t *start = line->start;
+    vector2_class_obj_t *position = line->position;
+    vector2_class_obj_t *end = line->end;
 
-//     if(destination[0] == MP_OBJ_NULL){  // Load
-//         // Call this after the if statement we're in
-//         default_instance_attr_func(self_in, attribute, destination);
-//     }else{                              // Store                    
-//         switch(attribute){
-//             case MP_QSTR_start:
-//             {
-//                 // Set then recalculate
-//                 default_instance_attr_func(self_in, attribute, destination);
-//                 line_2d_recalculate(self_in, false, NULL);
-//             }
-//             break;
-//             case MP_QSTR_position:
-//             {
-//                 // Recalculate `start` and `end` then set `position` to new
-//                 line_2d_recalculate(self_in, false, destination[1]);
-//                 default_instance_attr_func(self_in, attribute, destination);
-//             }
-//             break;
-//             case MP_QSTR_end:
-//             {
-//                 // Set then recalculate
-//                 default_instance_attr_func(self_in, attribute, destination);
-//                 line_2d_recalculate(self_in, false, NULL);
-//             }
-//             break;
-//         }
-//     }
-// }
+    float dx = nx - position->x;
+    float dy = ny - position->y;
+
+    start->x += dx;
+    end->x += dx;
+
+    start->y += dy;
+    end->y += dy;
+}
 
 
 // Return `true` if handled loading the attr from internal structure, `false` otherwise
@@ -286,17 +235,17 @@ bool line_2d_store_attr(engine_line_2d_node_class_obj_t *self, qstr attribute, m
     switch(attribute){
         case MP_QSTR_start:
             self->start = destination[1];
-            line_2d_recalculate(self, true, NULL);
+            line_2d_recalculate_midpoint(self);
             return true;
         break;
         case MP_QSTR_end:
             self->end = destination[1];
-            line_2d_recalculate(self, true, NULL);
+            line_2d_recalculate_midpoint(self);
             return true;
         break;
         case MP_QSTR_position:
             // Offset `start` and `end` based on new position
-            line_2d_recalculate(self, true, destination[1]);
+            line_2d_translate_endpoints(self, ((vector2_class_obj_t*)destination[1])->x, ((vector2_class_obj_t*)destination[1])->y);
             self->position = destination[1];
             return true;
         break;
@@ -318,9 +267,11 @@ bool line_2d_store_attr(engine_line_2d_node_class_obj_t *self, qstr attribute, m
 }
 
 
-STATIC void line_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
-    ENGINE_FORCE_PRINTF("Accessing Line2DNode attr");
+STATIC mp_attr_fun_t line_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+    ENGINE_INFO_PRINTF("Accessing Line2DNode attr");
 
+    // Get the node base from either class
+    // instance or native instance object
     bool is_obj_instance = false;
     engine_node_base_t *node_base = node_base_get(self_in, &is_obj_instance);
 
@@ -345,19 +296,6 @@ STATIC void line_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *
     if(is_obj_instance && attr_handled == false){
         default_instance_attr_func(self_in, attribute, destination);
     }
-}
-
-
-// When the `x` or `y` on `start`, `end`, or `position` is changed
-// we may need to recalculate the midpoint (`position`) or translate
-// `start` and `end`
-void on_change_native(){
-
-}
-
-
-void in_change_instance(){
-
 }
 
 
@@ -442,11 +380,7 @@ mp_obj_t line_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
     line_2d_node->color = parsed_args[color].u_obj;
     line_2d_node->outline = parsed_args[outline].u_obj;
 
-    // Calculate midpoint/position based on endpoints (only positions that can be set in the constructor)
-    // line_2d_recalculate(node_base, true, NULL);
-
     if(inherited == true){
-
         // Look for function overrides otherwise use the defaults
         mp_obj_t dest[2];
         mp_load_method_maybe(node_base->node, MP_QSTR_tick, dest);
@@ -469,14 +403,34 @@ mp_obj_t line_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
         // Store one pointer on the instance. Need to be able to get the
         // node base that contains a pointer the engine specific data we
         // care about
+        // mp_store_attr(node_instance, MP_QSTR_node_base, node_base);
         mp_store_attr(node_instance, MP_QSTR_node_base, node_base);
 
         // Store default Python class instance attr function
         // and override with custom intercept attr function
-        // so that certain callbacks/code can run
+        // so that certain callbacks/code can run (see py/objtype.c:mp_obj_instance_attr(...))
         default_instance_attr_func = MP_OBJ_TYPE_GET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr);
         MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr, line_2d_node_class_attr, 5);
     }
+
+    // Calculate midpoint/position based on endpoints 
+    // (only positions that can be set in the constructor)
+    line_2d_recalculate_midpoint(line_2d_node);
+
+    // When any part of the any of these Vector2s change, make sure to
+    // recalculate other components of the line
+    vector2_class_obj_t *line_start = line_2d_node->start;
+    vector2_class_obj_t *line_position = line_2d_node->position;
+    vector2_class_obj_t *line_end = line_2d_node->end;
+
+    line_start->on_changed = &line_2d_recalculate_midpoint;
+    line_start->on_change_user_ptr = line_2d_node;
+
+    line_position->on_changing = &line_2d_translate_endpoints;
+    line_position->on_change_user_ptr = line_2d_node;
+
+    line_end->on_changed = &line_2d_recalculate_midpoint;
+    line_end->on_change_user_ptr = line_2d_node;
 
     return MP_OBJ_FROM_PTR(node_base);
 }

@@ -8,7 +8,9 @@ typedef struct{
     mp_obj_base_t base;
     float x;
     float y;
-    void (*on_change)();    // <- Function pointer that's called when x or y is changed
+    void *on_change_user_ptr;
+    void (*on_changing)(void *on_change_user_ptr, float nx, float ny);   // <- Function pointer that's called before x or y is changed (parameters are new x and new y but one will really only change at a time)
+    void (*on_changed)(void *on_change_user_ptr);                        // <- Function pointer that's called after x or y is changed
 }vector2_class_obj_t;
 
 extern const mp_obj_type_t vector2_class_type;

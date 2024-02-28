@@ -299,8 +299,9 @@ engine_node_base_t *node_base_get(mp_obj_t object, bool *is_obj_instance){
 
     if(*is_obj_instance){
         mp_obj_t dest[2];
+        dest[0] = MP_OBJ_NULL; // Indicate we want to load a value
         default_instance_attr_func(object, MP_QSTR_node_base, dest);
-        return dest[1];
+        return dest[0];
     }else{
         return object;
     }
