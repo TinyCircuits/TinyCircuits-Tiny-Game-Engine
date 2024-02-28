@@ -37,6 +37,11 @@ typedef struct{
     linked_list_node *location_in_parents_children; // The location of this node in the parents linked list of children (used for easy deletion upon garbage collection of this node)
 }engine_node_base_t;
 
+
+// Given an object that may be a Python class instance or the node_base itself,
+// get the node_base from it. Returns `true` if instance and `false` if not
+engine_node_base_t *node_base_get(mp_obj_t object, bool *is_obj_instance);
+
 mp_obj_t node_base_del(mp_obj_t self_in);
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(node_base_del_obj, node_base_del);
 
@@ -65,10 +70,6 @@ bool node_base_is_disabled(engine_node_base_t *node_base);
 void node_base_set_if_disabled(engine_node_base_t *node_base, bool is_disabled);
 bool node_base_is_just_added(engine_node_base_t *node_base);
 void node_base_set_if_just_added(engine_node_base_t *node_base, bool is_just_added);
-
-// Given an object that may be a Python class instance or the node_base itself,
-// get the node_base from it. Returns `true` if instance and `false` if not
-engine_node_base_t *node_base_get(mp_obj_t object, bool *is_obj_instance);
 
 
 #endif  // NODE_BASE_H

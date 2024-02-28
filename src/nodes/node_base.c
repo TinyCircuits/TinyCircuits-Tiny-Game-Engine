@@ -22,6 +22,24 @@
 */ 
 
 
+engine_node_base_t *node_base_get(mp_obj_t object, bool *is_obj_instance){
+    bool is_instance = mp_obj_is_instance_type(((mp_obj_base_t*)object)->type);
+    engine_node_base_t *to_return = NULL;
+
+    if(is_instance){
+        mp_obj_t dest[2];
+        dest[0] = MP_OBJ_NULL; // Indicate we want to load a value
+        default_instance_attr_func(object, MP_QSTR_node_base, dest);
+        to_return = dest[0];
+    }else{
+        to_return = object;
+    }
+
+    if(is_obj_instance != NULL) *is_obj_instance = is_instance;
+    return to_return;
+}
+
+
 mp_obj_t node_base_del(mp_obj_t self_in){
     ENGINE_INFO_PRINTF("Node Base: Deleted (garbage collected, removing self from active engine objects)");
 
@@ -71,11 +89,10 @@ mp_obj_t node_base_del(mp_obj_t self_in){
 mp_obj_t node_base_add_child(mp_obj_t self_parent_in, mp_obj_t child_in){
     engine_node_base_t *parent_node_base = self_parent_in;
 
-    // The passed in child could be a non-inherited node_base or an
-    // mp_obj_t with a parent 'node_base'. Always look up the node
-    // base from the 'MP_QSTR_node_base' that every node needs to have
-    // for this to work
-    engine_node_base_t *child_node_base = mp_load_attr(child_in, MP_QSTR_node_base);
+    // Get the node_base for cases with the child is a Python
+    // class instance or just the node's native built-in type
+    // without inheritance
+    engine_node_base_t *child_node_base = node_base_get(child_in, NULL);
     
     ENGINE_INFO_PRINTF("Node Base: Adding child... parent node type: %d, child node type: %d", parent_node_base->type, child_node_base->type);
 
@@ -290,19 +307,5 @@ void node_base_set_if_just_added(engine_node_base_t *node_base, bool is_just_add
         BIT_SET_TRUE(node_base->meta_data, NODE_BASE_JUST_ADDED_BIT_INDEX);
     }else{
         BIT_SET_FALSE(node_base->meta_data, NODE_BASE_JUST_ADDED_BIT_INDEX);
-    }
-}
-
-
-engine_node_base_t *node_base_get(mp_obj_t object, bool *is_obj_instance){
-    *is_obj_instance = mp_obj_is_instance_type(((mp_obj_base_t*)object)->type);
-
-    if(*is_obj_instance){
-        mp_obj_t dest[2];
-        dest[0] = MP_OBJ_NULL; // Indicate we want to load a value
-        default_instance_attr_func(object, MP_QSTR_node_base, dest);
-        return dest[0];
-    }else{
-        return object;
     }
 }

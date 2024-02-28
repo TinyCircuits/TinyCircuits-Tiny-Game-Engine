@@ -11,17 +11,19 @@ import math
 import gc
 
 
-class MyLine(Line2DNode):
-    def __init__(self):
-        super().__init__(self)
-        self.color = engine_draw.purple
+# class MyLine(Line2DNode):
+#     def __init__(self):
+#         super().__init__(self)
+#         self.color = engine_draw.purple
 
 
-my_line = MyLine()
-my_line.start.x = 20
-my_line.start.y = 50
+# my_line = MyLine()
+# my_line.start.x = 20
+# my_line.start.y = 50
 
-line = Line2DNode(color=engine_draw.orange, start=Vector2(0, -15), end=Vector2(0, 15))
+# my_line.position.x = -64
+
+line = Line2DNode(color=engine_draw.orange, start=Vector2(10, -15), end=Vector2(10, 15), thickness=1)
 
 
 # By default, nodes are at center of screen at 0,0
@@ -29,7 +31,7 @@ line = Line2DNode(color=engine_draw.orange, start=Vector2(0, -15), end=Vector2(0
 # engine.set_fps_limit(60)
 # engine_debug.enable_setting(engine_debug.performance)
 font9 = FontResource("9pt-roboto-font.bmp")
-font12 = FontResource("12pt-roboto-font.bmp")
+# font12 = FontResource("12pt-roboto-font.bmp")
 
 class MyText(Text2DNode):
     def __init__(self):
@@ -71,7 +73,7 @@ circle.color = 0b1111100000000000
 rectangle.color = 0b1111101001001001
 sprite.transparent_color = engine_draw.black
 
-circle.position = Vector2(0, 0)
+circle.position = Vector2(10, 0)
 rectangle.position = Vector2(32, 0)
 sprite.position = Vector2(0, 32)
 polygon.position = Vector2(-32, 0)
@@ -128,7 +130,7 @@ circle.add_child(polygon)
 circle.add_child(text)
 circle.add_child(text0)
 # circle.add_child(my_line)
-# circle.add_child(line)
+circle.add_child(line)
 
 cursor = Circle2DNode(radius=5, color=engine_draw.green, outline=True)
 
