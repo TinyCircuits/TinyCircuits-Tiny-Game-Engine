@@ -56,14 +56,20 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Fix non square scale not positioning Text2DNode correctly
 [X] Have some way to generate typical polygon shapes like rectangle and hexagon without using decomposing PolygonCollisionShape2D classes
 [X] Weird sprite jumping/offset during rotation and scaling
+[X] Add Line2DNode that draws a rectangle between two points, Allow filled and outline modes
 
-[.] Add Line2DNode that draws a rectangle between two points, Allow filled and outline modes
-
+[] Add a git hook that runs a performance test on the hardware:
+   1. Build and upload the firmware with performance tests baked in
+   2. Run each performance test file using serial, Python, and REPL. Soft reset after each test. Each test should test performance of specific parts of the engine, nodes, audio, main loop, etc.
+   3. After collecting FPS from each test, create a new plot of the data and save as a png. 
+   4. Run `git add -A` to add this new performance data point and plot
+   5. Exit with returning zero to allow commit to complete
 
 [.] Figure out resetting engine when main loop ends
    * [X] Nodes
    * [.] Audio <- Needs special attention! (still has an error where if text played quickly on same channel at start up that it crashes the device in the ISR while calling `get_data`)
    * [X] Resources/Flash
+
 
 [] Line2DNode disappears when thickness is 1 and scale is slightly smaller than 1.0 due to camera zoom
 [] Weird shaking on UNIX when line is a child of camera and the camera is rotating
