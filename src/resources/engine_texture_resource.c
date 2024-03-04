@@ -2,6 +2,7 @@
 #include "debug/debug_print.h"
 #include "resources/engine_resource_manager.h"
 #include <stdlib.h>
+#include <math.h>
 
 
 // Class required functions
@@ -66,10 +67,18 @@ mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, si
 
     uint16_t bitmap_pixel_src_x = 0;
     uint16_t bitmap_pixel_src_y = bitmap_height-1;
+
+    // https://en.wikipedia.org/wiki/BMP_file_format#:~:text=optional%20color%20list.-,Pixel%20storage,-%5Bedit%5D
+    // Need to know how many pixels of padding there are in each
+    // row so that the pixel data can be extracted correctly
+    uint16_t padded_multiple_4_width = (uint16_t)(ceilf((float)bitmap_width / 4.0f) * 4.0f);
+
     for(uint32_t bitmap_pixel_dest_index=0; bitmap_pixel_dest_index<bitmap_width*bitmap_height; bitmap_pixel_dest_index++){
         
-        uint32_t bitmap_pixel_src_index = bitmap_pixel_src_y * bitmap_width + bitmap_pixel_src_x;
-        engine_resource_store_u16(engine_file_get_u16(bitmap_pixel_data_offset+bitmap_pixel_src_index*2));
+        // Each row has padded bytes to make each row a multiple
+        // of 4, use that width for calculating the index
+        uint32_t bitmap_pixel_src_index = bitmap_pixel_src_y * padded_multiple_4_width + bitmap_pixel_src_x;
+        engine_resource_store_u16(engine_file_get_u16(bitmap_pixel_data_offset + (bitmap_pixel_src_index*2)));
 
         bitmap_pixel_src_x++;
         if(bitmap_pixel_src_x >= bitmap_width){

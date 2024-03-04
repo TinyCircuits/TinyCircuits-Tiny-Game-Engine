@@ -39,7 +39,7 @@ arguments = sys.argv[1:]
 
 if len(arguments) == 0:
     print("\n\nERROR: expected path to script(s) to run...\n")
-    exit()
+    exit(1)
 
 clean_or_path_arg = arguments[0]
 
@@ -51,7 +51,7 @@ files_to_run = []
 if clean_or_path_arg == "clean":
     execute(['wsl', '-e', 'make', '-C', '../../../ports/rp3', 'clean', 'BOARD=THUMBY_COLOR'])
     print("\n\nSUCCESS: Done cleaning rp3 port!\n")
-    exit()
+    exit(1)
 elif os.path.isdir(clean_or_path_arg):
     shutil.copytree(clean_or_path_arg, '../../../ports/rp3/modules', dirs_exist_ok=True)
     files_to_run = os.listdir(clean_or_path_arg)
@@ -62,7 +62,7 @@ elif os.path.isfile(clean_or_path_arg):
     print("Done copying file to ports/rp3/modules")
 else:
     print("\n\nERROR: Argument was not `clean` or a valid path:", clean_or_path_arg, "\n")
-    exit()
+    exit(1)
 
 
 # ### Step 3: Strip filenames so that each can be run on REPL as `import <filename>`
@@ -162,5 +162,6 @@ for to_import in imports_to_run:
 ser.close()
 
 
-print("\nSamples:")
+print("\n\nSamples:")
 print(fps_sample_strs)
+print(" ")

@@ -6,7 +6,7 @@ line = Line2DNode()
 camera = CameraNode()
 
 ticks = 0
-ticks_end = 60 * 3
+ticks_end = 60 * 5
 fps_total = 0
 while ticks < ticks_end:
     engine.tick()

@@ -6,8 +6,8 @@
 
 typedef struct{
     mp_obj_base_t base;
-    uint32_t width;
-    uint32_t height;
+    uint16_t width;
+    uint16_t height;
     uint16_t *data;
     bool in_ram;
 }texture_resource_class_obj_t;

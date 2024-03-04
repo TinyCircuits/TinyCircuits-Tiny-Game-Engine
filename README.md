@@ -57,6 +57,7 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Have some way to generate typical polygon shapes like rectangle and hexagon without using decomposing PolygonCollisionShape2D classes
 [X] Weird sprite jumping/offset during rotation and scaling
 [X] Add Line2DNode that draws a rectangle between two points, Allow filled and outline modes
+[X] Fix bitmaps not rendering correctly when they have sizes like 7x7 (see padding in https://en.wikipedia.org/wiki/BMP_file_format#:~:text=optional%20color%20list.-,Pixel%20storage,-%5Bedit%5D)
 
 [] Add a git hook that runs a performance test on the hardware:
    1. Build and upload the firmware with performance tests baked in
