@@ -26,7 +26,7 @@ vox.height_scale = 40
 class MyCam(CameraNode):
     def __init__(self):
         super().__init__(self)
-        self.distance = 0.1
+        self.distance = 0.75
         self.mode = 0
 
     def forward(self):
@@ -47,9 +47,9 @@ class MyCam(CameraNode):
 
     def tick(self):
         if engine_input.check_pressed(engine_input.BUMPER_RIGHT):
-            self.rotation.y += 0.005
+            self.rotation.y += 0.05
         if engine_input.check_pressed(engine_input.BUMPER_LEFT):
-            self.rotation.y -= 0.005
+            self.rotation.y -= 0.05
     
 
         if engine_input.check_pressed(engine_input.DPAD_UP):
@@ -84,7 +84,7 @@ camera.position.x = 175
 camera.position.y = 200
 camera.position.z = 175
 camera.view_distance = 350
-camera.fov = 90 * (math.pi/180)
+camera.fov = 70 * (math.pi/180)
 
 camera.add_child(Circle2DNode(radius=3, color=engine_draw.green, outline=True))
 

@@ -59,6 +59,14 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Add Line2DNode that draws a rectangle between two points, Allow filled and outline modes
 [X] Fix bitmaps not rendering correctly when they have sizes like 7x7 (see padding in https://en.wikipedia.org/wiki/BMP_file_format#:~:text=optional%20color%20list.-,Pixel%20storage,-%5Bedit%5D)
 
+
+Adam:
+Delete nodes
+Collision
+Camera children
+VoxelSpace
+
+
 [] Add a git hook that runs a performance test on the hardware:
    1. Build and upload the firmware with performance tests baked in
    2. Run each performance test file using serial, Python, and REPL. Soft reset after each test. Each test should test performance of specific parts of the engine, nodes, audio, main loop, etc.

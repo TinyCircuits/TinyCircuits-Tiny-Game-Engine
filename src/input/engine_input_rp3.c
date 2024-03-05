@@ -55,18 +55,18 @@ void engine_input_rp3_setup(){
 
 void engine_input_rp3_update_pressed_mask(){
     // Reset this to all unpressed before checking if pressed
-    engine_input_pressed_buttons = 0;
+    pressed_buttons = 0;
 
-    if(gpio_get(GPIO_BUTTON_DPAD_UP) == false) engine_input_pressed_buttons |= BUTTON_DPAD_UP;
-    if(gpio_get(GPIO_BUTTON_DPAD_LEFT) == false) engine_input_pressed_buttons |= BUTTON_DPAD_LEFT;
-    if(gpio_get(GPIO_BUTTON_DPAD_DOWN) == false) engine_input_pressed_buttons |= BUTTON_DPAD_DOWN;
-    if(gpio_get(GPIO_BUTTON_DPAD_RIGHT) == false) engine_input_pressed_buttons |= BUTTON_DPAD_RIGHT;
+    if(gpio_get(GPIO_BUTTON_DPAD_UP) == false) pressed_buttons |= BUTTON_DPAD_UP;
+    if(gpio_get(GPIO_BUTTON_DPAD_LEFT) == false) pressed_buttons |= BUTTON_DPAD_LEFT;
+    if(gpio_get(GPIO_BUTTON_DPAD_DOWN) == false) pressed_buttons |= BUTTON_DPAD_DOWN;
+    if(gpio_get(GPIO_BUTTON_DPAD_RIGHT) == false) pressed_buttons |= BUTTON_DPAD_RIGHT;
 
-    if(gpio_get(GPIO_BUTTON_A) == false) engine_input_pressed_buttons |= BUTTON_A;
-    if(gpio_get(GPIO_BUTTON_B) == false) engine_input_pressed_buttons |= BUTTON_B;
+    if(gpio_get(GPIO_BUTTON_A) == false) pressed_buttons |= BUTTON_A;
+    if(gpio_get(GPIO_BUTTON_B) == false) pressed_buttons |= BUTTON_B;
 
-    if(gpio_get(GPIO_BUTTON_BUMPER_LEFT) == false) engine_input_pressed_buttons |= BUTTON_BUMPER_LEFT;
-    if(gpio_get(GPIO_BUTTON_BUMPER_RIGHT) == false) engine_input_pressed_buttons |= BUTTON_BUMPER_RIGHT;
+    if(gpio_get(GPIO_BUTTON_BUMPER_LEFT) == false) pressed_buttons |= BUTTON_BUMPER_LEFT;
+    if(gpio_get(GPIO_BUTTON_BUMPER_RIGHT) == false) pressed_buttons |= BUTTON_BUMPER_RIGHT;
 
-    if(gpio_get(GPIO_BUTTON_MENU) == false) engine_input_pressed_buttons |= BUTTON_MENU;
+    if(gpio_get(GPIO_BUTTON_MENU) == false) pressed_buttons |= BUTTON_MENU;
 }

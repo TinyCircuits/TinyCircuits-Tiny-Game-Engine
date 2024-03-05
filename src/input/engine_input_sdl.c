@@ -10,31 +10,31 @@ void engine_input_sdl_update_pressed_mask(){
         if(event.type == SDL_KEYDOWN){
             switch(event.key.keysym.sym){
                 case SDLK_w:        // DPAD UP
-                    engine_input_pressed_buttons |= BUTTON_DPAD_UP;
+                    pressed_buttons |= BUTTON_DPAD_UP;
                 break;
                 case SDLK_a:        // DPAD LEFT
-                    engine_input_pressed_buttons |= BUTTON_DPAD_LEFT;
+                    pressed_buttons |= BUTTON_DPAD_LEFT;
                 break;
                 case SDLK_s:        // DPAD DOWN
-                    engine_input_pressed_buttons |= BUTTON_DPAD_DOWN;
+                    pressed_buttons |= BUTTON_DPAD_DOWN;
                 break;
                 case SDLK_d:        // DPAD RIGHT
-                    engine_input_pressed_buttons |= BUTTON_DPAD_RIGHT;
+                    pressed_buttons |= BUTTON_DPAD_RIGHT;
                 break;
                 case SDLK_COMMA:    // A
-                    engine_input_pressed_buttons |= BUTTON_A;
+                    pressed_buttons |= BUTTON_A;
                 break;
                 case SDLK_PERIOD:   // B
-                    engine_input_pressed_buttons |= BUTTON_B;
+                    pressed_buttons |= BUTTON_B;
                 break;
                 case SDLK_LSHIFT:   // BUMPER LEFT
-                    engine_input_pressed_buttons |= BUTTON_BUMPER_LEFT;
+                    pressed_buttons |= BUTTON_BUMPER_LEFT;
                 break;
                 case SDLK_SPACE:    // BUMPER RIGHT
-                    engine_input_pressed_buttons |= BUTTON_BUMPER_RIGHT;
+                    pressed_buttons |= BUTTON_BUMPER_RIGHT;
                 break;
                 case SDLK_RETURN:    // MENU
-                    engine_input_pressed_buttons |= BUTTON_MENU;
+                    pressed_buttons |= BUTTON_MENU;
                 break;
             }
         }else if(event.type == SDL_KEYUP){
@@ -44,31 +44,31 @@ void engine_input_sdl_update_pressed_mask(){
 
             switch(event.key.keysym.sym){
                 case SDLK_w:        // DPAD UP
-                    engine_input_pressed_buttons = engine_input_pressed_buttons & ~(BUTTON_DPAD_UP);
+                    pressed_buttons = pressed_buttons & ~(BUTTON_DPAD_UP);
                 break;
                 case SDLK_a:        // DPAD LEFT
-                    engine_input_pressed_buttons = engine_input_pressed_buttons & ~(BUTTON_DPAD_LEFT);
+                    pressed_buttons = pressed_buttons & ~(BUTTON_DPAD_LEFT);
                 break;
                 case SDLK_s:        // DPAD DOWN
-                    engine_input_pressed_buttons = engine_input_pressed_buttons & ~(BUTTON_DPAD_DOWN);
+                    pressed_buttons = pressed_buttons & ~(BUTTON_DPAD_DOWN);
                 break;
                 case SDLK_d:        // DPAD RIGHT
-                    engine_input_pressed_buttons = engine_input_pressed_buttons & ~(BUTTON_DPAD_RIGHT);
+                    pressed_buttons = pressed_buttons & ~(BUTTON_DPAD_RIGHT);
                 break;
                 case SDLK_COMMA:    // A
-                    engine_input_pressed_buttons = engine_input_pressed_buttons & ~(BUTTON_A);
+                    pressed_buttons = pressed_buttons & ~(BUTTON_A);
                 break;
                 case SDLK_PERIOD:   // B
-                    engine_input_pressed_buttons = engine_input_pressed_buttons & ~(BUTTON_B);
+                    pressed_buttons = pressed_buttons & ~(BUTTON_B);
                 break;
                 case SDLK_LSHIFT:   // BUMPER LEFT
-                    engine_input_pressed_buttons = engine_input_pressed_buttons & ~(BUTTON_BUMPER_LEFT);
+                    pressed_buttons = pressed_buttons & ~(BUTTON_BUMPER_LEFT);
                 break;
                 case SDLK_SPACE:    // BUMPER RIGHT
-                    engine_input_pressed_buttons = engine_input_pressed_buttons & ~(BUTTON_BUMPER_RIGHT);
+                    pressed_buttons = pressed_buttons & ~(BUTTON_BUMPER_RIGHT);
                 break;
                 case SDLK_RETURN:    // MENU
-                    engine_input_pressed_buttons = engine_input_pressed_buttons & ~(BUTTON_MENU);
+                    pressed_buttons = pressed_buttons & ~(BUTTON_MENU);
                 break;
             }
         }

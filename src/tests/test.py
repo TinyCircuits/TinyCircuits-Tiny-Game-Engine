@@ -101,10 +101,11 @@ class MyCam(CameraNode):
         if engine_input.check_pressed(engine_input.DPAD_RIGHT):
             self.position.x += 0.25
         
-        if engine_input.check_pressed(engine_input.BUMPER_LEFT):
+        if engine_input.check_just_changed(engine_input.BUMPER_LEFT):
             self.rotation.z += 0.005
         if engine_input.check_pressed(engine_input.BUMPER_RIGHT):
             self.rotation.z -= 0.005
+
 
 
 camera = MyCam()

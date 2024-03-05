@@ -71,7 +71,8 @@ mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, si
     // https://en.wikipedia.org/wiki/BMP_file_format#:~:text=optional%20color%20list.-,Pixel%20storage,-%5Bedit%5D
     // Need to know how many pixels of padding there are in each
     // row so that the pixel data can be extracted correctly
-    uint16_t padded_multiple_4_width = (uint16_t)(ceilf((float)bitmap_width / 4.0f) * 4.0f);
+    // (working with pixels here whereas it is padded in bytes)
+    uint16_t padded_multiple_4_width = (uint16_t)(ceilf((float)bitmap_width / 2.0f) * 2.0f);
 
     for(uint32_t bitmap_pixel_dest_index=0; bitmap_pixel_dest_index<bitmap_width*bitmap_height; bitmap_pixel_dest_index++){
         
