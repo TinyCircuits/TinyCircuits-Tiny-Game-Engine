@@ -25,11 +25,26 @@ void engine_input_update_pressed_buttons(){
         engine_input_rp3_update_pressed_mask();
     #endif
 
+    // `pressed_buttons` always has bits set to 1 when pressed
+    // and 0 when not after the above functions are called
+
     // XOR: set `1` if the corresponding bits in the byte are different
-    just_changed_buttons = pressed_buttons_last ^ pressed_buttons;
+    just_changed_buttons = last_pressed_buttons ^ pressed_buttons;
+
+    // Figure out which buttons just changed from 0 (not pressed)
+    // to 1 (pressed) since last time. Steps:
+    // 1. Take the NOR of the `last_pressed_buttons` with all
+    //    `0x0000` to get bits set to 1 of NOT pressed buttons
+    // 2. Take the AND against the above for now `pressed_buttons`
+    just_pressed_buttons = (~(last_pressed_buttons | 0x0000)) & pressed_buttons;
+
+    // Figure out which buttons just changed from 1 (pressed)
+    // to 0 (not pressed) since last time. Steps:
+    // 
+    just_released_buttons = (~(pressed_buttons | 0x0000)) & last_pressed_buttons;
 
     // Keep track of the buttons states from last time
-    pressed_buttons_last = pressed_buttons;
+    last_pressed_buttons = pressed_buttons;
 }
 
 
@@ -51,7 +66,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_input_check_pressed_obj, engine_input_check_pre
 
 /*  --- doc ---
     NAME: check_just_changed
-    DESC: For checking buttons that were either just released or pressed. OR'ing together values means this returns true when all OR'ed buttons just changed
+    DESC: For checking buttons that were either just released or pressed. OR'ing together values means this returns true when all OR'ed buttons were just changed
     PARAM: [type=int]   [name=button_mask]  [value=single or OR'ed together enum/ints (e.g. 'engine_input.A | engine_input.B')]
     RETURN: None
 */ 
@@ -64,10 +79,40 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_input_check_just_changed_obj, engine_input_chec
 
 
 /*  --- doc ---
+    NAME: check_just_pressed
+    DESC: For checking buttons that were just pressed. OR'ing together values means this returns true when all OR'ed buttons were just pressed
+    PARAM: [type=int]   [name=button_mask]  [value=single or OR'ed together enum/ints (e.g. 'engine_input.A | engine_input.B')]
+    RETURN: None
+*/ 
+STATIC mp_obj_t engine_input_check_just_pressed(mp_obj_t button_mask_u16){
+    uint16_t button_mask = mp_obj_get_int(button_mask_u16);
+
+    return mp_obj_new_bool((just_pressed_buttons & button_mask) == button_mask);
+}
+MP_DEFINE_CONST_FUN_OBJ_1(engine_input_check_just_pressed_obj, engine_input_check_just_pressed);
+
+
+/*  --- doc ---
+    NAME: check_just_released
+    DESC: For checking buttons that were just released. OR'ing together values means this returns true when all OR'ed buttons were just released
+    PARAM: [type=int]   [name=button_mask]  [value=single or OR'ed together enum/ints (e.g. 'engine_input.A | engine_input.B')]
+    RETURN: None
+*/ 
+STATIC mp_obj_t engine_input_check_just_released(mp_obj_t button_mask_u16){
+    uint16_t button_mask = mp_obj_get_int(button_mask_u16);
+
+    return mp_obj_new_bool((just_released_buttons & button_mask) == button_mask);
+}
+MP_DEFINE_CONST_FUN_OBJ_1(engine_input_check_just_released_obj, engine_input_check_just_released);
+
+
+/*  --- doc ---
     NAME: engine_input
     DESC: Module for checking button presses
-    ATTR: [type=function]   [name={ref_link:check_pressed}]         [value=function] 
-    ATTR: [type=function]   [name={ref_link:check_just_changed}]    [value=function] 
+    ATTR: [type=function]   [name={ref_link:check_pressed}]         [value=function]
+    ATTR: [type=function]   [name={ref_link:check_just_changed}]    [value=function]
+    ATTR: [type=function]   [name={ref_link:check_just_pressed}]    [value=function]
+    ATTR: [type=function]   [name={ref_link:check_just_released}]   [value=function]
     ATTR: [type=enum/int]   [name=A]                                [value=0b0000000000000001]
     ATTR: [type=enum/int]   [name=B]                                [value=0b0000000000000010]
     ATTR: [type=enum/int]   [name=DPAD_UP]                          [value=0b0000000000000100]
@@ -82,6 +127,8 @@ STATIC const mp_rom_map_elem_t engine_input_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_input) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_check_pressed), (mp_obj_t)&engine_input_check_pressed_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_check_just_changed), (mp_obj_t)&engine_input_check_just_changed_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_check_just_pressed), (mp_obj_t)&engine_input_check_just_pressed_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_check_just_released), (mp_obj_t)&engine_input_check_just_released_obj },
 
     { MP_ROM_QSTR(MP_QSTR_A), MP_ROM_INT(BUTTON_A) },
     { MP_ROM_QSTR(MP_QSTR_B), MP_ROM_INT(BUTTON_B) },

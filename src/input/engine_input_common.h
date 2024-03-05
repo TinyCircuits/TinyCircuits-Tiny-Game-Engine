@@ -15,7 +15,7 @@
 #define BUTTON_MENU         0b0000000100000000
 
 extern uint16_t pressed_buttons;
-extern uint16_t pressed_buttons_last;
+extern uint16_t last_pressed_buttons;
 
 extern uint16_t just_changed_buttons;
 extern uint16_t just_pressed_buttons;

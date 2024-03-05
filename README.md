@@ -61,10 +61,11 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 
 
 Adam:
-Delete nodes
-Collision
-Camera children
-VoxelSpace
+[] Need a just_pressed, just_released, and just_changed function for input buttons
+[.] Delete nodes, need a .destroy() node function
+[] Collision (lots of work/testing still needed)
+[X] Camera children for HUD
+[X] VoxelSpace
 
 
 [] Add a git hook that runs a performance test on the hardware:

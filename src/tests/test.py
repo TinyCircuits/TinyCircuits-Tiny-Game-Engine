@@ -86,24 +86,24 @@ class MyCam(CameraNode):
         super().__init__(self)
     
     def tick(self):
-        if engine_input.check_pressed(engine_input.A):
+        if engine_input.check_just_pressed(engine_input.A):
             self.zoom -= 0.0025
-        if engine_input.check_pressed(engine_input.B):
+        if engine_input.check_just_pressed(engine_input.B):
             self.zoom += 0.0025
         
-        if engine_input.check_pressed(engine_input.DPAD_UP):
+        if engine_input.check_just_pressed(engine_input.DPAD_UP):
             self.position.y -= 0.25
-        if engine_input.check_pressed(engine_input.DPAD_DOWN):
+        if engine_input.check_just_pressed(engine_input.DPAD_DOWN):
             self.position.y += 0.25
         
-        if engine_input.check_pressed(engine_input.DPAD_LEFT):
+        if engine_input.check_just_pressed(engine_input.DPAD_LEFT):
             self.position.x -= 0.25
-        if engine_input.check_pressed(engine_input.DPAD_RIGHT):
+        if engine_input.check_just_pressed(engine_input.DPAD_RIGHT):
             self.position.x += 0.25
         
-        if engine_input.check_just_changed(engine_input.BUMPER_LEFT):
+        if engine_input.check_just_pressed(engine_input.BUMPER_LEFT):
             self.rotation.z += 0.005
-        if engine_input.check_pressed(engine_input.BUMPER_RIGHT):
+        if engine_input.check_just_pressed(engine_input.BUMPER_RIGHT):
             self.rotation.z -= 0.005
 
 
