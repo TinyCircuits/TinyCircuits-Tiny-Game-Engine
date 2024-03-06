@@ -52,7 +52,7 @@ void engine_input_update_pressed_buttons(){
     NAME: check_pressed
     DESC: For checking button presses. OR'ing together values means this returns true when all OR'ed buttons are pressed
     PARAM: [type=int]   [name=button_mask]  [value=single or OR'ed together enum/ints (e.g. 'engine_input.A | engine_input.B')]
-    RETURN: None
+    RETURN: True or False
 */ 
 STATIC mp_obj_t engine_input_check_pressed(mp_obj_t button_mask_u16){
     uint16_t button_mask = mp_obj_get_int(button_mask_u16);
@@ -68,7 +68,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_input_check_pressed_obj, engine_input_check_pre
     NAME: check_just_changed
     DESC: For checking buttons that were either just released or pressed. OR'ing together values means this returns true when all OR'ed buttons were just changed
     PARAM: [type=int]   [name=button_mask]  [value=single or OR'ed together enum/ints (e.g. 'engine_input.A | engine_input.B')]
-    RETURN: None
+    RETURN: True or False
 */ 
 STATIC mp_obj_t engine_input_check_just_changed(mp_obj_t button_mask_u16){
     uint16_t button_mask = mp_obj_get_int(button_mask_u16);
@@ -82,7 +82,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_input_check_just_changed_obj, engine_input_chec
     NAME: check_just_pressed
     DESC: For checking buttons that were just pressed. OR'ing together values means this returns true when all OR'ed buttons were just pressed
     PARAM: [type=int]   [name=button_mask]  [value=single or OR'ed together enum/ints (e.g. 'engine_input.A | engine_input.B')]
-    RETURN: None
+    RETURN: True or False
 */ 
 STATIC mp_obj_t engine_input_check_just_pressed(mp_obj_t button_mask_u16){
     uint16_t button_mask = mp_obj_get_int(button_mask_u16);
@@ -96,7 +96,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_input_check_just_pressed_obj, engine_input_chec
     NAME: check_just_released
     DESC: For checking buttons that were just released. OR'ing together values means this returns true when all OR'ed buttons were just released
     PARAM: [type=int]   [name=button_mask]  [value=single or OR'ed together enum/ints (e.g. 'engine_input.A | engine_input.B')]
-    RETURN: None
+    RETURN: True or False
 */ 
 STATIC mp_obj_t engine_input_check_just_released(mp_obj_t button_mask_u16){
     uint16_t button_mask = mp_obj_get_int(button_mask_u16);

@@ -59,6 +59,9 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Add Line2DNode that draws a rectangle between two points, Allow filled and outline modes
 [X] Fix bitmaps not rendering correctly when they have sizes like 7x7 (see padding in https://en.wikipedia.org/wiki/BMP_file_format#:~:text=optional%20color%20list.-,Pixel%20storage,-%5Bedit%5D)
 
+[X] Do not generate collisions when two static bodies are touching/overlapping
+[] When objects collide, figure out how to ensure another collision is found on the same object from its perspective
+[] When objects collide and one is static (not dynamic), move the dynamic object the full penetration distance instead of half (like what happens if two dynamic bodies collide)
 
 Adam:
 [] Need a just_pressed, just_released, and just_changed function for input buttons
