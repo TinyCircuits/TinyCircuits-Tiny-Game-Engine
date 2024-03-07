@@ -215,6 +215,7 @@ STATIC mp_obj_t engine_module_init(){
     engine_input_setup();
     engine_display_init();
     engine_display_send();
+    engine_physics_init();
 
     return mp_const_none;
 }

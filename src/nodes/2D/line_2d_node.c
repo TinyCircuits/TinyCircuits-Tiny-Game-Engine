@@ -401,7 +401,7 @@ mp_obj_t line_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
         mp_obj_t node_instance = parsed_args[child_class].u_obj;
 
         // Store one pointer on the instance. Need to be able to get the
-        // node base that contains a pointer the engine specific data we
+        // node base that contains a pointer to the engine specific data we
         // care about
         // mp_store_attr(node_instance, MP_QSTR_node_base, node_base);
         mp_store_attr(node_instance, MP_QSTR_node_base, node_base);

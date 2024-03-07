@@ -84,6 +84,9 @@ Adam:
    * [X] Resources/Flash
 
 
+[] Use DMA to clear background screen buffer (that's not being drawn to) after it is sent out to the screen and the game loop is still running (chaining?): https://e2e.ti.com/support/microcontrollers/c2000-microcontrollers-group/c2000/f/c2000-microcontrollers-forum/509048/fast-way-to-zero-out-an-array/1848882#1848882
+[] Clear physics collision buffer bit collection using DMA: https://e2e.ti.com/support/microcontrollers/c2000-microcontrollers-group/c2000/f/c2000-microcontrollers-forum/509048/fast-way-to-zero-out-an-array/1848882#1848882
+[] Allow the user to somehow indicate they want to init certain aspects of the engine themselves. This way they can control memory a little better
 [] Line2DNode disappears when thickness is 1 and scale is slightly smaller than 1.0 due to camera zoom
 [] Weird shaking on UNIX when line is a child of camera and the camera is rotating
 [] With lots of sprites on screen and big background, drawing or rotating slows down when rotated 90 degrees into the big 128x128 texture

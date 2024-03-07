@@ -3,10 +3,64 @@
 #include "nodes/2d/physics_2d_node.h"
 #include "math/vector2.h"
 #include "math/engine_math.h"
+#include "utility/engine_bit_collection.h"
 #include "collision_shapes/polygon_collision_shape_2d.h"
 #include "collision_contact_2d.h"
+#include "py/obj.h"
 
 #include <float.h>
+
+// The maximum number of physics nodes that can exist in a scene is restricted
+// by the number of IDs available to give those nodes. The number of IDs is
+// limited so that IDs can be used with a simple paring function to index in
+// a large bit array to check if collisions between objects have already occurred
+#define PHYSICS_ID_MAX 180
+
+// Bit array/collection to track nodes that have collided. In the `init` function
+// this is sized so that the output indices from a simple paring function can fit
+// (https://math.stackexchange.com/a/531914)
+engine_bit_collection_t collided_physics_nodes;
+
+// Buffer of available physics IDs. Filled with values
+// 1 -> `PHYSICS_ID_MAX` on physics `init`. 
+uint8_t available_physics_ids[PHYSICS_ID_MAX];
+uint8_t next_available_physics_id = 0;
+
+
+// Fill `available_physics_ids` with IDs from `1` -> `PHYSICS_ID_MAX`
+// through indices `0` -> `PHYSICS_ID_MAX-1`
+void engine_physics_init_ids(){
+    for(uint8_t idx=0; idx<PHYSICS_ID_MAX; idx++){
+        available_physics_ids[idx] = idx+1;
+    }
+}
+
+
+uint8_t engine_physics_take_available_id(){
+    if(next_available_physics_id >= PHYSICS_ID_MAX){
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EnginePhysics: ERROR: Ran out of IDs to give physics nodes..."));
+    }
+
+    uint8_t id = available_physics_ids[next_available_physics_id];
+    next_available_physics_id++;
+    return id;
+}
+
+
+void engine_physics_give_back_id(uint8_t id){
+    next_available_physics_id--;
+    available_physics_ids[next_available_physics_id] = id;
+}
+
+
+// Using a simple pairing function (https://math.stackexchange.com/a/531914)
+// calculate a unique number for the input IDs
+uint32_t engine_physics_get_pair_index(uint8_t a_id, uint8_t b_id){
+    return PHYSICS_ID_MAX * (uint32_t)a_id + (uint32_t)b_id;
+}
+
+
+
 
 linked_list engine_physics_nodes;
 float engine_physics_gravity_x = 0.0f;
@@ -150,6 +204,13 @@ void engine_physics_apply_impulses(){
 }
 
 
+void engine_physics_init(){
+    ENGINE_INFO_PRINTF("EnginePhysics: Starting...")
+    engine_physics_init_ids();
+    engine_bit_collection_create(&collided_physics_nodes, engine_physics_get_pair_index(PHYSICS_ID_MAX, PHYSICS_ID_MAX));
+}
+
+
 void engine_physics_tick(){
     // If it is not time to update physics, then don't, otherwise track when physics was updated last
     if(millis() - engine_physics_fps_time_at_last_tick_ms < engine_physics_fps_limit_period_ms){
@@ -179,6 +240,29 @@ void engine_physics_tick(){
                 // Only check collision if at atleast one of the involved nodes
                 // is dynamic (do not want static nodes generating collisions)
                 if(physics_node_a_dynamic == true || physics_node_b_dynamic == true){
+
+                    engine_physics_2d_node_common_data_t *physics_node_common_data_a = physics_node_base_a->node_common_data;
+                    engine_physics_2d_node_common_data_t *physics_node_common_data_b = physics_node_base_b->node_common_data;
+
+                    uint8_t a_id = physics_node_common_data_a->physics_id;
+                    uint8_t b_id = physics_node_common_data_b->physics_id;
+
+                    if(a_id > b_id){
+                        uint8_t temp_id = b_id;
+                        b_id = a_id;
+                        a_id = temp_id;
+                    }
+
+                    uint32_t pair_index = engine_physics_get_pair_index(a_id, b_id);
+                    bool already_collided = engine_bit_collection_get(&collided_physics_nodes, pair_index);
+
+                    if(already_collided){
+                        physics_link_node_b = physics_link_node_b->next;
+                        continue;
+                    }else{
+                        engine_bit_collection_set(&collided_physics_nodes, pair_index);
+                    }
+
                     // If a none null collision point is received that means
                     // a collision occurred. Call user callback and adjust
                     // physics node's velocity
@@ -190,9 +274,6 @@ void engine_physics_tick(){
 
                     if(engine_physics_check_collision(physics_node_base_a, physics_node_base_b, &collision_normal_x, &collision_normal_y, &collision_contact_x, &collision_contact_y, &collision_normal_penetration)){
                         ENGINE_FORCE_PRINTF("COLLISION: %0.3f, %0.3f, %0.3f", collision_normal_x, collision_normal_y, collision_normal_penetration);
-
-                        engine_node_base_t *node_base;
-                        engine_physics_2d_node_common_data_t *physics_2d_node_common_data;
 
                         // Resolve collision: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-basics-and-impulse-resolution--gamedev-6331t#:~:text=more%20readable%20than%20mathematical%20notation!
                         vector2_class_obj_t *physics_node_a_velocity = mp_load_attr(physics_node_base_a->attr_accessor, MP_QSTR_velocity);
@@ -232,13 +313,13 @@ void engine_physics_tick(){
 
                         // Avoid divide by zero for inverse mass calculation
                         if(physics_node_a_mass == 0.0f){
-                            physics_node_a_inverse_mass = 0.0f; 
+                            physics_node_a_inverse_mass = 0.0f;
                         }else{
                             physics_node_a_inverse_mass = 1.0f / physics_node_a_mass;
                         }
 
                         if(physics_node_b_mass == 0.0f){
-                            physics_node_b_inverse_mass = 0.0f; 
+                            physics_node_b_inverse_mass = 0.0f;
                         }else{
                             physics_node_b_inverse_mass = 1.0f / physics_node_b_mass;
                         }
@@ -261,22 +342,25 @@ void engine_physics_tick(){
                         vector2_class_obj_t *physics_node_a_position = mp_load_attr(physics_node_base_a->attr_accessor, MP_QSTR_position);
                         vector2_class_obj_t *physics_node_b_position = mp_load_attr(physics_node_base_b->attr_accessor, MP_QSTR_position);
 
-                        // Depending on which objects are dynamic, save data. Don't want static nodes
-                        // to be moved by the penetration amount. This will likely mean that the one
-                        // dynamic node will be moved by half and still be colliding. The next time
-                        // it is found to be colliding means it should move some more. This will
-                        // result in lots of collision callbacks, should move the dynamic object the
-                        // full amount if there's a static object: TODO
-                        // NOTE: DO NOT NEED TO DO mp_store_attr since we're modifying using the pointers!
-                        if(physics_node_a_dynamic){
+                        // Depending on which objects are dynamic, move the dynamic bodies by
+                        // the penetration amount. Don't want static nodes to be moved by the
+                        // penetration amount. 
+                        if(physics_node_a_dynamic == true && physics_node_b_dynamic == false){
+                            physics_node_a_position->x -= collision_normal_x * collision_normal_penetration;
+                            physics_node_a_position->y -= collision_normal_y * collision_normal_penetration;
+                        }else if(physics_node_a_dynamic == false && physics_node_b_dynamic == true){
+                            physics_node_b_position->x += collision_normal_x * collision_normal_penetration;
+                            physics_node_b_position->y += collision_normal_y * collision_normal_penetration;
+                        }else if(physics_node_a_dynamic == true && physics_node_b_dynamic == true){
                             physics_node_a_position->x -= collision_normal_x * collision_normal_penetration / 2;
                             physics_node_a_position->y -= collision_normal_y * collision_normal_penetration / 2;
-                        }
 
-                        if(physics_node_b_dynamic){
                             physics_node_b_position->x += collision_normal_x * collision_normal_penetration / 2;
                             physics_node_b_position->y += collision_normal_y * collision_normal_penetration / 2;
                         }
+                        // If both were not dynamic, that would have been caught
+                        // earlier and the collision check would not have happened
+
 
                         mp_obj_t collision_contact_data[5];
                         collision_contact_data[0] = mp_obj_new_float(collision_contact_x);
@@ -287,20 +371,16 @@ void engine_physics_tick(){
                         mp_obj_t exec[3];
 
                         // Call A callback
-                        node_base = physics_link_node_a->object;
-                        physics_2d_node_common_data = node_base->node_common_data;
                         collision_contact_data[4] = physics_link_node_b->object;
-                        exec[0] = physics_2d_node_common_data->collision_cb;
-                        exec[1] = node_base->attr_accessor;
+                        exec[0] = physics_node_common_data_a->collision_cb;
+                        exec[1] = physics_node_base_a->attr_accessor;
                         exec[2] = collision_contact_2d_class_new(&collision_contact_2d_class_type, 5, 0, collision_contact_data);
                         mp_call_method_n_kw(1, 0, exec);
 
                         // Call B callback
-                        node_base = physics_link_node_b->object;
-                        physics_2d_node_common_data = node_base->node_common_data;
                         collision_contact_data[4] = physics_link_node_a->object;
-                        exec[0] = physics_2d_node_common_data->collision_cb;
-                        exec[1] = node_base->attr_accessor;
+                        exec[0] = physics_node_common_data_b->collision_cb;
+                        exec[1] = physics_node_base_b->attr_accessor;
                         exec[2] = collision_contact_2d_class_new(&collision_contact_2d_class_type, 5, 0, collision_contact_data);
                         mp_call_method_n_kw(1, 0, exec);
                     }
@@ -313,6 +393,10 @@ void engine_physics_tick(){
 
     ENGINE_FORCE_PRINTF(" ");
     engine_physics_apply_impulses();
+
+    // After everything physics related is done, reset the bit array
+    // used for tracking which pairs of nodes had already collided
+    engine_bit_collection_erase(&collided_physics_nodes);
 }
 
 

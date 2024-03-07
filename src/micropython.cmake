@@ -34,6 +34,7 @@ target_sources(usermod_engine INTERFACE
     ${ENGINE_MOD_DIR}/utility/engine_file.c
     ${ENGINE_MOD_DIR}/utility/engine_utilities_module.c
     ${ENGINE_MOD_DIR}/utility/engine_mp.c
+    ${ENGINE_MOD_DIR}/utility/engine_bit_collection.c
     ${ENGINE_MOD_DIR}/engine_object_layers.c
     ${ENGINE_MOD_DIR}/engine_cameras.c
     ${ENGINE_MOD_DIR}/display/engine_display.c

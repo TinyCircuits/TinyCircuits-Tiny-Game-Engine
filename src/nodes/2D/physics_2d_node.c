@@ -117,6 +117,7 @@ mp_obj_t physics_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
 
     engine_physics_2d_node_common_data_t *common_data = malloc(sizeof(engine_physics_2d_node_common_data_t));
     common_data->penetration = 0.0f;
+    common_data->physics_id = engine_physics_take_available_id();
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);
@@ -199,6 +200,7 @@ mp_obj_t physics_2d_node_class_del(mp_obj_t self_in){
     engine_node_base_t *node_base = self_in;
     engine_physics_2d_node_common_data_t *common_data = node_base->node_common_data;
     engine_physics_untrack_node(common_data->physics_list_node);
+    engine_physics_give_back_id(common_data->physics_id);
 
     node_base_del(self_in);
 

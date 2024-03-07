@@ -29,10 +29,10 @@ vertical_wall_shape = PolygonCollisionShape2D(vertices=vertical_poly_verts)
 
 # Make `Physics2DNodes` and position them at edges of the screen (assuming camera is at 0,0). Set dynamic False
 # so that the walls are no moved by gravity or collision
-top_wall_physics_node = Physics2DNode(position=Vector2(0, -128/2), collision_shape=horizontal_wall_shape, dynamic=False)
-bottom_wall_physics_node = Physics2DNode(position=Vector2(0, 128/2), collision_shape=horizontal_wall_shape, dynamic=False)
-left_wall_physics_node = Physics2DNode(position=Vector2(-128/2, 0), collision_shape=vertical_wall_shape, dynamic=False)
-right_wall_physics_node = Physics2DNode(position=Vector2(128/2, 0), collision_shape=vertical_wall_shape, dynamic=False)
+top_wall_physics_node = Physics2DNode(position=Vector2(0, -128/2), collision_shape=horizontal_wall_shape, dynamic=True)
+bottom_wall_physics_node = Physics2DNode(position=Vector2(0, 128/2), collision_shape=horizontal_wall_shape, dynamic=True)
+left_wall_physics_node = Physics2DNode(position=Vector2(-128/2, 0), collision_shape=vertical_wall_shape, dynamic=True)
+right_wall_physics_node = Physics2DNode(position=Vector2(128/2, 0), collision_shape=vertical_wall_shape, dynamic=True)
 
 # Make some `Rectangle2DNode` and add them as children to the physics nodes and make them
 # the same size as the colliders to represent the extents
@@ -57,22 +57,22 @@ class Player(Physics2DNode):
         self.add_child(self.player)
 
         self.collision_shape = PolygonCollisionShape2D()
-        self.collision_shape.vertices.append(Vector2(-self.player.width/2, -self.player.height/2-1))
-        self.collision_shape.vertices.append(Vector2( self.player.width/2, -self.player.height/2-1))
+        self.collision_shape.vertices.append(Vector2(-self.player.width/2, -self.player.height/2))
+        self.collision_shape.vertices.append(Vector2( self.player.width/2, -self.player.height/2))
         self.collision_shape.vertices.append(Vector2( self.player.width/2,  self.player.height/2))
         self.collision_shape.vertices.append(Vector2(-self.player.width/2,  self.player.height/2))
         self.collision_shape.calculate_normals()
     
     def tick(self):
         if engine_input.check_pressed(engine_input.DPAD_LEFT):
-            self.velocity.x = -1.5
+            self.velocity.x = -2.5
         elif engine_input.check_pressed(engine_input.DPAD_RIGHT):
-            self.velocity.x = 1.5
+            self.velocity.x = 2.5
 
         if engine_input.check_pressed(engine_input.DPAD_UP):
-            self.velocity.y = -1.5
+            self.velocity.y = -2.5
         elif engine_input.check_pressed(engine_input.DPAD_DOWN):
-            self.velocity.y = 1.5
+            self.velocity.y = 2.5
 
 
 player = Player()
