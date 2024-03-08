@@ -82,6 +82,7 @@ void engine_physics_find_min_max_projection(float position_x, float position_y, 
     for(uint16_t ivx=1; ivx<vertex_count; ivx++){
         vertex = (vector2_class_obj_t*)vertices_list->items[ivx];
         projection = engine_math_dot_product(position_x+vertex->x, position_y+vertex->y, axis_x, axis_y);
+
         if(*min > projection){
             *min = projection;
         }
@@ -93,7 +94,7 @@ void engine_physics_find_min_max_projection(float position_x, float position_y, 
 }
 
 
-bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, engine_node_base_t *physics_node_base_b, float *collision_normal_x, float *collision_normal_y, float *collision_contact_x, float *collision_contact_y, float *collision_normal_penetration){
+bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, engine_node_base_t *physics_node_base_b){
     mp_obj_t collision_shape_obj_a = mp_load_attr(physics_node_base_a->attr_accessor, MP_QSTR_collision_shape);
     mp_obj_t collision_shape_obj_b = mp_load_attr(physics_node_base_b->attr_accessor, MP_QSTR_collision_shape);
 
@@ -122,9 +123,9 @@ bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, eng
             float max0 = 0.0f;
             float min1 = 0.0f;
             float max1 = 0.0f;
-            *collision_normal_penetration = FLT_MAX;
 
             // https://textbooks.cs.ksu.edu/cis580/04-collisions/04-separating-axis-theorem/index.html#:~:text=it%20would%20look%20like%20something%20like%20this%3A
+            // https://dyn4j.org/2010/01/sat/#:~:text=MTV%20when%20the-,shapes%20intersect.,-1%0A2%0A3
             for(uint16_t inx=0; inx<a_normals->len; inx++){
                 axis_x = ((vector2_class_obj_t*)a_normals->items[inx])->x;
                 axis_y = ((vector2_class_obj_t*)a_normals->items[inx])->y;
@@ -134,14 +135,6 @@ bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, eng
                 if(max0 < min1 || max1 < min0){
                     // No collision
                     return false;
-                }else{
-                    // https://dyn4j.org/2010/01/sat/#:~:text=MTV%20when%20the-,shapes%20intersect.,-1%0A2%0A3
-                    float overlap = fminf(max0, max1) - fmaxf(min0, min1);
-                    if(overlap < *collision_normal_penetration){
-                        *collision_normal_penetration = overlap;
-                        *collision_normal_x = axis_x;
-                        *collision_normal_y = axis_y;
-                    }
                 }
             }
             for(uint16_t inx=0; inx<b_normals->len; inx++){
@@ -153,14 +146,6 @@ bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, eng
                 if(max0 < min1 || max1 < min0){
                     // No collision
                     return false;
-                }else{
-                    // https://dyn4j.org/2010/01/sat/#:~:text=MTV%20when%20the-,shapes%20intersect.,-1%0A2%0A3
-                    float overlap = fminf(max0, max1) - fmaxf(min0, min1);
-                    if(overlap < *collision_normal_penetration){
-                        *collision_normal_penetration = overlap;
-                        *collision_normal_x = axis_x;
-                        *collision_normal_y = axis_y;
-                    }
                 }
             }
 
@@ -233,29 +218,35 @@ void engine_physics_tick(){
                 engine_node_base_t *physics_node_base_a = physics_link_node_a->object;
                 engine_node_base_t *physics_node_base_b = physics_link_node_b->object;
 
-                // Could use these flags to stop some calculations below: TODO
                 bool physics_node_a_dynamic = mp_obj_get_int(mp_load_attr(physics_node_base_a->attr_accessor, MP_QSTR_dynamic));
                 bool physics_node_b_dynamic = mp_obj_get_int(mp_load_attr(physics_node_base_b->attr_accessor, MP_QSTR_dynamic));
 
                 // Only check collision if at atleast one of the involved nodes
                 // is dynamic (do not want static nodes generating collisions)
                 if(physics_node_a_dynamic == true || physics_node_b_dynamic == true){
-
                     engine_physics_2d_node_common_data_t *physics_node_common_data_a = physics_node_base_a->node_common_data;
                     engine_physics_2d_node_common_data_t *physics_node_common_data_b = physics_node_base_b->node_common_data;
 
+                    // To consistently generate the index for `already_collided`
+                    // the ID pair needs to be sorted consistently (don't matter
+                    // how, just as long as it is consistent)
                     uint8_t a_id = physics_node_common_data_a->physics_id;
                     uint8_t b_id = physics_node_common_data_b->physics_id;
 
+                    // Sort so that id_max*a_id + b_id comes out the same
+                    // no matter which node is `a` or `b`
                     if(a_id > b_id){
-                        uint8_t temp_id = b_id;
-                        b_id = a_id;
-                        a_id = temp_id;
+                        b_id = physics_node_common_data_a->physics_id;
+                        a_id = physics_node_common_data_b->physics_id;
                     }
 
+                    // Get the perfect hash code (can be perfect since the range is limited)
                     uint32_t pair_index = engine_physics_get_pair_index(a_id, b_id);
                     bool already_collided = engine_bit_collection_get(&collided_physics_nodes, pair_index);
 
+                    // Skip collision check if already collied
+                    // before, otherwise set that these have collied
+                    // this frame already
                     if(already_collided){
                         physics_link_node_b = physics_link_node_b->next;
                         continue;
@@ -263,125 +254,19 @@ void engine_physics_tick(){
                         engine_bit_collection_set(&collided_physics_nodes, pair_index);
                     }
 
-                    // If a none null collision point is received that means
-                    // a collision occurred. Call user callback and adjust
-                    // physics node's velocity
-                    float collision_normal_x = 0.0f;
-                    float collision_normal_y = 0.0f;
-                    float collision_contact_x = 0.0f;
-                    float collision_contact_y = 0.0f;
-                    float collision_normal_penetration = 0.0f;
-
-                    if(engine_physics_check_collision(physics_node_base_a, physics_node_base_b, &collision_normal_x, &collision_normal_y, &collision_contact_x, &collision_contact_y, &collision_normal_penetration)){
-                        ENGINE_FORCE_PRINTF("COLLISION: %0.3f, %0.3f, %0.3f", collision_normal_x, collision_normal_y, collision_normal_penetration);
-
-                        // Resolve collision: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-basics-and-impulse-resolution--gamedev-6331t#:~:text=more%20readable%20than%20mathematical%20notation!
-                        vector2_class_obj_t *physics_node_a_velocity = mp_load_attr(physics_node_base_a->attr_accessor, MP_QSTR_velocity);
-                        vector2_class_obj_t *physics_node_b_velocity = mp_load_attr(physics_node_base_b->attr_accessor, MP_QSTR_velocity);
-
-                        // If either node is not dynamic, set any velocities to zero no matter what set to
-                        if(!physics_node_a_dynamic){
-                            physics_node_a_velocity->x = 0.0f;
-                            physics_node_a_velocity->y = 0.0f;
-                        }
-
-                        if(!physics_node_b_dynamic){
-                            physics_node_b_velocity->x = 0.0f;
-                            physics_node_b_velocity->y = 0.0f;
-                        }
-
-                        float relative_velocity_x = physics_node_b_velocity->x - physics_node_a_velocity->x;
-                        float relative_velocity_y = physics_node_b_velocity->y - physics_node_a_velocity->y;
-
-                        float velocity_along_collision_normal = engine_math_dot_product(relative_velocity_x, relative_velocity_y, collision_normal_x, collision_normal_y);
-
-                        // Do not resolve if velocities are separating
-                        if(velocity_along_collision_normal > 0){
-                            physics_link_node_b = physics_link_node_b->next;
-                            continue;
-                        }
-
-                        // Calculate restitution/bounciness
-                        float physics_node_a_bounciness = mp_obj_get_float(mp_load_attr(physics_node_base_a->attr_accessor, MP_QSTR_bounciness));
-                        float physics_node_b_bounciness = mp_obj_get_float(mp_load_attr(physics_node_base_b->attr_accessor, MP_QSTR_bounciness));
-                        float physics_node_a_mass = mp_obj_get_float(mp_load_attr(physics_node_base_a->attr_accessor, MP_QSTR_mass));
-                        float physics_node_b_mass = mp_obj_get_float(mp_load_attr(physics_node_base_b->attr_accessor, MP_QSTR_mass));
-                        float bounciness = fminf(physics_node_a_bounciness, physics_node_b_bounciness);
-
-                        float physics_node_a_inverse_mass = 0.0f;
-                        float physics_node_b_inverse_mass = 0.0f;
-
-                        // Avoid divide by zero for inverse mass calculation
-                        if(physics_node_a_mass == 0.0f){
-                            physics_node_a_inverse_mass = 0.0f;
-                        }else{
-                            physics_node_a_inverse_mass = 1.0f / physics_node_a_mass;
-                        }
-
-                        if(physics_node_b_mass == 0.0f){
-                            physics_node_b_inverse_mass = 0.0f;
-                        }else{
-                            physics_node_b_inverse_mass = 1.0f / physics_node_b_mass;
-                        }
-
-                        float impulse_coefficient_j = -(1 + bounciness) * velocity_along_collision_normal;
-                        impulse_coefficient_j /= physics_node_a_inverse_mass + physics_node_b_inverse_mass;
-
-                        float impulse_x = impulse_coefficient_j * collision_normal_x;
-                        float impulse_y = impulse_coefficient_j * collision_normal_y;
-
-                        physics_node_a_velocity->x -= 1 / physics_node_a_mass * impulse_x;
-                        physics_node_a_velocity->y -= 1 / physics_node_a_mass * impulse_y;
-
-                        physics_node_b_velocity->x += 1 / physics_node_b_mass * impulse_x;
-                        physics_node_b_velocity->y += 1 / physics_node_b_mass * impulse_y;
-
-                        // Using the normalized collision normal, offset positions of
-                        // both nodes by the amount they were overlapping (in pixels)
-                        // when the collision was detected. Split the overlap 50/50
-                        vector2_class_obj_t *physics_node_a_position = mp_load_attr(physics_node_base_a->attr_accessor, MP_QSTR_position);
-                        vector2_class_obj_t *physics_node_b_position = mp_load_attr(physics_node_base_b->attr_accessor, MP_QSTR_position);
-
-                        // Depending on which objects are dynamic, move the dynamic bodies by
-                        // the penetration amount. Don't want static nodes to be moved by the
-                        // penetration amount. 
-                        if(physics_node_a_dynamic == true && physics_node_b_dynamic == false){
-                            physics_node_a_position->x -= collision_normal_x * collision_normal_penetration;
-                            physics_node_a_position->y -= collision_normal_y * collision_normal_penetration;
-                        }else if(physics_node_a_dynamic == false && physics_node_b_dynamic == true){
-                            physics_node_b_position->x += collision_normal_x * collision_normal_penetration;
-                            physics_node_b_position->y += collision_normal_y * collision_normal_penetration;
-                        }else if(physics_node_a_dynamic == true && physics_node_b_dynamic == true){
-                            physics_node_a_position->x -= collision_normal_x * collision_normal_penetration / 2;
-                            physics_node_a_position->y -= collision_normal_y * collision_normal_penetration / 2;
-
-                            physics_node_b_position->x += collision_normal_x * collision_normal_penetration / 2;
-                            physics_node_b_position->y += collision_normal_y * collision_normal_penetration / 2;
-                        }
-                        // If both were not dynamic, that would have been caught
-                        // earlier and the collision check would not have happened
-
-
-                        mp_obj_t collision_contact_data[5];
-                        collision_contact_data[0] = mp_obj_new_float(collision_contact_x);
-                        collision_contact_data[1] = mp_obj_new_float(collision_contact_y);
-                        collision_contact_data[2] = mp_obj_new_float(collision_normal_x);
-                        collision_contact_data[3] = mp_obj_new_float(collision_normal_y);
-
+                    if(engine_physics_check_collision(physics_node_base_a, physics_node_base_b)){
                         mp_obj_t exec[3];
 
                         // Call A callback
-                        collision_contact_data[4] = physics_link_node_b->object;
                         exec[0] = physics_node_common_data_a->collision_cb;
                         exec[1] = physics_node_base_a->attr_accessor;
-                        exec[2] = collision_contact_2d_class_new(&collision_contact_2d_class_type, 5, 0, collision_contact_data);
+                        exec[2] = physics_link_node_b->object;
                         mp_call_method_n_kw(1, 0, exec);
 
                         // Call B callback
-                        collision_contact_data[4] = physics_link_node_a->object;
                         exec[0] = physics_node_common_data_b->collision_cb;
                         exec[1] = physics_node_base_b->attr_accessor;
-                        exec[2] = collision_contact_2d_class_new(&collision_contact_2d_class_type, 5, 0, collision_contact_data);
+                        exec[2] = physics_link_node_a->object;
                         mp_call_method_n_kw(1, 0, exec);
                     }
                 }
@@ -391,7 +276,7 @@ void engine_physics_tick(){
         physics_link_node_a = physics_link_node_a->next;
     }
 
-    ENGINE_FORCE_PRINTF(" ");
+    // ENGINE_FORCE_PRINTF(" ");
     engine_physics_apply_impulses();
 
     // After everything physics related is done, reset the bit array

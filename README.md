@@ -84,6 +84,7 @@ Adam:
    * [X] Resources/Flash
 
 
+[] Need to try using engine_bit_collection to set known bits and see if it is working as intended (print the collection out after setting)
 [] Use DMA to clear background screen buffer (that's not being drawn to) after it is sent out to the screen and the game loop is still running (chaining?): https://e2e.ti.com/support/microcontrollers/c2000-microcontrollers-group/c2000/f/c2000-microcontrollers-forum/509048/fast-way-to-zero-out-an-array/1848882#1848882
 [] Clear physics collision buffer bit collection using DMA: https://e2e.ti.com/support/microcontrollers/c2000-microcontrollers-group/c2000/f/c2000-microcontrollers-forum/509048/fast-way-to-zero-out-an-array/1848882#1848882
 [] Allow the user to somehow indicate they want to init certain aspects of the engine themselves. This way they can control memory a little better

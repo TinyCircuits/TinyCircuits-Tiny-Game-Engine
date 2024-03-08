@@ -7,6 +7,7 @@
 typedef struct{
     uint8_t *bit_collection;
     uint32_t byte_count;
+    bool dirty;
 }engine_bit_collection_t;
 
 

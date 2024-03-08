@@ -43,7 +43,7 @@ STATIC mp_obj_t polygon_2d_node_class_calculate_normals(mp_obj_t self_in){
         float temp_face_normal_x = ((vector2_class_obj_t*)vertices->items[next_ivx])->x - ((vector2_class_obj_t*)vertices->items[ivx])->x;
         float temp_face_normal_y = ((vector2_class_obj_t*)vertices->items[next_ivx])->y - ((vector2_class_obj_t*)vertices->items[ivx])->y;
         
-        // 2D Cross product (perpendicular vector to the direction of the edge)
+        // 2D Cross product (perpendicular vector to the direction of the edge): FLIP: https://stackoverflow.com/a/1243676
         float face_normal_x = temp_face_normal_y;
         float face_normal_y = temp_face_normal_x;
 
@@ -53,9 +53,12 @@ STATIC mp_obj_t polygon_2d_node_class_calculate_normals(mp_obj_t self_in){
             mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("PolygonCollisionShape2D: Could not calculate polygon collision normals, zero length edge detected"));
         }
 
+        // Flip sign of y-axis of normal since actually reversed on the screen
         float face_normal_length = sqrt(face_normal_length_squared);
-        face_normal_x = face_normal_x / face_normal_length;
-        face_normal_y = face_normal_y / face_normal_length;
+        face_normal_x =  face_normal_x / face_normal_length;
+        face_normal_y = -face_normal_y / face_normal_length;
+
+        ENGINE_FORCE_PRINTF("%.03f, %.03f", face_normal_x, face_normal_y)
 
         ENGINE_INFO_PRINTF("PolygonCollisionShape2D: Calculated face normal: %.03f %.03f", face_normal_x, face_normal_y);
 
