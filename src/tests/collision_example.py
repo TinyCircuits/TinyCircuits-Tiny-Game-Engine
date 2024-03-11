@@ -47,12 +47,14 @@ vertical_poly_verts =   [   Vector2(-wall_thickness,   -128/2+wall_thickness),
 # right_wall_physics_node.add_child(right_wall)
 
 
-box_poly_verts =   [Vector2(-10, -10),
-                    Vector2( 10, -10),
-                    Vector2( 10,  10),
-                    Vector2(-10,  10)]
+box_poly_verts =   [Vector2(-12, -12),
+                    Vector2( 12, -12),
+                    Vector2( 12,  12),
+                    Vector2(-12,  12)]
 box_shape = PolygonCollisionShape2D(vertices=box_poly_verts)
-box_physics_node = Physics2DNode(position=Vector2(0, 25), collision_shape=box_shape, dynamic=False)
+
+
+box_physics_node = Physics2DNode(position=Vector2(0, -25), collision_shape=box_shape, dynamic=False)
 box = Polygon2DNode(vertices=box_poly_verts, color=engine_draw.purple)
 box_physics_node.add_child(box)
 
@@ -78,22 +80,26 @@ class Player(Physics2DNode):
     
     def tick(self):
         if engine_input.check_pressed(engine_input.DPAD_LEFT):
-            self.velocity.x = -0.5
+            self.velocity.x = -0.25
         elif engine_input.check_pressed(engine_input.DPAD_RIGHT):
-            self.velocity.x = 0.5
+            self.velocity.x = 0.25
 
         if engine_input.check_pressed(engine_input.DPAD_UP):
-            self.velocity.y = -0.5
+            self.velocity.y = -0.25
         elif engine_input.check_pressed(engine_input.DPAD_DOWN):
-            self.velocity.y = 0.5
+            self.velocity.y = 0.25
     
-    def collision(self, contact):
-        print("Collision!")
-        Circle2DNode(position=contact.position, radius=2)
+    # def collision(self, contact):
+    #     print("Collision!")
+    #     Circle2DNode(position=contact.position, radius=2)
 
 
 
 player = Player()
+
+box_physics_node1 = Physics2DNode(position=Vector2(0, 25), collision_shape=box_shape, dynamic=False)
+box1 = Polygon2DNode(vertices=box_poly_verts, color=engine_draw.purple)
+box_physics_node1.add_child(box1)
 
 camera = CameraNode()
 
