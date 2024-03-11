@@ -53,6 +53,40 @@ void engine_math_2d_midpoint(float x0, float y0, float x1, float y1, float *mx, 
 }
 
 
+// https://stackoverflow.com/a/1968345
+// https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection#:~:text=Given%20two%20points%20on%20each%20line%20segment
+bool engine_math_2d_do_segments_intersect(float line_0_start_x, float line_0_start_y, float line_0_end_x, float line_0_end_y, 
+                                          float line_1_start_x, float line_1_start_y, float line_1_end_x, float line_1_end_y,
+                                          float *intersect_x, float *intersect_y){
+
+    float segment_0_x = line_0_end_x - line_0_start_x;
+    float segment_0_y = line_0_end_y - line_0_start_y;
+
+    float segment_1_x = line_1_end_x - line_1_start_x;
+    float segment_1_y = line_1_end_y - line_1_start_y;
+
+    float denominator = -segment_1_x * segment_0_y + segment_0_x * segment_1_y;
+
+    if(engine_math_compare_floats(denominator, 0.0f)){
+        return false;
+    }
+
+    float s_numerator = -segment_0_y * (line_0_start_x - line_1_start_x) + segment_0_x * (line_0_start_y - line_1_start_y);
+    float t_numerator =  segment_1_x * (line_0_start_y - line_1_start_y) - segment_1_y * (line_0_start_x - line_1_start_x);
+
+    float s = s_numerator / denominator;
+    float t = t_numerator / denominator;
+
+    if(s >= 0.0f && s <= 1.0f && t >= 0.0f && t <= 1.0f){
+        if(intersect_x != NULL) *intersect_x = line_0_start_x + (t * segment_0_x);
+        if(intersect_y != NULL) *intersect_y = line_0_start_y + (t * segment_0_y);
+        return true;
+    }
+
+    return false;
+}
+
+
 // https://stackoverflow.com/a/22491252
 void engine_math_rotate_point(float *px, float *py, float cx, float cy, float angle_radians){
     float x_centered = *px - cx;

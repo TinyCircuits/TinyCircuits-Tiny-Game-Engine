@@ -78,19 +78,18 @@ class Player(Physics2DNode):
     
     def tick(self):
         if engine_input.check_pressed(engine_input.DPAD_LEFT):
-            self.velocity.x = -0.6
+            self.velocity.x = -0.5
         elif engine_input.check_pressed(engine_input.DPAD_RIGHT):
-            self.velocity.x = 0.6
+            self.velocity.x = 0.5
 
         if engine_input.check_pressed(engine_input.DPAD_UP):
-            self.velocity.y = -0.6
+            self.velocity.y = -0.5
         elif engine_input.check_pressed(engine_input.DPAD_DOWN):
-            self.velocity.y = 0.6
+            self.velocity.y = 0.5
     
-    def collision(self, object):
+    def collision(self, contact):
         print("Collision!")
-        # self.velocity.x = 0
-        # self.velocity.y = 0
+        Circle2DNode(position=contact.position, radius=2)
 
 
 

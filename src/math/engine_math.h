@@ -32,6 +32,10 @@ uint32_t engine_math_2d_to_1d_index(uint32_t x, uint32_t y, uint32_t width);
 
 void engine_math_2d_midpoint(float x0, float y0, float x1, float y1, float *mx, float *my);
 
+bool engine_math_2d_do_segments_intersect(float line_0_start_x, float line_0_start_y, float line_0_end_x, float line_0_end_y, 
+                                          float line_1_start_x, float line_1_start_y, float line_1_end_x, float line_1_end_y,
+                                          float *intersect_x, float *intersect_y);
+
 // Rotate a point '(px, py)' about another center point '(cx, cy)'
 void engine_math_rotate_point(float *px, float *py, float cx, float cy, float angle_radians);
 

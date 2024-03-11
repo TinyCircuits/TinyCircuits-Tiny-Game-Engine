@@ -63,12 +63,23 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [] When objects collide, figure out how to ensure another collision is found on the same object from its perspective
 [] When objects collide and one is static (not dynamic), move the dynamic object the full penetration distance instead of half (like what happens if two dynamic bodies collide)
 
+For April 15th:
+[] Physics
+[] Tweening
+[] Buttons
+[] Menu (carousel)
+
 Adam:
-[] Need a just_pressed, just_released, and just_changed function for input buttons
+[X] Need a just_pressed, just_released, and just_changed function for input buttons
 [.] Delete nodes, need a .destroy() node function
 [] Collision (lots of work/testing still needed)
 [X] Camera children for HUD
 [X] VoxelSpace
+
+X Need good title for influencers
+X Mock ups/concepts of other games
+X Voxel game for influencers
+X Menu?
 
 
 [] Add a git hook that runs a performance test on the hardware:

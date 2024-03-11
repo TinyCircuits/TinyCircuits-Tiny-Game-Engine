@@ -70,88 +70,49 @@ float engine_physics_fps_limit_period_ms = 16.667f;
 float engine_physics_fps_time_at_last_tick_ms = 0.0f;
 
 
-// https://textbooks.cs.ksu.edu/cis580/04-collisions/04-separating-axis-theorem/index.html#:~:text=A%20helper%20method%20to%20do%20this%20might%20be%3A
-void engine_physics_find_min_max_projection(float position_x, float position_y, mp_obj_list_t *vertices_list, float axis_x, float axis_y, float *min, float *max){
-    vector2_class_obj_t *vertex = (vector2_class_obj_t*)vertices_list->items[0];
-    uint16_t vertex_count = vertices_list->len;
 
-    float projection = engine_math_dot_product(position_x+vertex->x, position_y+vertex->y, axis_x, axis_y);
-    *min = projection;
-    *max = projection;
 
-    for(uint16_t ivx=1; ivx<vertex_count; ivx++){
-        vertex = (vector2_class_obj_t*)vertices_list->items[ivx];
-        projection = engine_math_dot_product(position_x+vertex->x, position_y+vertex->y, axis_x, axis_y);
 
-        if(*min > projection){
-            *min = projection;
-        }
+bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, engine_node_base_t *physics_node_base_b, float *normal_x, float *normal_y, float *contact_x, float *contact_y){
+    polygon_collision_shape_2d_class_obj_t *polygon_shape_a = mp_load_attr(physics_node_base_a->attr_accessor, MP_QSTR_collision_shape);
+    polygon_collision_shape_2d_class_obj_t *polygon_shape_b = mp_load_attr(physics_node_base_b->attr_accessor, MP_QSTR_collision_shape);
 
-        if(*max < projection){
-            *max = projection;
+    // Check that objects exist
+    if(polygon_shape_a == MP_OBJ_NULL || polygon_shape_b == MP_OBJ_NULL){
+        return false;
+    }
+
+    vector2_class_obj_t *node_a_position = mp_load_attr(physics_node_base_a->attr_accessor, MP_QSTR_position);
+    vector2_class_obj_t *node_b_position = mp_load_attr(physics_node_base_b->attr_accessor, MP_QSTR_position);
+
+    mp_obj_list_t *vertices_list_a = polygon_shape_a->vertices;
+    mp_obj_list_t *vertices_list_b = polygon_shape_b->vertices;
+
+    // Need to check each segment in polygon against
+    // every other segment in the other polygon
+    for(uint32_t ivax=0; ivax<vertices_list_a->len-1; ivax++){
+        vector2_class_obj_t *line_a_start = (vector2_class_obj_t*)vertices_list_a->items[ivax];
+        vector2_class_obj_t *line_a_end   = (vector2_class_obj_t*)vertices_list_a->items[ivax+1];
+
+        for(uint32_t ivbx=0; ivbx<vertices_list_b->len-1; ivbx++){
+            vector2_class_obj_t *line_b_start = (vector2_class_obj_t*)vertices_list_b->items[ivbx];
+            vector2_class_obj_t *line_b_end   = (vector2_class_obj_t*)vertices_list_b->items[ivbx+1];
+
+            if(engine_math_2d_do_segments_intersect(node_a_position->x + line_a_start->x,
+                                                    node_a_position->y + line_a_start->y,
+                                                    node_a_position->x + line_a_end->x,
+                                                    node_a_position->y + line_a_end->y,
+
+                                                    node_b_position->x + line_b_start->x,
+                                                    node_b_position->y + line_b_start->y,
+                                                    node_b_position->x + line_b_end->x,
+                                                    node_b_position->y + line_b_end->y,
+                                                    contact_x, contact_y)){
+                return true;
+            }
         }
     }
-}
 
-
-bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, engine_node_base_t *physics_node_base_b){
-    mp_obj_t collision_shape_obj_a = mp_load_attr(physics_node_base_a->attr_accessor, MP_QSTR_collision_shape);
-    mp_obj_t collision_shape_obj_b = mp_load_attr(physics_node_base_b->attr_accessor, MP_QSTR_collision_shape);
-
-    if(collision_shape_obj_a != MP_OBJ_NULL && collision_shape_obj_b != MP_OBJ_NULL){
-        vector2_class_obj_t *physics_node_a_position = mp_load_attr(physics_node_base_a->attr_accessor, MP_QSTR_position);
-        vector2_class_obj_t *physics_node_b_position = mp_load_attr(physics_node_base_b->attr_accessor, MP_QSTR_position);
-
-        if( mp_obj_is_type(collision_shape_obj_a, &polygon_collision_shape_2d_class_type) &&
-            mp_obj_is_type(collision_shape_obj_b, &polygon_collision_shape_2d_class_type)){    // Polygon vs. Polygon: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-oriented-rigid-bodies--gamedev-8032t
-            polygon_collision_shape_2d_class_obj_t *polygon_shape_a = collision_shape_obj_a;
-            polygon_collision_shape_2d_class_obj_t *polygon_shape_b = collision_shape_obj_b;
-
-            mp_obj_list_t *a_normals = polygon_shape_a->normals;
-            mp_obj_list_t *b_normals = polygon_shape_b->normals;
-
-            // What if these are children of other nodes? Should this be in absolute? TODO
-            float collision_shape_a_pos_x = physics_node_a_position->x;
-            float collision_shape_a_pos_y = physics_node_a_position->y;
-
-            float collision_shape_b_pos_x = physics_node_b_position->x;
-            float collision_shape_b_pos_y = physics_node_b_position->y;
-
-            float axis_x = 0.0f;
-            float axis_y = 0.0f;
-            float min0 = 0.0f;
-            float max0 = 0.0f;
-            float min1 = 0.0f;
-            float max1 = 0.0f;
-
-            // https://textbooks.cs.ksu.edu/cis580/04-collisions/04-separating-axis-theorem/index.html#:~:text=it%20would%20look%20like%20something%20like%20this%3A
-            // https://dyn4j.org/2010/01/sat/#:~:text=MTV%20when%20the-,shapes%20intersect.,-1%0A2%0A3
-            for(uint16_t inx=0; inx<a_normals->len; inx++){
-                axis_x = ((vector2_class_obj_t*)a_normals->items[inx])->x;
-                axis_y = ((vector2_class_obj_t*)a_normals->items[inx])->y;
-                engine_physics_find_min_max_projection(collision_shape_a_pos_x, collision_shape_a_pos_y, polygon_shape_a->vertices, axis_x, axis_y, &min0, &max0);
-                engine_physics_find_min_max_projection(collision_shape_b_pos_x, collision_shape_b_pos_y, polygon_shape_b->vertices, axis_x, axis_y, &min1, &max1);
-
-                if(max0 < min1 || max1 < min0){
-                    // No collision
-                    return false;
-                }
-            }
-            for(uint16_t inx=0; inx<b_normals->len; inx++){
-                axis_x = ((vector2_class_obj_t*)b_normals->items[inx])->x;
-                axis_y = ((vector2_class_obj_t*)b_normals->items[inx])->y;
-                engine_physics_find_min_max_projection(collision_shape_a_pos_x, collision_shape_a_pos_y, polygon_shape_a->vertices, axis_x, axis_y, &min0, &max0);
-                engine_physics_find_min_max_projection(collision_shape_b_pos_x, collision_shape_b_pos_y, polygon_shape_b->vertices, axis_x, axis_y, &min1, &max1);
-
-                if(max0 < min1 || max1 < min0){
-                    // No collision
-                    return false;
-                }
-            }
-
-            return true;
-        }
-    }
 
     return false;
 }
@@ -254,19 +215,32 @@ void engine_physics_tick(){
                         engine_bit_collection_set(&collided_physics_nodes, pair_index);
                     }
 
-                    if(engine_physics_check_collision(physics_node_base_a, physics_node_base_b)){
+                    float normal_x = 0.0f;
+                    float normal_y = 0.0f;
+                    float contact_x = 0.0f;
+                    float contact_y = 0.0f;
+
+                    if(engine_physics_check_collision(physics_node_base_a, physics_node_base_b, &normal_x, &normal_y, &contact_x, &contact_y)){
+                        mp_obj_t collision_contact_data[5];
+                        collision_contact_data[0] = mp_obj_new_float(contact_x);
+                        collision_contact_data[1] = mp_obj_new_float(contact_y);
+                        collision_contact_data[2] = mp_obj_new_float(0.0f);
+                        collision_contact_data[3] = mp_obj_new_float(0.0f);
+
                         mp_obj_t exec[3];
 
                         // Call A callback
+                        collision_contact_data[4] = physics_link_node_b->object;
                         exec[0] = physics_node_common_data_a->collision_cb;
                         exec[1] = physics_node_base_a->attr_accessor;
-                        exec[2] = physics_link_node_b->object;
+                        exec[2] = collision_contact_2d_class_new(&collision_contact_2d_class_type, 5, 0, collision_contact_data);
                         mp_call_method_n_kw(1, 0, exec);
 
                         // Call B callback
+                        collision_contact_data[4] = physics_link_node_a->object;
                         exec[0] = physics_node_common_data_b->collision_cb;
                         exec[1] = physics_node_base_b->attr_accessor;
-                        exec[2] = physics_link_node_a->object;
+                        exec[2] = collision_contact_2d_class_new(&collision_contact_2d_class_type, 5, 0, collision_contact_data);
                         mp_call_method_n_kw(1, 0, exec);
                     }
                 }
