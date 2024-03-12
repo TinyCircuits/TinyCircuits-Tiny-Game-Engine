@@ -99,7 +99,7 @@ STATIC mp_obj_t text_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
     float bitmap_x_scale = text_scale->x*camera_zoom;
     float bitmap_y_scale = text_scale->y*camera_zoom;
 
-    // Used to traverse about rotation using unit circle sin/cos offsets
+    // Used to traverse about rotation using unit circle sin/cos offsets. Could probably store this: TODO
     float traversal_scale = sqrtf(text_scale->x*text_scale->x + text_scale->y*text_scale->y) * camera_zoom;
 
     // https://codereview.stackexchange.com/a/86546
@@ -108,16 +108,17 @@ STATIC mp_obj_t text_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
     float sin_angle = sinf(rotation) * traversal_scale;
     float cos_angle = cosf(rotation) * traversal_scale;
 
-    float sin_angle_perp = sinf(rotation + (PI/2.0f)) * traversal_scale;
-    float cos_angle_perp = cosf(rotation + (PI/2.0f)) * traversal_scale;
+    float sin_angle_perp = sinf(rotation + HALF_PI) * traversal_scale;
+    float cos_angle_perp = cosf(rotation + HALF_PI) * traversal_scale;
 
-    // // Set starting point to text box origin then translate to
-    // // starting in top-left by column and row shifts (while rotated).
-    // // This way, the text box rotates about its origin position set
-    // // by the user
+    // Set starting point to text box origin then translate to
+    // starting in top-left by column and row shifts (while rotated).
+    // This way, the text box rotates about its origin position set
+    // by the user
     float char_x = text_rotated_x;
     float char_y = text_rotated_y;
 
+    // Move to top left (go left and then up)
     char_x -= (cos_angle * text_box_width_half);
     char_y += (sin_angle * text_box_width_half);
 

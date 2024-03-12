@@ -275,7 +275,7 @@ STATIC mp_attr_fun_t line_2d_node_class_attr(mp_obj_t self_in, qstr attribute, m
     bool is_obj_instance = false;
     engine_node_base_t *node_base = node_base_get(self_in, &is_obj_instance);
 
-    // See if this access is from a Python class instance or native built-in instance object
+    // Get the underlying structure
     engine_line_2d_node_class_obj_t *self = node_base->node;
 
     // Used for telling if custom load/store functions handled the attr

@@ -20,7 +20,6 @@ target_sources(usermod_engine INTERFACE
     ${ENGINE_MOD_DIR}/nodes/2d/sprite_2d_node.c
     ${ENGINE_MOD_DIR}/nodes/2d/rectangle_2d_node.c
     ${ENGINE_MOD_DIR}/nodes/2d/line_2d_node.c
-    ${ENGINE_MOD_DIR}/nodes/2d/polygon_2d_node.c
     ${ENGINE_MOD_DIR}/nodes/2d/circle_2d_node.c
     ${ENGINE_MOD_DIR}/nodes/2d/physics_2d_node.c
     ${ENGINE_MOD_DIR}/nodes/2d/text_2d_node.c
@@ -32,7 +31,6 @@ target_sources(usermod_engine INTERFACE
     ${ENGINE_MOD_DIR}/utility/linked_list.c
     ${ENGINE_MOD_DIR}/utility/engine_time.c
     ${ENGINE_MOD_DIR}/utility/engine_file.c
-    ${ENGINE_MOD_DIR}/utility/engine_utilities_module.c
     ${ENGINE_MOD_DIR}/utility/engine_mp.c
     ${ENGINE_MOD_DIR}/utility/engine_bit_collection.c
     ${ENGINE_MOD_DIR}/engine_object_layers.c
@@ -51,7 +49,7 @@ target_sources(usermod_engine INTERFACE
     ${ENGINE_MOD_DIR}/resources/engine_wave_sound_resource.c
     ${ENGINE_MOD_DIR}/physics/engine_physics_module.c
     ${ENGINE_MOD_DIR}/physics/engine_physics.c
-    ${ENGINE_MOD_DIR}/physics/collision_shapes/polygon_collision_shape_2d.c
+    ${ENGINE_MOD_DIR}/physics/collision_shapes/rectangle_collision_shape_2d.c
     ${ENGINE_MOD_DIR}/physics/collision_contact_2d.c
 )
 

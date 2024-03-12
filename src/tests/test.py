@@ -4,7 +4,7 @@ import engine_debug
 import engine_input
 import engine_physics
 import engine_audio
-from engine_nodes import EmptyNode, Sprite2DNode, Rectangle2DNode, Polygon2DNode, Circle2DNode, CameraNode, VoxelSpaceNode, Physics2DNode, Text2DNode, Line2DNode
+from engine_nodes import EmptyNode, Sprite2DNode, Rectangle2DNode, Circle2DNode, CameraNode, VoxelSpaceNode, Physics2DNode, Text2DNode, Line2DNode
 from engine_math import Vector3, Vector2, Rectangle
 from engine_resources import TextureResource, WaveSoundResource, FontResource
 import math
@@ -61,13 +61,6 @@ rectangle.width = 30
 rectangle.height = 15
 rectangle.outline = True
 sprite = Sprite2DNode(texture=texture, position=Vector2(0, 0), scale=Vector2(1.0, 1.0))
-polygon = Polygon2DNode()
-polygon.vertices.append(Vector2(-15, 10))
-polygon.vertices.append(Vector2(10, 10))
-polygon.vertices.append(Vector2(-5, 15))
-polygon.vertices.append(Vector2(10, -10))
-polygon.vertices.append(Vector2(-10, -15))
-polygon.outline = True
 
 circle.color = 0b1111100000000000
 rectangle.color = 0b1111101001001001
@@ -76,7 +69,6 @@ sprite.transparent_color = engine_draw.black
 circle.position = Vector2(10, 0)
 rectangle.position = Vector2(32, 0)
 sprite.position = Vector2(0, 32)
-polygon.position = Vector2(-32, 0)
 text.position = Vector2(0, -36)
 text0.position = Vector2(0, -36)
 
@@ -127,7 +119,6 @@ camera.zoom = 1
 
 circle.add_child(rectangle)
 circle.add_child(sprite)
-circle.add_child(polygon)
 circle.add_child(text)
 circle.add_child(text0)
 # circle.add_child(my_line)

@@ -34,7 +34,8 @@ typedef struct{
 
 extern const mp_obj_type_t engine_physics_2d_node_class_type;
 
-mp_obj_t physics_2d_node_class_apply_manifold_impulse(mp_obj_t a_in, mp_obj_t b_in, mp_obj_t manifold_in);
-mp_obj_t physics_2d_node_class_test(mp_obj_t self_in, mp_obj_t b_in);
+// Call this after changing the rotation of the physics
+// node so that the shape (if needed) can be updated
+void engine_physics_2d_node_update_shape(engine_node_base_t *self_node_base);
 
 #endif  // PHYSICS_2D_NODE_H

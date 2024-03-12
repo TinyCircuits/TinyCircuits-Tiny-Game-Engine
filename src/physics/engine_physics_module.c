@@ -3,7 +3,7 @@
 #include "nodes/node_base.h"
 #include "display/engine_display_common.h"
 #include "physics/engine_physics.h"
-#include "physics/collision_shapes/polygon_collision_shape_2d.h"
+#include "physics/collision_shapes/rectangle_collision_shape_2d.h"
 #include "physics/collision_contact_2d.h"
 
 
@@ -60,7 +60,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_physics_get_gravity_obj, engine_physics_get_gra
 /* --- doc ---
    NAME: engine_physics
    DESC: Module for controlling physics and for common physics collision shapes
-   ATTR: [type=object]   [name={ref_link:PolygonCollisionShape2D}]            [value=object]
+   ATTR: [type=object]   [name={ref_link:RectangleCollisionShape2D}]       [value=object]
    ATTR: [type=function] [name={ref_link:set_physics_fps_limit}]           [value=function]
    ATTR: [type=function] [name={ref_link:set_gravity}]                     [value=function]
    ATTR: [type=function] [name={ref_link:get_gravity}]                     [value=function]
@@ -72,7 +72,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_physics_get_gravity_obj, engine_physics_get_gra
 
 STATIC const mp_rom_map_elem_t engine_physics_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_physics) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_PolygonCollisionShape2D), (mp_obj_t)&polygon_collision_shape_2d_class_type},
+    { MP_OBJ_NEW_QSTR(MP_QSTR_RectangleCollisionShape2D), (mp_obj_t)&rectangle_collision_shape_2d_class_type},
     // { MP_OBJ_NEW_QSTR(MP_QSTR_EmptyPolyCollisionShape2D), (mp_obj_t)&empty_poly_collision_shape_2d_class_type},
     // { MP_OBJ_NEW_QSTR(MP_QSTR_HexagonPolyCollisionShape2D), (mp_obj_t)&hexagon_poly_collision_shape_2d_class_type},
     // { MP_OBJ_NEW_QSTR(MP_QSTR_RectanglePolyCollisionShape2D), (mp_obj_t)&rectangle_poly_collision_shape_2d_class_type},

@@ -7,6 +7,19 @@
 #include "math/vector2.h"
 #include "draw/engine_display_draw.h"
 #include "physics/engine_physics.h"
+#include "physics/collision_shapes/rectangle_collision_shape_2d.h"
+
+
+void engine_physics_2d_node_update_shape(engine_node_base_t *self_node_base){
+    mp_obj_t collision_shape = mp_load_attr(self_node_base->attr_accessor, MP_QSTR_collision_shape);
+
+    if(mp_obj_is_type(collision_shape, &rectangle_collision_shape_2d_class_type)){
+        rectangle_collision_shape_2d_class_obj_t *shape = collision_shape;
+        shape->rotation = mp_obj_get_float(mp_load_attr(self_node_base->attr_accessor, MP_QSTR_rotation));
+        ENGINE_FORCE_PRINTF("%.03f", shape->rotation);
+        rectangle_collision_shape_2d_recalculate(collision_shape);
+    }
+}
 
 
 // Class required functions
@@ -111,7 +124,7 @@ mp_obj_t physics_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
     if(parsed_args[acceleration].u_obj == MP_OBJ_NULL) parsed_args[acceleration].u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL);
     if(parsed_args[rotation].u_obj == MP_OBJ_NULL) parsed_args[rotation].u_obj = mp_obj_new_float(0.0);
     if(parsed_args[mass].u_obj == MP_OBJ_NULL) parsed_args[mass].u_obj = mp_obj_new_float(1.0f);
-    if(parsed_args[bounciness].u_obj == MP_OBJ_NULL) parsed_args[bounciness].u_obj = mp_obj_new_float(2.0f);
+    if(parsed_args[bounciness].u_obj == MP_OBJ_NULL) parsed_args[bounciness].u_obj = mp_obj_new_float(1.0f);
     if(parsed_args[dynamic].u_obj == MP_OBJ_NULL) parsed_args[dynamic].u_obj = mp_obj_new_int(1);
     if(parsed_args[gravity_scale].u_obj == MP_OBJ_NULL) parsed_args[gravity_scale].u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)});
 
@@ -189,6 +202,8 @@ mp_obj_t physics_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
         mp_store_attr(node_base->node, MP_QSTR_dynamic, parsed_args[dynamic].u_obj);
         mp_store_attr(node_base->node, MP_QSTR_gravity_scale, parsed_args[gravity_scale].u_obj);
     }
+
+    engine_physics_2d_node_update_shape(node_base);
 
     return MP_OBJ_FROM_PTR(node_base);
 }
@@ -289,6 +304,7 @@ STATIC void physics_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_
             break;
             case MP_QSTR_rotation:
                 self->rotation = destination[1];
+                engine_physics_2d_node_update_shape(self_in);
             break;
             case MP_QSTR_mass:
                 self->mass = destination[1];

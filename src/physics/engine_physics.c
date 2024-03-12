@@ -4,7 +4,7 @@
 #include "math/vector2.h"
 #include "math/engine_math.h"
 #include "utility/engine_bit_collection.h"
-#include "collision_shapes/polygon_collision_shape_2d.h"
+#include "collision_shapes/rectangle_collision_shape_2d.h"
 #include "collision_contact_2d.h"
 #include "py/obj.h"
 
@@ -71,17 +71,13 @@ float engine_physics_fps_time_at_last_tick_ms = 0.0f;
 
 
 // https://textbooks.cs.ksu.edu/cis580/04-collisions/04-separating-axis-theorem/index.html#:~:text=A%20helper%20method%20to%20do%20this%20might%20be%3A
-void engine_physics_find_min_max_projection(float position_x, float position_y, mp_obj_list_t *vertices_list, float axis_x, float axis_y, float *min, float *max){
-    vector2_class_obj_t *vertex = (vector2_class_obj_t*)vertices_list->items[0];
-    uint16_t vertex_count = vertices_list->len;
-
-    float projection = engine_math_dot_product(position_x+vertex->x, position_y+vertex->y, axis_x, axis_y);
+void engine_physics_find_min_max_projection(float position_x, float position_y, float *vertices_x, float *vertices_y, float axis_x, float axis_y, float *min, float *max){
+    float projection = engine_math_dot_product(position_x+vertices_x[0], position_y+vertices_y[0], axis_x, axis_y);
     *min = projection;
     *max = projection;
 
-    for(uint16_t ivx=1; ivx<vertex_count; ivx++){
-        vertex = (vector2_class_obj_t*)vertices_list->items[ivx];
-        projection = engine_math_dot_product(position_x+vertex->x, position_y+vertex->y, axis_x, axis_y);
+    for(uint16_t ivx=1; ivx<4; ivx++){
+        projection = engine_math_dot_product(position_x+vertices_x[ivx], position_y+vertices_y[ivx], axis_x, axis_y);
         if(*min > projection){
             *min = projection;
         }
@@ -101,13 +97,10 @@ bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, eng
         vector2_class_obj_t *physics_node_a_position = mp_load_attr(physics_node_base_a->attr_accessor, MP_QSTR_position);
         vector2_class_obj_t *physics_node_b_position = mp_load_attr(physics_node_base_b->attr_accessor, MP_QSTR_position);
 
-        if( mp_obj_is_type(collision_shape_obj_a, &polygon_collision_shape_2d_class_type) &&
-            mp_obj_is_type(collision_shape_obj_b, &polygon_collision_shape_2d_class_type)){    // Polygon vs. Polygon: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-oriented-rigid-bodies--gamedev-8032t
-            polygon_collision_shape_2d_class_obj_t *polygon_shape_a = collision_shape_obj_a;
-            polygon_collision_shape_2d_class_obj_t *polygon_shape_b = collision_shape_obj_b;
-
-            mp_obj_list_t *a_normals = polygon_shape_a->normals;
-            mp_obj_list_t *b_normals = polygon_shape_b->normals;
+        if( mp_obj_is_type(collision_shape_obj_a, &rectangle_collision_shape_2d_class_type) &&
+            mp_obj_is_type(collision_shape_obj_b, &rectangle_collision_shape_2d_class_type)){    // rectangle vs. rectangle: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-oriented-rigid-bodies--gamedev-8032t
+            rectangle_collision_shape_2d_class_obj_t *rectangle_shape_a = collision_shape_obj_a;
+            rectangle_collision_shape_2d_class_obj_t *rectangle_shape_b = collision_shape_obj_b;
 
             // What if these are children of other nodes? Should this be in absolute? TODO
             float collision_shape_a_pos_x = physics_node_a_position->x;
@@ -125,11 +118,11 @@ bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, eng
             *collision_normal_penetration = FLT_MAX;
 
             // https://textbooks.cs.ksu.edu/cis580/04-collisions/04-separating-axis-theorem/index.html#:~:text=it%20would%20look%20like%20something%20like%20this%3A
-            for(uint16_t inx=0; inx<a_normals->len; inx++){
-                axis_x = ((vector2_class_obj_t*)a_normals->items[inx])->x;
-                axis_y = ((vector2_class_obj_t*)a_normals->items[inx])->y;
-                engine_physics_find_min_max_projection(collision_shape_a_pos_x, collision_shape_a_pos_y, polygon_shape_a->vertices, axis_x, axis_y, &a_min, &a_max);
-                engine_physics_find_min_max_projection(collision_shape_b_pos_x, collision_shape_b_pos_y, polygon_shape_b->vertices, axis_x, axis_y, &b_min, &b_max);
+            for(uint16_t inx=0; inx<4; inx++){
+                axis_x = rectangle_shape_a->normals_x[inx];
+                axis_y = rectangle_shape_a->normals_y[inx];
+                engine_physics_find_min_max_projection(collision_shape_a_pos_x, collision_shape_a_pos_y, rectangle_shape_a->vertices_x, rectangle_shape_a->vertices_y, axis_x, axis_y, &a_min, &a_max);
+                engine_physics_find_min_max_projection(collision_shape_b_pos_x, collision_shape_b_pos_y, rectangle_shape_b->vertices_x, rectangle_shape_b->vertices_y, axis_x, axis_y, &b_min, &b_max);
 
                 if(a_max < b_min || b_max < a_min){
                     // No collision
@@ -144,11 +137,11 @@ bool engine_physics_check_collision(engine_node_base_t *physics_node_base_a, eng
                     }
                 }
             }
-            for(uint16_t inx=0; inx<b_normals->len; inx++){
-                axis_x = ((vector2_class_obj_t*)b_normals->items[inx])->x;
-                axis_y = ((vector2_class_obj_t*)b_normals->items[inx])->y;
-                engine_physics_find_min_max_projection(collision_shape_a_pos_x, collision_shape_a_pos_y, polygon_shape_a->vertices, axis_x, axis_y, &a_min, &a_max);
-                engine_physics_find_min_max_projection(collision_shape_b_pos_x, collision_shape_b_pos_y, polygon_shape_b->vertices, axis_x, axis_y, &b_min, &b_max);
+            for(uint16_t inx=0; inx<4; inx++){
+                axis_x = rectangle_shape_b->normals_x[inx];
+                axis_y = rectangle_shape_b->normals_y[inx];
+                engine_physics_find_min_max_projection(collision_shape_a_pos_x, collision_shape_a_pos_y, rectangle_shape_a->vertices_x, rectangle_shape_a->vertices_y, axis_x, axis_y, &a_min, &a_max);
+                engine_physics_find_min_max_projection(collision_shape_b_pos_x, collision_shape_b_pos_y, rectangle_shape_b->vertices_x, rectangle_shape_b->vertices_y, axis_x, axis_y, &b_min, &b_max);
 
                 if(a_max < b_min || b_max < a_min){
                     // No collision
@@ -277,7 +270,7 @@ void engine_physics_tick(){
                     float collision_normal_penetration = 0.0f;
 
                     if(engine_physics_check_collision(physics_node_base_a, physics_node_base_b, &collision_normal_x, &collision_normal_y, &collision_contact_x, &collision_contact_y, &collision_normal_penetration)){
-                        ENGINE_FORCE_PRINTF("COLLISION: a_id: %d, b_id: %d | nx: %0.3f, ny: %0.3f", physics_node_common_data_a->physics_id, physics_node_common_data_b->physics_id, collision_normal_x, collision_normal_y);
+                        // ENGINE_FORCE_PRINTF("COLLISION: a_id: %d, b_id: %d | nx: %0.3f, ny: %0.3f", physics_node_common_data_a->physics_id, physics_node_common_data_b->physics_id, collision_normal_x, collision_normal_y);
 
                         // `collision_normal_x` and `collision_normal_y` will point in any direction,
                         // need to discern if the normal axis should be flipped so that the objects
@@ -292,7 +285,7 @@ void engine_physics_tick(){
                             collision_normal_x = -collision_normal_x;
                             collision_normal_y = -collision_normal_y;
                         }
-                        ENGINE_FORCE_PRINTF("COLLISION: a_id: %d, b_id: %d | nx: %0.3f, ny: %0.3f\n", physics_node_common_data_a->physics_id, physics_node_common_data_b->physics_id, collision_normal_x, collision_normal_y);
+                        // ENGINE_FORCE_PRINTF("COLLISION: a_id: %d, b_id: %d | nx: %0.3f, ny: %0.3f\n", physics_node_common_data_a->physics_id, physics_node_common_data_b->physics_id, collision_normal_x, collision_normal_y);
 
 
                         // Resolve collision: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-basics-and-impulse-resolution--gamedev-6331t#:~:text=more%20readable%20than%20mathematical%20notation!
@@ -318,7 +311,7 @@ void engine_physics_tick(){
                         // Do not resolve if velocities are separating
                         if(velocity_along_collision_normal <= 0.0f){
                             physics_link_node_b = physics_link_node_b->next;
-                            ENGINE_FORCE_PRINTF("Separating!");
+                            // ENGINE_FORCE_PRINTF("Separating!");
                             continue;
                         }
 
@@ -357,54 +350,51 @@ void engine_physics_tick(){
                         physics_node_b_velocity->x += physics_node_b_inverse_mass * impulse_x;
                         physics_node_b_velocity->y += physics_node_b_inverse_mass * impulse_y;
 
-                        // // Using the normalized collision normal, offset positions of
-                        // // both nodes by the amount they were overlapping (in pixels)
-                        // // when the collision was detected. Split the overlap 50/50
-                        // //
-                        // // Depending on which objects are dynamic, move the dynamic bodies by
-                        // // the penetration amount. Don't want static nodes to be moved by the
-                        // // penetration amount. 
-                        // if(physics_node_a_dynamic == true && physics_node_b_dynamic == false){
-                        //     ENGINE_FORCE_PRINTF("1");
-                        //     physics_node_a_position->x -= collision_normal_x * collision_normal_penetration;
-                        //     physics_node_a_position->y -= collision_normal_y * collision_normal_penetration;
-                        // }else if(physics_node_a_dynamic == false && physics_node_b_dynamic == true){
-                        //     ENGINE_FORCE_PRINTF("2");
-                        //     physics_node_b_position->x += flip_coe * collision_normal_x * collision_normal_penetration;
-                        //     physics_node_b_position->y += flip_coe * collision_normal_y * collision_normal_penetration;
-                        // }else if(physics_node_a_dynamic == true && physics_node_b_dynamic == true){
-                        //     ENGINE_FORCE_PRINTF("3");
-                        //     physics_node_a_position->x -= collision_normal_x * collision_normal_penetration / 2;
-                        //     physics_node_a_position->y -= collision_normal_y * collision_normal_penetration / 2;
+                        // Using the normalized collision normal, offset positions of
+                        // both nodes by the amount they were overlapping (in pixels)
+                        // when the collision was detected. Split the overlap 50/50
+                        //
+                        // Depending on which objects are dynamic, move the dynamic bodies by
+                        // the penetration amount. Don't want static nodes to be moved by the
+                        // penetration amount. 
+                        if(physics_node_a_dynamic == true && physics_node_b_dynamic == false){
+                            physics_node_a_position->x += collision_normal_x * collision_normal_penetration;
+                            physics_node_a_position->y += collision_normal_y * collision_normal_penetration;
+                        }else if(physics_node_a_dynamic == false && physics_node_b_dynamic == true){
+                            physics_node_b_position->x -= collision_normal_x * collision_normal_penetration;
+                            physics_node_b_position->y -= collision_normal_y * collision_normal_penetration;
+                        }else if(physics_node_a_dynamic == true && physics_node_b_dynamic == true){
+                            physics_node_a_position->x += collision_normal_x * collision_normal_penetration / 2;
+                            physics_node_a_position->y += collision_normal_y * collision_normal_penetration / 2;
 
-                        //     physics_node_b_position->x += flip_coe * collision_normal_x * collision_normal_penetration / 2;
-                        //     physics_node_b_position->y += flip_coe * collision_normal_y * collision_normal_penetration / 2;
-                        // }
-                        // // If both were not dynamic, that would have been caught
-                        // // earlier and the collision check would not have happened
+                            physics_node_b_position->x -= collision_normal_x * collision_normal_penetration / 2;
+                            physics_node_b_position->y -= collision_normal_y * collision_normal_penetration / 2;
+                        }
+                        // If both were not dynamic, that would have been caught
+                        // earlier and the collision check would not have happened
 
 
-                        // mp_obj_t collision_contact_data[5];
-                        // collision_contact_data[0] = mp_obj_new_float(collision_contact_x);
-                        // collision_contact_data[1] = mp_obj_new_float(collision_contact_y);
-                        // collision_contact_data[2] = mp_obj_new_float(collision_normal_x);
-                        // collision_contact_data[3] = mp_obj_new_float(collision_normal_y);
+                        mp_obj_t collision_contact_data[5];
+                        collision_contact_data[0] = mp_obj_new_float(collision_contact_x);
+                        collision_contact_data[1] = mp_obj_new_float(collision_contact_y);
+                        collision_contact_data[2] = mp_obj_new_float(collision_normal_x);
+                        collision_contact_data[3] = mp_obj_new_float(collision_normal_y);
 
-                        // mp_obj_t exec[3];
+                        mp_obj_t exec[3];
 
-                        // // Call A callback
-                        // collision_contact_data[4] = physics_link_node_b->object;
-                        // exec[0] = physics_node_common_data_a->collision_cb;
-                        // exec[1] = physics_node_base_a->attr_accessor;
-                        // exec[2] = collision_contact_2d_class_new(&collision_contact_2d_class_type, 5, 0, collision_contact_data);
-                        // mp_call_method_n_kw(1, 0, exec);
+                        // Call A callback
+                        collision_contact_data[4] = physics_link_node_b->object;
+                        exec[0] = physics_node_common_data_a->collision_cb;
+                        exec[1] = physics_node_base_a->attr_accessor;
+                        exec[2] = collision_contact_2d_class_new(&collision_contact_2d_class_type, 5, 0, collision_contact_data);
+                        mp_call_method_n_kw(1, 0, exec);
 
-                        // // Call B callback
-                        // collision_contact_data[4] = physics_link_node_a->object;
-                        // exec[0] = physics_node_common_data_b->collision_cb;
-                        // exec[1] = physics_node_base_b->attr_accessor;
-                        // exec[2] = collision_contact_2d_class_new(&collision_contact_2d_class_type, 5, 0, collision_contact_data);
-                        // mp_call_method_n_kw(1, 0, exec);
+                        // Call B callback
+                        collision_contact_data[4] = physics_link_node_a->object;
+                        exec[0] = physics_node_common_data_b->collision_cb;
+                        exec[1] = physics_node_base_b->attr_accessor;
+                        exec[2] = collision_contact_2d_class_new(&collision_contact_2d_class_type, 5, 0, collision_contact_data);
+                        mp_call_method_n_kw(1, 0, exec);
                     }
                 }
             }
@@ -413,7 +403,6 @@ void engine_physics_tick(){
         physics_link_node_a = physics_link_node_a->next;
     }
 
-    // ENGINE_FORCE_PRINTF(" ");
     engine_physics_apply_impulses();
 
     // After everything physics related is done, reset the bit array
