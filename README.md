@@ -95,7 +95,8 @@ X Menu?
    * [.] Audio <- Needs special attention! (still has an error where if text played quickly on same channel at start up that it crashes the device in the ISR while calling `get_data`)
    * [X] Resources/Flash
 
-
+[] Collision layers
+[] Flag on physics nodes that that make it not check for collision? Or maybe just an empty physics nodes? Want something for particles
 [] Need to try using engine_bit_collection to set known bits and see if it is working as intended (print the collection out after setting)
 [] Use DMA to clear background screen buffer (that's not being drawn to) after it is sent out to the screen and the game loop is still running (chaining?): https://e2e.ti.com/support/microcontrollers/c2000-microcontrollers-group/c2000/f/c2000-microcontrollers-forum/509048/fast-way-to-zero-out-an-array/1848882#1848882
 [] Clear physics collision buffer bit collection using DMA: https://e2e.ti.com/support/microcontrollers/c2000-microcontrollers-group/c2000/f/c2000-microcontrollers-forum/509048/fast-way-to-zero-out-an-array/1848882#1848882

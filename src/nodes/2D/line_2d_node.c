@@ -164,40 +164,43 @@ void line_2d_translate_endpoints(engine_line_2d_node_class_obj_t *line, float nx
 
 
 // Return `true` if handled loading the attr from internal structure, `false` otherwise
-bool line_2d_load_attr(engine_line_2d_node_class_obj_t *self, qstr attribute, mp_obj_t *destination){
+bool line_2d_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_t *destination){
+    // Get the underlying structure
+    engine_line_2d_node_class_obj_t *self = self_node_base->node;
+
     switch(attribute){
         case MP_QSTR___del__:
             destination[0] = MP_OBJ_FROM_PTR(&node_base_del_obj);
-            destination[1] = self;
+            destination[1] = self_node_base;
             return true;
         break;
         case MP_QSTR_add_child:
             destination[0] = MP_OBJ_FROM_PTR(&node_base_add_child_obj);
-            destination[1] = self;
+            destination[1] = self_node_base;
             return true;
         break;
         case MP_QSTR_get_child:
             destination[0] = MP_OBJ_FROM_PTR(&node_base_get_child_obj);
-            destination[1] = self;
+            destination[1] = self_node_base;
             return true;
         break;
         case MP_QSTR_remove_child:
             destination[0] = MP_OBJ_FROM_PTR(&node_base_remove_child_obj);
-            destination[1] = self;
+            destination[1] = self_node_base;
             return true;
         break;
         case MP_QSTR_set_layer:
             destination[0] = MP_OBJ_FROM_PTR(&node_base_set_layer_obj);
-            destination[1] = self;
+            destination[1] = self_node_base;
             return true;
         break;
         case MP_QSTR_get_layer:
             destination[0] = MP_OBJ_FROM_PTR(&node_base_get_layer_obj);
-            destination[1] = self;
+            destination[1] = self_node_base;
             return true;
         break;
         case MP_QSTR_node_base:
-            destination[0] = self;
+            destination[0] = self_node_base;
             return true;
         break;
         case MP_QSTR_start:
@@ -231,7 +234,10 @@ bool line_2d_load_attr(engine_line_2d_node_class_obj_t *self, qstr attribute, mp
 
 
 // Return `true` if handled storing the attr from internal structure, `false` otherwise
-bool line_2d_store_attr(engine_line_2d_node_class_obj_t *self, qstr attribute, mp_obj_t *destination){
+bool line_2d_store_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_t *destination){
+    // Get the underlying structure
+    engine_line_2d_node_class_obj_t *self = self_node_base->node;
+
     switch(attribute){
         case MP_QSTR_start:
             self->start = destination[1];
@@ -381,24 +387,24 @@ mp_obj_t line_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
     line_2d_node->outline = parsed_args[outline].u_obj;
 
     if(inherited == true){
+        // Get the Python class instance
+        mp_obj_t node_instance = parsed_args[child_class].u_obj;
+
         // Look for function overrides otherwise use the defaults
         mp_obj_t dest[2];
-        mp_load_method_maybe(node_base->node, MP_QSTR_tick, dest);
+        mp_load_method_maybe(node_instance, MP_QSTR_tick, dest);
         if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
             common_data->tick_cb = MP_OBJ_FROM_PTR(&line_2d_node_class_tick_obj);
         }else{                                                  // Likely found method (could be attribute)
             common_data->tick_cb = dest[0];
         }
 
-        mp_load_method_maybe(node_base->node, MP_QSTR_draw, dest);
+        mp_load_method_maybe(node_instance, MP_QSTR_draw, dest);
         if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
             common_data->draw_cb = MP_OBJ_FROM_PTR(&line_2d_node_class_draw_obj);
         }else{                                                  // Likely found method (could be attribute)
             common_data->draw_cb = dest[0];
         }
-
-        // Get the Python class instance
-        mp_obj_t node_instance = parsed_args[child_class].u_obj;
 
         // Store one pointer on the instance. Need to be able to get the
         // node base that contains a pointer to the engine specific data we

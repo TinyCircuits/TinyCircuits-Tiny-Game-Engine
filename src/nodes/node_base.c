@@ -90,7 +90,7 @@ mp_obj_t node_base_add_child(mp_obj_t self_parent_in, mp_obj_t child_in){
     // Get the node_base for cases with the child is a Python
     // class instance or just the node's native built-in type
     // without inheritance
-    engine_node_base_t *parent_node_base = node_base_get(self_parent_in, NULL);;
+    engine_node_base_t *parent_node_base = node_base_get(self_parent_in, NULL);
     engine_node_base_t *child_node_base = node_base_get(child_in, NULL);
     
     ENGINE_INFO_PRINTF("Node Base: Adding child... parent node type: %d, child node type: %d", parent_node_base->type, child_node_base->type);

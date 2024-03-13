@@ -1,7 +1,6 @@
 #ifndef ENGINE_PHYSICS_H
 #define ENGINE_PHYSICS_H
 
-#include "nodes/2d/physics_2d_node.h"
 #include "utility/linked_list.h"
 #include "nodes/node_base.h"
 #include "math/vector2.h"

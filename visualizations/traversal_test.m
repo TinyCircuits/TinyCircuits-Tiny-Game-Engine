@@ -4,8 +4,8 @@ height = 5;
 half_width = width * 0.5;
 half_height = height * 0.5;
 
-rotation = pi/3;
-#rotation = 0;
+#rotation = pi/3;
+rotation = 0;
 
 x_traversel_cos = cos(rotation) * half_width;
 x_traversel_sin = sin(rotation) * half_width;
@@ -40,3 +40,4 @@ y_axis = [y_zero, y0, y1, y2, y3];
 scatter(x_axis, y_axis);
 axis equal;
 axis([-10 10 -10 10]);
+set (gca (), "ydir", "reverse")

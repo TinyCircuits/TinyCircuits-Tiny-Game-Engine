@@ -21,7 +21,7 @@ target_sources(usermod_engine INTERFACE
     ${ENGINE_MOD_DIR}/nodes/2d/rectangle_2d_node.c
     ${ENGINE_MOD_DIR}/nodes/2d/line_2d_node.c
     ${ENGINE_MOD_DIR}/nodes/2d/circle_2d_node.c
-    ${ENGINE_MOD_DIR}/nodes/2d/physics_2d_node.c
+    ${ENGINE_MOD_DIR}/nodes/2d/physics_rectangle_2d_node.c
     ${ENGINE_MOD_DIR}/nodes/2d/text_2d_node.c
     ${ENGINE_MOD_DIR}/math/vector3.c
     ${ENGINE_MOD_DIR}/math/vector2.c
@@ -49,7 +49,6 @@ target_sources(usermod_engine INTERFACE
     ${ENGINE_MOD_DIR}/resources/engine_wave_sound_resource.c
     ${ENGINE_MOD_DIR}/physics/engine_physics_module.c
     ${ENGINE_MOD_DIR}/physics/engine_physics.c
-    ${ENGINE_MOD_DIR}/physics/collision_shapes/rectangle_collision_shape_2d.c
     ${ENGINE_MOD_DIR}/physics/collision_contact_2d.c
 )
 

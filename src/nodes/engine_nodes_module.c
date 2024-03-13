@@ -7,7 +7,7 @@
 #include "2d/rectangle_2d_node.h"
 #include "2d/line_2d_node.h"
 #include "2d/circle_2d_node.h"
-#include "2d/physics_2d_node.h"
+#include "2d/physics_rectangle_2d_node.h"
 #include "2d/text_2d_node.h"
 
 
@@ -34,7 +34,7 @@ STATIC const mp_rom_map_elem_t engine_nodes_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_Rectangle2DNode), (mp_obj_t)&engine_rectangle_2d_node_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Line2DNode), (mp_obj_t)&engine_line_2d_node_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Circle2DNode), (mp_obj_t)&engine_circle_2d_node_class_type },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_Physics2DNode), (mp_obj_t)&engine_physics_2d_node_class_type },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_PhysicsRectangle2DNode), (mp_obj_t)&engine_physics_rectangle_2d_node_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Text2DNode), (mp_obj_t)&engine_text_2d_node_class_type },
 };
 
