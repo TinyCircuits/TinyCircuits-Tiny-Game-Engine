@@ -23,7 +23,7 @@
     ATTR: [type=object]   [name={ref_link:Polygon2DNode}]       [value=object]
     ATTR: [type=object]   [name={ref_link:Circle2DNode}]        [value=object]
     ATTR: [type=object]   [name={ref_link:Physics2DNode}]       [value=object]
-    ATTR: [type=object]   [name={ref_link:Text2DNode}]       [value=object]
+    ATTR: [type=object]   [name={ref_link:Text2DNode}]          [value=object]
 */
 STATIC const mp_rom_map_elem_t engine_nodes_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_nodes) },

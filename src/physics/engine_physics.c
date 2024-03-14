@@ -7,6 +7,7 @@
 #include "collision_contact_2d.h"
 #include "nodes/node_types.h"
 #include "py/obj.h"
+#include "draw/engine_display_draw.h"
 
 #include <float.h>
 
@@ -85,6 +86,128 @@ void engine_physics_find_min_max_projection(float position_x, float position_y, 
         if(*max < projection){
             *max = projection;
         }
+    }
+}
+
+
+void engine_physics_rect_rect_get_best(float px, float py, float collision_normal_x, float collision_normal_y, float *max_proj_vertex_x, float *max_proj_vertex_y, float *edge_v0_x, float *edge_v0_y, float *edge_v1_x, float *edge_v1_y, float *vertices_x, float *vertices_y){
+    float max = -FLT_MAX;
+    uint8_t vertex_index = 0;
+
+    // Step 1: Find farthest vertex in polygon along separation normal
+    for(uint8_t ivx=0; ivx<4; ivx++){
+        float projection = engine_math_dot_product(collision_normal_x, collision_normal_y, px+vertices_x[ivx], py+vertices_y[ivx]);
+        if(projection > max){
+            max = projection;
+            vertex_index = ivx;
+        }
+    }
+
+    // Step 2: Find most perpendicular vertex
+    *max_proj_vertex_x = px+vertices_x[vertex_index];
+    *max_proj_vertex_y = py+vertices_y[vertex_index];
+
+    float v1x = 0.0f;
+    float v1y = 0.0f;
+
+    float v0x = 0.0f;
+    float v0y = 0.0f;
+
+    if(vertex_index + 1 > 3){
+        v1x = px+vertices_x[0];
+        v1y = py+vertices_y[0];
+    }else{
+        v1x = px+vertices_x[vertex_index+1];
+        v1y = py+vertices_y[vertex_index+1];
+    }
+
+    if(vertex_index - 1 < 0){
+        v0x = px+vertices_x[3];
+        v0y = py+vertices_y[3];
+    }else{
+        v0x = px+vertices_x[vertex_index-1];
+        v0y = py+vertices_y[vertex_index-1];
+    }
+
+    float left_v_x = *max_proj_vertex_x - v1x;
+    float left_v_y = *max_proj_vertex_y - v1y;
+
+    float right_v_x = *max_proj_vertex_x - v0x;
+    float right_v_y = *max_proj_vertex_y - v0y;
+
+    engine_math_normalize(&left_v_x, &left_v_y);
+    engine_math_normalize(&right_v_x, &right_v_y);
+
+    if(engine_math_dot_product(right_v_x, right_v_y, collision_normal_x, collision_normal_y) <= engine_math_dot_product(left_v_x, left_v_y, collision_normal_x, collision_normal_y)){
+        *edge_v0_x = v0x;
+        *edge_v0_y = v0y;
+        *edge_v1_x = *max_proj_vertex_x;
+        *edge_v1_y = *max_proj_vertex_y;
+    }else{
+        *edge_v0_x = *max_proj_vertex_x;
+        *edge_v0_y = *max_proj_vertex_y;
+        *edge_v1_x = v1x;
+        *edge_v1_y = v1y;
+    }
+}
+
+
+// Get the contact point from the OBB to OBB collision: https://dyn4j.org/2011/11/contact-points-using-clipping/
+void engine_physics_rect_rect_get_contact(float collision_normal_x, float collision_normal_y, float *collision_contact_x, float *collision_contact_y, engine_physics_rectangle_2d_node_class_obj_t *physics_rectangle_a, engine_physics_rectangle_2d_node_class_obj_t *physics_rectangle_b){
+    float a_max_proj_vertex_x = 0.0f;
+    float a_max_proj_vertex_y = 0.0f;
+
+    float a_edge_v0_x = 0.0f;
+    float a_edge_v0_y = 0.0f;
+    float a_edge_v1_x = 0.0f;
+    float a_edge_v1_y = 0.0f;
+
+    float b_max_proj_vertex_x = 0.0f;
+    float b_max_proj_vertex_y = 0.0f;
+
+    float b_edge_v0_x = 0.0f;
+    float b_edge_v0_y = 0.0f;
+    float b_edge_v1_x = 0.0f;
+    float b_edge_v1_y = 0.0f;
+
+    float apx = ((vector2_class_obj_t*)physics_rectangle_a->position)->x;
+    float apy = ((vector2_class_obj_t*)physics_rectangle_a->position)->y;
+
+    float bpx = ((vector2_class_obj_t*)physics_rectangle_b->position)->x;
+    float bpy = ((vector2_class_obj_t*)physics_rectangle_b->position)->y;
+    
+    engine_physics_rect_rect_get_best(apx, apy, -collision_normal_x, -collision_normal_y, &a_max_proj_vertex_x, &a_max_proj_vertex_y, &a_edge_v0_x, &a_edge_v0_y, &a_edge_v1_x, &a_edge_v1_y, physics_rectangle_a->vertices_x, physics_rectangle_a->vertices_y);
+    engine_physics_rect_rect_get_best(bpx, bpy,  collision_normal_x,  collision_normal_y, &b_max_proj_vertex_x, &b_max_proj_vertex_y, &b_edge_v0_x, &b_edge_v0_y, &b_edge_v1_x, &b_edge_v1_y, physics_rectangle_b->vertices_x, physics_rectangle_b->vertices_y);
+
+    engine_draw_line(0b111111000000000000, a_edge_v0_x+64, a_edge_v0_y+64, a_edge_v1_x+64, a_edge_v1_y+64, NULL);
+    engine_draw_line(0b111111000000011111, b_edge_v0_x+64, b_edge_v0_y+64, b_edge_v1_x+64, b_edge_v1_y+64, NULL);
+
+    // Already know that the intersection will happen, just need to handle case
+    // where the two edges can be exactly parallel. Project edges onto this parallel
+    // line, find the smallest portion, get the midpoint, use that as the intersection
+    if(engine_math_2d_do_segments_intersect(a_edge_v0_x, a_edge_v0_y, a_edge_v1_x, a_edge_v1_y, b_edge_v0_x, b_edge_v0_y, b_edge_v1_x, b_edge_v1_y, collision_contact_x, collision_contact_y) == false){
+        float to_project_x[] = {a_edge_v0_x, a_edge_v1_x, b_edge_v0_x, b_edge_v1_x};
+        float to_project_y[] = {a_edge_v0_y, a_edge_v1_y, b_edge_v0_y, b_edge_v1_y};
+
+        // Make this project vector perpendicular
+        float projections[4];
+        projections[0] = engine_math_dot_product(a_edge_v0_x, a_edge_v0_y, collision_normal_y, -collision_normal_x);
+        projections[1] = engine_math_dot_product(a_edge_v1_x, a_edge_v1_y, collision_normal_y, -collision_normal_x);
+        projections[2] = engine_math_dot_product(b_edge_v0_x, b_edge_v0_y, collision_normal_y, -collision_normal_x);
+        projections[3] = engine_math_dot_product(b_edge_v1_x, b_edge_v1_y, collision_normal_y, -collision_normal_x);
+
+        // https://math.stackexchange.com/a/2196332
+        for(uint8_t i=0; i<4; ++i){
+            for(uint8_t j=i+1; j<4; ++j){
+                if(projections[i] > projections[j]){
+                    engine_math_swap(&projections[i], &projections[j]);
+                    engine_math_swap(&to_project_x[i], &to_project_x[j]);
+                    engine_math_swap(&to_project_y[i], &to_project_y[j]);
+                }
+            }
+        }
+
+        engine_math_2d_midpoint(to_project_x[1], to_project_y[1], to_project_x[2], to_project_y[2], collision_contact_x, collision_contact_y);
     }
 }
 
@@ -231,6 +354,9 @@ void engine_physics_tick(){
                 vector2_class_obj_t *physics_node_a_velocity = NULL;
                 vector2_class_obj_t *physics_node_b_velocity = NULL;
 
+                mp_obj_t collision_cb_a = MP_OBJ_NULL;
+                mp_obj_t collision_cb_b = MP_OBJ_NULL;
+
                 if(physics_node_base_a->type == NODE_TYPE_PHYSICS_RECTANGLE_2D && physics_node_base_b->type == NODE_TYPE_PHYSICS_RECTANGLE_2D){
                     engine_physics_rectangle_2d_node_class_obj_t *physics_rectangle_a = physics_node_base_a->node;
                     engine_physics_rectangle_2d_node_class_obj_t *physics_rectangle_b = physics_node_base_b->node;
@@ -248,6 +374,9 @@ void engine_physics_tick(){
                     physics_node_b_velocity = physics_rectangle_b->velocity;
 
                     check_collision = engine_physics_check_rect_rect_collision;
+
+                    collision_cb_a = physics_rectangle_a->collision_cb;
+                    collision_cb_b = physics_rectangle_b->collision_cb;
                 }else if(physics_node_base_a->type == NODE_TYPE_PHYSICS_RECTANGLE_2D && physics_node_base_b->type == NODE_TYPE_PHYSICS_CIRCLE_2D){
 
                 }else if(physics_node_base_a->type == NODE_TYPE_PHYSICS_CIRCLE_2D && physics_node_base_b->type == NODE_TYPE_PHYSICS_RECTANGLE_2D){
@@ -327,6 +456,8 @@ void engine_physics_tick(){
                             continue;
                         }
 
+                        engine_physics_rect_rect_get_contact(collision_normal_x, collision_normal_y, &collision_contact_x, &collision_contact_y, physics_node_base_a->node, physics_node_base_b->node);
+
                         // Calculate restitution/bounciness
                         float physics_node_a_bounciness = mp_obj_get_float(mp_load_attr(physics_node_base_a->attr_accessor, MP_QSTR_bounciness));
                         float physics_node_b_bounciness = mp_obj_get_float(mp_load_attr(physics_node_base_b->attr_accessor, MP_QSTR_bounciness));
@@ -386,27 +517,27 @@ void engine_physics_tick(){
                         // earlier and the collision check would not have happened
 
 
-                        // mp_obj_t collision_contact_data[5];
-                        // collision_contact_data[0] = mp_obj_new_float(collision_contact_x);
-                        // collision_contact_data[1] = mp_obj_new_float(collision_contact_y);
-                        // collision_contact_data[2] = mp_obj_new_float(collision_normal_x);
-                        // collision_contact_data[3] = mp_obj_new_float(collision_normal_y);
+                        mp_obj_t collision_contact_data[5];
+                        collision_contact_data[0] = mp_obj_new_float(collision_contact_x);
+                        collision_contact_data[1] = mp_obj_new_float(collision_contact_y);
+                        collision_contact_data[2] = mp_obj_new_float(collision_normal_x);
+                        collision_contact_data[3] = mp_obj_new_float(collision_normal_y);
 
-                        // mp_obj_t exec[3];
+                        mp_obj_t exec[3];
 
-                        // // Call A callback
-                        // collision_contact_data[4] = physics_link_node_b->object;
-                        // exec[0] = physics_node_common_data_a->collision_cb;
-                        // exec[1] = physics_node_base_a->attr_accessor;
-                        // exec[2] = collision_contact_2d_class_new(&collision_contact_2d_class_type, 5, 0, collision_contact_data);
-                        // mp_call_method_n_kw(1, 0, exec);
+                        // Call A callback
+                        collision_contact_data[4] = physics_link_node_b->object;
+                        exec[0] = collision_cb_a;
+                        exec[1] = physics_node_base_a->attr_accessor;
+                        exec[2] = collision_contact_2d_class_new(&collision_contact_2d_class_type, 5, 0, collision_contact_data);
+                        mp_call_method_n_kw(1, 0, exec);
 
-                        // // Call B callback
-                        // collision_contact_data[4] = physics_link_node_a->object;
-                        // exec[0] = physics_node_common_data_b->collision_cb;
-                        // exec[1] = physics_node_base_b->attr_accessor;
-                        // exec[2] = collision_contact_2d_class_new(&collision_contact_2d_class_type, 5, 0, collision_contact_data);
-                        // mp_call_method_n_kw(1, 0, exec);
+                        // Call B callback
+                        collision_contact_data[4] = physics_link_node_a->object;
+                        exec[0] = collision_cb_b;
+                        exec[1] = physics_node_base_b->attr_accessor;
+                        exec[2] = collision_contact_2d_class_new(&collision_contact_2d_class_type, 5, 0, collision_contact_data);
+                        mp_call_method_n_kw(1, 0, exec);
                     }
                 }
             }

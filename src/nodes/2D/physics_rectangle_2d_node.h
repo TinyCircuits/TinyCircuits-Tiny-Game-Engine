@@ -27,8 +27,8 @@ typedef struct{
     float vertices_x[4];
     float vertices_y[4];
 
-    float normals_x[4];
-    float normals_y[4];
+    float normals_x[2];
+    float normals_y[2];
 
     mp_obj_t tick_cb;
     mp_obj_t draw_cb;

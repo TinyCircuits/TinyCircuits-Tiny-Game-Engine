@@ -23,6 +23,8 @@ void engine_math_normalize(float *vx, float *vy);
 
 float engine_math_clamp(float value, float min, float max);
 
+void engine_math_swap(float *val0, float *val1);
+
 bool engine_math_compare_floats(float value0, float value1);
 
 float engine_math_angle_between(float px0, float py0, float px1, float py1);

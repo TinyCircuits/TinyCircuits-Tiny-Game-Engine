@@ -23,6 +23,13 @@ float engine_math_clamp(float value, float min, float max){
 }
 
 
+void engine_math_swap(float *val0, float *val1){
+    float temp = *val0;
+    *val0 = *val1;
+    *val1 = temp;
+}
+
+
 // https://stackoverflow.com/a/5989243
 bool engine_math_compare_floats(float value0, float value1){
     return fabsf(value0 - value1) < EPSILON;

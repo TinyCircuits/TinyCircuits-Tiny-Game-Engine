@@ -11,8 +11,8 @@ import math
 # engine_physics.set_gravity(0, 0)
 
 
-box_physics_0 = PhysicsRectangle2DNode(width=15, height=15, position=Vector2(0, -25), rotation=math.pi/4, dynamic=False)
-box_0 = Rectangle2DNode(width=15, height=15, outline=True)
+box_physics_0 = PhysicsRectangle2DNode(width=20, height=20, position=Vector2(0, -25), rotation=math.pi/4, dynamic=False)
+box_0 = Rectangle2DNode(width=20, height=20, outline=True)
 box_0.color = engine_draw.blue
 box_physics_0.add_child(box_0)
  
@@ -25,6 +25,7 @@ class Player(PhysicsRectangle2DNode):
 
         self.width = 20
         self.height = 15
+        self.rotation=math.pi/4
 
         self.player = Rectangle2DNode(width=20, height=15, color=engine_draw.green, outline=True)
         self.add_child(self.player)
@@ -55,7 +56,7 @@ player = Player()
 
 
 
-box_physics_1 = PhysicsRectangle2DNode(width=15, height=15, position=Vector2(0, 25), rotation=0, dynamic=False)
+box_physics_1 = PhysicsRectangle2DNode(width=15, height=15, position=Vector2(0, 25), rotation=math.pi/4, dynamic=False)
 box_1 = Rectangle2DNode(width=15, height=15, outline=True)
 box_1.color = engine_draw.blue
 box_physics_1.add_child(box_1)

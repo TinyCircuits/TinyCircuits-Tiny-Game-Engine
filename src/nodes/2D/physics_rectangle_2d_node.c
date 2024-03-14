@@ -43,19 +43,12 @@ void engine_physics_rectangle_2d_node_update(engine_physics_rectangle_2d_node_cl
 
     // Calculate a new list of normals (should be able to
     // know the size of the final normal list size, just use
-    // append for now: TODO)
-    for(uint32_t ivx=0; ivx<4; ivx++){
-        uint16_t next_ivx = 0;
-
-        if(ivx + 1 < 4){
-            next_ivx = ivx + 1;
-        }else{
-            next_ivx = 0;
-        }
-        
+    // append for now: TODO). Only need two perpendicular normals
+    // for checking collisions between rectangles
+    for(uint32_t ivx=0; ivx<2; ivx++){        
         // 2D Cross product (perpendicular vector to the direction of the edge): FLIP: https://stackoverflow.com/a/1243676
-        float temp_face_normal_x = self->vertices_x[next_ivx] - self->vertices_x[ivx];
-        float temp_face_normal_y = self->vertices_y[next_ivx] - self->vertices_y[ivx];
+        float temp_face_normal_x = self->vertices_x[ivx + 1] - self->vertices_x[ivx];
+        float temp_face_normal_y = self->vertices_y[ivx + 1] - self->vertices_y[ivx];
 
         float face_normal_length_squared = (temp_face_normal_x*temp_face_normal_x) + (temp_face_normal_y*temp_face_normal_y);
 
