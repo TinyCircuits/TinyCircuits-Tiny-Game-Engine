@@ -179,9 +179,6 @@ void engine_physics_rect_rect_get_contact(float collision_normal_x, float collis
     engine_physics_rect_rect_get_best(apx, apy, -collision_normal_x, -collision_normal_y, &a_max_proj_vertex_x, &a_max_proj_vertex_y, &a_edge_v0_x, &a_edge_v0_y, &a_edge_v1_x, &a_edge_v1_y, physics_rectangle_a->vertices_x, physics_rectangle_a->vertices_y);
     engine_physics_rect_rect_get_best(bpx, bpy,  collision_normal_x,  collision_normal_y, &b_max_proj_vertex_x, &b_max_proj_vertex_y, &b_edge_v0_x, &b_edge_v0_y, &b_edge_v1_x, &b_edge_v1_y, physics_rectangle_b->vertices_x, physics_rectangle_b->vertices_y);
 
-    engine_draw_line(0b111111000000000000, a_edge_v0_x+64, a_edge_v0_y+64, a_edge_v1_x+64, a_edge_v1_y+64, NULL);
-    engine_draw_line(0b111111000000011111, b_edge_v0_x+64, b_edge_v0_y+64, b_edge_v1_x+64, b_edge_v1_y+64, NULL);
-
     // Already know that the intersection will happen, just need to handle case
     // where the two edges can be exactly parallel. Project edges onto this parallel
     // line, find the smallest portion, get the midpoint, use that as the intersection
@@ -207,6 +204,7 @@ void engine_physics_rect_rect_get_contact(float collision_normal_x, float collis
             }
         }
 
+        // The contact point of two parallel lines is the midpoint of the overlapping area
         engine_math_2d_midpoint(to_project_x[1], to_project_y[1], to_project_x[2], to_project_y[2], collision_contact_x, collision_contact_y);
     }
 }
@@ -450,7 +448,9 @@ void engine_physics_tick(){
 
                         float velocity_along_collision_normal = engine_math_dot_product(relative_velocity_x, relative_velocity_y, collision_normal_x, collision_normal_y);
 
-                        // Do not resolve if velocities are separating
+                        // Do not resolve if velocities are separating (this does mean
+                        // objects inside each other will not collide until a non separating
+                        // velocity is set)
                         if(velocity_along_collision_normal <= 0.0f){
                             physics_link_node_b = physics_link_node_b->next;
                             continue;

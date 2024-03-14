@@ -29,6 +29,9 @@ class Player(PhysicsRectangle2DNode):
 
         self.player = Rectangle2DNode(width=20, height=15, color=engine_draw.green, outline=True)
         self.add_child(self.player)
+
+        self.count = 0
+        print(self.count)
     
     def tick(self):
         if engine_input.check_pressed(engine_input.DPAD_LEFT):
@@ -47,7 +50,8 @@ class Player(PhysicsRectangle2DNode):
             self.rotation -= 0.0045
     
     def collision(self, contact):
-        print("Collision!")
+        self.count = self.count + 1
+        print("Collision!", self.count)
         Circle2DNode(position=contact.position, radius=2)
 
 

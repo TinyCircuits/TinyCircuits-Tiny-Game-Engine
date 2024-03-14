@@ -77,6 +77,10 @@ void engine_invoke_all_node_callbacks(){
                         exec[0] = empty_node_common_data->tick_cb;
                         exec[1] = node_base->attr_accessor;
                         mp_call_method_n_kw(0, 0, exec);
+
+                        exec[0] = empty_node_common_data->draw_cb;
+                        exec[1] = node_base->attr_accessor;
+                        engine_camera_draw_for_each_obj(exec);
                     }
                     break;
                     case NODE_TYPE_CAMERA:
@@ -94,9 +98,7 @@ void engine_invoke_all_node_callbacks(){
                         exec[1] = node_base->attr_accessor;
                         mp_call_method_n_kw(0, 0, exec);
 
-                        exec[0] = voxelspace_node_common_data->draw_cb;
-                        exec[1] = node_base;
-                        engine_camera_draw_for_each(exec);
+                        engine_camera_draw_for_each(voxelspace_node_class_draw, node_base);
                     }
                     break;
                     case NODE_TYPE_RECTANGLE_2D:
@@ -106,9 +108,7 @@ void engine_invoke_all_node_callbacks(){
                         exec[1] = node_base->attr_accessor;
                         mp_call_method_n_kw(0, 0, exec);
 
-                        exec[0] = rectangle_2d_node_common_data->draw_cb;
-                        exec[1] = node_base;
-                        engine_camera_draw_for_each(exec);
+                        engine_camera_draw_for_each(rectangle_2d_node_class_draw, node_base);
                     }
                     break;
                     case NODE_TYPE_LINE_2D:
@@ -118,9 +118,7 @@ void engine_invoke_all_node_callbacks(){
                         exec[1] = node_base->attr_accessor;
                         mp_call_method_n_kw(0, 0, exec);
 
-                        exec[0] = line_2d_node_common_data->draw_cb;
-                        exec[1] = node_base;
-                        engine_camera_draw_for_each(exec);
+                        engine_camera_draw_for_each(line_2d_node_class_draw, node_base);
                     }
                     break;
                     case NODE_TYPE_CIRCLE_2D:
@@ -130,9 +128,7 @@ void engine_invoke_all_node_callbacks(){
                         exec[1] = node_base->attr_accessor;
                         mp_call_method_n_kw(0, 0, exec);
 
-                        exec[0] = circle_2d_node_common_data->draw_cb;
-                        exec[1] = node_base;
-                        engine_camera_draw_for_each(exec);
+                        engine_camera_draw_for_each(circle_2d_node_class_draw, node_base);
                     }
                     break;
                     case NODE_TYPE_SPRITE_2D:
@@ -142,9 +138,7 @@ void engine_invoke_all_node_callbacks(){
                         exec[1] = node_base->attr_accessor;
                         mp_call_method_n_kw(0, 0, exec);
 
-                        exec[0] = sprite_2d_node_common_data->draw_cb;
-                        exec[1] = node_base;
-                        engine_camera_draw_for_each(exec);
+                        engine_camera_draw_for_each(sprite_2d_node_class_draw, node_base);
                     }
                     break;
                     case NODE_TYPE_TEXT_2D:
@@ -154,9 +148,7 @@ void engine_invoke_all_node_callbacks(){
                         exec[1] = node_base->attr_accessor;
                         mp_call_method_n_kw(0, 0, exec);
 
-                        exec[0] = text_2d_node_common_data->draw_cb;
-                        exec[1] = node_base;
-                        engine_camera_draw_for_each(exec);
+                        engine_camera_draw_for_each(text_2d_node_class_draw, node_base);
                     }
                     break;
                     case NODE_TYPE_PHYSICS_RECTANGLE_2D:
@@ -165,10 +157,6 @@ void engine_invoke_all_node_callbacks(){
                         exec[0] = physics_rectangle_2d_node->tick_cb;
                         exec[1] = node_base->attr_accessor;
                         mp_call_method_n_kw(0, 0, exec);
-
-                        exec[0] = physics_rectangle_2d_node->draw_cb;
-                        exec[1] = node_base;
-                        engine_camera_draw_for_each(exec);
                     }
                     break;
                     default:

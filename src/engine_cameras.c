@@ -19,7 +19,7 @@ void engine_camera_untrack(linked_list_node *camera_list_node){
 }
 
 
-void engine_camera_draw_for_each(mp_obj_t dest[2]){
+void engine_camera_draw_for_each_obj(mp_obj_t dest[2]){
     linked_list_node *current_camera_list_node = engine_cameras.start;
     if(current_camera_list_node == NULL){
         ENGINE_WARNING_PRINTF("No cameras exist, not calling draw callbacks!");
@@ -34,6 +34,22 @@ void engine_camera_draw_for_each(mp_obj_t dest[2]){
         arguments[2] = camera_node_base;
         
         mp_call_method_n_kw(1, 0, arguments);
+        current_camera_list_node = current_camera_list_node->next;
+    }
+}
+
+
+void engine_camera_draw_for_each(void (*draw_cb)(mp_obj_t, mp_obj_t), engine_node_base_t *node_base){
+    linked_list_node *current_camera_list_node = engine_cameras.start;
+    if(current_camera_list_node == NULL){
+        ENGINE_WARNING_PRINTF("No cameras exist, not calling draw callbacks!");
+    }
+
+    while(current_camera_list_node != NULL){
+        engine_node_base_t *camera_node_base = current_camera_list_node->object;
+        
+        draw_cb(node_base, camera_node_base);
+
         current_camera_list_node = current_camera_list_node->next;
     }
 }

@@ -3,7 +3,6 @@
 #include "py/objstr.h"
 #include "py/objtype.h"
 #include "nodes/node_types.h"
-#include "nodes/node_base.h"
 #include "debug/debug_print.h"
 #include "engine_object_layers.h"
 #include "math/vector3.h"
@@ -26,11 +25,9 @@ STATIC mp_obj_t line_2d_node_class_tick(mp_obj_t self_in){
 MP_DEFINE_CONST_FUN_OBJ_1(line_2d_node_class_tick_obj, line_2d_node_class_tick);
 
 
-STATIC mp_obj_t line_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
+void line_2d_node_class_draw(engine_node_base_t *line_node_base, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("Line2DNode: Drawing");
     
-    // Decode and store properties about the line and camera nodes
-    engine_node_base_t *line_node_base = self_in;   // Do not need `node_base_get` since the draw function is always fed an engine_node_base (unlike the attr functions)
     engine_line_2d_node_class_obj_t *line_2d = line_node_base->node;
 
     engine_node_base_t *camera_node_base = camera_node;
@@ -63,7 +60,7 @@ STATIC mp_obj_t line_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
     float line_resolved_hierarchy_y = 0.0f;
     float line_resolved_hierarchy_rotation = 0.0f;
     bool line_is_child_of_camera = false;
-    node_base_get_child_absolute_xy(&line_resolved_hierarchy_x, &line_resolved_hierarchy_y, &line_resolved_hierarchy_rotation, &line_is_child_of_camera, self_in);
+    node_base_get_child_absolute_xy(&line_resolved_hierarchy_x, &line_resolved_hierarchy_y, &line_resolved_hierarchy_rotation, &line_is_child_of_camera, line_node_base);
 
     // Store the non-rotated x and y for a second
     float line_rotated_x = line_resolved_hierarchy_x-camera_resolved_hierarchy_x;
@@ -129,13 +126,7 @@ STATIC mp_obj_t line_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
         engine_draw_line(line_color, brx, bry, blx, bly, camera_node);
         engine_draw_line(line_color, blx, bly, tlx, tly, camera_node);
     }
-
-    return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_2(line_2d_node_class_draw_obj, line_2d_node_class_draw);
-
-
-
 
 
 void line_2d_recalculate_midpoint(engine_line_2d_node_class_obj_t *line){
@@ -323,7 +314,6 @@ STATIC mp_attr_fun_t line_2d_node_class_attr(mp_obj_t self_in, qstr attribute, m
     ATTR:   [type=int]                        [name=color]                      [value=0 ~ 65535 (16-bit RGB565 0bRRRRRGGGGGGBBBBB)]   
     ATTR:   [type=bool]                       [name=outline]                    [value=True or False]
     OVRR:   [type=function]                   [name={ref_link:tick}]            [value=function]
-    OVRR:   [type=function]                   [name={ref_link:draw}]            [value=function]
 */
 mp_obj_t line_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Line2DNode");
@@ -374,7 +364,6 @@ mp_obj_t line_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
     node_base->attr_accessor = node_base;
 
     common_data->tick_cb = MP_OBJ_FROM_PTR(&line_2d_node_class_tick_obj);
-    common_data->draw_cb = MP_OBJ_FROM_PTR(&line_2d_node_class_draw_obj);
 
     line_2d_node->start = parsed_args[start].u_obj;
     line_2d_node->end = parsed_args[end].u_obj;
@@ -396,13 +385,6 @@ mp_obj_t line_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
             common_data->tick_cb = dest[0];
         }
 
-        mp_load_method_maybe(node_instance, MP_QSTR_draw, dest);
-        if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
-            common_data->draw_cb = MP_OBJ_FROM_PTR(&line_2d_node_class_draw_obj);
-        }else{                                                  // Likely found method (could be attribute)
-            common_data->draw_cb = dest[0];
-        }
-
         // Store one pointer on the instance. Need to be able to get the
         // node base that contains a pointer to the engine specific data we
         // care about
@@ -414,6 +396,9 @@ mp_obj_t line_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
         // so that certain callbacks/code can run (see py/objtype.c:mp_obj_instance_attr(...))
         default_instance_attr_func = MP_OBJ_TYPE_GET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr);
         MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr, line_2d_node_class_attr, 5);
+
+        // Need a way to access the object node instance instead of the native type for callbacks (tick, draw, collision)
+        node_base->attr_accessor = node_instance;
     }
 
     // Calculate midpoint/position based on endpoints 

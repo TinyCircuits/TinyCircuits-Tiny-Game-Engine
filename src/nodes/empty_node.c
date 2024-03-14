@@ -19,7 +19,7 @@ STATIC mp_obj_t empty_node_class_tick(mp_obj_t self_in){
 MP_DEFINE_CONST_FUN_OBJ_1(empty_node_class_tick_obj, empty_node_class_tick);
 
 
-STATIC mp_obj_t empty_node_class_draw(mp_obj_t self_in){
+mp_obj_t empty_node_class_draw(mp_obj_t self_in){
     ENGINE_WARNING_PRINTF("EmptyNode: Draw function not overridden");
     return mp_const_none;
 }
@@ -58,6 +58,13 @@ STATIC mp_obj_t empty_node_class_new(const mp_obj_type_t *type, size_t n_args, s
             common_data->tick_cb = MP_OBJ_FROM_PTR(&empty_node_class_tick_obj);
         }else{                                                  // Likely found method (could be attribute)
             common_data->tick_cb = dest[0];
+        }
+
+        mp_load_method_maybe(node_base->node, MP_QSTR_draw, dest);
+        if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
+            common_data->draw_cb = MP_OBJ_FROM_PTR(&empty_node_class_draw_obj);
+        }else{                                                  // Likely found method (could be attribute)
+            common_data->draw_cb = dest[0];
         }
     }else{
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Too many arguments passed to EmptyNode constructor!"));

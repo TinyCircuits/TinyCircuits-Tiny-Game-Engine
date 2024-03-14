@@ -78,14 +78,6 @@ STATIC mp_obj_t physics_rectangle_2d_node_class_tick(mp_obj_t self_in){
 MP_DEFINE_CONST_FUN_OBJ_1(physics_rectangle_2d_node_class_tick_obj, physics_rectangle_2d_node_class_tick);
 
 
-STATIC mp_obj_t physics_rectangle_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
-    ENGINE_WARNING_PRINTF("PhysicsRectangle2DNode: Drawing callback not overridden!");
-
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_2(physics_rectangle_2d_node_class_draw_obj, physics_rectangle_2d_node_class_draw);
-
-
 STATIC mp_obj_t physics_rectangle_2d_node_class_collision(mp_obj_t self_in, mp_obj_t collision_contact_2d){
     ENGINE_WARNING_PRINTF("PhysicsRectangle2DNode: Collision callback not overridden!");
 
@@ -396,7 +388,6 @@ mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n
     physics_2d_node->physics_list_node = engine_physics_track_node(node_base);
 
     physics_2d_node->tick_cb = MP_OBJ_FROM_PTR(&physics_rectangle_2d_node_class_tick_obj);
-    physics_2d_node->draw_cb = MP_OBJ_FROM_PTR(&physics_rectangle_2d_node_class_draw_obj);
     physics_2d_node->collision_cb = MP_OBJ_FROM_PTR(&physics_rectangle_2d_node_class_collision_obj);
 
     physics_2d_node->physics_id = engine_physics_take_available_id();
@@ -413,13 +404,6 @@ mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n
             physics_2d_node->tick_cb = MP_OBJ_FROM_PTR(&physics_rectangle_2d_node_class_tick_obj);
         }else{                                                  // Likely found method (could be attribute)
             physics_2d_node->tick_cb = dest[0];
-        }
-
-        mp_load_method_maybe(node_instance, MP_QSTR_draw, dest);
-        if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
-            physics_2d_node->draw_cb = MP_OBJ_FROM_PTR(&physics_rectangle_2d_node_class_draw_obj);
-        }else{                                                  // Likely found method (could be attribute)
-            physics_2d_node->draw_cb = dest[0];
         }
 
         mp_load_method_maybe(node_instance, MP_QSTR_collision, dest);
@@ -440,6 +424,9 @@ mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n
         // so that certain callbacks/code can run (see py/objtype.c:mp_obj_instance_attr(...))
         default_instance_attr_func = MP_OBJ_TYPE_GET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr);
         MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr, physics_rectangle_2d_node_class_attr, 5);
+
+        // Need a way to access the object node instance instead of the native type for callbacks (tick, draw, collision)
+        node_base->attr_accessor = node_instance;
     }
 
     engine_physics_rectangle_2d_node_update(node_base->node);

@@ -1,7 +1,6 @@
 #include "sprite_2d_node.h"
 
 #include "nodes/node_types.h"
-#include "nodes/node_base.h"
 #include "debug/debug_print.h"
 #include "engine_object_layers.h"
 #include "math/vector2.h"
@@ -28,11 +27,9 @@ STATIC mp_obj_t sprite_2d_node_class_tick(mp_obj_t self_in){
 MP_DEFINE_CONST_FUN_OBJ_1(sprite_2d_node_class_tick_obj, sprite_2d_node_class_tick);
 
 
-STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
+void sprite_2d_node_class_draw(engine_node_base_t *sprite_node_base, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("Sprite2DNode: Drawing");
 
-    // Decode and store properties about the rectangle and camera nodes
-    engine_node_base_t *sprite_node_base = self_in;
     engine_node_base_t *camera_node_base = camera_node;
     engine_sprite_2d_node_common_data_t *sprite_common_data = sprite_node_base->node_common_data;
 
@@ -72,7 +69,7 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
     float sprite_resolved_hierarchy_y = 0.0f;
     float sprite_resolved_hierarchy_rotation = 0.0f;
     bool sprite_is_child_of_camera = false;
-    node_base_get_child_absolute_xy(&sprite_resolved_hierarchy_x, &sprite_resolved_hierarchy_y, &sprite_resolved_hierarchy_rotation, &sprite_is_child_of_camera, self_in);
+    node_base_get_child_absolute_xy(&sprite_resolved_hierarchy_x, &sprite_resolved_hierarchy_y, &sprite_resolved_hierarchy_rotation, &sprite_is_child_of_camera, sprite_node_base);
 
     // Store the non-rotated x and y for a second
     float sprite_rotated_x = sprite_resolved_hierarchy_x - camera_resolved_hierarchy_x;
@@ -139,10 +136,7 @@ STATIC mp_obj_t sprite_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node
             sprite_common_data->time_at_last_animation_update_ms = millis();
         }
     }
-                                               
-    return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_2(sprite_2d_node_class_draw_obj, sprite_2d_node_class_draw);
 
 
 /*  --- doc ---
@@ -175,7 +169,6 @@ MP_DEFINE_CONST_FUN_OBJ_2(sprite_2d_node_class_draw_obj, sprite_2d_node_class_dr
     ATTR:   [type=int]                        [name=frame_current_x]            [value=any positive integer]
     ATTR:   [type=int]                        [name=frame_current_y]            [value=any positive integer]
     OVRR:   [type=function]                   [name={ref_link:tick}]            [value=function]
-    OVRR:   [type=function]                   [name={ref_link:draw}]            [value=function]
 */
 mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Sprite2DNode");
@@ -243,7 +236,6 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
         node_base->attr_accessor = node_base;
 
         common_data->tick_cb = MP_OBJ_FROM_PTR(&sprite_2d_node_class_tick_obj);
-        common_data->draw_cb = MP_OBJ_FROM_PTR(&sprite_2d_node_class_draw_obj);
 
         sprite_2d_node->position = parsed_args[position].u_obj;
         sprite_2d_node->texture_resource = parsed_args[texture].u_obj;
@@ -267,13 +259,6 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
             common_data->tick_cb = MP_OBJ_FROM_PTR(&sprite_2d_node_class_tick_obj);
         }else{                                                  // Likely found method (could be attribute)
             common_data->tick_cb = dest[0];
-        }
-
-        mp_load_method_maybe(node_base->node, MP_QSTR_draw, dest);
-        if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
-            common_data->draw_cb = MP_OBJ_FROM_PTR(&sprite_2d_node_class_draw_obj);
-        }else{                                                  // Likely found method (could be attribute)
-            common_data->draw_cb = dest[0];
         }
 
         mp_store_attr(node_base->node, MP_QSTR_position, parsed_args[position].u_obj);

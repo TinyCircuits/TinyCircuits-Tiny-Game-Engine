@@ -3,7 +3,6 @@
 #include "py/objstr.h"
 #include "py/objtype.h"
 #include "nodes/node_types.h"
-#include "nodes/node_base.h"
 #include "debug/debug_print.h"
 #include "engine_object_layers.h"
 #include "math/vector2.h"
@@ -31,11 +30,10 @@ STATIC mp_obj_t text_2d_node_class_tick(mp_obj_t self_in){
 MP_DEFINE_CONST_FUN_OBJ_1(text_2d_node_class_tick_obj, text_2d_node_class_tick);
 
 
-STATIC mp_obj_t text_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
+void text_2d_node_class_draw(engine_node_base_t *text_node_base, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("Text2DNode: Drawing");
 
     // Very first thing is to early out if the text is not set
-    engine_node_base_t *text_node_base = self_in;
     mp_obj_t text_obj = mp_load_attr(text_node_base->attr_accessor, MP_QSTR_text);
     
     if(text_obj == mp_const_none){
@@ -77,7 +75,7 @@ STATIC mp_obj_t text_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
     float text_resolved_hierarchy_y = 0.0f;
     float text_resolved_hierarchy_rotation = 0.0f;
     bool text_is_child_of_camera = false;
-    node_base_get_child_absolute_xy(&text_resolved_hierarchy_x, &text_resolved_hierarchy_y, &text_resolved_hierarchy_rotation, &text_is_child_of_camera, self_in);
+    node_base_get_child_absolute_xy(&text_resolved_hierarchy_x, &text_resolved_hierarchy_y, &text_resolved_hierarchy_rotation, &text_is_child_of_camera, text_node_base);
 
     // Store the non-rotated x and y for a second
     float text_rotated_x = text_resolved_hierarchy_x - camera_resolved_hierarchy_x;
@@ -166,10 +164,7 @@ STATIC mp_obj_t text_2d_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
         char_y -= (sin_angle * char_width);
         current_row_width += char_width;
     }
-
-    return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_2(text_2d_node_class_draw_obj, text_2d_node_class_draw);
 
 
 // `native`     == instance of this built-in type (`Text2DNode`)
@@ -290,7 +285,6 @@ STATIC void text_2d_node_class_set(mp_obj_t self_in, qstr attribute, mp_obj_t *d
     ATTR:   [type=float]                      [name=rotation]                   [value=any (radians)]
     ATTR:   [type={ref_link:Vector2}]         [name=scale]                      [value={ref_link:Vector2}]
     OVRR:   [type=function]                   [name={ref_link:tick}]            [value=function]
-    OVRR:   [type=function]                   [name={ref_link:draw}]            [value=function]
 */
 mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Text2DNode");
@@ -349,7 +343,6 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
         node_base->attr_accessor = node_base;
 
         common_data->tick_cb = MP_OBJ_FROM_PTR(&text_2d_node_class_tick_obj);
-        common_data->draw_cb = MP_OBJ_FROM_PTR(&text_2d_node_class_draw_obj);
 
         text_2d_node->position = parsed_args[position].u_obj;
         text_2d_node->font_resource = parsed_args[font].u_obj;
@@ -371,13 +364,6 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
             common_data->tick_cb = MP_OBJ_FROM_PTR(&text_2d_node_class_tick_obj);
         }else{                                                  // Likely found method (could be attribute)
             common_data->tick_cb = dest[0];
-        }
-
-        mp_load_method_maybe(node_base->node, MP_QSTR_draw, dest);
-        if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
-            common_data->draw_cb = MP_OBJ_FROM_PTR(&text_2d_node_class_draw_obj);
-        }else{                                                  // Likely found method (could be attribute)
-            common_data->draw_cb = dest[0];
         }
 
         mp_store_attr(node_base->node, MP_QSTR_position, parsed_args[position].u_obj);

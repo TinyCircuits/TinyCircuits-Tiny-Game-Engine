@@ -1,7 +1,6 @@
 #include "voxelspace_node.h"
 
 #include "nodes/node_types.h"
-#include "nodes/node_base.h"
 #include "debug/debug_print.h"
 #include "engine_object_layers.h"
 #include "math/vector3.h"
@@ -32,11 +31,9 @@ STATIC mp_obj_t voxelspace_node_class_tick(mp_obj_t self_in){
 MP_DEFINE_CONST_FUN_OBJ_1(voxelspace_node_class_tick_obj, voxelspace_node_class_tick);
 
 
-STATIC mp_obj_t voxelspace_node_class_draw(mp_obj_t self_in, mp_obj_t camera_node){
+void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("VoxelSpaceNode: Drawing");
 
-    // Decode and store properties about the rectangle and camera nodes
-    engine_node_base_t *voxelspace_node_base = self_in;
     // engine_voxelspace_node_common_data_t *common_data = voxelspace_node_base->node_common_data;
     engine_node_base_t *camera_node_base = camera_node;
 
@@ -124,10 +121,7 @@ STATIC mp_obj_t voxelspace_node_class_draw(mp_obj_t self_in, mp_obj_t camera_nod
         z += dz;
         dz += 0.0085f;
     }
-
-    return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_2(voxelspace_node_class_draw_obj, voxelspace_node_class_draw);
 
 
 /*  --- doc ---
@@ -150,7 +144,6 @@ MP_DEFINE_CONST_FUN_OBJ_2(voxelspace_node_class_draw_obj, voxelspace_node_class_
     ATTR:   [type=float]                      [name=height_scale]               [value=any]
     ATTR:   [type={ref_link:Vector3}]         [name=rotation]                   [value={ref_link:Vector3}]
     OVRR:   [type=function]                   [name={ref_link:tick}]            [value=function]
-    OVRR:   [type=function]                   [name={ref_link:draw}]            [value=function]
 */
 mp_obj_t voxelspace_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New VoxelSpaceNode");
@@ -209,7 +202,6 @@ mp_obj_t voxelspace_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
         node_base->attr_accessor = node_base;
 
         common_data->tick_cb = MP_OBJ_FROM_PTR(&voxelspace_node_class_tick_obj);
-        common_data->draw_cb = MP_OBJ_FROM_PTR(&voxelspace_node_class_draw_obj);
         common_data->transform_texture_pixel_cb = MP_OBJ_NULL;
         common_data->transform_heightmap_pixel_cb = MP_OBJ_NULL;
 
@@ -229,13 +221,6 @@ mp_obj_t voxelspace_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
             common_data->tick_cb = MP_OBJ_FROM_PTR(&voxelspace_node_class_tick_obj);
         }else{                                                  // Likely found method (could be attribute)
             common_data->tick_cb = dest[0];
-        }
-
-        mp_load_method_maybe(node_base->node, MP_QSTR_draw, dest);
-        if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
-            common_data->draw_cb = MP_OBJ_FROM_PTR(&voxelspace_node_class_draw_obj);
-        }else{                                                  // Likely found method (could be attribute)
-            common_data->draw_cb = dest[0];
         }
 
         mp_load_method_maybe(node_base->node, MP_QSTR_transform_texture, dest);

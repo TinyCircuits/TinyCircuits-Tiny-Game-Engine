@@ -31,7 +31,6 @@ typedef struct{
     float normals_y[2];
 
     mp_obj_t tick_cb;
-    mp_obj_t draw_cb;
     mp_obj_t collision_cb;
     linked_list_node *physics_list_node;    // All physics 2d nodes get added to a list that is easy to traverse
 }engine_physics_rectangle_2d_node_class_obj_t;

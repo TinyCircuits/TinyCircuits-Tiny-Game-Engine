@@ -2,6 +2,7 @@
 #define SPRITE_2D_NODE_H
 
 #include "py/obj.h"
+#include "nodes/node_base.h"
 
 // A basic 2d sprite node
 typedef struct{
@@ -20,10 +21,10 @@ typedef struct{
 
 typedef struct{
     mp_obj_t tick_cb;
-    mp_obj_t draw_cb;
     uint32_t time_at_last_animation_update_ms;
 }engine_sprite_2d_node_common_data_t;
 
 extern const mp_obj_type_t engine_sprite_2d_node_class_type;
+void sprite_2d_node_class_draw(engine_node_base_t *sprite_node_base, mp_obj_t camera_node);
 
 #endif  // SPRITE_2D_NODE_H

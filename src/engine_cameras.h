@@ -17,7 +17,9 @@ void engine_camera_untrack(linked_list_node *camera_list_node);
 
 // For each camera instance that is not disabled,
 // pass each camera to the draw callback
-void engine_camera_draw_for_each(mp_obj_t dest[2]);
+void engine_camera_draw_for_each_obj(mp_obj_t dest[2]);
+
+void engine_camera_draw_for_each(void (*draw_cb)(mp_obj_t, mp_obj_t), engine_node_base_t *node_base);
 
 // Remove all cameras from linked list
 void engine_camera_clear_all();

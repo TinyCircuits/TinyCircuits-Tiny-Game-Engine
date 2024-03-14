@@ -2,6 +2,7 @@
 #define RECTANGLE_2D_NODE_H
 
 #include "py/obj.h"
+#include "nodes/node_base.h"
 
 // A basic 2d rectangle node
 typedef struct{
@@ -16,10 +17,10 @@ typedef struct{
 
 typedef struct{
     mp_obj_t tick_cb;
-    mp_obj_t draw_cb;
 }engine_rectangle_2d_node_common_data_t;
 
 extern const mp_obj_type_t engine_rectangle_2d_node_class_type;
+void rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_base, mp_obj_t camera_node);
 
 
 #endif  // RECTANGLE_2D_NODE_H
