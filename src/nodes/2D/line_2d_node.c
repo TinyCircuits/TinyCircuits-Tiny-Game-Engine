@@ -281,16 +281,13 @@ STATIC mp_attr_fun_t line_2d_node_class_attr(mp_obj_t self_in, qstr attribute, m
     bool is_obj_instance = false;
     engine_node_base_t *node_base = node_base_get(self_in, &is_obj_instance);
 
-    // Get the underlying structure
-    engine_line_2d_node_class_obj_t *self = node_base->node;
-
     // Used for telling if custom load/store functions handled the attr
     bool attr_handled = false;
 
     if(destination[0] == MP_OBJ_NULL){          // Load
-        attr_handled = line_2d_load_attr(self, attribute, destination);
+        attr_handled = line_2d_load_attr(node_base, attribute, destination);
     }else if(destination[1] != MP_OBJ_NULL){    // Store
-        attr_handled = line_2d_store_attr(self, attribute, destination);
+        attr_handled = line_2d_store_attr(node_base, attribute, destination);
 
         // If handled, mark as successful store
         if(attr_handled) destination[0] = MP_OBJ_NULL;
