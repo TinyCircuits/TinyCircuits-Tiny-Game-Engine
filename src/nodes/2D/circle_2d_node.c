@@ -88,7 +88,7 @@ void circle_2d_node_class_draw(engine_node_base_t *circle_node_base, mp_obj_t ca
         }
     }else{
         // https://stackoverflow.com/a/58629898
-        float distance = circle_radius / 2.0f;
+        float distance = circle_radius;
         float angle_increment = acosf(1 - 1/distance) * 2.0f;   // Multiply by 2.0 since care about speed and not accuracy as much
 
         for(float angle = 0; angle <= 90; angle += angle_increment){

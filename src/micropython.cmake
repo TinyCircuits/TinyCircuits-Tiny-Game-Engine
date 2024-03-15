@@ -22,6 +22,7 @@ target_sources(usermod_engine INTERFACE
     ${ENGINE_MOD_DIR}/nodes/2d/line_2d_node.c
     ${ENGINE_MOD_DIR}/nodes/2d/circle_2d_node.c
     ${ENGINE_MOD_DIR}/nodes/2d/physics_rectangle_2d_node.c
+    ${ENGINE_MOD_DIR}/nodes/2d/physics_circle_2d_node.c
     ${ENGINE_MOD_DIR}/nodes/2d/text_2d_node.c
     ${ENGINE_MOD_DIR}/math/vector3.c
     ${ENGINE_MOD_DIR}/math/vector2.c

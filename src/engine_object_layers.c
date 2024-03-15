@@ -8,6 +8,7 @@
 #include "nodes/2d/sprite_2d_node.h"
 #include "nodes/2d/text_2d_node.h"
 #include "nodes/2d/physics_rectangle_2d_node.h"
+#include "nodes/2d/physics_circle_2d_node.h"
 #include "nodes/node_types.h"
 #include "nodes/node_base.h"
 #include "engine_cameras.h"
@@ -155,6 +156,14 @@ void engine_invoke_all_node_callbacks(){
                     {
                         engine_physics_rectangle_2d_node_class_obj_t *physics_rectangle_2d_node = node_base->node;
                         exec[0] = physics_rectangle_2d_node->tick_cb;
+                        exec[1] = node_base->attr_accessor;
+                        mp_call_method_n_kw(0, 0, exec);
+                    }
+                    break;
+                    case NODE_TYPE_PHYSICS_CIRCLE_2D:
+                    {
+                        engine_physics_circle_2d_node_class_obj_t *physics_circle_2d_node = node_base->node;
+                        exec[0] = physics_circle_2d_node->tick_cb;
                         exec[1] = node_base->attr_accessor;
                         mp_call_method_n_kw(0, 0, exec);
                     }

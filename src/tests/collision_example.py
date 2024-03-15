@@ -3,7 +3,7 @@ import engine_draw
 import engine_input
 import engine_physics
 from engine_math import Vector2
-from engine_nodes import Rectangle2DNode, Circle2DNode, CameraNode, PhysicsRectangle2DNode
+from engine_nodes import Rectangle2DNode, Circle2DNode, CameraNode, PhysicsRectangle2DNode, PhysicsCircle2DNode
 import random
 import math
 
@@ -11,23 +11,31 @@ import math
 # engine_physics.set_gravity(0, 0)
 
 
-box_physics_0 = PhysicsRectangle2DNode(width=20, height=20, position=Vector2(0, -25), rotation=math.pi/4, dynamic=False)
+circle_physics_0 = PhysicsCircle2DNode(position=Vector2(20, -15), radius=15)
+circle_0 = Circle2DNode(outline=True, radius=15)
+circle_physics_0.add_child(circle_0)
+
+
+box_physics_0 = PhysicsRectangle2DNode(width=20, height=20, position=Vector2(0, -30), rotation=math.pi/4, dynamic=False)
 box_0 = Rectangle2DNode(width=20, height=20, outline=True)
 box_0.color = engine_draw.blue
 box_physics_0.add_child(box_0)
  
-class Player(PhysicsRectangle2DNode):
+
+middle_box_physics = PhysicsRectangle2DNode(width=20, height=15, rotation=math.pi/4)
+middle_box = Rectangle2DNode(width=20, height=15, color=engine_draw.green, outline=True)
+middle_box_physics.add_child(middle_box)
+
+class Player(PhysicsCircle2DNode):
     def __init__(self):
         super().__init__(self)
-        self.position = Vector2(0, 0)
+        self.position = Vector2(35, -35)
 
         self.bounciness = 1.0
 
-        self.width = 20
-        self.height = 15
-        self.rotation=math.pi/4
+        self.radius = 7
 
-        self.player = Rectangle2DNode(width=20, height=15, color=engine_draw.green, outline=True)
+        self.player = Circle2DNode(radius = 7, color=engine_draw.green, outline=True)
         self.add_child(self.player)
 
         self.count = 0
@@ -51,13 +59,17 @@ class Player(PhysicsRectangle2DNode):
     
     def collision(self, contact):
         self.count = self.count + 1
-        print("Collision!", self.count)
+        # print("Collision!", self.count)
         Circle2DNode(position=contact.position, radius=2)
 
 
 
 player = Player()
 
+
+circle_physics_1 = PhysicsCircle2DNode(radius=10, position=Vector2(20, 15), dynamic=False)
+circle_1 = Circle2DNode(outline=True, radius=10)
+circle_physics_1.add_child(circle_1)
 
 
 box_physics_1 = PhysicsRectangle2DNode(width=15, height=15, position=Vector2(0, 25), rotation=math.pi/4, dynamic=False)

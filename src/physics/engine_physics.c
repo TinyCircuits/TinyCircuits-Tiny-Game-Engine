@@ -1,6 +1,7 @@
 #include "engine_physics.h"
 #include "debug/debug_print.h"
 #include "nodes/2d/physics_rectangle_2d_node.h"
+#include "nodes/2d/physics_circle_2d_node.h"
 #include "math/vector2.h"
 #include "math/engine_math.h"
 #include "utility/engine_bit_collection.h"
@@ -278,6 +279,57 @@ bool engine_physics_check_rect_rect_collision(engine_node_base_t *physics_node_b
 }
 
 
+// https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-basics-and-impulse-resolution--gamedev-6331t#:~:text=must%20be%20extended.-,Circle%20vs%20Circle,-Lets%20start%20with
+// https://github.com/RandyGaul/ImpulseEngine/blob/8d5f4d9113876f91a53cfb967879406e975263d1/Collision.cpp#L32-L66
+bool engine_physics_check_circle_circle_collision(engine_node_base_t *physics_node_base_a, engine_node_base_t *physics_node_base_b, float *collision_normal_x, float *collision_normal_y, float *collision_contact_x, float *collision_contact_y, float *collision_normal_penetration){
+    engine_physics_circle_2d_node_class_obj_t *physics_circle_a = physics_node_base_a->node;
+    engine_physics_circle_2d_node_class_obj_t *physics_circle_b = physics_node_base_b->node;
+
+    vector2_class_obj_t *physics_circle_a_position = physics_circle_a->position;
+    vector2_class_obj_t *physics_circle_b_position = physics_circle_b->position;
+
+    // What if these are children of other nodes? Should this be in absolute? TODO
+    float collision_shape_a_pos_x = physics_circle_a_position->x;
+    float collision_shape_a_pos_y = physics_circle_a_position->y;
+
+    float collision_shape_b_pos_x = physics_circle_b_position->x;
+    float collision_shape_b_pos_y = physics_circle_b_position->y;
+
+    float a_radius = mp_obj_get_float(physics_circle_a->radius);
+    float b_radius = mp_obj_get_float(physics_circle_b->radius);
+
+    // Get the normal/vector of translation
+    float normal_x = collision_shape_b_pos_x - collision_shape_a_pos_x;
+    float normal_y = collision_shape_b_pos_y - collision_shape_a_pos_y;
+
+    float normal_length_squared = (normal_x*normal_x) + (normal_y*normal_y);
+    float radius = a_radius + b_radius;
+
+    // If true, not close enough to be in contact, no collision
+    if(normal_length_squared >= radius * radius){
+        return false;
+    }
+
+    float normal_length = sqrtf(normal_length_squared);
+
+    if(normal_length == 0.0f){
+        *collision_normal_penetration = a_radius;
+        *collision_normal_x = 1.0f;
+        *collision_normal_y = 0.0f;
+        *collision_contact_x = collision_shape_a_pos_x;
+        *collision_contact_y = collision_shape_a_pos_y;
+    }else{
+        *collision_normal_penetration = radius - normal_length;
+        *collision_normal_x = normal_x / normal_length;
+        *collision_normal_y = normal_y / normal_length;
+        *collision_contact_x = *collision_normal_x * a_radius + collision_shape_a_pos_x;
+        *collision_contact_y = *collision_normal_y * a_radius + collision_shape_a_pos_y;
+    }
+
+    return true;
+}
+
+
 void engine_physics_apply_impulses(){
     linked_list_node *physics_link_node = engine_physics_nodes.start;
     while(physics_link_node != NULL){
@@ -338,7 +390,8 @@ void engine_physics_tick(){
             if(physics_link_node_a->object != physics_link_node_b->object){
                 engine_node_base_t *physics_node_base_a = physics_link_node_a->object;
                 engine_node_base_t *physics_node_base_b = physics_link_node_b->object;
-                bool (*check_collision)(void*, void*, float*, float*, float*, float*, float*);
+                bool (*check_collision)(engine_node_base_t*, engine_node_base_t*, float*, float*, float*, float*, float*) = NULL;
+                void (*get_contact)(float, float, float*, float*, void*, void*) = NULL;
 
                 bool physics_node_a_dynamic = false;
                 bool physics_node_b_dynamic = false;
@@ -372,6 +425,7 @@ void engine_physics_tick(){
                     physics_node_b_velocity = physics_rectangle_b->velocity;
 
                     check_collision = engine_physics_check_rect_rect_collision;
+                    get_contact = engine_physics_rect_rect_get_contact;
 
                     collision_cb_a = physics_rectangle_a->collision_cb;
                     collision_cb_b = physics_rectangle_b->collision_cb;
@@ -380,7 +434,26 @@ void engine_physics_tick(){
                 }else if(physics_node_base_a->type == NODE_TYPE_PHYSICS_CIRCLE_2D && physics_node_base_b->type == NODE_TYPE_PHYSICS_RECTANGLE_2D){
 
                 }else if(physics_node_base_a->type == NODE_TYPE_PHYSICS_CIRCLE_2D && physics_node_base_b->type == NODE_TYPE_PHYSICS_CIRCLE_2D){
+                    engine_physics_circle_2d_node_class_obj_t *physics_circle_a = physics_node_base_a->node;
+                    engine_physics_circle_2d_node_class_obj_t *physics_circle_b = physics_node_base_b->node;
 
+                    physics_node_a_dynamic = mp_obj_get_int(physics_circle_a->dynamic);
+                    physics_node_b_dynamic = mp_obj_get_int(physics_circle_b->dynamic);
+
+                    physics_node_a_id = physics_circle_a->physics_id;
+                    physics_node_b_id = physics_circle_b->physics_id;
+
+                    physics_node_a_position = physics_circle_a->position;
+                    physics_node_b_position = physics_circle_b->position;
+
+                    physics_node_a_velocity = physics_circle_a->velocity;
+                    physics_node_b_velocity = physics_circle_b->velocity;
+
+                    check_collision = engine_physics_check_circle_circle_collision;
+                    get_contact = NULL;
+
+                    collision_cb_a = physics_circle_a->collision_cb;
+                    collision_cb_b = physics_circle_b->collision_cb;
                 }
 
                 // Only check collision if at atleast one of the involved nodes
@@ -456,7 +529,7 @@ void engine_physics_tick(){
                             continue;
                         }
 
-                        engine_physics_rect_rect_get_contact(collision_normal_x, collision_normal_y, &collision_contact_x, &collision_contact_y, physics_node_base_a->node, physics_node_base_b->node);
+                        if(get_contact != NULL) get_contact(collision_normal_x, collision_normal_y, &collision_contact_x, &collision_contact_y, physics_node_base_a->node, physics_node_base_b->node);
 
                         // Calculate restitution/bounciness
                         float physics_node_a_bounciness = mp_obj_get_float(mp_load_attr(physics_node_base_a->attr_accessor, MP_QSTR_bounciness));
