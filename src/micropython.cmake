@@ -50,6 +50,8 @@ target_sources(usermod_engine INTERFACE
     ${ENGINE_MOD_DIR}/resources/engine_wave_sound_resource.c
     ${ENGINE_MOD_DIR}/physics/engine_physics_module.c
     ${ENGINE_MOD_DIR}/physics/engine_physics.c
+    ${ENGINE_MOD_DIR}/physics/engine_physics_ids.c
+    ${ENGINE_MOD_DIR}/physics/engine_physics_collision.c
     ${ENGINE_MOD_DIR}/physics/collision_contact_2d.c
 )
 
