@@ -4,6 +4,7 @@
 #include "py/objtype.h"
 #include "nodes/node_types.h"
 #include "nodes/node_base.h"
+#include "nodes/physics_node_base.h"
 #include "debug/debug_print.h"
 #include "engine_object_layers.h"
 #include "math/vector2.h"
@@ -40,9 +41,10 @@ mp_obj_t physics_circle_2d_node_class_del(mp_obj_t self_in){
     ENGINE_INFO_PRINTF("PhysicsCircle2DNode: Deleted (garbage collected, removing self from active engine objects)");
 
     engine_node_base_t *node_base = self_in;
-    engine_physics_circle_2d_node_class_obj_t *node = node_base->node;
-    engine_physics_untrack_node(node->physics_list_node);
-    engine_physics_give_back_id(node->physics_id);
+    engine_physics_node_base_t *physics_node_base = node_base->node;
+    engine_physics_circle_2d_node_class_obj_t *node = physics_node_base->unique_data;
+    engine_physics_untrack_node(physics_node_base->physics_list_node);
+    engine_physics_give_back_id(physics_node_base->physics_id);
 
     node_base_del(self_in);
 
@@ -54,7 +56,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(physics_circle_2d_node_class_del_obj, physics_c
 // Return `true` if handled loading the attr from internal structure, `false` otherwise
 bool physics_circle_2d_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_t *destination){
     // Get the underlying structure
-    engine_physics_circle_2d_node_class_obj_t *self = self_node_base->node;
+    engine_physics_node_base_t *physics_node_base = self_node_base->node;
+    engine_physics_circle_2d_node_class_obj_t *self = physics_node_base->unique_data;
 
     switch(attribute){
         case MP_QSTR___del__:
@@ -91,44 +94,8 @@ bool physics_circle_2d_load_attr(engine_node_base_t *self_node_base, qstr attrib
             destination[0] = self_node_base;
             return true;
         break;
-        case MP_QSTR_position:
-            destination[0] = self->position;
-            return true;
-        break;
         case MP_QSTR_radius:
             destination[0] = self->radius;
-            return true;
-        break;
-        case MP_QSTR_velocity:
-            destination[0] = self->velocity;
-            return true;
-        break;
-        case MP_QSTR_acceleration:
-            destination[0] = self->acceleration;
-            return true;
-        break;
-        case MP_QSTR_rotation:
-            destination[0] = self->rotation;
-            return true;
-        break;
-        case MP_QSTR_mass:
-            destination[0] = self->mass;
-            return true;
-        break;
-        case MP_QSTR_bounciness:
-            destination[0] = self->bounciness;
-            return true;
-        break;
-        case MP_QSTR_dynamic:
-            destination[0] = self->dynamic;
-            return true;
-        break;
-        case MP_QSTR_solid:
-            destination[0] = self->solid;
-            return true;
-        break;
-        case MP_QSTR_gravity_scale:
-            destination[0] = self->gravity_scale;
             return true;
         break;
         default:
@@ -140,47 +107,12 @@ bool physics_circle_2d_load_attr(engine_node_base_t *self_node_base, qstr attrib
 // Return `true` if handled storing the attr from internal structure, `false` otherwise
 bool physics_circle_2d_store_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_t *destination){
     // Get the underlying structure
-    engine_physics_circle_2d_node_class_obj_t *self = self_node_base->node;
+    engine_physics_node_base_t *physics_node_base = self_node_base->node;
+    engine_physics_circle_2d_node_class_obj_t *self = physics_node_base->unique_data;
 
     switch(attribute){
-        case MP_QSTR_position:
-            self->position = destination[1];
-            return true;
-        break;
         case MP_QSTR_radius:
             self->radius = destination[1];
-            return true;
-        break;
-        case MP_QSTR_velocity:
-            self->velocity = destination[1];
-            return true;
-        break;
-        case MP_QSTR_acceleration:
-            self->acceleration = destination[1];
-            return true;
-        break;
-        case MP_QSTR_rotation:
-            self->rotation = destination[1];
-            return true;
-        break;
-        case MP_QSTR_mass:
-            self->mass = destination[1];
-            return true;
-        break;
-        case MP_QSTR_bounciness:
-            self->bounciness = destination[1];
-            return true;
-        break;
-        case MP_QSTR_dynamic:
-            self->dynamic = destination[1];
-            return true;
-        break;
-        case MP_QSTR_solid:
-            self->solid = destination[1];
-            return true;
-        break;
-        case MP_QSTR_gravity_scale:
-            self->gravity_scale = destination[1];
             return true;
         break;
         default:
@@ -202,8 +134,10 @@ STATIC mp_attr_fun_t physics_circle_2d_node_class_attr(mp_obj_t self_in, qstr at
 
     if(destination[0] == MP_OBJ_NULL){          // Load
         attr_handled = physics_circle_2d_load_attr(node_base, attribute, destination);
+        if(!attr_handled) attr_handled = physics_node_base_load_attr(node_base, attribute, destination);
     }else if(destination[1] != MP_OBJ_NULL){    // Store
         attr_handled = physics_circle_2d_store_attr(node_base, attribute, destination);
+        if(!attr_handled) attr_handled = physics_node_base_store_attr(node_base, attribute, destination);
 
         // If handled, mark as successful store
         if(attr_handled) destination[0] = MP_OBJ_NULL;
@@ -302,30 +236,36 @@ mp_obj_t physics_circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_ar
     engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);
     node_base_init(node_base, NULL, &engine_physics_circle_2d_node_class_type, NODE_TYPE_PHYSICS_CIRCLE_2D);
 
-    engine_physics_circle_2d_node_class_obj_t *physics_2d_node = m_malloc(sizeof(engine_physics_circle_2d_node_class_obj_t));
-    node_base->node = physics_2d_node;
+    // Another layer, all physics objects have some data in common,
+    // create that plus the specific data structure for this collider
+    engine_physics_node_base_t *physics_node_base = m_malloc(sizeof(engine_physics_node_base_t));
+    engine_physics_circle_2d_node_class_obj_t *physics_circle_2d_node = m_malloc(sizeof(engine_physics_circle_2d_node_class_obj_t));
+    physics_node_base->unique_data = physics_circle_2d_node;
+
+    node_base->node = physics_node_base;
     node_base->attr_accessor = node_base;
 
-    physics_2d_node->position = parsed_args[position].u_obj;
-    physics_2d_node->radius = parsed_args[radius].u_obj;
-    physics_2d_node->velocity = parsed_args[velocity].u_obj;
-    physics_2d_node->acceleration = parsed_args[acceleration].u_obj;
-    physics_2d_node->rotation = parsed_args[rotation].u_obj;
-    physics_2d_node->mass = parsed_args[mass].u_obj;
-    physics_2d_node->bounciness = parsed_args[bounciness].u_obj;
-    physics_2d_node->dynamic = parsed_args[dynamic].u_obj;
-    physics_2d_node->solid = parsed_args[solid].u_obj;
-    physics_2d_node->gravity_scale = parsed_args[gravity_scale].u_obj;
+    physics_node_base->position = parsed_args[position].u_obj;
+    physics_node_base->velocity = parsed_args[velocity].u_obj;
+    physics_node_base->acceleration = parsed_args[acceleration].u_obj;
+    physics_node_base->rotation = parsed_args[rotation].u_obj;
+    physics_node_base->mass = parsed_args[mass].u_obj;
+    physics_node_base->bounciness = parsed_args[bounciness].u_obj;
+    physics_node_base->dynamic = parsed_args[dynamic].u_obj;
+    physics_node_base->solid = parsed_args[solid].u_obj;
+    physics_node_base->gravity_scale = parsed_args[gravity_scale].u_obj;
+    physics_node_base->physics_id = engine_physics_take_available_id();
 
     // Track the node base for this physics node so that it can
     // be looped over quickly in a linked list
-    physics_2d_node->physics_list_node = engine_physics_track_node(node_base);
+    physics_node_base->physics_list_node = engine_physics_track_node(node_base);
 
-    physics_2d_node->tick_cb = MP_OBJ_FROM_PTR(&physics_circle_2d_node_class_tick_obj);
-    physics_2d_node->collision_cb = MP_OBJ_FROM_PTR(&physics_circle_2d_node_class_collision_obj);
+    physics_node_base->tick_cb = MP_OBJ_FROM_PTR(&physics_circle_2d_node_class_tick_obj);
+    physics_node_base->collision_cb = MP_OBJ_FROM_PTR(&physics_circle_2d_node_class_collision_obj);
 
-    physics_2d_node->physics_id = engine_physics_take_available_id();
+    physics_node_base_calculate_inverse_mass(physics_node_base);
 
+    physics_circle_2d_node->radius = parsed_args[radius].u_obj;
 
     if(inherited == true){
         // Get the Python class instance
@@ -335,16 +275,16 @@ mp_obj_t physics_circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_ar
         mp_obj_t dest[2];
         mp_load_method_maybe(node_instance, MP_QSTR_tick, dest);
         if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
-            physics_2d_node->tick_cb = MP_OBJ_FROM_PTR(&physics_circle_2d_node_class_tick_obj);
+            physics_node_base->tick_cb = MP_OBJ_FROM_PTR(&physics_circle_2d_node_class_tick_obj);
         }else{                                                  // Likely found method (could be attribute)
-            physics_2d_node->tick_cb = dest[0];
+            physics_node_base->tick_cb = dest[0];
         }
 
         mp_load_method_maybe(node_instance, MP_QSTR_collision, dest);
         if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
-            physics_2d_node->collision_cb = MP_OBJ_FROM_PTR(&physics_circle_2d_node_class_collision_obj);
+            physics_node_base->collision_cb = MP_OBJ_FROM_PTR(&physics_circle_2d_node_class_collision_obj);
         }else{                                                  // Likely found method (could be attribute)
-            physics_2d_node->collision_cb = dest[0];
+            physics_node_base->collision_cb = dest[0];
         }
 
         // Store one pointer on the instance. Need to be able to get the

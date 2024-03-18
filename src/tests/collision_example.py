@@ -11,9 +11,9 @@ import math
 engine_physics.set_gravity(0, 0)
 
 
-# circle_physics_0 = PhysicsCircle2DNode(position=Vector2(20, -15), radius=12)
-# circle_0 = Circle2DNode(outline=True, radius=12)
-# circle_physics_0.add_child(circle_0)
+circle_physics_0 = PhysicsCircle2DNode(position=Vector2(20, -15), radius=12)
+circle_0 = Circle2DNode(outline=True, radius=12)
+circle_physics_0.add_child(circle_0)
 
 
 box_physics_0 = PhysicsRectangle2DNode(width=20, height=20, position=Vector2(0, -30), rotation=0, dynamic=False, bounciness = 2.0)

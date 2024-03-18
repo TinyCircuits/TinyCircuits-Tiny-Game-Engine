@@ -8,26 +8,7 @@
 
 
 typedef struct{
-    mp_obj_t position;              // Vector2: 2d xy position of this node
-    mp_obj_t radius;                // Radius of the collider
-    mp_obj_t velocity;              // Vector2 (Absolute velocity)
-    mp_obj_t acceleration;          // Vector2
-    mp_obj_t rotation;              // float (Current rotation angle)
-    mp_obj_t mass;                  // How heavy the node is
-    mp_obj_t bounciness;            // Restitution or elasticity
-
-    mp_obj_t dynamic;               // Flag indicating if node is dynamic and moving around due to physics or static
-    mp_obj_t solid;                 // May want collision callbacks to happen without impeding objects, set to false
-
-    mp_obj_t gravity_scale;         // Vector2 allowing scaling affects of gravity. Set to 0,0 for no gravity
-
-    
-
-    uint8_t physics_id;
-
-    mp_obj_t tick_cb;
-    mp_obj_t collision_cb;
-    linked_list_node *physics_list_node;    // All physics 2d nodes get added to a list that is easy to traverse
+    mp_obj_t radius;                        // Radius of the collider
 }engine_physics_circle_2d_node_class_obj_t;
 
 
