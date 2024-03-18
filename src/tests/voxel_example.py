@@ -3,7 +3,7 @@ import engine_draw
 import engine_debug
 import engine_input
 import engine_physics
-from engine_nodes import EmptyNode, Sprite2DNode, Rectangle2DNode, Circle2DNode, CameraNode, VoxelSpaceNode, Physics2DNode
+from engine_nodes import EmptyNode, Sprite2DNode, Rectangle2DNode, Circle2DNode, CameraNode, VoxelSpaceNode
 from engine_math import Vector3, Vector2, Rectangle
 from engine_resources import TextureResource
 import gc

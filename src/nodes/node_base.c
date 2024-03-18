@@ -264,6 +264,7 @@ void node_base_init(engine_node_base_t *node_base, void *common_data, mp_obj_typ
     node_base->layer = 0;
     node_base->type = node_type;
     node_base->object_list_node = engine_add_object_to_layer(node_base, node_base->layer);
+    node_base->parent_node_base = NULL;
     node_base_set_if_visible(node_base, true);
     node_base_set_if_disabled(node_base, false);
     node_base_set_if_just_added(node_base, true);

@@ -95,6 +95,8 @@ X Menu?
    * [.] Audio <- Needs special attention! (still has an error where if text played quickly on same channel at start up that it crashes the device in the ISR while calling `get_data`)
    * [X] Resources/Flash
 
+[] Make sure the other node in the collision is passed to the collision callback, doesn't seem to be the case for rect vs. circle collision
+[] Detect if a node adds itself as a child to itself
 [] Collision layers
 [] Flag on physics nodes that that make it not check for collision? Or maybe just an empty physics nodes? Want something for particles
 [] Need to try using engine_bit_collection to set known bits and see if it is working as intended (print the collection out after setting)

@@ -190,14 +190,7 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);
-    node_base->node_common_data = common_data;
-    node_base->base.type = &engine_rectangle_2d_node_class_type;
-    node_base->layer = 0;
-    node_base->type = NODE_TYPE_RECTANGLE_2D;
-    node_base->object_list_node = engine_add_object_to_layer(node_base, node_base->layer);
-    node_base_set_if_visible(node_base, true);
-    node_base_set_if_disabled(node_base, false);
-    node_base_set_if_just_added(node_base, true);
+    node_base_init(node_base, common_data, &engine_rectangle_2d_node_class_type, NODE_TYPE_RECTANGLE_2D);
 
     if(inherited == false){        // Non-inherited (create a new object)
         engine_rectangle_2d_node_class_obj_t *rectangle_2d_node = m_malloc(sizeof(engine_rectangle_2d_node_class_obj_t));
