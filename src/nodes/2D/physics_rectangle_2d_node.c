@@ -11,6 +11,7 @@
 #include "draw/engine_display_draw.h"
 #include "math/engine_math.h"
 #include "draw/engine_display_draw.h"
+#include "physics/engine_physics.h"
 
 
 void engine_physics_rectangle_2d_node_update(engine_physics_node_base_t *physics_node_base){
@@ -18,7 +19,7 @@ void engine_physics_rectangle_2d_node_update(engine_physics_node_base_t *physics
 
     float half_width = mp_obj_get_float(self->width) * 0.5f;
     float half_height = mp_obj_get_float(self->height) * 0.5f;
-    float rotation = mp_obj_get_float(physics_node_base->rotation);
+    float rotation = physics_node_base->rotation;
 
     float x_traversal_cos = cosf(rotation) * half_width;
     float x_traversal_sin = sinf(rotation) * half_width;
@@ -94,13 +95,30 @@ mp_obj_t physics_rectangle_2d_node_class_del(mp_obj_t self_in){
     engine_physics_node_base_t *physics_node_base = node_base->node;
     engine_physics_rectangle_2d_node_class_obj_t *node = physics_node_base->unique_data;
     engine_physics_untrack_node(physics_node_base->physics_list_node);
-    engine_physics_give_back_id(physics_node_base->physics_id);
+    engine_physics_ids_give_back(physics_node_base->physics_id);
 
     node_base_del(self_in);
 
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(physics_rectangle_2d_node_class_del_obj, physics_rectangle_2d_node_class_del);
+
+
+float physics_rectangle_2d_calculate_inverse_inertia(engine_node_base_t *node_base){
+    engine_physics_node_base_t *physics_node_base = node_base->node;
+    engine_physics_rectangle_2d_node_class_obj_t *physics_rectangle = physics_node_base->unique_data;
+
+    float width = mp_obj_get_float(physics_rectangle->width);
+    float height = mp_obj_get_float(physics_rectangle->height);
+    float mass = mp_obj_get_float(physics_node_base->mass);
+
+    // https://www.concepts-of-physics.com/mechanics/moment-of-inertia.php#:~:text=Moment%20of%20Inertia%20of%20Common%20Shapes
+    if(mass = 0.0f){
+        physics_node_base->inverse_moment_of_inertia = 0.0f;
+    }else{
+        physics_node_base->inverse_moment_of_inertia = 1.0f / ((mass * (width*width) + (height*height)) / 12.0f);
+    }
+}
 
 
 // Return `true` if handled loading the attr from internal structure, `false` otherwise
@@ -176,8 +194,14 @@ bool physics_rectangle_2d_store_attr(engine_node_base_t *self_node_base, qstr at
             return true;
         break;
         case MP_QSTR_rotation:  // Special case, want to handle rotation here instead of base
-            physics_node_base->rotation = destination[1];
+            physics_node_base->rotation = mp_obj_get_float(destination[1]);
             engine_physics_rectangle_2d_node_update(physics_node_base);
+            return true;
+        break;
+        case MP_QSTR_mass:
+            physics_node_base->mass = destination[1];
+            physics_node_base_calculate_inverse_mass(physics_node_base);
+            physics_rectangle_2d_calculate_inverse_inertia(self_node_base);
             return true;
         break;
         default:
@@ -225,7 +249,6 @@ STATIC mp_attr_fun_t physics_rectangle_2d_node_class_attr(mp_obj_t self_in, qstr
     PARAM: [type=float]                                  [name=width]                    [value=any]
     PARAM: [type=float]                                  [name=height]                   [value=any]
     PARAM: [type={ref_link:Vector2}]                     [name=velocity]                 [value={ref_link:Vector2}]
-    PARAM: [type={ref_link:Vector2}]                     [name=acceleration]             [value={ref_link:Vector2}]
     PARAM: [type=float]                                  [name=rotation]                 [value=any]
     PARAM: [type=float]                                  [name=mass]                     [value=any]
     PARAM: [type=float]                                  [name=bounciness]               [value=any]
@@ -242,7 +265,6 @@ STATIC mp_attr_fun_t physics_rectangle_2d_node_class_attr(mp_obj_t self_in, qstr
     ATTR:  [type=float]                                  [name=width]                    [value=any]
     ATTR:  [type=float]                                  [name=height]                   [value=any]
     ATTR:  [type={ref_link:Vector2}]                     [name=velocity]                 [value={ref_link:Vector2}]
-    ATTR:  [type={ref_link:Vector2}]                     [name=acceleration]             [value={ref_link:Vector2}]
     ATTR:  [type=float]                                  [name=rotation]                 [value=any]
     ATTR:  [type=float]                                  [name=mass]                     [value=any]
     ATTR:  [type=float]                                  [name=bounciness]               [value=any]
@@ -260,16 +282,16 @@ mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n
         { MP_QSTR_width,            MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_height,           MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_velocity,         MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_acceleration,     MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_angular_velocity, MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_rotation,         MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_mass,             MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_bounciness,       MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_dynamic,          MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_solid,          MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_solid,            MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_gravity_scale,    MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
-    enum arg_ids {child_class, position, width, height, velocity, acceleration, rotation, mass, bounciness, dynamic, solid, gravity_scale};
+    enum arg_ids {child_class, position, width, height, velocity, angular_velocity, rotation, mass, bounciness, dynamic, solid, gravity_scale};
     bool inherited = false;
 
     // If there is one positional argument and it isn't the first 
@@ -293,7 +315,7 @@ mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n
     if(parsed_args[width].u_obj == MP_OBJ_NULL) parsed_args[width].u_obj = mp_obj_new_float(10.0f);
     if(parsed_args[height].u_obj == MP_OBJ_NULL) parsed_args[height].u_obj = mp_obj_new_float(10.0f);
     if(parsed_args[velocity].u_obj == MP_OBJ_NULL) parsed_args[velocity].u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL);
-    if(parsed_args[acceleration].u_obj == MP_OBJ_NULL) parsed_args[acceleration].u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL);
+    if(parsed_args[angular_velocity].u_obj == MP_OBJ_NULL) parsed_args[angular_velocity].u_obj = mp_obj_new_float(0.0f);
     if(parsed_args[rotation].u_obj == MP_OBJ_NULL) parsed_args[rotation].u_obj = mp_obj_new_float(0.0);
     if(parsed_args[mass].u_obj == MP_OBJ_NULL) parsed_args[mass].u_obj = mp_obj_new_float(1.0f);
     if(parsed_args[bounciness].u_obj == MP_OBJ_NULL) parsed_args[bounciness].u_obj = mp_obj_new_float(1.0f);
@@ -316,14 +338,16 @@ mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n
 
     physics_node_base->position = parsed_args[position].u_obj;
     physics_node_base->velocity = parsed_args[velocity].u_obj;
-    physics_node_base->acceleration = parsed_args[acceleration].u_obj;
-    physics_node_base->rotation = parsed_args[rotation].u_obj;
+    physics_node_base->angular_velocity = parsed_args[angular_velocity].u_obj;
+    physics_node_base->rotation = mp_obj_get_float(parsed_args[rotation].u_obj);
     physics_node_base->mass = parsed_args[mass].u_obj;
     physics_node_base->bounciness = parsed_args[bounciness].u_obj;
     physics_node_base->dynamic = parsed_args[dynamic].u_obj;
     physics_node_base->solid = parsed_args[solid].u_obj;
     physics_node_base->gravity_scale = parsed_args[gravity_scale].u_obj;
-    physics_node_base->physics_id = engine_physics_take_available_id();
+    physics_node_base->physics_id = engine_physics_ids_take_available();
+    physics_node_base->total_position_correction_x = 0.0f;
+    physics_node_base->total_position_correction_y = 0.0f;
 
     // Track the node base for this physics node so that it can
     // be looped over quickly in a linked list
@@ -332,10 +356,11 @@ mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n
     physics_node_base->tick_cb = MP_OBJ_FROM_PTR(&physics_rectangle_2d_node_class_tick_obj);
     physics_node_base->collision_cb = MP_OBJ_FROM_PTR(&physics_rectangle_2d_node_class_collision_obj);
 
-    physics_node_base_calculate_inverse_mass(physics_node_base);
-
     physics_rectangle_2d_node->width = parsed_args[width].u_obj;
     physics_rectangle_2d_node->height = parsed_args[height].u_obj;
+
+    physics_node_base_calculate_inverse_mass(physics_node_base);
+    physics_rectangle_2d_calculate_inverse_inertia(node_base);
 
     if(inherited == true){
         // Get the Python class instance

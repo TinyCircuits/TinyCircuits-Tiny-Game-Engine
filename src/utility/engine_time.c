@@ -51,7 +51,7 @@
 uint32_t millis(){
     #if defined(__EMSCRIPTEN__)
         gettimeofday(&tv, NULL);
-        return tv.tv_sec*1000LL + tv.tv_usec/1000;
+        return tv.tv_sec * 1000LL + tv.tv_usec / 1000;
     #elif defined(__unix__)
         // https://stackoverflow.com/a/63140531
         // Slow? https://github.com/microsoft/WSL/issues/3697#issuecomment-457767554

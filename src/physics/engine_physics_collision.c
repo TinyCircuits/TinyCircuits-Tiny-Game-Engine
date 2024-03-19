@@ -376,7 +376,8 @@ bool engine_physics_check_rect_circle_collision(engine_physics_node_base_t *phys
     float mag = sqrtf((closest_delta_x*closest_delta_x) + (closest_delta_y*closest_delta_y));
     if(mag == 0.0f){
         ENGINE_FORCE_PRINTF("rect vs. circle: mag == 0.0...");
-        return false;
+        circle_to_vert_axis_x = 0.0f;
+        circle_to_vert_axis_y = 0.0f;
     }else{
         circle_to_vert_axis_x = closest_delta_x / mag;
         circle_to_vert_axis_y = closest_delta_y / mag;

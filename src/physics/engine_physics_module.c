@@ -6,27 +6,6 @@
 #include "physics/collision_contact_2d.h"
 
 
-/* --- doc ---
-   NAME: set_physics_fps_limit
-   DESC: Sets the limit at which physics tick occur. This could be set lower than the frame rate to make the average game framerate higher if physics is impacting it, of course then objects affected by physic will move a lower framerate
-   PARAM: [type=float] [name=fps] [value=any positive floats]
-   RETURN: None
-*/
-STATIC mp_obj_t engine_set_physics_fps_limit(mp_obj_t fps_obj){
-    ENGINE_INFO_PRINTF("EnginePhysics: Setting FPS Limit");
-
-    float fps = mp_obj_get_float(fps_obj);
-
-    if(fps < 0){
-        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EnginePhysics: ERROR: Tried to set physics fps limit to negative number!"));
-    }
-
-    engine_physics_fps_limit_period_ms = (1.0f / fps) * 1000.0f;
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_1(engine_set_physics_fps_limit_obj, engine_set_physics_fps_limit);
-
-
 // Could add another method that takes a vector2 to set gravity, just this for now
 /* --- doc ---
    NAME: set_gravity
@@ -66,7 +45,6 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_physics_get_gravity_obj, engine_physics_get_gra
 STATIC const mp_rom_map_elem_t engine_physics_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_physics) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_CollisionContact2D), (mp_obj_t)&collision_contact_2d_class_type},
-    { MP_OBJ_NEW_QSTR(MP_QSTR_set_physics_fps_limit), (mp_obj_t)&engine_set_physics_fps_limit_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_set_gravity), (mp_obj_t)&engine_physics_set_gravity_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_get_gravity), (mp_obj_t)&engine_physics_get_gravity_obj },
 };

@@ -9,6 +9,11 @@ float engine_math_dot_product(float x0, float y0, float x1, float y1){
 }
 
 
+float engine_math_cross_product(float x0, float y0, float x1, float y1){
+    return x0*y1 - y0*x1;
+}
+
+
 void engine_math_normalize(float *vx, float *vy){
     const float factor = 1.0 / sqrtf((*vx) * (*vx) + (*vy) * (*vy));
     *vx = (*vx) * factor;

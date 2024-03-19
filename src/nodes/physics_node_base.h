@@ -6,10 +6,14 @@
 
 typedef struct{
     mp_obj_t position;                      // Vector2: 2d xy position of this node
+    
     mp_obj_t velocity;                      // Vector2 (Absolute velocity)
-    mp_obj_t acceleration;                  // Vector2
-    mp_obj_t rotation;                      // float (Current rotation angle)
+    mp_obj_t angular_velocity;
+
+    float rotation;                      // float (Current rotation angle)
+
     mp_obj_t mass;                          // How heavy the node is
+
     mp_obj_t bounciness;                    // Restitution or elasticity
 
     mp_obj_t dynamic;                       // Flag indicating if node is dynamic and moving around due to physics or static
@@ -20,14 +24,23 @@ typedef struct{
     uint8_t physics_id;
 
     float inverse_mass;
+    float inverse_moment_of_inertia;        // https://www.concepts-of-physics.com/mechanics/moment-of-inertia.php#:~:text=Moment%20of%20Inertia%20of%20Common%20Shapes
 
     void *unique_data;                      // Unique data about the collider (radius, width, height, etc.)
+
+    // When collisions are detected, the total amount the physics node will
+    // need to move to be away from all the collided nodes is stored here
+    float total_position_correction_x;
+    float total_position_correction_y;
 
     mp_obj_t tick_cb;
     mp_obj_t collision_cb;
     linked_list_node *physics_list_node;    // All physics 2d nodes get added to a list that is easy to traverse
 }engine_physics_node_base_t;
 
+void physics_node_base_apply_impulse_base(engine_physics_node_base_t *physics_node_base, float impulse_x, float impulse_y, float position_x, float position_y);
+
+// Updates mass, inverse mass, moment of inertia, and inverse moment of inertia
 float physics_node_base_calculate_inverse_mass(engine_physics_node_base_t *physics_node_base);
 
 // Return `true` if handled loading the attr from internal structure, `false` otherwise

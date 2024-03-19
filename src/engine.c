@@ -8,6 +8,7 @@
 #include "engine_cameras.h"
 #include "utility/engine_time.h"
 #include "audio/engine_audio_module.h"
+#include "math/engine_math.h"
 
 #include "display/engine_display.h"
 #include "draw/engine_display_draw.h"
@@ -26,7 +27,7 @@
 // false to stop the engine after the current loop/tick ends
 bool is_engine_looping = false;
 bool is_engine_initialized = false;
-float engine_fps_limit_period_ms = 0.0f;
+float engine_fps_limit_period_ms = 16.6667f;
 float engine_fps_time_at_last_tick_ms = 0.0f;
 float engine_fps_time_at_before_last_tick_ms = 0.0f;
 
