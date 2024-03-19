@@ -8,9 +8,14 @@ float engine_math_dot_product(float x0, float y0, float x1, float y1){
     return x0*x1 + y0*y1;
 }
 
-
-float engine_math_cross_product(float x0, float y0, float x1, float y1){
+// https://github.com/RandyGaul/ImpulseEngine/blob/8d5f4d9113876f91a53cfb967879406e975263d1/IEMath.h#L261-L274
+float engine_math_cross_product_v_v(float x0, float y0, float x1, float y1){
     return x0*y1 - y0*x1;
+}
+
+void engine_math_cross_product_float_v(float value, float in_x, float in_y, float *out_x, float *out_y){
+    *out_x = -value * in_y;
+    *out_y =  value * in_x;
 }
 
 

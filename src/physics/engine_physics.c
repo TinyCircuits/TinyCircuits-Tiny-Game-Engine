@@ -169,20 +169,6 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
         float physics_node_b_bounciness = mp_obj_get_float(physics_node_base_b->bounciness);
         float bounciness = fminf(physics_node_a_bounciness, physics_node_b_bounciness); // Restitution
 
-
-
-        // float ra_x = collision_contact_x - physics_node_a_position->x;
-        // float ra_y = collision_contact_y - physics_node_a_position->y;
-
-        // float rb_x = collision_contact_x - physics_node_b_position->x;
-        // float rb_y = collision_contact_y - physics_node_b_position->y;
-
-
-        // float cross_a = engine_math_cross_product(ra_x, ra_y, collision_normal_x, collision_normal_y);
-        // float cross_b = engine_math_cross_product(rb_x, rb_y, collision_normal_x, collision_normal_y);
-
-        // float inv_mass_sum = physics_node_base_a->inverse_mass + physics_node_base_b->inverse_mass + sqrtf(cross_a) * physics_node_base_a->inverse_moment_of_inertia + sqrtf(cross_b) * physics_node_base_b->inverse_moment_of_inertia;
-
         float inv_mass_sum = physics_node_base_a->inverse_mass + physics_node_base_b->inverse_mass;
 
         float impulse_coefficient_j = -(1 + bounciness) * velocity_mag_along_normal;

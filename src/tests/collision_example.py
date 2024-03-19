@@ -35,16 +35,16 @@ for i in range(6):
     boxes.append(stacked_box_physics)
     boxes.append(stacked_box)
 
-class Player(PhysicsCircle2DNode):
+class Player(PhysicsRectangle2DNode):
     def __init__(self):
         super().__init__(self)
         self.position = Vector2(0, -50)
 
         self.bounciness = 2.0
 
-        self.radius = 7
+        # self.radius = 7
 
-        self.player = Circle2DNode(radius = 7, color=engine_draw.green, outline=True)
+        self.player = Rectangle2DNode(color=engine_draw.green, outline=True)
         self.add_child(self.player)
 
         self.count = 0

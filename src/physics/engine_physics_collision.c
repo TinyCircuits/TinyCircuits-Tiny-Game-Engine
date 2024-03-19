@@ -313,18 +313,101 @@ bool engine_physics_check_rect_rect_collision(engine_physics_node_base_t *physic
     // Resolve collision: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-basics-and-impulse-resolution--gamedev-6331t#:~:text=more%20readable%20than%20mathematical%20notation!
     engine_physics_resolve_normal_direction(physics_node_base_a, physics_node_base_b, collision_normal_x, collision_normal_y);
     engine_physics_cancel_dynamics(physics_node_base_a, physics_node_base_b);
-    engine_physics_get_relative_normal_velocity_magnitude(physics_node_base_a, physics_node_base_b, *collision_normal_x, *collision_normal_y, velocity_mag_along_normal);
+    engine_physics_rect_rect_get_contact(*collision_normal_x, *collision_normal_y, collision_contact_x, collision_contact_y, physics_node_base_a, physics_node_base_b);
 
-    // Do not resolve if velocities are separating (this does mean
-    // objects inside each other will not collide until a non separating
-    // velocity is set)
-    if(engine_physics_check_velocities_separating(*velocity_mag_along_normal)){
+    float ra_x = *collision_contact_x - physics_rectangle_a_position->x;
+    float ra_y = *collision_contact_y - physics_rectangle_a_position->y;
+
+    float rb_x = *collision_contact_x - physics_rectangle_b_position->x;
+    float rb_y = *collision_contact_y - physics_rectangle_b_position->y;
+
+    float cross_a_x = 0.0f;
+    float cross_a_y = 0.0f;
+
+    float cross_b_x = 0.0f;
+    float cross_b_y = 0.0f;
+
+    engine_math_cross_product_float_v(mp_obj_get_float(physics_node_base_b->angular_velocity), rb_x, rb_y, &cross_b_x, &cross_b_y);
+    engine_math_cross_product_float_v(mp_obj_get_float(physics_node_base_a->angular_velocity), ra_x, ra_y, &cross_a_x, &cross_a_y);
+
+    vector2_class_obj_t *physics_rectangle_a_velocity = physics_node_base_a->velocity;
+    vector2_class_obj_t *physics_rectangle_b_velocity = physics_node_base_b->velocity;
+
+    float rv_x = physics_rectangle_b_velocity->x + cross_b_x - physics_rectangle_a_velocity->x - cross_a_x;
+    float rv_y = physics_rectangle_b_velocity->y + cross_b_y - physics_rectangle_a_velocity->y - cross_a_y;
+
+    float contact_velocity = engine_math_dot_product(rv_x, rv_y, *collision_normal_x, *collision_normal_y);
+
+    if(contact_velocity > 0.0f){
         return false;
     }
 
-    engine_physics_rect_rect_get_contact(*collision_normal_x, *collision_normal_y, collision_contact_x, collision_contact_y, physics_node_base_a, physics_node_base_b);
+    float cross_a = engine_math_cross_product_v_v(ra_x, ra_y, *collision_normal_x, *collision_normal_y);
+    float cross_b = engine_math_cross_product_v_v(rb_x, rb_y, *collision_normal_x, *collision_normal_y);
 
-    return true;
+    float inv_mass_sum = physics_node_base_a->inverse_mass + physics_node_base_b->inverse_mass + sqrtf(cross_a) * physics_node_base_a->inverse_moment_of_inertia + sqrtf(cross_b) * physics_node_base_b->inverse_moment_of_inertia;
+
+    float physics_node_a_bounciness = mp_obj_get_float(physics_node_base_a->bounciness);
+    float physics_node_b_bounciness = mp_obj_get_float(physics_node_base_b->bounciness);
+    float bounciness = fminf(physics_node_a_bounciness, physics_node_b_bounciness); // Restitution
+
+    float j = (-(1.0f + bounciness) * contact_velocity) / inv_mass_sum;
+    // !
+
+    float impulse_x = j * *collision_normal_x;
+    float impulse_y = j * *collision_normal_y;
+
+    // physics_node_base_a->total_impulse_x += impulse_x;
+    // physics_node_base_a->total_impulse_y += impulse_y;
+
+    physics_node_base_apply_impulse_base(physics_node_base_a, -impulse_x, -impulse_y, ra_x, ra_y);
+    physics_node_base_apply_impulse_base(physics_node_base_b, impulse_x, impulse_y, rb_x, rb_y);
+
+    // https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-basics-and-impulse-resolution--gamedev-6331t#:~:text=We%20only%20perform%20positional%20correction%20if%20the%20penetration%20is%20above%20some%20arbitrary%20threshold%2C%20referred%20to%20as%20%22slop%22%3A
+    // Do not want the positions to always be shifting due to overlap, add in some slop
+    float correction_x = max(*collision_normal_penetration - 0.01f, 0.0f) / inv_mass_sum * 0.9f * *collision_normal_x;
+    float correction_y = max(*collision_normal_penetration - 0.01f, 0.0f) / inv_mass_sum * 0.9f * *collision_normal_y;
+
+    bool physics_node_a_dynamic = mp_obj_get_int(physics_node_base_a->dynamic);
+    bool physics_node_b_dynamic = mp_obj_get_int(physics_node_base_b->dynamic);
+
+    // Using the normalized collision normal, offset positions of
+    // both nodes by the amount they were overlapping (in pixels)
+    // when the collision was detected. Split the overlap 50/50
+    //
+    // Depending on which objects are dynamic, move the dynamic bodies by
+    // the penetration amount. Don't want static nodes to be moved by the
+    // penetration amount. 
+    if(physics_node_a_dynamic == true && physics_node_b_dynamic == false){
+        physics_node_base_a->total_position_correction_x += correction_x;
+        physics_node_base_a->total_position_correction_y += correction_y;
+    }else if(physics_node_a_dynamic == false && physics_node_b_dynamic == true){
+        physics_node_base_b->total_position_correction_x -= correction_x;
+        physics_node_base_b->total_position_correction_y -= correction_y;
+    }else if(physics_node_a_dynamic == true && physics_node_b_dynamic == true){
+        physics_node_base_a->total_position_correction_x += correction_x / 2;
+        physics_node_base_a->total_position_correction_y += correction_y / 2;
+
+        physics_node_base_b->total_position_correction_x -= correction_x / 2;
+        physics_node_base_b->total_position_correction_y -= correction_y / 2;
+    }
+
+
+    // float cross_a = engine_math_cross_product(ra_x, ra_y, *collision_normal_x, *collision_normal_y);
+    // float cross_b = engine_math_cross_product(rb_x, rb_y, *collision_normal_x, *collision_normal_y);
+    
+    // engine_physics_get_relative_normal_velocity_magnitude(physics_node_base_a, physics_node_base_b, *collision_normal_x, *collision_normal_y, velocity_mag_along_normal);
+
+    // // Do not resolve if velocities are separating (this does mean
+    // // objects inside each other will not collide until a non separating
+    // // velocity is set)
+    // if(engine_physics_check_velocities_separating(*velocity_mag_along_normal)){
+    //     return false;
+    // }
+
+    
+
+    return false;
 }
 
 
@@ -417,16 +500,18 @@ bool engine_physics_check_rect_circle_collision(engine_physics_node_base_t *phys
     // Resolve collision: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-basics-and-impulse-resolution--gamedev-6331t#:~:text=more%20readable%20than%20mathematical%20notation!
     engine_physics_resolve_normal_direction(physics_rect_node_base, physics_circle_node_base, collision_normal_x, collision_normal_y);
     engine_physics_cancel_dynamics(physics_rect_node_base, physics_circle_node_base);
-    engine_physics_get_relative_normal_velocity_magnitude(physics_rect_node_base, physics_circle_node_base, *collision_normal_x, *collision_normal_y, velocity_mag_along_normal);
-
-    // Do not resolve if velocities are separating (this does mean
-    // objects inside each other will not collide until a non separating
-    // velocity is set)
-    if(engine_physics_check_velocities_separating(*velocity_mag_along_normal)){
-        return false;
-    }
-
     engine_physics_rect_circle_get_contact(*collision_normal_x, *collision_normal_y, collision_contact_x, collision_contact_y, circle_to_vert_axis_x, circle_to_vert_axis_y, physics_rect_node_base, physics_circle_node_base);
+    
+    // engine_physics_get_relative_normal_velocity_magnitude(physics_rect_node_base, physics_circle_node_base, *collision_normal_x, *collision_normal_y, velocity_mag_along_normal);
+
+    // // Do not resolve if velocities are separating (this does mean
+    // // objects inside each other will not collide until a non separating
+    // // velocity is set)
+    // if(engine_physics_check_velocities_separating(*velocity_mag_along_normal)){
+    //     return false;
+    // }
+
+    
 
     return true;
 }
@@ -480,14 +565,16 @@ bool engine_physics_check_circle_circle_collision(engine_physics_node_base_t *ph
     // Resolve collision: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-basics-and-impulse-resolution--gamedev-6331t#:~:text=more%20readable%20than%20mathematical%20notation!
     engine_physics_resolve_normal_direction(physics_node_base_a, physics_node_base_b, collision_normal_x, collision_normal_y);
     engine_physics_cancel_dynamics(physics_node_base_a, physics_node_base_b);
-    engine_physics_get_relative_normal_velocity_magnitude(physics_node_base_a, physics_node_base_b, *collision_normal_x, *collision_normal_y, velocity_mag_along_normal);
+    
+    
+    // engine_physics_get_relative_normal_velocity_magnitude(physics_node_base_a, physics_node_base_b, *collision_normal_x, *collision_normal_y, velocity_mag_along_normal);
 
-    // Do not resolve if velocities are separating (this does mean
-    // objects inside each other will not collide until a non separating
-    // velocity is set)
-    if(engine_physics_check_velocities_separating(*velocity_mag_along_normal)){
-        return false;
-    }
+    // // Do not resolve if velocities are separating (this does mean
+    // // objects inside each other will not collide until a non separating
+    // // velocity is set)
+    // if(engine_physics_check_velocities_separating(*velocity_mag_along_normal)){
+    //     return false;
+    // }
 
     return true;
 }

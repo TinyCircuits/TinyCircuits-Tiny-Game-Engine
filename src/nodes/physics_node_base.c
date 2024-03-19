@@ -20,7 +20,7 @@ void physics_node_base_apply_impulse_base(engine_physics_node_base_t *physics_no
     physics_node_base_velocity->x += physics_node_base->inverse_mass * impulse_x;
     physics_node_base_velocity->y += physics_node_base->inverse_mass * impulse_y;
 
-    float cross = engine_math_cross_product(impulse_x, impulse_y, position_x, position_y);
+    float cross = engine_math_cross_product_v_v(impulse_x, impulse_y, position_x, position_y);
     physics_node_base->angular_velocity = mp_obj_new_float(physics_node_base->inverse_moment_of_inertia * cross);
 }
 
