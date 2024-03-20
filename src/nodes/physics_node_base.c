@@ -20,8 +20,8 @@ void physics_node_base_apply_impulse_base(engine_physics_node_base_t *physics_no
     physics_node_base_velocity->x += physics_node_base->inverse_mass * impulse_x;
     physics_node_base_velocity->y += physics_node_base->inverse_mass * impulse_y;
 
-    float cross = engine_math_cross_product_v_v(impulse_x, impulse_y, position_x, position_y);
-    physics_node_base->angular_velocity = mp_obj_new_float(physics_node_base->inverse_moment_of_inertia * cross);
+    float cross = engine_math_cross_product_v_v(position_x, position_y, impulse_x, impulse_y);
+    physics_node_base->angular_velocity = physics_node_base->inverse_moment_of_inertia * cross;
 }
 
 
@@ -64,7 +64,7 @@ bool physics_node_base_load_attr(engine_node_base_t *self_node_base, qstr attrib
             return true;
         break;
         case MP_QSTR_angular_velocity:
-            destination[0] = self->angular_velocity;
+            destination[0] = mp_obj_new_float(self->angular_velocity);
             return true;
         break;
         case MP_QSTR_rotation:
@@ -73,6 +73,10 @@ bool physics_node_base_load_attr(engine_node_base_t *self_node_base, qstr attrib
         break;
         case MP_QSTR_mass:
             destination[0] = self->mass;
+            return true;
+        break;
+        case MP_QSTR_friction:
+            destination[0] = self->friction;
             return true;
         break;
         case MP_QSTR_bounciness:
@@ -112,7 +116,7 @@ bool physics_node_base_store_attr(engine_node_base_t *self_node_base, qstr attri
             return true;
         break;
         case MP_QSTR_angular_velocity:
-            self->angular_velocity = destination[1];
+            self->angular_velocity = mp_obj_get_float(destination[1]);
             return true;
         break;
         case MP_QSTR_rotation:
@@ -122,6 +126,10 @@ bool physics_node_base_store_attr(engine_node_base_t *self_node_base, qstr attri
         case MP_QSTR_mass:
             self->mass = destination[1];
             physics_node_base_calculate_inverse_mass(self);
+            return true;
+        break;
+        case MP_QSTR_friction:
+            self->friction = destination[1];
             return true;
         break;
         case MP_QSTR_bounciness:

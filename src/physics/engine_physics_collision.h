@@ -13,9 +13,12 @@ typedef struct{
     float collision_contact_x;
     float collision_contact_y;
     float collision_normal_penetration;
-    float relative_velocity_x;
-    float relative_velocity_y;
     float contact_velocity_magnitude;
+
+    float local_collision_position_a_x;
+    float local_collision_position_a_y;
+    float local_collision_position_b_x;
+    float local_collision_position_b_y;
 }contact_t;
 
 

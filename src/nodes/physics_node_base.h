@@ -8,11 +8,13 @@ typedef struct{
     mp_obj_t position;                      // Vector2: 2d xy position of this node
     
     mp_obj_t velocity;                      // Vector2 (Absolute velocity)
-    mp_obj_t angular_velocity;
+    float angular_velocity;
 
     float rotation;                      // float (Current rotation angle)
 
     mp_obj_t mass;                          // How heavy the node is
+
+    mp_obj_t friction;
 
     mp_obj_t bounciness;                    // Restitution or elasticity
 

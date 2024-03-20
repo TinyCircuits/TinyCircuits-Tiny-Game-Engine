@@ -19,10 +19,15 @@ void engine_math_cross_product_float_v(float value, float in_x, float in_y, floa
 }
 
 
+// https://github.com/RandyGaul/ImpulseEngine/blob/8d5f4d9113876f91a53cfb967879406e975263d1/IEMath.h#L144-L155
 void engine_math_normalize(float *vx, float *vy){
-    const float factor = 1.0 / sqrtf((*vx) * (*vx) + (*vy) * (*vy));
-    *vx = (*vx) * factor;
-    *vy = (*vy) * factor;
+    float length = sqrtf((*vx) * (*vx) + (*vy) * (*vy));
+
+    if(engine_math_compare_floats(length, 0.0) == false){
+        const float factor = 1.0 / length;
+        *vx = (*vx) * factor;
+        *vy = (*vy) * factor;
+    }
 }
 
 

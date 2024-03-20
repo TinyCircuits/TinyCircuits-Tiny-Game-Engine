@@ -7,13 +7,17 @@ from engine_nodes import Rectangle2DNode, Circle2DNode, CameraNode, PhysicsRecta
 import random
 import math
 
+
+engine.set_fps_limit(60)
+
+
 # Imagine we're targeting a top-down game, turn gravity off on each axis
 # engine_physics.set_gravity(0, 0)
 
 
-circle_physics_0 = PhysicsCircle2DNode(position=Vector2(0, -15), radius=8)
-circle_0 = Circle2DNode(outline=True, radius=8)
-circle_physics_0.add_child(circle_0)
+# circle_physics_0 = PhysicsCircle2DNode(position=Vector2(0, -15), radius=8)
+# circle_0 = Circle2DNode(outline=True, radius=8)
+# circle_physics_0.add_child(circle_0)
 
 
 box_physics_0 = PhysicsRectangle2DNode(width=20, height=20, position=Vector2(25, -35), rotation=0, dynamic=False, bounciness = 2.0)
@@ -29,11 +33,12 @@ floor_box_physics.add_child(floor_box)
 
 boxes = []
 for i in range(6):
-    stacked_box_physics = PhysicsRectangle2DNode(width=7, height=7, position=Vector2(0, i*7))
+    stacked_box_physics = PhysicsRectangle2DNode(width=7, height=7, position=Vector2(0, -15+i*8))
     stacked_box = Rectangle2DNode(width=7, height=7, color=engine_draw.green, outline=True)
     stacked_box_physics.add_child(stacked_box)
     boxes.append(stacked_box_physics)
     boxes.append(stacked_box)
+    # stacked_box_physics.angular_velocity = 0.1
 
 class Player(PhysicsRectangle2DNode):
     def __init__(self):
@@ -52,14 +57,14 @@ class Player(PhysicsRectangle2DNode):
     
     def tick(self):
         if engine_input.check_pressed(engine_input.DPAD_LEFT):
-            self.velocity.x = -0.55
+            self.velocity.x = -0.3
         elif engine_input.check_pressed(engine_input.DPAD_RIGHT):
-            self.velocity.x = 0.55
+            self.velocity.x = 0.3
 
         if engine_input.check_pressed(engine_input.DPAD_UP):
-            self.velocity.y = -0.55
+            self.velocity.y = -0.3
         elif engine_input.check_pressed(engine_input.DPAD_DOWN):
-            self.velocity.y = 0.55
+            self.velocity.y = 0.3
 
         if engine_input.check_pressed(engine_input.BUMPER_LEFT):
             self.rotation += 0.0045
@@ -68,8 +73,8 @@ class Player(PhysicsRectangle2DNode):
     
     def collision(self, contact):
         self.count = self.count + 1
-        print("Collision!", self.count)
-        # Circle2DNode(position=contact.position, radius=2)
+        # print("Collision!", self.count)
+        # Circle2DNode(position=contact.position, radius=1)
 
 
 

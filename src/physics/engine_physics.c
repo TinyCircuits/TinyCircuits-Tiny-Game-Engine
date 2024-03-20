@@ -51,26 +51,25 @@ void engine_physics_apply_impulses(float dt, float alpha){
 
         if(physics_node_dynamic){
             vector2_class_obj_t *physics_node_velocity = physics_node_base->velocity;
-            float physics_node_angular_velocity = mp_obj_get_float(physics_node_base->angular_velocity);
             vector2_class_obj_t *physics_node_position = physics_node_base->position;
             vector2_class_obj_t *physics_node_gravity_scale = physics_node_base->gravity_scale;
 
-            // https://github.com/RandyGaul/ImpulseEngine/blob/8d5f4d9113876f91a53cfb967879406e975263d1/Scene.cpp#L35-L42
-            physics_node_velocity->x -= physics_node_base->inverse_mass * engine_physics_gravity_x * physics_node_gravity_scale->x;
-            physics_node_velocity->y -= physics_node_base->inverse_mass * engine_physics_gravity_y * physics_node_gravity_scale->y;
-
+            // Position correction
             physics_node_position->x += physics_node_base->total_position_correction_x;
             physics_node_position->y += physics_node_base->total_position_correction_y;
 
             physics_node_base->total_position_correction_x = 0.0f;
             physics_node_base->total_position_correction_y = 0.0f;
 
+            // Gravity: https://github.com/RandyGaul/ImpulseEngine/blob/8d5f4d9113876f91a53cfb967879406e975263d1/Scene.cpp#L35-L42
+            physics_node_velocity->x -= physics_node_base->inverse_mass * engine_physics_gravity_x * physics_node_gravity_scale->x;
+            physics_node_velocity->y -= physics_node_base->inverse_mass * engine_physics_gravity_y * physics_node_gravity_scale->y;
 
-            // https://github.com/RandyGaul/ImpulseEngine/blob/8d5f4d9113876f91a53cfb967879406e975263d1/Scene.cpp#L44-L53
+            // Velocity -> position: https://github.com/RandyGaul/ImpulseEngine/blob/8d5f4d9113876f91a53cfb967879406e975263d1/Scene.cpp#L44-L53
             physics_node_position->x += physics_node_velocity->x;
             physics_node_position->y += physics_node_velocity->y;
 
-            physics_node_base->rotation += physics_node_angular_velocity;
+            physics_node_base->rotation += physics_node_base->angular_velocity;
 
             // When the rotation changes the collider box vertices need to be updated
             if(node_base->type == NODE_TYPE_PHYSICS_RECTANGLE_2D){
@@ -120,8 +119,10 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
         .collision_contact_x = 0.0f,
         .collision_contact_y = 0.0f,
         .collision_normal_penetration = 0.0f,
-        .relative_velocity_x = 0.0f,
-        .relative_velocity_y = 0.0f,
+        .local_collision_position_a_x = 0.0f,
+        .local_collision_position_a_y = 0.0f,
+        .local_collision_position_b_x = 0.0f,
+        .local_collision_position_b_y = 0.0f,
         .contact_velocity_magnitude = 0.0f
     };
 
@@ -156,12 +157,6 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
     }
 
     if(collided){
-        vector2_class_obj_t *physics_node_a_velocity = physics_node_base_a->velocity;
-        vector2_class_obj_t *physics_node_b_velocity = physics_node_base_b->velocity;
-
-        vector2_class_obj_t *physics_node_a_position = physics_node_base_a->position;
-        vector2_class_obj_t *physics_node_b_position = physics_node_base_b->position;
-
         bool physics_node_a_dynamic = mp_obj_get_int(physics_node_base_a->dynamic);
         bool physics_node_b_dynamic = mp_obj_get_int(physics_node_base_b->dynamic);
 
@@ -170,45 +165,78 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
         float physics_node_b_bounciness = mp_obj_get_float(physics_node_base_b->bounciness);
         float bounciness = fminf(physics_node_a_bounciness, physics_node_b_bounciness); // Restitution
 
+        // https://github.com/RandyGaul/ImpulseEngine/blob/master/Manifold.cpp#L65-L92
+        // float cross_a = engine_math_cross_product_v_v(contact.local_collision_position_a_x, contact.local_collision_position_a_y, contact.collision_normal_x, contact.collision_normal_y);
+        // float cross_b = engine_math_cross_product_v_v(contact.local_collision_position_b_x, contact.local_collision_position_b_y, contact.collision_normal_x, contact.collision_normal_y);
+        // float inv_mass_sum = physics_node_base_a->inverse_mass + physics_node_base_b->inverse_mass + (cross_a*cross_a) * physics_node_base_a->inverse_moment_of_inertia + (cross_b*cross_b) * physics_node_base_b->inverse_moment_of_inertia;
+
+        // float j = -(1.0f + bounciness) * contact.contact_velocity_magnitude;
+        // j /= inv_mass_sum;
+
+        // float impulse_x = contact.collision_normal_x * j;
+        // float impulse_y = contact.collision_normal_y * j;
+
+        // physics_node_base_apply_impulse_base(physics_node_base_a, -impulse_x, -impulse_y, contact.local_collision_position_a_x, contact.local_collision_position_a_y);
+        // physics_node_base_apply_impulse_base(physics_node_base_b,  impulse_x,  impulse_y, contact.local_collision_position_b_x, contact.local_collision_position_b_y);
 
 
-        // float ra_x = contact.collision_contact_x - physics_node_a_position->x;
-        // float ra_y = contact.collision_contact_y - physics_node_a_position->y;
+        vector2_class_obj_t *physics_node_a_velocity = physics_node_base_a->velocity;
+        vector2_class_obj_t *physics_node_b_velocity = physics_node_base_b->velocity;
 
-        // float rb_x = contact.collision_contact_x - physics_node_b_position->x;
-        // float rb_y = contact.collision_contact_y - physics_node_b_position->y;
-
-
-        // float cross_a = engine_math_cross_product_v_v(ra_x, ra_y, contact.collision_normal_x, contact.collision_normal_y);
-        // float cross_b = engine_math_cross_product_v_v(rb_x, rb_y, contact.collision_normal_x, contact.collision_normal_y);
-
-        // float inv_inertia_sum = sqrtf(cross_a) * physics_node_base_a->inverse_moment_of_inertia + sqrtf(cross_b) * physics_node_base_b->inverse_moment_of_inertia;
         float inv_mass_sum = physics_node_base_a->inverse_mass + physics_node_base_b->inverse_mass;
 
         float impulse_coefficient_j = -(1 + bounciness) * contact.contact_velocity_magnitude;
         
         float impulse_coefficient_j_mass = impulse_coefficient_j / inv_mass_sum;
-        // float impulse_coefficient_j_inertia = impulse_coefficient_j / inv_mass_sum;
 
         float impulse_x = impulse_coefficient_j_mass * contact.collision_normal_x;
         float impulse_y = impulse_coefficient_j_mass * contact.collision_normal_y;
 
-        // physics_node_base_a->angular_velocity = mp_obj_new_float(-impulse_coefficient_j * impulse_coefficient_j_inertia);
-        // physics_node_base_b->angular_velocity = mp_obj_new_float( impulse_coefficient_j * impulse_coefficient_j_inertia);
-
-        // physics_node_base_apply_impulse_base(physics_node_base_a, impulse_x, impulse_y, ra_x, ra_y);
-        // physics_node_base_apply_impulse_base(physics_node_base_b, impulse_x, impulse_y, rb_x, rb_y);
         physics_node_a_velocity->x -= physics_node_base_a->inverse_mass * impulse_x;
         physics_node_a_velocity->y -= physics_node_base_a->inverse_mass * impulse_y;
 
         physics_node_b_velocity->x += physics_node_base_b->inverse_mass * impulse_x;
         physics_node_b_velocity->y += physics_node_base_b->inverse_mass * impulse_y;
 
+        // // https://gamedev.stackexchange.com/a/102778
+        // float contact_point_sqrd_length = ((contact.collision_contact_x*contact.collision_contact_x) + (contact.collision_contact_y*contact.collision_contact_y));
+        // physics_node_base_a->angular_velocity += physics_node_base_a->inverse_moment_of_inertia * engine_math_cross_product_v_v(contact.collision_contact_x, contact.collision_contact_x, physics_node_a_velocity->x, physics_node_a_velocity->y) / contact_point_sqrd_length;
+        // physics_node_base_b->angular_velocity += physics_node_base_b->inverse_moment_of_inertia * engine_math_cross_product_v_v(contact.collision_contact_x, contact.collision_contact_x, physics_node_b_velocity->x, physics_node_b_velocity->y) / contact_point_sqrd_length;
+
+
+        // Simple friction: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-friction-scene-and-jump-table--gamedev-7756t#:~:text=in%20our%20collision%20resolver
+        float a_friction = mp_obj_get_float(physics_node_base_a->friction);
+        float b_friction = mp_obj_get_float(physics_node_base_b->friction);
+        
+        float relative_velocity_x = physics_node_b_velocity->x - physics_node_a_velocity->x;
+        float relative_velocity_y = physics_node_b_velocity->y - physics_node_a_velocity->y;
+
+        float dot = engine_math_dot_product(relative_velocity_x, relative_velocity_y, contact.collision_normal_x, contact.collision_normal_y);
+        float tangent_x = relative_velocity_x - dot * contact.collision_normal_x;
+        float tangent_y = relative_velocity_y - dot * contact.collision_normal_y;
+        engine_math_normalize(&tangent_x, &tangent_y);
+
+        float jt = -engine_math_dot_product(relative_velocity_x, relative_velocity_y, tangent_x, tangent_y);
+        jt /= inv_mass_sum;
+
+        float mu = sqrtf((a_friction*a_friction) + (b_friction*b_friction));
+
+        float friction_impulse_x = tangent_x * jt * mu;
+        float friction_impulse_y = tangent_y * jt * mu;
+
+        physics_node_a_velocity->x -= physics_node_base_a->inverse_mass * friction_impulse_x;
+        physics_node_a_velocity->y -= physics_node_base_a->inverse_mass * friction_impulse_y;
+
+        physics_node_b_velocity->x += physics_node_base_b->inverse_mass * friction_impulse_x;
+        physics_node_b_velocity->y += physics_node_base_b->inverse_mass * friction_impulse_y;
 
         // https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-basics-and-impulse-resolution--gamedev-6331t#:~:text=We%20only%20perform%20positional%20correction%20if%20the%20penetration%20is%20above%20some%20arbitrary%20threshold%2C%20referred%20to%20as%20%22slop%22%3A
         // Do not want the positions to always be shifting due to overlap, add in some slop
         float correction_x = max(contact.collision_normal_penetration - slop, 0.0f) / inv_mass_sum * percent * contact.collision_normal_x;
         float correction_y = max(contact.collision_normal_penetration - slop, 0.0f) / inv_mass_sum * percent * contact.collision_normal_y;
+
+        // float correction_x = contact.collision_normal_penetration * contact.collision_normal_x;
+        // float correction_y = contact.collision_normal_penetration * contact.collision_normal_y;
 
         // Using the normalized collision normal, offset positions of
         // both nodes by the amount they were overlapping (in pixels)

@@ -12,6 +12,7 @@
 #include "math/engine_math.h"
 #include "draw/engine_display_draw.h"
 #include "physics/engine_physics.h"
+#include "physics/engine_physics_ids.h"
 
 
 void engine_physics_rectangle_2d_node_update(engine_physics_node_base_t *physics_node_base){
@@ -104,7 +105,7 @@ mp_obj_t physics_rectangle_2d_node_class_del(mp_obj_t self_in){
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(physics_rectangle_2d_node_class_del_obj, physics_rectangle_2d_node_class_del);
 
 
-float physics_rectangle_2d_calculate_inverse_inertia(engine_node_base_t *node_base){
+void physics_rectangle_2d_calculate_inverse_inertia(engine_node_base_t *node_base){
     engine_physics_node_base_t *physics_node_base = node_base->node;
     engine_physics_rectangle_2d_node_class_obj_t *physics_rectangle = physics_node_base->unique_data;
 
@@ -285,13 +286,14 @@ mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n
         { MP_QSTR_angular_velocity, MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_rotation,         MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_mass,             MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_friction,         MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_bounciness,       MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_dynamic,          MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_solid,            MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_gravity_scale,    MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
-    enum arg_ids {child_class, position, width, height, velocity, angular_velocity, rotation, mass, bounciness, dynamic, solid, gravity_scale};
+    enum arg_ids {child_class, position, width, height, velocity, angular_velocity, rotation, mass, friction, bounciness, dynamic, solid, gravity_scale};
     bool inherited = false;
 
     // If there is one positional argument and it isn't the first 
@@ -318,6 +320,7 @@ mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n
     if(parsed_args[angular_velocity].u_obj == MP_OBJ_NULL) parsed_args[angular_velocity].u_obj = mp_obj_new_float(0.0f);
     if(parsed_args[rotation].u_obj == MP_OBJ_NULL) parsed_args[rotation].u_obj = mp_obj_new_float(0.0);
     if(parsed_args[mass].u_obj == MP_OBJ_NULL) parsed_args[mass].u_obj = mp_obj_new_float(1.0f);
+    if(parsed_args[friction].u_obj == MP_OBJ_NULL) parsed_args[friction].u_obj = mp_obj_new_float(1.0f);
     if(parsed_args[bounciness].u_obj == MP_OBJ_NULL) parsed_args[bounciness].u_obj = mp_obj_new_float(1.0f);
     if(parsed_args[dynamic].u_obj == MP_OBJ_NULL) parsed_args[dynamic].u_obj = mp_obj_new_int(1);
     if(parsed_args[solid].u_obj == MP_OBJ_NULL) parsed_args[solid].u_obj = mp_obj_new_int(1);
@@ -338,9 +341,10 @@ mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n
 
     physics_node_base->position = parsed_args[position].u_obj;
     physics_node_base->velocity = parsed_args[velocity].u_obj;
-    physics_node_base->angular_velocity = parsed_args[angular_velocity].u_obj;
+    physics_node_base->angular_velocity = mp_obj_get_float(parsed_args[angular_velocity].u_obj);
     physics_node_base->rotation = mp_obj_get_float(parsed_args[rotation].u_obj);
     physics_node_base->mass = parsed_args[mass].u_obj;
+    physics_node_base->friction = parsed_args[friction].u_obj;
     physics_node_base->bounciness = parsed_args[bounciness].u_obj;
     physics_node_base->dynamic = parsed_args[dynamic].u_obj;
     physics_node_base->solid = parsed_args[solid].u_obj;
