@@ -114,16 +114,17 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
         return;
     }
 
-    // Direction of collision and the amount of overlap
-    // when the collision was detected (some objects can
-    // be fast and the collision will never be detected...
-    // this is called `tunneling`)
-    float collision_normal_x = 0.0f;
-    float collision_normal_y = 0.0f;
-    float collision_contact_x = 0.0f;
-    float collision_contact_y = 0.0f;
-    float collision_normal_penetration = 0.0f;
-    float velocity_mag_along_normal = 0.0f;
+    contact_t contact = {
+        .collision_normal_x = 0.0f,
+        .collision_normal_y = 0.0f,
+        .collision_contact_x = 0.0f,
+        .collision_contact_y = 0.0f,
+        .collision_normal_penetration = 0.0f,
+        .relative_velocity_x = 0.0f,
+        .relative_velocity_y = 0.0f,
+        .contact_velocity_magnitude = 0.0f
+    };
+
     bool collided = false;
 
     // Now that it has been confirmed that the two objects are
@@ -132,7 +133,7 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
     // check the correct pairing (rect vs. rect, rect vs. circle,
     // or circle vs. circle)
     if(node_base_a->type == NODE_TYPE_PHYSICS_RECTANGLE_2D && node_base_b->type == NODE_TYPE_PHYSICS_RECTANGLE_2D){
-        collided = engine_physics_check_rect_rect_collision(physics_node_base_a, physics_node_base_b, &collision_normal_x, &collision_normal_y, &collision_contact_x, &collision_contact_y, &collision_normal_penetration, &velocity_mag_along_normal);
+        collided = engine_physics_check_rect_rect_collision(physics_node_base_a, physics_node_base_b, &contact);
     }else if((node_base_a->type == NODE_TYPE_PHYSICS_RECTANGLE_2D && node_base_b->type == NODE_TYPE_PHYSICS_CIRCLE_2D) ||
              (node_base_a->type == NODE_TYPE_PHYSICS_CIRCLE_2D    && node_base_b->type == NODE_TYPE_PHYSICS_RECTANGLE_2D)){
 
@@ -147,9 +148,9 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
             physics_node_base_b = node_base_b->node;
         }
 
-        collided = engine_physics_check_rect_circle_collision(physics_node_base_a, physics_node_base_b, &collision_normal_x, &collision_normal_y, &collision_contact_x, &collision_contact_y, &collision_normal_penetration, &velocity_mag_along_normal);
+        collided = engine_physics_check_rect_circle_collision(physics_node_base_a, physics_node_base_b, &contact);
     }else if(node_base_a->type == NODE_TYPE_PHYSICS_CIRCLE_2D && node_base_b->type == NODE_TYPE_PHYSICS_CIRCLE_2D){
-        collided = engine_physics_check_circle_circle_collision(physics_node_base_a, physics_node_base_b, &collision_normal_x, &collision_normal_y, &collision_contact_x, &collision_contact_y, &collision_normal_penetration, &velocity_mag_along_normal);
+        collided = engine_physics_check_circle_circle_collision(physics_node_base_a, physics_node_base_b, &contact);
     }else{
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EnginePhysics: ERROR: Unknown collider pair collision check!"));
     }
@@ -169,14 +170,31 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
         float physics_node_b_bounciness = mp_obj_get_float(physics_node_base_b->bounciness);
         float bounciness = fminf(physics_node_a_bounciness, physics_node_b_bounciness); // Restitution
 
+
+
+        // float ra_x = contact.collision_contact_x - physics_node_a_position->x;
+        // float ra_y = contact.collision_contact_y - physics_node_a_position->y;
+
+        // float rb_x = contact.collision_contact_x - physics_node_b_position->x;
+        // float rb_y = contact.collision_contact_y - physics_node_b_position->y;
+
+
+        // float cross_a = engine_math_cross_product_v_v(ra_x, ra_y, contact.collision_normal_x, contact.collision_normal_y);
+        // float cross_b = engine_math_cross_product_v_v(rb_x, rb_y, contact.collision_normal_x, contact.collision_normal_y);
+
+        // float inv_inertia_sum = sqrtf(cross_a) * physics_node_base_a->inverse_moment_of_inertia + sqrtf(cross_b) * physics_node_base_b->inverse_moment_of_inertia;
         float inv_mass_sum = physics_node_base_a->inverse_mass + physics_node_base_b->inverse_mass;
 
-        float impulse_coefficient_j = -(1 + bounciness) * velocity_mag_along_normal;
-        // impulse_coefficient_j /= inv_mass_sum;  // physics_node_base_a->inverse_mass + physics_node_base_b->inverse_mass;
-        impulse_coefficient_j /= inv_mass_sum;
+        float impulse_coefficient_j = -(1 + bounciness) * contact.contact_velocity_magnitude;
+        
+        float impulse_coefficient_j_mass = impulse_coefficient_j / inv_mass_sum;
+        // float impulse_coefficient_j_inertia = impulse_coefficient_j / inv_mass_sum;
 
-        float impulse_x = impulse_coefficient_j * collision_normal_x;
-        float impulse_y = impulse_coefficient_j * collision_normal_y;
+        float impulse_x = impulse_coefficient_j_mass * contact.collision_normal_x;
+        float impulse_y = impulse_coefficient_j_mass * contact.collision_normal_y;
+
+        // physics_node_base_a->angular_velocity = mp_obj_new_float(-impulse_coefficient_j * impulse_coefficient_j_inertia);
+        // physics_node_base_b->angular_velocity = mp_obj_new_float( impulse_coefficient_j * impulse_coefficient_j_inertia);
 
         // physics_node_base_apply_impulse_base(physics_node_base_a, impulse_x, impulse_y, ra_x, ra_y);
         // physics_node_base_apply_impulse_base(physics_node_base_b, impulse_x, impulse_y, rb_x, rb_y);
@@ -189,8 +207,8 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
 
         // https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-basics-and-impulse-resolution--gamedev-6331t#:~:text=We%20only%20perform%20positional%20correction%20if%20the%20penetration%20is%20above%20some%20arbitrary%20threshold%2C%20referred%20to%20as%20%22slop%22%3A
         // Do not want the positions to always be shifting due to overlap, add in some slop
-        float correction_x = max(collision_normal_penetration - slop, 0.0f) / inv_mass_sum * percent * collision_normal_x;
-        float correction_y = max(collision_normal_penetration - slop, 0.0f) / inv_mass_sum * percent * collision_normal_y;
+        float correction_x = max(contact.collision_normal_penetration - slop, 0.0f) / inv_mass_sum * percent * contact.collision_normal_x;
+        float correction_y = max(contact.collision_normal_penetration - slop, 0.0f) / inv_mass_sum * percent * contact.collision_normal_y;
 
         // Using the normalized collision normal, offset positions of
         // both nodes by the amount they were overlapping (in pixels)
@@ -216,10 +234,10 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
         // earlier and the collision check would not have happened
 
         mp_obj_t collision_contact_data[5];
-        collision_contact_data[0] = mp_obj_new_float(collision_contact_x);
-        collision_contact_data[1] = mp_obj_new_float(collision_contact_y);
-        collision_contact_data[2] = mp_obj_new_float(collision_normal_x);
-        collision_contact_data[3] = mp_obj_new_float(collision_normal_y);
+        collision_contact_data[0] = mp_obj_new_float(contact.collision_contact_x);
+        collision_contact_data[1] = mp_obj_new_float(contact.collision_contact_y);
+        collision_contact_data[2] = mp_obj_new_float(contact.collision_normal_x);
+        collision_contact_data[3] = mp_obj_new_float(contact.collision_normal_y);
 
         mp_obj_t exec[3];
 

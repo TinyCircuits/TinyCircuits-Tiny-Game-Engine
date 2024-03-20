@@ -33,9 +33,6 @@ typedef struct{
     float total_position_correction_x;
     float total_position_correction_y;
 
-    float total_impulse_x;
-    float total_impulse_y;
-
     mp_obj_t tick_cb;
     mp_obj_t collision_cb;
     linked_list_node *physics_list_node;    // All physics 2d nodes get added to a list that is easy to traverse

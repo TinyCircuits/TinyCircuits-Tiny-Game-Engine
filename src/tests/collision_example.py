@@ -95,6 +95,23 @@ class rect(PhysicsRectangle2DNode):
         self.rotation -= 0.0025
     
 
+class Gate(PhysicsRectangle2DNode):
+    def __init__(self):
+        super().__init__(self)
+        self.width = 30
+        self.height = 3
+        self.dynamic = False
+
+        self.gate = Rectangle2DNode(width=30, height=3, color=engine_draw.red)
+        self.add_child(self.gate)
+    
+    def collision(self, contact):
+        if self.position.x > -40:
+            self.position.x = self.position.x - 0.05
+
+
+gate = Gate()
+gate.position.y = 30
 
 box_physics_1 = rect()
 box_1 = Rectangle2DNode(width=15, height=15, outline=True)

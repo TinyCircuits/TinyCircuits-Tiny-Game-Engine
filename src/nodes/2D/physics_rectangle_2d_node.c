@@ -348,8 +348,6 @@ mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n
     physics_node_base->physics_id = engine_physics_ids_take_available();
     physics_node_base->total_position_correction_x = 0.0f;
     physics_node_base->total_position_correction_y = 0.0f;
-    physics_node_base->total_impulse_x = 0.0f;
-    physics_node_base->total_impulse_y = 0.0f;
 
     // Track the node base for this physics node so that it can
     // be looped over quickly in a linked list
