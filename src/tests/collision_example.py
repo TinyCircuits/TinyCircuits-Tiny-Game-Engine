@@ -8,7 +8,7 @@ import random
 import math
 
 
-engine.set_fps_limit(60)
+engine.set_fps_limit(50)
 
 
 # Imagine we're targeting a top-down game, turn gravity off on each axis
@@ -20,13 +20,13 @@ engine.set_fps_limit(60)
 # circle_physics_0.add_child(circle_0)
 
 
-box_physics_0 = PhysicsRectangle2DNode(width=20, height=20, position=Vector2(25, -35), rotation=0, dynamic=False, bounciness = 2.0)
+box_physics_0 = PhysicsRectangle2DNode(width=20, height=20, position=Vector2(25, -35), rotation=0, dynamic=False, bounciness = 1.0)
 box_0 = Rectangle2DNode(width=20, height=20, outline=True)
 box_0.color = engine_draw.blue
 box_physics_0.add_child(box_0)
  
 
-floor_box_physics = PhysicsRectangle2DNode(width=128, height=10, position=Vector2(0, 64), dynamic=False)
+floor_box_physics = PhysicsRectangle2DNode(width=128, height=10, position=Vector2(0, 64), dynamic=False, bounciness=0)
 floor_box = Rectangle2DNode(width=128, height=10, color=engine_draw.green, outline=True)
 floor_box_physics.add_child(floor_box)
 
@@ -39,6 +39,8 @@ for i in range(6):
     boxes.append(stacked_box_physics)
     boxes.append(stacked_box)
     stacked_box_physics.velocity.y = -0.5
+    stacked_box_physics.bounciness = 0.0
+    stacked_box_physics.density = 0.01
     # stacked_box_physics.angular_velocity = 0.1
 
 class Player(PhysicsRectangle2DNode):
@@ -46,11 +48,14 @@ class Player(PhysicsRectangle2DNode):
         super().__init__(self)
         self.position = Vector2(5, -50)
 
-        self.bounciness = 2.0
+        self.bounciness = 0.0
+        self.width=20
+        self.height=20
+        self.density = 0.01
 
         # self.radius = 7
 
-        self.player = Rectangle2DNode(color=engine_draw.green, outline=True)
+        self.player = Rectangle2DNode(color=engine_draw.green, outline=True, width=self.width, height=self.height)
         self.add_child(self.player)
 
         self.count = 0
@@ -77,9 +82,10 @@ class Player(PhysicsRectangle2DNode):
         # print("Collision!", self.count)
         # Circle2DNode(position=contact.position, radius=1)
 
-
+camera = CameraNode()
 
 player = Player()
+player.add_child(camera)
 
 
 # circle_physics_1 = PhysicsCircle2DNode(radius=10, position=Vector2(20, 15), dynamic=False)
@@ -116,8 +122,8 @@ class Gate(PhysicsRectangle2DNode):
             self.position.x = self.position.x - 0.05
 
 
-gate = Gate()
-gate.position.y = 30
+# gate = Gate()
+# gate.position.y = 30
 
 box_physics_1 = rect()
 box_1 = Rectangle2DNode(width=15, height=15, outline=True)
@@ -125,6 +131,6 @@ box_1.color = engine_draw.blue
 box_physics_1.add_child(box_1)
 
 
-camera = CameraNode()
+
 
 engine.start()

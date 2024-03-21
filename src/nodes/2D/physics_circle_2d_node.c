@@ -55,15 +55,33 @@ mp_obj_t physics_circle_2d_node_class_del(mp_obj_t self_in){
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(physics_circle_2d_node_class_del_obj, physics_circle_2d_node_class_del);
 
 
+void physics_circle_2d_calculate_inverse_mass(engine_node_base_t *node_base){
+    engine_physics_node_base_t *physics_node_base = node_base->node;
+    engine_physics_circle_2d_node_class_obj_t *physics_circle = physics_node_base->unique_data;
+
+    float radius = mp_obj_get_float(physics_circle->radius);
+    float density = mp_obj_get_float(physics_node_base->density);
+    float area = PI * radius*radius;
+    physics_node_base->mass = density * area;
+
+    // https://www.concepts-of-physics.com/mechanics/moment-of-inertia.php#:~:text=Moment%20of%20Inertia%20of%20Common%20Shapes
+    if(density == 0.0f){
+        physics_node_base->inverse_mass = 0.0f;
+    }else{
+        physics_node_base->inverse_mass = 1.0f / physics_node_base->mass;
+    }
+}
+
+
 void physics_circle_2d_calculate_inverse_inertia(engine_node_base_t *node_base){
     engine_physics_node_base_t *physics_node_base = node_base->node;
     engine_physics_circle_2d_node_class_obj_t *physics_circle = physics_node_base->unique_data;
 
     float radius = mp_obj_get_float(physics_circle->radius);
-    float mass = mp_obj_get_float(physics_node_base->mass);
+    float mass = physics_node_base->mass;
 
     // https://www.concepts-of-physics.com/mechanics/moment-of-inertia.php#:~:text=Moment%20of%20Inertia%20of%20Common%20Shapes
-    if(mass = 0.0f){
+    if(mass == 0.0f){
         physics_node_base->inverse_moment_of_inertia = 0.0f;
     }else{
         physics_node_base->inverse_moment_of_inertia = 1.0f / (0.5f + mass * (radius*radius));
@@ -131,11 +149,15 @@ bool physics_circle_2d_store_attr(engine_node_base_t *self_node_base, qstr attri
     switch(attribute){
         case MP_QSTR_radius:
             self->radius = destination[1];
+
+            // As the radius changes so does the mass due to density
+            physics_circle_2d_calculate_inverse_mass(self_node_base);
+            physics_circle_2d_calculate_inverse_inertia(self_node_base);
             return true;
         break;
-        case MP_QSTR_mass:
-            physics_node_base->mass = destination[1];
-            physics_node_base_calculate_inverse_mass(physics_node_base);
+        case MP_QSTR_density:
+            physics_node_base->density = destination[1];
+            physics_circle_2d_calculate_inverse_mass(self_node_base);
             physics_circle_2d_calculate_inverse_inertia(self_node_base);
             return true;
         break;
@@ -184,7 +206,7 @@ STATIC mp_attr_fun_t physics_circle_2d_node_class_attr(mp_obj_t self_in, qstr at
     PARAM: [type=float]                                  [name=radius]                   [value=any]
     PARAM: [type={ref_link:Vector2}]                     [name=velocity]                 [value={ref_link:Vector2}]
     PARAM: [type=float]                                  [name=rotation]                 [value=any]
-    PARAM: [type=float]                                  [name=mass]                     [value=any]
+    PARAM: [type=float]                                  [name=density]                  [value=any]
     PARAM: [type=float]                                  [name=bounciness]               [value=any]
     PARAM: [type=boolean]                                [name=dynamic]                  [value=True or False]
     PARAM: [type=boolean]                                [name=solid]                    [value=True or False]
@@ -199,7 +221,7 @@ STATIC mp_attr_fun_t physics_circle_2d_node_class_attr(mp_obj_t self_in, qstr at
     ATTR:  [type=float]                                  [name=radius]                   [value=any]
     ATTR:  [type={ref_link:Vector2}]                     [name=velocity]                 [value={ref_link:Vector2}]
     ATTR:  [type=float]                                  [name=rotation]                 [value=any]
-    ATTR:  [type=float]                                  [name=mass]                     [value=any]
+    ATTR:  [type=float]                                  [name=density]                  [value=any]
     ATTR:  [type=float]                                  [name=bounciness]               [value=any]
     ATTR:  [type=boolean]                                [name=dynamic]                  [value=True or False]
     ATTR:  [type=boolean]                                [name=solid]                    [value=True or False]
@@ -216,7 +238,7 @@ mp_obj_t physics_circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_ar
         { MP_QSTR_velocity,         MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_angular_velocity, MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_rotation,         MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_mass,             MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_density,          MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_friction,         MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_bounciness,       MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_dynamic,          MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
@@ -224,7 +246,7 @@ mp_obj_t physics_circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_ar
         { MP_QSTR_gravity_scale,    MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
-    enum arg_ids {child_class, position, radius, velocity, angular_velocity, rotation, mass, friction, bounciness, dynamic, solid, gravity_scale};
+    enum arg_ids {child_class, position, radius, velocity, angular_velocity, rotation, density, friction, bounciness, dynamic, solid, gravity_scale};
     bool inherited = false;
 
     // If there is one positional argument and it isn't the first 
@@ -249,8 +271,8 @@ mp_obj_t physics_circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_ar
     if(parsed_args[velocity].u_obj == MP_OBJ_NULL) parsed_args[velocity].u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL);
     if(parsed_args[angular_velocity].u_obj == MP_OBJ_NULL) parsed_args[angular_velocity].u_obj = mp_obj_new_float(0.0f);
     if(parsed_args[rotation].u_obj == MP_OBJ_NULL) parsed_args[rotation].u_obj = mp_obj_new_float(0.0);
-    if(parsed_args[mass].u_obj == MP_OBJ_NULL) parsed_args[mass].u_obj = mp_obj_new_float(1.0f);
-    if(parsed_args[friction].u_obj == MP_OBJ_NULL) parsed_args[friction].u_obj = mp_obj_new_float(1.0f);
+    if(parsed_args[density].u_obj == MP_OBJ_NULL) parsed_args[density].u_obj = mp_obj_new_float(1.0f);
+    if(parsed_args[friction].u_obj == MP_OBJ_NULL) parsed_args[friction].u_obj = mp_obj_new_float(0.1f);
     if(parsed_args[bounciness].u_obj == MP_OBJ_NULL) parsed_args[bounciness].u_obj = mp_obj_new_float(1.0f);
     if(parsed_args[dynamic].u_obj == MP_OBJ_NULL) parsed_args[dynamic].u_obj = mp_obj_new_int(1);
     if(parsed_args[solid].u_obj == MP_OBJ_NULL) parsed_args[solid].u_obj = mp_obj_new_int(1);
@@ -273,13 +295,14 @@ mp_obj_t physics_circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_ar
     physics_node_base->velocity = parsed_args[velocity].u_obj;
     physics_node_base->angular_velocity = mp_obj_get_float(parsed_args[angular_velocity].u_obj);
     physics_node_base->rotation = mp_obj_get_float(parsed_args[rotation].u_obj);
-    physics_node_base->mass = parsed_args[mass].u_obj;
+    physics_node_base->density = parsed_args[density].u_obj;
     physics_node_base->friction = parsed_args[friction].u_obj;
     physics_node_base->bounciness = parsed_args[bounciness].u_obj;
     physics_node_base->dynamic = parsed_args[dynamic].u_obj;
     physics_node_base->solid = parsed_args[solid].u_obj;
     physics_node_base->gravity_scale = parsed_args[gravity_scale].u_obj;
     physics_node_base->physics_id = engine_physics_ids_take_available();
+    physics_node_base->mass = 0.0f;
     physics_node_base->total_position_correction_x = 0.0f;
     physics_node_base->total_position_correction_y = 0.0f;
 
@@ -292,7 +315,7 @@ mp_obj_t physics_circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_ar
 
     physics_circle_2d_node->radius = parsed_args[radius].u_obj;
 
-    physics_node_base_calculate_inverse_mass(physics_node_base);
+    physics_circle_2d_calculate_inverse_mass(node_base);
     physics_circle_2d_calculate_inverse_inertia(node_base);
 
     if(inherited == true){

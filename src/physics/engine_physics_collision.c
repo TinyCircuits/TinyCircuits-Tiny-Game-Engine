@@ -70,8 +70,8 @@ void engine_physics_get_relative_velocity(engine_physics_node_base_t *physics_no
     // contact->moment_arm_b_y = contact->collision_contact_y - b_position->y;
 
     // engine_draw_pixel(0b1111100000000000, contact->collision_contact_x+64, contact->collision_contact_y+64);
-
-
+    // engine_draw_line(0b0000011111100000, 64+a_position->x, 64+a_position->y, 64+a_position->x+contact->moment_arm_a_x, 64+a_position->y+contact->moment_arm_a_y, NULL);
+    // engine_draw_line(0b0000000000011111, 64+b_position->x, 64+b_position->y, 64+b_position->x+contact->moment_arm_b_x, 64+b_position->y+contact->moment_arm_b_y, NULL);
 
     // ENGINE_FORCE_PRINTF("%.03f %.03f %.03f %.03f", contact->moment_arm_a_x, contact->moment_arm_a_y, contact->moment_arm_b_x, contact->moment_arm_b_y);
 
@@ -83,9 +83,11 @@ void engine_physics_get_relative_velocity(engine_physics_node_base_t *physics_no
 
     // engine_math_cross_product_float_v(physics_node_base_a->angular_velocity, contact->moment_arm_a_x, contact->moment_arm_a_y, &cross_a_x, &cross_a_y);
     // engine_math_cross_product_float_v(physics_node_base_b->angular_velocity, contact->moment_arm_b_x, contact->moment_arm_b_x, &cross_b_x, &cross_b_y);
+    // // engine_math_cross_product_v_float(contact->moment_arm_a_x, contact->moment_arm_a_y, physics_node_base_a->angular_velocity, &cross_a_x, &cross_a_y);
+    // // engine_math_cross_product_v_float(contact->moment_arm_b_x, contact->moment_arm_b_x, physics_node_base_b->angular_velocity, &cross_b_x, &cross_b_y);
 
-    // contact->relative_velocity_x = b_velocity->x - cross_b_x - a_velocity->x - cross_a_x;
-    // contact->relative_velocity_y = b_velocity->y - cross_b_y - a_velocity->y - cross_a_y;
+    // contact->relative_velocity_x = (b_velocity->x + cross_b_x) - (a_velocity->x + cross_a_x);
+    // contact->relative_velocity_y = (b_velocity->y + cross_b_y) - (a_velocity->y + cross_a_y);
 
     // contact->contact_velocity_magnitude = engine_math_dot_product(contact->relative_velocity_x, contact->relative_velocity_y, contact->collision_normal_x, contact->collision_normal_y);
 }
@@ -358,6 +360,8 @@ bool engine_physics_check_rect_rect_collision(engine_physics_node_base_t *physic
     if(engine_physics_check_velocities_separating(contact)){
         return false;
     }
+
+    // ENGINE_FORCE_PRINTF("%.03f", contact->contact_velocity_magnitude);
 
     return true;
 }

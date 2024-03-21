@@ -18,6 +18,11 @@ void engine_math_cross_product_float_v(float value, float in_x, float in_y, floa
     *out_y =  value * in_x;
 }
 
+void engine_math_cross_product_v_float(float in_x, float in_y, float value, float *out_x, float *out_y){
+    *out_x =  value * in_y;
+    *out_y = -value * in_x;
+}
+
 
 // https://github.com/RandyGaul/ImpulseEngine/blob/8d5f4d9113876f91a53cfb967879406e975263d1/IEMath.h#L144-L155
 void engine_math_normalize(float *vx, float *vy){
@@ -28,6 +33,10 @@ void engine_math_normalize(float *vx, float *vy){
         *vx = (*vx) * factor;
         *vy = (*vy) * factor;
     }
+}
+
+float engine_math_vector_length_sqr(float x, float y){
+    return x*x + y*y;
 }
 
 

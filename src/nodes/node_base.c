@@ -258,7 +258,7 @@ void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, bool *
 }
 
 
-void node_base_init(engine_node_base_t *node_base, void *common_data, mp_obj_type_t *mp_type, uint8_t node_type){
+void node_base_init(engine_node_base_t *node_base, void *common_data, const mp_obj_type_t *mp_type, uint8_t node_type){
     node_base->node_common_data = common_data;
     node_base->base.type = mp_type;
     node_base->layer = 0;

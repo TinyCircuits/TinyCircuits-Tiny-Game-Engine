@@ -63,7 +63,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(node_base_get_layer_obj, node_base_get_layer);
 
 void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, bool *is_child_of_camera, mp_obj_t child_node_base);
 
-void node_base_init(engine_node_base_t *node_base, void *common_data, mp_obj_type_t *mp_type, uint8_t node_type);
+void node_base_init(engine_node_base_t *node_base, void *common_data, const mp_obj_type_t *mp_type, uint8_t node_type);
 bool node_base_is_visible(engine_node_base_t *node_base);
 void node_base_set_if_visible(engine_node_base_t *node_base, bool is_visible);
 bool node_base_is_disabled(engine_node_base_t *node_base);

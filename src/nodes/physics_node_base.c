@@ -3,17 +3,6 @@
 #include "math/engine_math.h"
 
 
-void physics_node_base_calculate_inverse_mass(engine_physics_node_base_t *physics_node_base){
-    float mass = mp_obj_get_float(physics_node_base->mass);
-    
-    if(mass == 0.0f){
-        physics_node_base->inverse_mass = 0.0f;
-    }else{
-        physics_node_base->inverse_mass = 1.0f / mass;
-    }
-}
-
-
 // https://github.com/RandyGaul/ImpulseEngine/blob/8d5f4d9113876f91a53cfb967879406e975263d1/Body.h#L35-L39
 void physics_node_base_apply_impulse_base(engine_physics_node_base_t *physics_node_base, float impulse_x, float impulse_y, float position_x, float position_y){
     vector2_class_obj_t *physics_node_base_velocity = physics_node_base->velocity;
@@ -72,10 +61,6 @@ bool physics_node_base_load_attr(engine_node_base_t *self_node_base, qstr attrib
             destination[0] = mp_obj_new_float(self->rotation);
             return true;
         break;
-        case MP_QSTR_mass:
-            destination[0] = self->mass;
-            return true;
-        break;
         case MP_QSTR_friction:
             destination[0] = self->friction;
             return true;
@@ -122,11 +107,6 @@ bool physics_node_base_store_attr(engine_node_base_t *self_node_base, qstr attri
         break;
         case MP_QSTR_rotation:
             self->rotation = mp_obj_get_float(destination[1]);
-            return true;
-        break;
-        case MP_QSTR_mass:
-            self->mass = destination[1];
-            physics_node_base_calculate_inverse_mass(self);
             return true;
         break;
         case MP_QSTR_friction:
