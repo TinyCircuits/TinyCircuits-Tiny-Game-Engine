@@ -3,7 +3,7 @@
 #include "math/engine_math.h"
 
 
-float physics_node_base_calculate_inverse_mass(engine_physics_node_base_t *physics_node_base){
+void physics_node_base_calculate_inverse_mass(engine_physics_node_base_t *physics_node_base){
     float mass = mp_obj_get_float(physics_node_base->mass);
     
     if(mass == 0.0f){
@@ -14,6 +14,7 @@ float physics_node_base_calculate_inverse_mass(engine_physics_node_base_t *physi
 }
 
 
+// https://github.com/RandyGaul/ImpulseEngine/blob/8d5f4d9113876f91a53cfb967879406e975263d1/Body.h#L35-L39
 void physics_node_base_apply_impulse_base(engine_physics_node_base_t *physics_node_base, float impulse_x, float impulse_y, float position_x, float position_y){
     vector2_class_obj_t *physics_node_base_velocity = physics_node_base->velocity;
 
@@ -21,7 +22,7 @@ void physics_node_base_apply_impulse_base(engine_physics_node_base_t *physics_no
     physics_node_base_velocity->y += physics_node_base->inverse_mass * impulse_y;
 
     float cross = engine_math_cross_product_v_v(position_x, position_y, impulse_x, impulse_y);
-    physics_node_base->angular_velocity = physics_node_base->inverse_moment_of_inertia * cross;
+    physics_node_base->angular_velocity -= physics_node_base->inverse_moment_of_inertia * cross;
 }
 
 
@@ -41,7 +42,7 @@ mp_obj_t physics_node_base_apply_impulse(mp_obj_t self_in, mp_obj_t impulse, mp_
 
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(physics_node_base_apply_impulse_obj, physics_node_base_apply_impulse);
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(physics_node_base_apply_impulse_obj, physics_node_base_apply_impulse);
 
 
 // Return `true` if handled loading the attr from internal structure, `false` otherwise

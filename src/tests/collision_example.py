@@ -33,17 +33,18 @@ floor_box_physics.add_child(floor_box)
 
 boxes = []
 for i in range(6):
-    stacked_box_physics = PhysicsRectangle2DNode(width=7, height=7, position=Vector2(0, -15+i*8))
+    stacked_box_physics = PhysicsRectangle2DNode(width=7, height=7, position=Vector2(0, -20+i*9))
     stacked_box = Rectangle2DNode(width=7, height=7, color=engine_draw.green, outline=True)
     stacked_box_physics.add_child(stacked_box)
     boxes.append(stacked_box_physics)
     boxes.append(stacked_box)
+    stacked_box_physics.velocity.y = -0.5
     # stacked_box_physics.angular_velocity = 0.1
 
 class Player(PhysicsRectangle2DNode):
     def __init__(self):
         super().__init__(self)
-        self.position = Vector2(0, -50)
+        self.position = Vector2(5, -50)
 
         self.bounciness = 2.0
 

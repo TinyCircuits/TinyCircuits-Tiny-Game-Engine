@@ -43,7 +43,7 @@ typedef struct{
 void physics_node_base_apply_impulse_base(engine_physics_node_base_t *physics_node_base, float impulse_x, float impulse_y, float position_x, float position_y);
 
 // Updates mass, inverse mass, moment of inertia, and inverse moment of inertia
-float physics_node_base_calculate_inverse_mass(engine_physics_node_base_t *physics_node_base);
+void physics_node_base_calculate_inverse_mass(engine_physics_node_base_t *physics_node_base);
 
 // Return `true` if handled loading the attr from internal structure, `false` otherwise
 bool physics_node_base_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_t *destination);

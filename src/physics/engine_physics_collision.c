@@ -1,8 +1,8 @@
 #include "physics/engine_physics_collision.h"
-#include "math/vector2.h"
 #include "math/engine_math.h"
 #include <stdint.h>
 #include <float.h>
+#include "draw/engine_display_draw.h"
 
 
 // Some algorithms, like SAT, pick the first normal they come across
@@ -44,7 +44,7 @@ void engine_physics_cancel_dynamics(engine_physics_node_base_t *physics_node_bas
 
 
 // https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-basics-and-impulse-resolution--gamedev-6331t#:~:text=more%20readable%20than%20mathematical%20notation!
-void engine_physics_get_relative_normal_velocity_magnitude(engine_physics_node_base_t *physics_node_base_a, engine_physics_node_base_t *physics_node_base_b, contact_t *contact){
+void engine_physics_get_relative_velocity(engine_physics_node_base_t *physics_node_base_a, engine_physics_node_base_t *physics_node_base_b, contact_t *contact){
     vector2_class_obj_t *physics_node_a_velocity = physics_node_base_a->velocity;
     vector2_class_obj_t *physics_node_b_velocity = physics_node_base_b->velocity;
 
@@ -53,18 +53,27 @@ void engine_physics_get_relative_normal_velocity_magnitude(engine_physics_node_b
 
     contact->contact_velocity_magnitude = engine_math_dot_product(relative_velocity_x, relative_velocity_y, contact->collision_normal_x, contact->collision_normal_y);
 
-    // https://github.com/RandyGaul/ImpulseEngine/blob/master/Manifold.cpp#L65-L92
+
+
+    // // https://github.com/RandyGaul/ImpulseEngine/blob/master/Manifold.cpp#L65-L92
+    // // https://github.com/victorfisac/Physac/blob/29d9fc06860b54571a02402fff6fa8572d19bd12/src/physac.h#L1671-L1679
     // vector2_class_obj_t *a_position = physics_node_base_a->position;
     // vector2_class_obj_t *b_position = physics_node_base_b->position;
 
     // vector2_class_obj_t *a_velocity = physics_node_base_a->velocity;
     // vector2_class_obj_t *b_velocity = physics_node_base_b->velocity;
 
-    // contact->local_collision_position_a_x = contact->collision_contact_x - a_position->x;
-    // contact->local_collision_position_a_y = contact->collision_contact_y - a_position->y;
+    // contact->moment_arm_a_x = contact->collision_contact_x - a_position->x;
+    // contact->moment_arm_a_y = contact->collision_contact_y - a_position->y;
 
-    // contact->local_collision_position_b_x = contact->collision_contact_x - b_position->x;
-    // contact->local_collision_position_b_y = contact->collision_contact_y - b_position->y;
+    // contact->moment_arm_b_x = contact->collision_contact_x - b_position->x;
+    // contact->moment_arm_b_y = contact->collision_contact_y - b_position->y;
+
+    // engine_draw_pixel(0b1111100000000000, contact->collision_contact_x+64, contact->collision_contact_y+64);
+
+
+
+    // ENGINE_FORCE_PRINTF("%.03f %.03f %.03f %.03f", contact->moment_arm_a_x, contact->moment_arm_a_y, contact->moment_arm_b_x, contact->moment_arm_b_y);
 
     // // https://github.com/tutsplus/ImpulseEngine/blob/7a66ba78562efd9c3029ff0992d21b31026afc8a/Manifold.cpp#L69-L74
     // float cross_a_x = 0.0f;
@@ -72,13 +81,13 @@ void engine_physics_get_relative_normal_velocity_magnitude(engine_physics_node_b
     // float cross_b_x = 0.0f;
     // float cross_b_y = 0.0f;
 
-    // engine_math_cross_product_float_v(physics_node_base_a->angular_velocity, contact->local_collision_position_a_x, contact->local_collision_position_a_y, &cross_a_x, &cross_a_y);
-    // engine_math_cross_product_float_v(physics_node_base_b->angular_velocity, contact->local_collision_position_b_x, contact->local_collision_position_b_y, &cross_b_x, &cross_b_y);
+    // engine_math_cross_product_float_v(physics_node_base_a->angular_velocity, contact->moment_arm_a_x, contact->moment_arm_a_y, &cross_a_x, &cross_a_y);
+    // engine_math_cross_product_float_v(physics_node_base_b->angular_velocity, contact->moment_arm_b_x, contact->moment_arm_b_x, &cross_b_x, &cross_b_y);
 
-    // float relative_velocity_x = b_velocity->x + cross_b_x - a_velocity->x - cross_a_x;
-    // float relative_velocity_y = b_velocity->y + cross_b_y - a_velocity->y - cross_a_y;
+    // contact->relative_velocity_x = b_velocity->x - cross_b_x - a_velocity->x - cross_a_x;
+    // contact->relative_velocity_y = b_velocity->y - cross_b_y - a_velocity->y - cross_a_y;
 
-    // contact->contact_velocity_magnitude = engine_math_dot_product(relative_velocity_x, relative_velocity_y, contact->collision_normal_x, contact->collision_normal_y);
+    // contact->contact_velocity_magnitude = engine_math_dot_product(contact->relative_velocity_x, contact->relative_velocity_y, contact->collision_normal_x, contact->collision_normal_y);
 }
 
 
@@ -341,7 +350,7 @@ bool engine_physics_check_rect_rect_collision(engine_physics_node_base_t *physic
     engine_physics_resolve_normal_direction(physics_node_base_a, physics_node_base_b, contact);
     engine_physics_cancel_dynamics(physics_node_base_a, physics_node_base_b);
     engine_physics_rect_rect_get_contact(contact, physics_node_base_a, physics_node_base_b);
-    engine_physics_get_relative_normal_velocity_magnitude(physics_node_base_a, physics_node_base_b, contact);
+    engine_physics_get_relative_velocity(physics_node_base_a, physics_node_base_b, contact);
 
     // Do not resolve if velocities are separating (this does mean
     // objects inside each other will not collide until a non separating
@@ -444,7 +453,7 @@ bool engine_physics_check_rect_circle_collision(engine_physics_node_base_t *phys
     engine_physics_resolve_normal_direction(physics_rect_node_base, physics_circle_node_base, contact);
     engine_physics_cancel_dynamics(physics_rect_node_base, physics_circle_node_base);
     engine_physics_rect_circle_get_contact(contact, circle_to_vert_axis_x, circle_to_vert_axis_y, physics_rect_node_base, physics_circle_node_base);
-    engine_physics_get_relative_normal_velocity_magnitude(physics_rect_node_base, physics_circle_node_base, contact);
+    engine_physics_get_relative_velocity(physics_rect_node_base, physics_circle_node_base, contact);
 
     // Do not resolve if velocities are separating (this does mean
     // objects inside each other will not collide until a non separating
@@ -505,7 +514,7 @@ bool engine_physics_check_circle_circle_collision(engine_physics_node_base_t *ph
     // Resolve collision: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-basics-and-impulse-resolution--gamedev-6331t#:~:text=more%20readable%20than%20mathematical%20notation!
     engine_physics_resolve_normal_direction(physics_node_base_a, physics_node_base_b, contact);
     engine_physics_cancel_dynamics(physics_node_base_a, physics_node_base_b);
-    engine_physics_get_relative_normal_velocity_magnitude(physics_node_base_a, physics_node_base_b, contact);
+    engine_physics_get_relative_velocity(physics_node_base_a, physics_node_base_b, contact);
 
     // Do not resolve if velocities are separating (this does mean
     // objects inside each other will not collide until a non separating

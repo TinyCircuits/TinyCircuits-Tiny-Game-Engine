@@ -3,6 +3,7 @@
 
 #include "nodes/2d/physics_rectangle_2d_node.h"
 #include "nodes/2d/physics_circle_2d_node.h"
+#include "math/vector2.h"
 
 // Structure used to hold common data about collisions.
 // Filled during collision check of various pairs of
@@ -15,11 +16,17 @@ typedef struct{
     float collision_normal_penetration;
     float contact_velocity_magnitude;
 
-    float local_collision_position_a_x;
-    float local_collision_position_a_y;
-    float local_collision_position_b_x;
-    float local_collision_position_b_y;
+    float moment_arm_a_x;
+    float moment_arm_a_y;
+    float moment_arm_b_x;
+    float moment_arm_b_y;
+
+    float relative_velocity_x;
+    float relative_velocity_y;
 }contact_t;
+
+
+void engine_physics_get_relative_velocity(engine_physics_node_base_t *physics_node_base_a, engine_physics_node_base_t *physics_node_base_b, contact_t *contact);
 
 
 // https://textbooks.cs.ksu.edu/cis580/04-collisions/04-separating-axis-theorem/index.html#:~:text=A%20helper%20method%20to%20do%20this%20might%20be%3A
