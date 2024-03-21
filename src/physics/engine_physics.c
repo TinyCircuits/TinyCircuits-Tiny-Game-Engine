@@ -349,12 +349,6 @@ void engine_physics_tick(){
     // // https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-core-engine--gamedev-7493t#timestepping:~:text=Here%20is%20a%20full%20example%3A
     const float alpha = time_accumulator / engine_fps_limit_period_ms;
 
-    // // Apply impulses/move objects due to physics before
-    // // checking for collisions. Doing it this way means
-    // // you don't see when objects are overlapping and moved
-    // // back (looks more stable)
-    engine_physics_apply_impulses(engine_fps_limit_period_ms, alpha);
-
     const float current_time_ms = millis();
 
     // Store the time elapsed since the last frame began
@@ -374,7 +368,12 @@ void engine_physics_tick(){
         engine_physics_update(engine_fps_limit_period_ms);
         time_accumulator -= engine_fps_limit_period_ms;
     }
-    engine_physics_update(engine_fps_limit_period_ms);
+
+    // Apply impulses/move objects due to physics before
+    // checking for collisions. Doing it this way means
+    // you don't see when objects are overlapping and moved
+    // back (looks more stable)
+    engine_physics_apply_impulses(engine_fps_limit_period_ms, alpha);
 }
 
 

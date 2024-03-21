@@ -43,19 +43,19 @@ for i in range(6):
     stacked_box_physics.density = 0.01
     # stacked_box_physics.angular_velocity = 0.1
 
-class Player(PhysicsRectangle2DNode):
+class Player(PhysicsCircle2DNode):
     def __init__(self):
         super().__init__(self)
         self.position = Vector2(5, -50)
 
         self.bounciness = 0.0
-        self.width=20
-        self.height=20
+        # self.width=20
+        # self.height=20
         self.density = 0.01
 
         # self.radius = 7
 
-        self.player = Rectangle2DNode(color=engine_draw.green, outline=True, width=self.width, height=self.height)
+        self.player = Circle2DNode(color=engine_draw.green, outline=True)
         self.add_child(self.player)
 
         self.count = 0
@@ -85,7 +85,7 @@ class Player(PhysicsRectangle2DNode):
 camera = CameraNode()
 
 player = Player()
-player.add_child(camera)
+# player.add_child(camera)
 
 
 # circle_physics_1 = PhysicsCircle2DNode(radius=10, position=Vector2(20, 15), dynamic=False)
