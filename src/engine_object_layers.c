@@ -94,7 +94,6 @@ void engine_invoke_all_node_callbacks(){
                     break;
                     case NODE_TYPE_VOXELSPACE:
                     {
-                        ENGINE_FORCE_PRINTF("TEST");
                         engine_voxelspace_node_common_data_t *voxelspace_node_common_data = node_base->node_common_data;
                         exec[0] = voxelspace_node_common_data->tick_cb;
                         exec[1] = node_base->attr_accessor;

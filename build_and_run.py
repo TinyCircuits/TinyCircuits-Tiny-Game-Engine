@@ -2,7 +2,7 @@ import sys
 import os
 import shutil
 import string
-from ctypes import windll
+import psutil
 from subprocess import Popen, PIPE, CalledProcessError
 
 # python -m pip install pyserial
@@ -13,7 +13,7 @@ import serial.tools.list_ports
 
 # Helper for running commands and processing output
 def execute(cmd):
-    with Popen(cmd, stdout=PIPE, bufsize=1, universal_newlines=True, shell=True) as p:
+    with Popen(cmd, stdout=PIPE, bufsize=1, universal_newlines=True, shell=False) as p:
         for line in p.stdout:
             print(line, end='') # process line here
 
@@ -24,12 +24,11 @@ def execute(cmd):
 # Helper for getting mounted drives on computer (RP3 only)
 # https://stackoverflow.com/questions/827371/is-there-a-way-to-list-all-the-available-windows-drives
 def get_drives():
+    partitions = psutil.disk_partitions()
     drives = []
-    bitmask = windll.kernel32.GetLogicalDrives()
-    for letter in string.ascii_uppercase:
-        if bitmask & 1:
-            drives.append(letter)
-        bitmask >>= 1
+
+    for p in partitions:
+        drives.append(p.mountpoint)
 
     return drives
 
@@ -49,7 +48,7 @@ clean_or_path_arg = arguments[0]
 files_to_run = []
 
 if clean_or_path_arg == "clean":
-    execute(['wsl', '-e', 'make', '-C', '../../../ports/rp3', 'clean', 'BOARD=THUMBY_COLOR'])
+    execute(['make', '-C', '../../../ports/rp3', 'clean', 'BOARD=THUMBY_COLOR'])
     print("\n\nSUCCESS: Done cleaning rp3 port!\n")
     exit(1)
 elif os.path.isdir(clean_or_path_arg):
@@ -75,12 +74,8 @@ for file in files_to_run:
 
 # ### Step 4: Now that everything is copied, build the firmware (which will freeze everything in `modules`)
 print("\n\nBuilding rp3 port...\n")
-execute(['wsl', '-e', 'make', '-C', '../../../ports/rp3', '-j8', 'BOARD=THUMBY_COLOR', 'USER_C_MODULES=../../examples/usercmodule/TinyCircuits-Tiny-Game-Engine/src/micropython.cmake'])
+execute(['make', '-C', '../../../ports/rp3', '-j8', 'BOARD=THUMBY_COLOR', 'USER_C_MODULES=../../examples/usercmodule/TinyCircuits-Tiny-Game-Engine/src/micropython.cmake'])
 print("\n\nDone building rp3 port!\n")
-
-
-# ### Step 5: Collect list of drives connected now, before putting into BOOTLOADER mode
-drives_before = get_drives()
 
 
 # ### Step 6: Assume that the port is plugged in and may be running a program, connect to it
@@ -89,7 +84,7 @@ print("Looking for serial port to reset...")
 for port, desc, hwid in sorted(serial.tools.list_ports.comports()):
     if("VID:PID=2E8A:0005" in hwid):
         print("Found serial port! Connecting...", desc)
-        ser = serial.Serial(port, 115200)
+        ser = serial.Serial(port, 9600)
 
         ser.write("\x03".encode("utf-8"))
         ser.write("import machine\r\n".encode("utf-8"))
@@ -101,15 +96,22 @@ for port, desc, hwid in sorted(serial.tools.list_ports.comports()):
 
 # ### Step 7: Find the BOOTSEL device and copy over the firmware
 print("Finding drive letter... (may need to manually put into BOOTSEL mode)")
-drives_after = get_drives()
-while drives_before == drives_after:
-    drives_after = get_drives()
+mount = None
+done = False
+while done == False:
+    drives = get_drives()
 
-drive_letter = list(set(drives_after) - set(drives_before))[0]
-print("Found drive letter! " + drive_letter)
+    for drive in drives:
+        if 'root' not in drive and 'RP' in drive:
+            mount = drive
+            done = True
+            break
+
+print("Found drive! " + mount)
 
 print("Copying firmware to device...")
-shutil.copyfile("../../../ports/rp3/build-THUMBY_COLOR/firmware.uf2 ", drive_letter + ":\\firmware.uf2")
+# shutil.copyfile("../../../ports/rp3/build-THUMBY_COLOR/firmware.uf2 ", mount + "/firmware.uf2")
+execute(['sudo', 'cp', '../../../ports/rp3/build-THUMBY_COLOR/firmware.uf2', mount + "/firmware.uf2"])
 print("SUCCESS: Copied firmware to device!\n")
 
 
