@@ -308,7 +308,7 @@ bool engine_physics_check_rect_rect_collision(engine_physics_node_base_t *physic
     contact->collision_normal_penetration = FLT_MAX;
 
     // https://textbooks.cs.ksu.edu/cis580/04-collisions/04-separating-axis-theorem/index.html#:~:text=it%20would%20look%20like%20something%20like%20this%3A
-    // Only need to test two axes since rectangles have parallel directions: https://www.gamedev.net/tutorials/programming/general-and-gameplay-programming/2d-rotated-rectangle-collision-r2604/#:~:text=This%20gives%20us-,four%20axes,-%2C%20each%20of%20which
+    // Only need to test two axes since rectangles have parallel directions: https://www.gamedev.net/tutorials/programming/general-and-gameplay-programming/2D-rotated-rectangle-collision-r2604/#:~:text=This%20gives%20us-,four%20axes,-%2C%20each%20of%20which
     for(uint8_t inx=0; inx<2; inx++){
         axis_x = physics_rectangle_a->normals_x[inx];
         axis_y = physics_rectangle_a->normals_y[inx];
@@ -432,7 +432,7 @@ bool engine_physics_check_rect_circle_collision(engine_physics_node_base_t *phys
     contact->collision_normal_penetration = FLT_MAX;
 
     // https://textbooks.cs.ksu.edu/cis580/04-collisions/04-separating-axis-theorem/index.html#:~:text=it%20would%20look%20like%20something%20like%20this%3A
-    // Only need to test two axes since rectangles have parallel directions: https://www.gamedev.net/tutorials/programming/general-and-gameplay-programming/2d-rotated-rectangle-collision-r2604/#:~:text=This%20gives%20us-,four%20axes,-%2C%20each%20of%20which
+    // Only need to test two axes since rectangles have parallel directions: https://www.gamedev.net/tutorials/programming/general-and-gameplay-programming/2D-rotated-rectangle-collision-r2604/#:~:text=This%20gives%20us-,four%20axes,-%2C%20each%20of%20which
     for(uint8_t inx=0; inx<2; inx++){
         axis_x = physics_rectangle->normals_x[inx];
         axis_y = physics_rectangle->normals_y[inx];

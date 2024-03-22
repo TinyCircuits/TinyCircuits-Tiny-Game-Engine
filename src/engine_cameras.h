@@ -2,7 +2,7 @@
 #define ENGINE_CAMERAS_H
 
 #include "utility/linked_list.h"
-#include "nodes/3d/camera_node.h"
+#include "nodes/3D/camera_node.h"
 #include "nodes/node_base.h"
 #include "py/obj.h"
 

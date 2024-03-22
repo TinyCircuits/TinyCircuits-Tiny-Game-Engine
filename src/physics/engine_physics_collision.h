@@ -1,8 +1,8 @@
 #ifndef ENGINE_PHYSICS_COLLISION_H
 #define ENGINE_PHYSICS_COLLISION_H
 
-#include "nodes/2d/physics_rectangle_2d_node.h"
-#include "nodes/2d/physics_circle_2d_node.h"
+#include "nodes/2D/physics_rectangle_2d_node.h"
+#include "nodes/2D/physics_circle_2d_node.h"
 #include "math/vector2.h"
 
 // Structure used to hold common data about collisions.

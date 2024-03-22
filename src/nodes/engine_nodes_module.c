@@ -1,15 +1,15 @@
 #include "py/obj.h"
 
 #include "empty_node.h"
-#include "3d/camera_node.h"
-#include "3d/voxelspace_node.h"
-#include "2d/sprite_2d_node.h"
-#include "2d/rectangle_2d_node.h"
-#include "2d/line_2d_node.h"
-#include "2d/circle_2d_node.h"
-#include "2d/physics_rectangle_2d_node.h"
-#include "2d/physics_circle_2d_node.h"
-#include "2d/text_2d_node.h"
+#include "3D/camera_node.h"
+#include "3D/voxelspace_node.h"
+#include "2D/sprite_2d_node.h"
+#include "2D/rectangle_2d_node.h"
+#include "2D/line_2d_node.h"
+#include "2D/circle_2d_node.h"
+#include "2D/physics_rectangle_2d_node.h"
+#include "2D/physics_circle_2d_node.h"
+#include "2D/text_2d_node.h"
 
 
 /*  --- doc ---
