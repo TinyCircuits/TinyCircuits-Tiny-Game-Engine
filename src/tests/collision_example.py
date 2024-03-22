@@ -26,7 +26,7 @@ box_0.color = engine_draw.blue
 box_physics_0.add_child(box_0)
  
 
-floor_box_physics = PhysicsRectangle2DNode(width=128, height=10, position=Vector2(0, 64), dynamic=False, bounciness=0)
+floor_box_physics = PhysicsRectangle2DNode(width=128, height=10, position=Vector2(0, 64), dynamic=False, bounciness=0.5)
 floor_box = Rectangle2DNode(width=128, height=10, color=engine_draw.green, outline=True)
 floor_box_physics.add_child(floor_box)
 
@@ -48,7 +48,7 @@ class Player(PhysicsCircle2DNode):
         super().__init__(self)
         self.position = Vector2(5, -50)
 
-        self.bounciness = 0.0
+        self.bounciness = 0.5
         # self.width=20
         # self.height=20
         self.density = 0.01

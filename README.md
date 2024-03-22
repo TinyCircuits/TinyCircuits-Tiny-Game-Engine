@@ -65,7 +65,7 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 
 For April 15th:
 [] Get rid of polygon collider and polygon drawing to make things more simple, only have rotated rectangles for colliders + circles
-[] Physics
+[] Physics: got rotated circles and rectangles but still need to figure out a better way of separating nodes without an impulse, resolve angular velocity during collision
 [] Tweening
 [] Buttons
 [] Menu (carousel)
@@ -77,9 +77,9 @@ Adam:
 [X] Camera children for HUD
 [X] VoxelSpace
 
-X Need good title for influencers
+X Need good title for influencer
 X Mock ups/concepts of other games
-X Voxel game for influencers
+X Voxel game for influencer
 X Menu?
 
 
