@@ -7,8 +7,8 @@
 void physics_node_base_apply_impulse_base(engine_physics_node_base_t *physics_node_base, float impulse_x, float impulse_y, float position_x, float position_y){
     vector2_class_obj_t *physics_node_base_velocity = physics_node_base->velocity;
 
-    physics_node_base_velocity->x += physics_node_base->inverse_mass * impulse_x;
-    physics_node_base_velocity->y += physics_node_base->inverse_mass * impulse_y;
+    physics_node_base_velocity->x.value += physics_node_base->inverse_mass * impulse_x;
+    physics_node_base_velocity->y.value += physics_node_base->inverse_mass * impulse_y;
 
     float cross = engine_math_cross_product_v_v(position_x, position_y, impulse_x, impulse_y);
     physics_node_base->angular_velocity -= physics_node_base->inverse_moment_of_inertia * cross;
@@ -24,7 +24,7 @@ mp_obj_t physics_node_base_apply_impulse(mp_obj_t self_in, mp_obj_t impulse, mp_
         vector2_class_obj_t *applying_impulse = impulse;
         vector2_class_obj_t *applying_position = contact_position;
 
-        physics_node_base_apply_impulse_base(physics_node_base, applying_impulse->x, applying_impulse->y, applying_position->x, applying_position->y);
+        physics_node_base_apply_impulse_base(physics_node_base, applying_impulse->x.value, applying_impulse->y.value, applying_position->x.value, applying_position->y.value);
     }else{
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EnginePhysicsNodeBase: ERROR: Tried to apply an impulse with variable/object that is not Vector2! (either impulse or position)"));
     }

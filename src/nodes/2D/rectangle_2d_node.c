@@ -56,12 +56,12 @@ void rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_base, mp_ob
     float rectangle_rotated_x = rectangle_resolved_hierarchy_x-camera_resolved_hierarchy_x;
     float rectangle_rotated_y = rectangle_resolved_hierarchy_y-camera_resolved_hierarchy_y;
 
-    // Scale transformation due to camera zoom
-    if(rectangle_is_child_of_camera == false){
-        engine_math_scale_point(&rectangle_rotated_x, &rectangle_rotated_y, camera_position->x, camera_position->y, camera_zoom);
-    }else{
+    if(rectangle_is_child_of_camera == true){
         camera_zoom = 1.0f;
     }
+
+    // Scale transformation due to camera zoom
+    engine_math_scale_point(&rectangle_rotated_x, &rectangle_rotated_y, camera_position->x, camera_position->y, camera_zoom);
 
     rectangle_width = rectangle_width*camera_zoom;
     rectangle_height = rectangle_height*camera_zoom;
@@ -78,8 +78,8 @@ void rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_base, mp_ob
                                                 (int32_t)rectangle_rotated_y,
                                                 rectangle_width, 
                                                 rectangle_height,
-                                                (int32_t)(rectangle_scale->x*65536 + 0.5),
-                                                (int32_t)(rectangle_scale->y*65536 + 0.5),
+                                                (int32_t)(rectangle_scale->x.value*65536 + 0.5),
+                                                (int32_t)(rectangle_scale->y.value*65536 + 0.5),
                                                 (int16_t)(((rectangle_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation))*1024 / (float)(2*PI)),
                                                 (int32_t)camera_viewport->x,
                                                 (int32_t)camera_viewport->y,

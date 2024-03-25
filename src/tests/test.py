@@ -23,7 +23,7 @@ import gc
 
 # my_line.position.x = -64
 
-line = Line2DNode(color=engine_draw.orange, start=Vector2(10, -15), end=Vector2(10, 15), thickness=1)
+line = Line2DNode(color=engine_draw.orange, start=Vector2(40, -15), end=Vector2(40, 15), thickness=1)
 
 
 # By default, nodes are at center of screen at 0,0
@@ -121,13 +121,13 @@ circle.add_child(rectangle)
 circle.add_child(sprite)
 circle.add_child(text)
 circle.add_child(text0)
-# circle.add_child(my_line)
 circle.add_child(line)
 
-cursor = Circle2DNode(radius=5, color=engine_draw.green, outline=True)
+cursor = Circle2DNode(radius=5, color=engine_draw.green, outline=True, position=Vector2(0, 0))
 
 # camera.add_child(circle)
 # camera.add_child(fps)
 camera.add_child(cursor)
+# camera.add_child(rectangle)
 
 engine.start()

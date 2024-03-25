@@ -191,8 +191,8 @@ void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, bool *
     if(is_child_of_camera != NULL) *is_child_of_camera = false;
 
     vector2_class_obj_t *child_node_base_position = mp_load_attr(child_node_base->attr_accessor, MP_QSTR_position);
-    *x = (float)child_node_base_position->x;
-    *y = (float)child_node_base_position->y;
+    *x = (float)child_node_base_position->x.value;
+    *y = (float)child_node_base_position->y.value;
     mp_obj_t rotation_obj = engine_mp_load_attr_maybe(child_node_base->attr_accessor, MP_QSTR_rotation);
 
     // Use z-axis rotation for 2D rotations from 3D vectors
@@ -230,8 +230,8 @@ void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, bool *
                     parent_x = ((vector3_class_obj_t*)parent_position_obj)->x;
                     parent_y = ((vector3_class_obj_t*)parent_position_obj)->y;
                 }else{
-                    parent_x = ((vector2_class_obj_t*)parent_position_obj)->x;
-                    parent_y = ((vector2_class_obj_t*)parent_position_obj)->y;
+                    parent_x = ((vector2_class_obj_t*)parent_position_obj)->x.value;
+                    parent_y = ((vector2_class_obj_t*)parent_position_obj)->y.value;
                 }
 
                 if(parent_rotation_obj == MP_OBJ_NULL){

@@ -60,6 +60,11 @@ extern uint32_t engine_performance_timers[5];
     mp_printf(MP_PYTHON_PRINTER, "\x1b[0m\n");
 
 
+#define ENGINE_PRINTF(fmt, ...)                       \
+    mp_printf(MP_PYTHON_PRINTER, fmt, ##__VA_ARGS__);    \
+    mp_printf(MP_PYTHON_PRINTER, "\n");
+
+
 // Tracks time (in ms) when called to used when calling 'ENGINE_PERFORMANCE_STOP()' later
 #define ENGINE_PERFORMANCE_START(timer)                                                             \
     if(DEBUG_PERFORMANCE_ENABLED){                                                                  \

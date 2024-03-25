@@ -54,20 +54,20 @@ void engine_physics_apply_impulses(float dt, float alpha){
             vector2_class_obj_t *physics_node_gravity_scale = physics_node_base->gravity_scale;
 
             // Position correction
-            physics_node_position->x += physics_node_base->total_position_correction_x;
-            physics_node_position->y += physics_node_base->total_position_correction_y;
+            physics_node_position->x.value += physics_node_base->total_position_correction_x;
+            physics_node_position->y.value += physics_node_base->total_position_correction_y;
 
             physics_node_base->total_position_correction_x = 0.0f;
             physics_node_base->total_position_correction_y = 0.0f;
 
             // Gravity: https://github.com/RandyGaul/ImpulseEngine/blob/8d5f4d9113876f91a53cfb967879406e975263d1/Scene.cpp#L35-L42
             //          https://github.com/victorfisac/Physac/blob/29d9fc06860b54571a02402fff6fa8572d19bd12/src/physac.h#L1644-L1648
-            physics_node_velocity->x -= engine_physics_gravity_x * physics_node_gravity_scale->x;
-            physics_node_velocity->y -= engine_physics_gravity_y * physics_node_gravity_scale->y;
+            physics_node_velocity->x.value -= engine_physics_gravity_x * physics_node_gravity_scale->x.value;
+            physics_node_velocity->y.value -= engine_physics_gravity_y * physics_node_gravity_scale->y.value;
 
             // Velocity -> position: https://github.com/RandyGaul/ImpulseEngine/blob/8d5f4d9113876f91a53cfb967879406e975263d1/Scene.cpp#L44-L53
-            physics_node_position->x += physics_node_velocity->x;
-            physics_node_position->y += physics_node_velocity->y;
+            physics_node_position->x.value += physics_node_velocity->x.value;
+            physics_node_position->y.value += physics_node_velocity->y.value;
 
             physics_node_base->rotation += physics_node_base->angular_velocity;
 
@@ -214,13 +214,13 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
 
         // Apply impulses to linear/positional velocity
         if(physics_node_a_dynamic){
-            physics_node_a_velocity->x -= (physics_node_base_a->inverse_mass * collision_impulse_x) + (separate_impulse_x);
-            physics_node_a_velocity->y -= (physics_node_base_a->inverse_mass * collision_impulse_y) + (separate_impulse_y);
+            physics_node_a_velocity->x.value -= (physics_node_base_a->inverse_mass * collision_impulse_x) + (separate_impulse_x);
+            physics_node_a_velocity->y.value -= (physics_node_base_a->inverse_mass * collision_impulse_y) + (separate_impulse_y);
         }
 
         if(physics_node_b_dynamic){
-            physics_node_b_velocity->x += (physics_node_base_b->inverse_mass * collision_impulse_x) + (separate_impulse_x);
-            physics_node_b_velocity->y += (physics_node_base_b->inverse_mass * collision_impulse_y) + (separate_impulse_y);
+            physics_node_b_velocity->x.value += (physics_node_base_b->inverse_mass * collision_impulse_x) + (separate_impulse_x);
+            physics_node_b_velocity->y.value += (physics_node_base_b->inverse_mass * collision_impulse_y) + (separate_impulse_y);
         }
 
         // if(contact.collision_normal_penetration > slop){
@@ -263,8 +263,8 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
         float b_friction = mp_obj_get_float(physics_node_base_b->friction);
         float mu = sqrtf(a_friction + b_friction);
         
-        contact.relative_velocity_x = physics_node_b_velocity->x - physics_node_a_velocity->x;
-        contact.relative_velocity_y = physics_node_b_velocity->y - physics_node_a_velocity->y;
+        contact.relative_velocity_x = physics_node_b_velocity->x.value - physics_node_a_velocity->x.value;
+        contact.relative_velocity_y = physics_node_b_velocity->y.value - physics_node_a_velocity->y.value;
 
         // engine_physics_get_relative_velocity(physics_node_base_a, physics_node_base_b, &contact);
 
@@ -284,11 +284,11 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
             // physics_node_base_apply_impulse_base(physics_node_base_a, -friction_impulse_x, -friction_impulse_y, contact.moment_arm_a_x, contact.moment_arm_a_y);
             // physics_node_base_apply_impulse_base(physics_node_base_b,  friction_impulse_x,  friction_impulse_y, contact.moment_arm_b_x, contact.moment_arm_b_y);
 
-            physics_node_a_velocity->x -= physics_node_base_a->inverse_mass * friction_impulse_x;
-            physics_node_a_velocity->y -= physics_node_base_a->inverse_mass * friction_impulse_y;
+            physics_node_a_velocity->x.value -= physics_node_base_a->inverse_mass * friction_impulse_x;
+            physics_node_a_velocity->y.value -= physics_node_base_a->inverse_mass * friction_impulse_y;
 
-            physics_node_b_velocity->x += physics_node_base_b->inverse_mass * friction_impulse_x;
-            physics_node_b_velocity->y += physics_node_base_b->inverse_mass * friction_impulse_y;
+            physics_node_b_velocity->x.value += physics_node_base_b->inverse_mass * friction_impulse_x;
+            physics_node_b_velocity->y.value += physics_node_base_b->inverse_mass * friction_impulse_y;
         }
 
         mp_obj_t collision_contact_data[5];

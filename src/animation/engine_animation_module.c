@@ -1,46 +1,58 @@
 #include "engine_animation_module.h"
+#include "py/obj.h"
 
-// #include "py/obj.h"
-// #include "engine_physics_module.h"
-// #include "nodes/node_base.h"
-// #include "display/engine_display_common.h"
+linked_list tween_list;
 
 
-// // Could add another method that takes a vector2 to set gravity, just this for now
+linked_list_node* engine_animation_track_tween(tween_class_obj_t *tween){
+    return linked_list_add_obj(&tween_list, tween);
+}
 
 
-// /* --- doc ---
-//    NAME: get_gravity
-//    DESC: Gets the gravity that all objects are affected by
-//    RETURN: {ref_link:Vector2}
-// */
-// STATIC mp_obj_t engine_physics_get_gravity(){
-//     ENGINE_INFO_PRINTF("EnginePhysics: Getting gravity");
-//     return vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(engine_physics_gravity_x), mp_obj_new_float(engine_physics_gravity_y)});
-// }
-// MP_DEFINE_CONST_FUN_OBJ_0(engine_physics_get_gravity_obj, engine_physics_get_gravity);
+void engine_animation_untrack_tween(linked_list_node *list_node){
+    linked_list_del_list_node(&tween_list, list_node);
+}
 
 
-// /* --- doc ---
-//    NAME: engine_physics
-//    DESC: Module for controlling physics and for common physics collision shapes
-//    ATTR: [type=function] [name={ref_link:set_physics_fps_limit}]           [value=function]
-//    ATTR: [type=function] [name={ref_link:set_gravity}]                     [value=function]
-//    ATTR: [type=function] [name={ref_link:get_gravity}]                     [value=function]
-// */
-// STATIC const mp_rom_map_elem_t engine_physics_globals_table[] = {
-//     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_physics) },
-//     { MP_OBJ_NEW_QSTR(MP_QSTR_CollisionContact2D), (mp_obj_t)&collision_contact_2d_class_type},
-//     { MP_OBJ_NEW_QSTR(MP_QSTR_set_gravity), (mp_obj_t)&engine_physics_set_gravity_obj },
-//     { MP_OBJ_NEW_QSTR(MP_QSTR_get_gravity), (mp_obj_t)&engine_physics_get_gravity_obj },
-// };
+void engine_animation_init(){
+    linked_list_init(&tween_list);
+}
 
-// // Module init
-// STATIC MP_DEFINE_CONST_DICT (mp_module_engine_physics_globals, engine_physics_globals_table);
 
-// const mp_obj_module_t engine_physics_user_cmodule = {
-//     .base = { &mp_type_module },
-//     .globals = (mp_obj_dict_t*)&mp_module_engine_physics_globals,
-// };
+void engine_animation_tick(float dt){
+    linked_list_node *current = tween_list.start;
+    mp_obj_t exec[3];
 
-// MP_REGISTER_MODULE(MP_QSTR_engine_physics, engine_physics_user_cmodule);
+    while(current != NULL){
+        tween_class_obj_t *tween = current->object;
+
+        exec[0] = tween->tick;
+        exec[1] = tween->self;
+        exec[2] = mp_obj_new_float(dt);
+        mp_call_method_n_kw(1, 0, exec);
+
+        current = current->next;
+    }
+}
+
+
+/* --- doc ---
+   NAME: engine_animation
+   DESC: Module for animated certain aspects of the engine
+*/
+STATIC const mp_rom_map_elem_t engine_animation_globals_table[] = {
+    { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_animation) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_Tween), (mp_obj_t)&tween_class_type},
+    { MP_ROM_QSTR(MP_QSTR_LOOP), MP_ROM_INT(engine_animation_loop) },
+    { MP_ROM_QSTR(MP_QSTR_ONE_SHOT), MP_ROM_INT(engine_animation_one_shot) },
+};
+
+// Module init
+STATIC MP_DEFINE_CONST_DICT (mp_module_engine_animation_globals, engine_animation_globals_table);
+
+const mp_obj_module_t engine_animation_user_cmodule = {
+    .base = { &mp_type_module },
+    .globals = (mp_obj_dict_t*)&mp_module_engine_animation_globals,
+};
+
+MP_REGISTER_MODULE(MP_QSTR_engine_animation, engine_animation_user_cmodule);

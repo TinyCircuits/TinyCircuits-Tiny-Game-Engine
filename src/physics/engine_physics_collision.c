@@ -12,8 +12,8 @@ void engine_physics_resolve_normal_direction(engine_physics_node_base_t *physics
     vector2_class_obj_t *physics_node_a_position = physics_node_base_a->position;
     vector2_class_obj_t *physics_node_b_position = physics_node_base_b->position;
 
-    float a_to_b_direction_x = physics_node_b_position->x - physics_node_a_position->x;
-    float a_to_b_direction_y = physics_node_b_position->y - physics_node_a_position->y;
+    float a_to_b_direction_x = physics_node_b_position->x.value - physics_node_a_position->x.value;
+    float a_to_b_direction_y = physics_node_b_position->y.value - physics_node_a_position->y.value;
 
     if(engine_math_dot_product(contact->collision_normal_x, contact->collision_normal_y, a_to_b_direction_x, a_to_b_direction_y) >= 0.0f){
         contact->collision_normal_x = -contact->collision_normal_x;
@@ -32,13 +32,13 @@ void engine_physics_cancel_dynamics(engine_physics_node_base_t *physics_node_bas
 
     // If either node is not dynamic, set any velocities to zero no matter what set to
     if(!physics_node_a_dynamic){
-        physics_node_a_velocity->x = 0.0f;
-        physics_node_a_velocity->y = 0.0f;
+        physics_node_a_velocity->x.value = 0.0f;
+        physics_node_a_velocity->y.value = 0.0f;
     }
 
     if(!physics_node_b_dynamic){
-        physics_node_b_velocity->x = 0.0f;
-        physics_node_b_velocity->y = 0.0f;
+        physics_node_b_velocity->x.value = 0.0f;
+        physics_node_b_velocity->y.value = 0.0f;
     }
 }
 
@@ -48,8 +48,8 @@ void engine_physics_get_relative_velocity(engine_physics_node_base_t *physics_no
     vector2_class_obj_t *physics_node_a_velocity = physics_node_base_a->velocity;
     vector2_class_obj_t *physics_node_b_velocity = physics_node_base_b->velocity;
 
-    float relative_velocity_x = physics_node_b_velocity->x - physics_node_a_velocity->x;
-    float relative_velocity_y = physics_node_b_velocity->y - physics_node_a_velocity->y;
+    float relative_velocity_x = physics_node_b_velocity->x.value - physics_node_a_velocity->x.value;
+    float relative_velocity_y = physics_node_b_velocity->y.value - physics_node_a_velocity->y.value;
 
     contact->contact_velocity_magnitude = engine_math_dot_product(relative_velocity_x, relative_velocity_y, contact->collision_normal_x, contact->collision_normal_y);
 
@@ -210,11 +210,11 @@ void engine_physics_rect_rect_get_contact(contact_t *contact, engine_physics_nod
     float b_edge_v1_x = 0.0f;
     float b_edge_v1_y = 0.0f;
 
-    float apx = ((vector2_class_obj_t*)physics_node_base_a->position)->x;
-    float apy = ((vector2_class_obj_t*)physics_node_base_a->position)->y;
+    float apx = ((vector2_class_obj_t*)physics_node_base_a->position)->x.value;
+    float apy = ((vector2_class_obj_t*)physics_node_base_a->position)->y.value;
 
-    float bpx = ((vector2_class_obj_t*)physics_node_base_b->position)->x;
-    float bpy = ((vector2_class_obj_t*)physics_node_base_b->position)->y;
+    float bpx = ((vector2_class_obj_t*)physics_node_base_b->position)->x.value;
+    float bpy = ((vector2_class_obj_t*)physics_node_base_b->position)->y.value;
     
     engine_physics_rect_rect_get_contacting(apx, apy, -contact->collision_normal_x, -contact->collision_normal_y, &a_max_proj_vertex_x, &a_max_proj_vertex_y, &a_edge_v0_x, &a_edge_v0_y, &a_edge_v1_x, &a_edge_v1_y, physics_rectangle_a->vertices_x, physics_rectangle_a->vertices_y);
     engine_physics_rect_rect_get_contacting(bpx, bpy,  contact->collision_normal_x,  contact->collision_normal_y, &b_max_proj_vertex_x, &b_max_proj_vertex_y, &b_edge_v0_x, &b_edge_v0_y, &b_edge_v1_x, &b_edge_v1_y, physics_rectangle_b->vertices_x, physics_rectangle_b->vertices_y);
@@ -262,13 +262,13 @@ void engine_physics_rect_circle_get_contact(contact_t *contact, float circle_to_
     float a_edge_v1_x = 0.0f;
     float a_edge_v1_y = 0.0f;
 
-    float apx = ((vector2_class_obj_t*)physics_node_base_rectangle->position)->x;
-    float apy = ((vector2_class_obj_t*)physics_node_base_rectangle->position)->y;
+    float apx = ((vector2_class_obj_t*)physics_node_base_rectangle->position)->x.value;
+    float apy = ((vector2_class_obj_t*)physics_node_base_rectangle->position)->y.value;
 
     engine_physics_rect_rect_get_contacting(apx, apy, -contact->collision_normal_x, -contact->collision_normal_y, &a_max_proj_vertex_x, &a_max_proj_vertex_y, &a_edge_v0_x, &a_edge_v0_y, &a_edge_v1_x, &a_edge_v1_y, physics_rectangle->vertices_x, physics_rectangle->vertices_y);
     
-    float circle_pos_x = ((vector2_class_obj_t*)physics_node_base_circle->position)->x;
-    float circle_pos_y = ((vector2_class_obj_t*)physics_node_base_circle->position)->y;
+    float circle_pos_x = ((vector2_class_obj_t*)physics_node_base_circle->position)->x.value;
+    float circle_pos_y = ((vector2_class_obj_t*)physics_node_base_circle->position)->y.value;
     float circle_radius = mp_obj_get_float(physics_circle->radius);
 
     float circle_pos_proj = engine_math_dot_product(circle_pos_x, circle_pos_y, contact->collision_normal_y, -contact->collision_normal_x);
@@ -293,11 +293,11 @@ bool engine_physics_check_rect_rect_collision(engine_physics_node_base_t *physic
     vector2_class_obj_t *physics_rectangle_b_position = physics_node_base_b->position;
 
     // What if these are children of other nodes? Should this be in absolute? TODO
-    float collision_shape_a_pos_x = physics_rectangle_a_position->x;
-    float collision_shape_a_pos_y = physics_rectangle_a_position->y;
+    float collision_shape_a_pos_x = physics_rectangle_a_position->x.value;
+    float collision_shape_a_pos_y = physics_rectangle_a_position->y.value;
 
-    float collision_shape_b_pos_x = physics_rectangle_b_position->x;
-    float collision_shape_b_pos_y = physics_rectangle_b_position->y;
+    float collision_shape_b_pos_x = physics_rectangle_b_position->x.value;
+    float collision_shape_b_pos_y = physics_rectangle_b_position->y.value;
 
     float axis_x = 0.0f;
     float axis_y = 0.0f;
@@ -375,11 +375,11 @@ bool engine_physics_check_rect_circle_collision(engine_physics_node_base_t *phys
     vector2_class_obj_t *physics_circle_position = physics_circle_node_base->position;
 
     // What if these are children of other nodes? Should this be in absolute? TODO
-    float rectangle_pos_x = physics_rectangle_position->x;
-    float rectangle_pos_y = physics_rectangle_position->y;
+    float rectangle_pos_x = physics_rectangle_position->x.value;
+    float rectangle_pos_y = physics_rectangle_position->y.value;
 
-    float circle_pos_x = physics_circle_position->x;
-    float circle_pos_y = physics_circle_position->y;
+    float circle_pos_x = physics_circle_position->x.value;
+    float circle_pos_y = physics_circle_position->y.value;
     float circle_radius = mp_obj_get_float(physics_circle->radius);
 
     // Need to find closest vertex on rect to circle
@@ -478,11 +478,11 @@ bool engine_physics_check_circle_circle_collision(engine_physics_node_base_t *ph
     vector2_class_obj_t *physics_circle_b_position = physics_node_base_b->position;
 
     // What if these are children of other nodes? Should this be in absolute? TODO
-    float collision_shape_a_pos_x = physics_circle_a_position->x;
-    float collision_shape_a_pos_y = physics_circle_a_position->y;
+    float collision_shape_a_pos_x = physics_circle_a_position->x.value;
+    float collision_shape_a_pos_y = physics_circle_a_position->y.value;
 
-    float collision_shape_b_pos_x = physics_circle_b_position->x;
-    float collision_shape_b_pos_y = physics_circle_b_position->y;
+    float collision_shape_b_pos_x = physics_circle_b_position->x.value;
+    float collision_shape_b_pos_y = physics_circle_b_position->y.value;
 
     float a_radius = mp_obj_get_float(physics_circle_a->radius);
     float b_radius = mp_obj_get_float(physics_circle_b->radius);

@@ -39,8 +39,8 @@ void line_2d_node_class_draw(engine_node_base_t *line_node_base, mp_obj_t camera
     bool line_outlined = mp_obj_get_int(line_2d->outline);
 
     // The line is drawn as a rectangle since we have a nice algorithm for doing that:
-    float line_length = engine_math_distance_between(line_start->x, line_start->y, line_end->x, line_end->y);
-    float line_rotation = engine_math_angle_between(line_start->x, line_start->y, line_end->x, line_end->y) - HALF_PI;
+    float line_length = engine_math_distance_between(line_start->x.value, line_start->y.value, line_end->x.value, line_end->y.value);
+    float line_rotation = engine_math_angle_between(line_start->x.value, line_start->y.value, line_end->x.value, line_end->y.value) - HALF_PI;
     line_rotation *= -1.0f; // https://stackoverflow.com/a/62486304
 
     // Grab camera
@@ -66,12 +66,12 @@ void line_2d_node_class_draw(engine_node_base_t *line_node_base, mp_obj_t camera
     float line_rotated_x = line_resolved_hierarchy_x-camera_resolved_hierarchy_x;
     float line_rotated_y = line_resolved_hierarchy_y-camera_resolved_hierarchy_y;
 
-    // Scale transformation due to camera zoom
-    if(line_is_child_of_camera == false){
-        engine_math_scale_point(&line_rotated_x, &line_rotated_y, camera_position->x, camera_position->y, camera_zoom);
-    }else{
+    if(line_is_child_of_camera == true){
         camera_zoom = 1.0f;
     }
+
+    // Scale transformation due to camera zoom
+    engine_math_scale_point(&line_rotated_x, &line_rotated_y, camera_position->x, camera_position->y, camera_zoom);
 
     // Scale by camera
     line_thickness = line_thickness*camera_zoom;
@@ -134,7 +134,13 @@ void line_2d_recalculate_midpoint(engine_line_2d_node_class_obj_t *line){
     vector2_class_obj_t *position = line->position;
     vector2_class_obj_t *end = line->end;
 
-    engine_math_2d_midpoint(start->x, start->y, end->x, end->y, &position->x, &position->y);
+    float mx = 0.0f;
+    float my = 0.0f;
+
+    engine_math_2d_midpoint(start->x.value, start->y.value, end->x.value, end->y.value, &mx, &my);
+
+    position->x.value = mx;
+    position->y.value = my;
 }
 
 
@@ -143,14 +149,14 @@ void line_2d_translate_endpoints(engine_line_2d_node_class_obj_t *line, float nx
     vector2_class_obj_t *position = line->position;
     vector2_class_obj_t *end = line->end;
 
-    float dx = nx - position->x;
-    float dy = ny - position->y;
+    float dx = nx - position->x.value;
+    float dy = ny - position->y.value;
 
-    start->x += dx;
-    end->x += dx;
+    start->x.value += dx;
+    end->x.value += dx;
 
-    start->y += dy;
-    end->y += dy;
+    start->y.value += dy;
+    end->y.value += dy;
 }
 
 
@@ -242,7 +248,7 @@ bool line_2d_store_attr(engine_node_base_t *self_node_base, qstr attribute, mp_o
         break;
         case MP_QSTR_position:
             // Offset `start` and `end` based on new position
-            line_2d_translate_endpoints(self, ((vector2_class_obj_t*)destination[1])->x, ((vector2_class_obj_t*)destination[1])->y);
+            line_2d_translate_endpoints(self, ((vector2_class_obj_t*)destination[1])->x.value, ((vector2_class_obj_t*)destination[1])->y.value);
             self->position = destination[1];
             return true;
         break;
@@ -256,6 +262,7 @@ bool line_2d_store_attr(engine_node_base_t *self_node_base, qstr attribute, mp_o
         break;
         case MP_QSTR_outline:
             self->outline = destination[1];
+
             return true;
         break;
         default:

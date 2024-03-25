@@ -13,6 +13,8 @@
 #include "display/engine_display.h"
 #include "draw/engine_display_draw.h"
 
+#include "animation/engine_animation_module.h"
+
 #include "py/mpstate.h"
 #include "py/mphal.h"
 #include "py/stream.h"
@@ -30,6 +32,7 @@ bool is_engine_initialized = false;
 float engine_fps_limit_period_ms = 16.6667f;
 float engine_fps_time_at_last_tick_ms = 0.0f;
 float engine_fps_time_at_before_last_tick_ms = 0.0f;
+float dt;
 
 
 /* --- doc ---
@@ -121,7 +124,9 @@ STATIC mp_obj_t engine_tick(){
     // correctly, just replicating what happens in modutime.c
     MP_THREAD_GIL_EXIT();
 
-    if(millis() - engine_fps_time_at_last_tick_ms >= engine_fps_limit_period_ms){
+    dt = millis() - engine_fps_time_at_last_tick_ms;
+
+    if(dt >= engine_fps_limit_period_ms){
         engine_fps_time_at_before_last_tick_ms = engine_fps_time_at_last_tick_ms;
         engine_fps_time_at_last_tick_ms = millis();
 
@@ -141,6 +146,9 @@ STATIC mp_obj_t engine_tick(){
         // all the callbacks for the physics nodes are done, the positions
         // from the engine node are synced back to the physics body
         engine_physics_tick();
+
+        // Goes through all animation components
+        engine_animation_tick(dt);
 
         // After every game cycle send the current active screen buffer to the display
         engine_display_send();
@@ -217,6 +225,7 @@ STATIC mp_obj_t engine_module_init(){
     engine_display_init();
     engine_display_send();
     engine_physics_init();
+    engine_animation_init();
 
     return mp_const_none;
 }

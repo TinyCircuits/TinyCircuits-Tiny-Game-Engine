@@ -81,12 +81,12 @@ void text_2d_node_class_draw(engine_node_base_t *text_node_base, mp_obj_t camera
     float text_rotated_x = text_resolved_hierarchy_x - camera_resolved_hierarchy_x;
     float text_rotated_y = text_resolved_hierarchy_y - camera_resolved_hierarchy_y;
 
-    // Scale transformation due to camera zoom
-    if(text_is_child_of_camera == false){
-        engine_math_scale_point(&text_rotated_x, &text_rotated_y, camera_position->x, camera_position->y, camera_zoom);
-    }else{
+    if(text_is_child_of_camera == true){
         camera_zoom = 1.0f;
     }
+
+    // Scale transformation due to camera zoom
+    engine_math_scale_point(&text_rotated_x, &text_rotated_y, camera_position->x, camera_position->y, camera_zoom);
 
     // Rotate text origin about the camera
     engine_math_rotate_point(&text_rotated_x, &text_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
@@ -94,11 +94,11 @@ void text_2d_node_class_draw(engine_node_base_t *text_node_base, mp_obj_t camera
     text_rotated_x += camera_viewport->width/2;
     text_rotated_y += camera_viewport->height/2;
 
-    float bitmap_x_scale = text_scale->x*camera_zoom;
-    float bitmap_y_scale = text_scale->y*camera_zoom;
+    float bitmap_x_scale = text_scale->x.value * camera_zoom;
+    float bitmap_y_scale = text_scale->y.value * camera_zoom;
 
     // Used to traverse about rotation using unit circle sin/cos offsets. Could probably store this: TODO
-    float traversal_scale = sqrtf(text_scale->x*text_scale->x + text_scale->y*text_scale->y) * camera_zoom;
+    float traversal_scale = sqrtf(text_scale->x.value * text_scale->x.value + text_scale->y.value * text_scale->y.value) * camera_zoom;
 
     // https://codereview.stackexchange.com/a/86546
     float rotation = (text_resolved_hierarchy_rotation + camera_resolved_hierarchy_rotation);
