@@ -6,6 +6,7 @@
 #include "utility/engine_mp.h"
 
 #include "math/vector2.h"
+#include "math/vector3.h"
 
 enum tween_value_types {tween_type_float, tween_type_vec2, tween_type_vec3, tween_type_color_rgb};
 
@@ -49,18 +50,26 @@ STATIC mp_obj_t tween_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
 
     if(tween->tween_type == tween_type_float){
         ((mp_obj_float_t*)(tween->value))->value = tween->initial_0 + ((tween->end_0 - tween->initial_0) * t);
+    }else if(tween->tween_type == tween_type_vec2){
+        vector2_class_obj_t *value = tween->value;
+
+        float x1 = tween->initial_0;
+        float y1 = tween->initial_1;
+
+        float x2 = tween->end_0;
+        float y2 = tween->end_1;
+
+        // https://stackoverflow.com/a/51067982
+        value->x.value = x1 + t * (x2 - x1);
+        value->y.value = y1 + t * (y2 - y1);
     }
-
-    // if(mp_obj_get_type(tween->start) == &vector2_class_type && mp_obj_get_type(tween->end) == &vector2_class_type){
-
-    // }
 
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_2(tween_class_tick_obj, tween_class_tick);
 
 
-mp_obj_t tween_class_play(size_t n_args, const mp_obj_t *args){
+mp_obj_t tween_class_start(size_t n_args, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("Tween: play");
 
     if(n_args < 4){
@@ -79,7 +88,27 @@ mp_obj_t tween_class_play(size_t n_args, const mp_obj_t *args){
         tween->end_0      = mp_obj_get_float(args[3]);
         tween->tween_type = tween_type_float;
     }else if(value_type == &vector2_class_type && start_type == &vector2_class_type && end_type == &vector2_class_type){
+        vector2_class_obj_t *start = args[2];
+        vector2_class_obj_t *end = args[3];
 
+        tween->initial_0 = start->x.value;
+        tween->initial_1 = start->y.value;
+
+        tween->end_0 = end->x.value;
+        tween->end_1 = end->y.value;
+
+        tween->tween_type = tween_type_vec2;
+    }else if(value_type == &vector2_class_type && start_type == &vector2_class_type && end_type == &vector2_class_type){
+        vector3_class_obj_t *start = args[2];
+        vector3_class_obj_t *end = args[3];
+
+        // tween->initial_0 = start->x.value;
+        // tween->initial_1 = start->y.value;
+
+        // tween->end_0 = end->x.value;
+        // tween->end_1 = end->y.value;
+
+        tween->tween_type = tween_type_vec2;
     }else{
         ENGINE_PRINTF("ERROR: Got types value: %s, start: %s, end %s:", mp_obj_get_type_str(args[1]), mp_obj_get_type_str(args[2]), mp_obj_get_type_str(args[3]));
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Tween: ERROR: Unknown combination of `value`, `start`, and `end` object types"));
@@ -102,7 +131,7 @@ mp_obj_t tween_class_play(size_t n_args, const mp_obj_t *args){
 
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(tween_class_play_obj, 4, 6, tween_class_play);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(tween_class_start_obj, 4, 6, tween_class_start);
 
 
 mp_obj_t tween_class_pause(mp_obj_t self_in){
@@ -142,8 +171,8 @@ bool tween_load_attr(tween_class_obj_t *tween, qstr attribute, mp_obj_t *destina
             destination[1] = tween;
             return true;
         break;
-        case MP_QSTR_play:
-            destination[0] = MP_OBJ_FROM_PTR(&tween_class_play_obj);
+        case MP_QSTR_start:
+            destination[0] = MP_OBJ_FROM_PTR(&tween_class_start_obj);
             destination[1] = tween;
             return true;
         break;

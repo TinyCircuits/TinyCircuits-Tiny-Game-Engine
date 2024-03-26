@@ -81,12 +81,12 @@ void text_2d_node_class_draw(engine_node_base_t *text_node_base, mp_obj_t camera
     float text_rotated_x = text_resolved_hierarchy_x - camera_resolved_hierarchy_x;
     float text_rotated_y = text_resolved_hierarchy_y - camera_resolved_hierarchy_y;
 
-    if(text_is_child_of_camera == true){
+    if(text_is_child_of_camera == false){
+        // Scale transformation due to camera zoom
+        engine_math_scale_point(&text_rotated_x, &text_rotated_y, camera_position->x.value, camera_position->y.value, camera_zoom);
+    }else{
         camera_zoom = 1.0f;
     }
-
-    // Scale transformation due to camera zoom
-    engine_math_scale_point(&text_rotated_x, &text_rotated_y, camera_position->x, camera_position->y, camera_zoom);
 
     // Rotate text origin about the camera
     engine_math_rotate_point(&text_rotated_x, &text_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);

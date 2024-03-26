@@ -21,7 +21,6 @@ mp_obj_t vector2_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw
     self->y.base.type = &mp_type_float;
 
     if(n_args == 0){
-        self->base.type = &vector2_class_type;
         self->x.value = 0.0f;
         self->y.value = 0.0f;
     }else if(n_args == 2){

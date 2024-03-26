@@ -75,12 +75,12 @@ void sprite_2d_node_class_draw(engine_node_base_t *sprite_node_base, mp_obj_t ca
     float sprite_rotated_x = sprite_resolved_hierarchy_x - camera_resolved_hierarchy_x;
     float sprite_rotated_y = sprite_resolved_hierarchy_y - camera_resolved_hierarchy_y;
 
-    if(sprite_is_child_of_camera == true){
+    if(sprite_is_child_of_camera == false){
+        // Scale transformation due to camera zoom
+        engine_math_scale_point(&sprite_rotated_x, &sprite_rotated_y, camera_position->x.value, camera_position->y.value, camera_zoom);
+    }else{
         camera_zoom = 1.0f;
     }
-
-    // Scale transformation due to camera zoom
-    engine_math_scale_point(&sprite_rotated_x, &sprite_rotated_y, camera_position->x, camera_position->y, camera_zoom);
 
     // Rotate sprite origin about the camera
     engine_math_rotate_point(&sprite_rotated_x, &sprite_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);

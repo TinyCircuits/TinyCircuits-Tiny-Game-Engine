@@ -128,6 +128,7 @@ cursor = Circle2DNode(radius=5, color=engine_draw.green, outline=True, position=
 # camera.add_child(circle)
 # camera.add_child(fps)
 camera.add_child(cursor)
+# camera.add_child(sprite)
 # camera.add_child(rectangle)
 
 engine.start()

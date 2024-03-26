@@ -56,12 +56,12 @@ void circle_2d_node_class_draw(engine_node_base_t *circle_node_base, mp_obj_t ca
     float circle_rotated_x = circle_resolved_hierarchy_x-camera_resolved_hierarchy_x;
     float circle_rotated_y = circle_resolved_hierarchy_y-camera_resolved_hierarchy_y;
 
-    if(circle_is_child_of_camera == true){
+    if(circle_is_child_of_camera == false){
+        // Scale transformation due to camera zoom
+        engine_math_scale_point(&circle_rotated_x, &circle_rotated_y, camera_position->x.value, camera_position->y.value, camera_zoom);   
+    }else{
         camera_zoom = 1.0f;
     }
-
-    // Scale transformation due to camera zoom
-    engine_math_scale_point(&circle_rotated_x, &circle_rotated_y, camera_position->x, camera_position->y, camera_zoom);
 
     // The final circle radius to draw the circle at is a combination of
     // the set radius, times the set scale, times the set camera zoom.

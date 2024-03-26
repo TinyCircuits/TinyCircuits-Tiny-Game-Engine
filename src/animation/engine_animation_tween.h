@@ -14,8 +14,12 @@ typedef struct{
     mp_obj_t tick;
 
     float initial_0;
-    float end_0;
+    float initial_1;
+    float initial_2;
 
+    float end_0;
+    float end_1;
+    float end_2;
 
     void *self;
     linked_list_node *list_node;

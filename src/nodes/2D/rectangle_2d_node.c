@@ -56,12 +56,12 @@ void rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_base, mp_ob
     float rectangle_rotated_x = rectangle_resolved_hierarchy_x-camera_resolved_hierarchy_x;
     float rectangle_rotated_y = rectangle_resolved_hierarchy_y-camera_resolved_hierarchy_y;
 
-    if(rectangle_is_child_of_camera == true){
+    if(rectangle_is_child_of_camera == false){
+        // Scale transformation due to camera zoom
+        engine_math_scale_point(&rectangle_rotated_x, &rectangle_rotated_y, camera_position->x.value, camera_position->y.value, camera_zoom);
+    }else{
         camera_zoom = 1.0f;
     }
-
-    // Scale transformation due to camera zoom
-    engine_math_scale_point(&rectangle_rotated_x, &rectangle_rotated_y, camera_position->x, camera_position->y, camera_zoom);
 
     rectangle_width = rectangle_width*camera_zoom;
     rectangle_height = rectangle_height*camera_zoom;

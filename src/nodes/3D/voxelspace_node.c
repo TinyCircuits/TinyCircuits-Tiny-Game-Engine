@@ -60,11 +60,11 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
         // and then use that as the radius. This means the view distance
         // will remain the same for every FOV
         // float hypot = z / cosf(camera_rotation->y-camera_fov/2); // Not working?
-        float pleft_x = z * cosf(camera_rotation->y-camera_fov/2);
-        float pleft_y = z * sinf(camera_rotation->y-camera_fov/2);
+        float pleft_x = z * cosf(camera_rotation->y.value-camera_fov/2);
+        float pleft_y = z * sinf(camera_rotation->y.value-camera_fov/2);
 
-        float pright_x = z * cosf(camera_rotation->y+camera_fov/2);
-        float pright_y = z * sinf(camera_rotation->y+camera_fov/2);
+        float pright_x = z * cosf(camera_rotation->y.value+camera_fov/2);
+        float pright_y = z * sinf(camera_rotation->y.value+camera_fov/2);
 
         // float sinphi = sinf(camera_rotation->y);
         // float cosphi = cosf(camera_rotation->y);
@@ -78,15 +78,15 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
         float dx = (pright_x - pleft_x) / SCREEN_WIDTH;
         float dy = (pright_y - pleft_y) / SCREEN_WIDTH;
 
-        pleft_x += camera_position->x;
-        pleft_y += camera_position->z;
+        pleft_x += camera_position->x.value;
+        pleft_y += camera_position->z.value;
 
         for(uint8_t i=0; i<SCREEN_WIDTH; i++){
             int32_t x = pleft_x;
             int32_t y = pleft_y;
 
-            if((x >= voxelspace_position->x && x < voxelspace_position->x+heightmap->width) && (y >= voxelspace_position->z && y < voxelspace_position->z+heightmap->height)){
-                uint32_t index = (y-voxelspace_position->z) * heightmap->width + (x-voxelspace_position->x);
+            if((x >= voxelspace_position->x.value && x < voxelspace_position->x.value + heightmap->width) && (y >= voxelspace_position->z.value && y < voxelspace_position->z.value+heightmap->height)){
+                uint32_t index = (y-voxelspace_position->z.value) * heightmap->width + (x-voxelspace_position->x.value);
 
                 uint16_t altitude = 0;
                 altitude += (heightmap->data[index] >> 0) & 0b00011111;
@@ -94,10 +94,10 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
                 altitude += (heightmap->data[index] >> 11) & 0b00011111;
 
                 // Use camera_rotation for on x-axis for pitch (head going in up/down in 'yes' motion)
-                uint16_t height_on_screen = (-voxelspace_position->y + camera_position->y - altitude) / z * voxelspace_height_scale + (camera_rotation->x);
+                uint16_t height_on_screen = (-voxelspace_position->y.value + camera_position->y.value - altitude) / z * voxelspace_height_scale + (camera_rotation->x.value);
 
                 // https://news.ycombinator.com/item?id=21945633
-                float roll = (camera_rotation->z*(((float)i)/((float)SCREEN_WIDTH)-0.5f) + 0.5f) * SCREEN_HEIGHT / 4;
+                float roll = (camera_rotation->z.value*(((float)i)/((float)SCREEN_WIDTH)-0.5f) + 0.5f) * SCREEN_HEIGHT / 4;
 
                 height_on_screen += (uint16_t)roll;
 
