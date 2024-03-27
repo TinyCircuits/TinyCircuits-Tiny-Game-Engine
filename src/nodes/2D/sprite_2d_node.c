@@ -11,6 +11,7 @@
 #include "utility/engine_file.h"
 #include "math/engine_math.h"
 #include "utility/engine_time.h"
+#include "draw/engine_color.h"
 
 
 // Class required functions
@@ -47,7 +48,7 @@ void sprite_2d_node_class_draw(engine_node_base_t *sprite_node_base, mp_obj_t ca
     uint16_t sprite_frame_current_y = mp_obj_get_int(mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_current_y));
     bool sprite_playing = mp_obj_get_int(mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_playing));
 
-    uint16_t transparent_color = mp_obj_get_int(mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_transparent_color));
+    color_class_obj_t *transparent_color = mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_transparent_color);
     uint32_t spritesheet_width = sprite_texture->width;
     uint32_t spritesheet_height = sprite_texture->height;
 
@@ -97,7 +98,7 @@ void sprite_2d_node_class_draw(engine_node_base_t *sprite_node_base, mp_obj_t ca
                      sprite_scale->x.value*camera_zoom,
                      sprite_scale->y.value*camera_zoom,
                      -(sprite_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation),
-                     transparent_color);
+                     transparent_color->value.val);
 
     // engine_draw_blit_scale_rotate( sprite_pixel_data+sprite_frame_fb_start_index,
     //                               (int32_t)sprite_rotated_x,

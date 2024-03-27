@@ -62,8 +62,8 @@ rectangle.height = 15
 rectangle.outline = True
 sprite = Sprite2DNode(texture=texture, position=Vector2(0, 0), scale=Vector2(1.0, 1.0))
 
-circle.color = 0b1111100000000000
-rectangle.color = 0b1111101001001001
+circle.color = engine_draw.red
+rectangle.color = engine_draw.yellow
 sprite.transparent_color = engine_draw.black
 
 circle.position = Vector2(10, 0)

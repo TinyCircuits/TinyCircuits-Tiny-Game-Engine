@@ -8,6 +8,8 @@
 #include "math/rectangle.h"
 #include "draw/engine_display_draw.h"
 #include "math/engine_math.h"
+#include "draw/engine_color.h"
+
 
 // Class required functions
 STATIC void rectangle_2d_node_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
@@ -32,7 +34,7 @@ void rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_base, mp_ob
     vector2_class_obj_t *rectangle_scale =  mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_scale);
     uint16_t rectangle_width = mp_obj_get_float(mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_width));
     uint16_t rectangle_height = mp_obj_get_float(mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_height));
-    uint16_t rectangle_color = mp_obj_get_int(mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_color));
+    color_class_obj_t *rectangle_color = mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_color);
     bool rectangle_outlined = mp_obj_get_int(mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_outline));
 
     vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
@@ -73,7 +75,7 @@ void rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_base, mp_ob
     rectangle_rotated_y += camera_viewport->height/2;
 
     if(rectangle_outlined == false){
-        engine_draw_fillrect_scale_rotate_viewport(rectangle_color,
+        engine_draw_fillrect_scale_rotate_viewport(rectangle_color->value.val,
                                                 (int32_t)rectangle_rotated_x,
                                                 (int32_t)rectangle_rotated_y,
                                                 rectangle_width, 
@@ -110,10 +112,10 @@ void rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_base, mp_ob
         engine_math_rotate_point(&brx, &bry, rectangle_rotated_x, rectangle_rotated_y, angle);
         engine_math_rotate_point(&blx, &bly, rectangle_rotated_x, rectangle_rotated_y, angle);
 
-        engine_draw_line(rectangle_color, tlx, tly, trx, try, camera_node);
-        engine_draw_line(rectangle_color, trx, try, brx, bry, camera_node);
-        engine_draw_line(rectangle_color, brx, bry, blx, bly, camera_node);
-        engine_draw_line(rectangle_color, blx, bly, tlx, tly, camera_node);
+        engine_draw_line(rectangle_color->value.val, tlx, tly, trx, try, camera_node);
+        engine_draw_line(rectangle_color->value.val, trx, try, brx, bry, camera_node);
+        engine_draw_line(rectangle_color->value.val, brx, bry, blx, bly, camera_node);
+        engine_draw_line(rectangle_color->value.val, blx, bly, tlx, tly, camera_node);
     }
 }
 
@@ -181,7 +183,7 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
     if(parsed_args[position].u_obj == MP_OBJ_NULL) parsed_args[position].u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL);
     if(parsed_args[width].u_obj == MP_OBJ_NULL) parsed_args[width].u_obj = mp_obj_new_float(10.0f);
     if(parsed_args[height].u_obj == MP_OBJ_NULL) parsed_args[height].u_obj = mp_obj_new_float(10.0f);
-    if(parsed_args[color].u_obj == MP_OBJ_NULL) parsed_args[color].u_obj = mp_obj_new_int(0xffff);
+    if(parsed_args[color].u_obj == MP_OBJ_NULL) parsed_args[color].u_obj = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0xffff)});
     if(parsed_args[outline].u_obj == MP_OBJ_NULL) parsed_args[outline].u_obj = mp_obj_new_bool(false);
     if(parsed_args[rotation].u_obj == MP_OBJ_NULL) parsed_args[rotation].u_obj = mp_obj_new_float(0.0f);
     if(parsed_args[scale].u_obj == MP_OBJ_NULL) parsed_args[scale].u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)});

@@ -18,14 +18,14 @@ void engine_color_sync_u16_to_rgb(color_class_obj_t *color){
 
 
 void engine_color_sync_rgb_to_u16(color_class_obj_t *color){
-    // const uint16_t r = color->r.value * (float)bitmask_5_bit;
-    // const uint16_t g = color->g.value * (float)bitmask_6_bit;
-    // const uint16_t b = color->b.value * (float)bitmask_5_bit;
+    const uint16_t r = color->r.value * (float)bitmask_5_bit;
+    const uint16_t g = color->g.value * (float)bitmask_6_bit;
+    const uint16_t b = color->b.value * (float)bitmask_5_bit;
 
-    // color->color.val = 0;
-    // color->color.val |= (r << 11);
-    // color->color.val |= (g << 5);
-    // color->color.val |= (b << 0);
+    color->value.val = 0;
+    color->value.val |= (r << 11);
+    color->value.val |= (g << 5);
+    color->value.val |= (b << 0);
 }
 
 
@@ -52,7 +52,6 @@ mp_obj_t color_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, 
         self->g.value = 0.0f;
         self->b.value = 0.0f;
     }else if(n_args == 1){
-        ENGINE_FORCE_PRINTF("%d", mp_obj_get_int(args[0]));
         self->value.val = mp_obj_get_int(args[0]);
         engine_color_sync_u16_to_rgb(self);
     }else if(n_args == 3){

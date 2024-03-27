@@ -40,8 +40,8 @@ t0 = Tween()
 t1 = Tween()
 t2 = Tween()
 
-circle0 = Circle2DNode(position=Vector2(-30, 30))
-circle1 = Circle2DNode(position=Vector2(30, -30))
+circle0 = Circle2DNode(color=engine_draw.red, position=Vector2(-30, 30))
+circle1 = Circle2DNode(color=engine_draw.green, position=Vector2(30, -30))
 
 time = 0
 

@@ -9,6 +9,7 @@
 #include "math/rectangle.h"
 #include "draw/engine_display_draw.h"
 #include "math/engine_math.h"
+#include "draw/engine_color.h"
 
 
 // Class required functions
@@ -35,7 +36,7 @@ void line_2d_node_class_draw(engine_node_base_t *line_node_base, mp_obj_t camera
     vector2_class_obj_t *line_start = line_2d->start;
     vector2_class_obj_t *line_end = line_2d->end;
     float line_thickness = mp_obj_get_float(line_2d->thickness);
-    uint16_t line_color = mp_obj_get_float(line_2d->color);
+    color_class_obj_t *line_color = line_2d->color;
     bool line_outlined = mp_obj_get_int(line_2d->outline);
 
     // The line is drawn as a rectangle since we have a nice algorithm for doing that:
@@ -84,7 +85,7 @@ void line_2d_node_class_draw(engine_node_base_t *line_node_base, mp_obj_t camera
     line_rotated_y += camera_viewport->height/2;
 
     if(line_outlined == false){
-        engine_draw_fillrect_scale_rotate_viewport(line_color,
+        engine_draw_fillrect_scale_rotate_viewport(line_color->value.val,
                                                 (int32_t)line_rotated_x,
                                                 (int32_t)line_rotated_y,
                                                 line_thickness, 
@@ -121,10 +122,10 @@ void line_2d_node_class_draw(engine_node_base_t *line_node_base, mp_obj_t camera
         engine_math_rotate_point(&brx, &bry, line_rotated_x, line_rotated_y, angle);
         engine_math_rotate_point(&blx, &bly, line_rotated_x, line_rotated_y, angle);
 
-        engine_draw_line(line_color, tlx, tly, trx, try, camera_node);
-        engine_draw_line(line_color, trx, try, brx, bry, camera_node);
-        engine_draw_line(line_color, brx, bry, blx, bly, camera_node);
-        engine_draw_line(line_color, blx, bly, tlx, tly, camera_node);
+        engine_draw_line(line_color->value.val, tlx, tly, trx, try, camera_node);
+        engine_draw_line(line_color->value.val, trx, try, brx, bry, camera_node);
+        engine_draw_line(line_color->value.val, brx, bry, blx, bly, camera_node);
+        engine_draw_line(line_color->value.val, blx, bly, tlx, tly, camera_node);
     }
 }
 
@@ -357,7 +358,7 @@ mp_obj_t line_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
     if(parsed_args[start].u_obj == MP_OBJ_NULL) parsed_args[start].u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(-5.0f)});
     if(parsed_args[end].u_obj == MP_OBJ_NULL) parsed_args[end].u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(5.0f)});
     if(parsed_args[thickness].u_obj == MP_OBJ_NULL) parsed_args[thickness].u_obj = mp_obj_new_float(1.0f);
-    if(parsed_args[color].u_obj == MP_OBJ_NULL) parsed_args[color].u_obj = mp_obj_new_int(0xffff);
+    if(parsed_args[color].u_obj == MP_OBJ_NULL) parsed_args[color].u_obj = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0xffff)});
     if(parsed_args[outline].u_obj == MP_OBJ_NULL) parsed_args[outline].u_obj = mp_obj_new_bool(false);
 
     engine_line_2d_node_common_data_t *common_data = malloc(sizeof(engine_line_2d_node_common_data_t));

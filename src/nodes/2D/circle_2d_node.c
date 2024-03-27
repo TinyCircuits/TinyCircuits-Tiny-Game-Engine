@@ -8,6 +8,7 @@
 #include "math/rectangle.h"
 #include "draw/engine_display_draw.h"
 #include "math/engine_math.h"
+#include "draw/engine_color.h"
 
 
 // Class required functions
@@ -38,7 +39,7 @@ void circle_2d_node_class_draw(engine_node_base_t *circle_node_base, mp_obj_t ca
     bool circle_outlined = mp_obj_get_int(mp_load_attr(circle_node_base->attr_accessor, MP_QSTR_outline));
     
     float circle_radius_sqr = circle_radius * circle_radius;
-    mp_int_t circle_color = mp_obj_get_int(mp_load_attr(circle_node_base->attr_accessor, MP_QSTR_color));
+    color_class_obj_t *circle_color = mp_load_attr(circle_node_base->attr_accessor, MP_QSTR_color);
 
     float camera_resolved_hierarchy_x = 0.0f;
     float camera_resolved_hierarchy_y = 0.0f;
@@ -83,7 +84,7 @@ void circle_2d_node_class_draw(engine_node_base_t *circle_node_base, mp_obj_t ca
             int ph = (int)circle_rotated_y + hh;
 
             for(int y=(int)circle_rotated_y-hh; y<ph; y++){
-                engine_draw_pixel(circle_color, rx, y);
+                engine_draw_pixel(circle_color->value.val, rx, y);
             }
         }
     }else{
@@ -111,10 +112,10 @@ void circle_2d_node_class_draw(engine_node_base_t *circle_node_base, mp_obj_t ca
                 int tlx = circle_rotated_x-cx;
                 int tly = circle_rotated_y-cy;
 
-                engine_draw_pixel(circle_color, brx, bry);
-                engine_draw_pixel(circle_color, blx, bly);
-                engine_draw_pixel(circle_color, trx, try);
-                engine_draw_pixel(circle_color, tlx, tly);
+                engine_draw_pixel(circle_color->value.val, brx, bry);
+                engine_draw_pixel(circle_color->value.val, blx, bly);
+                engine_draw_pixel(circle_color->value.val, trx, try);
+                engine_draw_pixel(circle_color->value.val, tlx, tly);
         }
     }
 }
@@ -177,7 +178,7 @@ mp_obj_t circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
 
     if(parsed_args[position].u_obj == MP_OBJ_NULL) parsed_args[position].u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL);
     if(parsed_args[radius].u_obj == MP_OBJ_NULL) parsed_args[radius].u_obj = mp_obj_new_float(5.0f);
-    if(parsed_args[color].u_obj == MP_OBJ_NULL) parsed_args[color].u_obj = mp_obj_new_int(0xffff);
+    if(parsed_args[color].u_obj == MP_OBJ_NULL) parsed_args[color].u_obj = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0xffff)});
     if(parsed_args[outline].u_obj == MP_OBJ_NULL) parsed_args[outline].u_obj = mp_obj_new_bool(false);
     if(parsed_args[rotation].u_obj == MP_OBJ_NULL) parsed_args[rotation].u_obj = mp_obj_new_float(0.0f);
     if(parsed_args[scale].u_obj == MP_OBJ_NULL) parsed_args[scale].u_obj = mp_obj_new_float(1.0f);
