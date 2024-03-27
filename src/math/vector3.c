@@ -4,7 +4,7 @@
 // Class required functions
 STATIC void vector3_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
     vector3_class_obj_t *self = self_in;
-    ENGINE_PRINTF("print(): Vector3 [%0.3f, %0.3f, %0.3f]", (double)self->x.value, (double)self->y.value, (double)self->z.value);
+    ENGINE_PRINTF("[%0.3f, %0.3f, %0.3f]", (double)self->x.value, (double)self->y.value, (double)self->z.value);
 }
 
 
@@ -51,13 +51,13 @@ STATIC void vector3_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *desti
     if(destination[0] == MP_OBJ_NULL){          // Load
         switch(attribute) {
             case MP_QSTR_x:
-                destination[0] = &self->x;
+                destination[0] = mp_obj_new_float(self->x.value);
             break;
             case MP_QSTR_y:
-                destination[0] = &self->y;
+                destination[0] = mp_obj_new_float(self->y.value);
             break;
             case MP_QSTR_z:
-                destination[0] = &self->z;
+                destination[0] = mp_obj_new_float(self->z.value);
             break;
             default:
                 return; // Fail

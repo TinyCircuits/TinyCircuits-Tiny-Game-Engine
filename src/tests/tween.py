@@ -1,9 +1,11 @@
 import engine
 import engine_draw
+from engine_draw import Color
 from engine_math import Vector2, Vector3
 from engine_nodes import Circle2DNode, CameraNode, VoxelSpaceNode
-from engine_animation import Tween, ONE_SHOT, LOOP
+from engine_animation import Tween, ONE_SHOT, LOOP, PING_PONG
 from engine_resources import TextureResource
+import gc
 # import engine_debug
 
 # engine_debug.enable_all()
@@ -29,7 +31,7 @@ vox.height_scale = 40
 # print(vox.position)
 print("Tween test!")
 
-a = vox.position
+a = vox.position.x
 vox.position.x = vox.position.x + 1
 
 print(a, vox.position)
@@ -39,27 +41,23 @@ print("Tween test!")
 t0 = Tween()
 t1 = Tween()
 t2 = Tween()
+t3 = Tween()
 
 circle0 = Circle2DNode(color=engine_draw.red, position=Vector2(-30, 30))
 circle1 = Circle2DNode(color=engine_draw.green, position=Vector2(30, -30))
 
-time = 0
 
-
-# t0.start(time, "", Vector2(-64, -64), Vector2( 64, 64), 1500.0, LOOP)
-
-# t1.start(circle1.position.x, Vector2( 64, -64), Vector2(-64, 64), 3000.0, LOOP)
-
-# t1.start(circle1.position.x, 0, 100, 3000.0, LOOP)
-
-# circle0.position.x = circle0.position.y + 1
+t0.start(circle0, "position", Vector2( -64, -64), Vector2(64, 64), 3000.0, PING_PONG)
+t1.start(circle1, "position", Vector2( 64, -64), Vector2(-64, 64), 3000.0, PING_PONG)
 
 
 camera = CameraNode()
 camera.add_child(circle0)
 camera.add_child(circle1)
 
-t2.start(camera.position, Vector3(50, 32, 50), Vector3(-50, 200, -50), 3500.0, LOOP)
+t2.start(camera, "position", Vector3(50, 32, 50), Vector3(-50, 200, -50), 3000.0, PING_PONG)
+
+t3.start(circle0, "color", Color(1, 0, 0), Color(0, 1, 0), 3000.0, PING_PONG)
 
 # engine.start()
 while True:
@@ -67,3 +65,4 @@ while True:
     # circle0.position.x = value
     # circle0.position.y = value
     engine.tick()
+    gc.collect()

@@ -4,7 +4,7 @@
 // Class required functions
 STATIC void rectangle_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
     (void)kind;
-    ENGINE_INFO_PRINTF("print(): Rectangle");
+    ENGINE_PRINTF("Rectangle");
 }
 
 mp_obj_t rectangle_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){

@@ -14,7 +14,7 @@
 // Class required functions
 STATIC void circle_2d_node_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
     (void)kind;
-    ENGINE_INFO_PRINTF("print(): Circle2DNode");
+    ENGINE_PRINTF("Circle2DNode");
 }
 
 

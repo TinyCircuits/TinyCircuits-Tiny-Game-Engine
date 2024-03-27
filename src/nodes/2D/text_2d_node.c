@@ -19,7 +19,7 @@
 // Class required functions
 STATIC void text_2d_node_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
     (void)kind;
-    ENGINE_INFO_PRINTF("print(): Text2DNode");
+    ENGINE_PRINTF("Text2DNode");
 }
 
 

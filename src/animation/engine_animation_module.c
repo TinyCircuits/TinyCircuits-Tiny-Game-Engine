@@ -45,6 +45,7 @@ STATIC const mp_rom_map_elem_t engine_animation_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_Tween), (mp_obj_t)&tween_class_type},
     { MP_ROM_QSTR(MP_QSTR_LOOP), MP_ROM_INT(engine_animation_loop) },
     { MP_ROM_QSTR(MP_QSTR_ONE_SHOT), MP_ROM_INT(engine_animation_one_shot) },
+    { MP_ROM_QSTR(MP_QSTR_PING_PONG), MP_ROM_INT(engine_animation_ping_pong) },
 };
 
 // Module init

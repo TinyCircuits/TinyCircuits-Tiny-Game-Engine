@@ -33,7 +33,7 @@ void engine_color_sync_rgb_to_u16(color_class_obj_t *color){
 // Class required functions
 STATIC void color_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
     color_class_obj_t *self = self_in;
-    ENGINE_PRINTF("print(): Color [%0.3f, %0.3f, %0.3f]", self->r.value, self->g.value, self->b.value);
+    ENGINE_PRINTF("[%0.3f, %0.3f, %0.3f]", self->r.value, self->g.value, self->b.value);
 }
 
 
@@ -74,13 +74,13 @@ STATIC void color_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destina
     if(destination[0] == MP_OBJ_NULL){          // Load
         switch(attribute) {
             case MP_QSTR_r:
-                destination[0] = &self->r;
+                destination[0] = mp_obj_new_float(self->r.value);
             break;
             case MP_QSTR_g:
-                destination[0] = &self->g;
+                destination[0] = mp_obj_new_float(self->g.value);
             break;
             case MP_QSTR_b:
-                destination[0] = &self->b;
+                destination[0] = mp_obj_new_float(self->b.value);
             break;
             default:
                 return; // Fail

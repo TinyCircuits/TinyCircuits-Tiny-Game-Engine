@@ -7,8 +7,10 @@
 
 #include "math/vector2.h"
 #include "math/vector3.h"
+#include "draw/engine_color.h"
 
-enum tween_value_types {tween_type_float, tween_type_vec2, tween_type_vec3, tween_type_color_rgb};
+enum tween_value_types {tween_type_float, tween_type_vec2, tween_type_vec3, tween_type_color};
+enum tween_direction {forwards, backwards};
 
 // Class required functions
 STATIC void tween_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
@@ -22,19 +24,36 @@ STATIC mp_obj_t tween_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
     tween_class_obj_t *tween = self_in;
 
     if(tween->finished){
-        if(tween->loop_type == engine_animation_one_shot){
-            return mp_const_none;
-        }else if(tween->value != mp_const_none){
-            tween->finished = false;
-            tween->time = 0.0f;
-        }else{
-            return mp_const_none;
+        switch(tween->loop_type){
+            case engine_animation_loop:
+            {
+                tween->finished = false;
+                tween->time = 0.0f;
+            }
+            break;
+            case engine_animation_one_shot:
+            {
+                return mp_const_none;
+            }
+            break;
+            case engine_animation_ping_pong:
+            {
+                if(tween->tween_direction == backwards){
+                    tween->tween_direction = forwards;
+                }else if(tween->tween_direction == forwards){
+                    tween->tween_direction = backwards;
+                }
+
+                tween->finished = false;
+                tween->time = 0.0f;
+            }
+            break;
         }
     }
 
     // Get dt and add to total runnign time
     float dt = mp_obj_get_float(dt_obj);
-    tween->time += dt;
+    tween->time += (dt * tween->ping_pong_multiplier);
 
     // If reached end of time, mark as finished
     // and stop. This lets the user catch the
@@ -46,12 +65,20 @@ STATIC mp_obj_t tween_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
     }
 
     // Figure out where we are in interpolation (percentage)
-    float t = tween->time / tween->duration;
+    float t = 0.0f;
+
+    if(tween->tween_direction == backwards){
+        t = 1.0f - (tween->time / tween->duration);
+    }else if(tween->tween_direction == forwards){
+        t = (tween->time / tween->duration);
+    }
+
+    mp_obj_t tweening_value = mp_load_attr(tween->object, tween->attr);
 
     if(tween->tween_type == tween_type_float){
-        ((mp_obj_float_t*)(tween->value))->value = tween->initial_0 + ((tween->end_0 - tween->initial_0) * t);
+        ((mp_obj_float_t*)(tweening_value))->value = tween->initial_0 + ((tween->end_0 - tween->initial_0) * t);
     }else if(tween->tween_type == tween_type_vec2){
-        vector2_class_obj_t *value = tween->value;
+        vector2_class_obj_t *value = tweening_value;
 
         float x0 = tween->initial_0;
         float y0 = tween->initial_1;
@@ -63,7 +90,7 @@ STATIC mp_obj_t tween_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
         value->x.value = x0 + t * (x1 - x0);
         value->y.value = y0 + t * (y1 - y0);
     }else if(tween->tween_type == tween_type_vec3){
-        vector3_class_obj_t *value = tween->value;
+        vector3_class_obj_t *value = tweening_value;
 
         float x0 = tween->initial_0;
         float y0 = tween->initial_1;
@@ -77,6 +104,24 @@ STATIC mp_obj_t tween_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
         value->x.value = x0 + t * (x1 - x0);
         value->y.value = y0 + t * (y1 - y0);
         value->z.value = z0 + t * (z1 - z0);
+    }else if(tween->tween_type == tween_type_color){
+        color_class_obj_t *value = tweening_value;
+
+        float r0 = tween->initial_0;
+        float g0 = tween->initial_1;
+        float b0 = tween->initial_2;
+
+        float r1 = tween->end_0;
+        float g1 = tween->end_1;
+        float b1 = tween->end_2;
+
+        // https://www.alanzucconi.com/2016/01/06/colour-interpolation/#:~:text=can%20be%20done-,as%20such,-%3A
+        // Lame way of interpolating RGB: TODO
+        value->r.value = r0 + (r1 - r0) * t;
+        value->g.value = g0 + (g1 - g0) * t;
+        value->b.value = b0 + (b1 - b0) * t;
+
+        engine_color_sync_rgb_to_u16(value);
     }
 
     return mp_const_none;
@@ -87,24 +132,35 @@ MP_DEFINE_CONST_FUN_OBJ_2(tween_class_tick_obj, tween_class_tick);
 mp_obj_t tween_class_start(size_t n_args, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("Tween: play");
 
-    if(n_args < 4){
-        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Tween: ERROR: Not enough arguments passed to `play()`, expected at least 4"));
-    }
+    // if(n_args < 4){
+    //     mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Tween: ERROR: Not enough arguments passed to `play()`, expected at least 4"));
+    // }
 
+    // self, always `tween_class_obj_t` since attr function handles getting base
     tween_class_obj_t *tween = args[0];
-    tween->value = args[1];
+    tween->finished = false;
+    tween->time = 0.0f;
+    tween->loop_type = engine_animation_loop;
+    tween->tween_direction = forwards;
+    tween->ping_pong_multiplier = 1.0f;
 
-    mp_obj_type_t *value_type = mp_obj_get_type(args[1]);
-    mp_obj_type_t *start_type = mp_obj_get_type(args[2]);
-    mp_obj_type_t *end_type = mp_obj_get_type(args[3]);
+    // The object with the attribute that will be tweened
+    tween->object = args[1];
+
+    // Get the qstr for the attribute that should be tweened
+    tween->attr = mp_obj_str_get_qstr(args[2]);
+
+    mp_obj_type_t *value_type = mp_obj_get_type(mp_load_attr(tween->object, tween->attr));
+    mp_obj_type_t *start_type = mp_obj_get_type(args[3]);
+    mp_obj_type_t *end_type = mp_obj_get_type(args[4]);
 
     if(value_type == &mp_type_float && start_type == &mp_type_float && end_type == &mp_type_float){
-        tween->initial_0  = mp_obj_get_float(args[2]);
-        tween->end_0      = mp_obj_get_float(args[3]);
+        tween->initial_0  = mp_obj_get_float(args[3]);
+        tween->end_0      = mp_obj_get_float(args[4]);
         tween->tween_type = tween_type_float;
     }else if(value_type == &vector2_class_type && start_type == &vector2_class_type && end_type == &vector2_class_type){
-        vector2_class_obj_t *start = args[2];
-        vector2_class_obj_t *end = args[3];
+        vector2_class_obj_t *start = args[3];
+        vector2_class_obj_t *end = args[4];
 
         tween->initial_0 = start->x.value;
         tween->initial_1 = start->y.value;
@@ -114,8 +170,8 @@ mp_obj_t tween_class_start(size_t n_args, const mp_obj_t *args){
 
         tween->tween_type = tween_type_vec2;
     }else if(value_type == &vector3_class_type && start_type == &vector3_class_type && end_type == &vector3_class_type){
-        vector3_class_obj_t *start = args[2];
-        vector3_class_obj_t *end = args[3];
+        vector3_class_obj_t *start = args[3];
+        vector3_class_obj_t *end = args[4];
 
         tween->initial_0 = start->x.value;
         tween->initial_1 = start->y.value;
@@ -126,29 +182,43 @@ mp_obj_t tween_class_start(size_t n_args, const mp_obj_t *args){
         tween->end_2 = end->z.value;
 
         tween->tween_type = tween_type_vec3;
+    }else if(value_type == &color_class_type && start_type == &color_class_type && end_type == &color_class_type){
+        color_class_obj_t *start = args[3];
+        color_class_obj_t *end = args[4];
+
+        tween->initial_0 = start->r.value;
+        tween->initial_1 = start->g.value;
+        tween->initial_2 = start->b.value;
+
+        tween->end_0 = end->r.value;
+        tween->end_1 = end->g.value;
+        tween->end_2 = end->b.value;
+
+        tween->tween_type = tween_type_color;
     }else{
         ENGINE_PRINTF("ERROR: Got types value: %s, start: %s, end %s:", mp_obj_get_type_str(args[1]), mp_obj_get_type_str(args[2]), mp_obj_get_type_str(args[3]));
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Tween: ERROR: Unknown combination of `value`, `start`, and `end` object types"));
     }
 
-    if(n_args >= 5){
-        tween->duration = mp_obj_get_float(args[4]);
+    if(n_args >= 6){
+        tween->duration = mp_obj_get_float(args[5]);
     }
 
-    if(n_args >= 6){
-        tween->loop_type = mp_obj_get_int(args[5]);
+    if(n_args >= 7){
+        tween->loop_type = mp_obj_get_int(args[6]);
 
-        if(tween->loop_type > 1){
+        if(tween->loop_type == engine_animation_ping_pong){
+            tween->ping_pong_multiplier = 2.0f;
+        }
+
+        if(tween->loop_type > 2){
             mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Tween: ERROR: Unknown loop type..."));
         }
     }
 
-    tween->finished = false;
-    tween->time = 0.0f;
-
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(tween_class_start_obj, 4, 6, tween_class_start);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(tween_class_start_obj, 4, 7, tween_class_start);
 
 
 mp_obj_t tween_class_pause(mp_obj_t self_in){
@@ -305,7 +375,7 @@ mp_obj_t tween_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, 
     self->duration = 1000.0f;
     self->time = 0.0f;
     self->finished = true;
-    self->value = mp_const_none;
+    self->object = mp_const_none;
 
 
     if(inherited == true){

@@ -20,7 +20,7 @@ uint8_t height_buffer[SCREEN_WIDTH];
 // Class required functions
 STATIC void voxelspace_node_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
     (void)kind;
-    ENGINE_INFO_PRINTF("print(): VoxelSpaceNode");
+    ENGINE_PRINTF("VoxelSpaceNode");
 }
 
 
