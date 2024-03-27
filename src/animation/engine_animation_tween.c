@@ -53,15 +53,30 @@ STATIC mp_obj_t tween_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
     }else if(tween->tween_type == tween_type_vec2){
         vector2_class_obj_t *value = tween->value;
 
-        float x1 = tween->initial_0;
-        float y1 = tween->initial_1;
+        float x0 = tween->initial_0;
+        float y0 = tween->initial_1;
 
-        float x2 = tween->end_0;
-        float y2 = tween->end_1;
+        float x1 = tween->end_0;
+        float y1 = tween->end_1;
 
         // https://stackoverflow.com/a/51067982
-        value->x.value = x1 + t * (x2 - x1);
-        value->y.value = y1 + t * (y2 - y1);
+        value->x.value = x0 + t * (x1 - x0);
+        value->y.value = y0 + t * (y1 - y0);
+    }else if(tween->tween_type == tween_type_vec3){
+        vector3_class_obj_t *value = tween->value;
+
+        float x0 = tween->initial_0;
+        float y0 = tween->initial_1;
+        float z0 = tween->initial_2;
+
+        float x1 = tween->end_0;
+        float y1 = tween->end_1;
+        float z1 = tween->end_2;
+
+        // https://stackoverflow.com/a/51067982
+        value->x.value = x0 + t * (x1 - x0);
+        value->y.value = y0 + t * (y1 - y0);
+        value->z.value = z0 + t * (z1 - z0);
     }
 
     return mp_const_none;
@@ -98,17 +113,19 @@ mp_obj_t tween_class_start(size_t n_args, const mp_obj_t *args){
         tween->end_1 = end->y.value;
 
         tween->tween_type = tween_type_vec2;
-    }else if(value_type == &vector2_class_type && start_type == &vector2_class_type && end_type == &vector2_class_type){
+    }else if(value_type == &vector3_class_type && start_type == &vector3_class_type && end_type == &vector3_class_type){
         vector3_class_obj_t *start = args[2];
         vector3_class_obj_t *end = args[3];
 
-        // tween->initial_0 = start->x.value;
-        // tween->initial_1 = start->y.value;
+        tween->initial_0 = start->x.value;
+        tween->initial_1 = start->y.value;
+        tween->initial_2 = start->z.value;
 
-        // tween->end_0 = end->x.value;
-        // tween->end_1 = end->y.value;
+        tween->end_0 = end->x.value;
+        tween->end_1 = end->y.value;
+        tween->end_2 = end->z.value;
 
-        tween->tween_type = tween_type_vec2;
+        tween->tween_type = tween_type_vec3;
     }else{
         ENGINE_PRINTF("ERROR: Got types value: %s, start: %s, end %s:", mp_obj_get_type_str(args[1]), mp_obj_get_type_str(args[2]), mp_obj_get_type_str(args[3]));
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Tween: ERROR: Unknown combination of `value`, `start`, and `end` object types"));

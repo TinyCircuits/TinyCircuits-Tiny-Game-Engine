@@ -2,6 +2,7 @@
 #include "py/runtime.h"
 #include "display/engine_display_common.h"
 #include "resources/engine_texture_resource.h"
+#include "engine_color.h"
 
 
 /*  --- doc ---
@@ -70,6 +71,7 @@ STATIC const mp_rom_map_elem_t engine_draw_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_draw) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_set_background_color), (mp_obj_t)&engine_draw_set_background_color_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_set_background), (mp_obj_t)&engine_draw_set_background_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_Color), (mp_obj_t)&color_class_type },
 
     // https://github.com/Bodmer/TFT_eSPI/blob/cbf06d7a214938d884b21d5aeb465241c25ce774/TFT_eSPI.h#L304-L328
     { MP_ROM_QSTR(MP_QSTR_black), MP_ROM_INT(0x0000) },

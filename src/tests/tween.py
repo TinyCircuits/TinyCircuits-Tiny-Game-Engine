@@ -1,11 +1,24 @@
 import engine
 import engine_draw
-from engine_math import Vector2
-from engine_nodes import Circle2DNode, CameraNode
+from engine_math import Vector2, Vector3
+from engine_nodes import Circle2DNode, CameraNode, VoxelSpaceNode
 from engine_animation import Tween, ONE_SHOT, LOOP
+from engine_resources import TextureResource
 # import engine_debug
 
 # engine_debug.enable_all()
+
+engine_draw.set_background_color(engine_draw.skyblue)
+C18W = TextureResource("C18W.bmp", True)
+D18 = TextureResource("D18.bmp", True)
+
+
+vox = VoxelSpaceNode(texture=C18W, heightmap=D18)
+vox.position.x = -75
+vox.position.y = -75
+vox.position.z = -75
+vox.height_scale = 40
+
 
 print("Tween test!")
 
@@ -13,18 +26,23 @@ value = 0.0
 
 t0 = Tween()
 t1 = Tween()
+t2 = Tween()
 
 circle0 = Circle2DNode(color=engine_draw.red, position=Vector2(-30, 30))
 circle1 = Circle2DNode(color=engine_draw.green, position=Vector2(30, -30))
 
 t0.start(circle0.position, Vector2(-64, -64), Vector2( 64, 64), 1500.0, LOOP)
-t1.start(circle1.position, Vector2( 64, -64), Vector2(-64, 64), 1500.0, LOOP)
+t1.start(circle1.position, Vector2( 64, -64), Vector2(-64, 64), 3000.0, LOOP)
 
 # circle0.position.x = circle0.position.y + 1
 
 
 
 camera = CameraNode()
+camera.add_child(circle0)
+camera.add_child(circle1)
+
+t2.start(camera.position, Vector3(50, 32, 50), Vector3(-50, 200, -50), 3500.0, LOOP)
 
 # engine.start()
 while True:

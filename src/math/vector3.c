@@ -18,16 +18,15 @@ mp_obj_t vector3_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw
     self->z.base.type = &mp_type_float;
 
     if(n_args == 0) {
-      
-      self->x.value = 0.0f;
-      self->y.value = 0.0f;
-      self->z.value = 0.0f;
+        self->x.value = 0.0f;
+        self->y.value = 0.0f;
+        self->z.value = 0.0f;
     } else if(n_args == 3) {
-      self->x.value = mp_obj_get_float(args[0]);
-      self->y.value = mp_obj_get_float(args[1]);
-      self->z.value = mp_obj_get_float(args[2]);
+        self->x.value = mp_obj_get_float(args[0]);
+        self->y.value = mp_obj_get_float(args[1]);
+        self->z.value = mp_obj_get_float(args[2]);
     }else{
-      mp_raise_TypeError(MP_ERROR_TEXT("function takes 0 or 3 arguments"));
+        mp_raise_TypeError(MP_ERROR_TEXT("function takes 0 or 3 arguments"));
     }
     ENGINE_INFO_PRINTF("Returning Vector3");
     return MP_OBJ_FROM_PTR(self);

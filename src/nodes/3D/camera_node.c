@@ -120,7 +120,7 @@ mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t 
         camera_node->rotation = parsed_args[rotation].u_obj;
         camera_node->fov = parsed_args[fov].u_obj;
         camera_node->view_distance = parsed_args[view_distance].u_obj;
-    }else if(inherited = true){  // Inherited (use existing object)
+    }else if(inherited == true){  // Inherited (use existing object)
         node_base->node = parsed_args[child_class].u_obj;
         node_base->attr_accessor = node_base->node;
 

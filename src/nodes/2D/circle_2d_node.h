@@ -3,6 +3,7 @@
 
 #include "py/obj.h"
 #include "nodes/node_base.h"
+#include "draw/engine_color.h"
 
 // A basic 2d circle node
 typedef struct{

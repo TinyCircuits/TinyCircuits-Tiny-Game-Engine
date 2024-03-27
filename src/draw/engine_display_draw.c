@@ -16,7 +16,6 @@
 #endif
 
 
-
 void engine_draw_fill_color(uint16_t color, uint16_t *screen_buffer){
     uint16_t *buf = screen_buffer;
     uint16_t count = SCREEN_BUFFER_SIZE_PIXELS;

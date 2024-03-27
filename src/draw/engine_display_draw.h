@@ -3,6 +3,7 @@
 
 #include "py/obj.h"
 #include <stdint.h>
+#include "engine_color.h"
 
 // Color that is passed to draw function indicating that no transparency is needed
 #define ENGINE_NO_TRANSPARENCY_COLOR 0b0000100000100001
