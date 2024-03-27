@@ -3,6 +3,7 @@
 #include "display/engine_display_common.h"
 #include "resources/engine_texture_resource.h"
 #include "engine_color.h"
+#include "debug/debug_print.h"
 
 
 /*  --- doc ---
@@ -11,11 +12,12 @@
     PARAM: [type=enum/int]   [name=background_color]  [value=enum/int (16-bit RGB565)]
     RETURN: None
 */ 
-STATIC mp_obj_t engine_draw_set_background_color(mp_obj_t background_color){
-    engine_fill_color = mp_obj_get_int(background_color);
+STATIC mp_obj_t engine_draw_set_background_color(mp_obj_t module, mp_obj_t background_color){
+    color_class_obj_t *color = background_color;
+    engine_fill_color = color->value.val;
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_1(engine_draw_set_background_color_obj, engine_draw_set_background_color);
+MP_DEFINE_CONST_FUN_OBJ_2(engine_draw_set_background_color_obj, engine_draw_set_background_color);
 
 
 /*  --- doc ---
@@ -24,7 +26,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_draw_set_background_color_obj, engine_draw_set_
     PARAM: [type=object]   [name=background]  [value={ref_link:TextureResource}]
     RETURN: None
 */ 
-STATIC mp_obj_t engine_draw_set_background(mp_obj_t background){
+STATIC mp_obj_t engine_draw_set_background(mp_obj_t module, mp_obj_t background){
     texture_resource_class_obj_t *background_texture_resource = background;
 
     if(background_texture_resource->width != SCREEN_WIDTH || background_texture_resource->height != SCREEN_HEIGHT){
@@ -69,42 +71,122 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_draw_set_background_obj, engine_draw_set_backgr
 */
 STATIC const mp_rom_map_elem_t engine_draw_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_draw) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_set_background_color), (mp_obj_t)&engine_draw_set_background_color_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_set_background), (mp_obj_t)&engine_draw_set_background_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_Color), (mp_obj_t)&color_class_type },
-
-    // https://github.com/Bodmer/TFT_eSPI/blob/cbf06d7a214938d884b21d5aeb465241c25ce774/TFT_eSPI.h#L304-L328
-    { MP_ROM_QSTR(MP_QSTR_black), MP_ROM_INT(0x0000) },
-    { MP_ROM_QSTR(MP_QSTR_navy), MP_ROM_INT(0x000F) },
-    { MP_ROM_QSTR(MP_QSTR_darkgreen), MP_ROM_INT(0x03E0) },
-    { MP_ROM_QSTR(MP_QSTR_darkcyan), MP_ROM_INT(0x03EF) },
-    { MP_ROM_QSTR(MP_QSTR_maroon), MP_ROM_INT(0x7800) },
-    { MP_ROM_QSTR(MP_QSTR_purple), MP_ROM_INT(0x780F) },
-    { MP_ROM_QSTR(MP_QSTR_olive), MP_ROM_INT(0x7BE0) },
-    { MP_ROM_QSTR(MP_QSTR_lightgrey), MP_ROM_INT(0xD69A) },
-    { MP_ROM_QSTR(MP_QSTR_darkgrey), MP_ROM_INT(0x7BEF) },
-    { MP_ROM_QSTR(MP_QSTR_blue), MP_ROM_INT(0x001F) },
-    { MP_ROM_QSTR(MP_QSTR_green), MP_ROM_INT(0x07E0) },
-    { MP_ROM_QSTR(MP_QSTR_cyan), MP_ROM_INT(0x07FF) },
-    { MP_ROM_QSTR(MP_QSTR_red), MP_ROM_INT(0xF800) },
-    { MP_ROM_QSTR(MP_QSTR_magenta), MP_ROM_INT(0xF81F) },
-    { MP_ROM_QSTR(MP_QSTR_yellow), MP_ROM_INT(0xFFE0) },
-    { MP_ROM_QSTR(MP_QSTR_white), MP_ROM_INT(0xFFFF) },
-    { MP_ROM_QSTR(MP_QSTR_orange), MP_ROM_INT(0xFDA0) },
-    { MP_ROM_QSTR(MP_QSTR_greenyellow), MP_ROM_INT(0xB7E0) },
-    { MP_ROM_QSTR(MP_QSTR_pink), MP_ROM_INT(0xFE19) },
-    { MP_ROM_QSTR(MP_QSTR_brown), MP_ROM_INT(0x9A60) },
-    { MP_ROM_QSTR(MP_QSTR_gold), MP_ROM_INT(0xFEA0) },
-    { MP_ROM_QSTR(MP_QSTR_silver), MP_ROM_INT(0xC618) },
-    { MP_ROM_QSTR(MP_QSTR_skyblue), MP_ROM_INT(0x867D) },
-    { MP_ROM_QSTR(MP_QSTR_violet), MP_ROM_INT(0x915C) },
 };
 
 // Module init
 STATIC MP_DEFINE_CONST_DICT (mp_module_engine_draw_globals, engine_draw_globals_table);
 
+
+STATIC void draw_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
+    ENGINE_FORCE_PRINTF("print(): Draw");
+}
+
+
+STATIC void draw_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+    if(destination[0] == MP_OBJ_NULL){          // Load
+        switch(attribute) {
+            case MP_QSTR_set_background_color:
+                destination[0] = MP_OBJ_FROM_PTR(&engine_draw_set_background_color_obj);
+                destination[1] = self_in;
+            break;
+            case MP_QSTR_set_background:
+                destination[0] = MP_OBJ_FROM_PTR(&engine_draw_set_background_obj);
+                destination[1] = self_in;
+            break;
+            case MP_QSTR_Color:
+                destination[0] = &color_class_type;
+            break;
+            case MP_QSTR_black:
+                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0x0000)});
+            break;
+            case MP_QSTR_navy:
+                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0x000F)});
+            break;
+            case MP_QSTR_darkgreen:
+                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0x03E0)});
+            break;
+            case MP_QSTR_darkcyan:
+                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0x03EF)});
+            break;
+            case MP_QSTR_maroon:
+                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0x7800)});
+            break;
+            case MP_QSTR_purple:
+                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0x780F)});
+            break;
+            case MP_QSTR_olive:
+                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0x7BE0)});
+            break;
+            case MP_QSTR_lightgrey:
+                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0xD69A)});
+            break;
+            case MP_QSTR_darkgrey:
+                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0x7BEF)});
+            break;
+            case MP_QSTR_blue:
+                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0x001F)});
+            break;
+            case MP_QSTR_green:
+                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0x07E0)});
+            break;
+            case MP_QSTR_cyan:
+                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0x07FF)});
+            break;
+            case MP_QSTR_red:
+                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0xF800)});
+            break;
+            case MP_QSTR_magenta:
+                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0xF81F)});
+            break;
+            case MP_QSTR_yellow:
+                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0xFFE0)});
+            break;
+            case MP_QSTR_white:
+                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0xFFFF)});
+            break;
+            case MP_QSTR_orange:
+                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0xFDA0)});
+            break;
+            case MP_QSTR_greenyellow:
+                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0xB7E0)});
+            break;
+            case MP_QSTR_pink:
+                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0xFE19)});
+            break;
+            case MP_QSTR_brown:
+                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0x9A60)});
+            break;
+            case MP_QSTR_gold:
+                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0xFEA0)});
+            break;
+            case MP_QSTR_silver:
+                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0xC618)});
+            break;
+            case MP_QSTR_skyblue:
+                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0x867D)});
+            break;
+            case MP_QSTR_violet:
+                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0x915C)});
+            break;
+            default:
+                return; // Fail
+        }
+    }else if(destination[1] != MP_OBJ_NULL){    // Store
+        return; // Fail
+    }
+}
+
+
+MP_DEFINE_CONST_OBJ_TYPE(
+    mp_type_color_module,
+    MP_QSTR_module,
+    MP_TYPE_FLAG_NONE,
+    print, draw_class_print,
+    attr, draw_class_attr
+);
+
 const mp_obj_module_t engine_draw_user_cmodule = {
-    .base = { &mp_type_module },
+    .base = { &mp_type_color_module },
     .globals = (mp_obj_dict_t*)&mp_module_engine_draw_globals,
 };
 

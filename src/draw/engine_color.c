@@ -5,15 +5,15 @@ const uint16_t bitmask_5_bit = 0b0000000000011111;
 const uint16_t bitmask_6_bit = 0b0000000000111111;
 
 void engine_color_sync_u16_to_rgb(color_class_obj_t *color){
-    // // RGB565
-    // const uint16_t r = (color->color.val >> 11) & bitmask_5_bit;
-    // const uint16_t g = (color->color.val >> 5)  & bitmask_6_bit;
-    // const uint16_t b = (color->color.val >> 0)  & bitmask_5_bit;
+    // RGB565
+    const uint16_t r = (color->value.val >> 11) & bitmask_5_bit;
+    const uint16_t g = (color->value.val >> 5)  & bitmask_6_bit;
+    const uint16_t b = (color->value.val >> 0)  & bitmask_5_bit;
 
-    // // RGB1.0,1.0,1.0
-    // color->r.value = (float)r / (float)bitmask_5_bit;
-    // color->g.value = (float)g / (float)bitmask_6_bit;
-    // color->b.value = (float)b / (float)bitmask_5_bit;
+    // RGB1.0,1.0,1.0
+    color->r.value = (float)r / (float)bitmask_5_bit;
+    color->g.value = (float)g / (float)bitmask_6_bit;
+    color->b.value = (float)b / (float)bitmask_5_bit;
 }
 
 
@@ -33,7 +33,7 @@ void engine_color_sync_rgb_to_u16(color_class_obj_t *color){
 // Class required functions
 STATIC void color_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
     color_class_obj_t *self = self_in;
-    ENGINE_INFO_PRINTF("print(): Color [%0.3f, %0.3f, %0.3f]", self->r.value, self->g.value, self->b.value);
+    ENGINE_PRINTF("print(): Color [%0.3f, %0.3f, %0.3f]", self->r.value, self->g.value, self->b.value);
 }
 
 
@@ -45,13 +45,17 @@ mp_obj_t color_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, 
     self->r.base.type = &mp_type_float;
     self->g.base.type = &mp_type_float;
     self->b.base.type = &mp_type_float;
-    self->color.base.type = &mp_type_int;
+    self->value.base.type = &mp_type_int;
 
     if(n_args == 0) {
         self->r.value = 0.0f;
         self->g.value = 0.0f;
         self->b.value = 0.0f;
-    } else if(n_args == 3) {
+    }else if(n_args == 1){
+        ENGINE_FORCE_PRINTF("%d", mp_obj_get_int(args[0]));
+        self->value.val = mp_obj_get_int(args[0]);
+        engine_color_sync_u16_to_rgb(self);
+    }else if(n_args == 3){
         self->r.value = mp_obj_get_float(args[0]);
         self->g.value = mp_obj_get_float(args[1]);
         self->b.value = mp_obj_get_float(args[2]);
@@ -115,7 +119,7 @@ STATIC MP_DEFINE_CONST_DICT(color_class_locals_dict, color_class_locals_dict_tab
 
 MP_DEFINE_CONST_OBJ_TYPE(
     color_class_type,
-    MP_QSTR_Vector3,
+    MP_QSTR_Color,
     MP_TYPE_FLAG_NONE,
 
     make_new, color_class_new,

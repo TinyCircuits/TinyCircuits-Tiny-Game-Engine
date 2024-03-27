@@ -11,7 +11,7 @@ typedef struct{
     mp_obj_float_t r;
     mp_obj_float_t g;
     mp_obj_float_t b;
-    mp_obj_int_t color;
+    mp_obj_int_t value;
 }color_class_obj_t;
 
 extern const mp_obj_type_t color_class_type;

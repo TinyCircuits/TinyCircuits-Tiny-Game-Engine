@@ -1,6 +1,18 @@
 # TinyCircuits-Tiny-Game-Engine
 This is a Object-Oriented-Programming (OOP) style game engine for embedded devices running MicroPython.
 
+# INFO:
+
+1.
+```
+cmd_parser.add_argument(
+   "-mlongint-impl",
+   choices=["none", "longlong", "mpz"],
+   default="longlong", # Changed this from mpz since we don't need that!
+   help="long-int implementation used by target (default mpz)",
+)
+```
+
 # Background
 This engine is tightly coupled with MicroPython (https://github.com/micropython/micropython) and will not work without it. This engine is built into MicroPython as an external C module (https://docs.micropython.org/en/latest/develop/cmodules.html). Currently, the engine works on the rp3 and unix ports, with webassembly support planned in the future.
 

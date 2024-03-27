@@ -8,6 +8,12 @@ from engine_resources import TextureResource
 
 # engine_debug.enable_all()
 
+print(engine_draw.black)
+
+a = engine_draw.black
+a.r = 0.5
+print(a)
+
 engine_draw.set_background_color(engine_draw.skyblue)
 C18W = TextureResource("C18W.bmp", True)
 D18 = TextureResource("D18.bmp", True)
@@ -20,22 +26,33 @@ vox.position.z = -75
 vox.height_scale = 40
 
 
+# print(vox.position)
 print("Tween test!")
 
-value = 0.0
+a = vox.position
+vox.position.x = vox.position.x + 1
+
+print(a, vox.position)
+
+print("Tween test!")
 
 t0 = Tween()
 t1 = Tween()
 t2 = Tween()
 
-circle0 = Circle2DNode(color=engine_draw.red, position=Vector2(-30, 30))
-circle1 = Circle2DNode(color=engine_draw.green, position=Vector2(30, -30))
+circle0 = Circle2DNode(position=Vector2(-30, 30))
+circle1 = Circle2DNode(position=Vector2(30, -30))
 
-t0.start(circle0.position, Vector2(-64, -64), Vector2( 64, 64), 1500.0, LOOP)
-t1.start(circle1.position, Vector2( 64, -64), Vector2(-64, 64), 3000.0, LOOP)
+time = 0
+
+
+# t0.start(time, "", Vector2(-64, -64), Vector2( 64, 64), 1500.0, LOOP)
+
+# t1.start(circle1.position.x, Vector2( 64, -64), Vector2(-64, 64), 3000.0, LOOP)
+
+# t1.start(circle1.position.x, 0, 100, 3000.0, LOOP)
 
 # circle0.position.x = circle0.position.y + 1
-
 
 
 camera = CameraNode()
