@@ -15,7 +15,7 @@ enum tween_direction {forwards, backwards};
 // Class required functions
 STATIC void tween_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
     tween_class_obj_t *self = self_in;
-    ENGINE_FORCE_PRINTF("print(): Tween");
+    ENGINE_PRINTF("Tween");
 }
 
 
@@ -33,6 +33,13 @@ STATIC mp_obj_t tween_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
             break;
             case engine_animation_one_shot:
             {
+                if(tween->after_called == false && tween->after != mp_const_none){
+                    mp_obj_t exec[2];
+                    exec[0] = tween->after;
+                    exec[1] = tween->self;
+                    mp_call_method_n_kw(0, 0, exec);
+                    tween->after_called = true;
+                }
                 return mp_const_none;
             }
             break;
@@ -48,6 +55,8 @@ STATIC mp_obj_t tween_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
                 tween->time = 0.0f;
             }
             break;
+            default:
+                return mp_const_none;   // By default, if finished (which is true by default) then just stop if no loop type is set
         }
     }
 
@@ -130,11 +139,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(tween_class_tick_obj, tween_class_tick);
 
 
 mp_obj_t tween_class_start(size_t n_args, const mp_obj_t *args){
-    ENGINE_INFO_PRINTF("Tween: play");
-
-    // if(n_args < 4){
-    //     mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Tween: ERROR: Not enough arguments passed to `play()`, expected at least 4"));
-    // }
+    ENGINE_INFO_PRINTF("Tween: start");
 
     // self, always `tween_class_obj_t` since attr function handles getting base
     tween_class_obj_t *tween = args[0];
@@ -143,6 +148,7 @@ mp_obj_t tween_class_start(size_t n_args, const mp_obj_t *args){
     tween->loop_type = engine_animation_loop;
     tween->tween_direction = forwards;
     tween->ping_pong_multiplier = 1.0f;
+    tween->after_called = false;    // Set this to false every time (don't want to clear `after` entry but only want to call it once)
 
     // The object with the attribute that will be tweened
     tween->object = args[1];
@@ -211,7 +217,7 @@ mp_obj_t tween_class_start(size_t n_args, const mp_obj_t *args){
             tween->ping_pong_multiplier = 2.0f;
         }
 
-        if(tween->loop_type > 2){
+        if(tween->loop_type > 3){
             mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Tween: ERROR: Unknown loop type..."));
         }
     }
@@ -273,6 +279,11 @@ bool tween_load_attr(tween_class_obj_t *tween, qstr attribute, mp_obj_t *destina
             destination[1] = tween;
             return true;
         break;
+        case MP_QSTR_after:
+            destination[0] = tween->after;
+            destination[1] = tween;
+            return true;
+        break;
         case MP_QSTR_base:
             destination[0] = tween;
             return true;
@@ -308,6 +319,10 @@ bool tween_store_attr(tween_class_obj_t *tween, qstr attribute, mp_obj_t *destin
         break;
         case MP_QSTR_finished:
             mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Tween: Changing the value of `finished` is not allowed!"));
+            return true;
+        break;
+        case MP_QSTR_after:
+            tween->after = destination[1];
             return true;
         break;
         default:
@@ -371,11 +386,14 @@ mp_obj_t tween_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, 
     self->list_node = engine_animation_track_tween(self);
     self->base.type = &tween_class_type;
 
-    self->loop_type = engine_animation_loop;
+    self->loop_type = engine_animation_none;
     self->duration = 1000.0f;
     self->time = 0.0f;
     self->finished = true;
     self->object = mp_const_none;
+    self->after_called = false;
+    self->attr = mp_const_none;
+    self->after = mp_const_none;
 
 
     if(inherited == true){
@@ -389,6 +407,13 @@ mp_obj_t tween_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, 
             self->tick = MP_OBJ_FROM_PTR(&tween_class_tick_obj);
         }else{                                                  // Likely found method (could be attribute)
             self->tick = dest[0];
+        }
+
+        mp_load_method_maybe(child_class_obj, MP_QSTR_after, dest);
+        if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
+            self->after = mp_const_none;
+        }else{                                                  // Likely found method (could be attribute)
+            self->after = dest[0];
         }
 
         // Store one pointer on the instance. Need to be able to get the

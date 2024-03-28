@@ -13,7 +13,9 @@ typedef struct{
     uint8_t tween_type;
     float time;
     mp_obj_t tick;
+
     mp_obj_t after;
+    bool after_called;
 
     float initial_0;
     float initial_1;

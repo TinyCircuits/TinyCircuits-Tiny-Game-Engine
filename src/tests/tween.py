@@ -38,26 +38,46 @@ print(a, vox.position)
 
 print("Tween test!")
 
-t0 = Tween()
+
+
+class AnimatedCircle():
+    def __init__(self):
+        self.circle = Circle2DNode(color=engine_draw.red, position=Vector2(-30, 30))
+        self.tween = Tween()
+        
+        self.color_tween = Tween()
+        self.color_tween.start(self.circle, "color", Color(1, 0, 0), Color(0, 1, 0))
+    
+    def tween_after(self, tween):
+        self.tween.start(self.circle, "position", self.circle.position, Vector2(-64, -64), 3000.0, ONE_SHOT)
+        self.tween.after = None
+    
+    def start(self):
+        self.tween.after = self.tween_after
+        self.tween.start(self.circle, "position", Vector2( 64, -64), Vector2(-64, 64), 3000.0, ONE_SHOT)
+
+
+
 t1 = Tween()
 t2 = Tween()
-t3 = Tween()
+# t3 = Tween()
 
-circle0 = Circle2DNode(color=engine_draw.red, position=Vector2(-30, 30))
 circle1 = Circle2DNode(color=engine_draw.green, position=Vector2(30, -30))
 
 
-t0.start(circle0, "position", Vector2( -64, -64), Vector2(64, 64), 3000.0, PING_PONG)
 t1.start(circle1, "position", Vector2( 64, -64), Vector2(-64, 64), 3000.0, PING_PONG)
 
 
+ac = AnimatedCircle()
+ac.start()
+
+
 camera = CameraNode()
-camera.add_child(circle0)
+camera.add_child(ac.circle)
 camera.add_child(circle1)
 
 t2.start(camera, "position", Vector3(50, 32, 50), Vector3(-50, 200, -50), 3000.0, PING_PONG)
 
-t3.start(circle0, "color", Color(1, 0, 0), Color(0, 1, 0), 3000.0, PING_PONG)
 
 # engine.start()
 while True:
