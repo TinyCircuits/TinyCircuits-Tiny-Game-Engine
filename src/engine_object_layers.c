@@ -2,6 +2,7 @@
 #include "nodes/empty_node.h"
 #include "nodes/3D/camera_node.h"
 #include "nodes/3D/voxelspace_node.h"
+#include "nodes/3D/tunnel_node.h"
 #include "nodes/2D/rectangle_2d_node.h"
 #include "nodes/2D/line_2d_node.h"
 #include "nodes/2D/circle_2d_node.h"
@@ -102,6 +103,11 @@ void engine_invoke_all_node_callbacks(){
                         engine_camera_draw_for_each(voxelspace_node_class_draw, node_base);
                     }
                     break;
+                    case NODE_TYPE_TUNNEL:
+                    {
+                        engine_camera_draw_for_each(tunnel_node_class_draw, node_base);
+                    }
+                    break;
                     case NODE_TYPE_RECTANGLE_2D:
                     {
                         engine_rectangle_2d_node_common_data_t *rectangle_2d_node_common_data = node_base->node_common_data;
@@ -114,8 +120,8 @@ void engine_invoke_all_node_callbacks(){
                     break;
                     case NODE_TYPE_LINE_2D:
                     {
-                        engine_line_2d_node_common_data_t *line_2d_node_common_data = node_base->node_common_data;
-                        exec[0] = line_2d_node_common_data->tick_cb;
+                        engine_line_2d_node_class_obj_t *line_2d_node = node_base->node;
+                        exec[0] = line_2d_node->tick_cb;
                         exec[1] = node_base->attr_accessor;
                         mp_call_method_n_kw(0, 0, exec);
 

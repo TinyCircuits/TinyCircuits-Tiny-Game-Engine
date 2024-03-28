@@ -376,17 +376,15 @@ mp_obj_t line_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
     if(parsed_args[opacity].u_obj == MP_OBJ_NULL) parsed_args[opacity].u_obj = mp_obj_new_float(1.0f);
     if(parsed_args[outline].u_obj == MP_OBJ_NULL) parsed_args[outline].u_obj = mp_obj_new_bool(false);
 
-    engine_line_2d_node_common_data_t *common_data = malloc(sizeof(engine_line_2d_node_common_data_t));
-
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);
-    node_base_init(node_base, common_data, &engine_line_2d_node_class_type, NODE_TYPE_LINE_2D);
+    node_base_init(node_base, NULL, &engine_line_2d_node_class_type, NODE_TYPE_LINE_2D);
 
     engine_line_2d_node_class_obj_t *line_2d_node = m_malloc(sizeof(engine_line_2d_node_class_obj_t));
     node_base->node = line_2d_node;
     node_base->attr_accessor = node_base;
 
-    common_data->tick_cb = MP_OBJ_FROM_PTR(&line_2d_node_class_tick_obj);
+    line_2d_node->tick_cb = MP_OBJ_FROM_PTR(&line_2d_node_class_tick_obj);
 
     line_2d_node->start = parsed_args[start].u_obj;
     line_2d_node->end = parsed_args[end].u_obj;
@@ -404,9 +402,9 @@ mp_obj_t line_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
         mp_obj_t dest[2];
         mp_load_method_maybe(node_instance, MP_QSTR_tick, dest);
         if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
-            common_data->tick_cb = MP_OBJ_FROM_PTR(&line_2d_node_class_tick_obj);
+            line_2d_node->tick_cb = MP_OBJ_FROM_PTR(&line_2d_node_class_tick_obj);
         }else{                                                  // Likely found method (could be attribute)
-            common_data->tick_cb = dest[0];
+            line_2d_node->tick_cb = dest[0];
         }
 
         // Store one pointer on the instance. Need to be able to get the

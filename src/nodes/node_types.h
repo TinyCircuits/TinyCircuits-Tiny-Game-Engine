@@ -13,10 +13,9 @@
 #define NODE_TYPE_LINE_2D               5
 #define NODE_TYPE_CIRCLE_2D             6
 #define NODE_TYPE_SPRITE_2D             7
-#define NODE_TYPE_POLYGON_2D            8
-#define NODE_TYPE_TEXT_2D               9
+#define NODE_TYPE_TEXT_2D               8
 
-#define NODE_TYPE_VOXELSPACE           10   // https://github.com/s-macke/VoxelSpace
-
+#define NODE_TYPE_VOXELSPACE            9   // https://github.com/s-macke/VoxelSpace
+#define NODE_TYPE_TUNNEL               10   // https://lodev.org/cgtutor/tunnel.html
 
 #endif  // NODE_TYPES_H

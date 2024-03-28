@@ -3,6 +3,7 @@
 #include "empty_node.h"
 #include "3D/camera_node.h"
 #include "3D/voxelspace_node.h"
+#include "3D/tunnel_node.h"
 #include "2D/sprite_2d_node.h"
 #include "2D/rectangle_2d_node.h"
 #include "2D/line_2d_node.h"
@@ -31,6 +32,7 @@ STATIC const mp_rom_map_elem_t engine_nodes_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_EmptyNode), (mp_obj_t)&engine_empty_node_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_CameraNode), (mp_obj_t)&engine_camera_node_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_VoxelSpaceNode), (mp_obj_t)&engine_voxelspace_node_class_type },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_TunnelNode), (mp_obj_t)&engine_tunnel_node_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Sprite2DNode), (mp_obj_t)&engine_sprite_2d_node_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Rectangle2DNode), (mp_obj_t)&engine_rectangle_2d_node_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Line2DNode), (mp_obj_t)&engine_line_2d_node_class_type },
