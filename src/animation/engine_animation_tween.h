@@ -32,6 +32,7 @@ typedef struct{
     float ping_pong_multiplier; // Either 1.0 or 2.0 depending on if in ping pong mode
 
     bool finished;
+    bool paused;
 }tween_class_obj_t;
 
 extern const mp_obj_type_t tween_class_type;

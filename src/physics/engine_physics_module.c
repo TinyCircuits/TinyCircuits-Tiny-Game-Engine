@@ -38,7 +38,6 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_physics_get_gravity_obj, engine_physics_get_gra
 /* --- doc ---
    NAME: engine_physics
    DESC: Module for controlling physics and for common physics collision shapes
-   ATTR: [type=function] [name={ref_link:set_physics_fps_limit}]           [value=function]
    ATTR: [type=function] [name={ref_link:set_gravity}]                     [value=function]
    ATTR: [type=function] [name={ref_link:get_gravity}]                     [value=function]
 */

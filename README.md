@@ -74,6 +74,7 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Do not generate collisions when two static bodies are touching/overlapping
 [] When objects collide, figure out how to ensure another collision is found on the same object from its perspective
 [] When objects collide and one is static (not dynamic), move the dynamic object the full penetration distance instead of half (like what happens if two dynamic bodies collide)
+[] Allow setting sting to "" in Tween to directly interpolate value
 
 For April 15th:
 [] Get rid of polygon collider and polygon drawing to make things more simple, only have rotated rectangles for colliders + circles

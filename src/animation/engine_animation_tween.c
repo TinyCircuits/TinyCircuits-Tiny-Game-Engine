@@ -19,9 +19,19 @@ STATIC void tween_class_print(const mp_print_t *print, mp_obj_t self_in, mp_prin
 }
 
 
+/* --- doc ---
+   NAME: after
+   DESC: Function that can be directly set or defined as a method in a class that is called after the tween completes (only called for ONE_SHOT mode)
+   PARAM: [type=object] [name=tween] [value=object (the tween object that just finished)]
+   RETURN: None
+*/
 STATIC mp_obj_t tween_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
     ENGINE_INFO_PRINTF("Tween: tick!");
     tween_class_obj_t *tween = self_in;
+
+    if(tween->paused == true){
+        return mp_const_none;
+    }
 
     if(tween->finished){
         switch(tween->loop_type){
@@ -82,6 +92,8 @@ STATIC mp_obj_t tween_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
         t = (tween->time / tween->duration);
     }
 
+    // Always load the attribute since a reference might go stale
+    // if the obeject's attribute is assigned to during tweening
     mp_obj_t tweening_value = mp_load_attr(tween->object, tween->attr);
 
     if(tween->tween_type == tween_type_float){
@@ -138,12 +150,24 @@ STATIC mp_obj_t tween_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
 MP_DEFINE_CONST_FUN_OBJ_2(tween_class_tick_obj, tween_class_tick);
 
 
+/* --- doc ---
+   NAME: start
+   DESC: Starts tweening a value
+   PARAM: [type=object]      [name=object]         [value=object (the object that has an attribute to be tweened)]
+   PARAM: [type=string]      [name=attribute_name] [value=string]
+   PARAM: [type=object]      [name=start]          [value=object (must be the same type as the attribute from `attribute_name`)]
+   PARAM: [type=object]      [name=end]            [value=object (must be the same type as the attribute from `attribute_name`)]
+   PARAM: [type=int]         [name=duration]       [value=any positive value representing milliseconds]
+   PARAM: [type=enum/int]    [name=loop_type]      [value=LOOP, ONE_SHOT, or PING_PONG]
+   RETURN: None
+*/
 mp_obj_t tween_class_start(size_t n_args, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("Tween: start");
 
     // self, always `tween_class_obj_t` since attr function handles getting base
     tween_class_obj_t *tween = args[0];
     tween->finished = false;
+    tween->paused = false;
     tween->time = 0.0f;
     tween->loop_type = engine_animation_loop;
     tween->tween_direction = forwards;
@@ -227,18 +251,48 @@ mp_obj_t tween_class_start(size_t n_args, const mp_obj_t *args){
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(tween_class_start_obj, 4, 7, tween_class_start);
 
 
+/* --- doc ---
+   NAME: pause
+   DESC: Pauses tweening a value
+   RETURN: None
+*/
 mp_obj_t tween_class_pause(mp_obj_t self_in){
     ENGINE_INFO_PRINTF("Tween: pause");
     tween_class_obj_t *tween = self_in;
+
+    tween->paused = true;
 
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(tween_class_pause_obj, tween_class_pause);
 
 
+/* --- doc ---
+   NAME: unpause
+   DESC: Resumes tweening a value after pause
+   RETURN: None
+*/
+mp_obj_t tween_class_unpause(mp_obj_t self_in){
+    ENGINE_INFO_PRINTF("Tween: unpause");
+    tween_class_obj_t *tween = self_in;
+
+    tween->paused = false;
+
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(tween_class_unpause_obj, tween_class_unpause);
+
+
+/* --- doc ---
+   NAME: restart
+   DESC: Restarts tweening a value
+   RETURN: None
+*/
 mp_obj_t tween_class_restart(mp_obj_t self_in){
     ENGINE_INFO_PRINTF("Tween: restart");
     tween_class_obj_t *tween = self_in;
+
+    tween->time = 0.0f;
 
     return mp_const_none;
 }
@@ -271,6 +325,11 @@ bool tween_load_attr(tween_class_obj_t *tween, qstr attribute, mp_obj_t *destina
         break;
         case MP_QSTR_pause:
             destination[0] = MP_OBJ_FROM_PTR(&tween_class_pause_obj);
+            destination[1] = tween;
+            return true;
+        break;
+        case MP_QSTR_unpause:
+            destination[0] = MP_OBJ_FROM_PTR(&tween_class_unpause_obj);
             destination[1] = tween;
             return true;
         break;
@@ -369,6 +428,20 @@ STATIC mp_attr_fun_t tween_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
 }
 
 
+/* --- doc ---
+   NAME: Tween
+   DESC: Object for interpolating and easing parameters of objects
+   ATTR:    [type=function]            [name={ref_link:start}]        [value=function]
+   ATTR:    [type=function]            [name={ref_link:pause}]        [value=function]
+   ATTR:    [type=function]            [name={ref_link:unpause}]      [value=function]
+   ATTR:    [type=function]            [name={ref_link:restart}]      [value=function]
+   ATTR:    [type=function]            [name={ref_link:after}]        [value=function]
+   ATTR:    [type=int]                 [name=duration]                [value=any positive value representing milliseconds]
+   ATTR:    [type=enum/int]            [name=loop_type]               [value=LOOP, ONE_SHOT, or PING_PONG]
+   ATTR:    [type=boolean]             [name=finished]                [value=True or False (read-only)]
+   OVRR:    [type=function]            [name={ref_link:tick}]         [value=function]
+   OVRR:    [type=function]            [name={ref_link:after}]        [value=function]
+*/
 mp_obj_t tween_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Tween");
 
@@ -390,6 +463,7 @@ mp_obj_t tween_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, 
     self->duration = 1000.0f;
     self->time = 0.0f;
     self->finished = true;
+    self->paused = true;
     self->object = mp_const_none;
     self->after_called = false;
     self->attr = mp_const_none;

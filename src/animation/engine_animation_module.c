@@ -38,7 +38,11 @@ void engine_animation_tick(float dt){
 
 /* --- doc ---
    NAME: engine_animation
-   DESC: Module for animated certain aspects of the engine
+   DESC: Module for animating certain aspects of the engine
+   ATTR: [type=object]     [name={ref_link:Tween}]      [value=object] 
+   ATTR: [type=enum/int]   [name=LOOP]                  [value=1]
+   ATTR: [type=enum/int]   [name=ONE_SHOT]              [value=2]
+   ATTR: [type=enum/int]   [name=PING_PONG]             [value=3]
 */
 STATIC const mp_rom_map_elem_t engine_animation_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_animation) },

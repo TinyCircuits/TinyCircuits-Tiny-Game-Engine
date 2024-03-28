@@ -9,7 +9,7 @@ from generate_common import get_attr_or_param_name_type_value, get_docstring_pro
 ref_link = "{ref_link:"
 
 # Get paths from this work directory to each file in 'build'
-paths = glob.glob('build\**\*', recursive=True)
+paths = glob.glob('build/**/*', recursive=True)
 
 for path in paths:
     if os.path.isfile(path):
@@ -43,7 +43,7 @@ for path in paths:
                     link_name = link_name.replace("\r", "")
                     link_after = " [returns: " + ret[0] + "]"
             else:
-                print("ERROR: Looking for fragment: " + fragment_path + " from " + path)
+                print("ERROR: Looking for fragment: `" + fragment_path + "` from `" + path + "`")
                 raise "ERROR: Could not find fragment"
 
             # link_contents = "[" + link_name + "]" + "(" + link_dest  + ".html)" + link_after

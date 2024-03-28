@@ -131,9 +131,10 @@ if os.path.isdir('build'):
 os.mkdir('build')
 
 # Get paths from this work directory to each file in 'src'
-paths = glob.glob('..\src\**\*', recursive=True)
+paths = glob.glob('../src/**/*', recursive=True)
 
 for path in paths:
+    print(path)
     if os.path.isfile(path):
         # Open each file and get contents. Use codecs to ignore decode errors for non ASCII files
         file = codecs.open(path, 'r', 'utf-8', errors='replace')
@@ -145,3 +146,5 @@ for path in paths:
             exit()
 
 import generate_resolve_ref_links
+
+print("Done!")
