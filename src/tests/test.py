@@ -24,7 +24,7 @@ import gc
 # my_line.position.x = -64
 
 line = Line2DNode(color=engine_draw.orange, start=Vector2(40, -15), end=Vector2(40, 15), thickness=1)
-
+line.opacity = 0.6
 
 # By default, nodes are at center of screen at 0,0
 # engine_debug.enable_all()
@@ -39,6 +39,8 @@ class MyText(Text2DNode):
         self.text = "Hello World!\nLine 2\nLine 3\nLine 4                       hi"
 
 text = Text2DNode(text="Hello World!\nLine 2\nLine 3", font=font9, scale=Vector2(2.0, 2.0), position=Vector2(0, -0))
+text.opacity = 0.5
+
 text0 = Text2DNode(text="Hello World!\nLine 2\nLine 3", font=font9, scale=Vector2(1.0, 1.0), position=Vector2(0, -0))
 
 
@@ -56,15 +58,18 @@ class MyCircle(Circle2DNode):
 circle = MyCircle()
 circle.outline = True
 circle.radius = 25
+circle.opacity = 0.25
 rectangle = Rectangle2DNode()
 rectangle.width = 30
 rectangle.height = 15
+rectangle.opacity = 0.5
 rectangle.outline = True
 sprite = Sprite2DNode(texture=texture, position=Vector2(0, 0), scale=Vector2(1.0, 1.0))
 
 circle.color = engine_draw.red
 rectangle.color = engine_draw.yellow
 sprite.transparent_color = engine_draw.black
+sprite.opacity = 0.3
 
 circle.position = Vector2(10, 0)
 rectangle.position = Vector2(32, 0)
@@ -123,7 +128,7 @@ circle.add_child(text)
 circle.add_child(text0)
 circle.add_child(line)
 
-cursor = Circle2DNode(radius=5, color=engine_draw.green, outline=True, position=Vector2(0, 0))
+cursor = Circle2DNode(radius=2.5, color=engine_draw.green, outline=True, position=Vector2(0, 0))
 
 # camera.add_child(circle)
 # camera.add_child(fps)

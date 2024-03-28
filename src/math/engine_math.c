@@ -13,6 +13,13 @@ float engine_math_cross_product_v_v(float x0, float y0, float x1, float y1){
     return x0*y1 - y0*x1;
 }
 
+// http://labman.phys.utk.edu/3D%20Physics/crossproduct/crossproduct.html#:~:text=of%20the%20vector-,C%20%3D%20A%C3%97%20B,-and%20its%20magnitude
+float engine_math_3d_cross_product_v_v(float ax, float ay, float az, float bx, float by, float bz, float *out_x, float *out_y, float *out_z){
+    *out_x = ay*bz - az*by;
+    *out_y = az*bx - ax*bz;
+    *out_z = ax*by - ay*bx;
+}
+
 void engine_math_cross_product_float_v(float value, float in_x, float in_y, float *out_x, float *out_y){
     *out_x = -value * in_y;
     *out_y =  value * in_x;
@@ -32,8 +39,26 @@ void engine_math_normalize(float *vx, float *vy){
         const float factor = 1.0 / length;
         *vx = (*vx) * factor;
         *vy = (*vy) * factor;
+    }else{
+        mp_raise_msg(&mp_type_RuntimeError, "EngineMath: Could not normalize 2d vector");
     }
 }
+
+
+// https://stackoverflow.com/a/19301193
+void engine_math_3d_normalize(float *vx, float *vy, float *vz){
+    float length = sqrtf((*vx) * (*vx) + (*vy) * (*vy) + (*vz) * (*vz));
+
+    if(engine_math_compare_floats(length, 0.0) == false){
+        const float factor = 1.0 / length;
+        *vx = (*vx) * factor;
+        *vy = (*vy) * factor;
+        *vz = (*vz) * factor;
+    }else{
+        mp_raise_msg(&mp_type_RuntimeError, "EngineMath: Could not normalize 3d vector");
+    }
+}
+
 
 float engine_math_vector_length_sqr(float x, float y){
     return x*x + y*y;

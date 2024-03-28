@@ -35,6 +35,7 @@ void rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_base, mp_ob
     uint16_t rectangle_width = mp_obj_get_float(mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_width));
     uint16_t rectangle_height = mp_obj_get_float(mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_height));
     color_class_obj_t *rectangle_color = mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_color);
+    float rectangle_opacity = mp_obj_get_float(mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_opacity));
     bool rectangle_outlined = mp_obj_get_int(mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_outline));
 
     vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
@@ -86,7 +87,8 @@ void rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_base, mp_ob
                                                 (int32_t)camera_viewport->x,
                                                 (int32_t)camera_viewport->y,
                                                 (int32_t)camera_viewport->width,
-                                                (int32_t)camera_viewport->height);
+                                                (int32_t)camera_viewport->height,
+                                                rectangle_opacity);
     }else{
         float rectangle_half_width = rectangle_width/2;
         float rectangle_half_height = rectangle_height/2;
@@ -112,10 +114,10 @@ void rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_base, mp_ob
         engine_math_rotate_point(&brx, &bry, rectangle_rotated_x, rectangle_rotated_y, angle);
         engine_math_rotate_point(&blx, &bly, rectangle_rotated_x, rectangle_rotated_y, angle);
 
-        engine_draw_line(rectangle_color->value.val, tlx, tly, trx, try, camera_node);
-        engine_draw_line(rectangle_color->value.val, trx, try, brx, bry, camera_node);
-        engine_draw_line(rectangle_color->value.val, brx, bry, blx, bly, camera_node);
-        engine_draw_line(rectangle_color->value.val, blx, bly, tlx, tly, camera_node);
+        engine_draw_line(rectangle_color->value.val, tlx, tly, trx, try, camera_node, rectangle_opacity);
+        engine_draw_line(rectangle_color->value.val, trx, try, brx, bry, camera_node, rectangle_opacity);
+        engine_draw_line(rectangle_color->value.val, brx, bry, blx, bly, camera_node, rectangle_opacity);
+        engine_draw_line(rectangle_color->value.val, blx, bly, tlx, tly, camera_node, rectangle_opacity);
     }
 }
 
@@ -127,6 +129,7 @@ void rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_base, mp_ob
     PARAM:  [type=float]                      [name=width]                      [value=any]
     PARAM:  [type=float]                      [name=height]                     [value=any]
     PARAM:  [type=int]                        [name=color]                      [value=any 16-bit RGB565 integer]
+    PARAM:  [type=float]                      [name=opacity]                    [value=0 ~ 1.0] 
     PARAM:  [type=bool]                       [name=outline]                    [value=True or False]
     PARAM:  [type=float]                      [name=rotation]                   [value=any (radians)]
     PARAM:  [type={ref_link:Vector2}]         [name=scale]                      [value={ref_link:Vector2}]
@@ -140,10 +143,10 @@ void rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_base, mp_ob
     ATTR:   [type=float]                      [name=width]                      [value=any]
     ATTR:   [type=float]                      [name=height]                     [value=any]
     ATTR:   [type=int]                        [name=color]                      [value=any 16-bit RGB565 integer]
+    ATTR:   [type=float]                      [name=opacity]                    [value=0 ~ 1.0] 
     ATTR:   [type=bool]                       [name=outline]                    [value=True or False]
     ATTR:   [type=float]                      [name=rotation]                   [value=any (radians)]
     ATTR:   [type={ref_link:Vector2}]         [name=scale]                      [value={ref_link:Vector2}]
-
     OVRR:   [type=function]                   [name={ref_link:tick}]            [value=function]
 */
 mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
@@ -155,12 +158,13 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
         { MP_QSTR_width,        MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_height,       MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_color,        MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_opacity,      MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_outline,      MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_rotation,     MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_scale,        MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
-    enum arg_ids {child_class, position, width, height, color, outline, rotation, scale};
+    enum arg_ids {child_class, position, width, height, color, opacity, outline, rotation, scale};
     bool inherited = false;
 
     // If there is one positional argument and it isn't the first 
@@ -184,6 +188,7 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
     if(parsed_args[width].u_obj == MP_OBJ_NULL) parsed_args[width].u_obj = mp_obj_new_float(10.0f);
     if(parsed_args[height].u_obj == MP_OBJ_NULL) parsed_args[height].u_obj = mp_obj_new_float(10.0f);
     if(parsed_args[color].u_obj == MP_OBJ_NULL) parsed_args[color].u_obj = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0xffff)});
+    if(parsed_args[opacity].u_obj == MP_OBJ_NULL) parsed_args[opacity].u_obj = mp_obj_new_float(1.0f);
     if(parsed_args[outline].u_obj == MP_OBJ_NULL) parsed_args[outline].u_obj = mp_obj_new_bool(false);
     if(parsed_args[rotation].u_obj == MP_OBJ_NULL) parsed_args[rotation].u_obj = mp_obj_new_float(0.0f);
     if(parsed_args[scale].u_obj == MP_OBJ_NULL) parsed_args[scale].u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)});
@@ -205,6 +210,7 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
         rectangle_2d_node->width = parsed_args[width].u_obj;
         rectangle_2d_node->height = parsed_args[height].u_obj;
         rectangle_2d_node->color = parsed_args[color].u_obj;
+        rectangle_2d_node->opacity = parsed_args[opacity].u_obj;
         rectangle_2d_node->outline = parsed_args[outline].u_obj;
         rectangle_2d_node->rotation = parsed_args[rotation].u_obj;
         rectangle_2d_node->scale = parsed_args[scale].u_obj;
@@ -225,6 +231,7 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
         mp_store_attr(node_base->node, MP_QSTR_width, parsed_args[width].u_obj);
         mp_store_attr(node_base->node, MP_QSTR_height, parsed_args[height].u_obj);
         mp_store_attr(node_base->node, MP_QSTR_color, parsed_args[color].u_obj);
+        mp_store_attr(node_base->node, MP_QSTR_opacity, parsed_args[opacity].u_obj);
         mp_store_attr(node_base->node, MP_QSTR_outline, parsed_args[outline].u_obj);
         mp_store_attr(node_base->node, MP_QSTR_rotation, parsed_args[rotation].u_obj);
         mp_store_attr(node_base->node, MP_QSTR_scale, parsed_args[scale].u_obj);
@@ -280,6 +287,9 @@ STATIC void rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_ob
             case MP_QSTR_color:
                 destination[0] = self->color;
             break;
+            case MP_QSTR_opacity:
+                destination[0] = self->opacity;
+            break;
             case MP_QSTR_outline:
                 destination[0] = self->outline;
             break;
@@ -305,6 +315,9 @@ STATIC void rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_ob
             break;
             case MP_QSTR_color:
                 self->color = destination[1];
+            break;
+            case MP_QSTR_opacity:
+                self->opacity = destination[1];
             break;
             case MP_QSTR_outline:
                 self->outline = destination[1];

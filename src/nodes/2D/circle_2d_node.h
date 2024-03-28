@@ -11,6 +11,7 @@ typedef struct{
     mp_obj_t radius;    // float
     mp_obj_t rotation;  // float Rotation in radians (affects child nodes)
     mp_obj_t color;     // int The color of this circle
+    mp_obj_t opacity;
     mp_obj_t scale;     // float: how much to scale radius by, 1.0f by default
     mp_obj_t outline;   // bool: if true, circle is drawn as an outline, false by default
 }engine_circle_2d_node_class_obj_t;

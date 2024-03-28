@@ -44,6 +44,7 @@ void text_2d_node_class_draw(engine_node_base_t *text_node_base, mp_obj_t camera
 
     vector2_class_obj_t *text_scale =  mp_load_attr(text_node_base->attr_accessor, MP_QSTR_scale);
     font_resource_class_obj_t *text_font = mp_load_attr(text_node_base->attr_accessor, MP_QSTR_font);
+    float text_opacity = mp_obj_get_float(mp_load_attr(text_node_base->attr_accessor, MP_QSTR_opacity));
 
     float text_box_width = mp_obj_get_float(mp_load_attr(text_node_base->attr_accessor, MP_QSTR_width));
     float text_box_height = mp_obj_get_float(mp_load_attr(text_node_base->attr_accessor, MP_QSTR_height));
@@ -158,7 +159,8 @@ void text_2d_node_class_draw(engine_node_base_t *text_node_base, mp_obj_t camera
                         bitmap_x_scale,
                         bitmap_y_scale,
                         -rotation,
-                        0);
+                        0,
+                        text_opacity);
 
         char_x += (cos_angle * char_width);
         char_y -= (sin_angle * char_width);
@@ -273,6 +275,7 @@ STATIC void text_2d_node_class_set(mp_obj_t self_in, qstr attribute, mp_obj_t *d
     PARAM:  [type=string]                     [name=text]                       [value=any]
     PARAM:  [type=float]                      [name=rotation]                   [value=any (radians)]
     PARAM:  [type={ref_link:Vector2}]         [name=scale]                      [value={ref_link:Vector2}]
+    PARAM:  [type=float]                      [name=opacity]                    [value=0 ~ 1.0]
     ATTR:   [type=function]                   [name={ref_link:add_child}]       [value=function] 
     ATTR:   [type=function]                   [name={ref_link:get_child}]       [value=function] 
     ATTR:   [type=function]                   [name={ref_link:remove_child}]    [value=function]
@@ -284,6 +287,7 @@ STATIC void text_2d_node_class_set(mp_obj_t self_in, qstr attribute, mp_obj_t *d
     ATTR:   [type=string]                     [name=text]                       [value=any]
     ATTR:   [type=float]                      [name=rotation]                   [value=any (radians)]
     ATTR:   [type={ref_link:Vector2}]         [name=scale]                      [value={ref_link:Vector2}]
+    ATTR:   [type=float]                      [name=opacity]                    [value=0 ~ 1.0]
     OVRR:   [type=function]                   [name={ref_link:tick}]            [value=function]
 */
 mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
@@ -296,9 +300,10 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
         { MP_QSTR_text,                 MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_rotation,             MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_scale,                MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_opacity,              MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
-    enum arg_ids {child_class, position, font, text, rotation, scale};
+    enum arg_ids {child_class, position, font, text, rotation, scale, opacity};
     bool inherited = false;
 
     // If there is one positional argument and it isn't the first 
@@ -323,6 +328,7 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
     if(parsed_args[text].u_obj == MP_OBJ_NULL) parsed_args[text].u_obj = mp_const_none;
     if(parsed_args[rotation].u_obj == MP_OBJ_NULL) parsed_args[rotation].u_obj = mp_obj_new_float(0.0f);
     if(parsed_args[scale].u_obj == MP_OBJ_NULL) parsed_args[scale].u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)});
+    if(parsed_args[opacity].u_obj == MP_OBJ_NULL) parsed_args[opacity].u_obj = mp_obj_new_float(1.0f);
 
     engine_text_2d_node_common_data_t *common_data = malloc(sizeof(engine_text_2d_node_common_data_t));
 
@@ -349,6 +355,7 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
         text_2d_node->text = parsed_args[text].u_obj;
         text_2d_node->rotation = parsed_args[rotation].u_obj;
         text_2d_node->scale = parsed_args[scale].u_obj;
+        text_2d_node->opacity = parsed_args[opacity].u_obj;
         text_2d_node->width = mp_obj_new_int(0);
         text_2d_node->height = mp_obj_new_int(0);
 
@@ -371,6 +378,7 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
         mp_store_attr(node_base->node, MP_QSTR_text, parsed_args[text].u_obj);
         mp_store_attr(node_base->node, MP_QSTR_rotation, parsed_args[rotation].u_obj);
         mp_store_attr(node_base->node, MP_QSTR_scale, parsed_args[scale].u_obj);
+        mp_store_attr(node_base->node, MP_QSTR_opacity, parsed_args[opacity].u_obj);
         mp_store_attr(node_base->node, MP_QSTR_width, mp_obj_new_int(0));
         mp_store_attr(node_base->node, MP_QSTR_height, mp_obj_new_int(0));
 
@@ -436,6 +444,9 @@ STATIC void text_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *
             case MP_QSTR_scale:
                 destination[0] = self->scale;
             break;
+            case MP_QSTR_opacity:
+                destination[0] = self->opacity;
+            break;
             case MP_QSTR_width:
                 destination[0] = self->width;
             break;
@@ -462,6 +473,9 @@ STATIC void text_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *
             break;
             case MP_QSTR_scale:
                 self->scale = destination[1];
+            break;
+            case MP_QSTR_opacity:
+                self->opacity = destination[1];
             break;
             case MP_QSTR_width:
                 mp_raise_msg(&mp_type_AttributeError, MP_ERROR_TEXT("Text2DNode: ERROR: 'width' is read-only, it is not allowed to be set!"));

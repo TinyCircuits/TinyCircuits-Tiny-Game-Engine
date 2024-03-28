@@ -10,6 +10,7 @@
 #include "math/vector3.h"
 #include "math/rectangle.h"
 #include "math/engine_math.h"
+#include "draw/engine_color.h"
 
 #ifndef __unix__
     #include "hardware/interp.h"
@@ -44,8 +45,23 @@ void engine_draw_pixel(uint16_t color, int32_t x, int32_t y){
 }
 
 
+void engine_draw_pixel_alpha(uint16_t color, int32_t x, int32_t y, float alpha){
+    if((x >= 0 && x < SCREEN_WIDTH) && (y >= 0 && y < SCREEN_HEIGHT)){
+        uint16_t *screen_buffer = engine_get_active_screen_buffer();
+        uint16_t index = y * SCREEN_WIDTH + x;
+
+        screen_buffer[index] = engine_color_alpha_blend(screen_buffer[index], color, alpha);
+    }
+}
+
+
 // https://en.wikipedia.org/wiki/Digital_differential_analyzer_(graphics_algorithm)
-void engine_draw_line(uint16_t color, float x_start, float y_start, float x_end, float y_end, mp_obj_t camera_node_base_in){
+void engine_draw_line(uint16_t color, float x_start, float y_start, float x_end, float y_end, mp_obj_t camera_node_base_in, float alpha){
+    bool draw_with_alpha = false;
+    if(alpha < 1.0f){
+        draw_with_alpha = true;
+    }
+
     // Distance difference between endpoints
     float dx = x_end - x_start;
     float dy = y_end - y_start;
@@ -69,7 +85,12 @@ void engine_draw_line(uint16_t color, float x_start, float y_start, float x_end,
     for(uint32_t step=0; step<step_count; step++){
         line_x = line_x + slope_x;
         line_y = line_y + slope_y;
-        engine_draw_pixel(color, (int32_t)line_x, (int32_t)line_y);
+
+        if(draw_with_alpha){
+            engine_draw_pixel_alpha(color, (int32_t)line_x, (int32_t)line_y, alpha);
+        }else{
+            engine_draw_pixel(color, (int32_t)line_x, (int32_t)line_y);
+        }
     }
 }
 
@@ -166,7 +187,11 @@ void engine_draw_blit_scale(uint16_t *pixels, int32_t x, int32_t y, uint16_t wid
 }
 
 
-void engine_draw_fillrect_scale_trishear_viewport(uint16_t color, int32_t x, int32_t y, uint16_t width, uint16_t height, int32_t xsc, int32_t ysc, int32_t xsr, int32_t ysr, int32_t xsr2, int32_t vx, int32_t vy, int32_t vw, int32_t vh){
+void engine_draw_fillrect_scale_trishear_viewport(uint16_t color, int32_t x, int32_t y, uint16_t width, uint16_t height, int32_t xsc, int32_t ysc, int32_t xsr, int32_t ysr, int32_t xsr2, int32_t vx, int32_t vy, int32_t vw, int32_t vh, float alpha){
+    bool draw_with_alpha = false;
+    if(alpha < 1.0f){
+        draw_with_alpha = true;
+    }
 
     int32_t xe = (width * xsc) >> 16;
     int32_t ye = (height * ysc) >> 16;
@@ -191,7 +216,14 @@ void engine_draw_fillrect_scale_trishear_viewport(uint16_t color, int32_t x, int
         for(int cx = x; cx < x + xe; cx++) {
             xshift2 = (((yp >> 16) - y) * xsr2);
             int32_t xp = cx + (xshift >> 16) + (xshift2 >> 16);
-            if(is_xy_inside_viewport(xp, yp >> 16, vx, vy, vw, vw)) screen_buffer[fb_pos + (cx) + ((yp >> 16) - cy) * SCREEN_WIDTH + (xshift2 >> 16)] = color;
+            if(is_xy_inside_viewport(xp, yp >> 16, vx, vy, vw, vw)){
+                uint32_t index = fb_pos + (cx) + ((yp >> 16) - cy) * SCREEN_WIDTH + (xshift2 >> 16);
+                if(draw_with_alpha){
+                    screen_buffer[index] = engine_color_alpha_blend(screen_buffer[index], color, alpha);
+                }else{
+                    screen_buffer[index] = color;
+                }
+            }
             yp += ysr;
         }
 
@@ -246,149 +278,7 @@ void engine_draw_rect_scale_trishear_viewport(uint16_t color, int32_t x, int32_t
 }
 
 
-void engine_draw_blit_scale_trishear(uint16_t *pixels, int32_t x, int32_t y, uint32_t stride, int32_t width, uint16_t height, int32_t xsc, int32_t ysc, int32_t xsr, int32_t ysr, int32_t xsr2, int flip, uint16_t transparent_color){
-    // #ifndef __unix__
-    //     init_interp(width_log2);
-    // #endif
-
-    // int32_t width = 1u << width_log2;
-    int32_t xe = (width * xsc) >> 16;
-    int32_t ye = (height * ysc) >> 16;
-    int32_t dtx = ((int64_t)width << 16) / xe;
-    int32_t dty = ((int64_t)height << 16) / ye;
-    int32_t ty = 0;
-    int32_t tx = 0;
-
-    if(xsc < 0){
-        xe = -xe;
-        x -= xe;
-    }
-    if(ysc < 0){
-        ye = -ye;
-        y -= ye;
-        ty = (height << 16) - 0x10000;
-    }
-
-    int32_t fb_pos = y * SCREEN_WIDTH + x;
-    int32_t x_start = ((xsc < 0)) ? ((width << 16) - 0x10000) : 0;
-
-    int32_t xshift = 0;
-    int32_t yshift = 0;
-    int32_t xshift2 = 0;
-    uint16_t *screen_buffer = engine_get_active_screen_buffer();
-
-    for(int cy = 0; cy < ye; cy++){
-        yshift = (xshift >> 16) * ysr;
-        tx = x_start;
-        fb_pos += (xshift >> 16);
-
-        // #ifndef __unix__
-        //     interp0->accum[1] = tx;
-        //     interp0->base[1] = dtx;
-        //     interp0->accum[0] = ty;
-        //     interp0->base[0] = 0;
-        // #endif
-
-        if(flip) for(int cx = 0; cx < xe; cx++){
-            xshift2 = ((cy + (yshift >> 16)) * xsr2);
-
-            // #ifndef __unix__
-            //     screen_buffer[fb_pos + (cx) + (yshift >> 16) * SCREEN_WIDTH + (xshift2 >> 16)] = pixels[width * height - 1 - interp_pop_full_result(interp0)];
-            // #else
-                uint32_t index = fb_pos + (cx) + (yshift >> 16) * SCREEN_WIDTH + (xshift2 >> 16);
-                int32_t abs_x_pos = x+cx+(xshift >> 16)+(xshift2 >> 16);
-                int32_t abs_y_pos = y+cy+(yshift >> 16);
-                if(abs_x_pos >= 0 && abs_x_pos < SCREEN_WIDTH && abs_y_pos >= 0 && abs_y_pos < SCREEN_HEIGHT){
-                    uint16_t pixel = pixels[(stride * height - 1 - ((ty >> 16) * stride + (tx >> 16)))];
-                    if(transparent_color == ENGINE_NO_TRANSPARENCY_COLOR || pixel != transparent_color){
-                        screen_buffer[index] = pixel;
-                    }
-                }
-                tx += dtx;
-            // #endif
-
-            yshift += ysr;
-        }else for(int cx = 0; cx < xe; cx++){
-            xshift2 = ((cy + (yshift >> 16)) * xsr2);
-
-            // #ifndef __unix__
-            //     screen_buffer[fb_pos + (cx) + (yshift >> 16) * SCREEN_WIDTH + (xshift2 >> 16)] = pixels[interp_pop_full_result(interp0)];
-            // #else
-                uint32_t index = fb_pos + (cx) + (yshift >> 16) * SCREEN_WIDTH + (xshift2 >> 16);
-                int32_t abs_x_pos = x+cx+(xshift >> 16)+(xshift2 >> 16);
-                int32_t abs_y_pos = y+cy+(yshift >> 16);
-                if(abs_x_pos >= 0 && abs_x_pos < SCREEN_WIDTH && abs_y_pos >= 0 && abs_y_pos < SCREEN_HEIGHT){
-                    uint16_t pixel = pixels[((ty >> 16) * stride + (tx >> 16))];
-                    if(transparent_color == ENGINE_NO_TRANSPARENCY_COLOR || pixel != transparent_color){
-                        screen_buffer[index] = pixel;
-                    }
-                }
-                tx += dtx;
-            // #endif
-
-            yshift += ysr;
-        }
-
-        fb_pos -= (xshift >> 16);
-        fb_pos += SCREEN_WIDTH;
-        xshift += xsr;
-        ty += dty;
-    }
-}
-
-
-void engine_draw_blit_scale_rotate(uint16_t *pixels, int32_t x, int32_t y, uint32_t stride, int32_t width, uint16_t height, int32_t xsc, int32_t ysc, int16_t theta, uint16_t transparent_color){
-    ENGINE_PERFORMANCE_CYCLES_START();
-
-    int flip = 0;
-    // int32_t width = 1u << width_log2;
-    // Step 1: Get theta inside (-pi/2, pi/2) and flip if we need to
-    theta &= 0x3FF;
-    if(theta > 0x200) theta -= 0x400;
-    if(theta > 0x100){
-        flip = 1;
-        theta -= 0x200;
-    } else if(theta < -0x100){
-        flip = 1;
-        theta += 0x200;
-    }
-
-    int negative = 0;
-    if(theta < 0){
-        negative = 1;
-        theta = -theta;
-    }
-
-    int idx = (theta << 1);
-    int32_t a, b;
-    if(idx != 512){
-        a = (negative) ? -tan_sin_tab[idx] : tan_sin_tab[idx];
-        b = (negative) ? tan_sin_tab[idx+1] : -tan_sin_tab[idx+1];
-    }else{
-        a = (negative) ? -65536 : 65536;
-        b = (negative) ? 65536 : -65536;
-    }
-    int32_t c = (((int64_t)a*b) >> 16) + 0x10000;
-
-
-    // Step 3: Rotate center w.r.t. pivot so we can rotate about the center instead
-    int32_t xe = ((int64_t)width * xsc) >> 16;
-    int32_t ye = ((int64_t)height * ysc) >> 16;
-    if(xsc < 0) xe = -xe;
-    if(ysc < 0) ye = -ye;
-    int cx = ((int64_t)(xe/2) * c - (int64_t)(ye/2) * b) >> 16;
-    int cy = ((int64_t)(ye/2) * c + (int64_t)(xe/2) * b) >> 16;
-    if(xsc < 0) cx -= xe;
-    if(ysc < 0) cy -= ye;
-    //Step 4: Triple shear (a, b, a);
-    //blit_scale_trishear_pow2_tex_internal(fb, f_xs, tex, t_xs_log2, t_ys, x - cx, y - cy, xsc, ysc, a, b, a, flip);
-    engine_draw_blit_scale_trishear(pixels, x - cx, y - cy, stride, width, height, xsc, ysc, a, b, a, flip, transparent_color);
-
-    ENGINE_PERFORMANCE_CYCLES_STOP();
-}
-
-
-void engine_draw_fillrect_scale_rotate_viewport(uint16_t color, int32_t x, int32_t y, uint16_t width, uint16_t height, int32_t xsc, int32_t ysc, int16_t theta, int32_t vx, int32_t vy, int32_t vw, int32_t vh){
+void engine_draw_fillrect_scale_rotate_viewport(uint16_t color, int32_t x, int32_t y, uint16_t width, uint16_t height, int32_t xsc, int32_t ysc, int16_t theta, int32_t vx, int32_t vy, int32_t vw, int32_t vh, float alpha){
     // Step 1: Get theta inside (-pi/2, pi/2) and flip if we need to
     theta &= 0x3FF;
     if(theta > 0x200) theta -= 0x400;
@@ -427,11 +317,11 @@ void engine_draw_fillrect_scale_rotate_viewport(uint16_t color, int32_t x, int32
     if(ysc < 0) cy -= ye;
     //Step 4: Triple shear (a, b, a);
     //blit_scale_trishear_pow2_tex_internal(fb, f_xs, tex, t_xs_log2, t_ys, x - cx, y - cy, xsc, ysc, a, b, a, flip);
-    engine_draw_fillrect_scale_trishear_viewport(color, x - cx, y - cy, width, height, xsc, ysc, a, b, a, vx, vy, vw, vh);
+    engine_draw_fillrect_scale_trishear_viewport(color, x - cx, y - cy, width, height, xsc, ysc, a, b, a, vx, vy, vw, vh, alpha);
 }
 
 
-void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t window_width, uint32_t window_height, uint32_t pixels_stride, float x_scale, float y_scale, float rotation_radians, uint16_t transparent_color){
+void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t window_width, uint32_t window_height, uint32_t pixels_stride, float x_scale, float y_scale, float rotation_radians, uint16_t transparent_color, float alpha){
     /*  https://cohost.org/tomforsyth/post/891823-rotation-with-three#:~:text=But%20the%20TL%3BDR%20is%20you%20do%20three%20shears%3A
         https://stackoverflow.com/questions/65909025/rotating-a-bitmap-with-3-shears    Lots of inspiration from here
         https://computergraphics.stackexchange.com/questions/10599/rotate-a-bitmap-with-shearing
@@ -453,6 +343,10 @@ void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t
     */
 
     // ENGINE_PERFORMANCE_CYCLES_START();
+    bool draw_with_alpha = false;
+    if(alpha < 1.0f){
+        draw_with_alpha = true;
+    }
 
     uint16_t *screen_buffer = engine_get_active_screen_buffer();
 
@@ -551,7 +445,13 @@ void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t
                     uint32_t src_offset = rotY * pixels_stride + rotX;
                     uint16_t src_color = pixels[src_offset];
 
-                    if(src_color != transparent_color) screen_buffer[dest_offset] = src_color;
+                    if(src_color != transparent_color){
+                        if(draw_with_alpha){
+                            screen_buffer[dest_offset] = engine_color_alpha_blend(screen_buffer[dest_offset], src_color, alpha);
+                        }else{
+                            screen_buffer[dest_offset] = src_color;
+                        }
+                    }
                 }
 
                 // While in row, keep traversing about rotation

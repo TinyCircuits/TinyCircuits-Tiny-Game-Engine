@@ -16,6 +16,7 @@ typedef struct{
     mp_obj_t frame_current_y;
     mp_obj_t rotation;              // Rotation about into screen/z-axis in degrees
     mp_obj_t scale;                 // Vector2
+    mp_obj_t opacity;
     mp_obj_t playing;               // Bool: is the animation running or not
 }engine_sprite_2d_node_class_obj_t;
 

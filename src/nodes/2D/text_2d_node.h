@@ -11,6 +11,7 @@ typedef struct{
     mp_obj_t text;          // string: The text to display
     mp_obj_t rotation;      // Rotation about into screen/z-axis in degrees
     mp_obj_t scale;         // Vector2
+    mp_obj_t opacity;
     mp_obj_t width;         // Width, in int pixels, of the box containing the text
     mp_obj_t height;        // height, in int pixels, of the box containing the text
 }engine_text_2d_node_class_obj_t;

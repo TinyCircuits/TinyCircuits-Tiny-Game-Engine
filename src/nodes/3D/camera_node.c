@@ -26,6 +26,63 @@ STATIC mp_obj_t camera_node_class_tick(mp_obj_t self_in){
 MP_DEFINE_CONST_FUN_OBJ_1(camera_node_class_tick_obj, camera_node_class_tick);
 
 
+// // https://forums.unrealengine.com/t/how-does-get-look-at-rotation-work-from-a-mathematical-point-of-view/732711/3
+// // https://gamedev.stackexchange.com/a/112572
+// STATIC mp_obj_t camera_node_class_lookat(mp_obj_t self_in, mp_obj_t lookat_target_position_obj){
+//     ENGINE_WARNING_PRINTF("CameraNode: Lookat");
+
+//     engine_node_base_t *camera_node_base = self_in;
+
+//     vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
+//     vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
+//     vector3_class_obj_t *lookat_target_position = lookat_target_position_obj;
+
+//     float lookat_x = lookat_target_position->x.value - camera_position->x.value;
+//     float lookat_y = lookat_target_position->y.value - camera_position->y.value;
+//     float lookat_z = lookat_target_position->z.value - camera_position->z.value;
+//     engine_math_3d_normalize(&lookat_x, &lookat_y, &lookat_z);
+
+//     camera_rotation->x.value = asinf(lookat_y);
+//     camera_rotation->y.value = atan2f(lookat_x, lookat_z);
+//     // camera_rotation->y.value = look_up_y;
+//     // camera_rotation->z.value = look_up_z;
+
+//     // // Step 1: generate x
+//     // float forward_x = lookat_target_position->x.value - camera_position->x.value;
+//     // float forward_y = lookat_target_position->y.value - camera_position->y.value;
+//     // float forward_z = lookat_target_position->z.value - camera_position->z.value;
+
+//     // engine_math_3d_normalize(&forward_x, &forward_y, &forward_z);
+
+//     // // Step 2: generate y
+//     // float world_up_x = 0.0f;
+//     // float world_up_y = 1.0f;
+//     // float world_up_z = 0.0f;
+//     // float side_x = 0.0f;
+//     // float side_y = 0.0f;
+//     // float side_z = 0.0f;
+
+//     // engine_math_3d_cross_product_v_v(world_up_x, world_up_y, world_up_z,
+//     //                                  forward_x, forward_y, forward_z,
+//     //                                  &side_x, &side_y, &side_z);
+    
+//     // // Step 3: generate z
+//     // float look_up_x = 0.0f;
+//     // float look_up_y = 0.0f;
+//     // float look_up_z = 0.0f;
+//     // engine_math_3d_cross_product_v_v(forward_x, forward_y, forward_z,
+//     //                                  side_x, side_y, side_z,
+//     //                                  &look_up_x, &look_up_y, &look_up_z);
+    
+//     // camera_rotation->x.value = look_up_x;
+//     // camera_rotation->y.value = look_up_y;
+//     // camera_rotation->z.value = look_up_z;
+
+//     return mp_const_none;
+// }
+// MP_DEFINE_CONST_FUN_OBJ_2(camera_node_class_lookat_obj, camera_node_class_lookat);
+
+
 /*  --- doc ---
     NAME: CameraNode
     DESC: Node that defines the perspective the scene is drawn at. There can be multiple but this will impact performance if rendering the same scene twice. To make other nodes not move when the camera moves, make the other nodes children of the camera.
@@ -190,6 +247,10 @@ STATIC void camera_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *d
                 destination[0] = MP_OBJ_FROM_PTR(&node_base_get_layer_obj);
                 destination[1] = self_in;
             break;
+            // case MP_QSTR_lookat:
+            //     destination[0] = MP_OBJ_FROM_PTR(&camera_node_class_lookat_obj);
+            //     destination[1] = self_in;
+            // break;
             case MP_QSTR_node_base:
                 destination[0] = self_in;
             break;

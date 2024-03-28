@@ -6,6 +6,7 @@ from engine_nodes import Circle2DNode, CameraNode, VoxelSpaceNode
 from engine_animation import Tween, ONE_SHOT, LOOP, PING_PONG
 from engine_resources import TextureResource
 import gc
+import math
 # import engine_debug
 
 # engine_debug.enable_all()
@@ -72,7 +73,27 @@ ac = AnimatedCircle()
 ac.start()
 
 
-camera = CameraNode()
+class cam(CameraNode):
+    def __init__(self):
+        super().__init__(self)
+        self.target = Vector3(75, 0, -36)
+
+    def tick(self):
+        lookat_x = self.target.x - self.position.x
+        lookat_y = self.target.y - self.position.y
+        lookat_z = self.target.z - self.position.z
+
+        len = math.sqrt((lookat_x*lookat_x) + (lookat_y*lookat_y) + (lookat_z*lookat_z))
+
+        lookat_x = lookat_x / len
+        lookat_y = lookat_y / len
+        lookat_z = lookat_z / len
+
+        self.rotation.x = math.asin(lookat_y)
+        self.rotation.y = math.atan2(lookat_x, lookat_z)
+
+
+camera = cam()
 camera.add_child(ac.circle)
 camera.add_child(circle1)
 

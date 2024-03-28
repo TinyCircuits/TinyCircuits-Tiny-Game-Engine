@@ -29,6 +29,28 @@ void engine_color_sync_rgb_to_u16(color_class_obj_t *color){
 }
 
 
+// https://stackoverflow.com/a/19060243
+uint16_t engine_color_alpha_blend(uint16_t background, uint16_t foreground, float alpha){
+    const uint16_t bg_r = (background >> 11) & bitmask_5_bit;
+    const uint16_t bg_g = (background >> 5)  & bitmask_6_bit;
+    const uint16_t bg_b = (background >> 0)  & bitmask_5_bit;
+
+    const uint16_t fg_r = (foreground >> 11) & bitmask_5_bit;
+    const uint16_t fg_g = (foreground >> 5)  & bitmask_6_bit;
+    const uint16_t fg_b = (foreground >> 0)  & bitmask_5_bit;
+
+    const uint16_t out_r = (fg_r * alpha + bg_r * (bitmask_5_bit - (uint16_t)(alpha*bitmask_5_bit)));
+    const uint16_t out_g = (fg_g * alpha + bg_g * (bitmask_6_bit - (uint16_t)(alpha*bitmask_6_bit)));
+    const uint16_t out_b = (fg_b * alpha + bg_b * (bitmask_5_bit - (uint16_t)(alpha*bitmask_5_bit)));
+
+    uint16_t result = 0;
+    result |= (out_r << 11);
+    result |= (out_g << 5);
+    result |= (out_b << 0);
+
+    return result;
+}
+
 
 // Class required functions
 STATIC void color_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){

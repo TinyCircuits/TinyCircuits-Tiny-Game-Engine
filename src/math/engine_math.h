@@ -19,11 +19,18 @@
 #endif
 
 float engine_math_dot_product(float x0, float y0, float x1, float y1);
+
 float engine_math_cross_product_v_v(float x0, float y0, float x1, float y1);
+float engine_math_3d_cross_product_v_v(float ax, float ay, float az, float bx, float by, float bz, float *out_x, float *out_y, float *out_z);
+
 void engine_math_cross_product_float_v(float value, float in_x, float in_y, float *out_x, float *out_y);
 void engine_math_cross_product_v_float(float in_x, float in_y, float value, float *out_x, float *out_y);
 
+
+
 void engine_math_normalize(float *vx, float *vy);
+void engine_math_3d_normalize(float *vx, float *vy, float *vz);
+
 float engine_math_vector_length_sqr(float x, float y);
 
 float engine_math_clamp(float value, float min, float max);

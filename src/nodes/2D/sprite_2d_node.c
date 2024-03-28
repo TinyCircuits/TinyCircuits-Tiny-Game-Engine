@@ -36,6 +36,7 @@ void sprite_2d_node_class_draw(engine_node_base_t *sprite_node_base, mp_obj_t ca
 
     vector2_class_obj_t *sprite_scale =  mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_scale);
     texture_resource_class_obj_t *sprite_texture = mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_texture);
+    float sprite_opacity = mp_obj_get_float(mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_opacity));
 
     vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
     vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
@@ -98,18 +99,8 @@ void sprite_2d_node_class_draw(engine_node_base_t *sprite_node_base, mp_obj_t ca
                      sprite_scale->x.value*camera_zoom,
                      sprite_scale->y.value*camera_zoom,
                      -(sprite_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation),
-                     transparent_color->value.val);
-
-    // engine_draw_blit_scale_rotate( sprite_pixel_data+sprite_frame_fb_start_index,
-    //                               (int32_t)sprite_rotated_x,
-    //                               (int32_t)sprite_rotated_y,
-    //                               spritesheet_width,
-    //                               sprite_frame_width,
-    //                               sprite_frame_height,
-    //                               (int32_t)((sprite_scale->x*camera_zoom)*65536 + 0.5),
-    //                               (int32_t)((sprite_scale->y*camera_zoom)*65536 + 0.5),
-    //                               (int16_t)(((sprite_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation))*1024 / (float)(2*PI)),
-    //                               transparent_color);
+                     transparent_color->value.val,
+                     sprite_opacity);
 
     // After drawing, go to the next frame if it is time to and the animation is playing
     if(sprite_playing == 1){
@@ -151,6 +142,7 @@ void sprite_2d_node_class_draw(engine_node_base_t *sprite_node_base, mp_obj_t ca
     PARAM:  [type=int]                        [name=frame_count_y]              [value=any positive integer]
     PARAM:  [type=float]                      [name=rotation]                   [value=any (radians)]
     PARAM:  [type={ref_link:Vector2}]         [name=scale]                      [value={ref_link:Vector2}]
+    PARAM:  [type=float]                      [name=opacity]                    [value=0 ~ 1.0] 
     PARAM:  [type=boolean]                    [name=playing]                    [value=boolean]
     ATTR:   [type=function]                   [name={ref_link:add_child}]       [value=function] 
     ATTR:   [type=function]                   [name={ref_link:get_child}]       [value=function] 
@@ -166,6 +158,7 @@ void sprite_2d_node_class_draw(engine_node_base_t *sprite_node_base, mp_obj_t ca
     ATTR:   [type=int]                        [name=frame_count_y]              [value=any positive integer]
     ATTR:   [type=float]                      [name=rotation]                   [value=any (radians)]
     ATTR:   [type={ref_link:Vector2}]         [name=scale]                      [value={ref_link:Vector2}]
+    ATTR:   [type=float]                      [name=opacity]                    [value=0 ~ 1.0]
     ATTR:   [type=boolean]                    [name=playing]                    [value=boolean]
     ATTR:   [type=int]                        [name=frame_current_x]            [value=any positive integer]
     ATTR:   [type=int]                        [name=frame_current_y]            [value=any positive integer]
@@ -184,10 +177,11 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
         { MP_QSTR_frame_count_y,        MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_rotation,             MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_scale,                MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_opacity,              MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_playing,              MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
-    enum arg_ids {child_class, position, texture, transparent_color, fps, frame_count_x, frame_count_y, rotation, scale, playing};
+    enum arg_ids {child_class, position, texture, transparent_color, fps, frame_count_x, frame_count_y, rotation, scale, opacity, playing};
     bool inherited = false;
 
     // If there is one positional argument and it isn't the first 
@@ -215,6 +209,7 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
     if(parsed_args[frame_count_y].u_obj == MP_OBJ_NULL) parsed_args[frame_count_y].u_obj = mp_obj_new_int(1);
     if(parsed_args[rotation].u_obj == MP_OBJ_NULL) parsed_args[rotation].u_obj = mp_obj_new_float(0.0f);
     if(parsed_args[scale].u_obj == MP_OBJ_NULL) parsed_args[scale].u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)});
+    if(parsed_args[opacity].u_obj == MP_OBJ_NULL) parsed_args[opacity].u_obj = mp_obj_new_float(1.0f);
     if(parsed_args[playing].u_obj == MP_OBJ_NULL) parsed_args[playing].u_obj = mp_obj_new_bool(true);
 
     engine_sprite_2d_node_common_data_t *common_data = malloc(sizeof(engine_sprite_2d_node_common_data_t));
@@ -246,6 +241,7 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
         sprite_2d_node->frame_count_y = parsed_args[frame_count_y].u_obj;
         sprite_2d_node->rotation = parsed_args[rotation].u_obj;
         sprite_2d_node->scale = parsed_args[scale].u_obj;
+        sprite_2d_node->opacity = parsed_args[opacity].u_obj;
         sprite_2d_node->playing = parsed_args[playing].u_obj;
         sprite_2d_node->frame_current_x = mp_obj_new_int(0);
         sprite_2d_node->frame_current_y = mp_obj_new_int(0);
@@ -270,6 +266,7 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
         mp_store_attr(node_base->node, MP_QSTR_frame_count_y, parsed_args[frame_count_y].u_obj);
         mp_store_attr(node_base->node, MP_QSTR_rotation, parsed_args[rotation].u_obj);
         mp_store_attr(node_base->node, MP_QSTR_scale, parsed_args[scale].u_obj);
+        mp_store_attr(node_base->node, MP_QSTR_opacity, parsed_args[opacity].u_obj);
         mp_store_attr(node_base->node, MP_QSTR_playing, parsed_args[playing].u_obj);
         mp_store_attr(node_base->node, MP_QSTR_frame_current_x, mp_obj_new_int(0));
         mp_store_attr(node_base->node, MP_QSTR_frame_current_y, mp_obj_new_int(0));
@@ -337,6 +334,9 @@ STATIC void sprite_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
             case MP_QSTR_scale:
                 destination[0] = self->scale;
             break;
+            case MP_QSTR_opacity:
+                destination[0] = self->opacity;
+            break;
             case MP_QSTR_playing:
                 destination[0] = self->playing;
             break;
@@ -374,6 +374,9 @@ STATIC void sprite_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
             break;
             case MP_QSTR_scale:
                 self->scale = destination[1];
+            break;
+            case MP_QSTR_opacity:
+                self->opacity = destination[1];
             break;
             case MP_QSTR_playing:
                 self->playing = destination[1];

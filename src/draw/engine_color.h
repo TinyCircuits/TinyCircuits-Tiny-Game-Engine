@@ -20,5 +20,6 @@ mp_obj_t color_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, 
 
 void engine_color_sync_u16_to_rgb(color_class_obj_t *color);
 void engine_color_sync_rgb_to_u16(color_class_obj_t *color);
+uint16_t engine_color_alpha_blend(uint16_t background, uint16_t foreground, float alpha);
 
 #endif  /// ENGINE_COLOR_H

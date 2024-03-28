@@ -12,6 +12,7 @@ typedef struct{
     mp_obj_t position;  // Vector2: midpoint between start and end
     mp_obj_t thickness; // How thick the line should be, in pixels (ceil to clamp up)
     mp_obj_t color;     // int The color of this line
+    mp_obj_t opacity;
     mp_obj_t outline;   // bool: if true, line is drawn as an outline, false by default
 }engine_line_2d_node_class_obj_t;
 
