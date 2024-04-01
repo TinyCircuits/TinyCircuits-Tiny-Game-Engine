@@ -70,20 +70,26 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Weird sprite jumping/offset during rotation and scaling
 [X] Add Line2DNode that draws a rectangle between two points, Allow filled and outline modes
 [X] Fix bitmaps not rendering correctly when they have sizes like 7x7 (see padding in https://en.wikipedia.org/wiki/BMP_file_format#:~:text=optional%20color%20list.-,Pixel%20storage,-%5Bedit%5D)
-
+[X] Get rid of polygon collider and polygon drawing to make things more simple, only have rotated rectangles for colliders + circles
 [X] Do not generate collisions when two static bodies are touching/overlapping
+[X] Add enums for each type of easing function in cglm in tween `start(...)` function and add documentation
+[X] Add speed multiplier to tween
+
+[] If an object is passed to tween `start(...)` but the string for the attribute to tween is "", tween the value without a lookup
+[] Add buttons
+
+
+
+
+
 [] When objects collide, figure out how to ensure another collision is found on the same object from its perspective
 [] When objects collide and one is static (not dynamic), move the dynamic object the full penetration distance instead of half (like what happens if two dynamic bodies collide)
 [] Allow setting sting to "" in Tween to directly interpolate value
 [] Add different easing types ot Tween (https://www.reddit.com/r/godot/comments/sg2nqq/reference_gif_for_all_the_interpolation_methods/, https://easings.net/#)
-
-For April 15th:
-[] Get rid of polygon collider and polygon drawing to make things more simple, only have rotated rectangles for colliders + circles
 [] Physics: got rotated circles and rectangles but still need to figure out a better way of separating nodes without an impulse, resolve angular velocity during collision
 [] Tweening
 [] Buttons
 [] Menu (carousel)
-
 Adam:
 [X] Need a just_pressed, just_released, and just_changed function for input buttons
 [.] Delete nodes, need a .destroy() node function

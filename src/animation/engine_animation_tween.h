@@ -10,8 +10,12 @@ typedef struct{
     qstr attr;
     float duration;
     uint8_t loop_type;
+    uint8_t ease_type;
     uint8_t tween_type;
+
     float time;
+    float speed;
+
     mp_obj_t tick;
 
     mp_obj_t after;

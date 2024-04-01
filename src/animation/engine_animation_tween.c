@@ -8,6 +8,56 @@
 #include "math/vector2.h"
 #include "math/vector3.h"
 #include "draw/engine_color.h"
+#include <string.h>
+
+#include "../../cglm/include/cglm/ease.h"
+
+
+// Function positions in this array must correlate to enums in `engine_animation_ease_types`
+float (*ease[31])(float) = {
+    &glm_ease_linear,
+    
+    &glm_ease_sine_in,
+    &glm_ease_sine_out,
+    &glm_ease_sine_inout,
+
+    &glm_ease_quad_in,
+    &glm_ease_quad_out,
+    &glm_ease_quad_inout,
+
+    &glm_ease_cubic_in,
+    &glm_ease_cubic_out,
+    &glm_ease_cubic_inout,
+
+    &glm_ease_quart_in,
+    &glm_ease_quart_out,
+    &glm_ease_quart_inout,
+
+    &glm_ease_quint_in,
+    &glm_ease_quint_out,
+    &glm_ease_quint_inout,
+
+    &glm_ease_exp_in,
+    &glm_ease_exp_out,
+    &glm_ease_exp_inout,
+
+    &glm_ease_circ_in,
+    &glm_ease_circ_out,
+    &glm_ease_circ_inout,
+
+    &glm_ease_back_in,
+    &glm_ease_back_out,
+    &glm_ease_back_inout,
+
+    &glm_ease_elast_in,
+    &glm_ease_elast_out,
+    &glm_ease_elast_inout,
+
+    &glm_ease_bounce_out,
+    &glm_ease_bounce_in,
+    &glm_ease_bounce_inout
+};
+
 
 enum tween_value_types {tween_type_float, tween_type_vec2, tween_type_vec3, tween_type_color};
 enum tween_direction {forwards, backwards};
@@ -35,13 +85,13 @@ STATIC mp_obj_t tween_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
 
     if(tween->finished){
         switch(tween->loop_type){
-            case engine_animation_loop:
+            case engine_animation_loop_loop:
             {
                 tween->finished = false;
                 tween->time = 0.0f;
             }
             break;
-            case engine_animation_one_shot:
+            case engine_animation_loop_one_shot:
             {
                 if(tween->after_called == false && tween->after != mp_const_none){
                     mp_obj_t exec[2];
@@ -53,7 +103,7 @@ STATIC mp_obj_t tween_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
                 return mp_const_none;
             }
             break;
-            case engine_animation_ping_pong:
+            case engine_animation_loop_ping_pong:
             {
                 if(tween->tween_direction == backwards){
                     tween->tween_direction = forwards;
@@ -66,13 +116,13 @@ STATIC mp_obj_t tween_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
             }
             break;
             default:
-                return mp_const_none;   // By default, if finished (which is true by default) then just stop if no loop type is set
+                return mp_const_none;   // By default, if finished (which is true by default) then just stop if no loop type is set, must have been `engine_animation_ease_none`
         }
     }
 
     // Get dt and add to total runnign time
     float dt = mp_obj_get_float(dt_obj);
-    tween->time += (dt * tween->ping_pong_multiplier);
+    tween->time += (dt * tween->ping_pong_multiplier * tween->speed);
 
     // If reached end of time, mark as finished
     // and stop. This lets the user catch the
@@ -92,9 +142,16 @@ STATIC mp_obj_t tween_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
         t = (tween->time / tween->duration);
     }
 
+    t = ease[tween->ease_type](t);
+
     // Always load the attribute since a reference might go stale
-    // if the obeject's attribute is assigned to during tweening
-    mp_obj_t tweening_value = mp_load_attr(tween->object, tween->attr);
+    // if the object's attribute is assigned to during tweening
+    mp_obj_t tweening_value;
+    if(tween->attr == 0){
+        tweening_value = tween->object;
+    }else{
+        tweening_value = mp_load_attr(tween->object, tween->attr);
+    }
 
     if(tween->tween_type == tween_type_float){
         ((mp_obj_float_t*)(tweening_value))->value = tween->initial_0 + ((tween->end_0 - tween->initial_0) * t);
@@ -152,13 +209,15 @@ MP_DEFINE_CONST_FUN_OBJ_2(tween_class_tick_obj, tween_class_tick);
 
 /* --- doc ---
    NAME: start
-   DESC: Starts tweening a value
+   DESC: Starts tweening a value. See https://easings.net/ for plots of the various easing functions
    PARAM: [type=object]      [name=object]         [value=object (the object that has an attribute to be tweened)]
    PARAM: [type=string]      [name=attribute_name] [value=string]
    PARAM: [type=object]      [name=start]          [value=object (must be the same type as the attribute from `attribute_name`)]
    PARAM: [type=object]      [name=end]            [value=object (must be the same type as the attribute from `attribute_name`)]
    PARAM: [type=int]         [name=duration]       [value=any positive value representing milliseconds]
+   PARAM: [type=float]       [name=speed]          [value=any]
    PARAM: [type=enum/int]    [name=loop_type]      [value=LOOP, ONE_SHOT, or PING_PONG]
+   PARAM: [type=enum/int]    [name=ease_type]      [value=EASE_LINEAR, EASE_SINE_IN, EASE_SINE_OUT, EASE_SINE_IN_OUT, EASE_QUAD_IN, EASE_QUAD_OUT, EASE_QUAD_IN_OUT, EASE_CUBIC_IN, EASE_CUBIC_OUT, EASE_CUBIC_IN_OUT, EASE_QUART_IN, EASE_QUART_OUT, EASE_QUART_IN_OUT, EASE_QUINT_IN, EASE_QUINT_OUT, EASE_QUINT_IN_OUT, EASE_EXP_IN, EASE_EXP_OUT, EASE_EXP_IN_OUT, EASE_CIRC_IN, EASE_CIRC_OUT, EASE_CIRC_IN_OUT, EASE_BACK_IN, EASE_BACK_OUT, EASE_BACK_IN_OUT, EASE_ELAST_IN, EASE_ELAST_OUT, EASE_ELAST_IN_OUT, EASE_BOUNCE_IN, EASE_BOUNCE_OUT, or EASE_BOUNCE_IN_OUT]
    RETURN: None
 */
 mp_obj_t tween_class_start(size_t n_args, const mp_obj_t *args){
@@ -169,7 +228,6 @@ mp_obj_t tween_class_start(size_t n_args, const mp_obj_t *args){
     tween->finished = false;
     tween->paused = false;
     tween->time = 0.0f;
-    tween->loop_type = engine_animation_loop;
     tween->tween_direction = forwards;
     tween->ping_pong_multiplier = 1.0f;
     tween->after_called = false;    // Set this to false every time (don't want to clear `after` entry but only want to call it once)
@@ -177,10 +235,19 @@ mp_obj_t tween_class_start(size_t n_args, const mp_obj_t *args){
     // The object with the attribute that will be tweened
     tween->object = args[1];
 
-    // Get the qstr for the attribute that should be tweened
-    tween->attr = mp_obj_str_get_qstr(args[2]);
+    mp_obj_type_t *value_type;
+    const char *attr_name = mp_obj_str_get_str(args[2]);
 
-    mp_obj_type_t *value_type = mp_obj_get_type(mp_load_attr(tween->object, tween->attr));
+
+    if(strlen(attr_name) == 0){
+        tween->attr = 0;
+        value_type = mp_obj_get_type(tween->object);
+    }else{
+        // Get the qstr for the attribute that should be tweened
+        tween->attr = mp_obj_str_get_qstr(args[2]);
+        value_type = mp_obj_get_type(mp_load_attr(tween->object, tween->attr));
+    }
+
     mp_obj_type_t *start_type = mp_obj_get_type(args[3]);
     mp_obj_type_t *end_type = mp_obj_get_type(args[4]);
 
@@ -226,7 +293,7 @@ mp_obj_t tween_class_start(size_t n_args, const mp_obj_t *args){
 
         tween->tween_type = tween_type_color;
     }else{
-        ENGINE_PRINTF("ERROR: Got types value: %s, start: %s, end %s:", mp_obj_get_type_str(args[1]), mp_obj_get_type_str(args[2]), mp_obj_get_type_str(args[3]));
+        ENGINE_PRINTF("ERROR: Got types value: %s, start: %s, end %s:\n", mp_obj_get_type_str(args[1]), mp_obj_get_type_str(args[2]), mp_obj_get_type_str(args[3]));
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Tween: ERROR: Unknown combination of `value`, `start`, and `end` object types"));
     }
 
@@ -235,20 +302,24 @@ mp_obj_t tween_class_start(size_t n_args, const mp_obj_t *args){
     }
 
     if(n_args >= 7){
-        tween->loop_type = mp_obj_get_int(args[6]);
+        tween->speed = mp_obj_get_float(args[6]);
+    }
 
-        if(tween->loop_type == engine_animation_ping_pong){
+    if(n_args >= 8){
+        tween->loop_type = mp_obj_get_int(args[7]);
+
+        if(tween->loop_type == engine_animation_loop_ping_pong){
             tween->ping_pong_multiplier = 2.0f;
         }
+    }
 
-        if(tween->loop_type > 3){
-            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Tween: ERROR: Unknown loop type..."));
-        }
+    if(n_args >= 9){
+        tween->ease_type = mp_obj_get_int(args[8]);
     }
 
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(tween_class_start_obj, 4, 7, tween_class_start);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(tween_class_start_obj, 4, 9, tween_class_start);
 
 
 /* --- doc ---
@@ -351,8 +422,16 @@ bool tween_load_attr(tween_class_obj_t *tween, qstr attribute, mp_obj_t *destina
             destination[0] = mp_obj_new_float(tween->duration);
             return true;
         break;
+        case MP_QSTR_speed:
+            destination[0] = mp_obj_new_float(tween->speed);
+            return true;
+        break;
         case MP_QSTR_loop_type:
             destination[0] = mp_obj_new_int(tween->loop_type);
+            return true;
+        break;
+        case MP_QSTR_ease_type:
+            destination[0] = mp_obj_new_int(tween->ease_type);
             return true;
         break;
         case MP_QSTR_finished:
@@ -372,8 +451,16 @@ bool tween_store_attr(tween_class_obj_t *tween, qstr attribute, mp_obj_t *destin
             tween->duration = mp_obj_get_float(destination[1]);
             return true;
         break;
+        case MP_QSTR_speed:
+            tween->speed = mp_obj_get_float(destination[1]);
+            return true;
+        break;
         case MP_QSTR_loop_type:
             tween->loop_type = mp_obj_get_int(destination[1]);
+            return true;
+        break;
+        case MP_QSTR_ease_type:
+            tween->ease_type = mp_obj_get_int(destination[1]);
             return true;
         break;
         case MP_QSTR_finished:
@@ -437,7 +524,9 @@ STATIC mp_attr_fun_t tween_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
    ATTR:    [type=function]            [name={ref_link:restart}]      [value=function]
    ATTR:    [type=function]            [name={ref_link:after}]        [value=function]
    ATTR:    [type=int]                 [name=duration]                [value=any positive value representing milliseconds]
+   ATTR:    [type=float]               [name=speed]                   [value=any]
    ATTR:    [type=enum/int]            [name=loop_type]               [value=LOOP, ONE_SHOT, or PING_PONG]
+   ATTR:    [type=enum/int]            [name=ease_type]               [value=EASE_LINEAR, EASE_SINE_IN, EASE_SINE_OUT, EASE_SINE_IN_OUT, EASE_QUAD_IN, EASE_QUAD_OUT, EASE_QUAD_IN_OUT, EASE_CUBIC_IN, EASE_CUBIC_OUT, EASE_CUBIC_IN_OUT, EASE_QUART_IN, EASE_QUART_OUT, EASE_QUART_IN_OUT, EASE_QUINT_IN, EASE_QUINT_OUT, EASE_QUINT_IN_OUT, EASE_EXP_IN, EASE_EXP_OUT, EASE_EXP_IN_OUT, EASE_CIRC_IN, EASE_CIRC_OUT, EASE_CIRC_IN_OUT, EASE_BACK_IN, EASE_BACK_OUT, EASE_BACK_IN_OUT, EASE_ELAST_IN, EASE_ELAST_OUT, EASE_ELAST_IN_OUT, EASE_BOUNCE_IN, EASE_BOUNCE_OUT, or EASE_BOUNCE_IN_OUT]
    ATTR:    [type=boolean]             [name=finished]                [value=True or False (read-only)]
    OVRR:    [type=function]            [name={ref_link:tick}]         [value=function]
    OVRR:    [type=function]            [name={ref_link:after}]        [value=function]
@@ -459,9 +548,11 @@ mp_obj_t tween_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, 
     self->list_node = engine_animation_track_tween(self);
     self->base.type = &tween_class_type;
 
-    self->loop_type = engine_animation_none;
+    self->loop_type = engine_animation_loop_loop;
+    self->ease_type = engine_animation_ease_linear;
     self->duration = 1000.0f;
     self->time = 0.0f;
+    self->speed = 1.0f;
     self->finished = true;
     self->paused = true;
     self->object = mp_const_none;

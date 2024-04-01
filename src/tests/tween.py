@@ -3,7 +3,7 @@ import engine_draw
 from engine_draw import Color
 from engine_math import Vector2, Vector3
 from engine_nodes import Circle2DNode, CameraNode, VoxelSpaceNode
-from engine_animation import Tween, ONE_SHOT, LOOP, PING_PONG
+from engine_animation import Tween, ONE_SHOT, LOOP, PING_PONG, EASE_CIRC_IN_OUT, EASE_BOUNCE_IN, EASE_BOUNCE_OUT
 from engine_resources import TextureResource
 import gc
 import math
@@ -39,27 +39,31 @@ class AnimatedCircle():
         self.color_tween.start(self.circle, "color", Color(1, 0, 0), Color(0, 1, 0))
     
     def tween_after(self, tween):
-        self.tween.start(self.circle, "position", self.circle.position, Vector2(-64, -64), 3000.0, ONE_SHOT)
+        self.tween.start(self.circle, "position", self.circle.position, Vector2(-64, -64), 3000.0, 1.0, ONE_SHOT)
         self.tween.after = None
     
     def start(self):
         self.tween.after = self.tween_after
-        self.tween.start(self.circle, "position", Vector2( 64, -64), Vector2(-64, 64), 3000.0, ONE_SHOT)
+        self.tween.start(self.circle, "position", Vector2( 64, -64), Vector2(-64, 64), 3000.0, 1.0, ONE_SHOT)
 
 
 
 t1 = Tween()
 t2 = Tween()
-# t3 = Tween()
+t3 = Tween()
 
 circle1 = Circle2DNode(color=engine_draw.green, position=Vector2(30, -30))
 
 
-t1.start(circle1, "position", Vector2( 64, -64), Vector2(-64, 64), 3000.0, PING_PONG)
+t1.start(circle1, "position", Vector2( 64, -64), Vector2(-64, 64), 3000.0, 1.0, PING_PONG, EASE_BOUNCE_OUT)
 
 
 ac = AnimatedCircle()
 ac.start()
+
+
+value = 0
+# t3.start(value, "", -1, 1)
 
 
 class cam(CameraNode):
@@ -86,7 +90,7 @@ camera = cam()
 camera.add_child(ac.circle)
 camera.add_child(circle1)
 
-t2.start(camera, "position", Vector3(50, 32, 50), Vector3(-50, 200, -50), 3000.0, PING_PONG)
+t2.start(camera, "position", Vector3(50, 32, 50), Vector3(-50, 200, -50), 3000.0, 0.5, PING_PONG, EASE_BOUNCE_IN)
 
 
 # engine.start()

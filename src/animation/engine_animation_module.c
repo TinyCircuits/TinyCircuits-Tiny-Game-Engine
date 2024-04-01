@@ -47,9 +47,51 @@ void engine_animation_tick(float dt){
 STATIC const mp_rom_map_elem_t engine_animation_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_animation) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Tween), (mp_obj_t)&tween_class_type},
-    { MP_ROM_QSTR(MP_QSTR_LOOP), MP_ROM_INT(engine_animation_loop) },
-    { MP_ROM_QSTR(MP_QSTR_ONE_SHOT), MP_ROM_INT(engine_animation_one_shot) },
-    { MP_ROM_QSTR(MP_QSTR_PING_PONG), MP_ROM_INT(engine_animation_ping_pong) },
+    { MP_ROM_QSTR(MP_QSTR_LOOP), MP_ROM_INT(engine_animation_loop_loop) },
+    { MP_ROM_QSTR(MP_QSTR_ONE_SHOT), MP_ROM_INT(engine_animation_loop_one_shot) },
+    { MP_ROM_QSTR(MP_QSTR_PING_PONG), MP_ROM_INT(engine_animation_loop_ping_pong) },
+
+    { MP_ROM_QSTR(MP_QSTR_EASE_LINEAR), MP_ROM_INT(engine_animation_ease_linear) },
+
+    { MP_ROM_QSTR(MP_QSTR_EASE_SINE_IN), MP_ROM_INT(engine_animation_ease_sine_in) },
+    { MP_ROM_QSTR(MP_QSTR_EASE_SINE_OUT), MP_ROM_INT(engine_animation_ease_sine_out) },
+    { MP_ROM_QSTR(MP_QSTR_EASE_SINE_IN_OUT), MP_ROM_INT(engine_animation_ease_sine_in_out) },
+
+    { MP_ROM_QSTR(MP_QSTR_EASE_QUAD_IN), MP_ROM_INT(engine_animation_ease_quad_in) },
+    { MP_ROM_QSTR(MP_QSTR_EASE_QUAD_OUT), MP_ROM_INT(engine_animation_ease_quad_out) },
+    { MP_ROM_QSTR(MP_QSTR_EASE_QUAD_IN_OUT), MP_ROM_INT(engine_animation_ease_quad_in_out) },
+
+    { MP_ROM_QSTR(MP_QSTR_EASE_CUBIC_IN), MP_ROM_INT(engine_animation_ease_cubic_in) },
+    { MP_ROM_QSTR(MP_QSTR_EASE_CUBIC_OUT), MP_ROM_INT(engine_animation_ease_cubic_out) },
+    { MP_ROM_QSTR(MP_QSTR_EASE_CUBIC_IN_OUT), MP_ROM_INT(engine_animation_ease_cubic_in_out) },
+
+    { MP_ROM_QSTR(MP_QSTR_EASE_QUART_IN), MP_ROM_INT(engine_animation_ease_quart_in) },
+    { MP_ROM_QSTR(MP_QSTR_EASE_QUART_OUT), MP_ROM_INT(engine_animation_ease_quart_out) },
+    { MP_ROM_QSTR(MP_QSTR_EASE_QUART_IN_OUT), MP_ROM_INT(engine_animation_ease_quart_in_out) },
+
+    { MP_ROM_QSTR(MP_QSTR_EASE_QUINT_IN), MP_ROM_INT(engine_animation_ease_quint_in) },
+    { MP_ROM_QSTR(MP_QSTR_EASE_QUINT_OUT), MP_ROM_INT(engine_animation_ease_quint_out) },
+    { MP_ROM_QSTR(MP_QSTR_EASE_QUINT_IN_OUT), MP_ROM_INT(engine_animation_ease_quint_in_out) },
+
+    { MP_ROM_QSTR(MP_QSTR_EASE_EXP_IN), MP_ROM_INT(engine_animation_ease_exp_in) },
+    { MP_ROM_QSTR(MP_QSTR_EASE_EXP_OUT), MP_ROM_INT(engine_animation_ease_exp_out) },
+    { MP_ROM_QSTR(MP_QSTR_EASE_EXP_IN_OUT), MP_ROM_INT(engine_animation_ease_exp_in_out) },
+
+    { MP_ROM_QSTR(MP_QSTR_EASE_CIRC_IN), MP_ROM_INT(engine_animation_ease_circ_in) },
+    { MP_ROM_QSTR(MP_QSTR_EASE_CIRC_OUT), MP_ROM_INT(engine_animation_ease_circ_out) },
+    { MP_ROM_QSTR(MP_QSTR_EASE_CIRC_IN_OUT), MP_ROM_INT(engine_animation_ease_circ_in_out) },
+
+    { MP_ROM_QSTR(MP_QSTR_EASE_BACK_IN), MP_ROM_INT(engine_animation_ease_back_in) },
+    { MP_ROM_QSTR(MP_QSTR_EASE_BACK_OUT), MP_ROM_INT(engine_animation_ease_back_out) },
+    { MP_ROM_QSTR(MP_QSTR_EASE_BACK_IN_OUT), MP_ROM_INT(engine_animation_ease_back_in_out) },
+
+    { MP_ROM_QSTR(MP_QSTR_EASE_ELAST_IN), MP_ROM_INT(engine_animation_ease_elast_in) },
+    { MP_ROM_QSTR(MP_QSTR_EASE_ELAST_OUT), MP_ROM_INT(engine_animation_ease_elast_out) },
+    { MP_ROM_QSTR(MP_QSTR_EASE_ELAST_IN_OUT), MP_ROM_INT(engine_animation_ease_elast_in_out) },
+
+    { MP_ROM_QSTR(MP_QSTR_EASE_BOUNCE_IN), MP_ROM_INT(engine_animation_ease_bounce_in) },
+    { MP_ROM_QSTR(MP_QSTR_EASE_BOUNCE_OUT), MP_ROM_INT(engine_animation_ease_bounce_out) },
+    { MP_ROM_QSTR(MP_QSTR_EASE_BOUNCE_IN_OUT), MP_ROM_INT(engine_animation_ease_bounce_in_out) },
 };
 
 // Module init
