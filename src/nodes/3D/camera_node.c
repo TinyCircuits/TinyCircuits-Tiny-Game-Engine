@@ -4,12 +4,42 @@
 #include "nodes/node_base.h"
 #include "debug/debug_print.h"
 #include "engine_object_layers.h"
-#include "math/vector3.h"
 #include "math/rectangle.h"
 #include "utility/linked_list.h"
 #include "display/engine_display_common.h"
 #include "engine_cameras.h"
 #include "math/engine_math.h"
+
+
+// https://stackoverflow.com/a/54958473
+const vector3_class_obj_t world_up = {
+    .base.type = &vector3_class_type,
+
+    .x = (mp_obj_float_t){.base.type = &mp_type_float,
+                          .value = 0.0f,
+    },
+    .y = (mp_obj_float_t){.base.type = &mp_type_float,
+                          .value = 1.0f,
+    },
+    .z = (mp_obj_float_t){.base.type = &mp_type_float,
+                          .value = 0.0f,
+    },
+};
+
+
+const vector3_class_obj_t world_north = {
+    .base.type = &vector3_class_type,
+
+    .x = (mp_obj_float_t){.base.type = &mp_type_float,
+                          .value = 0.0f,
+    },
+    .y = (mp_obj_float_t){.base.type = &mp_type_float,
+                          .value = -1.0f,
+    },
+    .z = (mp_obj_float_t){.base.type = &mp_type_float,
+                          .value = 0.0f,
+    },
+};
 
 
 // Class required functions

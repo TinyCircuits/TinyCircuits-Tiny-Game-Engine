@@ -29,17 +29,6 @@ vox.position.z = -75
 vox.height_scale = 40
 
 
-# print(vox.position)
-print("Tween test!")
-
-a = vox.position.x
-vox.position.x = vox.position.x + 1
-
-print(a, vox.position)
-
-print("Tween test!")
-
-
 
 class AnimatedCircle():
     def __init__(self):

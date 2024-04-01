@@ -2,6 +2,7 @@
 
 #include "vector2.h"
 #include "vector3.h"
+#include "matrix4x4.h"
 #include "rectangle.h"
 
 
@@ -16,6 +17,7 @@ STATIC const mp_rom_map_elem_t engine_math_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_math) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Vector2), (mp_obj_t)&vector2_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Vector3), (mp_obj_t)&vector3_class_type },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_Matrix4x4), (mp_obj_t)&matrix4x4_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Rectangle), (mp_obj_t)&rectangle_class_type },
 };
 

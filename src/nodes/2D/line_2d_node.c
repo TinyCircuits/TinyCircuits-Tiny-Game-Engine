@@ -274,7 +274,6 @@ bool line_2d_store_attr(engine_node_base_t *self_node_base, qstr attribute, mp_o
         break;
         case MP_QSTR_outline:
             self->outline = destination[1];
-
             return true;
         break;
         default:

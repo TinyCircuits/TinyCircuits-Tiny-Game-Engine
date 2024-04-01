@@ -3,7 +3,13 @@
 
 #include "py/obj.h"
 #include "utility/linked_list.h"
+#include "math/vector3.h"
+#include "utility/engine_mp.h"
 
+
+// https://stackoverflow.com/a/54958473
+const vector3_class_obj_t world_up;
+const vector3_class_obj_t world_north;
 
 // Node the defines view that the world is rendered about
 typedef struct{

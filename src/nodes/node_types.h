@@ -16,6 +16,6 @@
 #define NODE_TYPE_TEXT_2D               8
 
 #define NODE_TYPE_VOXELSPACE            9   // https://github.com/s-macke/VoxelSpace
-#define NODE_TYPE_TUNNEL               10   // https://lodev.org/cgtutor/tunnel.html
+#define NODE_TYPE_MESH_3D               10  // https://www.scratchapixel.com/lessons/3d-basic-rendering/computing-pixel-coordinates-of-3d-point/mathematics-computing-2d-coordinates-of-3d-points.html
 
 #endif  // NODE_TYPES_H

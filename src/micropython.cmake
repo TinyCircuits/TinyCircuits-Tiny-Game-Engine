@@ -19,7 +19,7 @@ target_sources(usermod_engine INTERFACE
     ${ENGINE_MOD_DIR}/nodes/empty_node.c
     ${ENGINE_MOD_DIR}/nodes/3D/camera_node.c
     ${ENGINE_MOD_DIR}/nodes/3D/voxelspace_node.c
-    ${ENGINE_MOD_DIR}/nodes/3D/tunnel_node.c
+    ${ENGINE_MOD_DIR}/nodes/3D/mesh_node.c
     ${ENGINE_MOD_DIR}/nodes/2D/sprite_2d_node.c
     ${ENGINE_MOD_DIR}/nodes/2D/rectangle_2d_node.c
     ${ENGINE_MOD_DIR}/nodes/2D/line_2d_node.c
@@ -28,6 +28,7 @@ target_sources(usermod_engine INTERFACE
     ${ENGINE_MOD_DIR}/nodes/2D/physics_circle_2d_node.c
     ${ENGINE_MOD_DIR}/nodes/2D/text_2d_node.c
     ${ENGINE_MOD_DIR}/math/vector3.c
+    ${ENGINE_MOD_DIR}/math/matrix4x4.c
     ${ENGINE_MOD_DIR}/math/vector2.c
     ${ENGINE_MOD_DIR}/math/rectangle.c
     ${ENGINE_MOD_DIR}/debug/engine_debug_module.c
