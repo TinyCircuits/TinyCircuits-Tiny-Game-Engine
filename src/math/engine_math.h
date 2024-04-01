@@ -34,6 +34,8 @@ void engine_math_3d_normalize(float *vx, float *vy, float *vz);
 float engine_math_vector_length_sqr(float x, float y);
 
 float engine_math_clamp(float value, float min, float max);
+float engine_math_map(float value, float in_min, float in_max, float out_min, float out_max);
+float engine_math_map_clamp_out(float value, float in_min, float in_max, float out_min, float out_max);
 
 void engine_math_swap(float *val0, float *val1);
 

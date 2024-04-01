@@ -28,6 +28,7 @@ class MyCam(CameraNode):
         super().__init__(self)
         self.distance = 0.75
         self.mode = 0
+        self.intensity = 0
 
     def forward(self):
         self.position.x += math.cos(self.rotation.y) * self.distance
@@ -53,10 +54,12 @@ class MyCam(CameraNode):
     
 
         if engine_input.check_pressed(engine_input.DPAD_UP):
-            engine_input.rumble(True)
+            self.intensity += 0.005
+            engine_input.rumble(self.intensity)
             self.forward()
         if engine_input.check_pressed(engine_input.DPAD_DOWN):
-            engine_input.rumble(False)
+            self.intensity -= 0.005
+            engine_input.rumble(self.intensity)
             self.backward()
         if engine_input.check_pressed(engine_input.DPAD_LEFT):
             self.left()

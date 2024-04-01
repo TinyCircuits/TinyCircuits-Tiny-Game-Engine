@@ -106,12 +106,12 @@ STATIC mp_obj_t engine_input_check_just_released(mp_obj_t button_mask_u16){
 MP_DEFINE_CONST_FUN_OBJ_1(engine_input_check_just_released_obj, engine_input_check_just_released);
 
 
-STATIC mp_obj_t engine_input_rumble(mp_obj_t rumble_obj){
+STATIC mp_obj_t engine_input_rumble(mp_obj_t intensity_obj){
     #ifdef __unix__
         // Nothing to do
     #else
-        bool rumble = mp_obj_get_int(rumble_obj);
-        engine_input_rp3_rumble(rumble);
+        float intensity = mp_obj_get_float(intensity_obj);
+        engine_input_rp3_rumble(intensity);
     #endif
     return mp_const_none;
 }

@@ -72,6 +72,17 @@ float engine_math_clamp(float value, float min, float max){
 }
 
 
+float engine_math_map(float value, float in_min, float in_max, float out_min, float out_max){
+    return (value - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
+
+float engine_math_map_clamp_out(float value, float in_min, float in_max, float out_min, float out_max){
+    value = engine_math_map(value, in_min, in_max, out_min, out_max);
+    return engine_math_clamp(value, out_min, out_max);
+}
+
+
 void engine_math_swap(float *val0, float *val1){
     float temp = *val0;
     *val0 = *val1;

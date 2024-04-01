@@ -74,9 +74,9 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Do not generate collisions when two static bodies are touching/overlapping
 [X] Add enums for each type of easing function in cglm in tween `start(...)` function and add documentation
 [X] Add speed multiplier to tween
+[X] If an object is passed to tween `start(...)` but the string for the attribute to tween is "", tween the value without a lookup
 
-[] If an object is passed to tween `start(...)` but the string for the attribute to tween is "", tween the value without a lookup
-[] Add buttons
+[] Add button nodes
 
 
 

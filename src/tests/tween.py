@@ -1,5 +1,6 @@
 import engine
 import engine_draw
+import engine_input
 from engine_draw import Color
 from engine_math import Vector2, Vector3
 from engine_nodes import Circle2DNode, CameraNode, VoxelSpaceNode
@@ -62,8 +63,8 @@ ac = AnimatedCircle()
 ac.start()
 
 
-value = 0
-# t3.start(value, "", -1, 1)
+value = 0.0
+t3.start(value, "", 0.0, 1.0, 3000.0, 1.0, LOOP, EASE_BOUNCE_IN)
 
 
 class cam(CameraNode):

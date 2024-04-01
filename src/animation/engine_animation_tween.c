@@ -238,7 +238,7 @@ mp_obj_t tween_class_start(size_t n_args, const mp_obj_t *args){
     mp_obj_type_t *value_type;
     const char *attr_name = mp_obj_str_get_str(args[2]);
 
-
+    // If the string attribute name is empty, we'll tween the value without a lookup
     if(strlen(attr_name) == 0){
         tween->attr = 0;
         value_type = mp_obj_get_type(tween->object);
@@ -293,7 +293,7 @@ mp_obj_t tween_class_start(size_t n_args, const mp_obj_t *args){
 
         tween->tween_type = tween_type_color;
     }else{
-        ENGINE_PRINTF("ERROR: Got types value: %s, start: %s, end %s:\n", mp_obj_get_type_str(args[1]), mp_obj_get_type_str(args[2]), mp_obj_get_type_str(args[3]));
+        ENGINE_PRINTF("ERROR: Got types value: %s, start: %s, end %s:\n", mp_obj_get_type_str(args[1]), mp_obj_get_type_str(args[3]), mp_obj_get_type_str(args[4]));
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Tween: ERROR: Unknown combination of `value`, `start`, and `end` object types"));
     }
 

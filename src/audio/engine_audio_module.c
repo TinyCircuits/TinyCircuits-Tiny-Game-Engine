@@ -205,9 +205,9 @@ void engine_audio_setup_playback(){
         // Nothing to do
     #elif defined(__arm__)
         // Setup amplifier but make sure it is disabled while PWM is being setup
-        gpio_init(26);
-        gpio_set_dir(26, GPIO_OUT);
-        gpio_put(26, 0);
+        gpio_init(20);
+        gpio_set_dir(20, GPIO_OUT);
+        gpio_put(20, 0);
 
         // Setup PWM audio pin, bit-depth, and frequency. Duty cycle
         // is only adjusted PWM parameter as samples are retrievd from
@@ -220,7 +220,7 @@ void engine_audio_setup_playback(){
         pwm_init(audio_pwm_pin_slice, &audio_pwm_pin_config, true);
 
         // Now allow sound to play by enabling the amplifier
-        gpio_put(26, 1);
+        gpio_put(20, 1);
     #endif
 }
 
