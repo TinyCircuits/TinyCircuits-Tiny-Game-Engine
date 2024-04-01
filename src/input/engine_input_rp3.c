@@ -8,14 +8,15 @@
 
 
 #define GPIO_BUTTON_DPAD_UP         1
-#define GPIO_BUTTON_DPAD_LEFT       6 
+#define GPIO_BUTTON_DPAD_LEFT       0 
 #define GPIO_BUTTON_DPAD_DOWN       3
 #define GPIO_BUTTON_DPAD_RIGHT      2
-#define GPIO_BUTTON_A               22
+#define GPIO_BUTTON_A               21
 #define GPIO_BUTTON_B               25
-#define GPIO_BUTTON_BUMPER_LEFT     7
-#define GPIO_BUTTON_BUMPER_RIGHT    21
-#define GPIO_BUTTON_MENU            0
+#define GPIO_BUTTON_BUMPER_LEFT     6
+#define GPIO_BUTTON_BUMPER_RIGHT    22
+#define GPIO_BUTTON_MENU            26
+#define GPIO_RUMBLE                 5
 
 
 void engine_input_rp3_setup(){
@@ -30,6 +31,7 @@ void engine_input_rp3_setup(){
     gpio_init(GPIO_BUTTON_BUMPER_LEFT);
     gpio_init(GPIO_BUTTON_BUMPER_RIGHT);
     gpio_init(GPIO_BUTTON_MENU);
+    gpio_init(GPIO_RUMBLE);
 
     gpio_pull_up(GPIO_BUTTON_DPAD_UP);
     gpio_pull_up(GPIO_BUTTON_DPAD_LEFT);
@@ -50,6 +52,7 @@ void engine_input_rp3_setup(){
     gpio_set_dir(GPIO_BUTTON_BUMPER_LEFT, GPIO_IN);
     gpio_set_dir(GPIO_BUTTON_BUMPER_RIGHT, GPIO_IN);
     gpio_set_dir(GPIO_BUTTON_MENU, GPIO_IN);
+    gpio_set_dir(GPIO_RUMBLE, GPIO_OUT);
 }
 
 
@@ -69,4 +72,9 @@ void engine_input_rp3_update_pressed_mask(){
     if(gpio_get(GPIO_BUTTON_BUMPER_RIGHT) == false) pressed_buttons |= BUTTON_BUMPER_RIGHT;
 
     if(gpio_get(GPIO_BUTTON_MENU) == false) pressed_buttons |= BUTTON_MENU;
+}
+
+
+void engine_input_rp3_rumble(bool rumble){
+    gpio_put(GPIO_RUMBLE, rumble);
 }

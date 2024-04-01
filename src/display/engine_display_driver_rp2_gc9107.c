@@ -33,9 +33,9 @@
 #define PIN_GP19_SPI0_TX__TO__SDA  PICO_DEFAULT_SPI_TX_PIN      // Default refers to spi port 0
 #define PIN_GP18_SPI0_SCK__TO__CLK PICO_DEFAULT_SPI_SCK_PIN     // Default refers to spi port 0
 #define PIN_GP17_SPI0_CSn__TO__CS  PICO_DEFAULT_SPI_CSN_PIN     // Default refers to spi port 0
-#define PIN_GP16__TO__DC           16
-#define PIN_GP11__TO__RST          11
-#define PIN_GP20__TO__BL           20
+#define PIN_GP16__TO__DC          16
+#define PIN_GP4__TO__RST          4
+#define PIN_GP7__TO__BL           7
 
 // Who add these numbers? Not sure, if you don't then the window address is wrong
 const uint16_t WINDOW_ADDR_X1 = 0 + 2;
@@ -99,21 +99,21 @@ void engine_display_gc9107_init(){
     // Setup GPIO
     gpio_init(PIN_GP17_SPI0_CSn__TO__CS);               // Although part of the SPI port, we'll control chip select manually
     gpio_init(PIN_GP16__TO__DC);
-    gpio_init(PIN_GP11__TO__RST);
-    gpio_init(PIN_GP20__TO__BL);
+    gpio_init(PIN_GP4__TO__RST);
+    gpio_init(PIN_GP7__TO__BL);
     gpio_set_dir(PIN_GP17_SPI0_CSn__TO__CS, GPIO_OUT);
     gpio_set_dir(PIN_GP16__TO__DC, GPIO_OUT);
-    gpio_set_dir(PIN_GP11__TO__RST, GPIO_OUT);
-    gpio_set_dir(PIN_GP20__TO__BL, GPIO_OUT);
+    gpio_set_dir(PIN_GP4__TO__RST, GPIO_OUT);
+    gpio_set_dir(PIN_GP7__TO__BL, GPIO_OUT);
 
     // Do the init sequence
-    gpio_put(PIN_GP20__TO__BL, 0);  // Backlight off during init
+    gpio_put(PIN_GP7__TO__BL, 0);  // Backlight off during init
 
     gpio_put(PIN_GP17_SPI0_CSn__TO__CS, 1);
     sleep_ms(5);
-    gpio_put(PIN_GP11__TO__RST, 0);
+    gpio_put(PIN_GP4__TO__RST, 0);
     sleep_ms(50);
-    gpio_put(PIN_GP11__TO__RST, 1);
+    gpio_put(PIN_GP4__TO__RST, 1);
     sleep_ms(120);
 
     gc9107_write_cmd(0xB0, (uint8_t[]){ 0xC0 }, 1);
@@ -163,7 +163,7 @@ void engine_display_gc9107_init(){
     channel_config_set_transfer_data_size(&dma_config, DMA_SIZE_16);
     channel_config_set_dreq(&dma_config, DREQ_SPI0_TX);
 
-    gpio_put(PIN_GP20__TO__BL, 1);  // Backlight on after all init
+    gpio_put(PIN_GP7__TO__BL, 1);  // Backlight on after all init
 }
 
 

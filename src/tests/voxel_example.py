@@ -53,8 +53,10 @@ class MyCam(CameraNode):
     
 
         if engine_input.check_pressed(engine_input.DPAD_UP):
+            engine_input.rumble(True)
             self.forward()
         if engine_input.check_pressed(engine_input.DPAD_DOWN):
+            engine_input.rumble(False)
             self.backward()
         if engine_input.check_pressed(engine_input.DPAD_LEFT):
             self.left()

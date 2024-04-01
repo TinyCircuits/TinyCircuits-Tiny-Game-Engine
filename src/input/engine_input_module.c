@@ -106,6 +106,18 @@ STATIC mp_obj_t engine_input_check_just_released(mp_obj_t button_mask_u16){
 MP_DEFINE_CONST_FUN_OBJ_1(engine_input_check_just_released_obj, engine_input_check_just_released);
 
 
+STATIC mp_obj_t engine_input_rumble(mp_obj_t rumble_obj){
+    #ifdef __unix__
+        // Nothing to do
+    #else
+        bool rumble = mp_obj_get_int(rumble_obj);
+        engine_input_rp3_rumble(rumble);
+    #endif
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_1(engine_input_rumble_obj, engine_input_rumble);
+
+
 /*  --- doc ---
     NAME: engine_input
     DESC: Module for checking button presses
@@ -129,6 +141,7 @@ STATIC const mp_rom_map_elem_t engine_input_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_check_just_changed), (mp_obj_t)&engine_input_check_just_changed_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_check_just_pressed), (mp_obj_t)&engine_input_check_just_pressed_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_check_just_released), (mp_obj_t)&engine_input_check_just_released_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_rumble), (mp_obj_t)&engine_input_rumble_obj },
 
     { MP_ROM_QSTR(MP_QSTR_A), MP_ROM_INT(BUTTON_A) },
     { MP_ROM_QSTR(MP_QSTR_B), MP_ROM_INT(BUTTON_B) },
