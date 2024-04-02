@@ -87,19 +87,12 @@ void line_2d_node_class_draw(engine_node_base_t *line_node_base, mp_obj_t camera
     line_rotated_y += camera_viewport->height/2;
 
     if(line_outlined == false){
-        engine_draw_fillrect_scale_rotate_viewport(line_color->value.val,
-                                                (int32_t)line_rotated_x,
-                                                (int32_t)line_rotated_y,
-                                                line_thickness, 
-                                                line_length,
-                                                (int32_t)(1.0f*65536 + 0.5),
-                                                (int32_t)(1.0f*65536 + 0.5),
-                                                (int16_t)(((line_resolved_hierarchy_rotation+line_rotation+camera_resolved_hierarchy_rotation))*1024 / (float)(2*PI)),
-                                                (int32_t)camera_viewport->x,
-                                                (int32_t)camera_viewport->y,
-                                                (int32_t)camera_viewport->width,
-                                                (int32_t)camera_viewport->height,
-                                                line_opacity);
+        engine_draw_rect(line_color->value.val,
+                         line_rotated_x, line_rotated_y,
+                         line_thickness, line_length,
+                         1.0f, 1.0f,
+                       -(line_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation),
+                         line_opacity);
     }else{
         float line_half_width = line_thickness/2;
         float line_half_height = line_length/2;

@@ -91,7 +91,6 @@ void engine_input_rp3_rumble(float intensity){
     if(engine_math_compare_floats(intensity, 0.0f)){
         pwm_set_gpio_level(GPIO_RUMBLE, 0);
     }else{
-        pwm_set_gpio_level(GPIO_RUMBLE, (uint32_t)engine_math_map_clamp_out(intensity, 0.0f, 1.0f, 1200.0f, 2048.0f));
+        pwm_set_gpio_level(GPIO_RUMBLE, (uint32_t)engine_math_map_clamp_out(intensity, 0.0f, 1.0f, 1400.0f, 2048.0f));
     }
-    
 }

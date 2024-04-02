@@ -11,6 +11,7 @@
 #include "2D/physics_rectangle_2d_node.h"
 #include "2D/physics_circle_2d_node.h"
 #include "2D/text_2d_node.h"
+#include "2D/button_2d_node.h"
 
 
 /*  --- doc ---
@@ -40,6 +41,7 @@ STATIC const mp_rom_map_elem_t engine_nodes_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_PhysicsRectangle2DNode), (mp_obj_t)&engine_physics_rectangle_2d_node_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_PhysicsCircle2DNode), (mp_obj_t)&engine_physics_circle_2d_node_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Text2DNode), (mp_obj_t)&engine_text_2d_node_class_type },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_Button2DNode), (mp_obj_t)&engine_button_2d_node_class_type },
 };
 
 // Module init

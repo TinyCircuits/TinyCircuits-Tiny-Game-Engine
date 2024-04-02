@@ -22,5 +22,6 @@ extern const mp_obj_type_t font_resource_class_type;
 mp_obj_t font_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args);
 uint8_t font_resource_get_glyph_width(font_resource_class_obj_t *font, char codepoint);
 uint16_t font_resource_get_glyph_x_offset(font_resource_class_obj_t *font, char codepoint);
+void font_resource_get_box_dimensions(font_resource_class_obj_t *font, mp_obj_t text, float *text_box_width, float *text_box_height);
 
 #endif  // ENGINE_FONT_RESOURCE_H

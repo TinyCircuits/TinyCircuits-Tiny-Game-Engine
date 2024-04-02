@@ -198,33 +198,9 @@ STATIC void text_2d_node_class_calculate_dimensions(mp_obj_t attr_accessor, bool
         return;
     }
 
-    font_resource_class_obj_t *text_font = text_font_obj;
-    uint8_t char_height = text_font->glyph_height;
-
-    // Get length of string: https://github.com/v923z/micropython-usermod/blob/master/snippets/stringarg/stringarg.c
-    GET_STR_DATA_LEN(text_obj, str, str_len);
-
-    // Figure out the size of the text box, considering newlines
     float text_box_width = 0.0f;
-    float text_box_height = char_height;
-    float temp_text_box_width = 0.0f;
-    for(uint16_t icx=0; icx<str_len; icx++){
-        char current_char = ((char *)str)[icx];
-
-        // Check if newline, otherwise any other character contributes to text box width
-        if(current_char == 10){
-            text_box_height += char_height;
-            temp_text_box_width = 0.0f;
-        }else{
-            temp_text_box_width += font_resource_get_glyph_width(text_font, current_char);
-        }
-
-        // Trying to find row with the most width
-        // which will define total text box size
-        if(temp_text_box_width > text_box_width){
-            text_box_width = temp_text_box_width;
-        }
-    }
+    float text_box_height = 0.0f;
+    font_resource_get_box_dimensions(text_font_obj, text_obj, &text_box_width, &text_box_height);
 
     // Set the 'width' and 'height' attributes of the instance
     if(is_instance_native == false){
@@ -248,6 +224,11 @@ STATIC void text_2d_node_class_set(mp_obj_t self_in, qstr attribute, mp_obj_t *d
         // Call this after the if statement we're in                     
         default_instance_attr_func(self_in, attribute, destination);
         switch(attribute){
+            case MP_QSTR_font:
+            {
+                text_2d_node_class_calculate_dimensions(self_in, false);
+            }
+            break;
             case MP_QSTR_text:
             {
                 text_2d_node_class_calculate_dimensions(self_in, false);
@@ -463,6 +444,7 @@ STATIC void text_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *
             break;
             case MP_QSTR_font:
                 self->font_resource = destination[1];
+                text_2d_node_class_calculate_dimensions(self_in, true);
             break;
             case MP_QSTR_text:
                 self->text = destination[1];

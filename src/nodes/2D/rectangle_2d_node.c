@@ -76,19 +76,12 @@ void rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_base, mp_ob
     rectangle_rotated_y += camera_viewport->height/2;
 
     if(rectangle_outlined == false){
-        engine_draw_fillrect_scale_rotate_viewport(rectangle_color->value.val,
-                                                (int32_t)rectangle_rotated_x,
-                                                (int32_t)rectangle_rotated_y,
-                                                rectangle_width, 
-                                                rectangle_height,
-                                                (int32_t)(rectangle_scale->x.value*65536 + 0.5),
-                                                (int32_t)(rectangle_scale->y.value*65536 + 0.5),
-                                                (int16_t)(((rectangle_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation))*1024 / (float)(2*PI)),
-                                                (int32_t)camera_viewport->x,
-                                                (int32_t)camera_viewport->y,
-                                                (int32_t)camera_viewport->width,
-                                                (int32_t)camera_viewport->height,
-                                                rectangle_opacity);
+        engine_draw_rect(rectangle_color->value.val,
+                         rectangle_rotated_x, rectangle_rotated_y,
+                         rectangle_width, rectangle_height,
+                         rectangle_scale->x.value*camera_zoom, rectangle_scale->y.value*camera_zoom,
+                       -(rectangle_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation),
+                         rectangle_opacity);
     }else{
         float rectangle_half_width = rectangle_width/2;
         float rectangle_half_height = rectangle_height/2;

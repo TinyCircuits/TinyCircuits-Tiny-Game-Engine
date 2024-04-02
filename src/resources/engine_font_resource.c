@@ -1,6 +1,8 @@
 #include "engine_font_resource.h"
 #include "debug/debug_print.h"
 #include "math/engine_math.h"
+#include "py/objtype.h"
+#include "py/objstr.h"
 
 
 // Class required functions
@@ -85,6 +87,36 @@ uint8_t font_resource_get_glyph_width(font_resource_class_obj_t *font, char code
 uint16_t font_resource_get_glyph_x_offset(font_resource_class_obj_t *font, char codepoint){
     // ASCII space is 32 but mapped to index 0 in the array
     return font->glyph_x_offsets[codepoint - 32];
+}
+
+
+void font_resource_get_box_dimensions(font_resource_class_obj_t *font, mp_obj_t text, float *text_box_width, float *text_box_height){
+    uint8_t char_height = font->glyph_height;
+
+    // Get length of string: https://github.com/v923z/micropython-usermod/blob/master/snippets/stringarg/stringarg.c
+    GET_STR_DATA_LEN(text, str, str_len);
+
+    // Figure out the size of the text box, considering newlines
+    *text_box_width = 0.0f;
+    *text_box_height = char_height;
+    float temp_text_box_width = 0.0f;
+    for(uint16_t icx=0; icx<str_len; icx++){
+        char current_char = ((char *)str)[icx];
+
+        // Check if newline, otherwise any other character contributes to text box width
+        if(current_char == 10){
+            *text_box_height += char_height;
+            temp_text_box_width = 0.0f;
+        }else{
+            temp_text_box_width += font_resource_get_glyph_width(font, current_char);
+        }
+
+        // Trying to find row with the most width
+        // which will define total text box size
+        if(temp_text_box_width > *text_box_width){
+            *text_box_width = temp_text_box_width;
+        }
+    }
 }
 
 
