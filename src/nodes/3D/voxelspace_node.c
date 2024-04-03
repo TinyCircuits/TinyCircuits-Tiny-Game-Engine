@@ -104,7 +104,7 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
                 if(height_on_screen < SCREEN_HEIGHT){
                     uint8_t ipx = height_on_screen;
                     while(ipx < height_buffer[i]){
-                        engine_draw_pixel(texture->data[index], i, ipx, 1.0f);
+                        engine_draw_pixel(texture->data[index], i, ipx, 1.0f, NULL, 0);
                         ipx++;
                     }
                 }

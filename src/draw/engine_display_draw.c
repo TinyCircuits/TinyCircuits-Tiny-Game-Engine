@@ -2,7 +2,6 @@
 #include "display/engine_display_common.h"
 #include "debug/debug_print.h"
 #include "math/trig_tables.h"
-#include "utility/engine_defines.h"
 #include <string.h>
 #include <stdlib.h>
 
@@ -19,22 +18,12 @@
 const uint8_t default_shader_len = 1;
 uint8_t default_shader[1] = {SHADER_OPACITY_BLEND};
 
-uint8_t *current_shader = default_shader;
-uint8_t current_shader_len = default_shader_len;
-
-void engine_draw_set_shader(uint8_t *shader, uint8_t shader_len){
-    current_shader = shader;
-    current_shader_len = shader_len;
-}
-
-
-void engine_draw_reset_shader(){
-    current_shader = default_shader;
-    current_shader_len = default_shader_len;
-}
-
 
 uint16_t ENGINE_FAST_FUNCTION(engine_pixel_shader)(uint16_t bg, uint16_t fg, float opacity, uint8_t *shader, uint8_t shader_len){
+    if(shader == NULL || shader_len == 0){
+        return fg;
+    }
+
     uint16_t result = fg;
     uint8_t index = 0;
 
@@ -87,12 +76,12 @@ void ENGINE_FAST_FUNCTION(engine_draw_fill_buffer)(uint16_t* src_buffer, uint16_
 }
 
 
-void ENGINE_FAST_FUNCTION(engine_draw_pixel)(uint16_t color, int32_t x, int32_t y, float alpha){
+void ENGINE_FAST_FUNCTION(engine_draw_pixel)(uint16_t color, int32_t x, int32_t y, float alpha, uint8_t *shader, uint8_t shader_len){
     if((x >= 0 && x < SCREEN_WIDTH) && (y >= 0 && y < SCREEN_HEIGHT)){
         uint16_t *screen_buffer = engine_get_active_screen_buffer();
         uint16_t index = y * SCREEN_WIDTH + x;
 
-        screen_buffer[index] = engine_pixel_shader(screen_buffer[index], color, alpha, current_shader, current_shader_len);
+        screen_buffer[index] = engine_pixel_shader(screen_buffer[index], color, alpha, shader, shader_len);
     }
 }
 
@@ -123,7 +112,7 @@ void engine_draw_line(uint16_t color, float x_start, float y_start, float x_end,
         line_x = line_x + slope_x;
         line_y = line_y + slope_y;
 
-        engine_draw_pixel(color, (int32_t)line_x, (int32_t)line_y, alpha);
+        engine_draw_pixel(color, (int32_t)line_x, (int32_t)line_y, alpha, default_shader, default_shader_len);
     }
 }
 
@@ -250,7 +239,7 @@ void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t
                     uint16_t src_color = pixels[src_offset];
 
                     if(src_color != transparent_color || src_color == ENGINE_NO_TRANSPARENCY_COLOR){
-                        screen_buffer[dest_offset] = engine_pixel_shader(screen_buffer[dest_offset], src_color, alpha, current_shader, current_shader_len);
+                        screen_buffer[dest_offset] = engine_pixel_shader(screen_buffer[dest_offset], src_color, alpha, default_shader, default_shader_len);
                     }
                 }
 
@@ -393,7 +382,7 @@ void engine_draw_rect(uint16_t color, float center_x, float center_y, uint32_t w
                 // If statements are expensive! Don't need to check if withing screen
                 // bounds since those dimensions are clipped (destination rect)
                 if((rotX >= 0 && rotX < width) && (rotY >= 0 && rotY < height)){
-                    screen_buffer[dest_offset] = engine_pixel_shader(screen_buffer[dest_offset], color, alpha, current_shader, current_shader_len);
+                    screen_buffer[dest_offset] = engine_pixel_shader(screen_buffer[dest_offset], color, alpha, default_shader, default_shader_len);
                 }
 
                 // While in row, keep traversing about rotation
@@ -445,10 +434,10 @@ void engine_draw_outline_circle(uint16_t color, float center_x, float center_y, 
         int tlx = center_x-cx;
         int tly = center_y-cy;
 
-        engine_draw_pixel(color, brx, bry, alpha);
-        engine_draw_pixel(color, blx, bly, alpha);
-        engine_draw_pixel(color, trx, try, alpha);
-        engine_draw_pixel(color, tlx, tly, alpha);
+        engine_draw_pixel(color, brx, bry, alpha, default_shader, default_shader_len);
+        engine_draw_pixel(color, blx, bly, alpha, default_shader, default_shader_len);
+        engine_draw_pixel(color, trx, try, alpha, default_shader, default_shader_len);
+        engine_draw_pixel(color, tlx, tly, alpha, default_shader, default_shader_len);
     }
 }
 
@@ -463,7 +452,7 @@ void engine_draw_filled_circle(uint16_t color, float center_x, float center_y, f
         int ph = (int)center_y + hh;
 
         for(int y=(int)center_y-hh; y<ph; y++){
-            engine_draw_pixel(color, rx, y, alpha);
+            engine_draw_pixel(color, rx, y, alpha, default_shader, default_shader_len);
         }
     }
 }
