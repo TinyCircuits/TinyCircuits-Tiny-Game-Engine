@@ -49,19 +49,6 @@ void text_2d_node_class_draw(engine_node_base_t *text_node_base, mp_obj_t camera
     float text_box_width = mp_obj_get_float(mp_load_attr(text_node_base->attr_accessor, MP_QSTR_width));
     float text_box_height = mp_obj_get_float(mp_load_attr(text_node_base->attr_accessor, MP_QSTR_height));
 
-    // Since sprites are centered by default and the text box height includes the
-    // height of the first line, get rid of one line's worth of height to center
-    // it correctly
-    text_box_height -= (float)text_font->glyph_height;
-
-    float text_box_width_half = text_box_width * 0.5f;
-    float text_box_height_half = text_box_height * 0.5f;
-
-    uint16_t text_font_bitmap_width = text_font->texture_resource->width;
-
-    uint16_t *text_pixel_data = (uint16_t*)text_font->texture_resource->data;
-    uint8_t char_height = text_font->glyph_height;
-
     vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
     rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
     float camera_zoom = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_zoom));
@@ -95,77 +82,7 @@ void text_2d_node_class_draw(engine_node_base_t *text_node_base, mp_obj_t camera
     text_rotated_x += camera_viewport->width/2;
     text_rotated_y += camera_viewport->height/2;
 
-    float bitmap_x_scale = text_scale->x.value * camera_zoom;
-    float bitmap_y_scale = text_scale->y.value * camera_zoom;
-
-    // Used to traverse about rotation using unit circle sin/cos offsets. Could probably store this: TODO
-    float traversal_scale = sqrtf(text_scale->x.value * text_scale->x.value + text_scale->y.value * text_scale->y.value) * camera_zoom;
-
-    // https://codereview.stackexchange.com/a/86546
-    float rotation = (text_resolved_hierarchy_rotation + camera_resolved_hierarchy_rotation);
-    
-    float sin_angle = sinf(rotation) * traversal_scale;
-    float cos_angle = cosf(rotation) * traversal_scale;
-
-    float sin_angle_perp = sinf(rotation + HALF_PI) * traversal_scale;
-    float cos_angle_perp = cosf(rotation + HALF_PI) * traversal_scale;
-
-    // Set starting point to text box origin then translate to
-    // starting in top-left by column and row shifts (while rotated).
-    // This way, the text box rotates about its origin position set
-    // by the user
-    float char_x = text_rotated_x;
-    float char_y = text_rotated_y;
-
-    // Move to top left (go left and then up)
-    char_x -= (cos_angle * text_box_width_half);
-    char_y += (sin_angle * text_box_width_half);
-
-    char_x += (cos_angle_perp * text_box_height_half);
-    char_y -= (sin_angle_perp * text_box_height_half);
-
-    float current_row_width = 0.0f;
-
-    // Get length of string: https://github.com/v923z/micropython-usermod/blob/master/snippets/stringarg/stringarg.c
-    GET_STR_DATA_LEN(text_obj, str, str_len);
-
-    for(uint16_t icx=0; icx<str_len; icx++){
-        char current_char = ((char *)str)[icx];
-
-        // Check if newline, otherwise any other character contributes to text box width
-        if(current_char == 10){
-            // Move to start of line
-            char_x -= (cos_angle * current_row_width);
-            char_y += (sin_angle * current_row_width);
-
-            // Move to next line
-            char_x -= (cos_angle_perp * char_height);
-            char_y += (sin_angle_perp * char_height);
-
-            current_row_width = 0.0f;
-            continue;
-        }
-
-        // The width of this character, all heights are defined by bitmap font height-1
-        uint8_t char_width = font_resource_get_glyph_width(text_font, current_char);
-
-        // Offset inside the ASCII font bitmap (not into where we're drawing)
-        uint16_t char_bitmap_x_offset = font_resource_get_glyph_x_offset(text_font, current_char);
-
-        engine_draw_blit(text_pixel_data+engine_math_2d_to_1d_index(char_bitmap_x_offset, 0, text_font_bitmap_width),
-                        (char_x), (char_y),
-                        char_width, char_height,
-                        text_font_bitmap_width,
-                        bitmap_x_scale,
-                        bitmap_y_scale,
-                        -rotation,
-                        0,
-                        text_opacity);
-
-        char_x += (cos_angle * char_width);
-        char_y -= (sin_angle * char_width);
-        current_row_width += char_width;
-    }
+    engine_draw_text(text_font, text_obj, text_rotated_x, text_rotated_y, text_box_width, text_box_height, text_scale->x.value*camera_zoom, text_scale->y.value*camera_zoom, text_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation, text_opacity);
 }
 
 

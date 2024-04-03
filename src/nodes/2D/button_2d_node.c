@@ -36,7 +36,63 @@ void button_2d_node_class_draw(engine_node_base_t *button_node_base, mp_obj_t ca
     if(button->text != mp_const_none && button->font_resource != mp_const_none){
         engine_node_base_t *camera_node_base = camera_node;
 
-        
+        vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
+        rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
+        float camera_zoom = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_zoom));
+
+        float camera_resolved_hierarchy_x = 0.0f;
+        float camera_resolved_hierarchy_y = 0.0f;
+        float camera_resolved_hierarchy_rotation = 0.0f;
+        node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
+        camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
+
+        float button_resolved_hierarchy_x = 0.0f;
+        float button_resolved_hierarchy_y = 0.0f;
+        float button_resolved_hierarchy_rotation = 0.0f;
+        bool button_is_child_of_camera = false;
+        node_base_get_child_absolute_xy(&button_resolved_hierarchy_x, &button_resolved_hierarchy_y, &button_resolved_hierarchy_rotation, &button_is_child_of_camera, button_node_base);
+
+
+
+        // Store the non-rotated x and y for a second
+        float button_rotated_x = button_resolved_hierarchy_x - camera_resolved_hierarchy_x;
+        float button_rotated_y = button_resolved_hierarchy_y - camera_resolved_hierarchy_y;
+
+        if(button_is_child_of_camera == false){
+            // Scale transformation due to camera zoom
+            engine_math_scale_point(&button_rotated_x, &button_rotated_y, camera_position->x.value, camera_position->y.value, camera_zoom);
+        }else{
+            camera_zoom = 1.0f;
+        }
+
+        // Rotate text origin about the camera
+        engine_math_rotate_point(&button_rotated_x, &button_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
+
+        button_rotated_x += camera_viewport->width/2;
+        button_rotated_y += camera_viewport->height/2;
+
+        font_resource_class_obj_t *font = button->font_resource;
+        vector2_class_obj_t *button_scale = button->scale;
+        float button_opacity = mp_obj_get_float(button->opacity);
+
+        float x_scale = button_scale->x.value*camera_zoom;
+        float y_scale = button_scale->y.value*camera_zoom;
+
+        float traversal_scale = sqrtf(x_scale * y_scale);
+
+        engine_draw_rect(0b1111100000000000,
+                         button_rotated_x, button_rotated_y,
+                         button->width, button->height,
+                         x_scale, y_scale,
+                       -(button_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation),
+                         button_opacity);
+
+        engine_draw_text(font, button->text,
+                         button_rotated_x, button_rotated_y, 
+                         button->width, button->height,
+                         x_scale, y_scale,
+                         button_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation,
+                         button_opacity);
     }
 }
 
@@ -298,6 +354,8 @@ mp_obj_t button_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
         // Need a way to access the object node instance instead of the native type for callbacks (tick, draw, collision)
         node_base->attr_accessor = node_instance;
     }
+
+    button_2d_node_calculate_dimensions(button_2d_node);
 
     return MP_OBJ_FROM_PTR(node_base);
 }

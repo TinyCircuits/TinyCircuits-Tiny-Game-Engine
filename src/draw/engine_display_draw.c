@@ -12,6 +12,9 @@
 #include "math/engine_math.h"
 #include "draw/engine_color.h"
 
+#include "py/objstr.h"
+#include "py/objtype.h"
+
 #ifndef __unix__
     #include "hardware/interp.h"
 #endif
@@ -402,4 +405,95 @@ void engine_draw_rect(uint16_t color, float center_x, float center_y, uint32_t w
     }
 
     // ENGINE_PERFORMANCE_CYCLES_STOP();
+}
+
+
+void engine_draw_text(font_resource_class_obj_t *font, mp_obj_t text, float center_x, float center_y, float text_box_width, float text_box_height, float x_scale, float y_scale, float rotation_radians, float alpha){    
+    // Used to traverse about rotation using unit circle sin/cos offsets. Could probably store this: TODO
+    // float traversal_scale = x_scale * y_scale;
+    
+    // float sin_angle = sinf(rotation_radians) * traversal_scale;
+    // float cos_angle = cosf(rotation_radians) * traversal_scale;
+
+    // float sin_angle_perp = sinf(rotation_radians + HALF_PI) * traversal_scale;
+    // float cos_angle_perp = cosf(rotation_radians + HALF_PI) * traversal_scale;
+    
+    float sin_angle = sinf(rotation_radians);
+    float cos_angle = cosf(rotation_radians);
+
+    float sin_angle_perp = sinf(rotation_radians + HALF_PI);
+    float cos_angle_perp = cosf(rotation_radians + HALF_PI);
+
+    // Since sprites are centered by default and the text box height includes the
+    // height of the first line, get rid of one line's worth of height to center
+    // it correctly
+    float text_box_width_half = text_box_width * 0.5f;
+    float text_box_height_half = (text_box_height - font->glyph_height) * 0.5f;
+
+    // Set starting point to text box origin then translate to
+    // starting in top-left by column and row shifts (while rotated).
+    // This way, the text box rotates about its origin position set
+    // by the user
+    float char_x = center_x;
+    float char_y = center_y;
+
+    // Move to left (go left and then up)
+    char_x -= (cos_angle * text_box_width_half * x_scale);
+    char_y += (sin_angle * text_box_width_half * x_scale);
+
+    // Move up
+    char_x += (cos_angle_perp * text_box_height_half * y_scale);
+    char_y -= (sin_angle_perp * text_box_height_half * y_scale);
+
+    float current_row_width = 0.0f;
+
+    // Get length of string: https://github.com/v923z/micropython-usermod/blob/master/snippets/stringarg/stringarg.c
+    GET_STR_DATA_LEN(text, str, str_len);
+
+    for(uint16_t icx=0; icx<str_len; icx++){
+        char current_char = ((char *)str)[icx];
+
+        // Check if newline, otherwise any other character contributes to text box width
+        if(current_char == 10){
+            // Move to start of line
+            char_x -= (cos_angle * current_row_width * x_scale);
+            char_y += (sin_angle * current_row_width * x_scale);
+
+            // Move to next line
+            char_x -= (cos_angle_perp * font->glyph_height * y_scale);
+            char_y += (sin_angle_perp * font->glyph_height * y_scale);
+
+            current_row_width = 0.0f;
+            continue;
+        }
+
+        // The width of this character, all heights are defined by bitmap font height-1
+        const uint8_t char_width = font_resource_get_glyph_width(font, current_char);
+        const float char_width_half = char_width * 0.5f;
+
+        float final_char_x = char_x;
+        float final_char_y = char_y;
+
+        final_char_x += (cos_angle * char_width_half * x_scale);
+        final_char_y -= (sin_angle * char_width_half * x_scale);
+
+        // Offset inside the ASCII font bitmap (not into where we're drawing)
+        uint16_t char_bitmap_x_offset = font_resource_get_glyph_x_offset(font, current_char);
+
+        engine_draw_blit(font->texture_resource->data+engine_math_2d_to_1d_index(char_bitmap_x_offset, 0, font->texture_resource->width),
+                        (final_char_x), (final_char_y),
+                        char_width, font->glyph_height,
+                        font->texture_resource->width,
+                        x_scale,
+                        y_scale,
+                        -rotation_radians,
+                        0,
+                        alpha);
+
+        // Move to next character position in row
+        char_x += (cos_angle * char_width * x_scale);
+        char_y -= (sin_angle * char_width * x_scale);
+
+        current_row_width += char_width;
+    }
 }
