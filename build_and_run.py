@@ -3,6 +3,8 @@ import os
 import shutil
 import string
 import psutil
+import subprocess
+import datetime
 from subprocess import Popen, PIPE, CalledProcessError
 
 # python -m pip install pyserial
@@ -164,6 +166,26 @@ for to_import in imports_to_run:
 ser.close()
 
 
-print("\n\nSamples:")
-print(fps_sample_strs)
-print(" ")
+# If samples were gathered, add to list of samples
+if len(fps_sample_strs) > 0:
+    to_write = ""
+
+    to_write += str(datetime.datetime.now())
+    to_write += " : "
+
+    to_write += subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode("utf-8")
+
+    to_write += subprocess.check_output(['git', 'log', '-1', '--pretty=%B']).decode("utf-8")
+
+    to_write += "{\n"
+    for sample_str in fps_sample_strs:
+        to_write += sample_str + "\n"
+    to_write += "}"
+
+    to_write += "\n\n\n ----- \n\n\n"
+
+    print(to_write)
+
+    file = open("performance_samples.txt", "a")
+    file.write(to_write)
+    file.close()

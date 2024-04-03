@@ -11,6 +11,8 @@ import math
 import gc
 
 
+engine.set_fps_limit(60)
+
 # class MyLine(Line2DNode):
 #     def __init__(self):
 #         super().__init__(self)
