@@ -29,6 +29,7 @@
 // false to stop the engine after the current loop/tick ends
 bool is_engine_looping = false;
 bool is_engine_initialized = false;
+bool fps_limit_disabled = true;
 float engine_fps_limit_period_ms = 16.6667f;
 float engine_fps_time_at_last_tick_ms = 0.0f;
 float engine_fps_time_at_before_last_tick_ms = 0.0f;
@@ -49,10 +50,24 @@ STATIC mp_obj_t engine_set_fps_limit(mp_obj_t fps_obj){
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Engine: ERROR: Tried to set fps limit to 0 (would divide by zero) or negative value"));
     }
     
+    fps_limit_disabled = false;
     engine_fps_limit_period_ms = (1.0f / fps) * 1000.0f;
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(engine_set_fps_limit_obj, engine_set_fps_limit);
+
+
+/* --- doc ---
+   NAME: disable_fps_limit
+   DESC: Disables the FPS limit. The engine will tick uncapped
+   RETURN: None
+*/
+STATIC mp_obj_t engine_disable_fps_limit(){
+    ENGINE_INFO_PRINTF("Engine: Disabling FPS limit");
+    fps_limit_disabled = true;
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_0(engine_disable_fps_limit_obj, engine_disable_fps_limit);
 
 
 /* --- doc ---
@@ -126,7 +141,7 @@ STATIC mp_obj_t engine_tick(){
 
     dt = millis() - engine_fps_time_at_last_tick_ms;
 
-    if(dt >= engine_fps_limit_period_ms){
+    if(fps_limit_disabled || dt >= engine_fps_limit_period_ms){
         engine_fps_time_at_before_last_tick_ms = engine_fps_time_at_last_tick_ms;
         engine_fps_time_at_last_tick_ms = millis();
 
@@ -236,6 +251,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_module_init_obj, engine_module_init);
    NAME: engine
    DESC: Main component for controlling vital engine features
    ATTR: [type=function] [name={ref_link:set_fps_limit}]        [value=function]
+   ATTR: [type=function] [name={ref_link:disable_fps_limit}]    [value=function (fps limit is disabled by default, use {ref_link:set_fps_limit} to enable it)]
    ATTR: [type=function] [name={ref_link:get_running_fps}]      [value=function]
    ATTR: [type=function] [name={ref_link:tick}]                 [value=function]
    ATTR: [type=function] [name={ref_link:start}]                [value=function]
@@ -246,6 +262,7 @@ STATIC const mp_rom_map_elem_t engine_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine) },
     { MP_OBJ_NEW_QSTR(MP_QSTR___init__), (mp_obj_t)&engine_module_init_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_set_fps_limit), (mp_obj_t)&engine_set_fps_limit_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_disable_fps_limit), (mp_obj_t)&engine_disable_fps_limit_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_get_running_fps), (mp_obj_t)&engine_get_running_fps_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_tick), (mp_obj_t)&engine_tick_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_start), (mp_obj_t)&engine_start_obj },

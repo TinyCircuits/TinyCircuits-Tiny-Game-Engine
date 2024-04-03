@@ -16,6 +16,23 @@
 #include "py/objstr.h"
 #include "py/objtype.h"
 
+const uint8_t default_shader_len = 1;
+uint8_t default_shader[1] = {SHADER_OPACITY_BLEND};
+
+uint8_t *current_shader = default_shader;
+uint8_t current_shader_len = default_shader_len;
+
+void engine_draw_set_shader(uint8_t *shader, uint8_t shader_len){
+    current_shader = shader;
+    current_shader_len = shader_len;
+}
+
+
+void engine_draw_reset_shader(){
+    current_shader = default_shader;
+    current_shader_len = default_shader_len;
+}
+
 
 uint16_t ENGINE_FAST_FUNCTION(engine_pixel_shader)(uint16_t bg, uint16_t fg, float opacity, uint8_t *shader, uint8_t shader_len){
     uint16_t result = fg;
@@ -75,7 +92,7 @@ void ENGINE_FAST_FUNCTION(engine_draw_pixel)(uint16_t color, int32_t x, int32_t 
         uint16_t *screen_buffer = engine_get_active_screen_buffer();
         uint16_t index = y * SCREEN_WIDTH + x;
 
-        screen_buffer[index] = engine_color_alpha_blend(screen_buffer[index], color, alpha);
+        screen_buffer[index] = engine_pixel_shader(screen_buffer[index], color, alpha, current_shader, current_shader_len);
     }
 }
 
@@ -233,7 +250,7 @@ void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t
                     uint16_t src_color = pixels[src_offset];
 
                     if(src_color != transparent_color || src_color == ENGINE_NO_TRANSPARENCY_COLOR){
-                        screen_buffer[dest_offset] = engine_pixel_shader(screen_buffer[dest_offset], src_color, alpha, (uint8_t[]){SHADER_OPACITY_BLEND}, 1);
+                        screen_buffer[dest_offset] = engine_pixel_shader(screen_buffer[dest_offset], src_color, alpha, current_shader, current_shader_len);
                     }
                 }
 
@@ -376,7 +393,7 @@ void engine_draw_rect(uint16_t color, float center_x, float center_y, uint32_t w
                 // If statements are expensive! Don't need to check if withing screen
                 // bounds since those dimensions are clipped (destination rect)
                 if((rotX >= 0 && rotX < width) && (rotY >= 0 && rotY < height)){
-                    screen_buffer[dest_offset] = engine_color_alpha_blend(screen_buffer[dest_offset], color, alpha);
+                    screen_buffer[dest_offset] = engine_pixel_shader(screen_buffer[dest_offset], color, alpha, current_shader, current_shader_len);
                 }
 
                 // While in row, keep traversing about rotation
@@ -400,6 +417,55 @@ void engine_draw_rect(uint16_t color, float center_x, float center_y, uint32_t w
     }
 
     // ENGINE_PERFORMANCE_CYCLES_STOP();
+}
+
+
+void engine_draw_outline_circle(uint16_t color, float center_x, float center_y, float radius, float alpha){
+    // https://stackoverflow.com/a/58629898
+    float distance = radius;
+    float angle_increment = acosf(1 - 1/distance) * 2.0f;   // Multiply by 2.0 since care about speed and not accuracy as much
+
+    for(float angle = 0; angle <= 90; angle += angle_increment){
+        float cx = distance * cosf(angle);
+        float cy = distance * sinf(angle);
+        
+        // Bottom right quadrant of the circle
+        int brx = center_x+cx;
+        int bry = center_y+cy;
+
+        // Bottom left quadrant of the circle
+        int blx = center_x-cx;
+        int bly = center_y+cy;
+
+        // Top right quadrant of the circle
+        int trx = center_x+cx;
+        int try = center_y-cy;
+
+        // Top left quadrant of the circle
+        int tlx = center_x-cx;
+        int tly = center_y-cy;
+
+        engine_draw_pixel(color, brx, bry, alpha);
+        engine_draw_pixel(color, blx, bly, alpha);
+        engine_draw_pixel(color, trx, try, alpha);
+        engine_draw_pixel(color, tlx, tly, alpha);
+    }
+}
+
+
+void engine_draw_filled_circle(uint16_t color, float center_x, float center_y, float radius, float alpha){
+    float radius_sqr = radius * radius;
+
+    // https://stackoverflow.com/a/59211338
+    for(int x=-radius; x<(int)radius; x++){
+        int hh = (int)sqrt(radius_sqr - x * x);
+        int rx = (int)center_x + x;
+        int ph = (int)center_y + hh;
+
+        for(int y=(int)center_y-hh; y<ph; y++){
+            engine_draw_pixel(color, rx, y, alpha);
+        }
+    }
 }
 
 

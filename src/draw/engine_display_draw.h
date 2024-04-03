@@ -32,6 +32,10 @@ void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t
 
 void engine_draw_rect(uint16_t color, float center_x, float center_y, uint32_t width, uint32_t height, float x_scale, float y_scale, float rotation_radians, float alpha);
 
+void engine_draw_outline_circle(uint16_t color, float center_x, float center_y, float radius, float alpha);
+
+void engine_draw_filled_circle(uint16_t color, float center_x, float center_y, float radius, float alpha);
+
 void engine_draw_text(font_resource_class_obj_t *font, mp_obj_t text, float center_x, float center_y, float text_box_width, float text_box_height, float x_scale, float y_scale, float rotation_radians, float alpha);
 
 #endif  // ENGINE_DISPLAY_DRAW_H

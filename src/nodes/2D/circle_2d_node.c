@@ -37,8 +37,6 @@ void circle_2d_node_class_draw(engine_node_base_t *circle_node_base, mp_obj_t ca
     float circle_scale =  mp_obj_get_float(mp_load_attr(circle_node_base->attr_accessor, MP_QSTR_scale));
     float circle_radius =  (mp_obj_get_float(mp_load_attr(circle_node_base->attr_accessor, MP_QSTR_radius)));
     bool circle_outlined = mp_obj_get_int(mp_load_attr(circle_node_base->attr_accessor, MP_QSTR_outline));
-    
-    float circle_radius_sqr = circle_radius * circle_radius;
 
     color_class_obj_t *circle_color = mp_load_attr(circle_node_base->attr_accessor, MP_QSTR_color);
     float circle_opacity = mp_obj_get_float(mp_load_attr(circle_node_base->attr_accessor, MP_QSTR_opacity));
@@ -78,47 +76,11 @@ void circle_2d_node_class_draw(engine_node_base_t *circle_node_base, mp_obj_t ca
     circle_rotated_x += camera_viewport->width/2;
     circle_rotated_y += camera_viewport->height/2;
 
+
     if(circle_outlined == false){
-        // https://stackoverflow.com/a/59211338
-        for(int x=-circle_radius; x<(int)circle_radius; x++){
-            int hh = (int)sqrt(circle_radius_sqr - x * x);
-            int rx = (int)circle_rotated_x + x;
-            int ph = (int)circle_rotated_y + hh;
-
-            for(int y=(int)circle_rotated_y-hh; y<ph; y++){
-                engine_draw_pixel(circle_color->value.val, rx, y, circle_opacity);
-            }
-        }
+        engine_draw_filled_circle(circle_color->value.val, circle_rotated_x, circle_rotated_y, circle_radius, circle_opacity);
     }else{
-        // https://stackoverflow.com/a/58629898
-        float distance = circle_radius;
-        float angle_increment = acosf(1 - 1/distance) * 2.0f;   // Multiply by 2.0 since care about speed and not accuracy as much
-
-        for(float angle = 0; angle <= 90; angle += angle_increment){
-            float cx = distance * cosf(angle);
-            float cy = distance * sinf(angle);
-            
-            // Bottom right quadrant of the circle
-            int brx = circle_rotated_x+cx;
-            int bry = circle_rotated_y+cy;
-
-            // Bottom left quadrant of the circle
-            int blx = circle_rotated_x-cx;
-            int bly = circle_rotated_y+cy;
-
-            // Top right quadrant of the circle
-            int trx = circle_rotated_x+cx;
-            int try = circle_rotated_y-cy;
-
-            // Top left quadrant of the circle
-            int tlx = circle_rotated_x-cx;
-            int tly = circle_rotated_y-cy;
-
-            engine_draw_pixel(circle_color->value.val, brx, bry, circle_opacity);
-            engine_draw_pixel(circle_color->value.val, blx, bly, circle_opacity);
-            engine_draw_pixel(circle_color->value.val, trx, try, circle_opacity);
-            engine_draw_pixel(circle_color->value.val, tlx, tly, circle_opacity);
-        }
+        engine_draw_outline_circle(circle_color->value.val, circle_rotated_x, circle_rotated_y, circle_radius, circle_opacity);
     }
 }
 

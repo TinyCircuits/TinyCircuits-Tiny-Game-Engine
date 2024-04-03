@@ -71,8 +71,18 @@ class cam(CameraNode):
     def __init__(self):
         super().__init__(self)
         self.target = Vector3(75, 0, -36)
+        self.intensity = 0.0
 
     def tick(self):
+        if engine_input.check_pressed(engine_input.BUMPER_RIGHT):
+            self.intensity += 0.05
+            engine_input.rumble(self.intensity)
+            print(self.intensity)
+        if engine_input.check_pressed(engine_input.BUMPER_LEFT):
+            self.intensity -= 0.05
+            engine_input.rumble(self.intensity)
+            print(self.intensity)
+
         lookat_x = self.target.x - self.position.x
         lookat_y = self.target.y - self.position.y
         lookat_z = self.target.z - self.position.z
@@ -100,4 +110,3 @@ while True:
     # circle0.position.x = value
     # circle0.position.y = value
     engine.tick()
-    gc.collect()

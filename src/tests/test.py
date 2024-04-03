@@ -56,7 +56,7 @@ class MyCircle(Circle2DNode):
 
 
 circle = MyCircle()
-circle.outline = True
+# circle.outline = True
 circle.radius = 25
 circle.opacity = 0.25
 rectangle = Rectangle2DNode()
@@ -85,9 +85,9 @@ class MyCam(CameraNode):
     def tick(self):
         print(engine.get_running_fps())
         if engine_input.check_pressed(engine_input.A):
-            self.zoom -= 0.0025
+            self.zoom -= 0.005
         if engine_input.check_pressed(engine_input.B):
-            self.zoom += 0.0025
+            self.zoom += 0.005
         
         if engine_input.check_pressed(engine_input.DPAD_UP):
             self.position.y -= 0.25
@@ -129,7 +129,7 @@ circle.add_child(text)
 circle.add_child(text0)
 circle.add_child(line)
 
-cursor = Circle2DNode(radius=2.5, color=engine_draw.green, outline=True, position=Vector2(0, 0))
+cursor = Circle2DNode(radius=7, color=engine_draw.green, outline=False, position=Vector2(0, 0), opacity=0.5)
 
 # camera.add_child(circle)
 # camera.add_child(fps)
