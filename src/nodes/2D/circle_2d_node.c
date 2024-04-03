@@ -42,11 +42,6 @@ void circle_2d_node_class_draw(engine_node_base_t *circle_node_base, mp_obj_t ca
 
     color_class_obj_t *circle_color = mp_load_attr(circle_node_base->attr_accessor, MP_QSTR_color);
     float circle_opacity = mp_obj_get_float(mp_load_attr(circle_node_base->attr_accessor, MP_QSTR_opacity));
-    bool draw_with_alpha = false;
-    if(circle_opacity < 1.0f){
-        draw_with_alpha = true;
-    }
-    
 
     float camera_resolved_hierarchy_x = 0.0f;
     float camera_resolved_hierarchy_y = 0.0f;
@@ -91,11 +86,7 @@ void circle_2d_node_class_draw(engine_node_base_t *circle_node_base, mp_obj_t ca
             int ph = (int)circle_rotated_y + hh;
 
             for(int y=(int)circle_rotated_y-hh; y<ph; y++){
-                if(draw_with_alpha){
-                    engine_draw_pixel_alpha(circle_color->value.val, rx, y, circle_opacity);
-                }else{
-                    engine_draw_pixel(circle_color->value.val, rx, y);
-                }
+                engine_draw_pixel(circle_color->value.val, rx, y, circle_opacity);
             }
         }
     }else{
@@ -123,17 +114,10 @@ void circle_2d_node_class_draw(engine_node_base_t *circle_node_base, mp_obj_t ca
             int tlx = circle_rotated_x-cx;
             int tly = circle_rotated_y-cy;
 
-            if(draw_with_alpha){
-                engine_draw_pixel_alpha(circle_color->value.val, brx, bry, circle_opacity);
-                engine_draw_pixel_alpha(circle_color->value.val, blx, bly, circle_opacity);
-                engine_draw_pixel_alpha(circle_color->value.val, trx, try, circle_opacity);
-                engine_draw_pixel_alpha(circle_color->value.val, tlx, tly, circle_opacity);
-            }else{
-                engine_draw_pixel(circle_color->value.val, brx, bry);
-                engine_draw_pixel(circle_color->value.val, blx, bly);
-                engine_draw_pixel(circle_color->value.val, trx, try);
-                engine_draw_pixel(circle_color->value.val, tlx, tly);
-            }
+            engine_draw_pixel(circle_color->value.val, brx, bry, circle_opacity);
+            engine_draw_pixel(circle_color->value.val, blx, bly, circle_opacity);
+            engine_draw_pixel(circle_color->value.val, trx, try, circle_opacity);
+            engine_draw_pixel(circle_color->value.val, tlx, tly, circle_opacity);
         }
     }
 }

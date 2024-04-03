@@ -2,6 +2,7 @@
 #include "display/engine_display_common.h"
 #include "debug/debug_print.h"
 #include "math/trig_tables.h"
+#include "utility/engine_defines.h"
 #include <string.h>
 #include <stdlib.h>
 
@@ -15,12 +16,43 @@
 #include "py/objstr.h"
 #include "py/objtype.h"
 
-#ifndef __unix__
-    #include "hardware/interp.h"
-#endif
+
+uint16_t ENGINE_FAST_FUNCTION(engine_pixel_shader)(uint16_t bg, uint16_t fg, float opacity, uint8_t *shader, uint8_t shader_len){
+    uint16_t result = fg;
+    uint8_t index = 0;
+
+    while(index < shader_len){
+        switch(shader[index]){
+            case SHADER_OPACITY_BLEND:
+            {
+                result = engine_color_alpha_blend(bg, result, opacity);
+            }
+            break;
+            case SHADER_RGB_INTERPOLATE:
+            {
+                uint16_t interpolate_to_color = 0x0000;
+                interpolate_to_color |= (shader[index+1] << 8);
+                interpolate_to_color |= (shader[index+2] << 0);
+
+                float t = 0;
+                memcpy(&t, shader+index+3, 4);
+
+                result = engine_color_blend(result, interpolate_to_color, t);
+
+                index += 6; // OPPFFFF
+                continue;
+            }
+            break;
+        }
+
+        index++;
+    }
+
+    return result;
+}
 
 
-void engine_draw_fill_color(uint16_t color, uint16_t *screen_buffer){
+void ENGINE_FAST_FUNCTION(engine_draw_fill_color)(uint16_t color, uint16_t *screen_buffer){
     uint16_t *buf = screen_buffer;
     uint16_t count = SCREEN_BUFFER_SIZE_PIXELS;
 
@@ -28,7 +60,7 @@ void engine_draw_fill_color(uint16_t color, uint16_t *screen_buffer){
 }
 
 
-void engine_draw_fill_buffer(uint16_t* src_buffer, uint16_t *screen_buffer){
+void ENGINE_FAST_FUNCTION(engine_draw_fill_buffer)(uint16_t* src_buffer, uint16_t *screen_buffer){
     uint16_t index = 0;
 
     while(index < SCREEN_BUFFER_SIZE_PIXELS){
@@ -38,17 +70,7 @@ void engine_draw_fill_buffer(uint16_t* src_buffer, uint16_t *screen_buffer){
 }
 
 
-void engine_draw_pixel(uint16_t color, int32_t x, int32_t y){
-    if((x >= 0 && x < SCREEN_WIDTH) && (y >= 0 && y < SCREEN_HEIGHT)){
-        uint16_t *screen_buffer = engine_get_active_screen_buffer();
-        uint16_t index = y * SCREEN_WIDTH + x;
-
-        screen_buffer[index] = color;
-    }
-}
-
-
-void engine_draw_pixel_alpha(uint16_t color, int32_t x, int32_t y, float alpha){
+void ENGINE_FAST_FUNCTION(engine_draw_pixel)(uint16_t color, int32_t x, int32_t y, float alpha){
     if((x >= 0 && x < SCREEN_WIDTH) && (y >= 0 && y < SCREEN_HEIGHT)){
         uint16_t *screen_buffer = engine_get_active_screen_buffer();
         uint16_t index = y * SCREEN_WIDTH + x;
@@ -60,11 +82,6 @@ void engine_draw_pixel_alpha(uint16_t color, int32_t x, int32_t y, float alpha){
 
 // https://en.wikipedia.org/wiki/Digital_differential_analyzer_(graphics_algorithm)
 void engine_draw_line(uint16_t color, float x_start, float y_start, float x_end, float y_end, mp_obj_t camera_node_base_in, float alpha){
-    bool draw_with_alpha = false;
-    if(alpha < 1.0f){
-        draw_with_alpha = true;
-    }
-
     // Distance difference between endpoints
     float dx = x_end - x_start;
     float dy = y_end - y_start;
@@ -89,11 +106,7 @@ void engine_draw_line(uint16_t color, float x_start, float y_start, float x_end,
         line_x = line_x + slope_x;
         line_y = line_y + slope_y;
 
-        if(draw_with_alpha){
-            engine_draw_pixel_alpha(color, (int32_t)line_x, (int32_t)line_y, alpha);
-        }else{
-            engine_draw_pixel(color, (int32_t)line_x, (int32_t)line_y);
-        }
+        engine_draw_pixel(color, (int32_t)line_x, (int32_t)line_y, alpha);
     }
 }
 
@@ -122,11 +135,6 @@ void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t
     */
 
     // ENGINE_PERFORMANCE_CYCLES_START();
-    bool draw_with_alpha = false;
-    if(alpha < 1.0f){
-        draw_with_alpha = true;
-    }
-
     uint16_t *screen_buffer = engine_get_active_screen_buffer();
 
     float inverse_x_scale = 1.0f / x_scale;
@@ -225,11 +233,7 @@ void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t
                     uint16_t src_color = pixels[src_offset];
 
                     if(src_color != transparent_color || src_color == ENGINE_NO_TRANSPARENCY_COLOR){
-                        if(draw_with_alpha){
-                            screen_buffer[dest_offset] = engine_color_alpha_blend(screen_buffer[dest_offset], src_color, alpha);
-                        }else{
-                            screen_buffer[dest_offset] = src_color;
-                        }
+                        screen_buffer[dest_offset] = engine_pixel_shader(screen_buffer[dest_offset], src_color, alpha, (uint8_t[]){SHADER_OPACITY_BLEND}, 1);
                     }
                 }
 
@@ -278,11 +282,6 @@ void engine_draw_rect(uint16_t color, float center_x, float center_y, uint32_t w
     */
 
     // ENGINE_PERFORMANCE_CYCLES_START();
-    bool draw_with_alpha = false;
-    if(alpha < 1.0f){
-        draw_with_alpha = true;
-    }
-
     uint16_t *screen_buffer = engine_get_active_screen_buffer();
 
     float inverse_x_scale = 1.0f / x_scale;
@@ -377,11 +376,7 @@ void engine_draw_rect(uint16_t color, float center_x, float center_y, uint32_t w
                 // If statements are expensive! Don't need to check if withing screen
                 // bounds since those dimensions are clipped (destination rect)
                 if((rotX >= 0 && rotX < width) && (rotY >= 0 && rotY < height)){
-                    if(draw_with_alpha){
-                        screen_buffer[dest_offset] = engine_color_alpha_blend(screen_buffer[dest_offset], color, alpha);
-                    }else{
-                        screen_buffer[dest_offset] = color;
-                    }
+                    screen_buffer[dest_offset] = engine_color_alpha_blend(screen_buffer[dest_offset], color, alpha);
                 }
 
                 // While in row, keep traversing about rotation
@@ -409,15 +404,6 @@ void engine_draw_rect(uint16_t color, float center_x, float center_y, uint32_t w
 
 
 void engine_draw_text(font_resource_class_obj_t *font, mp_obj_t text, float center_x, float center_y, float text_box_width, float text_box_height, float x_scale, float y_scale, float rotation_radians, float alpha){    
-    // Used to traverse about rotation using unit circle sin/cos offsets. Could probably store this: TODO
-    // float traversal_scale = x_scale * y_scale;
-    
-    // float sin_angle = sinf(rotation_radians) * traversal_scale;
-    // float cos_angle = cosf(rotation_radians) * traversal_scale;
-
-    // float sin_angle_perp = sinf(rotation_radians + HALF_PI) * traversal_scale;
-    // float cos_angle_perp = cosf(rotation_radians + HALF_PI) * traversal_scale;
-    
     float sin_angle = sinf(rotation_radians);
     float cos_angle = cosf(rotation_radians);
 

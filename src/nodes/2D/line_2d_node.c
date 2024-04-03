@@ -80,6 +80,11 @@ void line_2d_node_class_draw(engine_node_base_t *line_node_base, mp_obj_t camera
     line_thickness = line_thickness*camera_zoom;
     line_length = line_length*camera_zoom;
 
+    // Stop line from disappearing when it gets too thin
+    if(line_thickness < 1.0f){
+        line_thickness = 1.0f;
+    }
+
     // Rotate rectangle origin about the camera
     engine_math_rotate_point(&line_rotated_x, &line_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
 

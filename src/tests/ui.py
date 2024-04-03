@@ -6,7 +6,7 @@ import engine_input
 
 font = FontResource("9pt-roboto-font.bmp")
 # button = Button2DNode(font=font, text="Hi\nYo!", rotation=0)
-button2 = Button2DNode(font=font, text="Hiiiiii\nYo!", rotation=0, position=Vector2(30, 0), scale=Vector2(1, 1))
+button2 = Button2DNode(font=font, text="Hello\nWorld!\n^^^^^^", rotation=0, scale=Vector2(1, 1))
 
 
 
@@ -31,9 +31,9 @@ class MyCam(CameraNode):
             self.position.x += 0.25
         
         if engine_input.check_pressed(engine_input.BUMPER_LEFT):
-            self.rotation.z += 0.005
+            self.rotation.z += 0.0085
         if engine_input.check_pressed(engine_input.BUMPER_RIGHT):
-            self.rotation.z -= 0.005
+            self.rotation.z -= 0.0085
 camera = MyCam()
 
 engine.start()

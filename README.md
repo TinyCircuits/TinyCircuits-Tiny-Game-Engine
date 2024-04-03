@@ -76,6 +76,7 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Add speed multiplier to tween
 [X] If an object is passed to tween `start(...)` but the string for the attribute to tween is "", tween the value without a lookup
 
+[] Add simple shader that happens per pixel for all drawing functions
 [] Add button nodes
 
 
@@ -87,7 +88,6 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [] Allow setting sting to "" in Tween to directly interpolate value
 [] Add different easing types ot Tween (https://www.reddit.com/r/godot/comments/sg2nqq/reference_gif_for_all_the_interpolation_methods/, https://easings.net/#)
 [] Physics: got rotated circles and rectangles but still need to figure out a better way of separating nodes without an impulse, resolve angular velocity during collision
-[] Tweening
 [] Buttons
 [] Menu (carousel)
 Adam:

@@ -32,8 +32,10 @@ class MyCam(CameraNode):
 
         if engine_input.check_pressed(engine_input.BUMPER_RIGHT):
             self.rotation.y += 0.05
+            engine_input.rumble(self.rotation.y)
         if engine_input.check_pressed(engine_input.BUMPER_LEFT):
             self.rotation.y -= 0.05
+            engine_input.rumble(self.rotation.y)
     
 
         if engine_input.check_pressed(engine_input.DPAD_UP):
@@ -68,7 +70,20 @@ mesh = MeshNode()
 
 mesh.vertices.append(Vector3(-5, -5, 1))
 mesh.vertices.append(Vector3(5, -5, 1))
-mesh.vertices.append(Vector3(0, 5, 1))
+mesh.vertices.append(Vector3(0, 5, 5))
+
+mesh.vertices.append(Vector3(-5, -5, -1))
+mesh.vertices.append(Vector3(5, -5, -1))
+mesh.vertices.append(Vector3(0, 5, -5))
+
+mesh.vertices.append(Vector3(-5, -5, 1))
+mesh.vertices.append(Vector3(5, -5, 1))
+mesh.vertices.append(Vector3(0, -10, 5))
+
+mesh.vertices.append(Vector3(-5, -5, -1))
+mesh.vertices.append(Vector3(5, -5, -1))
+mesh.vertices.append(Vector3(0, -10, -5))
+
 
 print(mesh.vertices)
 
