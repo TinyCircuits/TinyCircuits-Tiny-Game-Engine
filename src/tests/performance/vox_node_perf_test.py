@@ -32,4 +32,4 @@ while ticks < ticks_end:
     ticks = ticks + 1 
 
 
-print("[vox_node_perf_test.py, avg. FPS: " + str(fps_total / ticks_end) + "]")
+print("-[vox_node_perf_test.py, avg. FPS: " + str(fps_total / ticks_end) + "]-")

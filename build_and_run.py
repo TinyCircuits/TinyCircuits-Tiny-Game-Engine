@@ -154,13 +154,13 @@ for to_import in imports_to_run:
     ser.write(("import " + to_import + "\r\n").encode("utf-8"))
 
     reading = ""
-    while "]" not in reading:
+    while "]-" not in reading:
         read = ser.read().decode("utf-8")
         print(read, end='')
         reading += read
     
-    fps_sample_start = reading.rfind("[")+1
-    fps_sample_end = reading.rfind("]")
+    fps_sample_start = reading.rfind("-[")+1
+    fps_sample_end = reading.rfind("]-")
     fps_sample_strs.append(reading[fps_sample_start:fps_sample_end])
     
 ser.close()

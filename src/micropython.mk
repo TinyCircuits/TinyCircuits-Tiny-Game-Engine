@@ -5,6 +5,7 @@ SRC_USERMOD += $(ENGINE_MOD_DIR)/engine.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/math/engine_math.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/draw/engine_draw_module.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/draw/engine_color.c
+SRC_USERMOD += $(ENGINE_MOD_DIR)/draw/engine_shader.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/math/engine_math_module.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/engine_nodes_module.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/input/engine_input_module.c

@@ -9,6 +9,7 @@ target_sources(usermod_engine INTERFACE
     ${ENGINE_MOD_DIR}/math/engine_math.c
     ${ENGINE_MOD_DIR}/draw/engine_draw_module.c
     ${ENGINE_MOD_DIR}/draw/engine_color.c
+    ${ENGINE_MOD_DIR}/draw/engine_shader.c
     ${ENGINE_MOD_DIR}/math/engine_math_module.c
     ${ENGINE_MOD_DIR}/nodes/engine_nodes_module.c
     ${ENGINE_MOD_DIR}/input/engine_input_module.c

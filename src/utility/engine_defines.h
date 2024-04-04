@@ -2,7 +2,7 @@
 #define ENGINE_DEFINES_H
 
 #if defined(__unix__)
-    #define ENGINE_FAST_FUNCTION(x) extern inline x
+    #define ENGINE_FAST_FUNCTION(x) x
 #elif defined(__arm__)
     #define ENGINE_FAST_FUNCTION(x) __time_critical_func(x) // https://www.raspberrypi.com/documentation/pico-sdk/runtime.html#ga27ef91000958320e25ff481d16786ebf
 #else

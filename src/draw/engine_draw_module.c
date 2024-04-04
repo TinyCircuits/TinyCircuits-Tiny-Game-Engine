@@ -36,7 +36,7 @@ STATIC mp_obj_t engine_draw_set_background(mp_obj_t module, mp_obj_t background)
     engine_fill_background = background_texture_resource->data;
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_1(engine_draw_set_background_obj, engine_draw_set_background);
+MP_DEFINE_CONST_FUN_OBJ_2(engine_draw_set_background_obj, engine_draw_set_background);
 
 
 /*  --- doc ---

@@ -164,7 +164,7 @@ void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t
 
     // When rotated at 45 degrees, make sure corners don't get cut
     // off: https://math.stackexchange.com/questions/2915935/radius-of-a-circle-touching-a-rectangle-both-of-which-are-inside-a-square
-    uint32_t dim = (uint32_t)sqrtf((scaled_window_width*scaled_window_width) + (scaled_window_height*scaled_window_height));
+    int32_t dim = (uint32_t)sqrtf((scaled_window_width*scaled_window_width) + (scaled_window_height*scaled_window_height));
     float dim_half = (dim / 2.0f);
 
     // The top-left of the bitmap destination
@@ -229,12 +229,12 @@ void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t
 
                 // Floor these otherwise get artifacts (don't exactly know why).
                 // Floor + int seems to be faster than comparing floats
-                int32_t rotX = floorf(x);
-                int32_t rotY = floorf(y);
+                uint32_t rotX = floorf(x);
+                uint32_t rotY = floorf(y);
 
                 // If statements are expensive! Don't need to check if withing screen
                 // bounds since those dimensions are clipped (destination rect)
-                if((rotX >= 0 && rotX < window_width) && (rotY >= 0 && rotY < window_height)){
+                if((rotX < window_width) && (rotY < window_height)){
                     uint32_t src_offset = rotY * pixels_stride + rotX;
                     uint16_t src_color = pixels[src_offset];
 
@@ -311,7 +311,7 @@ void engine_draw_rect(uint16_t color, float center_x, float center_y, uint32_t w
 
     // When rotated at 45 degrees, make sure corners don't get cut
     // off: https://math.stackexchange.com/questions/2915935/radius-of-a-circle-touching-a-rectangle-both-of-which-are-inside-a-square
-    uint32_t dim = (uint32_t)sqrtf((scaled_width*scaled_width) + (scaled_height*scaled_height));
+    int32_t dim = (uint32_t)sqrtf((scaled_width*scaled_width) + (scaled_height*scaled_height));
     float dim_half = (dim / 2.0f);
 
     // The top-left of the bitmap destination
@@ -376,12 +376,12 @@ void engine_draw_rect(uint16_t color, float center_x, float center_y, uint32_t w
 
                 // Floor these otherwise get artifacts (don't exactly know why).
                 // Floor + int seems to be faster than comparing floats
-                int32_t rotX = floorf(x);
-                int32_t rotY = floorf(y);
+                uint32_t rotX = floorf(x);
+                uint32_t rotY = floorf(y);
 
                 // If statements are expensive! Don't need to check if withing screen
                 // bounds since those dimensions are clipped (destination rect)
-                if((rotX >= 0 && rotX < width) && (rotY >= 0 && rotY < height)){
+                if((rotX < width) && (rotY < height)){
                     screen_buffer[dest_offset] = engine_pixel_shader(screen_buffer[dest_offset], color, alpha, default_shader, default_shader_len);
                 }
 

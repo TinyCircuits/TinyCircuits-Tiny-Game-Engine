@@ -14,4 +14,4 @@ while ticks < ticks_end:
     ticks = ticks + 1 
 
 
-print("[line_node_perf_test.py, avg. FPS: " + str(fps_total / ticks_end) + "]")
+print("-[line_node_perf_test.py, avg. FPS: " + str(fps_total / ticks_end) + "]-")

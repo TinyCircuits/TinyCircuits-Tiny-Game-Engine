@@ -1,0 +1,13 @@
+2024-04-03 17:50:48.228476 : 6dbf33d859d4134bc0f794b4c11eac478a6a2139
+test performance
+
+{
+line_node_perf_test.py, avg. FPS: 239.2818
+circle_node_perf_test.py, avg. FPS: 241.3116
+vox_node_perf_test.py, avg. FPS: 41.79807
+}
+
+
+ ----- 
+
+

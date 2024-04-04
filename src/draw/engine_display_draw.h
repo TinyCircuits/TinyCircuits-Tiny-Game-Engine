@@ -10,10 +10,6 @@
 // Color that is passed to draw function indicating that no transparency is needed
 #define ENGINE_NO_TRANSPARENCY_COLOR 0b0000100000100001
 
-enum engine_shader_op_codes{
-    SHADER_OPACITY_BLEND,    // blend the next two `bg` bytes to the subsequent `fg` bytes
-    SHADER_RGB_INTERPOLATE,  // Interpolate `fg` to the color stored in the next two bytes using the 4 bytes after as the bytes containing a float from 0.0 to 1.0
-};
 
 // Fills entire screen buffer with 'color'
 void ENGINE_FAST_FUNCTION(engine_draw_fill_color)(uint16_t color, uint16_t *screen_buffer);

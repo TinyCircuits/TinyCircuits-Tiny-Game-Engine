@@ -11,7 +11,7 @@ import math
 import os
 import time
 
-
+engine.set_fps_limit(60)
 engine_draw.set_background_color(engine_draw.skyblue)
 
 
