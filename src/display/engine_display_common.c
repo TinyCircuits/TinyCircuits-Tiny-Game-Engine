@@ -44,11 +44,7 @@ uint16_t *engine_get_active_screen_buffer(){
 
 void engine_switch_active_screen_buffer(){
     // Switch which screen buffer should be drawn to
-    if(active_screen_buffer_index == 0){
-        active_screen_buffer_index = 1;
-    }else{
-        active_screen_buffer_index = 0;
-    }
+    active_screen_buffer_index = 1 - active_screen_buffer_index;
 
     active_screen_buffer = dual_screen_buffers[active_screen_buffer_index];
 }

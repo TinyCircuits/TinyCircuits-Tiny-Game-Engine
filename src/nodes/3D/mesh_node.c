@@ -57,11 +57,11 @@ void mesh_node_class_draw(engine_node_base_t *mesh_node_base, mp_obj_t camera_no
     mat4 m_projection = GLM_MAT4_ZERO_INIT;
     glm_perspective(1.571, SCREEN_WIDTH/SCREEN_HEIGHT, 0.1f, 1000.0f, m_projection);
 
-    mat4 m_model = GLM_MAT4_IDENTITY_INIT;
+    // mat4 m_model = GLM_MAT4_IDENTITY_INIT;
 
     mat4 mvp = GLM_MAT4_ZERO_INIT;
     glm_mat4_mul(m_projection, m_view, mvp);
-    glm_mat4_mul(mvp, m_model, mvp);
+    // glm_mat4_mul(mvp, m_model, mvp);
 
     vec4 v_viewport = {0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT};
 
@@ -223,7 +223,7 @@ mp_obj_t mesh_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_
         inherited = false;
     }
 
-    if(parsed_args[position].u_obj == MP_OBJ_NULL) parsed_args[position].u_obj = vector3_class_new(&vector3_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(0.0f), mp_obj_new_float(0.0f)});
+    if(parsed_args[position].u_obj == MP_OBJ_NULL) parsed_args[position].u_obj = vector3_class_new(&vector3_class_type, 3, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(0.0f), mp_obj_new_float(0.0f)});
     if(parsed_args[vertices].u_obj == MP_OBJ_NULL) parsed_args[vertices].u_obj = mp_obj_new_list(0, NULL);
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node

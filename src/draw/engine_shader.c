@@ -1,5 +1,6 @@
 #include "engine_shader.h"
 #include "draw/engine_color.h"
+#include "debug/debug_print.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -19,18 +20,13 @@ uint16_t ENGINE_FAST_FUNCTION(engine_pixel_shader_alpha)(uint16_t bg, uint16_t f
 
 // Slow function for when a node has a custom shader (TODO: not implemented yet)
 uint16_t ENGINE_FAST_FUNCTION(engine_pixel_shader_custom)(uint16_t bg, uint16_t fg, float opacity, engine_shader_t *shader){
-    if(shader == NULL || shader->program == NULL || shader->program_len == 0){
-        return fg;
-    }
-
-    uint16_t result = fg;
     uint8_t index = 0;
 
     while(index < shader->program_len){
         switch(shader->program[index]){
             case SHADER_OPACITY_BLEND:
             {
-                result = engine_color_alpha_blend(bg, result, opacity);
+                fg = engine_color_alpha_blend(bg, fg, opacity);
             }
             break;
             case SHADER_RGB_INTERPOLATE:
@@ -40,9 +36,9 @@ uint16_t ENGINE_FAST_FUNCTION(engine_pixel_shader_custom)(uint16_t bg, uint16_t 
                 interpolate_to_color |= (shader->program[index+2] << 0);
 
                 float t = 0;
-                memcpy(&t, shader+index+3, 4);
+                memcpy(&t, shader->program+index+3, sizeof(float));
 
-                result = engine_color_blend(result, interpolate_to_color, t);
+                fg = engine_color_blend(fg, interpolate_to_color, t);
 
                 index += 6; // OPPFFFF
                 continue;
@@ -53,7 +49,7 @@ uint16_t ENGINE_FAST_FUNCTION(engine_pixel_shader_custom)(uint16_t bg, uint16_t 
         index++;
     }
 
-    return result;
+    return fg;
 }
 
 
@@ -70,4 +66,11 @@ engine_shader_t opacity_shader = {
     .program = {},
     .program_len = 0,
     .execute = engine_pixel_shader_alpha,
+};
+
+
+engine_shader_t blend_opacity_shader = {
+    .program = {SHADER_RGB_INTERPOLATE, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, SHADER_OPACITY_BLEND},
+    .program_len = 8,
+    .execute = engine_pixel_shader_custom,
 };

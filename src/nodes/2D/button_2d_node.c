@@ -14,6 +14,8 @@
 #include "draw/engine_color.h"
 #include "resources/engine_font_resource.h"
 
+#include <string.h>
+
 
 // Class required functions
 STATIC void button_2d_node_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
@@ -87,19 +89,27 @@ void button_2d_node_class_draw(engine_node_base_t *button_node_base, mp_obj_t ca
 
         engine_draw_rect(0b1111100000000000,
                          button_rotated_x, button_rotated_y,
-                         button->width, button->height,
+                         button->width_padded, button->height_padded,
                          x_scale, y_scale,
                        -(button_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation),
                          button_opacity,
                          shader);
 
+        uint16_t color = 0b0000011111100000;
+        float t = 1.0f;
+
+        blend_opacity_shader.program[1] = (color >> 8) & 0b11111111;
+        blend_opacity_shader.program[2] = (color >> 0) & 0b11111111;
+
+        memcpy(blend_opacity_shader.program+3, &t, sizeof(float));
+
         engine_draw_text(font, button->text,
-                         button_rotated_x, button_rotated_y, 
+                         button_rotated_x, button_rotated_y,
                          button->width, button->height,
                          x_scale, y_scale,
                          button_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation,
                          button_opacity,
-                         shader);
+                         &blend_opacity_shader);
     }
 }
 
@@ -107,6 +117,9 @@ void button_2d_node_class_draw(engine_node_base_t *button_node_base, mp_obj_t ca
 void button_2d_node_calculate_dimensions(engine_button_2d_node_class_obj_t *button){
     if(button->text != mp_const_none && button->font_resource != mp_const_none){
         font_resource_get_box_dimensions(button->font_resource, button->text, &button->width, &button->height);
+        float padding = mp_obj_get_float(button->padding) * 2.0f;
+        button->width_padded = button->width + padding;
+        button->height_padded = button->height + padding;
     }
 }
 
@@ -163,6 +176,10 @@ bool button_2d_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp_
             destination[0] = self->text;
             return true;
         break;
+        case MP_QSTR_padding:
+            destination[0] = self->padding;
+            return true;
+        break;
         case MP_QSTR_rotation:
             destination[0] = self->rotation;
             return true;
@@ -180,11 +197,11 @@ bool button_2d_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp_
             return true;
         break;
         case MP_QSTR_width:
-            destination[0] = mp_obj_new_float(self->width);
+            destination[0] = mp_obj_new_float(self->width_padded);
             return true;
         break;
         case MP_QSTR_height:
-            destination[0] = mp_obj_new_float(self->height);
+            destination[0] = mp_obj_new_float(self->height_padded);
             return true;
         break;
         default:
@@ -210,6 +227,11 @@ bool button_2d_store_attr(engine_node_base_t *self_node_base, qstr attribute, mp
         break;
         case MP_QSTR_text:
             self->text = destination[1];
+            button_2d_node_calculate_dimensions(self);
+            return true;
+        break;
+        case MP_QSTR_padding:
+            self->padding = destination[1];
             button_2d_node_calculate_dimensions(self);
             return true;
         break;
@@ -284,12 +306,13 @@ mp_obj_t button_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
         { MP_QSTR_position,     MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_font,         MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_text,         MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_padding,      MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_rotation,     MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_scale,        MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_opacity,      MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
-    enum arg_ids {child_class, position, font, text, rotation, scale, opacity};
+    enum arg_ids {child_class, position, font, text, padding, rotation, scale, opacity};
     bool inherited = false;
 
     // If there is one positional argument and it isn't the first 
@@ -312,6 +335,7 @@ mp_obj_t button_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
     if(parsed_args[position].u_obj == MP_OBJ_NULL) parsed_args[position].u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(0.0f)});
     if(parsed_args[font].u_obj == MP_OBJ_NULL) parsed_args[font].u_obj = mp_const_none;
     if(parsed_args[text].u_obj == MP_OBJ_NULL) parsed_args[text].u_obj = mp_const_none;
+    if(parsed_args[padding].u_obj == MP_OBJ_NULL) parsed_args[padding].u_obj = mp_obj_new_float(1.0f);
     if(parsed_args[rotation].u_obj == MP_OBJ_NULL) parsed_args[rotation].u_obj = mp_obj_new_float(0.0f);
     if(parsed_args[scale].u_obj == MP_OBJ_NULL) parsed_args[scale].u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)});
     if(parsed_args[opacity].u_obj == MP_OBJ_NULL) parsed_args[opacity].u_obj = mp_obj_new_float(1.0f);
@@ -328,6 +352,7 @@ mp_obj_t button_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
     button_2d_node->position = parsed_args[position].u_obj;
     button_2d_node->font_resource = parsed_args[font].u_obj;
     button_2d_node->text = parsed_args[text].u_obj;
+    button_2d_node->padding = parsed_args[padding].u_obj;
     button_2d_node->rotation = parsed_args[rotation].u_obj;
     button_2d_node->scale = parsed_args[scale].u_obj;
     button_2d_node->opacity = parsed_args[opacity].u_obj;

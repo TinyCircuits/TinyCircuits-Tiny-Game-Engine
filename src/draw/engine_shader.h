@@ -17,5 +17,6 @@ typedef struct engine_shader_t{
 
 engine_shader_t empty_shader;
 engine_shader_t opacity_shader;
+engine_shader_t blend_opacity_shader;
 
 #endif  // ENGINE_SHADER_H

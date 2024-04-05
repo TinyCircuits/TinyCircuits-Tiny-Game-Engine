@@ -20,6 +20,9 @@
 #include "py/stream.h"
 #include "py/gc.h"
 
+#include "py/objtype.h"
+#include "py/objstr.h"
+
 // ### MODULE ###
 
 // Module functions

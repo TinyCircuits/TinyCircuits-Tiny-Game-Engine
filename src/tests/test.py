@@ -100,7 +100,7 @@ circle.add_child(text)
 circle.add_child(text0)
 circle.add_child(line)
 
-cursor = Circle2DNode(radius=7, color=engine_draw.green, outline=False, position=Vector2(0, 0), opacity=1.0)
+cursor = Circle2DNode(radius=4, color=engine_draw.green, outline=True, position=Vector2(0, 0), opacity=1.0)
 
 camera.add_child(cursor)
 

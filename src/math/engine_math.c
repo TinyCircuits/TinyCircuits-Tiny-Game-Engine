@@ -35,13 +35,14 @@ void engine_math_cross_product_v_float(float in_x, float in_y, float value, floa
 void engine_math_normalize(float *vx, float *vy){
     float length = sqrtf((*vx) * (*vx) + (*vy) * (*vy));
 
-    if(engine_math_compare_floats(length, 0.0) == false){
-        const float factor = 1.0 / length;
-        *vx = (*vx) * factor;
-        *vy = (*vy) * factor;
-    }else{
-        mp_raise_msg(&mp_type_RuntimeError, "EngineMath: Could not normalize 2d vector");
+    // https://stackoverflow.com/a/66446497
+    if(engine_math_compare_floats(length, 0.0)){
+        length = 0.0001f;
     }
+
+    const float factor = 1.0 / length;
+    *vx = (*vx) * factor;
+    *vy = (*vy) * factor;
 }
 
 
@@ -49,14 +50,15 @@ void engine_math_normalize(float *vx, float *vy){
 void engine_math_3d_normalize(float *vx, float *vy, float *vz){
     float length = sqrtf((*vx) * (*vx) + (*vy) * (*vy) + (*vz) * (*vz));
 
-    if(engine_math_compare_floats(length, 0.0) == false){
-        const float factor = 1.0 / length;
-        *vx = (*vx) * factor;
-        *vy = (*vy) * factor;
-        *vz = (*vz) * factor;
-    }else{
-        mp_raise_msg(&mp_type_RuntimeError, "EngineMath: Could not normalize 3d vector");
+    // https://stackoverflow.com/a/66446497
+    if(engine_math_compare_floats(length, 0.0)){
+        length = 0.0001f;
     }
+
+    const float factor = 1.0 / length;
+    *vx = (*vx) * factor;
+    *vy = (*vy) * factor;
+    *vz = (*vz) * factor;
 }
 
 

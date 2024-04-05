@@ -9,6 +9,7 @@ typedef struct{
     mp_obj_t position;
     mp_obj_t font_resource;
     mp_obj_t text;
+    mp_obj_t padding;
     mp_obj_t rotation;
     mp_obj_t scale;
     mp_obj_t opacity;
@@ -16,6 +17,8 @@ typedef struct{
     bool focused;
     float width;
     float height;
+    float width_padded;
+    float height_padded;
 }engine_button_2d_node_class_obj_t;
 
 extern const mp_obj_type_t engine_button_2d_node_class_type;

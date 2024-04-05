@@ -6,8 +6,8 @@ import engine_input
 
 font = FontResource("9pt-roboto-font.bmp")
 # button = Button2DNode(font=font, text="Hi\nYo!", rotation=0)
-button2 = Button2DNode(font=font, text="Hello\nWorld!\n^^^^^^", rotation=0, scale=Vector2(1, 1))
-
+button2 = Button2DNode(font=font, text="Hello\nWorld!\nXXXXX", rotation=0, scale=Vector2(1, 1))
+button2.padding = 3
 
 
 class MyCam(CameraNode):
