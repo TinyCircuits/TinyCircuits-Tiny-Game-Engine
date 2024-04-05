@@ -182,7 +182,7 @@ if len(fps_sample_strs) > 0:
         to_write += sample_str + "\n"
     to_write += "}"
 
-    to_write += "\n\n\n ----- \n\n\n"
+    to_write += "\n\n\n ----- \n\n\n\n"
 
     print(to_write)
 
@@ -193,4 +193,4 @@ if len(fps_sample_strs) > 0:
     # Need to add the now written to `performance_samples.txt`
     # without editing message or running hooks again
     execute(['git', 'add', 'performance_samples.txt'])
-    execute(['git', 'commit', '--no-verify', '--amend', '--no-edit'])
+    execute(['git', 'commit', '--amend', '--no-edit', '--no-verify'])
