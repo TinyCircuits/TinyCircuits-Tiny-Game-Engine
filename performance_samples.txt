@@ -26,3 +26,33 @@ vox_node_perf_test.py, avg. FPS: 43.04103
  ----- 
 
 
+2024-04-05 11:31:40.731816 : 2732279ce264f568ba629c07f5c1aea8a1373784
+Speed up blending alpha and colors by removing if statements
+
+{
+line_node_perf_test.py, avg. FPS: 239.2816
+test_opacity_perf_test.py, avg. FPS: 80.01699
+test_perf_test.py, avg. FPS: 97.79822
+circle_node_perf_test.py, avg. FPS: 241.4409
+vox_node_perf_test.py, avg. FPS: 43.04638
+}
+
+
+ ----- 
+
+
+2024-04-05 11:37:28.624966 : e24204337113ae0c922a7ea5df2207371f5c6e08
+Try adding perf samples to commit after commit
+
+{
+line_node_perf_test.py, avg. FPS: 239.2817
+test_opacity_perf_test.py, avg. FPS: 81.66255
+test_perf_test.py, avg. FPS: 99.46484
+circle_node_perf_test.py, avg. FPS: 241.4409
+vox_node_perf_test.py, avg. FPS: 43.04658
+}
+
+
+ ----- 
+
+
