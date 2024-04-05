@@ -42,7 +42,7 @@ class MyCircle(Circle2DNode):
 
 circle = MyCircle()
 circle.radius = 25
-circle.opacity = 1.0
+circle.opacity = 0.5
 rectangle = Rectangle2DNode()
 rectangle.width = 30
 rectangle.height = 15

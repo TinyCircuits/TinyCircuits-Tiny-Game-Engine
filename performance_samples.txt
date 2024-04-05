@@ -11,3 +11,18 @@ vox_node_perf_test.py, avg. FPS: 41.79807
  ----- 
 
 
+2024-04-05 11:17:26.134569 : 572dee31309a3f54b79df1d1dbf7fc6beb2ca444
+Make sure nodes draw as fast as possible if they do not use opacity
+
+{
+line_node_perf_test.py, avg. FPS: 239.1151
+test_opacity_perf_test.py, avg. FPS: 51.24171
+test_perf_test.py, avg. FPS: 98.04024
+circle_node_perf_test.py, avg. FPS: 241.4444
+vox_node_perf_test.py, avg. FPS: 43.04103
+}
+
+
+ ----- 
+
+

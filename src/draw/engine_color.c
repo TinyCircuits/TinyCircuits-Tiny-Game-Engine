@@ -33,12 +33,6 @@ void engine_color_sync_rgb_to_u16(color_class_obj_t *color){
 
 // https://stackoverflow.com/a/29321264
 uint16_t ENGINE_FAST_FUNCTION(engine_color_blend)(uint16_t from, uint16_t to, float amount){
-    if(engine_math_compare_floats(amount, 0.0f)){
-        return from;
-    }else if(engine_math_compare_floats(amount, 1.0f)){
-        return to;
-    }
-
     const uint16_t from_r = (from >> 11) & bitmask_5_bit;
     const uint16_t from_g = (from >> 5)  & bitmask_6_bit;
     const uint16_t from_b = (from >> 0)  & bitmask_5_bit;
@@ -48,8 +42,8 @@ uint16_t ENGINE_FAST_FUNCTION(engine_color_blend)(uint16_t from, uint16_t to, fl
     const uint16_t to_b = (to >> 0)  & bitmask_5_bit;
 
     const uint16_t out_r = sqrtf((1.0f - amount) * (from_r*from_r) + amount * (to_r*to_r));
-    const uint16_t out_g = sqrtf((1.0f - amount) * (from_r*from_r) + amount * (to_r*to_r));
-    const uint16_t out_b = sqrtf((1.0f - amount) * (from_r*from_r) + amount * (to_r*to_r));
+    const uint16_t out_g = sqrtf((1.0f - amount) * (from_g*from_g) + amount * (to_g*to_g));
+    const uint16_t out_b = sqrtf((1.0f - amount) * (from_b*from_b) + amount * (to_b*to_b));
 
     uint16_t result = 0;
     result |= (out_r << 11);
@@ -62,12 +56,6 @@ uint16_t ENGINE_FAST_FUNCTION(engine_color_blend)(uint16_t from, uint16_t to, fl
 
 // https://stackoverflow.com/a/19060243
 uint16_t ENGINE_FAST_FUNCTION(engine_color_alpha_blend)(uint16_t background, uint16_t foreground, float alpha){
-    if(engine_math_compare_floats(alpha, 0.0f)){
-        return background;
-    }else if(engine_math_compare_floats(alpha, 1.0f)){
-        return foreground;
-    }
-
     const uint16_t bg_r = (background >> 11) & bitmask_5_bit;
     const uint16_t bg_g = (background >> 5)  & bitmask_6_bit;
     const uint16_t bg_b = (background >> 0)  & bitmask_5_bit;
