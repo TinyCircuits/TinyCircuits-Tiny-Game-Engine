@@ -9,6 +9,7 @@
 #include "draw/engine_display_draw.h"
 #include "math/engine_math.h"
 #include "draw/engine_color.h"
+#include "draw/engine_shader.h"
 
 
 // Class required functions
@@ -75,13 +76,20 @@ void rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_base, mp_ob
     rectangle_rotated_x += camera_viewport->width/2;
     rectangle_rotated_y += camera_viewport->height/2;
 
+    // Decide which shader to use per-pixel
+    engine_shader_t *shader = &empty_shader;
+    if(rectangle_opacity < 1.0f){
+        shader = &opacity_shader;
+    }
+
     if(rectangle_outlined == false){
         engine_draw_rect(rectangle_color->value.val,
                          rectangle_rotated_x, rectangle_rotated_y,
                          rectangle_width, rectangle_height,
                          rectangle_scale->x.value*camera_zoom, rectangle_scale->y.value*camera_zoom,
                        -(rectangle_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation),
-                         rectangle_opacity);
+                         rectangle_opacity,
+                         shader);
     }else{
         float rectangle_half_width = rectangle_width/2;
         float rectangle_half_height = rectangle_height/2;
@@ -107,10 +115,10 @@ void rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_base, mp_ob
         engine_math_rotate_point(&brx, &bry, rectangle_rotated_x, rectangle_rotated_y, angle);
         engine_math_rotate_point(&blx, &bly, rectangle_rotated_x, rectangle_rotated_y, angle);
 
-        engine_draw_line(rectangle_color->value.val, tlx, tly, trx, try, camera_node, rectangle_opacity);
-        engine_draw_line(rectangle_color->value.val, trx, try, brx, bry, camera_node, rectangle_opacity);
-        engine_draw_line(rectangle_color->value.val, brx, bry, blx, bly, camera_node, rectangle_opacity);
-        engine_draw_line(rectangle_color->value.val, blx, bly, tlx, tly, camera_node, rectangle_opacity);
+        engine_draw_line(rectangle_color->value.val, tlx, tly, trx, try, camera_node, rectangle_opacity, shader);
+        engine_draw_line(rectangle_color->value.val, trx, try, brx, bry, camera_node, rectangle_opacity, shader);
+        engine_draw_line(rectangle_color->value.val, brx, bry, blx, bly, camera_node, rectangle_opacity, shader);
+        engine_draw_line(rectangle_color->value.val, blx, bly, tlx, tly, camera_node, rectangle_opacity, shader);
     }
 }
 

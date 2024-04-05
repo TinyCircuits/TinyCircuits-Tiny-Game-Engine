@@ -14,6 +14,7 @@
 #include "utility/engine_file.h"
 #include "math/engine_math.h"
 #include "utility/engine_time.h"
+#include "draw/engine_shader.h"
 
 
 // Class required functions
@@ -82,7 +83,13 @@ void text_2d_node_class_draw(engine_node_base_t *text_node_base, mp_obj_t camera
     text_rotated_x += camera_viewport->width/2;
     text_rotated_y += camera_viewport->height/2;
 
-    engine_draw_text(text_font, text_obj, text_rotated_x, text_rotated_y, text_box_width, text_box_height, text_scale->x.value*camera_zoom, text_scale->y.value*camera_zoom, text_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation, text_opacity);
+    // Decide which shader to use per-pixel
+    engine_shader_t *shader = &empty_shader;
+    if(text_opacity < 1.0f){
+        shader = &opacity_shader;
+    }
+
+    engine_draw_text(text_font, text_obj, text_rotated_x, text_rotated_y, text_box_width, text_box_height, text_scale->x.value*camera_zoom, text_scale->y.value*camera_zoom, text_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation, text_opacity, shader);
 }
 
 

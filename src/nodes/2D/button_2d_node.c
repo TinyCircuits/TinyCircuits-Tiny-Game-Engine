@@ -9,6 +9,7 @@
 #include "math/vector3.h"
 #include "math/rectangle.h"
 #include "draw/engine_display_draw.h"
+#include "draw/engine_shader.h"
 #include "math/engine_math.h"
 #include "draw/engine_color.h"
 #include "resources/engine_font_resource.h"
@@ -78,21 +79,27 @@ void button_2d_node_class_draw(engine_node_base_t *button_node_base, mp_obj_t ca
         float x_scale = button_scale->x.value*camera_zoom;
         float y_scale = button_scale->y.value*camera_zoom;
 
-        float traversal_scale = sqrtf(x_scale * y_scale);
+        // Decide which shader to use per-pixel
+        engine_shader_t *shader = &empty_shader;
+        if(button_opacity < 1.0f){
+            shader = &opacity_shader;
+        }
 
         engine_draw_rect(0b1111100000000000,
                          button_rotated_x, button_rotated_y,
                          button->width, button->height,
                          x_scale, y_scale,
                        -(button_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation),
-                         button_opacity);
+                         button_opacity,
+                         shader);
 
         engine_draw_text(font, button->text,
                          button_rotated_x, button_rotated_y, 
                          button->width, button->height,
                          x_scale, y_scale,
                          button_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation,
-                         button_opacity);
+                         button_opacity,
+                         shader);
     }
 }
 

@@ -159,7 +159,7 @@ for to_import in imports_to_run:
         print(read, end='')
         reading += read
     
-    fps_sample_start = reading.rfind("-[")+1
+    fps_sample_start = reading.rfind("-[")+2
     fps_sample_end = reading.rfind("]-")
     fps_sample_strs.append(reading[fps_sample_start:fps_sample_end])
     

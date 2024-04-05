@@ -12,6 +12,7 @@
 #include "math/engine_math.h"
 #include "utility/engine_time.h"
 #include "draw/engine_color.h"
+#include "draw/engine_shader.h"
 
 
 // Class required functions
@@ -38,7 +39,6 @@ void sprite_2d_node_class_draw(engine_node_base_t *sprite_node_base, mp_obj_t ca
     texture_resource_class_obj_t *sprite_texture = mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_texture);
     float sprite_opacity = mp_obj_get_float(mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_opacity));
 
-    vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
     vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
     rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
     float camera_zoom = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_zoom));
@@ -90,7 +90,11 @@ void sprite_2d_node_class_draw(engine_node_base_t *sprite_node_base, mp_obj_t ca
     sprite_rotated_x += camera_viewport->width/2;
     sprite_rotated_y += camera_viewport->height/2;
 
-    // engine_draw_pixel(0xffff, sprite_rotated_x, sprite_rotated_y);
+    // Decide which shader to use per-pixel
+    engine_shader_t *shader = &empty_shader;
+    if(sprite_opacity < 1.0f){
+        shader = &opacity_shader;
+    }
 
     engine_draw_blit(sprite_pixel_data+sprite_frame_fb_start_index,
                      sprite_rotated_x, sprite_rotated_y,
@@ -100,7 +104,8 @@ void sprite_2d_node_class_draw(engine_node_base_t *sprite_node_base, mp_obj_t ca
                      sprite_scale->y.value*camera_zoom,
                      -(sprite_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation),
                      transparent_color->value.val,
-                     sprite_opacity);
+                     sprite_opacity,
+                     shader);
 
     // After drawing, go to the next frame if it is time to and the animation is playing
     if(sprite_playing == 1){

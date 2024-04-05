@@ -67,7 +67,6 @@ class MyCam(CameraNode):
         super().__init__(self)
     
     def tick(self):
-        print(engine.get_running_fps())
         if engine_input.check_pressed(engine_input.A):
             self.zoom -= 0.005
         if engine_input.check_pressed(engine_input.B):
@@ -104,4 +103,14 @@ cursor = Circle2DNode(radius=7, color=engine_draw.green, outline=False, position
 
 camera.add_child(cursor)
 
-engine.start()
+
+ticks = 0
+ticks_end = 60 * 5
+fps_total = 0
+while ticks < ticks_end:
+    engine.tick()
+    fps_total = fps_total + engine.get_running_fps()
+    ticks = ticks + 1 
+
+
+print("-[test_perf_test.py, avg. FPS: " + str(fps_total / ticks_end) + "]-")

@@ -12,6 +12,8 @@
 #include "draw/engine_color.h"
 #include "nodes/3D/camera_node.h"
 #include "display/engine_display_common.h"
+#include "draw/engine_display_draw.h"
+#include "draw/engine_shader.h"
 
 #include "../../cglm/include/cglm/cglm.h"
 #include "../../cglm/include/cglm/vec3.h"
@@ -80,9 +82,9 @@ void mesh_node_class_draw(engine_node_base_t *mesh_node_base, mp_obj_t camera_no
         glm_project(v1, mvp, v_viewport, out_1);
         glm_project(v2, mvp, v_viewport, out_2);
 
-        engine_draw_line(0xffff, out_0[0], out_0[1], out_1[0], out_1[1], NULL, 1.0f);
-        engine_draw_line(0xffff, out_1[0], out_1[1], out_2[0], out_2[1], NULL, 1.0f);
-        engine_draw_line(0xffff, out_2[0], out_2[1], out_0[0], out_0[1], NULL, 1.0f);
+        engine_draw_line(0xffff, out_0[0], out_0[1], out_1[0], out_1[1], NULL, 1.0f, &empty_shader);
+        engine_draw_line(0xffff, out_1[0], out_1[1], out_2[0], out_2[1], NULL, 1.0f, &empty_shader);
+        engine_draw_line(0xffff, out_2[0], out_2[1], out_0[0], out_0[1], NULL, 1.0f, &empty_shader);
     }
 }
 
@@ -187,6 +189,8 @@ STATIC mp_attr_fun_t mesh_node_class_attr(mp_obj_t self_in, qstr attribute, mp_o
     if(is_obj_instance && attr_handled == false){
         default_instance_attr_func(self_in, attribute, destination);
     }
+
+    return mp_const_none;
 }
 
 
@@ -219,7 +223,7 @@ mp_obj_t mesh_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_
         inherited = false;
     }
 
-    if(parsed_args[position].u_obj == MP_OBJ_NULL) parsed_args[position].u_obj = vector2_class_new(&vector3_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(0.0f), mp_obj_new_float(0.0f)});
+    if(parsed_args[position].u_obj == MP_OBJ_NULL) parsed_args[position].u_obj = vector3_class_new(&vector3_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(0.0f), mp_obj_new_float(0.0f)});
     if(parsed_args[vertices].u_obj == MP_OBJ_NULL) parsed_args[vertices].u_obj = mp_obj_new_list(0, NULL);
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node

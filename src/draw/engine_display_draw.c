@@ -11,51 +11,10 @@
 #include "math/rectangle.h"
 #include "math/engine_math.h"
 #include "draw/engine_color.h"
+#include "draw/engine_shader.h"
 
 #include "py/objstr.h"
 #include "py/objtype.h"
-
-const uint8_t default_shader_len = 1;
-uint8_t default_shader[1] = {SHADER_OPACITY_BLEND};
-
-
-uint16_t ENGINE_FAST_FUNCTION(engine_pixel_shader)(uint16_t bg, uint16_t fg, float opacity, uint8_t *shader, uint8_t shader_len){
-    if(shader == NULL || shader_len == 0){
-        return fg;
-    }
-
-    uint16_t result = fg;
-    uint8_t index = 0;
-
-    while(index < shader_len){
-        switch(shader[index]){
-            case SHADER_OPACITY_BLEND:
-            {
-                result = engine_color_alpha_blend(bg, result, opacity);
-            }
-            break;
-            case SHADER_RGB_INTERPOLATE:
-            {
-                uint16_t interpolate_to_color = 0x0000;
-                interpolate_to_color |= (shader[index+1] << 8);
-                interpolate_to_color |= (shader[index+2] << 0);
-
-                float t = 0;
-                memcpy(&t, shader+index+3, 4);
-
-                result = engine_color_blend(result, interpolate_to_color, t);
-
-                index += 6; // OPPFFFF
-                continue;
-            }
-            break;
-        }
-
-        index++;
-    }
-
-    return result;
-}
 
 
 void ENGINE_FAST_FUNCTION(engine_draw_fill_color)(uint16_t color, uint16_t *screen_buffer){
@@ -76,18 +35,18 @@ void ENGINE_FAST_FUNCTION(engine_draw_fill_buffer)(uint16_t* src_buffer, uint16_
 }
 
 
-void ENGINE_FAST_FUNCTION(engine_draw_pixel)(uint16_t color, int32_t x, int32_t y, float alpha, uint8_t *shader, uint8_t shader_len){
+void ENGINE_FAST_FUNCTION(engine_draw_pixel)(uint16_t color, int32_t x, int32_t y, float alpha, engine_shader_t *shader){
     if((x >= 0 && x < SCREEN_WIDTH) && (y >= 0 && y < SCREEN_HEIGHT)){
         uint16_t *screen_buffer = engine_get_active_screen_buffer();
         uint16_t index = y * SCREEN_WIDTH + x;
 
-        screen_buffer[index] = engine_pixel_shader(screen_buffer[index], color, alpha, shader, shader_len);
+        screen_buffer[index] = shader->execute(screen_buffer[index], color, alpha, shader);
     }
 }
 
 
 // https://en.wikipedia.org/wiki/Digital_differential_analyzer_(graphics_algorithm)
-void engine_draw_line(uint16_t color, float x_start, float y_start, float x_end, float y_end, mp_obj_t camera_node_base_in, float alpha){
+void engine_draw_line(uint16_t color, float x_start, float y_start, float x_end, float y_end, mp_obj_t camera_node_base_in, float alpha, engine_shader_t *shader){
     // Distance difference between endpoints
     float dx = x_end - x_start;
     float dy = y_end - y_start;
@@ -112,14 +71,14 @@ void engine_draw_line(uint16_t color, float x_start, float y_start, float x_end,
         line_x = line_x + slope_x;
         line_y = line_y + slope_y;
 
-        engine_draw_pixel(color, (int32_t)line_x, (int32_t)line_y, alpha, default_shader, default_shader_len);
+        engine_draw_pixel(color, (int32_t)line_x, (int32_t)line_y, alpha, shader);
     }
 }
 
 
 
 
-void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t window_width, uint32_t window_height, uint32_t pixels_stride, float x_scale, float y_scale, float rotation_radians, uint16_t transparent_color, float alpha){
+void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t window_width, uint32_t window_height, uint32_t pixels_stride, float x_scale, float y_scale, float rotation_radians, uint16_t transparent_color, float alpha, engine_shader_t *shader){
     /*  https://cohost.org/tomforsyth/post/891823-rotation-with-three#:~:text=But%20the%20TL%3BDR%20is%20you%20do%20three%20shears%3A
         https://stackoverflow.com/questions/65909025/rotating-a-bitmap-with-3-shears    Lots of inspiration from here
         https://computergraphics.stackexchange.com/questions/10599/rotate-a-bitmap-with-shearing
@@ -164,7 +123,7 @@ void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t
 
     // When rotated at 45 degrees, make sure corners don't get cut
     // off: https://math.stackexchange.com/questions/2915935/radius-of-a-circle-touching-a-rectangle-both-of-which-are-inside-a-square
-    int32_t dim = (uint32_t)sqrtf((scaled_window_width*scaled_window_width) + (scaled_window_height*scaled_window_height));
+    uint32_t dim = (uint32_t)sqrtf((scaled_window_width*scaled_window_width) + (scaled_window_height*scaled_window_height));
     float dim_half = (dim / 2.0f);
 
     // The top-left of the bitmap destination
@@ -229,17 +188,17 @@ void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t
 
                 // Floor these otherwise get artifacts (don't exactly know why).
                 // Floor + int seems to be faster than comparing floats
-                uint32_t rotX = floorf(x);
-                uint32_t rotY = floorf(y);
+                int32_t rotX = floorf(x);
+                int32_t rotY = floorf(y);
 
                 // If statements are expensive! Don't need to check if withing screen
                 // bounds since those dimensions are clipped (destination rect)
-                if((rotX < window_width) && (rotY < window_height)){
+                if((rotX >= 0 && rotX < window_width) && (rotY >= 0 && rotY < window_height)){
                     uint32_t src_offset = rotY * pixels_stride + rotX;
                     uint16_t src_color = pixels[src_offset];
 
                     if(src_color != transparent_color || src_color == ENGINE_NO_TRANSPARENCY_COLOR){
-                        screen_buffer[dest_offset] = engine_pixel_shader(screen_buffer[dest_offset], src_color, alpha, default_shader, default_shader_len);
+                        screen_buffer[dest_offset] = shader->execute(screen_buffer[dest_offset], src_color, alpha, shader);
                     }
                 }
 
@@ -266,7 +225,7 @@ void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t
     // ENGINE_PERFORMANCE_CYCLES_STOP();
 }
 
-void engine_draw_rect(uint16_t color, float center_x, float center_y, uint32_t width, uint32_t height, float x_scale, float y_scale, float rotation_radians, float alpha){
+void engine_draw_rect(uint16_t color, float center_x, float center_y, uint32_t width, uint32_t height, float x_scale, float y_scale, float rotation_radians, float alpha, engine_shader_t *shader){
     /*  https://cohost.org/tomforsyth/post/891823-rotation-with-three#:~:text=But%20the%20TL%3BDR%20is%20you%20do%20three%20shears%3A
         https://stackoverflow.com/questions/65909025/rotating-a-bitmap-with-3-shears    Lots of inspiration from here
         https://computergraphics.stackexchange.com/questions/10599/rotate-a-bitmap-with-shearing
@@ -311,7 +270,7 @@ void engine_draw_rect(uint16_t color, float center_x, float center_y, uint32_t w
 
     // When rotated at 45 degrees, make sure corners don't get cut
     // off: https://math.stackexchange.com/questions/2915935/radius-of-a-circle-touching-a-rectangle-both-of-which-are-inside-a-square
-    int32_t dim = (uint32_t)sqrtf((scaled_width*scaled_width) + (scaled_height*scaled_height));
+    uint32_t dim = (uint32_t)sqrtf((scaled_width*scaled_width) + (scaled_height*scaled_height));
     float dim_half = (dim / 2.0f);
 
     // The top-left of the bitmap destination
@@ -376,13 +335,13 @@ void engine_draw_rect(uint16_t color, float center_x, float center_y, uint32_t w
 
                 // Floor these otherwise get artifacts (don't exactly know why).
                 // Floor + int seems to be faster than comparing floats
-                uint32_t rotX = floorf(x);
-                uint32_t rotY = floorf(y);
+                int32_t rotX = floorf(x);
+                int32_t rotY = floorf(y);
 
                 // If statements are expensive! Don't need to check if withing screen
                 // bounds since those dimensions are clipped (destination rect)
-                if((rotX < width) && (rotY < height)){
-                    screen_buffer[dest_offset] = engine_pixel_shader(screen_buffer[dest_offset], color, alpha, default_shader, default_shader_len);
+                if((rotX >= 0 && rotX < width) && (rotY >= 0 && rotY < height)){
+                    screen_buffer[dest_offset] = shader->execute(screen_buffer[dest_offset], color, alpha, shader);
                 }
 
                 // While in row, keep traversing about rotation
@@ -409,7 +368,7 @@ void engine_draw_rect(uint16_t color, float center_x, float center_y, uint32_t w
 }
 
 
-void engine_draw_outline_circle(uint16_t color, float center_x, float center_y, float radius, float alpha){
+void engine_draw_outline_circle(uint16_t color, float center_x, float center_y, float radius, float alpha, engine_shader_t *shader){
     // https://stackoverflow.com/a/58629898
     float distance = radius;
     float angle_increment = acosf(1 - 1/distance) * 2.0f;   // Multiply by 2.0 since care about speed and not accuracy as much
@@ -434,15 +393,15 @@ void engine_draw_outline_circle(uint16_t color, float center_x, float center_y, 
         int tlx = center_x-cx;
         int tly = center_y-cy;
 
-        engine_draw_pixel(color, brx, bry, alpha, default_shader, default_shader_len);
-        engine_draw_pixel(color, blx, bly, alpha, default_shader, default_shader_len);
-        engine_draw_pixel(color, trx, try, alpha, default_shader, default_shader_len);
-        engine_draw_pixel(color, tlx, tly, alpha, default_shader, default_shader_len);
+        engine_draw_pixel(color, brx, bry, alpha, shader);
+        engine_draw_pixel(color, blx, bly, alpha, shader);
+        engine_draw_pixel(color, trx, try, alpha, shader);
+        engine_draw_pixel(color, tlx, tly, alpha, shader);
     }
 }
 
 
-void engine_draw_filled_circle(uint16_t color, float center_x, float center_y, float radius, float alpha){
+void engine_draw_filled_circle(uint16_t color, float center_x, float center_y, float radius, float alpha, engine_shader_t *shader){
     float radius_sqr = radius * radius;
 
     // https://stackoverflow.com/a/59211338
@@ -452,13 +411,13 @@ void engine_draw_filled_circle(uint16_t color, float center_x, float center_y, f
         int ph = (int)center_y + hh;
 
         for(int y=(int)center_y-hh; y<ph; y++){
-            engine_draw_pixel(color, rx, y, alpha, default_shader, default_shader_len);
+            engine_draw_pixel(color, rx, y, alpha, shader);
         }
     }
 }
 
 
-void engine_draw_text(font_resource_class_obj_t *font, mp_obj_t text, float center_x, float center_y, float text_box_width, float text_box_height, float x_scale, float y_scale, float rotation_radians, float alpha){    
+void engine_draw_text(font_resource_class_obj_t *font, mp_obj_t text, float center_x, float center_y, float text_box_width, float text_box_height, float x_scale, float y_scale, float rotation_radians, float alpha, engine_shader_t *shader){    
     float sin_angle = sinf(rotation_radians);
     float cos_angle = cosf(rotation_radians);
 
@@ -529,7 +488,8 @@ void engine_draw_text(font_resource_class_obj_t *font, mp_obj_t text, float cent
                         y_scale,
                         -rotation_radians,
                         0,
-                        alpha);
+                        alpha,
+                        shader);
 
         // Move to next character position in row
         char_x += (cos_angle * char_width * x_scale);

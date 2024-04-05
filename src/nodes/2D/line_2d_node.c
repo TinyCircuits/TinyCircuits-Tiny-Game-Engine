@@ -10,6 +10,7 @@
 #include "draw/engine_display_draw.h"
 #include "math/engine_math.h"
 #include "draw/engine_color.h"
+#include "draw/engine_shader.h"
 
 
 // Class required functions
@@ -91,13 +92,20 @@ void line_2d_node_class_draw(engine_node_base_t *line_node_base, mp_obj_t camera
     line_rotated_x += camera_viewport->width/2;
     line_rotated_y += camera_viewport->height/2;
 
+    // Decide which shader to use per-pixel
+    engine_shader_t *shader = &empty_shader;
+    if(line_opacity < 1.0f){
+        shader = &opacity_shader;
+    }
+
     if(line_outlined == false){
         engine_draw_rect(line_color->value.val,
                          line_rotated_x, line_rotated_y,
                          line_thickness, line_length,
                          1.0f, 1.0f,
                        -(line_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation),
-                         line_opacity);
+                         line_opacity,
+                         shader);
     }else{
         float line_half_width = line_thickness/2;
         float line_half_height = line_length/2;
@@ -123,10 +131,10 @@ void line_2d_node_class_draw(engine_node_base_t *line_node_base, mp_obj_t camera
         engine_math_rotate_point(&brx, &bry, line_rotated_x, line_rotated_y, angle);
         engine_math_rotate_point(&blx, &bly, line_rotated_x, line_rotated_y, angle);
 
-        engine_draw_line(line_color->value.val, tlx, tly, trx, try, camera_node, line_opacity);
-        engine_draw_line(line_color->value.val, trx, try, brx, bry, camera_node, line_opacity);
-        engine_draw_line(line_color->value.val, brx, bry, blx, bly, camera_node, line_opacity);
-        engine_draw_line(line_color->value.val, blx, bly, tlx, tly, camera_node, line_opacity);
+        engine_draw_line(line_color->value.val, tlx, tly, trx, try, camera_node, line_opacity, shader);
+        engine_draw_line(line_color->value.val, trx, try, brx, bry, camera_node, line_opacity, shader);
+        engine_draw_line(line_color->value.val, brx, bry, blx, bly, camera_node, line_opacity, shader);
+        engine_draw_line(line_color->value.val, blx, bly, tlx, tly, camera_node, line_opacity, shader);
     }
 }
 

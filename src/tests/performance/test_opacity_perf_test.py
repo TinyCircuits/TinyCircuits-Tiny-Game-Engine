@@ -13,7 +13,7 @@ import gc
 
 
 line = Line2DNode(color=engine_draw.orange, start=Vector2(40, -15), end=Vector2(40, 15), thickness=1)
-line.opacity = 1.0
+line.opacity = 0.5
 
 font9 = FontResource("9pt-roboto-font.bmp")
 
@@ -24,7 +24,7 @@ class MyText(Text2DNode):
         self.text = "Hello World!\nLine 2\nLine 3\nLine 4                       hi"
 
 text = Text2DNode(text="Hello World!\nLine 2\nLine 3", font=font9, scale=Vector2(2.0, 2.0), position=Vector2(0, -0))
-text.opacity = 1.0
+text.opacity = 0.75
 
 text0 = Text2DNode(text="Hello World!\nLine 2\nLine 3", font=font9, scale=Vector2(1.0, 1.0), position=Vector2(0, -0))
 
@@ -42,18 +42,18 @@ class MyCircle(Circle2DNode):
 
 circle = MyCircle()
 circle.radius = 25
-circle.opacity = 1.0
+circle.opacity = 0.35
 rectangle = Rectangle2DNode()
 rectangle.width = 30
 rectangle.height = 15
-rectangle.opacity = 1.0
+rectangle.opacity = 0.85
 rectangle.outline = True
 sprite = Sprite2DNode(texture=texture, position=Vector2(0, 0), scale=Vector2(1.0, 1.0))
 
 circle.color = engine_draw.red
 rectangle.color = engine_draw.yellow
 sprite.transparent_color = engine_draw.black
-sprite.opacity = 1.0
+sprite.opacity = 0.4
 
 circle.position = Vector2(10, 0)
 rectangle.position = Vector2(32, 0)
@@ -67,7 +67,6 @@ class MyCam(CameraNode):
         super().__init__(self)
     
     def tick(self):
-        print(engine.get_running_fps())
         if engine_input.check_pressed(engine_input.A):
             self.zoom -= 0.005
         if engine_input.check_pressed(engine_input.B):
@@ -100,8 +99,17 @@ circle.add_child(text)
 circle.add_child(text0)
 circle.add_child(line)
 
-cursor = Circle2DNode(radius=7, color=engine_draw.green, outline=False, position=Vector2(0, 0), opacity=1.0)
+cursor = Circle2DNode(radius=7, color=engine_draw.green, outline=False, position=Vector2(0, 0), opacity=0.2)
 
 camera.add_child(cursor)
 
-engine.start()
+ticks = 0
+ticks_end = 60 * 5
+fps_total = 0
+while ticks < ticks_end:
+    engine.tick()
+    fps_total = fps_total + engine.get_running_fps()
+    ticks = ticks + 1 
+
+
+print("-[test_opacity_perf_test.py, avg. FPS: " + str(fps_total / ticks_end) + "]-")

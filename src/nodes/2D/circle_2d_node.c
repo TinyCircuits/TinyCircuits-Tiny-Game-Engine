@@ -9,6 +9,7 @@
 #include "draw/engine_display_draw.h"
 #include "math/engine_math.h"
 #include "draw/engine_color.h"
+#include "draw/engine_shader.h"
 
 
 // Class required functions
@@ -76,11 +77,16 @@ void circle_2d_node_class_draw(engine_node_base_t *circle_node_base, mp_obj_t ca
     circle_rotated_x += camera_viewport->width/2;
     circle_rotated_y += camera_viewport->height/2;
 
+    // Decide which shader to use per-pixel
+    engine_shader_t *shader = &empty_shader;
+    if(circle_opacity < 1.0f){
+        shader = &opacity_shader;
+    }
 
     if(circle_outlined == false){
-        engine_draw_filled_circle(circle_color->value.val, circle_rotated_x, circle_rotated_y, circle_radius, circle_opacity);
+        engine_draw_filled_circle(circle_color->value.val, circle_rotated_x, circle_rotated_y, circle_radius, circle_opacity, shader);
     }else{
-        engine_draw_outline_circle(circle_color->value.val, circle_rotated_x, circle_rotated_y, circle_radius, circle_opacity);
+        engine_draw_outline_circle(circle_color->value.val, circle_rotated_x, circle_rotated_y, circle_radius, circle_opacity, shader);
     }
 }
 

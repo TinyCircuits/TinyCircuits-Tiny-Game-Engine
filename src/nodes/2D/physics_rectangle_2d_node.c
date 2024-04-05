@@ -94,7 +94,7 @@ mp_obj_t physics_rectangle_2d_node_class_del(mp_obj_t self_in){
 
     engine_node_base_t *node_base = self_in;
     engine_physics_node_base_t *physics_node_base = node_base->node;
-    engine_physics_rectangle_2d_node_class_obj_t *node = physics_node_base->unique_data;
+    // engine_physics_rectangle_2d_node_class_obj_t *node = physics_node_base->unique_data;
     engine_physics_untrack_node(physics_node_base->physics_list_node);
     engine_physics_ids_give_back(physics_node_base->physics_id);
 
@@ -266,6 +266,8 @@ STATIC mp_attr_fun_t physics_rectangle_2d_node_class_attr(mp_obj_t self_in, qstr
     if(is_obj_instance && attr_handled == false){
         default_instance_attr_func(self_in, attribute, destination);
     }
+
+    return mp_const_none;
 }
 
 
