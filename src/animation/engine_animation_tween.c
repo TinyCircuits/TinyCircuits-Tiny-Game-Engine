@@ -10,7 +10,7 @@
 #include "draw/engine_color.h"
 #include <string.h>
 
-#include "../../cglm/include/cglm/ease.h"
+#include "../lib/cglm/include/cglm/ease.h"
 
 
 // Function positions in this array must correlate to enums in `engine_animation_ease_types`

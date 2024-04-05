@@ -1,0 +1,6 @@
+[submodule "lib/cglm"]
+	path = lib/cglm
+	url = https://github.com/recp/cglm.git
+[submodule "lib/FastNoiseLite"]
+	path = lib/FastNoiseLite
+	url = https://github.com/Auburn/FastNoiseLite.git

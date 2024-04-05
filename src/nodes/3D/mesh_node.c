@@ -15,10 +15,10 @@
 #include "draw/engine_display_draw.h"
 #include "draw/engine_shader.h"
 
-#include "../../cglm/include/cglm/cglm.h"
-#include "../../cglm/include/cglm/vec3.h"
-#include "../../cglm/include/cglm/mat4.h"
-#include "../../cglm/include/cglm/cam.h"
+#include "../lib/cglm/include/cglm/cglm.h"
+#include "../lib/cglm/include/cglm/vec3.h"
+#include "../lib/cglm/include/cglm/mat4.h"
+#include "../lib/cglm/include/cglm/cam.h"
 
 
 
