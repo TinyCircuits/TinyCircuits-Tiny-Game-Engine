@@ -4,10 +4,10 @@ from engine_math import Vector3, Matrix4x4
 from engine_resources import NoiseResource
 import engine_input
 import math
-
+# import machine
+# machine.freq(250 * 1000 * 1000)
 
 engine.set_fps_limit(60)
-
 
 class MyCam(CameraNode):
     def __init__(self):
@@ -33,6 +33,8 @@ class MyCam(CameraNode):
         self.position.z += math.sin(self.rotation.y+(math.pi/2)) * self.distance
 
     def tick(self):
+        # print(engine.get_running_fps())
+
         if engine_input.check_pressed(engine_input.BUMPER_RIGHT):
             self.rotation.y += 0.05
             engine_input.rumble(self.rotation.y)

@@ -104,3 +104,19 @@ vox_node_perf_test.py, avg. FPS: 44.75964
 
 
 
+2024-04-10 11:15:52.349092 : 752bd79c022414a5d1bc1d27d64174c2dc644e99
+Expose attributes of NoiseResource
+
+{
+line_node_perf_test.py, avg. FPS: 239.2818
+test_opacity_perf_test.py, avg. FPS: 82.42863
+test_perf_test.py, avg. FPS: 101.7345
+circle_node_perf_test.py, avg. FPS: 241.4444
+vox_node_perf_test.py, avg. FPS: 44.89149
+}
+
+
+ ----- 
+
+
+

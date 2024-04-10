@@ -88,11 +88,13 @@ void mesh_node_class_draw(engine_node_base_t *mesh_node_base, mp_obj_t camera_no
         float z2 = out_2[2];
 
         // Check that the triangle vertices are in front of the camera (not behind)
+        // Doing float compares for each pixel cuts FPS by half, this maybe could be
+        // better: TODO
         if(((z0 > 0.0f && z0 < 1.0f)) &&
            ((z1 > 0.0f && z1 < 1.0f)) &&
            ((z2 > 0.0f && z2 < 1.0f))){
 
-            // Cast to int and see if any end points will be on screen
+            // Cast to int and see if any endpoints will be on screen
             int32_t x0 = out_0[0];
             int32_t y0 = out_0[1];
 
@@ -107,6 +109,9 @@ void mesh_node_class_draw(engine_node_base_t *mesh_node_base, mp_obj_t camera_no
             bool endpoint_2_on_screen = engine_math_int32_between(x2, 0, SCREEN_WIDTH_MINUS_1) && engine_math_int32_between(y2, 0, SCREEN_HEIGHT_MINUS_1);
 
             // If either endpoint is on screen, draw the full line
+            // This avoids drawing lines that are out of bounds on
+            // the camera's view plane and increases performance a
+            // ton
             if(endpoint_0_on_screen || endpoint_1_on_screen){
                 engine_draw_line(0xffff, out_0[0], out_0[1], out_1[0], out_1[1], NULL, 1.0f, &empty_shader);
             }
