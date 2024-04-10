@@ -88,3 +88,19 @@ vox_node_perf_test.py, avg. FPS: 43.24937
 
 
 
+2024-04-10 10:30:20.897533 : 8d34b7db69ca04cce3212ee4fbc425e5951cccd6
+Fix mesh rendering so that it is faster and doesn't draw triangles that are behind the screen or all the way out of bounds
+
+{
+line_node_perf_test.py, avg. FPS: 238.9486
+test_opacity_perf_test.py, avg. FPS: 79.92868
+test_perf_test.py, avg. FPS: 98.61657
+circle_node_perf_test.py, avg. FPS: 239.6111
+vox_node_perf_test.py, avg. FPS: 44.75964
+}
+
+
+ ----- 
+
+
+

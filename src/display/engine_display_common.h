@@ -5,6 +5,8 @@
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 128
+#define SCREEN_WIDTH_MINUS_1 127
+#define SCREEN_HEIGHT_MINUS_1 127
 #define SCREEN_BUFFER_SIZE_PIXELS SCREEN_WIDTH*SCREEN_HEIGHT
 #define SCREEN_BUFFER_SIZE_BYTES SCREEN_BUFFER_SIZE_PIXELS*2 // Number of pixels times 2 (16-bit pixels) is the number of bytes in a screen buffer
 

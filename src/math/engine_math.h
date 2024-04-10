@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "utility/engine_defines.h"
 
 #define PI      3.14159265358979323846f
 #define HALF_PI 1.57079632679489661923f
@@ -21,7 +22,7 @@
 float engine_math_dot_product(float x0, float y0, float x1, float y1);
 
 float engine_math_cross_product_v_v(float x0, float y0, float x1, float y1);
-float engine_math_3d_cross_product_v_v(float ax, float ay, float az, float bx, float by, float bz, float *out_x, float *out_y, float *out_z);
+void engine_math_3d_cross_product_v_v(float ax, float ay, float az, float bx, float by, float bz, float *out_x, float *out_y, float *out_z);
 
 void engine_math_cross_product_float_v(float value, float in_x, float in_y, float *out_x, float *out_y);
 void engine_math_cross_product_v_float(float in_x, float in_y, float value, float *out_x, float *out_y);
@@ -43,6 +44,7 @@ bool engine_math_compare_floats(float value0, float value1);
 
 float engine_math_angle_between(float px0, float py0, float px1, float py1);
 float engine_math_distance_between(float px0, float py0, float px1, float py1);
+bool engine_math_int32_between(int32_t value, int32_t min, int32_t max);
 
 uint32_t engine_math_2d_to_1d_index(uint32_t x, uint32_t y, uint32_t width);
 

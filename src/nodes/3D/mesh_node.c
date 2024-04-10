@@ -15,6 +15,7 @@
 #include "draw/engine_display_draw.h"
 #include "draw/engine_shader.h"
 
+#define CGLM_CLIPSPACE_INCLUDE_ALL 1
 #include "../lib/cglm/include/cglm/cglm.h"
 #include "../lib/cglm/include/cglm/vec3.h"
 #include "../lib/cglm/include/cglm/mat4.h"
@@ -55,7 +56,7 @@ void mesh_node_class_draw(engine_node_base_t *mesh_node_base, mp_obj_t camera_no
     glm_lookat(cam_position, cam_target, cam_up, m_view);
 
     mat4 m_projection = GLM_MAT4_ZERO_INIT;
-    glm_perspective(1.571, SCREEN_WIDTH/SCREEN_HEIGHT, 0.1f, 1000.0f, m_projection);
+    glm_perspective(1.571, SCREEN_WIDTH/SCREEN_HEIGHT, 1.0f, 350.0f, m_projection);
 
     // mat4 m_model = GLM_MAT4_IDENTITY_INIT;
 
@@ -78,13 +79,46 @@ void mesh_node_class_draw(engine_node_base_t *mesh_node_base, mp_obj_t camera_no
         vec3 out_0 = GLM_VEC3_ZERO_INIT;
         vec3 out_1 = GLM_VEC3_ZERO_INIT;
         vec3 out_2 = GLM_VEC3_ZERO_INIT;
-        glm_project(v0, mvp, v_viewport, out_0);
-        glm_project(v1, mvp, v_viewport, out_1);
-        glm_project(v2, mvp, v_viewport, out_2);
+        glm_project_zo(v0, mvp, v_viewport, out_0);
+        glm_project_zo(v1, mvp, v_viewport, out_1);
+        glm_project_zo(v2, mvp, v_viewport, out_2);
 
-        engine_draw_line(0xffff, out_0[0], out_0[1], out_1[0], out_1[1], NULL, 1.0f, &empty_shader);
-        engine_draw_line(0xffff, out_1[0], out_1[1], out_2[0], out_2[1], NULL, 1.0f, &empty_shader);
-        engine_draw_line(0xffff, out_2[0], out_2[1], out_0[0], out_0[1], NULL, 1.0f, &empty_shader);
+        float z0 = out_0[2];
+        float z1 = out_1[2];
+        float z2 = out_2[2];
+
+        // Check that the triangle vertices are in front of the camera (not behind)
+        if(((z0 > 0.0f && z0 < 1.0f)) &&
+           ((z1 > 0.0f && z1 < 1.0f)) &&
+           ((z2 > 0.0f && z2 < 1.0f))){
+
+            // Cast to int and see if any end points will be on screen
+            int32_t x0 = out_0[0];
+            int32_t y0 = out_0[1];
+
+            int32_t x1 = out_1[0];
+            int32_t y1 = out_1[1];
+
+            int32_t x2 = out_2[0];
+            int32_t y2 = out_2[1];
+
+            bool endpoint_0_on_screen = engine_math_int32_between(x0, 0, SCREEN_WIDTH_MINUS_1) && engine_math_int32_between(y0, 0, SCREEN_HEIGHT_MINUS_1);
+            bool endpoint_1_on_screen = engine_math_int32_between(x1, 0, SCREEN_WIDTH_MINUS_1) && engine_math_int32_between(y1, 0, SCREEN_HEIGHT_MINUS_1);
+            bool endpoint_2_on_screen = engine_math_int32_between(x2, 0, SCREEN_WIDTH_MINUS_1) && engine_math_int32_between(y2, 0, SCREEN_HEIGHT_MINUS_1);
+
+            // If either endpoint is on screen, draw the full line
+            if(endpoint_0_on_screen || endpoint_1_on_screen){
+                engine_draw_line(0xffff, out_0[0], out_0[1], out_1[0], out_1[1], NULL, 1.0f, &empty_shader);
+            }
+
+            if(endpoint_1_on_screen || endpoint_2_on_screen){
+                engine_draw_line(0xffff, out_1[0], out_1[1], out_2[0], out_2[1], NULL, 1.0f, &empty_shader);
+            }
+
+            if(endpoint_2_on_screen || endpoint_0_on_screen){
+                engine_draw_line(0xffff, out_2[0], out_2[1], out_0[0], out_0[1], NULL, 1.0f, &empty_shader);
+            }
+        }
     }
 }
 

@@ -14,7 +14,7 @@ float engine_math_cross_product_v_v(float x0, float y0, float x1, float y1){
 }
 
 // http://labman.phys.utk.edu/3D%20Physics/crossproduct/crossproduct.html#:~:text=of%20the%20vector-,C%20%3D%20A%C3%97%20B,-and%20its%20magnitude
-float engine_math_3d_cross_product_v_v(float ax, float ay, float az, float bx, float by, float bz, float *out_x, float *out_y, float *out_z){
+void engine_math_3d_cross_product_v_v(float ax, float ay, float az, float bx, float by, float bz, float *out_x, float *out_y, float *out_z){
     *out_x = ay*bz - az*by;
     *out_y = az*bx - ax*bz;
     *out_z = ax*by - ay*bx;
@@ -108,6 +108,10 @@ float engine_math_distance_between(float px0, float py0, float px1, float py1){
     float dx = px1 - px0;
     float dy = py1 - py0;
     return sqrtf((dx*dx) + (dy*dy));
+}
+
+bool engine_math_int32_between(int32_t value, int32_t min, int32_t max){
+    return (value >= min && value <= max);
 }
 
 
