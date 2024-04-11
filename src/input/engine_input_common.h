@@ -2,6 +2,7 @@
 #define ENGINE_INPUT_COMMON_H
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "utility/bits.h"
 
 #define BUTTON_A            0b0000000000000001

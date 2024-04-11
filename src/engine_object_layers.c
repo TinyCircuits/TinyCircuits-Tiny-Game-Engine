@@ -8,7 +8,7 @@
 #include "nodes/2D/circle_2d_node.h"
 #include "nodes/2D/sprite_2d_node.h"
 #include "nodes/2D/text_2d_node.h"
-#include "nodes/2D/button_2d_node.h"
+#include "nodes/2D/gui_button_2d_node.h"
 #include "nodes/2D/physics_rectangle_2d_node.h"
 #include "nodes/2D/physics_circle_2d_node.h"
 #include "nodes/node_types.h"
@@ -164,14 +164,14 @@ void engine_invoke_all_node_callbacks(){
                         engine_camera_draw_for_each(text_2d_node_class_draw, node_base);
                     }
                     break;
-                    case NODE_TYPE_BUTTON_2D:
+                    case NODE_TYPE_GUI_BUTTON_2D:
                     {
-                        engine_button_2d_node_class_obj_t *button_2d_node = node_base->node;
+                        engine_gui_button_2d_node_class_obj_t *button_2d_node = node_base->node;
                         exec[0] = button_2d_node->tick_cb;
                         exec[1] = node_base->attr_accessor;
                         mp_call_method_n_kw(0, 0, exec);
 
-                        engine_camera_draw_for_each(button_2d_node_class_draw, node_base);
+                        engine_camera_draw_for_each(gui_button_2d_node_class_draw, node_base);
                     }
                     break;
                     case NODE_TYPE_PHYSICS_RECTANGLE_2D:

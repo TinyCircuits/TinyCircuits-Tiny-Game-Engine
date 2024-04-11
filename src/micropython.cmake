@@ -28,7 +28,7 @@ target_sources(usermod_engine INTERFACE
     ${ENGINE_MOD_DIR}/nodes/2D/physics_rectangle_2d_node.c
     ${ENGINE_MOD_DIR}/nodes/2D/physics_circle_2d_node.c
     ${ENGINE_MOD_DIR}/nodes/2D/text_2d_node.c
-    ${ENGINE_MOD_DIR}/nodes/2D/button_2d_node.c
+    ${ENGINE_MOD_DIR}/nodes/2D/gui_button_2d_node.c
     ${ENGINE_MOD_DIR}/math/vector3.c
     ${ENGINE_MOD_DIR}/math/matrix4x4.c
     ${ENGINE_MOD_DIR}/math/vector2.c
@@ -42,6 +42,7 @@ target_sources(usermod_engine INTERFACE
     ${ENGINE_MOD_DIR}/utility/engine_bit_collection.c
     ${ENGINE_MOD_DIR}/engine_object_layers.c
     ${ENGINE_MOD_DIR}/engine_cameras.c
+    ${ENGINE_MOD_DIR}/engine_gui.c
     ${ENGINE_MOD_DIR}/display/engine_display.c
     # ${ENGINE_MOD_DIR}/display/engine_display_driver_rp2_st7789.c
     ${ENGINE_MOD_DIR}/display/engine_display_driver_rp2_gc9107.c

@@ -6,6 +6,7 @@
 #include "physics/engine_physics.h"
 #include "resources/engine_resource_manager.h"
 #include "engine_cameras.h"
+#include "engine_gui.h"
 #include "utility/engine_time.h"
 #include "audio/engine_audio_module.h"
 #include "math/engine_math.h"
@@ -105,6 +106,8 @@ STATIC mp_obj_t engine_reset(){
     // Reset contigious flash space manager
     engine_audio_stop();
     engine_resource_reset();
+    engine_camera_clear_all();
+    engine_gui_clear_all();
 
     return mp_const_none;
 }
@@ -167,6 +170,8 @@ STATIC mp_obj_t engine_tick(){
 
         // Goes through all animation components
         engine_animation_tick(dt);
+
+        engine_gui_tick();
 
         // After every game cycle send the current active screen buffer to the display
         engine_display_send();

@@ -120,3 +120,19 @@ vox_node_perf_test.py, avg. FPS: 44.89149
 
 
 
+2024-04-11 16:14:32.081177 : 82f80a5033a0b871a2f935e899f67c862673e8b3
+Work on GUI mode switching and fix scaling issue when drawing all nodes with respect to camera
+
+{
+line_node_perf_test.py, avg. FPS: 238.4486
+test_opacity_perf_test.py, avg. FPS: 80.37726
+test_perf_test.py, avg. FPS: 98.98022
+circle_node_perf_test.py, avg. FPS: 240.7742
+vox_node_perf_test.py, avg. FPS: 43.18343
+}
+
+
+ ----- 
+
+
+

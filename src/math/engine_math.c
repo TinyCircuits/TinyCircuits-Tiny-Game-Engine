@@ -100,7 +100,7 @@ bool engine_math_compare_floats(float value0, float value1){
 
 // https://stackoverflow.com/a/2339510
 float engine_math_angle_between(float px0, float py0, float px1, float py1){
-    return atan2f(py0 - py1, px0 - px1);
+    return atan2f(py1 - py0, px1 - px0);
 }
 
 
@@ -179,7 +179,8 @@ void engine_math_rotate_point(float *px, float *py, float cx, float cy, float an
 
 // https://math.stackexchange.com/a/5808
 // https://math.stackexchange.com/a/234631
+// https://stackoverflow.com/a/49135089
 void engine_math_scale_point(float *px, float *py, float cx, float cy, float scale){
-    *px = scale * ((*px)-cx);
-    *py = scale * ((*py)-cy);
+    *px = scale * (((*px)-cx)+cx);
+    *py = scale * (((*py)-cy)+cy);
 }

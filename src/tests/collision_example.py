@@ -85,7 +85,7 @@ class Player(PhysicsCircle2DNode):
 camera = CameraNode()
 
 player = Player()
-# player.add_child(camera)
+player.add_child(camera)
 
 
 # circle_physics_1 = PhysicsCircle2DNode(radius=10, position=Vector2(20, 15), dynamic=False)

@@ -98,6 +98,7 @@ mp_obj_t color_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, 
         self->r.value = 0.0f;
         self->g.value = 0.0f;
         self->b.value = 0.0f;
+        engine_color_sync_u16_to_rgb(self);
     }else if(n_args == 1){
         self->value.val = mp_obj_get_int(args[0]);
         engine_color_sync_u16_to_rgb(self);
@@ -105,6 +106,7 @@ mp_obj_t color_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, 
         self->r.value = mp_obj_get_float(args[0]);
         self->g.value = mp_obj_get_float(args[1]);
         self->b.value = mp_obj_get_float(args[2]);
+        engine_color_sync_rgb_to_u16(self);
     }else{
         mp_raise_TypeError(MP_ERROR_TEXT("Color: ERROR: expected 0 or 3 arguments"));
     }
