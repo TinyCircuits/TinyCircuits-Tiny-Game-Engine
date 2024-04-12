@@ -276,7 +276,7 @@ mp_obj_t mesh_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);
-    node_base_init(node_base, NULL, &engine_mesh_node_class_type, NODE_TYPE_MESH_3D);
+    node_base_init(node_base, &engine_mesh_node_class_type, NODE_TYPE_MESH_3D);
 
     engine_mesh_node_class_obj_t *mesh_node = m_malloc(sizeof(engine_mesh_node_class_obj_t));
     node_base->node = mesh_node;
