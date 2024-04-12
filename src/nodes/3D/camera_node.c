@@ -110,7 +110,7 @@ mp_obj_t camera_node_class_del(mp_obj_t self_in){
     ENGINE_INFO_PRINTF("CameraNode: Deleted (garbage collected, removing self from active engine objects)");
 
     engine_node_base_t *node_base = self_in;
-    engine_camera_node_class_obj_t *camera_node = node_base->node_common_data;
+    engine_camera_node_class_obj_t *camera_node = node_base->node;
     engine_camera_untrack(camera_node->camera_list_node);
 
     node_base_del(self_in);
