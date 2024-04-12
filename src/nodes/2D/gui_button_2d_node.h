@@ -28,8 +28,21 @@ typedef struct{
     mp_obj_t rotation;
     mp_obj_t scale;
     mp_obj_t opacity;
+
     mp_obj_t tick_cb;
+    mp_obj_t on_focused_cb;
+    mp_obj_t on_just_focused_cb;
+    mp_obj_t on_just_unfocused_cb;
+    mp_obj_t on_pressed_cb;
+    mp_obj_t on_just_pressed_cb;
+    mp_obj_t on_just_released_cb;
+
     bool focused;
+    bool last_focused;
+    bool pressed;
+    bool last_pressed;
+    uint16_t button;
+
     float width;
     float height;
     float width_padded;

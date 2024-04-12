@@ -136,3 +136,43 @@ vox_node_perf_test.py, avg. FPS: 43.18343
 
 
 
+2024-04-12 11:48:10.088081 : c353f44b443138a45db9fe98ec7861da6b503d43
+Finish GUIButton2DNode callbacks and basic drawing
+
+{
+line_node_perf_test.py, avg. FPS: 238.6151
+test_opacity_perf_test.py, avg. FPS: 80.22475
+test_perf_test.py, avg. FPS: 98.01529
+circle_node_perf_test.py, avg. FPS: 239.4444
+vox_node_perf_test.py, avg. FPS: 43.23137
+}
+
+
+ ----- 
+
+
+
+2024-04-12 13:13:40.105568 : f9512478f50415c9823c5ef0d0db736f801c2ca2
+Finish GUIButton2DNode callbacks and basic drawing
+
+{
+test_opacity_perf_test.py, avg. FPS: 80.26562
+}
+
+
+ ----- 
+
+
+
+2024-04-12 13:14:58.409805 : 35a4b06da1420be1a36a0ed626c7501cca7329f0
+Finish GUIButton2DNode callbacks and basic drawing
+
+{
+test_opacity_perf_test.py, avg. FPS: 72.38383
+}
+
+
+ ----- 
+
+
+

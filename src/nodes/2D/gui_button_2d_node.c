@@ -14,6 +14,7 @@
 #include "draw/engine_color.h"
 #include "resources/engine_font_resource.h"
 #include "engine_gui.h"
+#include "input/engine_input_common.h"
 
 #include <string.h>
 
@@ -23,13 +24,6 @@ STATIC void gui_button_2d_node_class_print(const mp_print_t *print, mp_obj_t sel
     (void)kind;
     ENGINE_PRINTF("GUIButton2DNode");
 }
-
-
-STATIC mp_obj_t gui_button_2d_node_class_tick(mp_obj_t self_in){
-    ENGINE_WARNING_PRINTF("GUIButton2DNode: Tick function not overridden");
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_1(gui_button_2d_node_class_tick_obj, gui_button_2d_node_class_tick);
 
 
 void gui_button_2d_node_class_draw(engine_node_base_t *button_node_base, mp_obj_t camera_node){
@@ -90,8 +84,14 @@ void gui_button_2d_node_class_draw(engine_node_base_t *button_node_base, mp_obj_
 
         color_class_obj_t *outline_color = button->outline_color;
         color_class_obj_t *background_color = button->background_color;
+        color_class_obj_t *text_color = button->text_color;
 
-        if(button->focused){
+        if(button->pressed){
+            if(button->pressed_text_color != mp_const_none) text_color = button->pressed_text_color;
+            if(button->pressed_outline_color != mp_const_none) outline_color = button->pressed_outline_color;
+            if(button->pressed_background_color != mp_const_none) background_color = button->pressed_background_color;
+        }else if(button->focused){
+            if(button->focused_text_color != mp_const_none) text_color = button->focused_text_color;
             if(button->focused_outline_color != mp_const_none) outline_color = button->focused_outline_color;
             if(button->focused_background_color != mp_const_none) background_color = button->focused_background_color;
         }
@@ -115,10 +115,9 @@ void gui_button_2d_node_class_draw(engine_node_base_t *button_node_base, mp_obj_
 
         engine_shader_t *text_shader = NULL;
 
-        if(button->text_color == mp_const_none){
+        if(text_color == mp_const_none){
             text_shader = &empty_shader;
         }else{
-            color_class_obj_t *text_color = button->text_color;
             text_shader = &blend_opacity_shader;
 
             float t = 1.0f;
@@ -279,8 +278,48 @@ bool button_2d_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp_
             destination[0] = self->opacity;
             return true;
         break;
+
+        case MP_QSTR_tick:
+            destination[0] = self->tick_cb;
+            destination[1] = self_node_base->attr_accessor;
+        break;
+
+        case MP_QSTR_on_focused:
+            destination[0] = self->on_focused_cb;
+            destination[1] = self_node_base->attr_accessor;
+        break;
+        case MP_QSTR_on_just_focused:
+            destination[0] = self->on_just_focused_cb;
+            destination[1] = self_node_base->attr_accessor;
+        break;
+        case MP_QSTR_on_just_unfocused:
+            destination[0] = self->on_just_unfocused_cb;
+            destination[1] = self_node_base->attr_accessor;
+        break;
+
+        case MP_QSTR_on_pressed:
+            destination[0] = self->on_pressed_cb;
+            destination[1] = self_node_base->attr_accessor;
+        break;
+        case MP_QSTR_on_just_pressed:
+            destination[0] = self->on_just_pressed_cb;
+            destination[1] = self_node_base->attr_accessor;
+        break;
+        case MP_QSTR_on_just_released:
+            destination[0] = self->on_just_released_cb;
+            destination[1] = self_node_base->attr_accessor;
+        break;
+
         case MP_QSTR_focused:
             destination[0] = mp_obj_new_bool(self->focused);
+            return true;
+        break;
+        case MP_QSTR_pressed:
+            destination[0] = mp_obj_new_bool(self->pressed);
+            return true;
+        break;
+        case MP_QSTR_button:
+            destination[0] = mp_obj_new_int(self->button);
             return true;
         break;
         case MP_QSTR_width:
@@ -379,8 +418,41 @@ bool button_2d_store_attr(engine_node_base_t *self_node_base, qstr attribute, mp
             self->opacity = destination[1];
             return true;
         break;
+
+        case MP_QSTR_tick:
+            self->tick_cb = destination[1];
+        break;
+
+        case MP_QSTR_on_focused:
+            self->on_focused_cb = destination[1];
+        break;
+        case MP_QSTR_on_just_focused:
+            self->on_just_focused_cb = destination[1];
+        break;
+        case MP_QSTR_on_just_unfocused:
+            self->on_just_unfocused_cb = destination[1];
+        break;
+        
+        case MP_QSTR_on_pressed:
+            self->on_pressed_cb = destination[1];
+        break;
+        case MP_QSTR_on_just_pressed:
+            self->on_just_pressed_cb = destination[1];
+        break;
+        case MP_QSTR_on_just_released:
+            self->on_just_released_cb = destination[1];
+        break;
+
         case MP_QSTR_focused:
             self->focused = mp_obj_get_int(destination[1]);
+            return true;
+        break;
+        case MP_QSTR_pressed:
+            self->pressed = mp_obj_get_int(destination[1]);
+            return true;
+        break;
+        case MP_QSTR_button:
+            self->button = mp_obj_get_int(destination[1]);
             return true;
         break;
         case MP_QSTR_width:
@@ -473,6 +545,7 @@ mp_obj_t gui_button_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, 
                   pressed_outline_color,
 
                   rotation, scale, opacity};
+
     bool inherited = false;
 
     // If there is one positional argument and it isn't the first 
@@ -523,7 +596,14 @@ mp_obj_t gui_button_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, 
 
     gui_button_2d_node->gui_list_node = engine_gui_track(node_base);
 
-    gui_button_2d_node->tick_cb = MP_OBJ_FROM_PTR(&gui_button_2d_node_class_tick_obj);
+    gui_button_2d_node->tick_cb = mp_const_none;
+    gui_button_2d_node->on_focused_cb = mp_const_none;
+    gui_button_2d_node->on_just_focused_cb = mp_const_none;
+    gui_button_2d_node->on_just_unfocused_cb = mp_const_none;
+    gui_button_2d_node->on_pressed_cb = mp_const_none;
+    gui_button_2d_node->on_just_pressed_cb = mp_const_none;
+    gui_button_2d_node->on_just_released_cb = mp_const_none;
+
     gui_button_2d_node->position = parsed_args[position].u_obj;
     gui_button_2d_node->font_resource = parsed_args[font].u_obj;
     gui_button_2d_node->text = parsed_args[text].u_obj;
@@ -546,19 +626,70 @@ mp_obj_t gui_button_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, 
     gui_button_2d_node->scale = parsed_args[scale].u_obj;
     gui_button_2d_node->opacity = parsed_args[opacity].u_obj;
     gui_button_2d_node->focused = false;
+    gui_button_2d_node->pressed = false;
+    gui_button_2d_node->last_pressed = false;
+    gui_button_2d_node->button = BUTTON_A;
 
     if(inherited == true){
         // Get the Python class instance
         mp_obj_t node_instance = parsed_args[child_class].u_obj;
 
+        // Because the instance doesn't have a `node_base` yet, restore the
+        // instance type original attr function for now (otherwise get core abort)
+        if(default_instance_attr_func != NULL) MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr, default_instance_attr_func, 5);
+
         // Look for function overrides otherwise use the defaults
         mp_obj_t dest[2];
+
         mp_load_method_maybe(node_instance, MP_QSTR_tick, dest);
         if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
-            gui_button_2d_node->tick_cb = MP_OBJ_FROM_PTR(&gui_button_2d_node_class_tick_obj);
+            gui_button_2d_node->tick_cb = mp_const_none;
         }else{                                                  // Likely found method (could be attribute)
             gui_button_2d_node->tick_cb = dest[0];
         }
+
+        mp_load_method_maybe(node_instance, MP_QSTR_on_focused, dest);
+        if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
+            gui_button_2d_node->on_focused_cb = mp_const_none;
+        }else{                                                  // Likely found method (could be attribute)
+            gui_button_2d_node->on_focused_cb = dest[0];
+        }
+
+        mp_load_method_maybe(node_instance, MP_QSTR_on_just_focused, dest);
+        if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
+            gui_button_2d_node->on_just_focused_cb = mp_const_none;
+        }else{                                                  // Likely found method (could be attribute)
+            gui_button_2d_node->on_just_focused_cb = dest[0];
+        }
+
+        mp_load_method_maybe(node_instance, MP_QSTR_on_just_unfocused, dest);
+        if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
+            gui_button_2d_node->on_just_unfocused_cb = mp_const_none;
+        }else{                                                  // Likely found method (could be attribute)
+            gui_button_2d_node->on_just_unfocused_cb = dest[0];
+        }
+
+        mp_load_method_maybe(node_instance, MP_QSTR_on_pressed, dest);
+        if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
+            gui_button_2d_node->on_pressed_cb = mp_const_none;
+        }else{                                                  // Likely found method (could be attribute)
+            gui_button_2d_node->on_pressed_cb = dest[0];
+        }
+
+        mp_load_method_maybe(node_instance, MP_QSTR_on_just_pressed, dest);
+        if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
+            gui_button_2d_node->on_just_pressed_cb = mp_const_none;
+        }else{                                                  // Likely found method (could be attribute)
+            gui_button_2d_node->on_just_pressed_cb = dest[0];
+        }
+
+        mp_load_method_maybe(node_instance, MP_QSTR_on_just_released, dest);
+        if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
+            gui_button_2d_node->on_just_released_cb = mp_const_none;
+        }else{                                                  // Likely found method (could be attribute)
+            gui_button_2d_node->on_just_released_cb = dest[0];
+        }
+
 
         // Store one pointer on the instance. Need to be able to get the
         // node base that contains a pointer to the engine specific data we

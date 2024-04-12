@@ -20,6 +20,7 @@
     PARAM: [type=Node] [name=camera] [value=one of the camera nodes in the scene]                                                                                                         
     RETURN: None
 */ 
+void (*default_instance_attr_func)(mp_obj_t self_in, qstr attribute, mp_obj_t *destination) = NULL;
 
 
 engine_node_base_t *node_base_get(mp_obj_t object, bool *is_obj_instance){

@@ -180,7 +180,13 @@ void engine_gui_tick(){
         engine_gui_select_closest(engine_gui_is_up_check);
     }else if(check_just_pressed(BUTTON_DPAD_DOWN)){
         engine_gui_select_closest(engine_gui_is_down_check);
-    }else if(check_just_pressed(BUTTON_A)){
-
     }
+
+    if(focused_gui_node_base != NULL){
+        engine_gui_button_2d_node_class_obj_t *focused_node = focused_gui_node_base->node;
+
+        if(check_pressed(focused_node->button)){
+            focused_node->pressed = true;
+        }
+    }   
 }
