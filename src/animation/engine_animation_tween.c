@@ -154,6 +154,7 @@ STATIC mp_obj_t tween_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
     }
 
     if(tween->tween_type == tween_type_float){
+        ENGINE_FORCE_PRINTF("T");
         ((mp_obj_float_t*)(tweening_value))->value = tween->initial_0 + ((tween->end_0 - tween->initial_0) * t);
     }else if(tween->tween_type == tween_type_vec2){
         vector2_class_obj_t *value = tweening_value;
