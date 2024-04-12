@@ -149,3 +149,31 @@ vox_node_perf_test.py, avg. FPS: 43.23137
 
 
  ----- 
+2024-04-12 15:24:16.327661 : c02927ff010bc205f44d71eec95a1ebd3bad317f
+Remove node common data from node base
+
+{
+line_node_perf_test.py, avg. FPS: 239.2817
+test_opacity_perf_test.py, avg. FPS: 81.91862
+test_perf_test.py, avg. FPS: 98.49517
+circle_node_perf_test.py, avg. FPS: 241.6075
+vox_node_perf_test.py, avg. FPS: 45.02475
+}
+
+
+ ----- 
+
+
+
+2024-04-15 12:32:29.615955 : 9f4ca9e8ed3897600f9f8f90671bd9d248b1f657
+Remove node common data from node base
+
+{
+vox_node_perf_test.py, avg. FPS: 45.61341
+}
+
+
+ ----- 
+
+
+

@@ -30,7 +30,6 @@ typedef struct{
     uint8_t type;                       // The type of this node (see 'node_types.h')
     void *attr_accessor;                // Used in conjunction with mp_get_attr
     void *node;                         // Points to subclass if 'inherited' true otherwise to engine node struct
-    void *node_common_data;             // Common data for inherited and non-inherited nodes to always set here
     
     linked_list children_node_bases;                // Linked list of child node_bases
     void *parent_node_base;                         // If this is a child, pointer to parent node_base (can only have one parent)
@@ -63,7 +62,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(node_base_get_layer_obj, node_base_get_layer);
 
 void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, bool *is_child_of_camera, mp_obj_t child_node_base);
 
-void node_base_init(engine_node_base_t *node_base, void *common_data, const mp_obj_type_t *mp_type, uint8_t node_type);
+void node_base_init(engine_node_base_t *node_base, const mp_obj_type_t *mp_type, uint8_t node_type);
 bool node_base_is_visible(engine_node_base_t *node_base);
 void node_base_set_if_visible(engine_node_base_t *node_base, bool is_visible);
 bool node_base_is_disabled(engine_node_base_t *node_base);

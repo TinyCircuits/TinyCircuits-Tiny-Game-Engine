@@ -388,7 +388,7 @@ mp_obj_t line_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);
-    node_base_init(node_base, NULL, &engine_line_2d_node_class_type, NODE_TYPE_LINE_2D);
+    node_base_init(node_base, &engine_line_2d_node_class_type, NODE_TYPE_LINE_2D);
 
     engine_line_2d_node_class_obj_t *line_2d_node = m_malloc(sizeof(engine_line_2d_node_class_obj_t));
     node_base->node = line_2d_node;

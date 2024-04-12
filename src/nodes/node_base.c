@@ -75,7 +75,6 @@ mp_obj_t node_base_del(mp_obj_t self_in){
     }
 
     engine_remove_object_from_layer(node_base->object_list_node, node_base->layer);
-    free(node_base->node_common_data);
 
     return mp_const_none;
 }
@@ -265,8 +264,7 @@ void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, bool *
 }
 
 
-void node_base_init(engine_node_base_t *node_base, void *common_data, const mp_obj_type_t *mp_type, uint8_t node_type){
-    node_base->node_common_data = common_data;
+void node_base_init(engine_node_base_t *node_base, const mp_obj_type_t *mp_type, uint8_t node_type){
     node_base->base.type = mp_type;
     node_base->layer = 0;
     node_base->type = node_type;

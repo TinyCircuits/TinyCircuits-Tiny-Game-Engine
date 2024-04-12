@@ -336,7 +336,7 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);
-    node_base_init(node_base, NULL, &engine_text_2d_node_class_type, NODE_TYPE_TEXT_2D);
+    node_base_init(node_base, &engine_text_2d_node_class_type, NODE_TYPE_TEXT_2D);
     engine_text_2d_node_class_obj_t *text_2d_node = m_malloc(sizeof(engine_text_2d_node_class_obj_t));
     node_base->node = text_2d_node;
     node_base->attr_accessor = node_base;

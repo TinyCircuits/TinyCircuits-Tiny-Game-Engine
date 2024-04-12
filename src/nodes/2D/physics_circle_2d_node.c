@@ -267,7 +267,7 @@ mp_obj_t physics_circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_ar
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);
-    node_base_init(node_base, NULL, &engine_physics_circle_2d_node_class_type, NODE_TYPE_PHYSICS_CIRCLE_2D);
+    node_base_init(node_base, &engine_physics_circle_2d_node_class_type, NODE_TYPE_PHYSICS_CIRCLE_2D);
 
     // Another layer, all physics objects have some data in common,
     // create that plus the specific data structure for this collider

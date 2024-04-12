@@ -591,7 +591,7 @@ mp_obj_t gui_button_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, 
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);
-    node_base_init(node_base, NULL, &engine_gui_button_2d_node_class_type, NODE_TYPE_GUI_BUTTON_2D);
+    node_base_init(node_base, &engine_gui_button_2d_node_class_type, NODE_TYPE_GUI_BUTTON_2D);
     engine_gui_button_2d_node_class_obj_t *gui_button_2d_node = m_malloc(sizeof(engine_gui_button_2d_node_class_obj_t));
     node_base->node = gui_button_2d_node;
     node_base->attr_accessor = node_base;
@@ -692,10 +692,6 @@ mp_obj_t gui_button_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, 
             gui_button_2d_node->on_just_released_cb = dest[0];
         }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> f9512478f50415c9823c5ef0d0db736f801c2ca2
         // Store one pointer on the instance. Need to be able to get the
         // node base that contains a pointer to the engine specific data we
         // care about
