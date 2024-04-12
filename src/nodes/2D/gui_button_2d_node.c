@@ -692,6 +692,10 @@ mp_obj_t gui_button_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, 
             gui_button_2d_node->on_just_released_cb = dest[0];
         }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> f9512478f50415c9823c5ef0d0db736f801c2ca2
         // Store one pointer on the instance. Need to be able to get the
         // node base that contains a pointer to the engine specific data we
         // care about
