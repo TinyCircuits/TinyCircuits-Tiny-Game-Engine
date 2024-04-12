@@ -49,13 +49,6 @@ STATIC void camera_node_class_print(const mp_print_t *print, mp_obj_t self_in, m
 }
 
 
-STATIC mp_obj_t camera_node_class_tick(mp_obj_t self_in){
-    ENGINE_WARNING_PRINTF("CameraNode: Tick function not overridden");
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_1(camera_node_class_tick_obj, camera_node_class_tick);
-
-
 // // https://forums.unrealengine.com/t/how-does-get-look-at-rotation-work-from-a-mathematical-point-of-view/732711/3
 // // https://gamedev.stackexchange.com/a/112572
 // STATIC mp_obj_t camera_node_class_lookat(mp_obj_t self_in, mp_obj_t lookat_target_position_obj){
@@ -113,6 +106,171 @@ MP_DEFINE_CONST_FUN_OBJ_1(camera_node_class_tick_obj, camera_node_class_tick);
 // MP_DEFINE_CONST_FUN_OBJ_2(camera_node_class_lookat_obj, camera_node_class_lookat);
 
 
+mp_obj_t camera_node_class_del(mp_obj_t self_in){
+    ENGINE_INFO_PRINTF("CameraNode: Deleted (garbage collected, removing self from active engine objects)");
+
+    engine_node_base_t *node_base = self_in;
+    engine_camera_node_class_obj_t *camera_node = node_base->node_common_data;
+    engine_camera_untrack(camera_node->camera_list_node);
+
+    node_base_del(self_in);
+
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(camera_node_class_del_obj, camera_node_class_del);
+
+
+// Return `true` if handled loading the attr from internal structure, `false` otherwise
+bool camera_node_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_t *destination){
+    // Get the underlying structure
+    engine_camera_node_class_obj_t *self = self_node_base->node;
+
+    switch(attribute){
+        case MP_QSTR___del__:
+            destination[0] = MP_OBJ_FROM_PTR(&camera_node_class_del_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_add_child:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_add_child_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_get_child:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_child_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_remove_child:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_remove_child_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_set_layer:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_set_layer_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_get_layer:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_layer_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        // case MP_QSTR_lookat:
+        //     destination[0] = MP_OBJ_FROM_PTR(&camera_node_class_lookat_obj);
+        //     destination[1] = self_node_base;
+        //     return true;
+        // break;
+        case MP_QSTR_tick:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_layer_obj);
+            destination[1] = self_node_base->attr_accessor;
+            return true;
+        break;
+        case MP_QSTR_node_base:
+            destination[0] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_position:
+            destination[0] = self->position;
+            return true;
+        break;
+        case MP_QSTR_zoom:
+            destination[0] = self->zoom;
+            return true;
+        break;
+        case MP_QSTR_viewport:
+            destination[0] = self->viewport;
+            return true;
+        break;
+        case MP_QSTR_rotation:
+            destination[0] = self->rotation;
+            return true;
+        break;
+        case MP_QSTR_fov:
+            destination[0] = self->fov;
+            return true;
+        break;
+        case MP_QSTR_view_distance:
+            destination[0] = self->view_distance;
+            return true;
+        break;
+        default:
+            return false; // Fail
+    }
+}
+
+
+// Return `true` if handled storing the attr from internal structure, `false` otherwise
+bool camera_node_store_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_t *destination){
+    // Get the underlying structure
+    engine_camera_node_class_obj_t *self = self_node_base->node;
+
+    switch(attribute){
+        case MP_QSTR_tick:
+            self->tick_cb = destination[1];
+            return true;
+        break;
+        case MP_QSTR_position:
+            self->position = destination[1];
+            return true;
+        break;
+        case MP_QSTR_zoom:
+            self->zoom = destination[1];
+            return true;
+        break;
+        case MP_QSTR_viewport:
+            self->viewport = destination[1];
+            return true;
+        break;
+        case MP_QSTR_rotation:
+            self->rotation = destination[1];
+            return true;
+        break;
+        case MP_QSTR_fov:
+            self->fov = destination[1];
+            return true;
+        break;
+        case MP_QSTR_view_distance:
+            self->view_distance = destination[1];
+            return true;
+        break;
+        default:
+            return false; // Fail
+    }
+}
+
+
+STATIC mp_attr_fun_t camera_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+    ENGINE_INFO_PRINTF("Accessing CameraNode attr");
+
+    // Get the node base from either class
+    // instance or native instance object
+    bool is_obj_instance = false;
+    engine_node_base_t *node_base = node_base_get(self_in, &is_obj_instance);
+
+    // Used for telling if custom load/store functions handled the attr
+    bool attr_handled = false;
+
+    if(destination[0] == MP_OBJ_NULL){          // Load
+        attr_handled = camera_node_load_attr(node_base, attribute, destination);
+    }else if(destination[1] != MP_OBJ_NULL){    // Store
+        attr_handled = camera_node_store_attr(node_base, attribute, destination);
+
+        // If handled, mark as successful store
+        if(attr_handled) destination[0] = MP_OBJ_NULL;
+    }
+
+    // If this is a Python class instance and the attr was NOT
+    // handled by the above, defer the attr to the instance attr
+    // handler
+    if(is_obj_instance && attr_handled == false){
+        default_instance_attr_func(self_in, attribute, destination);
+    }
+
+    return mp_const_none;
+}
+
+
 /*  --- doc ---
     NAME: CameraNode
     DESC: Node that defines the perspective the scene is drawn at. There can be multiple but this will impact performance if rendering the same scene twice. To make other nodes not move when the camera moves, make the other nodes children of the camera.
@@ -128,6 +286,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(camera_node_class_tick_obj, camera_node_class_tick);
     ATTR:  [type=function]                       [name={ref_link:set_layer}]     [value=function]
     ATTR:  [type=function]                       [name={ref_link:get_layer}]     [value=function]
     ATTR:  [type=function]                       [name={ref_link:remove_child}]  [value=function]
+    ATTR:  [type=function]                       [name={ref_link:tick}]          [value=function]
     ATTR:  [type={ref_link:Vector3}]             [name=position]                 [value={ref_link:Vector3}]
     ATTR:  [type={ref_link:Vector3}]             [name=rotation]                 [value={ref_link:Vector3}]
     ATTR:  [type=float]                          [name=zoom]                     [value=any (scales all nodes by this factor, 1.0 by default)]
@@ -175,163 +334,61 @@ mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t 
     if(parsed_args[rotation].u_obj == MP_OBJ_NULL) parsed_args[rotation].u_obj = vector3_class_new(&vector3_class_type, 0, 0, NULL);
     if(parsed_args[fov].u_obj == MP_OBJ_NULL) parsed_args[fov].u_obj = mp_obj_new_float(PI/2.0f);
     if(parsed_args[view_distance].u_obj == MP_OBJ_NULL) parsed_args[view_distance].u_obj = mp_obj_new_float(256.0f);
-    
-    engine_camera_node_common_data_t *common_data = malloc(sizeof(engine_camera_node_common_data_t));
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);
-    node_base->node_common_data = common_data;
-    node_base->base.type = &engine_camera_node_class_type;
-    node_base->layer = 0;
-    node_base->type = NODE_TYPE_CAMERA;
-    node_base->object_list_node = engine_add_object_to_layer(node_base, node_base->layer);
-    node_base_set_if_visible(node_base, true);
-    node_base_set_if_disabled(node_base, false);
-    node_base_set_if_just_added(node_base, true);
+    node_base_init(node_base, NULL, &engine_camera_node_class_type, NODE_TYPE_CAMERA);
+    engine_camera_node_class_obj_t *camera_node = m_malloc(sizeof(engine_camera_node_class_obj_t));
+    node_base->node = camera_node;
+    node_base->attr_accessor = node_base;
 
     // Track the node base for this camera so that it can be
     // passed to draw callbacks, determined if inherited or not,
     // and then atributes looked up and used for drawing
-    common_data->camera_list_node = engine_camera_track(node_base);
+    camera_node->camera_list_node = engine_camera_track(node_base);
+    camera_node->tick_cb = mp_const_none;
+    camera_node->position = parsed_args[position].u_obj;
+    camera_node->zoom = parsed_args[zoom].u_obj;
+    camera_node->viewport = parsed_args[viewport].u_obj;
+    camera_node->rotation = parsed_args[rotation].u_obj;
+    camera_node->fov = parsed_args[fov].u_obj;
+    camera_node->view_distance = parsed_args[view_distance].u_obj;
+    
+    if(inherited == true){  // Inherited (use existing object)
+        // Get the Python class instance
+        mp_obj_t node_instance = parsed_args[child_class].u_obj;
 
-    if(inherited == false){        // Non-inherited (create a new object)
-        engine_camera_node_class_obj_t *camera_node = m_malloc(sizeof(engine_camera_node_class_obj_t));
-        node_base->node = camera_node;
-        node_base->attr_accessor = node_base;
-
-        common_data->tick_cb = MP_OBJ_FROM_PTR(&camera_node_class_tick_obj);
-
-        camera_node->position = parsed_args[position].u_obj;
-        camera_node->zoom = parsed_args[zoom].u_obj;
-        camera_node->viewport = parsed_args[viewport].u_obj;
-        camera_node->rotation = parsed_args[rotation].u_obj;
-        camera_node->fov = parsed_args[fov].u_obj;
-        camera_node->view_distance = parsed_args[view_distance].u_obj;
-    }else if(inherited == true){  // Inherited (use existing object)
-        node_base->node = parsed_args[child_class].u_obj;
-        node_base->attr_accessor = node_base->node;
+        // Because the instance doesn't have a `node_base` yet, restore the
+        // instance type original attr function for now (otherwise get core abort)
+        if(default_instance_attr_func != NULL) MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr, default_instance_attr_func, 5);
 
         // Look for function overrides otherwise use the defaults
         mp_obj_t dest[2];
-        mp_load_method_maybe(node_base->node, MP_QSTR_tick, dest);
+
+        mp_load_method_maybe(node_instance, MP_QSTR_tick, dest);
         if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
-            common_data->tick_cb = MP_OBJ_FROM_PTR(&camera_node_class_tick_obj);
+            camera_node->tick_cb = mp_const_none;
         }else{                                                  // Likely found method (could be attribute)
-            common_data->tick_cb = dest[0];
+            camera_node->tick_cb = dest[0];
         }
 
-        mp_store_attr(node_base->node, MP_QSTR_position, parsed_args[position].u_obj);
-        mp_store_attr(node_base->node, MP_QSTR_zoom, parsed_args[zoom].u_obj);
-        mp_store_attr(node_base->node, MP_QSTR_viewport, parsed_args[viewport].u_obj);
-        mp_store_attr(node_base->node, MP_QSTR_rotation, parsed_args[rotation].u_obj);
-        mp_store_attr(node_base->node, MP_QSTR_fov, parsed_args[fov].u_obj);
-        mp_store_attr(node_base->node, MP_QSTR_view_distance, parsed_args[view_distance].u_obj);
+        // Store one pointer on the instance. Need to be able to get the
+        // node base that contains a pointer to the engine specific data we
+        // care about
+        // mp_store_attr(node_instance, MP_QSTR_node_base, node_base);
+        mp_store_attr(node_instance, MP_QSTR_node_base, node_base);
+
+        // Store default Python class instance attr function
+        // and override with custom intercept attr function
+        // so that certain callbacks/code can run (see py/objtype.c:mp_obj_instance_attr(...))
+        default_instance_attr_func = MP_OBJ_TYPE_GET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr);
+        MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr, camera_node_class_attr, 5);
+
+        // Need a way to access the object node instance instead of the native type for callbacks (tick, draw, collision)
+        node_base->attr_accessor = node_instance;
     }
 
     return MP_OBJ_FROM_PTR(node_base);
-}
-
-
-mp_obj_t camera_node_class_del(mp_obj_t self_in){
-    ENGINE_INFO_PRINTF("CameraNode: Deleted (garbage collected, removing self from active engine objects)");
-
-    engine_node_base_t *node_base = self_in;
-    engine_camera_node_common_data_t *common_data = node_base->node_common_data;
-    engine_camera_untrack(common_data->camera_list_node);
-
-    node_base_del(self_in);
-
-    return mp_const_none;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(camera_node_class_del_obj, camera_node_class_del);
-
-
-STATIC void camera_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
-    ENGINE_INFO_PRINTF("Accessing CameraNode attr");
-
-    engine_camera_node_class_obj_t *self = ((engine_node_base_t*)(self_in))->node;
-
-    if(destination[0] == MP_OBJ_NULL){          // Load
-        switch(attribute){
-            case MP_QSTR___del__:
-                destination[0] = MP_OBJ_FROM_PTR(&camera_node_class_del_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_add_child:
-                destination[0] = MP_OBJ_FROM_PTR(&node_base_add_child_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_get_child:
-                destination[0] = MP_OBJ_FROM_PTR(&node_base_get_child_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_remove_child:
-                destination[0] = MP_OBJ_FROM_PTR(&node_base_remove_child_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_set_layer:
-                destination[0] = MP_OBJ_FROM_PTR(&node_base_set_layer_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_get_layer:
-                destination[0] = MP_OBJ_FROM_PTR(&node_base_get_layer_obj);
-                destination[1] = self_in;
-            break;
-            // case MP_QSTR_lookat:
-            //     destination[0] = MP_OBJ_FROM_PTR(&camera_node_class_lookat_obj);
-            //     destination[1] = self_in;
-            // break;
-            case MP_QSTR_node_base:
-                destination[0] = self_in;
-            break;
-            case MP_QSTR_position:
-                destination[0] = self->position;
-            break;
-            case MP_QSTR_zoom:
-                destination[0] = self->zoom;
-            break;
-            case MP_QSTR_viewport:
-                destination[0] = self->viewport;
-            break;
-            case MP_QSTR_rotation:
-                destination[0] = self->rotation;
-            break;
-            case MP_QSTR_fov:
-                destination[0] = self->fov;
-            break;
-            case MP_QSTR_view_distance:
-                destination[0] = self->view_distance;
-            break;
-            default:
-                return; // Fail
-        }
-    }else if(destination[1] != MP_OBJ_NULL){    // Store
-        switch(attribute){
-            case MP_QSTR_position:
-                self->position = destination[1];
-            break;
-            case MP_QSTR_zoom:
-                self->zoom = destination[1];
-            break;
-            case MP_QSTR_viewport:
-                self->viewport = destination[1];
-            break;
-            case MP_QSTR_rotation:
-                self->rotation = destination[1];
-            break;
-            case MP_QSTR_fov:
-                self->fov = destination[1];
-            break;
-            case MP_QSTR_view_distance:
-                self->view_distance = destination[1];
-            break;
-            default:
-                return; // Fail
-        }
-
-        // Success
-        destination[0] = MP_OBJ_NULL;
-    }
 }
 
 

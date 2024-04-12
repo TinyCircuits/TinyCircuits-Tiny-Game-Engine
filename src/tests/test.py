@@ -4,7 +4,7 @@ import engine_debug
 import engine_input
 import engine_physics
 import engine_audio
-from engine_nodes import EmptyNode, Sprite2DNode, Rectangle2DNode, Circle2DNode, CameraNode, VoxelSpaceNode, Text2DNode, Line2DNode
+from engine_nodes import EmptyNode, Sprite2DNode, Rectangle2DNode, Circle2DNode, CameraNode, VoxelSpaceNode, Text2DNode, Line2DNode, GUIButton2DNode
 from engine_math import Vector3, Vector2, Rectangle
 from engine_resources import TextureResource, WaveSoundResource, FontResource
 import math
@@ -30,6 +30,9 @@ text0 = Text2DNode(text="Hello World!\nLine 2\nLine 3", font=font9, scale=Vector
 
 
 texture = TextureResource("32x32.bmp")
+
+
+button0 = GUIButton2DNode(position=Vector2(-45,   0), font=font9, text="Button 0", rotation=0, scale=Vector2(0.75, 0.75), padding=2, outline=2, opacity=1.0)
 
 
 class MyCircle(Circle2DNode):
@@ -99,6 +102,7 @@ circle.add_child(sprite)
 circle.add_child(text)
 circle.add_child(text0)
 circle.add_child(line)
+circle.add_child(button0)
 
 cursor = Circle2DNode(radius=4, color=engine_draw.green, outline=True, position=Vector2(0, 0), opacity=1.0)
 

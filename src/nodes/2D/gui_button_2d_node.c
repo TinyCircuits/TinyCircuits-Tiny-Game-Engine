@@ -167,7 +167,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(gui_button_2d_node_class_del_obj, gui_button_2d
 
 
 // Return `true` if handled loading the attr from internal structure, `false` otherwise
-bool button_2d_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_t *destination){
+bool button_2d_node_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_t *destination){
     // Get the underlying structure
     engine_gui_button_2d_node_class_obj_t *self = self_node_base->node;
 
@@ -337,7 +337,7 @@ bool button_2d_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp_
 
 
 // Return `true` if handled storing the attr from internal structure, `false` otherwise
-bool button_2d_store_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_t *destination){
+bool button_2d_node_store_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_t *destination){
     // Get the underlying structure
     engine_gui_button_2d_node_class_obj_t *self = self_node_base->node;
 
@@ -481,9 +481,9 @@ STATIC mp_attr_fun_t gui_button_2d_node_class_attr(mp_obj_t self_in, qstr attrib
     bool attr_handled = false;
 
     if(destination[0] == MP_OBJ_NULL){          // Load
-        attr_handled = button_2d_load_attr(node_base, attribute, destination);
+        attr_handled = button_2d_node_load_attr(node_base, attribute, destination);
     }else if(destination[1] != MP_OBJ_NULL){    // Store
-        attr_handled = button_2d_store_attr(node_base, attribute, destination);
+        attr_handled = button_2d_node_store_attr(node_base, attribute, destination);
 
         // If handled, mark as successful store
         if(attr_handled) destination[0] = MP_OBJ_NULL;
@@ -495,6 +495,8 @@ STATIC mp_attr_fun_t gui_button_2d_node_class_attr(mp_obj_t self_in, qstr attrib
     if(is_obj_instance && attr_handled == false){
         default_instance_attr_func(self_in, attribute, destination);
     }
+
+    return mp_const_none;
 }
 
 
@@ -689,7 +691,6 @@ mp_obj_t gui_button_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, 
         }else{                                                  // Likely found method (could be attribute)
             gui_button_2d_node->on_just_released_cb = dest[0];
         }
-
 
         // Store one pointer on the instance. Need to be able to get the
         // node base that contains a pointer to the engine specific data we

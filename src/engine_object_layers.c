@@ -76,30 +76,32 @@ void engine_invoke_all_node_callbacks(){
                 switch(node_base->type){
                     case NODE_TYPE_EMPTY:
                     {
-                        engine_empty_node_common_data_t *empty_node_common_data = node_base->node_common_data;
-                        exec[0] = empty_node_common_data->tick_cb;
-                        exec[1] = node_base->attr_accessor;
-                        mp_call_method_n_kw(0, 0, exec);
-
-                        exec[0] = empty_node_common_data->draw_cb;
-                        exec[1] = node_base->attr_accessor;
-                        engine_camera_draw_for_each_obj(exec);
+                        engine_empty_node_class_obj_t *empty_node = node_base->node;
+                        if(empty_node->tick_cb != mp_const_none){
+                            exec[0] = empty_node->tick_cb;
+                            exec[1] = node_base->attr_accessor;
+                            mp_call_method_n_kw(0, 0, exec);
+                        }
                     }
                     break;
                     case NODE_TYPE_CAMERA:
                     {
-                        engine_camera_node_common_data_t *camera_node_common_data = node_base->node_common_data;
-                        exec[0] = camera_node_common_data->tick_cb;
-                        exec[1] = node_base->attr_accessor;
-                        mp_call_method_n_kw(0, 0, exec);
+                        engine_camera_node_class_obj_t *camera_node = node_base->node;
+                        if(camera_node->tick_cb != mp_const_none){
+                            exec[0] = camera_node->tick_cb;
+                            exec[1] = node_base->attr_accessor;
+                            mp_call_method_n_kw(0, 0, exec);
+                        }
                     }
                     break;
                     case NODE_TYPE_VOXELSPACE:
                     {
-                        engine_voxelspace_node_common_data_t *voxelspace_node_common_data = node_base->node_common_data;
-                        exec[0] = voxelspace_node_common_data->tick_cb;
-                        exec[1] = node_base->attr_accessor;
-                        mp_call_method_n_kw(0, 0, exec);
+                        engine_voxelspace_node_class_obj_t *voxelspace_node= node_base->node;
+                        if(voxelspace_node->tick_cb != mp_const_none){
+                            exec[0] = voxelspace_node->tick_cb;
+                            exec[1] = node_base->attr_accessor;
+                            mp_call_method_n_kw(0, 0, exec);
+                        }
 
                         engine_camera_draw_for_each(voxelspace_node_class_draw, node_base);
                     }
@@ -116,10 +118,12 @@ void engine_invoke_all_node_callbacks(){
                     break;
                     case NODE_TYPE_RECTANGLE_2D:
                     {
-                        engine_rectangle_2d_node_common_data_t *rectangle_2d_node_common_data = node_base->node_common_data;
-                        exec[0] = rectangle_2d_node_common_data->tick_cb;
-                        exec[1] = node_base->attr_accessor;
-                        mp_call_method_n_kw(0, 0, exec);
+                        engine_rectangle_2d_node_class_obj_t *rectangle_2d_node = node_base->node;
+                        if(rectangle_2d_node->tick_cb != mp_const_none){
+                            exec[0] = rectangle_2d_node->tick_cb;
+                            exec[1] = node_base->attr_accessor;
+                            mp_call_method_n_kw(0, 0, exec);
+                        }
 
                         engine_camera_draw_for_each(rectangle_2d_node_class_draw, node_base);
                     }
@@ -127,39 +131,47 @@ void engine_invoke_all_node_callbacks(){
                     case NODE_TYPE_LINE_2D:
                     {
                         engine_line_2d_node_class_obj_t *line_2d_node = node_base->node;
-                        exec[0] = line_2d_node->tick_cb;
-                        exec[1] = node_base->attr_accessor;
-                        mp_call_method_n_kw(0, 0, exec);
+                        if(line_2d_node->tick_cb != mp_const_none){
+                            exec[0] = line_2d_node->tick_cb;
+                            exec[1] = node_base->attr_accessor;
+                            mp_call_method_n_kw(0, 0, exec);
+                        }
 
                         engine_camera_draw_for_each(line_2d_node_class_draw, node_base);
                     }
                     break;
                     case NODE_TYPE_CIRCLE_2D:
                     {
-                        engine_circle_2d_node_common_data_t *circle_2d_node_common_data = node_base->node_common_data;
-                        exec[0] = circle_2d_node_common_data->tick_cb;
-                        exec[1] = node_base->attr_accessor;
-                        mp_call_method_n_kw(0, 0, exec);
+                        engine_circle_2d_node_class_obj_t *circle_2d_node = node_base->node;
+                        if(circle_2d_node->tick_cb != mp_const_none){
+                            exec[0] = circle_2d_node->tick_cb;
+                            exec[1] = node_base->attr_accessor;
+                            mp_call_method_n_kw(0, 0, exec);
+                        }
 
                         engine_camera_draw_for_each(circle_2d_node_class_draw, node_base);
                     }
                     break;
                     case NODE_TYPE_SPRITE_2D:
                     {
-                        engine_sprite_2d_node_common_data_t *sprite_2d_node_common_data = node_base->node_common_data;
-                        exec[0] = sprite_2d_node_common_data->tick_cb;
-                        exec[1] = node_base->attr_accessor;
-                        mp_call_method_n_kw(0, 0, exec);
+                        engine_sprite_2d_node_class_obj_t *sprite_2d_node = node_base->node;
+                        if(sprite_2d_node->tick_cb != mp_const_none){
+                            exec[0] = sprite_2d_node->tick_cb;
+                            exec[1] = node_base->attr_accessor;
+                            mp_call_method_n_kw(0, 0, exec);
+                        }
 
                         engine_camera_draw_for_each(sprite_2d_node_class_draw, node_base);
                     }
                     break;
                     case NODE_TYPE_TEXT_2D:
                     {
-                        engine_text_2d_node_common_data_t *text_2d_node_common_data = node_base->node_common_data;
-                        exec[0] = text_2d_node_common_data->tick_cb;
-                        exec[1] = node_base->attr_accessor;
-                        mp_call_method_n_kw(0, 0, exec);
+                        engine_text_2d_node_class_obj_t *text_2d_node = node_base->node;
+                        if(text_2d_node->tick_cb != mp_const_none){
+                            exec[0] = text_2d_node->tick_cb;
+                            exec[1] = node_base->attr_accessor;
+                            mp_call_method_n_kw(0, 0, exec);
+                        }
 
                         engine_camera_draw_for_each(text_2d_node_class_draw, node_base);
                     }
@@ -222,17 +234,21 @@ void engine_invoke_all_node_callbacks(){
                     case NODE_TYPE_PHYSICS_RECTANGLE_2D:
                     {
                         engine_physics_node_base_t *physics_node_base = node_base->node;
-                        exec[0] = physics_node_base->tick_cb;
-                        exec[1] = node_base->attr_accessor;
-                        mp_call_method_n_kw(0, 0, exec);
+                        if(physics_node_base->tick_cb != mp_const_none){
+                            exec[0] = physics_node_base->tick_cb;
+                            exec[1] = node_base->attr_accessor;
+                            mp_call_method_n_kw(0, 0, exec);
+                        }
                     }
                     break;
                     case NODE_TYPE_PHYSICS_CIRCLE_2D:
                     {
                         engine_physics_node_base_t *physics_node_base = node_base->node;
-                        exec[0] = physics_node_base->tick_cb;
-                        exec[1] = node_base->attr_accessor;
-                        mp_call_method_n_kw(0, 0, exec);
+                        if(physics_node_base->tick_cb != mp_const_none){
+                            exec[0] = physics_node_base->tick_cb;
+                            exec[1] = node_base->attr_accessor;
+                            mp_call_method_n_kw(0, 0, exec);
+                        }
                     }
                     break;
                     default:

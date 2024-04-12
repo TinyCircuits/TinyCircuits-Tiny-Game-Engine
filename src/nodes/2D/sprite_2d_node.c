@@ -22,34 +22,27 @@ STATIC void sprite_2d_node_class_print(const mp_print_t *print, mp_obj_t self_in
 }
 
 
-STATIC mp_obj_t sprite_2d_node_class_tick(mp_obj_t self_in){
-    ENGINE_WARNING_PRINTF("Sprite2DNode: Tick function not overridden");
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_1(sprite_2d_node_class_tick_obj, sprite_2d_node_class_tick);
-
-
 void sprite_2d_node_class_draw(engine_node_base_t *sprite_node_base, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("Sprite2DNode: Drawing");
 
     engine_node_base_t *camera_node_base = camera_node;
-    engine_sprite_2d_node_common_data_t *sprite_common_data = sprite_node_base->node_common_data;
+    engine_sprite_2d_node_class_obj_t *sprite_2d_node = sprite_node_base->node;
 
-    vector2_class_obj_t *sprite_scale =  mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_scale);
-    texture_resource_class_obj_t *sprite_texture = mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_texture);
-    float sprite_opacity = mp_obj_get_float(mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_opacity));
+    vector2_class_obj_t *sprite_scale =  sprite_2d_node->scale;
+    texture_resource_class_obj_t *sprite_texture = sprite_2d_node->texture_resource;
+    float sprite_opacity = mp_obj_get_float(sprite_2d_node->opacity);
 
     vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
     rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
     float camera_zoom = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_zoom));
 
-    uint16_t sprite_frame_count_x = mp_obj_get_int(mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_count_x));
-    uint16_t sprite_frame_count_y = mp_obj_get_int(mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_count_y));
-    uint16_t sprite_frame_current_x = mp_obj_get_int(mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_current_x));
-    uint16_t sprite_frame_current_y = mp_obj_get_int(mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_current_y));
-    bool sprite_playing = mp_obj_get_int(mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_playing));
+    uint16_t sprite_frame_count_x = mp_obj_get_int(sprite_2d_node->frame_count_x);
+    uint16_t sprite_frame_count_y = mp_obj_get_int(sprite_2d_node->frame_count_y);
+    uint16_t sprite_frame_current_x = mp_obj_get_int(sprite_2d_node->frame_current_x);
+    uint16_t sprite_frame_current_y = mp_obj_get_int(sprite_2d_node->frame_current_y);
+    bool sprite_playing = mp_obj_get_int(sprite_2d_node->playing);
 
-    color_class_obj_t *transparent_color = mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_transparent_color);
+    color_class_obj_t *transparent_color = sprite_2d_node->transparent_color;
     uint32_t spritesheet_width = sprite_texture->width;
     uint32_t spritesheet_height = sprite_texture->height;
 
@@ -113,7 +106,7 @@ void sprite_2d_node_class_draw(engine_node_base_t *sprite_node_base, mp_obj_t ca
         uint16_t sprite_period = (uint16_t)((1.0f/sprite_fps) * 1000.0f);
 
         uint32_t current_ms_time = millis();
-        if(current_ms_time - sprite_common_data->time_at_last_animation_update_ms >= sprite_period){
+        if(current_ms_time - sprite_2d_node->time_at_last_animation_update_ms >= sprite_period){
             sprite_frame_current_x++;
 
             // If reach end of x-axis frames, go to the next line and restart x
@@ -130,10 +123,205 @@ void sprite_2d_node_class_draw(engine_node_base_t *sprite_node_base, mp_obj_t ca
             // Update/store the current frame index
             mp_store_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_current_x, mp_obj_new_int(sprite_frame_current_x));
             mp_store_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_current_y, mp_obj_new_int(sprite_frame_current_y));
-            sprite_common_data->time_at_last_animation_update_ms = millis();
+            sprite_2d_node->time_at_last_animation_update_ms = millis();
         }
     }
 }
+
+
+// Return `true` if handled loading the attr from internal structure, `false` otherwise
+bool sprite_2d_node_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_t *destination){
+    // Get the underlying structure
+    engine_sprite_2d_node_class_obj_t *self = self_node_base->node;
+
+    switch(attribute){
+        case MP_QSTR___del__:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_del_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_add_child:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_add_child_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_get_child:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_child_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_remove_child:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_remove_child_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_set_layer:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_set_layer_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_get_layer:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_layer_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_tick:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_layer_obj);
+            destination[1] = self_node_base->attr_accessor;
+            return true;
+        break;
+        case MP_QSTR_node_base:
+            destination[0] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_position:
+            destination[0] = self->position;
+            return true;
+        break;
+        case MP_QSTR_texture:
+            destination[0] = self->texture_resource;
+            return true;
+        break;
+        case MP_QSTR_transparent_color:
+            destination[0] = self->transparent_color;
+            return true;
+        break;
+        case MP_QSTR_fps:
+            destination[0] = self->fps;
+            return true;
+        break;
+        case MP_QSTR_frame_count_x:
+            destination[0] = self->frame_count_x;
+            return true;
+        break;
+        case MP_QSTR_frame_count_y:
+            destination[0] = self->frame_count_y;
+            return true;
+        break;
+        case MP_QSTR_rotation:
+            destination[0] = self->rotation;
+            return true;
+        break;
+        case MP_QSTR_scale:
+            destination[0] = self->scale;
+            return true;
+        break;
+        case MP_QSTR_opacity:
+            destination[0] = self->opacity;
+            return true;
+        break;
+        case MP_QSTR_playing:
+            destination[0] = self->playing;
+            return true;
+        break;
+        case MP_QSTR_frame_current_x:
+            destination[0] = self->frame_current_x;
+            return true;
+        break;
+        case MP_QSTR_frame_current_y:
+            destination[0] = self->frame_current_y;
+            return true;
+        break;
+        default:
+            return; // Fail
+    }
+}
+
+
+// Return `true` if handled storing the attr from internal structure, `false` otherwise
+bool sprite_2d_node_store_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_t *destination){
+    // Get the underlying structure
+    engine_sprite_2d_node_class_obj_t *self = self_node_base->node;
+
+    switch(attribute){
+        case MP_QSTR_tick:
+            self->tick_cb = destination[1];
+            return true;
+        break;
+        case MP_QSTR_position:
+            self->position = destination[1];
+            return true;
+        break;
+        case MP_QSTR_texture:
+            self->texture_resource = destination[1];
+            return true;
+        break;
+        case MP_QSTR_transparent_color:
+            self->transparent_color = destination[1];
+            return true;
+        break;
+        case MP_QSTR_fps:
+            self->fps = destination[1];
+            return true;
+        break;
+        case MP_QSTR_frame_count_x:
+            self->frame_count_x = destination[1];
+            return true;
+        break;
+        case MP_QSTR_frame_count_y:
+            self->frame_count_y = destination[1];
+            return true;
+        break;
+        case MP_QSTR_rotation:
+            self->rotation = destination[1];
+            return true;
+        break;
+        case MP_QSTR_scale:
+            self->scale = destination[1];
+            return true;
+        break;
+        case MP_QSTR_opacity:
+            self->opacity = destination[1];
+            return true;
+        break;
+        case MP_QSTR_playing:
+            self->playing = destination[1];
+            return true;
+        break;
+        case MP_QSTR_frame_current_x:
+            self->frame_current_x = destination[1];
+            return true;
+        break;
+        case MP_QSTR_frame_current_y:
+            self->frame_current_y = destination[1];
+            return true;
+        break;
+        default:
+            return false; // Fail
+    }
+}
+
+
+STATIC mp_attr_fun_t sprite_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+    ENGINE_INFO_PRINTF("Accessing Sprite2DNode attr");
+
+    // Get the node base from either class
+    // instance or native instance object
+    bool is_obj_instance = false;
+    engine_node_base_t *node_base = node_base_get(self_in, &is_obj_instance);
+
+    // Used for telling if custom load/store functions handled the attr
+    bool attr_handled = false;
+
+    if(destination[0] == MP_OBJ_NULL){          // Load
+        attr_handled = sprite_2d_node_load_attr(node_base, attribute, destination);
+    }else if(destination[1] != MP_OBJ_NULL){    // Store
+        attr_handled = sprite_2d_node_store_attr(node_base, attribute, destination);
+
+        // If handled, mark as successful store
+        if(attr_handled) destination[0] = MP_OBJ_NULL;
+    }
+
+    // If this is a Python class instance and the attr was NOT
+    // handled by the above, defer the attr to the instance attr
+    // handler
+    if(is_obj_instance && attr_handled == false){
+        default_instance_attr_func(self_in, attribute, destination);
+    }
+
+    return mp_const_none;
+}
+
 
 
 /*  --- doc ---
@@ -155,6 +343,7 @@ void sprite_2d_node_class_draw(engine_node_base_t *sprite_node_base, mp_obj_t ca
     ATTR:   [type=function]                   [name={ref_link:set_layer}]       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_layer}]       [value=function]
     ATTR:   [type=function]                   [name={ref_link:remove_child}]    [value=function]
+    ATTR:   [type=function]                   [name={ref_link:tick}]            [value=function]
     ATTR:   [type={ref_link:Vector2}]         [name=position]                   [value={ref_link:Vector2}]
     ATTR:   [type={ref_link:TextureResource}] [name=texture]                    [value={ref_link:TextureResource}]
     ATTR:   [type=int]                        [name=transparent_color]          [value=any 16-bit RGB565 color]
@@ -217,188 +406,63 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
     if(parsed_args[opacity].u_obj == MP_OBJ_NULL) parsed_args[opacity].u_obj = mp_obj_new_float(1.0f);
     if(parsed_args[playing].u_obj == MP_OBJ_NULL) parsed_args[playing].u_obj = mp_obj_new_bool(true);
 
-    engine_sprite_2d_node_common_data_t *common_data = malloc(sizeof(engine_sprite_2d_node_common_data_t));
-    common_data->time_at_last_animation_update_ms = millis();
-
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);
-    node_base->node_common_data = common_data;
-    node_base->base.type = &engine_sprite_2d_node_class_type;
-    node_base->layer = 0;
-    node_base->type = NODE_TYPE_SPRITE_2D;
-    node_base->object_list_node = engine_add_object_to_layer(node_base, node_base->layer);
-    node_base_set_if_visible(node_base, true);
-    node_base_set_if_disabled(node_base, false);
-    node_base_set_if_just_added(node_base, true);
+    node_base_init(node_base, NULL, &engine_sprite_2d_node_class_type, NODE_TYPE_SPRITE_2D);
+    engine_sprite_2d_node_class_obj_t *sprite_2d_node = m_malloc(sizeof(engine_sprite_2d_node_class_obj_t));
+    node_base->node = sprite_2d_node;
+    node_base->attr_accessor = node_base;
 
-    if(inherited == false){        // Non-inherited (create a new object)
-        engine_sprite_2d_node_class_obj_t *sprite_2d_node = m_malloc(sizeof(engine_sprite_2d_node_class_obj_t));
-        node_base->node = sprite_2d_node;
-        node_base->attr_accessor = node_base;
+    sprite_2d_node->time_at_last_animation_update_ms = millis();
+    sprite_2d_node->tick_cb = mp_const_none;
+    sprite_2d_node->position = parsed_args[position].u_obj;
+    sprite_2d_node->texture_resource = parsed_args[texture].u_obj;
+    sprite_2d_node->transparent_color = parsed_args[transparent_color].u_obj;
+    sprite_2d_node->fps = parsed_args[fps].u_obj;
+    sprite_2d_node->frame_count_x = parsed_args[frame_count_x].u_obj;
+    sprite_2d_node->frame_count_y = parsed_args[frame_count_y].u_obj;
+    sprite_2d_node->rotation = parsed_args[rotation].u_obj;
+    sprite_2d_node->scale = parsed_args[scale].u_obj;
+    sprite_2d_node->opacity = parsed_args[opacity].u_obj;
+    sprite_2d_node->playing = parsed_args[playing].u_obj;
+    sprite_2d_node->frame_current_x = mp_obj_new_int(0);
+    sprite_2d_node->frame_current_y = mp_obj_new_int(0);
 
-        common_data->tick_cb = MP_OBJ_FROM_PTR(&sprite_2d_node_class_tick_obj);
+    if(inherited == true){  // Inherited (use existing object)
+        // Get the Python class instance
+        mp_obj_t node_instance = parsed_args[child_class].u_obj;
 
-        sprite_2d_node->position = parsed_args[position].u_obj;
-        sprite_2d_node->texture_resource = parsed_args[texture].u_obj;
-        sprite_2d_node->transparent_color = parsed_args[transparent_color].u_obj;
-        sprite_2d_node->fps = parsed_args[fps].u_obj;
-        sprite_2d_node->frame_count_x = parsed_args[frame_count_x].u_obj;
-        sprite_2d_node->frame_count_y = parsed_args[frame_count_y].u_obj;
-        sprite_2d_node->rotation = parsed_args[rotation].u_obj;
-        sprite_2d_node->scale = parsed_args[scale].u_obj;
-        sprite_2d_node->opacity = parsed_args[opacity].u_obj;
-        sprite_2d_node->playing = parsed_args[playing].u_obj;
-        sprite_2d_node->frame_current_x = mp_obj_new_int(0);
-        sprite_2d_node->frame_current_y = mp_obj_new_int(0);
-    }else if(inherited == true){  // Inherited (use existing object)
-        node_base->node = parsed_args[child_class].u_obj;;
-        node_base->attr_accessor = node_base->node;
+        // Because the instance doesn't have a `node_base` yet, restore the
+        // instance type original attr function for now (otherwise get core abort)
+        if(default_instance_attr_func != NULL) MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr, default_instance_attr_func, 5);
 
         // Look for function overrides otherwise use the defaults
         mp_obj_t dest[2];
-        mp_load_method_maybe(node_base->node, MP_QSTR_tick, dest);
+
+        mp_load_method_maybe(node_instance, MP_QSTR_tick, dest);
         if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
-            common_data->tick_cb = MP_OBJ_FROM_PTR(&sprite_2d_node_class_tick_obj);
+            sprite_2d_node->tick_cb = mp_const_none;
         }else{                                                  // Likely found method (could be attribute)
-            common_data->tick_cb = dest[0];
+            sprite_2d_node->tick_cb = dest[0];
         }
 
-        mp_store_attr(node_base->node, MP_QSTR_position, parsed_args[position].u_obj);
-        mp_store_attr(node_base->node, MP_QSTR_texture, parsed_args[texture].u_obj);
-        mp_store_attr(node_base->node, MP_QSTR_transparent_color, parsed_args[transparent_color].u_obj);
-        mp_store_attr(node_base->node, MP_QSTR_fps, parsed_args[fps].u_obj);
-        mp_store_attr(node_base->node, MP_QSTR_frame_count_x, parsed_args[frame_count_x].u_obj);
-        mp_store_attr(node_base->node, MP_QSTR_frame_count_y, parsed_args[frame_count_y].u_obj);
-        mp_store_attr(node_base->node, MP_QSTR_rotation, parsed_args[rotation].u_obj);
-        mp_store_attr(node_base->node, MP_QSTR_scale, parsed_args[scale].u_obj);
-        mp_store_attr(node_base->node, MP_QSTR_opacity, parsed_args[opacity].u_obj);
-        mp_store_attr(node_base->node, MP_QSTR_playing, parsed_args[playing].u_obj);
-        mp_store_attr(node_base->node, MP_QSTR_frame_current_x, mp_obj_new_int(0));
-        mp_store_attr(node_base->node, MP_QSTR_frame_current_y, mp_obj_new_int(0));
+        // Store one pointer on the instance. Need to be able to get the
+        // node base that contains a pointer to the engine specific data we
+        // care about
+        // mp_store_attr(node_instance, MP_QSTR_node_base, node_base);
+        mp_store_attr(node_instance, MP_QSTR_node_base, node_base);
+
+        // Store default Python class instance attr function
+        // and override with custom intercept attr function
+        // so that certain callbacks/code can run (see py/objtype.c:mp_obj_instance_attr(...))
+        default_instance_attr_func = MP_OBJ_TYPE_GET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr);
+        MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr, sprite_2d_node_class_attr, 5);
+
+        // Need a way to access the object node instance instead of the native type for callbacks (tick, draw, collision)
+        node_base->attr_accessor = node_instance;
     }
 
     return MP_OBJ_FROM_PTR(node_base);
-}
-
-
-STATIC void sprite_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
-    ENGINE_INFO_PRINTF("Accessing Sprite2DNode attr");
-
-    engine_sprite_2d_node_class_obj_t *self = ((engine_node_base_t*)(self_in))->node;
-
-    if(destination[0] == MP_OBJ_NULL){          // Load
-        switch(attribute){
-            case MP_QSTR___del__:
-                destination[0] = MP_OBJ_FROM_PTR(&node_base_del_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_add_child:
-                destination[0] = MP_OBJ_FROM_PTR(&node_base_add_child_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_get_child:
-                destination[0] = MP_OBJ_FROM_PTR(&node_base_get_child_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_remove_child:
-                destination[0] = MP_OBJ_FROM_PTR(&node_base_remove_child_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_set_layer:
-                destination[0] = MP_OBJ_FROM_PTR(&node_base_set_layer_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_get_layer:
-                destination[0] = MP_OBJ_FROM_PTR(&node_base_get_layer_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_node_base:
-                destination[0] = self_in;
-            break;
-            case MP_QSTR_position:
-                destination[0] = self->position;
-            break;
-            case MP_QSTR_texture:
-                destination[0] = self->texture_resource;
-            break;
-            case MP_QSTR_transparent_color:
-                destination[0] = self->transparent_color;
-            break;
-            case MP_QSTR_fps:
-                destination[0] = self->fps;
-            break;
-            case MP_QSTR_frame_count_x:
-                destination[0] = self->frame_count_x;
-            break;
-            case MP_QSTR_frame_count_y:
-                destination[0] = self->frame_count_y;
-            break;
-            case MP_QSTR_rotation:
-                destination[0] = self->rotation;
-            break;
-            case MP_QSTR_scale:
-                destination[0] = self->scale;
-            break;
-            case MP_QSTR_opacity:
-                destination[0] = self->opacity;
-            break;
-            case MP_QSTR_playing:
-                destination[0] = self->playing;
-            break;
-            case MP_QSTR_frame_current_x:
-                destination[0] = self->frame_current_x;
-            break;
-            case MP_QSTR_frame_current_y:
-                destination[0] = self->frame_current_y;
-            break;
-            default:
-                return; // Fail
-        }
-    }else if(destination[1] != MP_OBJ_NULL){    // Store
-        switch(attribute){
-            case MP_QSTR_position:
-                self->position = destination[1];
-            break;
-            case MP_QSTR_texture:
-                self->texture_resource = destination[1];
-            break;
-            case MP_QSTR_transparent_color:
-                self->transparent_color = destination[1];
-            break;
-            case MP_QSTR_fps:
-                self->fps = destination[1];
-            break;
-            case MP_QSTR_frame_count_x:
-                self->frame_count_x = destination[1];
-            break;
-            case MP_QSTR_frame_count_y:
-                self->frame_count_y = destination[1];
-            break;
-            case MP_QSTR_rotation:
-                self->rotation = destination[1];
-            break;
-            case MP_QSTR_scale:
-                self->scale = destination[1];
-            break;
-            case MP_QSTR_opacity:
-                self->opacity = destination[1];
-            break;
-            case MP_QSTR_playing:
-                self->playing = destination[1];
-            break;
-            case MP_QSTR_frame_current_x:
-                self->frame_current_x = destination[1];
-            break;
-            case MP_QSTR_frame_current_y:
-                self->frame_current_y = destination[1];
-            break;
-            default:
-                return; // Fail
-        }
-
-        // Success
-        destination[0] = MP_OBJ_NULL;
-    }
 }
 
 

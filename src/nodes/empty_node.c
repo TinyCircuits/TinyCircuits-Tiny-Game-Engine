@@ -4,6 +4,7 @@
 #include "node_base.h"
 #include "debug/debug_print.h"
 #include "engine_object_layers.h"
+#include "math/vector3.h"
 
 // Class required functions
 STATIC void empty_node_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
@@ -12,124 +13,195 @@ STATIC void empty_node_class_print(const mp_print_t *print, mp_obj_t self_in, mp
 }
 
 
-STATIC mp_obj_t empty_node_class_tick(mp_obj_t self_in){
-    ENGINE_WARNING_PRINTF("EmptyNode: Tick function not overridden");
-    return mp_const_none;
+// Return `true` if handled loading the attr from internal structure, `false` otherwise
+bool empty_node_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_t *destination){
+    // Get the underlying structure
+    engine_empty_node_class_obj_t *self = self_node_base->node;
+
+    switch(attribute){
+        case MP_QSTR___del__:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_del_obj);
+            destination[1] = self_node_base;
+        break;
+        case MP_QSTR_add_child:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_add_child_obj);
+            destination[1] = self_node_base;
+        break;
+        case MP_QSTR_get_child:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_child_obj);
+            destination[1] = self_node_base;
+        break;
+        case MP_QSTR_remove_child:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_remove_child_obj);
+            destination[1] = self_node_base;
+        break;
+        case MP_QSTR_set_layer:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_set_layer_obj);
+            destination[1] = self_node_base;
+        break;
+        case MP_QSTR_get_layer:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_layer_obj);
+            destination[1] = self_node_base;
+        break;
+        case MP_QSTR_tick:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_layer_obj);
+            destination[1] = self_node_base->attr_accessor;
+        break;
+        case MP_QSTR_node_base:
+            destination[0] = self_node_base;
+        break;
+        default:
+            return; // Fail
+    }
 }
-MP_DEFINE_CONST_FUN_OBJ_1(empty_node_class_tick_obj, empty_node_class_tick);
 
 
-mp_obj_t empty_node_class_draw(mp_obj_t self_in){
-    ENGINE_WARNING_PRINTF("EmptyNode: Draw function not overridden");
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_1(empty_node_class_draw_obj, empty_node_class_draw);
+// Return `true` if handled storing the attr from internal structure, `false` otherwise
+bool empty_node_store_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_t *destination){
+    // Get the underlying structure
+    engine_empty_node_class_obj_t *self = self_node_base->node;
 
-
-STATIC mp_obj_t empty_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
-    ENGINE_INFO_PRINTF("New EmptyNode");
-
-    engine_empty_node_common_data_t *common_data = malloc(sizeof(engine_empty_node_common_data_t));
-
-    // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
-    engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);
-    node_base->node_common_data = common_data;
-    node_base->base.type = &engine_empty_node_class_type;
-    node_base->layer = 0;
-    node_base->type = NODE_TYPE_EMPTY;
-    node_base->object_list_node = engine_add_object_to_layer(node_base, node_base->layer);
-    node_base->parent_node_base = NULL;
-    node_base->location_in_parents_children = NULL;
-    node_base_set_if_visible(node_base, true);
-    node_base_set_if_disabled(node_base, false);
-    node_base_set_if_just_added(node_base, true);
-
-    if(n_args == 0){        // Non-inherited (create a new object)
-        node_base->node = NULL;
-        node_base->attr_accessor = NULL;
-        common_data->tick_cb = MP_OBJ_FROM_PTR(&empty_node_class_tick_obj);
-    }else if(n_args == 1){  // Inherited (use existing object)
-        node_base->node = args[0];
-        node_base->attr_accessor = node_base->node;
-
-        mp_obj_t dest[2];
-        mp_load_method_maybe(node_base->node, MP_QSTR_tick, dest);
-        if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
-            common_data->tick_cb = MP_OBJ_FROM_PTR(&empty_node_class_tick_obj);
-        }else{                                                  // Likely found method (could be attribute)
-            common_data->tick_cb = dest[0];
-        }
-
-        mp_load_method_maybe(node_base->node, MP_QSTR_draw, dest);
-        if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
-            common_data->draw_cb = MP_OBJ_FROM_PTR(&empty_node_class_draw_obj);
-        }else{                                                  // Likely found method (could be attribute)
-            common_data->draw_cb = dest[0];
-        }
-    }else{
-        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Too many arguments passed to EmptyNode constructor!"));
+    switch(attribute){
+        case MP_QSTR_tick:
+            self->tick_cb = destination[1];
+            return true;
+        break;
+        default:
+            return false; // Fail
     }
 
-    return MP_OBJ_FROM_PTR(node_base);
+}
+
+
+STATIC mp_attr_fun_t empty_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+    ENGINE_INFO_PRINTF("Accessing GUIButton2DNode attr");
+
+    // Get the node base from either class
+    // instance or native instance object
+    bool is_obj_instance = false;
+    engine_node_base_t *node_base = node_base_get(self_in, &is_obj_instance);
+
+    // Used for telling if custom load/store functions handled the attr
+    bool attr_handled = false;
+
+    if(destination[0] == MP_OBJ_NULL){          // Load
+        attr_handled = empty_node_load_attr(node_base, attribute, destination);
+    }else if(destination[1] != MP_OBJ_NULL){    // Store
+        attr_handled = empty_node_store_attr(node_base, attribute, destination);
+
+        // If handled, mark as successful store
+        if(attr_handled) destination[0] = MP_OBJ_NULL;
+    }
+
+    // If this is a Python class instance and the attr was NOT
+    // handled by the above, defer the attr to the instance attr
+    // handler
+    if(is_obj_instance && attr_handled == false){
+        default_instance_attr_func(self_in, attribute, destination);
+    }
+
+    return mp_const_none;
 }
 
 
 /*  --- doc ---
     NAME: EmptyNode
     DESC: Node that does nothing except expose overrides for user implementation
-    ATTR: [type=function]   [name={ref_link:add_child}]     [value=function] 
-    ATTR: [type=function]   [name={ref_link:get_child}]     [value=function]
-    ATTR: [type=function]   [name={ref_link:remove_child}]  [value=function]
-    ATTR: [type=function]   [name={ref_link:set_layer}]     [value=function]
-    ATTR: [type=function]   [name={ref_link:get_layer}]     [value=function]
-    ATTR: [type=function]   [name={ref_link:remove_child}]  [value=function]
-    OVRR: [type=function]   [name={ref_link:tick}]          [value=function]
-    OVRR: [type=function]   [name={ref_link:draw}]          [value=function]
+    PARAM: [type={ref_link:Vector3}]    [name=position]                 [value={ref_link:Vector3}]
+    PARAM: [type={ref_link:Vector3}]    [name=rotation]                 [value={ref_link:Vector3}]
+    ATTR: [type=function]               [name={ref_link:add_child}]     [value=function] 
+    ATTR: [type=function]               [name={ref_link:get_child}]     [value=function]
+    ATTR: [type=function]               [name={ref_link:remove_child}]  [value=function]
+    ATTR: [type=function]               [name={ref_link:set_layer}]     [value=function]
+    ATTR: [type=function]               [name={ref_link:get_layer}]     [value=function]
+    ATTR: [type=function]               [name={ref_link:remove_child}]  [value=function]
+    ATTR: [type=function]               [name={ref_link:tick}]          [value=function]
+    ATTR: [type={ref_link:Vector3}]     [name=position]                 [value={ref_link:Vector3}]
+    ATTR: [type={ref_link:Vector3}]     [name=rotation]                 [value={ref_link:Vector3}]
+    OVRR: [type=function]               [name={ref_link:tick}]          [value=function]
 */
-STATIC void empty_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
-    ENGINE_INFO_PRINTF("Accessing EmptyNode attr");
+STATIC mp_obj_t empty_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
+    ENGINE_INFO_PRINTF("New EmptyNode");
 
-    if(destination[0] == MP_OBJ_NULL){          // Load
-        switch(attribute){
-            case MP_QSTR___del__:
-                destination[0] = MP_OBJ_FROM_PTR(&node_base_del_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_add_child:
-                destination[0] = MP_OBJ_FROM_PTR(&node_base_add_child_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_get_child:
-                destination[0] = MP_OBJ_FROM_PTR(&node_base_get_child_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_remove_child:
-                destination[0] = MP_OBJ_FROM_PTR(&node_base_remove_child_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_set_layer:
-                destination[0] = MP_OBJ_FROM_PTR(&node_base_set_layer_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_get_layer:
-                destination[0] = MP_OBJ_FROM_PTR(&node_base_get_layer_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_node_base:
-                destination[0] = self_in;
-            break;
-            default:
-                return; // Fail
-        }
-    }else if(destination[1] != MP_OBJ_NULL){    // Store
-        switch(attribute){
-            default:
-                return; // Fail
-        }
+    static const mp_arg_t allowed_args[] = {
+        { MP_QSTR_child_class,                  MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_position,                     MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_rotation,                     MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+    };
+    mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
+    enum arg_ids {child_class, position, rotation};
 
-        // Success
-        destination[0] = MP_OBJ_NULL;
+    bool inherited = false;
+
+    // If there is one positional argument and it isn't the first 
+    // expected argument (as is expected when using positional
+    // arguments) then define which way to parse the arguments
+    if(n_args >= 1 && mp_obj_get_type(args[0]) != &vector3_class_type){
+        // Using positional arguments but the type of the first one isn't
+        // as expected. Must be the child class
+        mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args), allowed_args, parsed_args);
+        inherited = true;
+    }else{
+        // Whether we're using positional arguments or not, prase them this
+        // way. It's a requirement that the child class be passed using position.
+        // Adjust what and where the arguments are parsed, since not inherited based
+        // on the first argument
+        mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args)-1, allowed_args+1, parsed_args+1);
+        inherited = false;
     }
+
+    if(parsed_args[position].u_obj == MP_OBJ_NULL) parsed_args[position].u_obj = vector3_class_new(&vector3_class_type, 3, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(0.0f), mp_obj_new_float(0.0f)});
+    if(parsed_args[rotation].u_obj == MP_OBJ_NULL) parsed_args[rotation].u_obj = vector3_class_new(&vector3_class_type, 3, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(0.0f), mp_obj_new_float(0.0f)});
+
+
+    // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
+    engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);
+    node_base_init(node_base, NULL, &engine_empty_node_class_type, NODE_TYPE_EMPTY);
+    engine_empty_node_class_obj_t *empty_node = m_malloc(sizeof(engine_empty_node_class_obj_t));
+    node_base->node = empty_node;
+    node_base->attr_accessor = node_base;
+
+    empty_node->position = parsed_args[position].u_obj;
+    empty_node->rotation = parsed_args[rotation].u_obj;
+    empty_node->tick_cb = mp_const_none;
+
+    if(n_args == 1){  // Inherited (use existing object)
+        // Get the Python class instance
+        mp_obj_t node_instance = parsed_args[child_class].u_obj;
+
+        // Because the instance doesn't have a `node_base` yet, restore the
+        // instance type original attr function for now (otherwise get core abort)
+        if(default_instance_attr_func != NULL) MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr, default_instance_attr_func, 5);
+
+        // Look for function overrides otherwise use the defaults
+        mp_obj_t dest[2];
+
+        mp_load_method_maybe(node_instance, MP_QSTR_tick, dest);
+        if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
+            empty_node->tick_cb = mp_const_none;
+        }else{                                                  // Likely found method (could be attribute)
+            empty_node->tick_cb = dest[0];
+        }
+
+        // Store one pointer on the instance. Need to be able to get the
+        // node base that contains a pointer to the engine specific data we
+        // care about
+        // mp_store_attr(node_instance, MP_QSTR_node_base, node_base);
+        mp_store_attr(node_instance, MP_QSTR_node_base, node_base);
+
+        // Store default Python class instance attr function
+        // and override with custom intercept attr function
+        // so that certain callbacks/code can run (see py/objtype.c:mp_obj_instance_attr(...))
+        default_instance_attr_func = MP_OBJ_TYPE_GET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr);
+        MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr, empty_node_class_attr, 5);
+
+        // Need a way to access the object node instance instead of the native type for callbacks (tick, draw, collision)
+        node_base->attr_accessor = node_instance;
+    }else{
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Too many arguments passed to EmptyNode constructor!"));
+    }
+
+    return MP_OBJ_FROM_PTR(node_base);
 }
 
 

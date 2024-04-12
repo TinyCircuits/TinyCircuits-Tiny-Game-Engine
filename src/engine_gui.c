@@ -164,6 +164,13 @@ void engine_gui_tick(){
     uint16_t gui_toggle_button = engine_input_get_gui_toggle_button();
     if(gui_toggle_button != 0 && check_just_pressed(gui_toggle_button)){
         engine_gui_toggle_focus();
+
+        // If unfocus GUI, make sure the focused node gets unfocused
+        if(focused_gui_node_base != NULL && gui_focused == false){
+            engine_gui_button_2d_node_class_obj_t *focused_node = focused_gui_node_base->node;
+            focused_node->focused = false;
+            focused_gui_node_base = NULL;
+        }
     }
 
     // Only run the GUI selection logic when the

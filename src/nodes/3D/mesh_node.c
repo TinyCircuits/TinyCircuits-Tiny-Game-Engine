@@ -164,6 +164,11 @@ bool mesh_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_t
             destination[1] = self_node_base;
             return true;
         break;
+        case MP_QSTR_tick:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_layer_obj);
+            destination[1] = self_node_base->attr_accessor;
+            return true;
+        break;
         case MP_QSTR_node_base:
             destination[0] = self_node_base;
             return true;
@@ -188,6 +193,10 @@ bool mesh_store_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_
     engine_mesh_node_class_obj_t *self = self_node_base->node;
 
     switch(attribute){
+        case MP_QSTR_tick:
+            self->tick_cb = destination[1];
+            return true;
+        break;
         case MP_QSTR_position:
             self->position = destination[1];
             return true;

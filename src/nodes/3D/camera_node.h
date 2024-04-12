@@ -19,12 +19,9 @@ typedef struct{
     mp_obj_t viewport;              // Rectangle: position, width and height in screen buffer
     mp_obj_t fov;                   // Only applies to certain nodes, like voxelspace (units are radians in that case)
     mp_obj_t view_distance;         // Only applies to certain nodes, like voxelspace (units are pixels in that case)
-}engine_camera_node_class_obj_t;
-
-typedef struct{
     mp_obj_t tick_cb;
     linked_list_node *camera_list_node;
-}engine_camera_node_common_data_t;
+}engine_camera_node_class_obj_t;
 
 extern const mp_obj_type_t engine_camera_node_class_type;
 

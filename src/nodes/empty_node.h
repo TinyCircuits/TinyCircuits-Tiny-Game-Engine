@@ -7,9 +7,10 @@
 // This can be used in games when there is only a need
 // to call code but do nothing else
 typedef struct{
+    mp_obj_t position;              // Vector3: xyz position of this node
+    mp_obj_t rotation;              // Vector3: rotation of this node in space
     mp_obj_t tick_cb;
-    mp_obj_t draw_cb;
-}engine_empty_node_common_data_t;
+}engine_empty_node_class_obj_t;
 
 extern const mp_obj_type_t engine_empty_node_class_type;
 

@@ -19,25 +19,19 @@ STATIC void rectangle_2d_node_class_print(const mp_print_t *print, mp_obj_t self
 }
 
 
-STATIC mp_obj_t rectangle_2d_node_class_tick(mp_obj_t self_in){
-    ENGINE_WARNING_PRINTF("Rectangle2DNode: Tick function not overridden");
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_1(rectangle_2d_node_class_tick_obj, rectangle_2d_node_class_tick);
-
-
 void rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_base, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("Rectangle2DNode: Drawing");
     
     // Decode and store properties about the rectangle and camera nodes
     engine_node_base_t *camera_node_base = camera_node;
+    engine_rectangle_2d_node_class_obj_t *rectangle_2d_node = rectangle_node_base->node;
 
-    vector2_class_obj_t *rectangle_scale =  mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_scale);
-    uint16_t rectangle_width = mp_obj_get_float(mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_width));
-    uint16_t rectangle_height = mp_obj_get_float(mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_height));
-    color_class_obj_t *rectangle_color = mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_color);
-    float rectangle_opacity = mp_obj_get_float(mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_opacity));
-    bool rectangle_outlined = mp_obj_get_int(mp_load_attr(rectangle_node_base->attr_accessor, MP_QSTR_outline));
+    vector2_class_obj_t *rectangle_scale =  rectangle_2d_node->scale;
+    uint16_t rectangle_width = mp_obj_get_float(rectangle_2d_node->width);
+    uint16_t rectangle_height = mp_obj_get_float(rectangle_2d_node->height);
+    color_class_obj_t *rectangle_color = rectangle_2d_node->color;
+    float rectangle_opacity = mp_obj_get_float(rectangle_2d_node->opacity);
+    bool rectangle_outlined = mp_obj_get_int(rectangle_2d_node->outline);
 
     vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
     vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
@@ -123,6 +117,168 @@ void rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_base, mp_ob
 }
 
 
+// Return `true` if handled loading the attr from internal structure, `false` otherwise
+bool rectangle_2d_node_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_t *destination){
+    // Get the underlying structure
+    engine_rectangle_2d_node_class_obj_t *self = self_node_base->node;
+
+    switch(attribute){
+        case MP_QSTR___del__:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_del_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_add_child:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_add_child_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_get_child:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_child_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_remove_child:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_remove_child_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_set_layer:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_set_layer_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_get_layer:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_layer_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_tick:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_layer_obj);
+            destination[1] = self_node_base->attr_accessor;
+            return true;
+        break;
+        case MP_QSTR_node_base:
+            destination[0] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_position:
+            destination[0] = self->position;
+            return true;
+        break;
+        case MP_QSTR_width:
+            destination[0] = self->width;
+            return true;
+        break;
+        case MP_QSTR_height:
+            destination[0] = self->height;
+            return true;
+        break;
+        case MP_QSTR_color:
+            destination[0] = self->color;
+            return true;
+        break;
+        case MP_QSTR_opacity:
+            destination[0] = self->opacity;
+            return true;
+        break;
+        case MP_QSTR_outline:
+            destination[0] = self->outline;
+            return true;
+        break;
+        case MP_QSTR_rotation:
+            destination[0] = self->rotation;
+            return true;
+        break;
+        case MP_QSTR_scale:
+            destination[0] = self->scale;
+            return true;
+        break;
+        default:
+            return; // Fail
+    }
+}
+
+
+// Return `true` if handled storing the attr from internal structure, `false` otherwise
+bool rectangle_2d_node_store_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_t *destination){
+    // Get the underlying structure
+    engine_rectangle_2d_node_class_obj_t *self = self_node_base->node;
+
+    switch(attribute){
+        case MP_QSTR_tick:
+            self->tick_cb = destination[1];
+            return true;
+        break;
+        case MP_QSTR_position:
+            self->position = destination[1];
+            return true;
+        break;
+        case MP_QSTR_width:
+            self->width = destination[1];
+            return true;
+        break;
+        case MP_QSTR_height:
+            self->height = destination[1];
+            return true;
+        break;
+        case MP_QSTR_color:
+            self->color = destination[1];
+            return true;
+        break;
+        case MP_QSTR_opacity:
+            self->opacity = destination[1];
+            return true;
+        break;
+        case MP_QSTR_outline:
+            self->outline = destination[1];
+            return true;
+        break;
+        case MP_QSTR_rotation:
+            self->rotation = destination[1];
+            return true;
+        break;
+        case MP_QSTR_scale:
+            self->scale = destination[1];
+            return true;
+        break;
+        default:
+            return false; // Fail
+    }
+}
+
+
+STATIC mp_attr_fun_t rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+    ENGINE_INFO_PRINTF("Accessing Rectangle2DNode attr");
+
+    // Get the node base from either class
+    // instance or native instance object
+    bool is_obj_instance = false;
+    engine_node_base_t *node_base = node_base_get(self_in, &is_obj_instance);
+
+    // Used for telling if custom load/store functions handled the attr
+    bool attr_handled = false;
+
+    if(destination[0] == MP_OBJ_NULL){          // Load
+        attr_handled = rectangle_2d_node_load_attr(node_base, attribute, destination);
+    }else if(destination[1] != MP_OBJ_NULL){    // Store
+        attr_handled = rectangle_2d_node_store_attr(node_base, attribute, destination);
+
+        // If handled, mark as successful store
+        if(attr_handled) destination[0] = MP_OBJ_NULL;
+    }
+
+    // If this is a Python class instance and the attr was NOT
+    // handled by the above, defer the attr to the instance attr
+    // handler
+    if(is_obj_instance && attr_handled == false){
+        default_instance_attr_func(self_in, attribute, destination);
+    }
+
+    return mp_const_none;
+}
+
+
 /*  --- doc ---
     NAME: Rectangle2DNode
     DESC: Simple 2D rectangle node
@@ -140,6 +296,7 @@ void rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_base, mp_ob
     ATTR:   [type=function]                   [name={ref_link:set_layer}]       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_layer}]       [value=function]
     ATTR:   [type=function]                   [name={ref_link:remove_child}]    [value=function]
+    ATTR:   [type=function]                   [name={ref_link:tick}]            [value=function]
     ATTR:   [type={ref_link:Vector2}]         [name=position]                   [value={ref_link:Vector2}]
     ATTR:   [type=float]                      [name=width]                      [value=any]
     ATTR:   [type=float]                      [name=height]                     [value=any]
@@ -194,148 +351,57 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
     if(parsed_args[rotation].u_obj == MP_OBJ_NULL) parsed_args[rotation].u_obj = mp_obj_new_float(0.0f);
     if(parsed_args[scale].u_obj == MP_OBJ_NULL) parsed_args[scale].u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)});
 
-    engine_rectangle_2d_node_common_data_t *common_data = malloc(sizeof(engine_rectangle_2d_node_common_data_t));
-
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);
-    node_base_init(node_base, common_data, &engine_rectangle_2d_node_class_type, NODE_TYPE_RECTANGLE_2D);
+    node_base_init(node_base, NULL, &engine_rectangle_2d_node_class_type, NODE_TYPE_RECTANGLE_2D);
+    engine_rectangle_2d_node_class_obj_t *rectangle_2d_node = m_malloc(sizeof(engine_rectangle_2d_node_class_obj_t));
+    node_base->node = rectangle_2d_node;
+    node_base->attr_accessor = node_base;
 
-    if(inherited == false){        // Non-inherited (create a new object)
-        engine_rectangle_2d_node_class_obj_t *rectangle_2d_node = m_malloc(sizeof(engine_rectangle_2d_node_class_obj_t));
-        node_base->node = rectangle_2d_node;
-        node_base->attr_accessor = node_base;
+    rectangle_2d_node->tick_cb = mp_const_none;
+    rectangle_2d_node->position = parsed_args[position].u_obj;
+    rectangle_2d_node->width = parsed_args[width].u_obj;
+    rectangle_2d_node->height = parsed_args[height].u_obj;
+    rectangle_2d_node->color = parsed_args[color].u_obj;
+    rectangle_2d_node->opacity = parsed_args[opacity].u_obj;
+    rectangle_2d_node->outline = parsed_args[outline].u_obj;
+    rectangle_2d_node->rotation = parsed_args[rotation].u_obj;
+    rectangle_2d_node->scale = parsed_args[scale].u_obj;
 
-        common_data->tick_cb = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_tick_obj);
+    if(inherited == true){  // Inherited (use existing object)
+        // Get the Python class instance
+        mp_obj_t node_instance = parsed_args[child_class].u_obj;
 
-        rectangle_2d_node->position = parsed_args[position].u_obj;
-        rectangle_2d_node->width = parsed_args[width].u_obj;
-        rectangle_2d_node->height = parsed_args[height].u_obj;
-        rectangle_2d_node->color = parsed_args[color].u_obj;
-        rectangle_2d_node->opacity = parsed_args[opacity].u_obj;
-        rectangle_2d_node->outline = parsed_args[outline].u_obj;
-        rectangle_2d_node->rotation = parsed_args[rotation].u_obj;
-        rectangle_2d_node->scale = parsed_args[scale].u_obj;
-    }else if(inherited == true){  // Inherited (use existing object)
-        node_base->node = parsed_args[child_class].u_obj;
-        node_base->attr_accessor = node_base->node;
+        // Because the instance doesn't have a `node_base` yet, restore the
+        // instance type original attr function for now (otherwise get core abort)
+        if(default_instance_attr_func != NULL) MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr, default_instance_attr_func, 5);
 
         // Look for function overrides otherwise use the defaults
         mp_obj_t dest[2];
-        mp_load_method_maybe(node_base->node, MP_QSTR_tick, dest);
+        mp_load_method_maybe(node_instance, MP_QSTR_tick, dest);
         if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
-            common_data->tick_cb = MP_OBJ_FROM_PTR(&rectangle_2d_node_class_tick_obj);
+            rectangle_2d_node->tick_cb = mp_const_none;
         }else{                                                  // Likely found method (could be attribute)
-            common_data->tick_cb = dest[0];
+            rectangle_2d_node->tick_cb = dest[0];
         }
 
-        mp_store_attr(node_base->node, MP_QSTR_position, parsed_args[position].u_obj);
-        mp_store_attr(node_base->node, MP_QSTR_width, parsed_args[width].u_obj);
-        mp_store_attr(node_base->node, MP_QSTR_height, parsed_args[height].u_obj);
-        mp_store_attr(node_base->node, MP_QSTR_color, parsed_args[color].u_obj);
-        mp_store_attr(node_base->node, MP_QSTR_opacity, parsed_args[opacity].u_obj);
-        mp_store_attr(node_base->node, MP_QSTR_outline, parsed_args[outline].u_obj);
-        mp_store_attr(node_base->node, MP_QSTR_rotation, parsed_args[rotation].u_obj);
-        mp_store_attr(node_base->node, MP_QSTR_scale, parsed_args[scale].u_obj);
+        // Store one pointer on the instance. Need to be able to get the
+        // node base that contains a pointer to the engine specific data we
+        // care about
+        // mp_store_attr(node_instance, MP_QSTR_node_base, node_base);
+        mp_store_attr(node_instance, MP_QSTR_node_base, node_base);
+
+        // Store default Python class instance attr function
+        // and override with custom intercept attr function
+        // so that certain callbacks/code can run (see py/objtype.c:mp_obj_instance_attr(...))
+        default_instance_attr_func = MP_OBJ_TYPE_GET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr);
+        MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr, rectangle_2d_node_class_attr, 5);
+
+        // Need a way to access the object node instance instead of the native type for callbacks (tick, draw, collision)
+        node_base->attr_accessor = node_instance;
     }
 
     return MP_OBJ_FROM_PTR(node_base);
-}
-
-
-STATIC void rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
-    ENGINE_INFO_PRINTF("Accessing Rectangle2DNode attr");
-
-    engine_rectangle_2d_node_class_obj_t *self = ((engine_node_base_t*)(self_in))->node;
-
-    if(destination[0] == MP_OBJ_NULL){          // Load
-        switch(attribute){
-            case MP_QSTR___del__:
-                destination[0] = MP_OBJ_FROM_PTR(&node_base_del_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_add_child:
-                destination[0] = MP_OBJ_FROM_PTR(&node_base_add_child_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_get_child:
-                destination[0] = MP_OBJ_FROM_PTR(&node_base_get_child_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_remove_child:
-                destination[0] = MP_OBJ_FROM_PTR(&node_base_remove_child_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_set_layer:
-                destination[0] = MP_OBJ_FROM_PTR(&node_base_set_layer_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_get_layer:
-                destination[0] = MP_OBJ_FROM_PTR(&node_base_get_layer_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_node_base:
-                destination[0] = self_in;
-            break;
-            case MP_QSTR_position:
-                destination[0] = self->position;
-            break;
-            case MP_QSTR_width:
-                destination[0] = self->width;
-            break;
-            case MP_QSTR_height:
-                destination[0] = self->height;
-            break;
-            case MP_QSTR_color:
-                destination[0] = self->color;
-            break;
-            case MP_QSTR_opacity:
-                destination[0] = self->opacity;
-            break;
-            case MP_QSTR_outline:
-                destination[0] = self->outline;
-            break;
-            case MP_QSTR_rotation:
-                destination[0] = self->rotation;
-            break;
-            case MP_QSTR_scale:
-                destination[0] = self->scale;
-            break;
-            default:
-                return; // Fail
-        }
-    }else if(destination[1] != MP_OBJ_NULL){    // Store
-        switch(attribute){
-            case MP_QSTR_position:
-                self->position = destination[1];
-            break;
-            case MP_QSTR_width:
-                self->width = destination[1];
-            break;
-            case MP_QSTR_height:
-                self->height = destination[1];
-            break;
-            case MP_QSTR_color:
-                self->color = destination[1];
-            break;
-            case MP_QSTR_opacity:
-                self->opacity = destination[1];
-            break;
-            case MP_QSTR_outline:
-                self->outline = destination[1];
-            break;
-            case MP_QSTR_rotation:
-                self->rotation = destination[1];
-            break;
-            case MP_QSTR_scale:
-                self->scale = destination[1];
-            break;
-            default:
-                return; // Fail
-        }
-
-        // Success
-        destination[0] = MP_OBJ_NULL;
-    }
 }
 
 

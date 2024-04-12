@@ -20,13 +20,6 @@ STATIC void line_2d_node_class_print(const mp_print_t *print, mp_obj_t self_in, 
 }
 
 
-STATIC mp_obj_t line_2d_node_class_tick(mp_obj_t self_in){
-    ENGINE_WARNING_PRINTF("Line2DNode: Tick function not overridden");
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_1(line_2d_node_class_tick_obj, line_2d_node_class_tick);
-
-
 void line_2d_node_class_draw(engine_node_base_t *line_node_base, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("Line2DNode: Drawing");
     
@@ -206,6 +199,11 @@ bool line_2d_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp_ob
             destination[1] = self_node_base;
             return true;
         break;
+        case MP_QSTR_tick:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_layer_obj);
+            destination[1] = self_node_base->attr_accessor;
+            return true;
+        break;
         case MP_QSTR_node_base:
             destination[0] = self_node_base;
             return true;
@@ -250,6 +248,10 @@ bool line_2d_store_attr(engine_node_base_t *self_node_base, qstr attribute, mp_o
     engine_line_2d_node_class_obj_t *self = self_node_base->node;
 
     switch(attribute){
+        case MP_QSTR_tick:
+            self->tick_cb = destination[1];
+            return true;
+        break;
         case MP_QSTR_start:
             self->start = destination[1];
             line_2d_recalculate_midpoint(self);
@@ -314,6 +316,8 @@ STATIC mp_attr_fun_t line_2d_node_class_attr(mp_obj_t self_in, qstr attribute, m
     if(is_obj_instance && attr_handled == false){
         default_instance_attr_func(self_in, attribute, destination);
     }
+
+    return mp_const_none;
 }
 
 
@@ -332,6 +336,7 @@ STATIC mp_attr_fun_t line_2d_node_class_attr(mp_obj_t self_in, qstr attribute, m
     ATTR:   [type=function]                   [name={ref_link:set_layer}]       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_layer}]       [value=function]
     ATTR:   [type=function]                   [name={ref_link:remove_child}]    [value=function]
+    ATTR:   [type=function]                   [name={ref_link:tick}]            [value=function]
     ATTR:   [type={ref_link:Vector2}]         [name=start]                      [value={ref_link:Vector2}]
     ATTR:   [type={ref_link:Vector2}]         [name=end]                        [value={ref_link:Vector2}]
     ATTR:   [type={ref_link:Vector2}]         [name=position]                   [value={ref_link:Vector2}]
@@ -389,7 +394,7 @@ mp_obj_t line_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
     node_base->node = line_2d_node;
     node_base->attr_accessor = node_base;
 
-    line_2d_node->tick_cb = MP_OBJ_FROM_PTR(&line_2d_node_class_tick_obj);
+    line_2d_node->tick_cb = mp_const_none;
 
     line_2d_node->start = parsed_args[start].u_obj;
     line_2d_node->end = parsed_args[end].u_obj;
@@ -403,11 +408,15 @@ mp_obj_t line_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
         // Get the Python class instance
         mp_obj_t node_instance = parsed_args[child_class].u_obj;
 
+        // Because the instance doesn't have a `node_base` yet, restore the
+        // instance type original attr function for now (otherwise get core abort)
+        if(default_instance_attr_func != NULL) MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr, default_instance_attr_func, 5);
+
         // Look for function overrides otherwise use the defaults
         mp_obj_t dest[2];
         mp_load_method_maybe(node_instance, MP_QSTR_tick, dest);
         if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
-            line_2d_node->tick_cb = MP_OBJ_FROM_PTR(&line_2d_node_class_tick_obj);
+            line_2d_node->tick_cb = mp_const_none;
         }else{                                                  // Likely found method (could be attribute)
             line_2d_node->tick_cb = dest[0];
         }

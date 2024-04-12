@@ -300,18 +300,22 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
         mp_obj_t exec[3];
 
         // Call A callback
-        collision_contact_data[4] = node_base_b;
-        exec[0] = physics_node_base_a->collision_cb;
-        exec[1] = node_base_a->attr_accessor;
-        exec[2] = collision_contact_2d_class_new(&collision_contact_2d_class_type, 5, 0, collision_contact_data);
-        mp_call_method_n_kw(1, 0, exec);
+        if(physics_node_base_a->collision_cb != mp_const_none){
+            collision_contact_data[4] = node_base_b;
+            exec[0] = physics_node_base_a->collision_cb;
+            exec[1] = node_base_a->attr_accessor;
+            exec[2] = collision_contact_2d_class_new(&collision_contact_2d_class_type, 5, 0, collision_contact_data);
+            mp_call_method_n_kw(1, 0, exec);
+        }
 
         // Call B callback
-        collision_contact_data[4] = node_base_a;
-        exec[0] = physics_node_base_b->collision_cb;
-        exec[1] = node_base_b->attr_accessor;
-        exec[2] = collision_contact_2d_class_new(&collision_contact_2d_class_type, 5, 0, collision_contact_data);
-        mp_call_method_n_kw(1, 0, exec);
+        if(physics_node_base_b->collision_cb != mp_const_none){
+            collision_contact_data[4] = node_base_a;
+            exec[0] = physics_node_base_b->collision_cb;
+            exec[1] = node_base_b->attr_accessor;
+            exec[2] = collision_contact_2d_class_new(&collision_contact_2d_class_type, 5, 0, collision_contact_data);
+            mp_call_method_n_kw(1, 0, exec);
+        }
     }
 }
 

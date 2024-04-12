@@ -14,11 +14,8 @@ typedef struct{
     mp_obj_t outline;   // bool: if true, rectangle drawn as outline, if false, drawn filled (false by default)
     mp_obj_t rotation;  // Rectangle rotation in radians
     mp_obj_t scale;     // Vector2: 2d scale of the rectangle
-}engine_rectangle_2d_node_class_obj_t;
-
-typedef struct{
     mp_obj_t tick_cb;
-}engine_rectangle_2d_node_common_data_t;
+}engine_rectangle_2d_node_class_obj_t;
 
 extern const mp_obj_type_t engine_rectangle_2d_node_class_type;
 void rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_base, mp_obj_t camera_node);

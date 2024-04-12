@@ -73,22 +73,6 @@ STATIC void physics_rectangle_2d_node_class_print(const mp_print_t *print, mp_ob
 }
 
 
-STATIC mp_obj_t physics_rectangle_2d_node_class_tick(mp_obj_t self_in){
-    ENGINE_WARNING_PRINTF("PhysicsRectangle2DNode: Tick callback not overridden!");
-
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_1(physics_rectangle_2d_node_class_tick_obj, physics_rectangle_2d_node_class_tick);
-
-
-STATIC mp_obj_t physics_rectangle_2d_node_class_collision(mp_obj_t self_in, mp_obj_t collision_contact_2d){
-    ENGINE_WARNING_PRINTF("PhysicsRectangle2DNode: Collision callback not overridden!");
-
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_2(physics_rectangle_2d_node_class_collision_obj, physics_rectangle_2d_node_class_collision);
-
-
 mp_obj_t physics_rectangle_2d_node_class_del(mp_obj_t self_in){
     ENGINE_INFO_PRINTF("PhysicsRectangle2DNode: Deleted (garbage collected, removing self from active engine objects)");
 
@@ -291,6 +275,7 @@ STATIC mp_attr_fun_t physics_rectangle_2d_node_class_attr(mp_obj_t self_in, qstr
     ATTR:  [type=function]                               [name={ref_link:set_layer}]     [value=function]
     ATTR:  [type=function]                               [name={ref_link:get_layer}]     [value=function]
     ATTR:  [type=function]                               [name={ref_link:remove_child}]  [value=function]
+    ATTR:  [type=function]                               [name={ref_link:tick}]          [value=function]
     ATTR:  [type={ref_link:Vector2}]                     [name=position]                 [value={ref_link:Vector2}]
     ATTR:  [type=float]                                  [name=width]                    [value=any]
     ATTR:  [type=float]                                  [name=height]                   [value=any]
@@ -387,8 +372,8 @@ mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n
     // be looped over quickly in a linked list
     physics_node_base->physics_list_node = engine_physics_track_node(node_base);
 
-    physics_node_base->tick_cb = MP_OBJ_FROM_PTR(&physics_rectangle_2d_node_class_tick_obj);
-    physics_node_base->collision_cb = MP_OBJ_FROM_PTR(&physics_rectangle_2d_node_class_collision_obj);
+    physics_node_base->tick_cb = mp_const_none;
+    physics_node_base->collision_cb = mp_const_none;
 
     physics_rectangle_2d_node->width = parsed_args[width].u_obj;
     physics_rectangle_2d_node->height = parsed_args[height].u_obj;
@@ -400,18 +385,23 @@ mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n
         // Get the Python class instance
         mp_obj_t node_instance = parsed_args[child_class].u_obj;
 
+        // Because the instance doesn't have a `node_base` yet, restore the
+        // instance type original attr function for now (otherwise get core abort)
+        if(default_instance_attr_func != NULL) MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr, default_instance_attr_func, 5);
+
         // Look for function overrides otherwise use the defaults
         mp_obj_t dest[2];
+
         mp_load_method_maybe(node_instance, MP_QSTR_tick, dest);
         if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
-            physics_node_base->tick_cb = MP_OBJ_FROM_PTR(&physics_rectangle_2d_node_class_tick_obj);
+            physics_node_base->tick_cb = mp_const_none;
         }else{                                                  // Likely found method (could be attribute)
             physics_node_base->tick_cb = dest[0];
         }
 
         mp_load_method_maybe(node_instance, MP_QSTR_collision, dest);
         if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
-            physics_node_base->collision_cb = MP_OBJ_FROM_PTR(&physics_rectangle_2d_node_class_collision_obj);
+            physics_node_base->collision_cb = mp_const_none;
         }else{                                                  // Likely found method (could be attribute)
             physics_node_base->collision_cb = dest[0];
         }

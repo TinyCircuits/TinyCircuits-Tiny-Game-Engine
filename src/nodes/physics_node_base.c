@@ -40,6 +40,10 @@ bool physics_node_base_load_attr(engine_node_base_t *self_node_base, qstr attrib
     engine_physics_node_base_t *self = self_node_base->node;
 
     switch(attribute){
+        case MP_QSTR_tick:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_layer_obj);
+            destination[1] = self_node_base->attr_accessor;
+        break;
         case MP_QSTR_apply_impulse:
             destination[0] = MP_OBJ_FROM_PTR(&physics_node_base_apply_impulse_obj);
             destination[1] = self_node_base;
@@ -93,6 +97,10 @@ bool physics_node_base_store_attr(engine_node_base_t *self_node_base, qstr attri
     engine_physics_node_base_t *self = self_node_base->node;
 
     switch(attribute){
+        case MP_QSTR_tick:
+            self->tick_cb = destination[1];
+            return true;
+        break;
         case MP_QSTR_position:
             self->position = destination[1];
             return true;
