@@ -58,6 +58,7 @@ SRC_USERMOD += $(ENGINE_MOD_DIR)/physics/engine_physics_collision.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/physics/collision_contact_2d.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/animation/engine_animation_module.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/animation/engine_animation_tween.c
+SRC_USERMOD += $(ENGINE_MOD_DIR)/animation/engine_animation_delay.c
 
 
 # We can add our module folder to include paths if needed

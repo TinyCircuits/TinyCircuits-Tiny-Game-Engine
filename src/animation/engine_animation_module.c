@@ -1,35 +1,50 @@
 #include "engine_animation_module.h"
 #include "py/obj.h"
 
-linked_list tween_list;
+
+// Holds a list of Tween and Delay
+linked_list animation_list;
 
 
-linked_list_node* engine_animation_track_tween(tween_class_obj_t *tween){
-    return linked_list_add_obj(&tween_list, tween);
+linked_list_node* engine_animation_track(mp_obj_t *animation_element){
+    return linked_list_add_obj(&animation_list, animation_element);
 }
 
 
-void engine_animation_untrack_tween(linked_list_node *list_node){
-    linked_list_del_list_node(&tween_list, list_node);
+void engine_animation_untrack(linked_list_node *list_node){
+    linked_list_del_list_node(&animation_list, list_node);
 }
 
 
 void engine_animation_init(){
-    linked_list_init(&tween_list);
+    linked_list_init(&animation_list);
 }
 
 
 void engine_animation_tick(float dt){
-    linked_list_node *current = tween_list.start;
+    linked_list_node *current = animation_list.start;
     mp_obj_t exec[3];
 
     while(current != NULL){
-        tween_class_obj_t *tween = current->object;
+        mp_obj_t element = current->object;
 
-        exec[0] = tween->tick;
-        exec[1] = tween->self;
-        exec[2] = mp_obj_new_float(dt);
-        mp_call_method_n_kw(1, 0, exec);
+        if(mp_obj_is_type(element, &tween_class_type)){
+            tween_class_obj_t *tween = current->object;
+
+            exec[0] = tween->tick;
+            exec[1] = tween->self;
+            exec[2] = mp_obj_new_float(dt);
+
+            mp_call_method_n_kw(1, 0, exec);
+        }else{
+            delay_class_obj_t *delay = current->object;
+
+            exec[0] = delay->tick;
+            exec[1] = delay->self;
+            exec[2] = mp_obj_new_float(dt);
+
+            mp_call_method_n_kw(1, 0, exec);
+        }
 
         current = current->next;
     }
@@ -40,6 +55,7 @@ void engine_animation_tick(float dt){
    NAME: engine_animation
    DESC: Module for animating certain aspects of the engine
    ATTR: [type=object]     [name={ref_link:Tween}]      [value=object] 
+   ATTR: [type=object]     [name={ref_link:Delay}]      [value=object] 
    ATTR: [type=enum/int]   [name=LOOP]                  [value=1]
    ATTR: [type=enum/int]   [name=ONE_SHOT]              [value=2]
    ATTR: [type=enum/int]   [name=PING_PONG]             [value=3]
@@ -47,6 +63,7 @@ void engine_animation_tick(float dt){
 STATIC const mp_rom_map_elem_t engine_animation_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_animation) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Tween), (mp_obj_t)&tween_class_type},
+    { MP_OBJ_NEW_QSTR(MP_QSTR_Delay), (mp_obj_t)&delay_class_type},
     { MP_ROM_QSTR(MP_QSTR_LOOP), MP_ROM_INT(engine_animation_loop_loop) },
     { MP_ROM_QSTR(MP_QSTR_ONE_SHOT), MP_ROM_INT(engine_animation_loop_one_shot) },
     { MP_ROM_QSTR(MP_QSTR_PING_PONG), MP_ROM_INT(engine_animation_loop_ping_pong) },

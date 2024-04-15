@@ -77,7 +77,15 @@ STATIC void tween_class_print(const mp_print_t *print, mp_obj_t self_in, mp_prin
 */
 STATIC mp_obj_t tween_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
     ENGINE_INFO_PRINTF("Tween: tick!");
+
     tween_class_obj_t *tween = self_in;
+
+    // Depending on what the user did and whats in ->self, get the base back
+    if(mp_obj_is_instance_type(((mp_obj_base_t*)self_in)->type)){
+        tween = mp_load_attr(self_in, MP_QSTR_base);
+    }else{
+        tween = self_in;
+    }
 
     if(tween->paused == true){
         return mp_const_none;
@@ -120,9 +128,18 @@ STATIC mp_obj_t tween_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
         }
     }
 
-    // Get dt and add to total runnign time
+    // Get dt and add to total running time
     float dt = mp_obj_get_float(dt_obj);
     tween->time += (dt * tween->ping_pong_multiplier * tween->speed);
+
+    // Always load the attribute since a reference might go stale
+    // if the object's attribute is assigned to during tweening
+    mp_obj_t tweening_value;
+    if(tween->attr == 0){
+        tweening_value = tween->object;
+    }else{
+        tweening_value = mp_load_attr(tween->object, tween->attr);
+    }
 
     // If reached end of time, mark as finished
     // and stop. This lets the user catch the
@@ -130,6 +147,31 @@ STATIC mp_obj_t tween_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
     if(tween->time >= tween->duration){
         tween->finished = true;
         tween->time = 0.0f;
+
+        // Set value exactly equal to the end value
+        if(tween->tween_type == tween_type_float){
+            ((mp_obj_float_t*)(tweening_value))->value = tween->end_0;
+
+            if(tween->attr != 0){
+                mp_store_attr(tweening_value, tween->attr, mp_obj_new_float(tween->end_0));
+            }
+        }else if(tween->tween_type == tween_type_vec2){
+            vector2_class_obj_t *value = tweening_value;
+            value->x.value = tween->end_0;
+            value->y.value = tween->end_1;
+        }else if(tween->tween_type == tween_type_vec3){
+            vector3_class_obj_t *value = tweening_value;
+            value->x.value = tween->end_0;
+            value->y.value = tween->end_1;
+            value->z.value = tween->end_2;
+        }else if(tween->tween_type == tween_type_color){
+            color_class_obj_t *value = tweening_value;
+            value->r.value = tween->end_0;
+            value->g.value = tween->end_1;
+            value->b.value = tween->end_2;
+            engine_color_sync_rgb_to_u16(value);
+        }
+
         return mp_const_none;
     }
 
@@ -144,18 +186,15 @@ STATIC mp_obj_t tween_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
 
     t = ease[tween->ease_type](t);
 
-    // Always load the attribute since a reference might go stale
-    // if the object's attribute is assigned to during tweening
-    mp_obj_t tweening_value;
-    if(tween->attr == 0){
-        tweening_value = tween->object;
-    }else{
-        tweening_value = mp_load_attr(tween->object, tween->attr);
-    }
-
     if(tween->tween_type == tween_type_float){
-        ENGINE_FORCE_PRINTF("T");
         ((mp_obj_float_t*)(tweening_value))->value = tween->initial_0 + ((tween->end_0 - tween->initial_0) * t);
+
+        // For the case of a float that is not a direct value and is a property
+        // of some other object, use the store function to use this copy to set
+        // the value
+        if(tween->attr != 0){
+            mp_store_attr(tween->object, tween->attr, tweening_value);
+        }
     }else if(tween->tween_type == tween_type_vec2){
         vector2_class_obj_t *value = tweening_value;
 
@@ -375,7 +414,7 @@ mp_obj_t tween_class_del(mp_obj_t self_in){
     ENGINE_INFO_PRINTF("Tween: Deleted");
 
     tween_class_obj_t *tween = self_in;
-    engine_animation_untrack_tween(tween->list_node);
+    engine_animation_untrack(tween->list_node);
 
     return mp_const_none;
 }
@@ -410,9 +449,14 @@ bool tween_load_attr(tween_class_obj_t *tween, qstr attribute, mp_obj_t *destina
             destination[1] = tween;
             return true;
         break;
+        case MP_QSTR_tick:
+            destination[0] = tween->tick;
+            destination[1] = tween->self;   // Pass either native or instance class object depending
+            return true;
+        break;
         case MP_QSTR_after:
             destination[0] = tween->after;
-            destination[1] = tween;
+            destination[1] = tween->self;   // Pass either native or instance class object depending
             return true;
         break;
         case MP_QSTR_base:
@@ -466,6 +510,10 @@ bool tween_store_attr(tween_class_obj_t *tween, qstr attribute, mp_obj_t *destin
         break;
         case MP_QSTR_finished:
             mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Tween: Changing the value of `finished` is not allowed!"));
+            return true;
+        break;
+        case MP_QSTR_tick:
+            tween->tick = destination[1];
             return true;
         break;
         case MP_QSTR_after:
@@ -523,6 +571,7 @@ STATIC mp_attr_fun_t tween_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
    ATTR:    [type=function]            [name={ref_link:pause}]        [value=function]
    ATTR:    [type=function]            [name={ref_link:unpause}]      [value=function]
    ATTR:    [type=function]            [name={ref_link:restart}]      [value=function]
+   ATTR:    [type=function]            [name={ref_link:tick}]         [value=function]
    ATTR:    [type=function]            [name={ref_link:after}]        [value=function]
    ATTR:    [type=int]                 [name=duration]                [value=any positive value representing milliseconds]
    ATTR:    [type=float]               [name=speed]                   [value=any]
@@ -546,7 +595,7 @@ mp_obj_t tween_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, 
     tween_class_obj_t *self = m_new_obj_with_finaliser(tween_class_obj_t);
     self->self = self;
     self->tick = MP_OBJ_FROM_PTR(&tween_class_tick_obj);
-    self->list_node = engine_animation_track_tween(self);
+    self->list_node = engine_animation_track(self);
     self->base.type = &tween_class_type;
 
     self->loop_type = engine_animation_loop_loop;
@@ -565,6 +614,10 @@ mp_obj_t tween_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, 
     if(inherited == true){
         // Get the Python class instance
         mp_obj_t child_class_obj = args[0];
+
+        // Because the instance doesn't have a `node_base` yet, restore the
+        // instance type original attr function for now (otherwise get core abort)
+        if(default_instance_attr_func != NULL) MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)child_class_obj)->type, attr, default_instance_attr_func, 5);
 
         // Look for function overrides otherwise use the defaults
         mp_obj_t dest[2];

@@ -58,8 +58,8 @@ for x in range(5):
         button.text = str(x) + str(y)
         button.rotation = 0
         button.scale = Vector2(1, 1)
-        button.padding = 2
-        button.outline = 2
+        button.padding = 4
+        button.outline = 4
         button.opacity = 1.0
         buttons.append(button)
 
@@ -75,20 +75,20 @@ class MyCam(CameraNode):
             self.position.x = engine_input.focused.position.x
             self.position.y = engine_input.focused.position.y
 
-        if engine_input.check_pressed(engine_input.A):
-            self.zoom -= 0.025
         if engine_input.check_pressed(engine_input.B):
+            self.zoom -= 0.025
+        if engine_input.check_pressed(engine_input.A):
             self.zoom += 0.025
         
         if engine_input.check_pressed(engine_input.DPAD_UP):
-            self.position.y -= 0.25
+            self.position.y -= 0.5
         if engine_input.check_pressed(engine_input.DPAD_DOWN):
-            self.position.y += 0.25
+            self.position.y += 0.5
         
         if engine_input.check_pressed(engine_input.DPAD_LEFT):
-            self.position.x -= 0.25
+            self.position.x -= 0.5
         if engine_input.check_pressed(engine_input.DPAD_RIGHT):
-            self.position.x += 0.25
+            self.position.x += 0.5
         
         if engine_input.check_pressed(engine_input.BUMPER_LEFT):
             self.rotation.z += 0.0085

@@ -165,11 +165,15 @@ vox_node_perf_test.py, avg. FPS: 45.02475
 
 
 
-2024-04-15 12:32:29.615955 : 9f4ca9e8ed3897600f9f8f90671bd9d248b1f657
-Remove node common data from node base
+2024-04-15 15:26:07.055101 : dce6932e282d0a710b170a1430e187d72315b6f9
+Work on GUI and add  to engine_animation for calling code after a certain amount of time
 
 {
-vox_node_perf_test.py, avg. FPS: 45.61341
+line_node_perf_test.py, avg. FPS: 239.115
+test_opacity_perf_test.py, avg. FPS: 81.47538
+test_perf_test.py, avg. FPS: 98.1916
+circle_node_perf_test.py, avg. FPS: 241.4091
+vox_node_perf_test.py, avg. FPS: 45.63897
 }
 
 

@@ -15,7 +15,7 @@
 #include <string.h>
 
 
-uint8_t height_buffer[SCREEN_WIDTH];
+int16_t height_buffer[SCREEN_WIDTH];
 
 
 // Class required functions
@@ -44,7 +44,10 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
     float camera_fov = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_fov));
     float camera_view_distance = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_view_distance));
 
-    memset(height_buffer, SCREEN_HEIGHT, SCREEN_WIDTH);
+    // memset(height_buffer, SCREEN_HEIGHT, SCREEN_WIDTH*2);
+    for(uint16_t i=0; i<SCREEN_WIDTH; i++){
+        height_buffer[i] = SCREEN_HEIGHT;
+    }
 
     float dz = 1.0f;
     float z = 1.0f;
@@ -89,21 +92,35 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
                 altitude += (heightmap->data[index] >> 11) & 0b00011111;
 
                 // Use camera_rotation for on x-axis for pitch (head going in up/down in 'yes' motion)
-                uint16_t height_on_screen = (-voxelspace_position->y.value + camera_position->y.value - altitude) / z * voxelspace_height_scale + (camera_rotation->x.value);
+                int16_t height_on_screen = (-voxelspace_position->y.value + camera_position->y.value - altitude) / z * voxelspace_height_scale + (camera_rotation->x.value);
 
                 // https://news.ycombinator.com/item?id=21945633
                 float roll = (camera_rotation->z.value*(((float)i)/((float)SCREEN_WIDTH)-0.5f) + 0.5f) * SCREEN_HEIGHT / 4;
 
-                height_on_screen += (uint16_t)roll;
+                height_on_screen += (int16_t)roll;
 
                 if(height_on_screen < SCREEN_HEIGHT){
-                    uint8_t ipx = height_on_screen;
+                    int16_t ipx = height_on_screen;
+
+                    // In case the height of the point on the screen
+                    // is negative, clip to top of screen so we don't
+                    // try to draw more pixels than needed
+                    if(ipx < 0){
+                        ipx = 0;
+                    }
+
+                    // Draw from a height close to the top of the screen
+                    // towards a the bottom of the screen. By default, every
+                    // tick/loop the height_buffer is filled with values of
+                    // `SCREEN_HEIGHT`
                     while(ipx < height_buffer[i]){
                         engine_draw_pixel(texture->data[index], i, ipx, 1.0f, &empty_shader);
                         ipx++;
                     }
                 }
 
+                // Remember, the Y is flipped so pixels that have a lower
+                /// y value will be towards the top of the screen
                 if(height_on_screen < height_buffer[i]){
                     height_buffer[i] = height_on_screen;
                 }

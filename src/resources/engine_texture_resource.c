@@ -7,7 +7,7 @@
 
 // Class required functions
 STATIC void texture_resource_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
-    ENGINE_INFO_PRINTF("print(): TextureResource");
+    ENGINE_PRINTF("TextureResource");
 }
 
 

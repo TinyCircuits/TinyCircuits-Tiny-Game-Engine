@@ -36,6 +36,21 @@ bool engine_gui_get_focus(){
 }
 
 
+void engine_gui_focus_node(engine_node_base_t *gui_node_base){
+    // Focus this node
+    engine_gui_button_2d_node_class_obj_t *gui_node = gui_node_base->node;
+    gui_node->focused = true;
+
+    // Unfocus the last one
+    if(focused_gui_node_base != NULL){
+        engine_gui_button_2d_node_class_obj_t *previously_focused_gui_node = focused_gui_node_base->node;
+        previously_focused_gui_node->focused = false;
+    }
+
+    focused_gui_node_base = gui_node_base;
+}
+
+
 void engine_gui_toggle_focus(){
     gui_focused = !gui_focused;
 
@@ -57,10 +72,7 @@ void engine_gui_toggle_focus(){
         }
 
         // Made it this far, must mean that no gui nodes are focused, focus the first one
-        engine_node_base_t *first_gui_node_base = engine_guis.start->object;
-        engine_gui_button_2d_node_class_obj_t *first_gui_button = first_gui_node_base->node;
-        first_gui_button->focused = true;
-        focused_gui_node_base = first_gui_node_base;
+        engine_gui_focus_node(engine_guis.start->object);
     }
 }
 
@@ -113,6 +125,11 @@ bool engine_gui_is_down_check(float angle_radians){
 // Given `focused_gui_node_base`, find the next closest
 // gui node.
 void engine_gui_select_closest(bool (direction_check)(float)){
+    // Make sure to not do anything if no GUI nodes in scene
+    if(focused_gui_node_base == NULL){
+        return;
+    }
+
     engine_gui_button_2d_node_class_obj_t *focused_gui_node = focused_gui_node_base->node;
     vector2_class_obj_t *origin = focused_gui_node->position;
 
@@ -147,12 +164,10 @@ void engine_gui_select_closest(bool (direction_check)(float)){
         current_gui_list_node = current_gui_list_node->next;
     }
 
+    // Found one! Focus it and make sure to unfocus the
+    // previously focused node
     if(closest_gui_node_base != NULL){
-        engine_gui_button_2d_node_class_obj_t *closest_gui_button = closest_gui_node_base->node;
-        closest_gui_button->focused = true;
-
-        focused_gui_node->focused = false;
-        focused_gui_node_base = closest_gui_node_base;
+        engine_gui_focus_node(closest_gui_node_base);
     }
 }
 

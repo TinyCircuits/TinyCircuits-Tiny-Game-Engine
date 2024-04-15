@@ -242,6 +242,22 @@ STATIC mp_attr_fun_t mesh_node_class_attr(mp_obj_t self_in, qstr attribute, mp_o
 }
 
 
+/*  --- doc ---
+    NAME: MeshNode
+    DESC: Node that renders a list of vertices (without indices)
+    PARAM: [type={ref_link:Vector3}]             [name=position]                 [value={ref_link:Vector3}]
+    PARAM: [type=list]                           [name=vertices]                 [value=list of {ref_link:Vector3}]
+    ATTR:  [type=function]                       [name={ref_link:add_child}]     [value=function] 
+    ATTR:  [type=function]                       [name={ref_link:get_child}]     [value=function] 
+    ATTR:  [type=function]                       [name={ref_link:remove_child}]  [value=function]
+    ATTR:  [type=function]                       [name={ref_link:set_layer}]     [value=function]
+    ATTR:  [type=function]                       [name={ref_link:get_layer}]     [value=function]
+    ATTR:  [type=function]                       [name={ref_link:remove_child}]  [value=function]
+    ATTR:  [type=function]                       [name={ref_link:tick}]          [value=function]
+    ATTR:  [type={ref_link:Vector3}]             [name=position]                 [value={ref_link:Vector3}]
+    ATTR:  [type=list]                           [name=vertices]                 [value=list of {ref_link:Vector3}]
+    OVRR:  [type=function]                       [name={ref_link:tick}]          [value=function]
+*/
 mp_obj_t mesh_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New MeshNode");
 

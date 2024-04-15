@@ -63,6 +63,7 @@ target_sources(usermod_engine INTERFACE
     ${ENGINE_MOD_DIR}/physics/collision_contact_2d.c
     ${ENGINE_MOD_DIR}/animation/engine_animation_module.c
     ${ENGINE_MOD_DIR}/animation/engine_animation_tween.c
+    ${ENGINE_MOD_DIR}/animation/engine_animation_delay.c
 )
 
 # Add the current directory as an include directory.

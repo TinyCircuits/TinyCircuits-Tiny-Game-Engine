@@ -2,6 +2,7 @@
 #define ENGINE_ANIMATION_MODULE_H
 
 #include "engine_animation_tween.h"
+#include "engine_animation_delay.h"
 #include "utility/linked_list.h"
 
 enum engine_animation_loop_types {engine_animation_loop_loop, engine_animation_loop_one_shot, engine_animation_loop_ping_pong};
@@ -17,8 +18,8 @@ enum engine_animation_ease_types {engine_animation_ease_linear,
                                   engine_animation_ease_elast_in,  engine_animation_ease_elast_out,  engine_animation_ease_elast_in_out,
                                   engine_animation_ease_bounce_in, engine_animation_ease_bounce_out, engine_animation_ease_bounce_in_out};
 
-linked_list_node* engine_animation_track_tween(tween_class_obj_t *tween);
-void engine_animation_untrack_tween(linked_list_node *list_node);
+linked_list_node* engine_animation_track(mp_obj_t *animation_element);
+void engine_animation_untrack(linked_list_node *list_node);
 void engine_animation_init();
 void engine_animation_tick(float dt);
 

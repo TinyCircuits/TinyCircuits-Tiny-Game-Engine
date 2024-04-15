@@ -445,6 +445,7 @@ bool button_2d_node_store_attr(engine_node_base_t *self_node_base, qstr attribut
 
         case MP_QSTR_focused:
             self->focused = mp_obj_get_int(destination[1]);
+            if(self->focused == true) engine_gui_focus_node(self_node_base);
             return true;
         break;
         case MP_QSTR_pressed:
