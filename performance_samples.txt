@@ -180,3 +180,19 @@ vox_node_perf_test.py, avg. FPS: 45.63897
 
 
 
+2024-04-16 11:47:08.709131 : 7cf6d43f823f04ff0f03548f86ceb850ea0eaba1
+Make it so that audio is not adaptive and that the user needs to control gains to balance everything. Also fix some audio playback errors
+
+{
+line_node_perf_test.py, avg. FPS: 239.115
+test_opacity_perf_test.py, avg. FPS: 78.91424
+test_perf_test.py, avg. FPS: 98.89349
+circle_node_perf_test.py, avg. FPS: 239.7407
+vox_node_perf_test.py, avg. FPS: 43.67567
+}
+
+
+ ----- 
+
+
+

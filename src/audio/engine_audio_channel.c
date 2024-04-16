@@ -1,4 +1,5 @@
 #include "engine_audio_channel.h"
+#include "math/engine_math.h"
 #include "debug/debug_print.h"
 #include <stdlib.h>
 
@@ -156,7 +157,7 @@ STATIC void audio_channel_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t 
                 self->source = destination[1];
             break;
             case MP_QSTR_gain:
-                self->gain = mp_obj_get_float(destination[1]);
+                self->gain = engine_math_clamp(mp_obj_get_float(destination[1]), 0.0f, 1.0f);
             break;
             // case MP_QSTR_time:
             //     self->time = mp_obj_get_float(destination[1]);

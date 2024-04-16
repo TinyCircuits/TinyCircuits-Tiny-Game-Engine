@@ -34,6 +34,9 @@ volatile float master_volume = 1.0f;
     #include "hardware/timer.h"
     #include "pico/multicore.h"
 
+    #define AUDIO_PWM_PIN 23
+    #define AUDIO_ENABLE_PIN 20
+
 
     // pg. 542: https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf
     // https://github.com/raspberrypi/pico-examples/blob/master/timer/hello_timer/hello_timer.c#L11-L57
@@ -130,7 +133,6 @@ volatile float master_volume = 1.0f;
     bool __no_inline_not_in_flash_func(repeating_audio_callback)(struct repeating_timer *t){
         float temp_sample = 0;
         float total_sample = 0;
-        uint8_t active_channel_count = 0;
 
         for(uint8_t icx=0; icx<CHANNEL_COUNT; icx++){
 
@@ -145,9 +147,6 @@ volatile float master_volume = 1.0f;
             // Go over every channel and check if set to something usable
             if(source != NULL){
 
-                // Another active channel
-                active_channel_count += 1;
-
                 // Fill buffer with data whether first time or looping
                 engine_audio_handle_buffer(channel);
 
@@ -158,18 +157,21 @@ volatile float master_volume = 1.0f;
                 switch(source->bytes_per_sample){
                     case 1:
                     {
-                        temp_sample = (float)channel->buffers[buffer_index][buffer_byte_offset];                // Get 8-bit sample
-                        temp_sample = temp_sample / (float)UINT8_MAX;                                           // Scale from 0 ~ 255 to 0.0 ~ 1.0
-                        temp_sample = temp_sample * channel->gain;                                              // Scale sample by channel gain
-                        temp_sample = (engine_math_clamp(temp_sample, 0.0f, 1.0f) * 512.0f * master_volume);    // Clamp volume scaled sample and scale from 0.0 ~ 1.0 to 0.0 to 512.0 (512 scaled by master_volume)
+                        uint8_t sample_byte = channel->buffers[buffer_index][buffer_byte_offset];       // Get sample as unsigned 8-bit value from 0 to 255
+                        temp_sample = (int8_t)(sample_byte - 128);                                      // Center sample in preparation for scaling to -1.0 ~ 1.0. Subtract 128 so that 0 -> -128 and 255 -> 127
+                        temp_sample = temp_sample / (float)INT8_MAX;                                    // Scale from -128 ~ 127 to -1.0078 ~ 1.0 (will clamp later)
+                        temp_sample = temp_sample * channel->gain * master_volume;                      // Scale sample by channel gain and master volume (that can be 0.0 ~ 1.0 each)
+                        temp_sample = (engine_math_clamp(temp_sample, -1.0f, 1.0f));                    // Clamp volume scaled sample to -1.0 ~ 1.0
                     }
                     break;
                     case 2:
                     {   
-                        temp_sample = (int16_t)(channel->buffers[buffer_index][buffer_byte_offset+1] << 8) + channel->buffers[buffer_index][buffer_byte_offset];  // Get 16-bit sample
-                        temp_sample = temp_sample / (float)UINT16_MAX;                                                                                            // Scale from 0 ~ 65535 to 0.0 ~ 1.0
-                        temp_sample = temp_sample * channel->gain;                                                                                                // Scale sample by channel gain
-                        temp_sample = (engine_math_clamp(temp_sample, 0.0f, 1.0f) * 512.0f * master_volume);                                                      // Clamp volume scaled sample and scale from 0.0 ~ 1.0 to 0.0 to 512.0 (512 scaled by master_volume)
+                        uint8_t sample_byte_lsb = channel->buffers[buffer_index][buffer_byte_offset];   // Get the right-most 8-bits as unsigned 8-bit (really is signed 16-bit byte, bits will still exist in same pattern)
+                        uint8_t sample_byte_msb = channel->buffers[buffer_index][buffer_byte_offset+1]; // Get the left-most 8-bits as unsigned 8-bit (really is signed 16-bit byte, bits will still exist in same pattern)
+                        temp_sample = (int16_t)((sample_byte_msb << 8) + sample_byte_lsb);              // Combine bytes to make signed 16-bit value from -32768 ~ 32767
+                        temp_sample = temp_sample / (float)INT16_MAX;                                   // Scale from -32768 ~ 32767 to -1.000031 ~ 1.0 (will clamp later)
+                        temp_sample = temp_sample * channel->gain * master_volume;                      // Scale sample by channel gain and master volume (that can be 0.0 ~ 1.0 each)
+                        temp_sample = engine_math_clamp(temp_sample, -1.0f, 1.0f);                      // Clamp volume scaled sample to -1.0 ~ 1.0
                     }
                     break;
                     default:
@@ -187,14 +189,16 @@ volatile float master_volume = 1.0f;
                 channel->time = (1.0f / source->sample_rate) * (channel->source_byte_offset / source->bytes_per_sample);
             }
         }
-        
-        // https://dsp.stackexchange.com/questions/3581/algorithms-to-mix-audio-signals-without-clipping: Viktor was wrong!
-        // https://www.google.com/search?q=mixing+n+number+of+channels+audio+stackexchange&rlz=1C1GCEA_enUS850US850&oq=mixing+n+number+of+channels+audio+stackexchange&gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIJCAEQIRgKGKABMgcIAhAhGKsC0gEINjk5OWowajeoAgCwAgA&sourceid=chrome&ie=UTF-8
-        // https://electronics.stackexchange.com/questions/193983/mixing-audio-in-a-microprocessor       
-        if(active_channel_count > 0){
-            pwm_set_gpio_level(23, (uint32_t)(total_sample / active_channel_count));
-        }
+              
+        // Up to the user to make sure all playing channels do not add up and
+        // go out of -1.0 ~ 1.0 range. First clamp the total sample sum since
+        // very likely it could end of out of bounds and then map to PWM levels
+        // NOTE: Set PWM wrap to 512 levels so it will use values from 0 to 511
+        total_sample = engine_math_clamp(total_sample, -1.0f, 1.0f);
+        total_sample = engine_math_map(total_sample, -1.0f, 1.0f, 0.0f, 511.0f);
 
+        // Actually set the wrap value to play this sample
+        pwm_set_gpio_level(AUDIO_PWM_PIN, (uint32_t)(total_sample));
         return true;
     }
 #endif
@@ -205,26 +209,25 @@ void engine_audio_setup_playback(){
         // Nothing to do
     #elif defined(__arm__)
         // Setup amplifier but make sure it is disabled while PWM is being setup
-        gpio_init(20);
-        gpio_set_dir(20, GPIO_OUT);
-        gpio_put(20, 0);
+        gpio_init(AUDIO_ENABLE_PIN);
+        gpio_set_dir(AUDIO_ENABLE_PIN, GPIO_OUT);
+        gpio_put(AUDIO_ENABLE_PIN, 0);
 
         // Setup PWM audio pin, bit-depth, and frequency. Duty cycle
         // is only adjusted PWM parameter as samples are retrievd from
         // channel sources
-        uint audio_pwm_pin_slice = pwm_gpio_to_slice_num(23);
-        gpio_set_function(23, GPIO_FUNC_PWM);
+        uint audio_pwm_pin_slice = pwm_gpio_to_slice_num(AUDIO_PWM_PIN);
+        gpio_set_function(AUDIO_PWM_PIN, GPIO_FUNC_PWM);
         pwm_config audio_pwm_pin_config = pwm_get_default_config();
         pwm_config_set_clkdiv_int(&audio_pwm_pin_config, 1);
         pwm_config_set_wrap(&audio_pwm_pin_config, 512);   // 125MHz / 1024 = 122kHz
         pwm_init(audio_pwm_pin_slice, &audio_pwm_pin_config, true);
 
         // Now allow sound to play by enabling the amplifier
-        gpio_put(20, 1);
+        gpio_put(AUDIO_ENABLE_PIN, 1);
     #endif
 }
 
-size_t stack_size = 4096*2;
 
 void engine_audio_setup(){
     ENGINE_FORCE_PRINTF("EngineAudio: Setting up...");
@@ -240,13 +243,6 @@ void engine_audio_setup(){
     #if defined(__unix__)
         // Nothing to do
     #elif defined(__arm__)
-        // Launch timer setup on other core. All audio playback
-        // is done on the other core. This means that access
-        // to channels and sources will need to be protected...
-        // https://github.com/raspberrypi/pico-examples/blob/master/multicore/hello_multicore/multicore.c
-        // multicore_reset_core1();
-        // multicore_launch_core1(engine_audio_setup_playback);
-        // engine_audio_setup_playback();
         if(add_repeating_timer_us((int64_t)((1.0/11025.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer) == false){
             mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("AudioModule: No timer slots available, could not audio callback!"));
         }

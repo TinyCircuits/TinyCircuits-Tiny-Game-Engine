@@ -69,7 +69,7 @@ mp_obj_t wave_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
     }
 
     // Get sample rate that this wave file should be played back at and
-    // the bytes that each sample needs (gets bits per sample adn divides
+    // the bytes that each sample needs (gets bits per sample and divides
     // by size of a byte)
     self->sample_rate = engine_file_get_u32(24);
     self->bytes_per_sample = engine_file_get_u16(34) / 8;
