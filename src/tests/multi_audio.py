@@ -3,11 +3,11 @@ import engine_audio
 import engine_input
 from engine_nodes import CameraNode
 
-from engine_resources import WaveSoundResource
+from engine_resources import WaveSoundResource, ToneSoundResource
 
 
 wave0 = WaveSoundResource("e0.wav")
-wave1 = WaveSoundResource("e1.wav")
+tone0 = ToneSoundResource()
 wave2 = WaveSoundResource("e2.wav")
 wave3 = WaveSoundResource("e3.wav")
 
@@ -22,7 +22,7 @@ while True:
         c.gain = 1
         
     if engine_input.check_just_pressed(engine_input.BUMPER_LEFT):
-        c = engine_audio.play(wave1, 1, False)
+        c = engine_audio.play(tone0, 1, False)
         c.gain = 1
     
     if engine_input.check_just_pressed(engine_input.A):

@@ -3,6 +3,10 @@
 #include "debug/debug_print.h"
 #include <stdlib.h>
 
+#include "resources/engine_sound_resource_base.h"
+#include "resources/engine_wave_sound_resource.h"
+#include "resources/engine_tone_sound_resource.h"
+
 
 // Class required functions
 STATIC void audio_channel_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
@@ -86,7 +90,11 @@ mp_obj_t audio_channel_stop(mp_obj_t self_in){
     // the reference from that source to this channel is
     // unlinked. Took care of it here anyway
     if(channel->source != NULL){
-        channel->source->channel = NULL;
+        if(mp_obj_is_type(channel->source, &wave_sound_resource_class_type)){
+            ((sound_resource_base_class_obj_t*)channel->source)->channel = NULL;
+        }else{
+            ((tone_sound_resource_class_obj_t*)channel->source)->channel = NULL;
+        }
     }
 
     channel->source = NULL;

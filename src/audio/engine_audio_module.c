@@ -3,11 +3,14 @@
 #include "engine_audio_module.h"
 #include "engine_audio_channel.h"
 #include "resources/engine_sound_resource_base.h"
+#include "resources/engine_wave_sound_resource.h"
+#include "resources/engine_tone_sound_resource.h"
 #include "debug/debug_print.h"
 #include <stdlib.h>
 #include <string.h>
 #include "math/engine_math.h"
 #include "utility/engine_time.h"
+#include "utility/engine_defines.h"
 
 
 
@@ -44,7 +47,9 @@ volatile float master_volume = 1.0f;
     // https://www.raspberrypi.com/documentation/pico-sdk/hardware.html#interrupt-numbers
     static struct repeating_timer repeating_audio_timer;
 
-    void __no_inline_not_in_flash_func(engine_audio_handle_buffer)(audio_channel_class_obj_t *channel){
+    uint8_t *current_source_data = NULL;
+
+    void ENGINE_FAST_FUNCTION(engine_audio_handle_buffer)(audio_channel_class_obj_t *channel){
         // When 'buffer_byte_offset = 0' that means the buffer hasn't been filled before, fill it (see that after this function it is immediately incremented)
         // When 'buffer_byte_offset >= channel->buffer_end' that means the index has run out of data, fill it with more
         if(channel->buffers_byte_offsets[channel->reading_buffer_index] == 0 || channel->buffers_byte_offsets[channel->reading_buffer_index] >= channel->buffers_ends[channel->reading_buffer_index]){
@@ -59,7 +64,9 @@ volatile float master_volume = 1.0f;
                 return;
             }
 
-            uint8_t *current_source_data = channel->source->get_data(channel, CHANNEL_BUFFER_SIZE, &channel->buffers_ends[channel->reading_buffer_index]);
+            sound_resource_base_class_obj_t *source = channel->source;
+
+            current_source_data = source->get_data(channel, CHANNEL_BUFFER_SIZE, &channel->buffers_ends[channel->reading_buffer_index]);
 
             // memcpy((uint8_t*)channel->buffer, (uint8_t*)current_source_data, channel->buffer_end);
 
@@ -129,76 +136,94 @@ volatile float master_volume = 1.0f;
     }
 
 
-    // Samples each channel, adds, normalizes, and sets PWM
-    bool __no_inline_not_in_flash_func(repeating_audio_callback)(struct repeating_timer *t){
+    float ENGINE_FAST_FUNCTION(get_wave_sample)(audio_channel_class_obj_t *channel){
         float temp_sample = 0;
+
+        sound_resource_base_class_obj_t *source = channel->source;
+
+        // Fill buffer with data whether first time or looping
+        engine_audio_handle_buffer(channel);
+
+        uint8_t buffer_index = channel->reading_buffer_index;
+        uint16_t buffer_byte_offset = channel->buffers_byte_offsets[buffer_index];
+
+        // Add samples to total
+        switch(source->bytes_per_sample){
+            case 1:
+            {
+                uint8_t sample_byte = channel->buffers[buffer_index][buffer_byte_offset];       // Get sample as unsigned 8-bit value from 0 to 255
+                temp_sample = (int8_t)(sample_byte - 128);                                      // Center sample in preparation for scaling to -1.0 ~ 1.0. Subtract 128 so that 0 -> -128 and 255 -> 127
+                temp_sample = temp_sample / (float)INT8_MAX;                                    // Scale from -128 ~ 127 to -1.0078 ~ 1.0 (will clamp later)
+                temp_sample = temp_sample * channel->gain * master_volume;                      // Scale sample by channel gain and master volume (that can be 0.0 ~ 1.0 each)
+                temp_sample = (engine_math_clamp(temp_sample, -1.0f, 1.0f));                    // Clamp volume scaled sample to -1.0 ~ 1.0
+            }
+            break;
+            case 2:
+            {   
+                uint8_t sample_byte_lsb = channel->buffers[buffer_index][buffer_byte_offset];   // Get the right-most 8-bits as unsigned 8-bit (really is signed 16-bit byte, bits will still exist in same pattern)
+                uint8_t sample_byte_msb = channel->buffers[buffer_index][buffer_byte_offset+1]; // Get the left-most 8-bits as unsigned 8-bit (really is signed 16-bit byte, bits will still exist in same pattern)
+                temp_sample = (int16_t)((sample_byte_msb << 8) + sample_byte_lsb);              // Combine bytes to make signed 16-bit value from -32768 ~ 32767
+                temp_sample = temp_sample / (float)INT16_MAX;                                   // Scale from -32768 ~ 32767 to -1.000031 ~ 1.0 (will clamp later)
+                temp_sample = temp_sample * channel->gain * master_volume;                      // Scale sample by channel gain and master volume (that can be 0.0 ~ 1.0 each)
+                temp_sample = engine_math_clamp(temp_sample, -1.0f, 1.0f);                      // Clamp volume scaled sample to -1.0 ~ 1.0
+            }
+            break;
+            default:
+                ENGINE_ERROR_PRINTF("AudioModule: Audio source with %d bytes per sample is not supported!", source->bytes_per_sample);
+        }
+
+        // Make sure to grab the next sample next time
+        channel->buffers_byte_offsets[buffer_index] += source->bytes_per_sample;
+
+        // Calculate the current time that we're at in the channel's source
+        // t_current =  (1 / sample_rate [1/s]) * (source_byte_offset / bytes_per_sample)
+        channel->time = (1.0f / source->sample_rate) * (channel->source_byte_offset / source->bytes_per_sample);
+    }
+
+
+    float ENGINE_FAST_FUNCTION(get_tone_sample)(audio_channel_class_obj_t *channel){
+        return tone_sound_resource_get_sample(channel->source);
+    }
+
+
+    // Samples each channel, adds, normalizes, and sets PWM
+    bool ENGINE_FAST_FUNCTION(repeating_audio_callback)(struct repeating_timer *t){
         float total_sample = 0;
+        bool play_sample = false;
 
         for(uint8_t icx=0; icx<CHANNEL_COUNT; icx++){
 
             audio_channel_class_obj_t *channel = channels[icx];
 
-            if(channel->busy){
+            if(channel->source == NULL || channel->busy){
                 continue;
             }
 
-            sound_resource_base_class_obj_t *source = channel->source;
+            // Playing at least one sample, switch flag
+            play_sample = true;
 
-            // Go over every channel and check if set to something usable
-            if(source != NULL){
-
-                // Fill buffer with data whether first time or looping
-                engine_audio_handle_buffer(channel);
-
-                uint8_t buffer_index = channel->reading_buffer_index;
-                uint16_t buffer_byte_offset = channel->buffers_byte_offsets[buffer_index];
-
-                // Add samples to total
-                switch(source->bytes_per_sample){
-                    case 1:
-                    {
-                        uint8_t sample_byte = channel->buffers[buffer_index][buffer_byte_offset];       // Get sample as unsigned 8-bit value from 0 to 255
-                        temp_sample = (int8_t)(sample_byte - 128);                                      // Center sample in preparation for scaling to -1.0 ~ 1.0. Subtract 128 so that 0 -> -128 and 255 -> 127
-                        temp_sample = temp_sample / (float)INT8_MAX;                                    // Scale from -128 ~ 127 to -1.0078 ~ 1.0 (will clamp later)
-                        temp_sample = temp_sample * channel->gain * master_volume;                      // Scale sample by channel gain and master volume (that can be 0.0 ~ 1.0 each)
-                        temp_sample = (engine_math_clamp(temp_sample, -1.0f, 1.0f));                    // Clamp volume scaled sample to -1.0 ~ 1.0
-                    }
-                    break;
-                    case 2:
-                    {   
-                        uint8_t sample_byte_lsb = channel->buffers[buffer_index][buffer_byte_offset];   // Get the right-most 8-bits as unsigned 8-bit (really is signed 16-bit byte, bits will still exist in same pattern)
-                        uint8_t sample_byte_msb = channel->buffers[buffer_index][buffer_byte_offset+1]; // Get the left-most 8-bits as unsigned 8-bit (really is signed 16-bit byte, bits will still exist in same pattern)
-                        temp_sample = (int16_t)((sample_byte_msb << 8) + sample_byte_lsb);              // Combine bytes to make signed 16-bit value from -32768 ~ 32767
-                        temp_sample = temp_sample / (float)INT16_MAX;                                   // Scale from -32768 ~ 32767 to -1.000031 ~ 1.0 (will clamp later)
-                        temp_sample = temp_sample * channel->gain * master_volume;                      // Scale sample by channel gain and master volume (that can be 0.0 ~ 1.0 each)
-                        temp_sample = engine_math_clamp(temp_sample, -1.0f, 1.0f);                      // Clamp volume scaled sample to -1.0 ~ 1.0
-                    }
-                    break;
-                    default:
-                        ENGINE_ERROR_PRINTF("AudioModule: Audio source with %d bytes per sample is not supported!", source->bytes_per_sample);
-                }
-
-                // Add the sample to the total
-                total_sample += temp_sample;
-
-                // Make sure to grab the next sample next time
-                channel->buffers_byte_offsets[buffer_index] += source->bytes_per_sample;
-
-                // Calculate the current time that we're at in the channel's source
-                // t_current =  (1 / sample_rate [1/s]) * (source_byte_offset / bytes_per_sample)
-                channel->time = (1.0f / source->sample_rate) * (channel->source_byte_offset / source->bytes_per_sample);
+            if(mp_obj_is_type(channel->source, &wave_sound_resource_class_type)){
+                total_sample += get_wave_sample(channel);
+            }else{
+                total_sample += get_tone_sample(channel);
             }
         }
-              
-        // Up to the user to make sure all playing channels do not add up and
-        // go out of -1.0 ~ 1.0 range. First clamp the total sample sum since
-        // very likely it could end of out of bounds and then map to PWM levels
-        // NOTE: Set PWM wrap to 512 levels so it will use values from 0 to 511
-        total_sample = engine_math_clamp(total_sample, -1.0f, 1.0f);
-        total_sample = engine_math_map(total_sample, -1.0f, 1.0f, 0.0f, 511.0f);
+        
+        if(play_sample){
+            // Up to the user to make sure all playing channels do not add up and
+            // go out of -1.0 ~ 1.0 range. First clamp the total sample sum since
+            // very likely it could end of out of bounds and then map to PWM levels
+            // NOTE: Set PWM wrap to 512 levels so it will use values from 0 to 511
+            total_sample = engine_math_clamp(total_sample, -1.0f, 1.0f);
+            total_sample = engine_math_map(total_sample, -1.0f, 1.0f, 0.0f, 511.0f);
 
-        // Actually set the wrap value to play this sample
-        pwm_set_gpio_level(AUDIO_PWM_PIN, (uint32_t)(total_sample));
+            // total_sample = engine_math_map(sinf(millis() * 8.0f), -1.0f, 1.0f, 0.0f, 511.0f);
+
+            // Actually set the wrap value to play this sample
+            pwm_set_gpio_level(AUDIO_PWM_PIN, (uint32_t)(total_sample));
+        }
+
+        // Always return true from repeating callback
         return true;
     }
 #endif
@@ -243,7 +268,8 @@ void engine_audio_setup(){
     #if defined(__unix__)
         // Nothing to do
     #elif defined(__arm__)
-        if(add_repeating_timer_us((int64_t)((1.0/11025.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer) == false){
+        // if(add_repeating_timer_us((int64_t)((1.0/11025.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer) == false){
+            if(add_repeating_timer_us((int64_t)((1.0/22050.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer) == false){
             mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("AudioModule: No timer slots available, could not audio callback!"));
         }
     #endif
@@ -265,32 +291,47 @@ void engine_audio_stop(){
 
 /*  --- doc ---
     NAME: play
-    DESC: Starts playing an audio source on a given channel and looping or not
+    DESC: Starts playing an audio source on a given channel and looping or not. It is up to the user to change the gains of the returned channels so that the audio does not clip.
     PARAM: [type=object]    [name=sound_resource] [value={ref_link:WaveSoundResource}]
     PARAM: [type=int]       [name=channel_index]  [value=0 ~ 3]                                                          
     PARAM: [type=boolean]   [name=loop]           [value=True or False]                                                  
     RETURN: {ref_link:AudioChannel}
 */ 
 STATIC mp_obj_t engine_audio_play(mp_obj_t sound_resource_obj, mp_obj_t channel_index_obj, mp_obj_t loop_obj){
-    // Should probably make sure this doesn't interfere with DMA or interrupt: TODO
+    // Should probably make sure this doesn't
+    // interfere with DMA or interrupt: TODO
     uint8_t channel_index = mp_obj_get_int(channel_index_obj);
     audio_channel_class_obj_t *channel = channels[channel_index];
-    sound_resource_base_class_obj_t *source = sound_resource_obj;
 
-    // Before anything, make sure to stop the channel incase of two `.play(...)` calls in a row
+    // Before anything, make sure to stop the channel
+    // incase of two `.play(...)` calls in a row
     audio_channel_stop(channel);
 
+    // Mark the channel as busy so that the interrupt
+    // doesn't use it
     channel->busy = true;
 
-    channel->source = source;
+    if(mp_obj_is_type(channel->source, &wave_sound_resource_class_type)){
+        sound_resource_base_class_obj_t *source = sound_resource_obj;
+
+        // Very important to set this link! The source needs access to the channel that
+        // is playing it (if one is) so that it can remove itself from the linked channel's
+        // source
+        source->channel = channel;
+    }else{
+        tone_sound_resource_class_obj_t *source = sound_resource_obj;
+
+        // Very important to set this link! The source needs access to the channel that
+        // is playing it (if one is) so that it can remove itself from the linked channel's
+        // source
+        source->channel = channel;
+    }
+
+    channel->source = sound_resource_obj;
     channel->loop = mp_obj_get_int(loop_obj);
     channel->done = false;
 
-    // Very important to set this link! The source needs access to the channel that
-    // is playing it (if one is) so that it can remove itself from the linked channel's
-    // source
-    source->channel = channel;
-
+    // Now let the interrupt use it
     channel->busy = false;
 
     return MP_OBJ_FROM_PTR(channel);
