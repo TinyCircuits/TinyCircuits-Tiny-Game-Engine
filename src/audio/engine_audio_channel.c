@@ -2,6 +2,7 @@
 #include "math/engine_math.h"
 #include "debug/debug_print.h"
 #include <stdlib.h>
+#include <string.h>
 
 #include "resources/engine_sound_resource_base.h"
 #include "resources/engine_wave_sound_resource.h"
@@ -39,6 +40,11 @@ mp_obj_t audio_channel_class_new(const mp_obj_type_t *type, size_t n_args, size_
     self->reading_buffer_index = 0;
     self->filling_buffer_index = 0;
     self->busy = false;
+
+    // Make sure to clear the buffers to zero to avoid static sound
+    // when audio first starts playing
+    memset(self->buffers[0], 0x0000, sizeof(uint8_t) * CHANNEL_BUFFER_SIZE);
+    memset(self->buffers[1], 0x0000, sizeof(uint8_t) * CHANNEL_BUFFER_SIZE);
 
     // https://github.com/raspberrypi/pico-examples/blob/eca13acf57916a0bd5961028314006983894fc84/dma/hello_dma/hello_dma.c#L21-L30
     // https://github.com/raspberrypi/pico-examples/blob/master/flash/xip_stream/flash_xip_stream.c#L58-L70 (see pg. 127 of rp2040 datasheet: https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf)

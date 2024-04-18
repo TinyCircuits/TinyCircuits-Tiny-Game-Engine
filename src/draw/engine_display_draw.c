@@ -1,7 +1,6 @@
 #include "draw/engine_display_draw.h"
 #include "display/engine_display_common.h"
 #include "debug/debug_print.h"
-#include "math/trig_tables.h"
 #include <string.h>
 #include <stdlib.h>
 

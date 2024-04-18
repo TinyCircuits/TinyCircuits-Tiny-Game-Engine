@@ -1,5 +1,6 @@
 #include "engine_tone_sound_resource.h"
 #include "audio/engine_audio_channel.h"
+#include "audio/engine_audio_module.h"
 #include "debug/debug_print.h"
 #include "resources/engine_resource_manager.h"
 #include "math/engine_math.h"
@@ -15,8 +16,9 @@ STATIC void tone_sound_resource_class_print(const mp_print_t *print, mp_obj_t se
 
 
 float ENGINE_FAST_FUNCTION(tone_sound_resource_get_sample)(tone_sound_resource_class_obj_t *self){
-    float sample = sinf(self->omega * self->time);
-    self->time += self->dt;
+    // float sample = sinf(self->omega * self->time);
+    float sample = engine_math_fast_sin(self->omega * self->time);
+    self->time += ENGINE_AUDIO_SAMPLE_DT;
     return sample;
 }
 
@@ -30,9 +32,8 @@ mp_obj_t tone_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
     self->channel = NULL;
 
     // https://www.mathworks.com/matlabcentral/answers/36428-sine-wave-plot#answer_45572
-    self->frequency = 3000.0f;
+    self->frequency = 1000.0f;
     self->omega = 2.0f * PI * self->frequency;
-    self->dt = 1.0f / 22050.0f;
     self->time = 0.0f;
 
     return MP_OBJ_FROM_PTR(self);
@@ -60,8 +61,8 @@ MP_DEFINE_CONST_FUN_OBJ_1(tone_sound_resource_class_del_obj, tone_sound_resource
 
 /*  --- doc ---
     NAME: ToneSoundResource
-    DESC: Holds audio data from a .wav file. `.wav` files can be 8 or 16-bit PCM but only at 11025Hz
-    PARAM:  [type=string]   [name=filepath] [value=string]                                                                                                                                                                   
+    DESC: Can be used to play a tone on an audio channel
+    ATTR:   [type=float]    [name=frequency]    [value=any]                                                                                                                                                                  
 */ 
 STATIC void tone_sound_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing ToneSoundResource attr");
@@ -83,7 +84,8 @@ STATIC void tone_sound_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_
     }else if(destination[1] != MP_OBJ_NULL){    // Store
         switch(attribute){
             case MP_QSTR_frequency:
-                self->frequency = mp_obj_get_float(destination[0]);
+                self->frequency = mp_obj_get_float(destination[1]);
+                self->omega = 2.0f * PI * self->frequency;
             break;
             default:
                 return; // Fail

@@ -11,6 +11,7 @@
     DESC: Resources are objects that are used as references to certain data (textures/bitmaps, audio, fonts, etc.)
     ATTR: [type=object]   [name={ref_link:TextureResource}]     [value=object] 
     ATTR: [type=object]   [name={ref_link:WaveSoundResource}]   [value=object]
+    ATTR: [type=object]   [name={ref_link:ToneSoundResource}]   [value=object]
     ATTR: [type=object]   [name={ref_link:FontResource}]        [value=object]
 */
 STATIC const mp_rom_map_elem_t engine_resources_globals_table[] = {

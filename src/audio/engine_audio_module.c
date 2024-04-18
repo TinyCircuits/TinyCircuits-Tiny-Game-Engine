@@ -137,9 +137,23 @@ volatile float master_volume = 1.0f;
 
 
     float ENGINE_FAST_FUNCTION(get_wave_sample)(audio_channel_class_obj_t *channel){
-        float temp_sample = 0;
-
         sound_resource_base_class_obj_t *source = channel->source;
+
+        // Depending on engine_playback sample rate
+        if(source->play_counter != 0){
+            if(source->sample_rate == 11025 && source->play_counter == 2){
+                source->play_counter = 0;
+            }else if(source->sample_rate == 22050 && source->play_counter == 1){
+                source->play_counter = 0;
+            }
+            // else if(source->sample_rate == 44100 && source->play_counter == 1){
+            //     source->play_counter = 0;
+            // }
+            else{
+                source->play_counter++;
+                return source->last_sample;
+            }
+        }
 
         // Fill buffer with data whether first time or looping
         engine_audio_handle_buffer(channel);
@@ -152,32 +166,35 @@ volatile float master_volume = 1.0f;
             case 1:
             {
                 uint8_t sample_byte = channel->buffers[buffer_index][buffer_byte_offset];       // Get sample as unsigned 8-bit value from 0 to 255
-                temp_sample = (int8_t)(sample_byte - 128);                                      // Center sample in preparation for scaling to -1.0 ~ 1.0. Subtract 128 so that 0 -> -128 and 255 -> 127
-                temp_sample = temp_sample / (float)INT8_MAX;                                    // Scale from -128 ~ 127 to -1.0078 ~ 1.0 (will clamp later)
-                temp_sample = temp_sample * channel->gain * master_volume;                      // Scale sample by channel gain and master volume (that can be 0.0 ~ 1.0 each)
-                temp_sample = (engine_math_clamp(temp_sample, -1.0f, 1.0f));                    // Clamp volume scaled sample to -1.0 ~ 1.0
+                source->last_sample = (int8_t)(sample_byte - 128);                              // Center sample in preparation for scaling to -1.0 ~ 1.0. Subtract 128 so that 0 -> -128 and 255 -> 127
+                source->last_sample = source->last_sample / (float)INT8_MAX;                    // Scale from -128 ~ 127 to -1.0078 ~ 1.0 (will clamp later)
+                source->last_sample = source->last_sample * channel->gain * master_volume;      // Scale sample by channel gain and master volume (that can be 0.0 ~ 1.0 each)
+                source->last_sample = (engine_math_clamp(source->last_sample, -1.0f, 1.0f));    // Clamp volume scaled sample to -1.0 ~ 1.0
             }
             break;
             case 2:
             {   
                 uint8_t sample_byte_lsb = channel->buffers[buffer_index][buffer_byte_offset];   // Get the right-most 8-bits as unsigned 8-bit (really is signed 16-bit byte, bits will still exist in same pattern)
                 uint8_t sample_byte_msb = channel->buffers[buffer_index][buffer_byte_offset+1]; // Get the left-most 8-bits as unsigned 8-bit (really is signed 16-bit byte, bits will still exist in same pattern)
-                temp_sample = (int16_t)((sample_byte_msb << 8) + sample_byte_lsb);              // Combine bytes to make signed 16-bit value from -32768 ~ 32767
-                temp_sample = temp_sample / (float)INT16_MAX;                                   // Scale from -32768 ~ 32767 to -1.000031 ~ 1.0 (will clamp later)
-                temp_sample = temp_sample * channel->gain * master_volume;                      // Scale sample by channel gain and master volume (that can be 0.0 ~ 1.0 each)
-                temp_sample = engine_math_clamp(temp_sample, -1.0f, 1.0f);                      // Clamp volume scaled sample to -1.0 ~ 1.0
+                source->last_sample = (int16_t)((sample_byte_msb << 8) + sample_byte_lsb);      // Combine bytes to make signed 16-bit value from -32768 ~ 32767
+                source->last_sample = source->last_sample / (float)INT16_MAX;                   // Scale from -32768 ~ 32767 to -1.000031 ~ 1.0 (will clamp later)
+                source->last_sample = source->last_sample * channel->gain * master_volume;      // Scale sample by channel gain and master volume (that can be 0.0 ~ 1.0 each)
+                source->last_sample = engine_math_clamp(source->last_sample, -1.0f, 1.0f);      // Clamp volume scaled sample to -1.0 ~ 1.0
             }
             break;
             default:
                 ENGINE_ERROR_PRINTF("AudioModule: Audio source with %d bytes per sample is not supported!", source->bytes_per_sample);
         }
 
-        // Make sure to grab the next sample next time
+        // Set for the next sample
         channel->buffers_byte_offsets[buffer_index] += source->bytes_per_sample;
 
         // Calculate the current time that we're at in the channel's source
-        // t_current =  (1 / sample_rate [1/s]) * (source_byte_offset / bytes_per_sample)
         channel->time = (1.0f / source->sample_rate) * (channel->source_byte_offset / source->bytes_per_sample);
+
+        source->play_counter++;
+
+        return source->last_sample;
     }
 
 
@@ -268,8 +285,7 @@ void engine_audio_setup(){
     #if defined(__unix__)
         // Nothing to do
     #elif defined(__arm__)
-        // if(add_repeating_timer_us((int64_t)((1.0/11025.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer) == false){
-            if(add_repeating_timer_us((int64_t)((1.0/22050.0) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer) == false){
+        if(add_repeating_timer_us((int64_t)((1.0/ENGINE_AUDIO_SAMPLE_RATE) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer) == false){
             mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("AudioModule: No timer slots available, could not audio callback!"));
         }
     #endif

@@ -7,6 +7,7 @@
 
 #define PI      3.14159265358979323846f
 #define HALF_PI 1.57079632679489661923f
+#define TWICE_PI 6.28318530717958647692f
 #define RAD2DEG (180.0f/PI)
 #define DEG2RAD (PI/180.0f)
 #define EPSILON 1e-9
@@ -59,5 +60,7 @@ void engine_math_rotate_point(float *px, float *py, float cx, float cy, float an
 
 // Scales a point from a center position
 void engine_math_scale_point(float *px, float *py, float cx, float cy, float scale);
+
+float engine_math_fast_sin(float angle_radians);
 
 #endif  // ENGINE_MATH_H

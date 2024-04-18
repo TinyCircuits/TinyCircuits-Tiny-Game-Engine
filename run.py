@@ -138,8 +138,12 @@ write_str(ser, file_size_str)
 ser.read_until("Waiting on file data...".encode()).decode("utf-8")
 write_str(ser, file_data, True)
 
-write_str(ser, "execfile(\"" + file_name + "\")\r\n", True)
+# Only execute if Python file, otherwise just upload
+if ".py" in file_name:
+    write_str(ser, "execfile(\"" + file_name + "\")\r\n", True)
+
 ser.read_until("Got all file data!".encode()).decode("utf-8")
+print("Uploaded", file_path)
 
 while True:
     data = ser.read_all().decode("utf8")

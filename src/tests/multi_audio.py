@@ -8,8 +8,8 @@ from engine_resources import WaveSoundResource, ToneSoundResource
 
 wave0 = WaveSoundResource("e0.wav")
 tone0 = ToneSoundResource()
-wave2 = WaveSoundResource("e2.wav")
-wave3 = WaveSoundResource("e3.wav")
+wave2 = WaveSoundResource("8bit_44100.wav")
+wave3 = WaveSoundResource("8bit_22050.wav")
 
 
 camera = CameraNode()
@@ -32,5 +32,12 @@ while True:
     if engine_input.check_just_pressed(engine_input.B):
         c = engine_audio.play(wave3, 3, False)
         c.gain = 1
+    
+    if engine_input.check_pressed(engine_input.DPAD_UP):
+        tone0.frequency += 10.0
+        print(tone0.frequency)
+    elif engine_input.check_pressed(engine_input.DPAD_DOWN):
+        tone0.frequency -= 10.0
+        print(tone0.frequency)
     
     engine.tick()

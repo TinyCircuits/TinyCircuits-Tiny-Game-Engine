@@ -11,8 +11,8 @@ typedef struct{
 
     float frequency;
     float omega;
-    float dt;
     float time;
+    bool busy;
 }tone_sound_resource_class_obj_t;
 
 extern const mp_obj_type_t tone_sound_resource_class_type;
