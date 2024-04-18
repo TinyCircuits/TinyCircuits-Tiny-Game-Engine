@@ -30,7 +30,7 @@ mp_obj_t tone_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
     self->channel = NULL;
 
     // https://www.mathworks.com/matlabcentral/answers/36428-sine-wave-plot#answer_45572
-    self->frequency = 15000.0f;
+    self->frequency = 3000.0f;
     self->omega = 2.0f * PI * self->frequency;
     self->dt = 1.0f / 22050.0f;
     self->time = 0.0f;

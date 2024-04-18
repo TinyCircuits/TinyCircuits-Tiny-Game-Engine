@@ -75,12 +75,14 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Add enums for each type of easing function in cglm in tween `start(...)` function and add documentation
 [X] Add speed multiplier to tween
 [X] If an object is passed to tween `start(...)` but the string for the attribute to tween is "", tween the value without a lookup
+[X] Add button nodes
 
-[] Add simple shader that happens per pixel for all drawing functions
-[] Add button nodes
+[.] Add simple shader that happens per pixel for all drawing functions, still need to expose to users somehow
+
+[] Figure out how to draw voxelspace at any angle
 
 
-
+[] Test PWM RGB LED light
 
 
 [] When objects collide, figure out how to ensure another collision is found on the same object from its perspective

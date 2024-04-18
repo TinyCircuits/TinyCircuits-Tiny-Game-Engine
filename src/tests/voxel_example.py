@@ -50,9 +50,15 @@ class MyCam(CameraNode):
 
     def tick(self):
         if engine_input.check_pressed(engine_input.BUMPER_RIGHT):
-            self.rotation.y += 0.05
+            if self.mode == 0:
+                self.rotation.y += 0.05
+            elif self.mode == 2:
+                self.rotation.z += 0.05
         if engine_input.check_pressed(engine_input.BUMPER_LEFT):
-            self.rotation.y -= 0.05
+            if self.mode == 0:
+                self.rotation.y -= 0.05
+            elif self.mode == 2:
+                self.rotation.z -= 0.05
     
 
         if engine_input.check_pressed(engine_input.DPAD_UP):
@@ -71,19 +77,20 @@ class MyCam(CameraNode):
         if engine_input.check_pressed(engine_input.A):
             if self.mode == 0:
                 self.position.y -= 1
-            else:
+            elif self.mode == 1:
                 self.rotation.x -= 0.5
         if engine_input.check_pressed(engine_input.B):
             if self.mode == 0:
                 self.position.y += 1
-            else:
+            elif self.mode == 1:
                 self.rotation.x += 0.5
         
-        if engine_input.check_pressed(engine_input.MENU):
-            if self.mode == 0:
-                self.mode = 1
-            else:
+        if engine_input.check_just_pressed(engine_input.MENU):
+            self.mode = self.mode + 1
+            if self.mode >= 3:
                 self.mode = 0
+            
+            print(self.mode)
 
 
 camera = MyCam()

@@ -52,6 +52,9 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
     float dz = 1.0f;
     float z = 1.0f;
 
+    float sin_angle = sinf(camera_rotation->z.value);
+    float cos_angle = cosf(camera_rotation->z.value);
+
     while(z < camera_view_distance){
         // Instead of rotating the points by the stepped view_distance z,
         // use z as the adjacent for triangle to figure out hypotenuse
@@ -95,9 +98,9 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
                 int16_t height_on_screen = (-voxelspace_position->y.value + camera_position->y.value - altitude) / z * voxelspace_height_scale + (camera_rotation->x.value);
 
                 // https://news.ycombinator.com/item?id=21945633
-                float roll = (camera_rotation->z.value*(((float)i)/((float)SCREEN_WIDTH)-0.5f) + 0.5f) * SCREEN_HEIGHT / 4;
+                // float roll = (camera_rotation->z.value*(((float)i)/((float)SCREEN_WIDTH)-0.5f) + 0.5f) * SCREEN_HEIGHT / 4;
 
-                height_on_screen += (int16_t)roll;
+                // height_on_screen += (int16_t)roll;
 
                 if(height_on_screen < SCREEN_HEIGHT){
                     int16_t ipx = height_on_screen;
@@ -113,9 +116,15 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
                     // towards a the bottom of the screen. By default, every
                     // tick/loop the height_buffer is filled with values of
                     // `SCREEN_HEIGHT`
+                    float x = i;
+                    float y = ipx;
                     while(ipx < height_buffer[i]){
                         engine_draw_pixel(texture->data[index], i, ipx, 1.0f, &empty_shader);
+                        // engine_draw_pixel(texture->data[index], x, y, 1.0f, &empty_shader);
                         ipx++;
+
+                        x -= cos_angle;
+                        y += sin_angle;
                     }
                 }
 
