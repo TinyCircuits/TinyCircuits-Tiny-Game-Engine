@@ -211,16 +211,47 @@ vox_node_perf_test.py, avg. FPS: 41.26124
  ----- 
 
 
-
-2024-04-18 17:16:19.101575 : ac86ce31149d0191f79cdf30bf25c2593eabdc67
-Mainly work on audio playback of waves and tones. Decide on 22050 as max sample rate for now
+2024-04-18 17:18:59.143086 : 900a53c1c6747e9af579bc79ac57ad738359e3ea
+Due to performance, only allow 11025Hz sample rate for wave and tone playback. ISR takes too much time
 
 {
-line_node_perf_test.py, avg. FPS: 239.1153
-test_opacity_perf_test.py, avg. FPS: 81.6825
-test_perf_test.py, avg. FPS: 99.64563
-circle_node_perf_test.py, avg. FPS: 241.5629
-vox_node_perf_test.py, avg. FPS: 46.09715
+line_node_perf_test.py, avg. FPS: 239.2817
+test_opacity_perf_test.py, avg. FPS: 81.66111
+test_perf_test.py, avg. FPS: 99.62041
+circle_node_perf_test.py, avg. FPS: 239.8974
+vox_node_perf_test.py, avg. FPS: 44.43056
+}
+
+
+ ----- 
+
+
+
+2024-04-18 17:20:08.616369 : a990db02708d5fcbd7f198fa8c7fc0c6ac6933d3
+None
+
+{
+line_node_perf_test.py, avg. FPS: 239.2818
+test_opacity_perf_test.py, avg. FPS: 90.54546
+test_perf_test.py, avg. FPS: 112.4547
+circle_node_perf_test.py, avg. FPS: 241.5741
+vox_node_perf_test.py, avg. FPS: 49.53446
+}
+
+
+ ----- 
+
+
+
+2024-04-19 09:55:47.324613 : b95655a94ebda728df1c30ec04cad55546201e2e
+Due to performance, only allow 11025Hz sample rate for wave and tone playback. ISR takes too much time
+
+{
+line_node_perf_test.py, avg. FPS: 239.2817
+test_opacity_perf_test.py, avg. FPS: 89.60998
+test_perf_test.py, avg. FPS: 108.9361
+circle_node_perf_test.py, avg. FPS: 241.5709
+vox_node_perf_test.py, avg. FPS: 47.04472
 }
 
 
