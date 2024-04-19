@@ -16,7 +16,6 @@ STATIC void tone_sound_resource_class_print(const mp_print_t *print, mp_obj_t se
 
 
 float ENGINE_FAST_FUNCTION(tone_sound_resource_get_sample)(tone_sound_resource_class_obj_t *self){
-    // float sample = sinf(self->omega * self->time);
     float sample = engine_math_fast_sin(self->omega * self->time);
     self->time += ENGINE_AUDIO_SAMPLE_DT;
     return sample;
@@ -84,8 +83,10 @@ STATIC void tone_sound_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_
     }else if(destination[1] != MP_OBJ_NULL){    // Store
         switch(attribute){
             case MP_QSTR_frequency:
+            {
                 self->frequency = mp_obj_get_float(destination[1]);
                 self->omega = 2.0f * PI * self->frequency;
+            }
             break;
             default:
                 return; // Fail

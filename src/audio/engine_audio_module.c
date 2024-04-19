@@ -38,14 +38,11 @@ volatile float master_volume = 1.0f;
     #include "pico/multicore.h"
 
     #define AUDIO_PWM_PIN 23
+    #define AUDIO_CALLBACK_PWM_PIN 24
     #define AUDIO_ENABLE_PIN 20
 
-
-    // pg. 542: https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf
-    // https://github.com/raspberrypi/pico-examples/blob/master/timer/hello_timer/hello_timer.c#L11-L57
-    // https://www.raspberrypi.com/documentation/pico-sdk/high_level.html#rpipdb65a0bdce0635d95877
-    // https://www.raspberrypi.com/documentation/pico-sdk/hardware.html#interrupt-numbers
-    static struct repeating_timer repeating_audio_timer;
+    // Pin for PWM audio sample wrap callback (faster than repeating timer, by a lot)
+    uint audio_callback_pwm_pin_slice;
 
     uint8_t *current_source_data = NULL;
 
@@ -204,7 +201,7 @@ volatile float master_volume = 1.0f;
 
 
     // Samples each channel, adds, normalizes, and sets PWM
-    bool ENGINE_FAST_FUNCTION(repeating_audio_callback)(struct repeating_timer *t){
+    void ENGINE_FAST_FUNCTION(repeating_audio_callback)(void){
         float total_sample = 0;
         bool play_sample = false;
 
@@ -240,8 +237,8 @@ volatile float master_volume = 1.0f;
             pwm_set_gpio_level(AUDIO_PWM_PIN, (uint32_t)(total_sample));
         }
 
-        // Always return true from repeating callback
-        return true;
+        pwm_clear_irq(audio_callback_pwm_pin_slice);
+        return;
     }
 #endif
 
@@ -285,9 +282,21 @@ void engine_audio_setup(){
     #if defined(__unix__)
         // Nothing to do
     #elif defined(__arm__)
-        if(add_repeating_timer_us((int64_t)((1.0/ENGINE_AUDIO_SAMPLE_RATE) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer) == false){
-            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("AudioModule: No timer slots available, could not audio callback!"));
-        }
+        // if(add_repeating_timer_us((int64_t)((1.0/ENGINE_AUDIO_SAMPLE_RATE) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer) == false){
+        //     mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("AudioModule: No timer slots available, could not audio callback!"));
+        // }
+
+        //generate the interrupt at the audio sample rate to set the PWM duty cycle
+        audio_callback_pwm_pin_slice = pwm_gpio_to_slice_num(AUDIO_CALLBACK_PWM_PIN);
+        pwm_clear_irq(audio_callback_pwm_pin_slice);
+        pwm_set_irq_enabled(audio_callback_pwm_pin_slice, true);
+        irq_set_exclusive_handler(PWM_IRQ_WRAP_0, repeating_audio_callback);
+        irq_set_priority(PWM_IRQ_WRAP_0, 1);
+        irq_set_enabled(PWM_IRQ_WRAP_0, true);
+        pwm_config audio_callback_pwm_pin_config = pwm_get_default_config();
+        pwm_config_set_clkdiv_int(&audio_callback_pwm_pin_config, 1);
+        pwm_config_set_wrap(&audio_callback_pwm_pin_config, ((125.0f * 1000.0f * 1000.0f) / ENGINE_AUDIO_SAMPLE_RATE) - 1);
+        pwm_init(audio_callback_pwm_pin_slice, &audio_callback_pwm_pin_config, true);
     #endif
 }
 
