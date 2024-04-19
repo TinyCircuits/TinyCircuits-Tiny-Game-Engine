@@ -51,7 +51,7 @@ bool empty_node_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp
             destination[0] = self_node_base;
         break;
         default:
-            return; // Fail
+            return false; // Fail
     }
 }
 

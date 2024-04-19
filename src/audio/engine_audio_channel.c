@@ -1,6 +1,7 @@
 #include "engine_audio_channel.h"
 #include "math/engine_math.h"
 #include "debug/debug_print.h"
+#include "audio/engine_audio_module.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -79,6 +80,20 @@ mp_obj_t audio_channel_class_new_dummy(const mp_obj_type_t *type, size_t n_args,
 
 
 /*  --- doc ---
+    NAME: play
+    DESC: Starts playing an audio source on a given channel and looping or not. It is up to the user to change the gains of the returned channels so that the audio does not clip.
+    PARAM: [type=object]    [name=sound_resource] [value={ref_link:WaveSoundResource}]
+    PARAM: [type=boolean]   [name=loop]           [value=True or False] 
+    RETURN: None
+*/ 
+mp_obj_t audio_channel_play(mp_obj_t self_in, mp_obj_t sound_resource_obj, mp_obj_t loop_obj){
+    engine_audio_play_on_channel(sound_resource_obj, self_in, loop_obj);
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_1(audio_channel_play_obj, audio_channel_play);
+
+
+/*  --- doc ---
     NAME: stop
     DESC: Stops audio playing on channel
     RETURN: None
@@ -143,6 +158,10 @@ STATIC void audio_channel_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t 
 
     if(destination[0] == MP_OBJ_NULL){          // Load
         switch(attribute){
+            case MP_QSTR_play:
+                destination[0] = MP_OBJ_FROM_PTR(&audio_channel_play_obj);
+                destination[1] = self_in;
+            break;
             case MP_QSTR_stop:
                 destination[0] = MP_OBJ_FROM_PTR(&audio_channel_stop_obj);
                 destination[1] = self_in;

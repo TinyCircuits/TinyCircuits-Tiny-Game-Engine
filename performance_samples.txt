@@ -243,7 +243,7 @@ vox_node_perf_test.py, avg. FPS: 49.53446
 
 
 2024-04-19 10:13:24.191822 : c90bbedc2214868553ae738146b901b72462c9c8
-Instead of user repeating timer for audio sample callback, use PWM wrap IRQ (faster, less overhead)
+Instead of user repeating timer for audio sample callback, use PWM wrap IRQ (faster, less overhead), also use 22050 as playback sample rate
 
 {
 line_node_perf_test.py, avg. FPS: 239.0039
@@ -251,6 +251,22 @@ test_opacity_perf_test.py, avg. FPS: 89.61009
 test_perf_test.py, avg. FPS: 110.6096
 circle_node_perf_test.py, avg. FPS: 239.9043
 vox_node_perf_test.py, avg. FPS: 48.70479
+}
+
+
+ ----- 
+
+
+
+2024-04-19 17:56:21.249225 : 061106a0de7131238c065e0ddbf5a14659bda7de
+Fix attr handling for some nodes. Work on RTTTL basics as well as general audio tweaks
+
+{
+line_node_perf_test.py, avg. FPS: 239.115
+test_opacity_perf_test.py, avg. FPS: 88.0912
+test_perf_test.py, avg. FPS: 110.2682
+circle_node_perf_test.py, avg. FPS: 239.7391
+vox_node_perf_test.py, avg. FPS: 46.8499
 }
 
 

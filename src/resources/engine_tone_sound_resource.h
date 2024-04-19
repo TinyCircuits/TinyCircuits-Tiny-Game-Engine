@@ -11,6 +11,12 @@ typedef struct{
 
     float frequency;
     float omega;
+
+    float next_frequency;
+    float next_omega;
+    bool next_frequency_ready;
+    float interpolation;
+
     float time;
     bool busy;
 }tone_sound_resource_class_obj_t;

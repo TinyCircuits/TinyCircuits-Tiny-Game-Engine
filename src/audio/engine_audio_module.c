@@ -1,7 +1,6 @@
 #include "py/obj.h"
 #include "py/mpthread.h"
 #include "engine_audio_module.h"
-#include "engine_audio_channel.h"
 #include "resources/engine_sound_resource_base.h"
 #include "resources/engine_wave_sound_resource.h"
 #include "resources/engine_tone_sound_resource.h"
@@ -276,7 +275,8 @@ void engine_audio_setup(){
     // (otherwise it would be trying to access all NULLs)
     // Setup should be run once per lifetime
     for(uint8_t icx=0; icx<CHANNEL_COUNT; icx++){
-        channels[icx] = audio_channel_class_new(&audio_channel_class_type, 0, 0, NULL);
+        audio_channel_class_obj_t *channel = audio_channel_class_new(&audio_channel_class_type, 0, 0, NULL);
+        channels[icx] = channel;
     }
 
     #if defined(__unix__)
@@ -301,7 +301,7 @@ void engine_audio_setup(){
 }
 
 
-void engine_audio_stop(){
+void engine_audio_stop_all(){
     ENGINE_INFO_PRINTF('EngineAudio: Stopping all channels...');
 
     for(uint8_t icx=0; icx<CHANNEL_COUNT; icx++){
@@ -314,20 +314,7 @@ void engine_audio_stop(){
 }
 
 
-/*  --- doc ---
-    NAME: play
-    DESC: Starts playing an audio source on a given channel and looping or not. It is up to the user to change the gains of the returned channels so that the audio does not clip.
-    PARAM: [type=object]    [name=sound_resource] [value={ref_link:WaveSoundResource}]
-    PARAM: [type=int]       [name=channel_index]  [value=0 ~ 3]                                                          
-    PARAM: [type=boolean]   [name=loop]           [value=True or False]                                                  
-    RETURN: {ref_link:AudioChannel}
-*/ 
-STATIC mp_obj_t engine_audio_play(mp_obj_t sound_resource_obj, mp_obj_t channel_index_obj, mp_obj_t loop_obj){
-    // Should probably make sure this doesn't
-    // interfere with DMA or interrupt: TODO
-    uint8_t channel_index = mp_obj_get_int(channel_index_obj);
-    audio_channel_class_obj_t *channel = channels[channel_index];
-
+void engine_audio_play_on_channel(mp_obj_t sound_resource_obj, audio_channel_class_obj_t *channel, mp_obj_t loop_obj){
     // Before anything, make sure to stop the channel
     // incase of two `.play(...)` calls in a row
     audio_channel_stop(channel);
@@ -358,6 +345,44 @@ STATIC mp_obj_t engine_audio_play(mp_obj_t sound_resource_obj, mp_obj_t channel_
 
     // Now let the interrupt use it
     channel->busy = false;
+}
+
+
+/*  --- doc ---
+    NAME: stop
+    DESC: Stops playing audio on channel at index
+    PARAM: [type=int]       [name=channel_index]  [value=0 ~ 3]                                                                                                          
+    RETURN: None
+*/ 
+STATIC mp_obj_t engine_audio_stop(mp_obj_t channel_index_obj){
+    uint8_t channel_index = mp_obj_get_int(channel_index_obj);
+
+    if(channel_index > 3){
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("AudioModule: ERROR: Tried to stop audio channel using an index that does not exist"));
+    }
+
+    audio_channel_stop(channels[channel_index]);
+
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_1(engine_audio_stop_obj, engine_audio_stop);
+
+
+/*  --- doc ---
+    NAME: play
+    DESC: Starts playing an audio source on a given channel and looping or not. It is up to the user to change the gains of the returned channels so that the audio does not clip.
+    PARAM: [type=object]    [name=sound_resource] [value={ref_link:WaveSoundResource}]
+    PARAM: [type=int]       [name=channel_index]  [value=0 ~ 3]                                                          
+    PARAM: [type=boolean]   [name=loop]           [value=True or False]                                                  
+    RETURN: {ref_link:AudioChannel}
+*/ 
+STATIC mp_obj_t engine_audio_play(mp_obj_t sound_resource_obj, mp_obj_t channel_index_obj, mp_obj_t loop_obj){
+    // Should probably make sure this doesn't
+    // interfere with DMA or interrupt: TODO
+    uint8_t channel_index = mp_obj_get_int(channel_index_obj);
+    audio_channel_class_obj_t *channel = channels[channel_index];
+
+    engine_audio_play_on_channel(sound_resource_obj, channel, loop_obj);
 
     return MP_OBJ_FROM_PTR(channel);
 }
@@ -400,6 +425,7 @@ STATIC const mp_rom_map_elem_t engine_audio_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_audio) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_AudioChannel), (mp_obj_t)&audio_channel_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_play), (mp_obj_t)&engine_audio_play_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_stop), (mp_obj_t)&engine_audio_stop_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_set_volume), (mp_obj_t)&engine_audio_set_volume_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_get_volume), (mp_obj_t)&engine_audio_get_volume_obj },
 };

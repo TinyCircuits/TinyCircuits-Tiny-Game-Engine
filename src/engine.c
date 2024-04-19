@@ -104,7 +104,7 @@ STATIC mp_obj_t engine_reset(){
     ENGINE_FORCE_PRINTF("Resetting engine...");
 
     // Reset contigious flash space manager
-    engine_audio_stop();
+    engine_audio_stop_all();
     engine_resource_reset();
     engine_camera_clear_all();
     engine_gui_clear_all();

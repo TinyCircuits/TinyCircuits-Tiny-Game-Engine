@@ -195,7 +195,7 @@ bool rectangle_2d_node_load_attr(engine_node_base_t *self_node_base, qstr attrib
             return true;
         break;
         default:
-            return; // Fail
+            return false; // Fail
     }
 }
 

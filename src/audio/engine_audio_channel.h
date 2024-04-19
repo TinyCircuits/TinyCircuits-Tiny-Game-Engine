@@ -30,7 +30,7 @@
 //
 // to get through the buffer. Hopefully we can take CHANNEL_BUFFER_SIZE bytes out of flash
 // and into RAM faster than that
-#define CHANNEL_BUFFER_SIZE 1024
+#define CHANNEL_BUFFER_SIZE 512
 
 // Forward declare since `resources/engine_sound_resource_base.h` and this file include each other
 typedef struct sound_resource_base_class_obj_t sound_resource_base_class_obj_t;
@@ -43,7 +43,7 @@ typedef struct audio_channel_class_obj_t{
     float time;                                 // Where in the 'channel_source' the audio is being played from
     bool loop;                                  // Loop back to the start of the 'channel_source' at the end or set it to mp_const_none
     bool done;                                  // After starting a sound on this channel, this is set to true and then false when the end is reached (never set false in the case of 'looping' being true)
-    uint8_t *buffers[2];                        // Dual buffers for audio, one gets DMA'ed to while to other is read from
+    uint8_t *buffers[2];                        // Dual buffers for audio, one gets DMA'ed to while the other is read from
     uint16_t buffers_ends[2];                   // Current of each buffer
     uint16_t buffers_byte_offsets[2];           // Current offset inside each buffer
     uint8_t reading_buffer_index;               // Index in 'buffers' of where audio samples should be picked from

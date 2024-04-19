@@ -9,6 +9,9 @@
 #include <math.h>
 
 
+#include "../lib/cglm/include/cglm/util.h"
+
+
 // Class required functions
 STATIC void tone_sound_resource_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
     ENGINE_INFO_PRINTF("print(): ToneSoundResource");
@@ -16,7 +19,25 @@ STATIC void tone_sound_resource_class_print(const mp_print_t *print, mp_obj_t se
 
 
 float ENGINE_FAST_FUNCTION(tone_sound_resource_get_sample)(tone_sound_resource_class_obj_t *self){
-    float sample = engine_math_fast_sin(self->omega * self->time);
+    float omega = 0.0f;
+
+    if(self->next_frequency_ready){
+
+        omega = glm_lerp(self->omega, self->next_omega, self->interpolation);
+
+        self->interpolation += 0.001f;
+
+        if(self->interpolation >= 1.0f){
+            self->interpolation = 0.0f;
+            self->next_frequency_ready = false;
+            self->frequency = self->next_frequency;
+            self->omega = self->next_omega;
+        }
+    }else{
+        omega = self->omega;
+    }
+
+    float sample = engine_math_fast_sin(omega * self->time);
     self->time += ENGINE_AUDIO_SAMPLE_DT;
     return sample;
 }
@@ -34,6 +55,11 @@ mp_obj_t tone_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
     self->frequency = 1000.0f;
     self->omega = 2.0f * PI * self->frequency;
     self->time = 0.0f;
+
+    self->next_frequency = 0.0f;
+    self->next_omega = 0.0f;
+    self->next_frequency_ready = false;
+    self->interpolation = 0.0f;
 
     return MP_OBJ_FROM_PTR(self);
 }
@@ -84,8 +110,15 @@ STATIC void tone_sound_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_
         switch(attribute){
             case MP_QSTR_frequency:
             {
-                self->frequency = mp_obj_get_float(destination[1]);
-                self->omega = 2.0f * PI * self->frequency;
+                if(self->channel == NULL){
+                    self->frequency = mp_obj_get_float(destination[1]);
+                    self->omega = 2.0f * PI * self->frequency;
+                    self->next_frequency_ready = false;
+                }else{
+                    self->next_frequency = mp_obj_get_float(destination[1]);
+                    self->next_omega = 2.0f * PI * self->next_frequency;
+                    self->next_frequency_ready = true;
+                }
             }
             break;
             default:

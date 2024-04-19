@@ -51,6 +51,7 @@ SRC_USERMOD += $(ENGINE_MOD_DIR)/resources/engine_texture_resource.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/resources/engine_font_resource.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/resources/engine_wave_sound_resource.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/resources/engine_tone_sound_resource.c
+SRC_USERMOD += $(ENGINE_MOD_DIR)/resources/engine_rtttl_sound_resource.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/resources/engine_noise_resource.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/physics/engine_physics_module.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/physics/engine_physics.c

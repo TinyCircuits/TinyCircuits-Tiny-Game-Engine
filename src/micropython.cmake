@@ -56,6 +56,7 @@ target_sources(usermod_engine INTERFACE
     ${ENGINE_MOD_DIR}/resources/engine_font_resource.c
     ${ENGINE_MOD_DIR}/resources/engine_wave_sound_resource.c
     ${ENGINE_MOD_DIR}/resources/engine_tone_sound_resource.c
+    ${ENGINE_MOD_DIR}/resources/engine_rtttl_sound_resource.c
     ${ENGINE_MOD_DIR}/resources/engine_noise_resource.c
     ${ENGINE_MOD_DIR}/physics/engine_physics_module.c
     ${ENGINE_MOD_DIR}/physics/engine_physics.c

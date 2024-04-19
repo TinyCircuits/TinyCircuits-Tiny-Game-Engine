@@ -16,6 +16,7 @@ camera = CameraNode()
 
 
 while True:
+    # print(engine.get_running_fps())
     
     if engine_input.check_just_pressed(engine_input.BUMPER_RIGHT):
         c = engine_audio.play(wave0, 0, False)
