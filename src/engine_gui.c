@@ -27,7 +27,13 @@ void engine_gui_untrack(linked_list_node *gui_list_node){
 
 void engine_gui_clear_all(){
     ENGINE_INFO_PRINTF("Untracking all gui nodes...");
-    linked_list_clear(&engine_guis);
+    
+    linked_list_node *current = engine_guis.start;
+    while(current != NULL){
+        m_del_obj((mp_obj_type_t*)((mp_obj_base_t*)current->object)->type, current->object);
+
+        current = current->next;
+    }
 }
 
 

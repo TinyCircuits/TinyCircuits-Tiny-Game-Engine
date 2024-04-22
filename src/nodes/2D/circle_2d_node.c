@@ -204,8 +204,6 @@ bool circle_2d_node_store_attr(engine_node_base_t *self_node_base, qstr attribut
 STATIC mp_attr_fun_t circle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Circle2DNode attr");
 
-    // ENGINE_FORCE_PRINTF("%s", qstr_str(attribute));
-
     // Get the node base from either class
     // instance or native instance object
     bool is_obj_instance = false;

@@ -76,11 +76,15 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Add speed multiplier to tween
 [X] If an object is passed to tween `start(...)` but the string for the attribute to tween is "", tween the value without a lookup
 [X] Add button nodes
+[X] Fix engine reset issue when switching from one file to the next that imports engine: Fixed, manually go through all nodes and mark for gc collect. Call their __del__ functions
 
 [.] Add simple shader that happens per pixel for all drawing functions, still need to expose to users somehow
 
-[] Fix engine reset issue when switching from one file to the next that imports engine
 [] Need to figure out what to do if user has two files that import engine that then resets the engine... Should be possible to import `engine` without resetting everything
+[] Should everything the engine allocates be manually de-allocated? Nodes are like this now but what about Vector2, Vector3, and resources? The GC should get them at some
+   point and they aren't drawn the screen, they just take up RAM so maybe not the end of the world to leave it for the GC to collect later
+[] Does it matter that on engine reset that we only delete native engine node types and not instance child classes? They will be collected later...
+[] Make GUIBitmap2DButton for main menu
 [] Tones need duration
 [] RTTTL Music implementation
 [] Figure out how to draw voxelspace at any angle

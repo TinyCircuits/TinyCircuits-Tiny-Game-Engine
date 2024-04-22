@@ -309,3 +309,19 @@ vox_node_perf_test.py, avg. FPS: 48.36065
 
 
 
+2024-04-22 16:37:09.143576 : b8c26b402b234c239ed39b979c698c08ef473fb3
+Got file switching to work when importing engine to reset everything. Manually go through all nodes and mark for gc collect and call their __del__ functions. Still have questions about instance objects not being marked
+
+{
+line_node_perf_test.py, avg. FPS: 239.115
+test_opacity_perf_test.py, avg. FPS: 88.4274
+test_perf_test.py, avg. FPS: 108.6757
+circle_node_perf_test.py, avg. FPS: 240.0775
+vox_node_perf_test.py, avg. FPS: 48.47466
+}
+
+
+ ----- 
+
+
+

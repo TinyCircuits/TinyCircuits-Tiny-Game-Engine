@@ -15,6 +15,8 @@
 #include "nodes/node_base.h"
 #include "engine_cameras.h"
 
+#include "py/gc.h"
+
 uint16_t engine_object_layer_count = 8;
 linked_list engine_object_layers[8];
 
@@ -22,7 +24,14 @@ linked_list engine_object_layers[8];
 void engine_objects_clear_all(){
     ENGINE_INFO_PRINTF("Untracking all nodes...");
     for(uint8_t inx=0; inx<engine_object_layer_count; inx++){
-        linked_list_clear(&engine_object_layers[inx]);
+
+        while(engine_object_layers[inx].start != NULL){
+            engine_node_base_t *node_base = engine_object_layers[inx].start->object;
+
+            mp_obj_t final = mp_load_attr(node_base, MP_QSTR___del__);
+            mp_call_function_0(final);
+            m_del_obj(mp_obj_get_type(node_base), node_base);
+        }
     }
 }
 

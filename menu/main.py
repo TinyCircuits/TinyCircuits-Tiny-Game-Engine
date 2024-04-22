@@ -73,14 +73,24 @@ class MainDelay(Delay):
 
 
 delay = MainDelay()
-delay.start(350.0)
+delay.start(650.0)
 
 camera = CameraNode()
 
 while delay.finished == False or delay.T_tween.finished == False:
     engine.tick()
 
-# engine.reset()
-# gc.collect()
+# Need to stop all tweens since reference sprites will be gc collected
+delay.T_tween.pause()
+delay.h_tween.pause()
+delay.u_tween.pause()
+delay.m_tween.pause()
+delay.b_tween.pause()
+delay.y_tween.pause()
+delay.C_tween.pause()
+delay.GO_tween.pause()
+delay.L_tween.pause()
+delay.RO_tween.pause()
+delay.R_tween.pause()
 
 execfile("../../examples/usercmodule/TinyCircuits-Tiny-Game-Engine/menu/launcher.py")

@@ -5,7 +5,7 @@
 #include "engine_animation_delay.h"
 #include "utility/linked_list.h"
 
-enum engine_animation_loop_types {engine_animation_loop_loop, engine_animation_loop_one_shot, engine_animation_loop_ping_pong};
+enum engine_animation_loop_types {engine_animation_loop_none, engine_animation_loop_loop, engine_animation_loop_one_shot, engine_animation_loop_ping_pong};
 enum engine_animation_ease_types {engine_animation_ease_linear,
                                   engine_animation_ease_sine_in,   engine_animation_ease_sine_out,   engine_animation_ease_sine_in_out,
                                   engine_animation_ease_quad_in,   engine_animation_ease_quad_out,   engine_animation_ease_quad_in_out,

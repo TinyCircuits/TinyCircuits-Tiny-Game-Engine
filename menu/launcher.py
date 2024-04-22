@@ -41,6 +41,12 @@ class LauncherTile(Sprite2DNode):
     def set_opacity(self, opacity):
         self.opacity = opacity
         self.mark_sprite.opacity = opacity
+    
+    def set_scale(self, scale):
+        self.scale.x = scale
+        self.scale.y = scale
+        self.mark_sprite.scale.x = scale
+        self.mark_sprite.scale.y = scale
 
 
 tile0 = LauncherTile()
@@ -48,14 +54,12 @@ tile0.selected = True
 
 tile1 = LauncherTile()
 tile1.position.x = -42
-tile1.scale.x = 0.25
-tile1.scale.y = 0.25
+tile1.set_scale(0.25)
 tile1.set_opacity(0.65)
 
 tile2 = LauncherTile()
 tile2.position.x = 42
-tile2.scale.x = 0.25
-tile2.scale.y = 0.25
+tile2.set_scale(0.25)
 tile2.set_opacity(0.65)
 
 camera = CameraNode()

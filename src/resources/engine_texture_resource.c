@@ -5,12 +5,6 @@
 #include <math.h>
 
 
-// Class required functions
-STATIC void texture_resource_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
-    ENGINE_PRINTF("TextureResource");
-}
-
-
 mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New TextureResource");
     mp_arg_check_num(n_args, n_kw, 1, 2, false);
@@ -176,7 +170,6 @@ MP_DEFINE_CONST_OBJ_TYPE(
     MP_TYPE_FLAG_NONE,
 
     make_new, texture_resource_class_new,
-    print, texture_resource_class_print,
     attr, texture_resource_class_attr,
     locals_dict, &texture_resource_class_locals_dict
 );

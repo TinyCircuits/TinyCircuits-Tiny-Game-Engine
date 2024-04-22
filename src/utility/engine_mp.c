@@ -1,4 +1,5 @@
 #include "engine_mp.h"
+#include "debug/debug_print.h"
 
 
 mp_obj_t engine_mp_load_attr_maybe(mp_obj_t base, qstr attr){

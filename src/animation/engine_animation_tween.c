@@ -132,7 +132,16 @@ STATIC mp_obj_t tween_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
     if(tween->attr == 0){
         tweening_value = tween->object;
     }else{
-        tweening_value = mp_load_attr(tween->object, tween->attr);
+        // tweening_value = mp_load_attr(tween->object, tween->attr);
+        tweening_value = engine_mp_load_attr_maybe(tween->object, tween->attr);
+    }
+
+    // In case the attr or object is not available anymore, stop tweening
+    if(tweening_value == MP_OBJ_NULL || tweening_value == mp_const_none){
+        tween->finished = true;
+        tween->time = 0.0f;
+        tween->loop_type = engine_animation_loop_none;
+        return mp_const_none;
     }
 
     // If reached end of time, mark as finished
@@ -592,7 +601,7 @@ mp_obj_t tween_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, 
     self->list_node = engine_animation_track(self);
     self->base.type = &tween_class_type;
 
-    self->loop_type = engine_animation_loop_loop;
+    self->loop_type = engine_animation_loop_none;
     self->ease_type = engine_animation_ease_linear;
     self->duration = 1000.0f;
     self->time = 0.0f;

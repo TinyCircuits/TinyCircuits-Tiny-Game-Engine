@@ -19,6 +19,7 @@
 #include "py/mpstate.h"
 #include "py/mphal.h"
 #include "py/stream.h"
+
 #include "py/gc.h"
 
 #include "py/objtype.h"
@@ -106,8 +107,16 @@ STATIC mp_obj_t engine_reset(){
     // Reset contigious flash space manager
     engine_audio_stop_all();
     engine_resource_reset();
-    engine_camera_clear_all();
-    engine_gui_clear_all();
+
+    // engine_camera_clear_all();
+    // engine_gui_clear_all();
+    engine_objects_clear_all();
+
+    // gc_sweep_all();
+    gc_collect();
+
+    // mp_obj_t machine_module = mp_import_name(MP_QSTR_machine, mp_const_none, MP_OBJ_NEW_SMALL_INT(0));
+    // mp_call_function_0(mp_load_attr(machine_module, MP_QSTR_soft_reset));
 
     return mp_const_none;
 }
