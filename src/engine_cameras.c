@@ -58,4 +58,10 @@ void engine_camera_draw_for_each(void (*draw_cb)(mp_obj_t, mp_obj_t), engine_nod
 void engine_camera_clear_all(){
     ENGINE_INFO_PRINTF("Untracking all cameras...");
     linked_list_clear(&engine_cameras);
+
+    // Keep deleting start node until it is made null
+    while(engine_cameras.start != NULL){
+        engine_camera_node_class_obj_t *camera = engine_cameras.start->object;
+        // linked_list_del_list_node(list, list->start);
+    }
 }

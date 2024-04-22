@@ -66,13 +66,6 @@ void engine_physics_rectangle_2d_node_update(engine_physics_node_base_t *physics
 }
 
 
-// Class required functions
-STATIC void physics_rectangle_2d_node_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
-    (void)kind;
-    ENGINE_INFO_PRINTF("print(): PhysicsRectangle2DNode");
-}
-
-
 mp_obj_t physics_rectangle_2d_node_class_del(mp_obj_t self_in){
     ENGINE_INFO_PRINTF("PhysicsRectangle2DNode: Deleted (garbage collected, removing self from active engine objects)");
 
@@ -441,7 +434,6 @@ MP_DEFINE_CONST_OBJ_TYPE(
     MP_TYPE_FLAG_NONE,
 
     make_new, physics_rectangle_2d_node_class_new,
-    print, physics_rectangle_2d_node_class_print,
     attr, physics_rectangle_2d_node_class_attr,
     locals_dict, &physics_rectangle_2d_node_class_locals_dict
 );

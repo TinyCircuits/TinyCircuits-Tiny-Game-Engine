@@ -1,12 +1,6 @@
 #include "collision_contact_2d.h"
 
 
-// Class required functions
-STATIC void collision_contact_2d_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
-    ENGINE_FORCE_PRINTF("print(): CollisionContact2D");
-}
-
-
 mp_obj_t collision_contact_2d_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New CollisionContact2D");
     mp_arg_check_num(n_args, n_kw, 0, 5, false);
@@ -96,7 +90,6 @@ MP_DEFINE_CONST_OBJ_TYPE(
     MP_TYPE_FLAG_NONE,
 
     make_new, collision_contact_2d_class_new,
-    print, collision_contact_2d_class_print,
     attr, collision_contact_2d_class_attr,
     locals_dict, &collision_contact_2d_class_locals_dict
 );

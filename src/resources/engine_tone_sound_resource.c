@@ -12,12 +12,6 @@
 #include "../lib/cglm/include/cglm/util.h"
 
 
-// Class required functions
-STATIC void tone_sound_resource_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
-    ENGINE_INFO_PRINTF("print(): ToneSoundResource");
-}
-
-
 float ENGINE_FAST_FUNCTION(tone_sound_resource_get_sample)(tone_sound_resource_class_obj_t *self){
     float omega = 0.0f;
 
@@ -144,7 +138,6 @@ MP_DEFINE_CONST_OBJ_TYPE(
     MP_TYPE_FLAG_NONE,
 
     make_new, tone_sound_resource_class_new,
-    print, tone_sound_resource_class_print,
     attr, tone_sound_resource_class_attr,
     locals_dict, &tone_sound_resource_class_locals_dict
 );

@@ -79,6 +79,10 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 
 [.] Add simple shader that happens per pixel for all drawing functions, still need to expose to users somehow
 
+[] Fix engine reset issue when switching from one file to the next that imports engine
+[] Need to figure out what to do if user has two files that import engine that then resets the engine... Should be possible to import `engine` without resetting everything
+[] Tones need duration
+[] RTTTL Music implementation
 [] Figure out how to draw voxelspace at any angle
 
 

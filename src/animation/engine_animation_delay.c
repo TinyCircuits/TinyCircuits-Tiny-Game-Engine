@@ -11,14 +11,6 @@
 #include <string.h>
 
 
-
-// Class required functions
-STATIC void delay_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
-    delay_class_obj_t *self = self_in;
-    ENGINE_PRINTF("Delay");
-}
-
-
 STATIC mp_obj_t delay_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
     ENGINE_INFO_PRINTF("Delay: tick!");
 
@@ -290,7 +282,6 @@ MP_DEFINE_CONST_OBJ_TYPE(
     MP_TYPE_FLAG_NONE,
 
     make_new, delay_class_new,
-    print, delay_class_print,
     attr, delay_class_attr,
     locals_dict, &delay_class_locals_dict
 );

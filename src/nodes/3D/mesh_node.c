@@ -22,14 +22,6 @@
 #include "../lib/cglm/include/cglm/cam.h"
 
 
-
-// Class required functions
-STATIC void mesh_node_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
-    (void)kind;
-    ENGINE_PRINTF("MeshNode");
-}
-
-
 STATIC mp_obj_t mesh_node_class_tick(mp_obj_t self_in){
     ENGINE_WARNING_PRINTF("MeshNode: Tick function not overridden");
     return mp_const_none;
@@ -349,7 +341,6 @@ MP_DEFINE_CONST_OBJ_TYPE(
     MP_TYPE_FLAG_NONE,
 
     make_new, mesh_node_class_new,
-    print, mesh_node_class_print,
     attr, mesh_node_class_attr,
     locals_dict, &mesh_node_class_locals_dict
 );

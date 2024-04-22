@@ -1,12 +1,6 @@
 #include "matrix4x4.h"
 #include "debug/debug_print.h"
 
-// Class required functions
-STATIC void matrix4x4_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
-    matrix4x4_class_obj_t *self = self_in;
-    ENGINE_PRINTF("Matrix4x4");
-}
-
 
 mp_obj_t matrix4x4_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Matrix4x4");
@@ -58,7 +52,6 @@ MP_DEFINE_CONST_OBJ_TYPE(
     MP_TYPE_FLAG_NONE,
 
     make_new, matrix4x4_class_new,
-    print, matrix4x4_class_print,
     attr, matrix4x4_class_attr,
     locals_dict, &matrix4x4_class_locals_dict
 );

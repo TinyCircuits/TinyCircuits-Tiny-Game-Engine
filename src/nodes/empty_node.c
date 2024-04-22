@@ -6,12 +6,6 @@
 #include "engine_object_layers.h"
 #include "math/vector3.h"
 
-// Class required functions
-STATIC void empty_node_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
-    (void)kind;
-    ENGINE_INFO_PRINTF("print(): EmptyNode");
-}
-
 
 // Return `true` if handled loading the attr from internal structure, `false` otherwise
 bool empty_node_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_t *destination){
@@ -218,7 +212,6 @@ MP_DEFINE_CONST_OBJ_TYPE(
     MP_TYPE_FLAG_NONE,
 
     make_new, empty_node_class_new,
-    print, empty_node_class_print,
     attr, empty_node_class_attr,
     locals_dict, &empty_node_class_locals_dict
 );

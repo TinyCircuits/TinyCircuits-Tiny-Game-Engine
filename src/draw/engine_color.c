@@ -77,13 +77,6 @@ uint16_t ENGINE_FAST_FUNCTION(engine_color_alpha_blend)(uint16_t background, uin
 }
 
 
-// Class required functions
-STATIC void color_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
-    color_class_obj_t *self = self_in;
-    ENGINE_PRINTF("[%0.3f, %0.3f, %0.3f]", self->r.value, self->g.value, self->b.value);
-}
-
-
 mp_obj_t color_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Color");
     color_class_obj_t *self = m_new_obj(color_class_obj_t);
@@ -171,7 +164,6 @@ MP_DEFINE_CONST_OBJ_TYPE(
     MP_TYPE_FLAG_NONE,
 
     make_new, color_class_new,
-    print, color_class_print,
     attr, color_class_attr,
     locals_dict, &color_class_locals_dict
 );

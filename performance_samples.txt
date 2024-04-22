@@ -274,3 +274,19 @@ vox_node_perf_test.py, avg. FPS: 46.8499
 
 
 
+2024-04-22 11:49:36.457211 : 866612f1dfa53671e6714dc02cbf4e55327aacf4
+Remove print functions from all engine types so that for cases of inheritance the correct object is printed
+
+{
+line_node_perf_test.py, avg. FPS: 239.2816
+test_opacity_perf_test.py, avg. FPS: 70.05116
+test_perf_test.py, avg. FPS: 83.02055
+circle_node_perf_test.py, avg. FPS: 241.3497
+vox_node_perf_test.py, avg. FPS: 46.81553
+}
+
+
+ ----- 
+
+
+

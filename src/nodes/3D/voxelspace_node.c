@@ -18,13 +18,6 @@
 int16_t height_buffer[SCREEN_WIDTH];
 
 
-// Class required functions
-STATIC void voxelspace_node_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
-    (void)kind;
-    ENGINE_PRINTF("VoxelSpaceNode");
-}
-
-
 void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("VoxelSpaceNode: Drawing");
 
@@ -408,7 +401,6 @@ MP_DEFINE_CONST_OBJ_TYPE(
     MP_TYPE_FLAG_NONE,
 
     make_new, voxelspace_node_class_new,
-    print, voxelspace_node_class_print,
     attr, voxelspace_node_class_attr,
     locals_dict, &voxelspace_node_class_locals_dict
 );

@@ -1,12 +1,6 @@
 #include "vector3.h"
 #include "debug/debug_print.h"
 
-// Class required functions
-STATIC void vector3_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
-    vector3_class_obj_t *self = self_in;
-    ENGINE_PRINTF("[%0.3f, %0.3f, %0.3f]", (double)self->x.value, (double)self->y.value, (double)self->z.value);
-}
-
 
 mp_obj_t vector3_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Vector3");
@@ -96,7 +90,6 @@ MP_DEFINE_CONST_OBJ_TYPE(
     MP_TYPE_FLAG_NONE,
 
     make_new, vector3_class_new,
-    print, vector3_class_print,
     attr, vector3_class_attr,
     locals_dict, &vector3_class_locals_dict
 );

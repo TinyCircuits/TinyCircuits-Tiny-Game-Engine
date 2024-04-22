@@ -62,12 +62,6 @@ float (*ease[31])(float) = {
 enum tween_value_types {tween_type_float, tween_type_vec2, tween_type_vec3, tween_type_color};
 enum tween_direction {forwards, backwards};
 
-// Class required functions
-STATIC void tween_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
-    tween_class_obj_t *self = self_in;
-    ENGINE_PRINTF("Tween");
-}
-
 
 /* --- doc ---
    NAME: after
@@ -668,7 +662,6 @@ MP_DEFINE_CONST_OBJ_TYPE(
     MP_TYPE_FLAG_NONE,
 
     make_new, tween_class_new,
-    print, tween_class_print,
     attr, tween_class_attr,
     locals_dict, &tween_class_locals_dict
 );

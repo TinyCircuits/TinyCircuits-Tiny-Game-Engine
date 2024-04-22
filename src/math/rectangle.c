@@ -1,11 +1,6 @@
 #include "rectangle.h"
 #include "debug/debug_print.h"
 
-// Class required functions
-STATIC void rectangle_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
-    (void)kind;
-    ENGINE_PRINTF("Rectangle");
-}
 
 mp_obj_t rectangle_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Rectangle");
@@ -129,7 +124,6 @@ MP_DEFINE_CONST_OBJ_TYPE(
     MP_TYPE_FLAG_NONE,
 
     make_new, rectangle_class_new,
-    print, rectangle_class_print,
     attr, rectangle_class_attr,
     locals_dict, &rectangle_class_locals_dict
 );

@@ -7,12 +7,6 @@
 #include <math.h>
 
 
-// Class required functions
-STATIC void wave_sound_resource_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
-    ENGINE_INFO_PRINTF("print(): WaveSoundResource");
-}
-
-
 uint8_t *wave_sound_resource_fill_destination(void *channel_in, uint16_t max_buffer_size, uint16_t *leftover_size){
     audio_channel_class_obj_t *channel = channel_in;
     sound_resource_base_class_obj_t *source = channel->source;
@@ -180,7 +174,6 @@ MP_DEFINE_CONST_OBJ_TYPE(
     MP_TYPE_FLAG_NONE,
 
     make_new, wave_sound_resource_class_new,
-    print, wave_sound_resource_class_print,
     attr, wave_sound_resource_class_attr,
     locals_dict, &wave_sound_resource_class_locals_dict
 );

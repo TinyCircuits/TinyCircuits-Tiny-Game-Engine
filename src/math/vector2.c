@@ -1,12 +1,6 @@
 #include "vector2.h"
 #include "debug/debug_print.h"
 
-// Class required functions
-STATIC void vector2_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
-    vector2_class_obj_t *self = self_in;
-    ENGINE_PRINTF("[%0.3f, %0.3f]", (double)self->x.value, (double)self->y.value);
-}
-
 
 mp_obj_t vector2_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Vector2");
@@ -100,7 +94,6 @@ MP_DEFINE_CONST_OBJ_TYPE(
     MP_TYPE_FLAG_NONE,
 
     make_new, vector2_class_new,
-    print, vector2_class_print,
     attr, vector2_class_attr,
     locals_dict, &vector2_class_locals_dict
 );

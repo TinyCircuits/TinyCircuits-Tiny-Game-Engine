@@ -42,13 +42,6 @@ const vector3_class_obj_t world_north = {
 };
 
 
-// Class required functions
-STATIC void camera_node_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
-    (void)kind;
-    ENGINE_INFO_PRINTF("print(): CameraNode");
-}
-
-
 // // https://forums.unrealengine.com/t/how-does-get-look-at-rotation-work-from-a-mathematical-point-of-view/732711/3
 // // https://gamedev.stackexchange.com/a/112572
 // STATIC mp_obj_t camera_node_class_lookat(mp_obj_t self_in, mp_obj_t lookat_target_position_obj){
@@ -405,7 +398,6 @@ MP_DEFINE_CONST_OBJ_TYPE(
     MP_TYPE_FLAG_NONE,
 
     make_new, camera_node_class_new,
-    print, camera_node_class_print,
     attr, camera_node_class_attr,
     locals_dict, &camera_node_class_locals_dict
 );
