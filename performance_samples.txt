@@ -274,15 +274,34 @@ vox_node_perf_test.py, avg. FPS: 46.8499
 
 
 
-2024-04-22 11:49:36.457211 : 866612f1dfa53671e6714dc02cbf4e55327aacf4
-Remove print functions from all engine types so that for cases of inheritance the correct object is printed
+
+
+
+2024-04-22 11:51:06.338955 : 04be553c089676d6dc46c39faebe9bd489885793
+Remove print statement from Circle2DNode
 
 {
-line_node_perf_test.py, avg. FPS: 239.2816
-test_opacity_perf_test.py, avg. FPS: 70.05116
-test_perf_test.py, avg. FPS: 83.02055
-circle_node_perf_test.py, avg. FPS: 241.3497
-vox_node_perf_test.py, avg. FPS: 46.81553
+line_node_perf_test.py, avg. FPS: 239.2817
+test_opacity_perf_test.py, avg. FPS: 88.48179
+test_perf_test.py, avg. FPS: 108.5274
+circle_node_perf_test.py, avg. FPS: 241.5709
+vox_node_perf_test.py, avg. FPS: 46.86424
+}
+
+
+ ----- 
+
+
+
+2024-04-22 15:54:22.639353 : 10af6cce71cd6da052473ccc3e9ef4bf4512206b
+Remove print statement from Circle2DNode
+
+{
+line_node_perf_test.py, avg. FPS: 239.9343
+test_opacity_perf_test.py, avg. FPS: 87.01828
+test_perf_test.py, avg. FPS: 108.2373
+circle_node_perf_test.py, avg. FPS: 239.9483
+vox_node_perf_test.py, avg. FPS: 48.36065
 }
 
 
