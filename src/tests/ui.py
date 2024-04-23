@@ -1,6 +1,8 @@
+import engine_main
+
 import engine
-from engine_nodes import GUIButton2DNode, CameraNode
-from engine_resources import FontResource
+from engine_nodes import GUIButton2DNode, GUIBitmapButton2DNode, CameraNode
+from engine_resources import FontResource, TextureResource
 from engine_math import Vector2
 import engine_draw
 import engine_input
@@ -17,6 +19,10 @@ font = FontResource("9pt-roboto-font.bmp")
 # button2 = GUIButton2DNode(position=Vector2( 32,   0), font=font, text="Button 2", rotation=0, scale=Vector2(1, 1), padding=2, outline=2, opacity=1.0)
 # button3 = GUIButton2DNode(position=Vector2(  0,  32), font=font, text="Button 3", rotation=0, scale=Vector2(1, 1), padding=2, outline=2, opacity=1.0)
 
+bitmap = TextureResource("button.bmp")
+bitmap_focused = TextureResource("button-highlighted.bmp")
+bitmap_pressed = TextureResource("button-pressed.bmp")
+bitmap_btn = GUIBitmapButton2DNode(position=Vector2(0, -32), font=font, text="Test", text_scale=Vector2(1.0, 1.0), bitmap=bitmap, focused_bitmap=bitmap_focused, pressed_bitmap=bitmap_pressed)
 
 
 class MyButton(GUIButton2DNode):

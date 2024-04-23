@@ -30,6 +30,7 @@ target_sources(usermod_engine INTERFACE
     ${ENGINE_MOD_DIR}/nodes/2D/physics_circle_2d_node.c
     ${ENGINE_MOD_DIR}/nodes/2D/text_2d_node.c
     ${ENGINE_MOD_DIR}/nodes/2D/gui_button_2d_node.c
+    ${ENGINE_MOD_DIR}/nodes/2D/gui_bitmap_button_2d_node.c
     ${ENGINE_MOD_DIR}/math/vector3.c
     ${ENGINE_MOD_DIR}/math/matrix4x4.c
     ${ENGINE_MOD_DIR}/math/vector2.c

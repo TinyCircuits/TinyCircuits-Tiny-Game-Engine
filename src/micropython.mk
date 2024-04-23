@@ -26,6 +26,7 @@ SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/2D/physics_rectangle_2d_node.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/2D/physics_circle_2d_node.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/2D/text_2d_node.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/2D/gui_button_2d_node.c
+SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/2D/gui_bitmap_button_2d_node.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/math/vector3.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/math/matrix4x4.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/math/vector2.c

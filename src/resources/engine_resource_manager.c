@@ -32,7 +32,7 @@ bool storing_in_ram = false;
 
 
 void engine_resource_reset(){
-    ENGINE_FORCE_PRINTF("EngineResourceManager: Resetting...");
+    ENGINE_PRINTF("EngineResourceManager: Resetting...\n");
     #if defined(__arm__)
         page_prog_index = 0;
         page_prog_count = 0;

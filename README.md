@@ -89,10 +89,10 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Line2DNode disappears when thickness is 1 and scale is slightly smaller than 1.0 due to camera zoom
 [X] Add outline and fill to each primitive
 [.] Add simple shader that happens per pixel for all drawing functions, still need to expose to users somehow
-
-[] Need to figure out what to do if user has two files that import engine that then resets the engine... Should be possible to import `engine` without resetting everything
+[X] Need to figure out what to do if user has two files that import engine that then resets the engine... Should be possible to import `engine` without resetting everything: Now required to run `import engine_main` to start and reset engine consistently
 
 [] Make GUIBitmap2DButton for main menu
+
 [] Tones need duration
 [] RTTTL Music implementation
 [] Figure out how to draw voxelspace at any angle

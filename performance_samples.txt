@@ -341,3 +341,19 @@ vox_node_perf_test.py, avg. FPS: 46.84073
 
 
 
+2024-04-23 15:03:04.907650 : f13726ba4eadfe9a13c458fb244a7e1e0eb63f53
+Add initial implementation for GUIBItmapButton2DNode. Still need to work on how text should behave, should it auto scale to the current bitmap (unfocused, focused, and pressed)
+
+{
+line_node_perf_test.py, avg. FPS: 238.4483
+test_opacity_perf_test.py, avg. FPS: 88.57104
+test_perf_test.py, avg. FPS: 111.4178
+circle_node_perf_test.py, avg. FPS: 238.7479
+vox_node_perf_test.py, avg. FPS: 48.42994
+}
+
+
+ ----- 
+
+
+

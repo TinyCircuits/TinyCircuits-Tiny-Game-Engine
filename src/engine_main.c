@@ -52,7 +52,7 @@ STATIC mp_obj_t engine_main_module_init(){
     }
     is_engine_initialized = true;
 
-    ENGINE_FORCE_PRINTF("Engine init!");
+    ENGINE_PRINTF("Engine init!\n");
 
     // Needs to be setup before hand since dynamicly inits array
     engine_audio_setup();

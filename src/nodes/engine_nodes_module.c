@@ -12,6 +12,7 @@
 #include "2D/physics_circle_2d_node.h"
 #include "2D/text_2d_node.h"
 #include "2D/gui_button_2d_node.h"
+#include "2D/gui_bitmap_button_2d_node.h"
 #include "engine_main.h"
 
 
@@ -37,6 +38,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_nodes_module_init_obj, engine_nodes_module_init
     ATTR: [type=object]   [name={ref_link:PhysicsCircle2DNode}]     [value=object]
     ATTR: [type=object]   [name={ref_link:Text2DNode}]              [value=object]
     ATTR: [type=object]   [name={ref_link:GUIButton2DNode}]         [value=object]
+    ATTR: [type=object]   [name={ref_link:GUIBitmapButton2DNode}]   [value=object]
 */
 STATIC const mp_rom_map_elem_t engine_nodes_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_nodes) },
@@ -53,6 +55,7 @@ STATIC const mp_rom_map_elem_t engine_nodes_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_PhysicsCircle2DNode), (mp_obj_t)&engine_physics_circle_2d_node_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Text2DNode), (mp_obj_t)&engine_text_2d_node_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_GUIButton2DNode), (mp_obj_t)&engine_gui_button_2d_node_class_type },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_GUIBitmapButton2DNode), (mp_obj_t)&engine_gui_bitmap_button_2d_node_class_type },
 };
 
 // Module init

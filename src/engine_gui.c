@@ -2,6 +2,7 @@
 #include "input/engine_input_common.h"
 #include "input/engine_input_module.h"
 #include "nodes/2D/gui_button_2d_node.h"
+#include "nodes/2D/gui_bitmap_button_2d_node.h"
 #include "math/engine_math.h"
 #include <float.h>
 
@@ -44,13 +45,23 @@ bool engine_gui_get_focus(){
 
 void engine_gui_focus_node(engine_node_base_t *gui_node_base){
     // Focus this node
-    engine_gui_button_2d_node_class_obj_t *gui_node = gui_node_base->node;
-    gui_node->focused = true;
+    if(mp_obj_is_type(gui_node_base, &engine_gui_bitmap_button_2d_node_class_type)){
+        engine_gui_bitmap_button_2d_node_class_obj_t *gui_node = gui_node_base->node;
+        gui_node->focused = true;
+    }else{
+        engine_gui_button_2d_node_class_obj_t *gui_node = gui_node_base->node;
+        gui_node->focused = true;
+    }
 
     // Unfocus the last one
     if(focused_gui_node_base != NULL){
-        engine_gui_button_2d_node_class_obj_t *previously_focused_gui_node = focused_gui_node_base->node;
-        previously_focused_gui_node->focused = false;
+        if(mp_obj_is_type(focused_gui_node_base, &engine_gui_bitmap_button_2d_node_class_type)){
+            engine_gui_bitmap_button_2d_node_class_obj_t *gui_node = focused_gui_node_base->node;
+            gui_node->focused = false;
+        }else{
+            engine_gui_button_2d_node_class_obj_t *gui_node = focused_gui_node_base->node;
+            gui_node->focused = false;
+        }
     }
 
     focused_gui_node_base = gui_node_base;
@@ -67,10 +78,17 @@ void engine_gui_toggle_focus(){
 
         while(current_gui_list_node != NULL){
             engine_node_base_t *gui_node_base = current_gui_list_node->object;
-            engine_gui_button_2d_node_class_obj_t *gui_button = gui_node_base->node;
+
+            bool focused = false;
+
+            if(mp_obj_is_type(gui_node_base, &engine_gui_bitmap_button_2d_node_class_type)){
+                focused = ((engine_gui_bitmap_button_2d_node_class_obj_t*)gui_node_base->node)->focused;
+            }else{
+                focused = ((engine_gui_button_2d_node_class_obj_t*)gui_node_base->node)->focused;
+            }
             
             // Don't need to focus any nodes, this one already is focused, end function
-            if(gui_button->focused){
+            if(focused){
                 return;
             }
 
@@ -136,11 +154,16 @@ void engine_gui_select_closest(bool (direction_check)(float)){
         return;
     }
 
-    engine_gui_button_2d_node_class_obj_t *focused_gui_node = focused_gui_node_base->node;
-    vector2_class_obj_t *origin = focused_gui_node->position;
+    // Get the position of the currently focused GUI node
+    vector2_class_obj_t *focused_gui_position = NULL;
+    if(mp_obj_is_type(focused_gui_node_base, &engine_gui_bitmap_button_2d_node_class_type)){
+        focused_gui_position = ((engine_gui_bitmap_button_2d_node_class_obj_t*)focused_gui_node_base->node)->position;
+    }else{
+        focused_gui_position = ((engine_gui_button_2d_node_class_obj_t*)focused_gui_node_base->node)->position;
+    }
 
+    // Setup for looping through all GUI nodes and finding closest
     linked_list_node *current_gui_list_node = engine_guis.start;
-
     engine_node_base_t *closest_gui_node_base = NULL;
     float shortest_distance = FLT_MAX;
 
@@ -153,17 +176,33 @@ void engine_gui_select_closest(bool (direction_check)(float)){
             continue;
         }
 
-        engine_node_base_t *gui_node_base = current_gui_list_node->object;
+        // Get the node base of the currently looping
+        // through node
+        engine_node_base_t *searching_gui_node_base = current_gui_list_node->object;
 
-        engine_gui_button_2d_node_class_obj_t *gui_button = gui_node_base->node;
-        vector2_class_obj_t *other = gui_button->position;
-        float angle_radians = engine_math_angle_between(origin->x.value, origin->y.value, other->x.value, other->y.value);
+        // Get the position of the currently focused
+        // GUI node
+        vector2_class_obj_t *searching_gui_position = NULL;
+        if(mp_obj_is_type(searching_gui_node_base, &engine_gui_bitmap_button_2d_node_class_type)){
+            searching_gui_position = ((engine_gui_bitmap_button_2d_node_class_obj_t*)searching_gui_node_base->node)->position;
+        }else{
+            searching_gui_position = ((engine_gui_button_2d_node_class_obj_t*)searching_gui_node_base->node)->position;
+        }
 
+        // Get the angle between the focused node and
+        // the node we looped to now
+        float angle_radians = engine_math_angle_between(focused_gui_position->x.value, focused_gui_position->y.value, searching_gui_position->x.value, searching_gui_position->y.value);
+
+        // Using the passed function, see if the angle
+        // is in the direction we want to go
         if(direction_check(angle_radians)){
-            float distance = engine_math_distance_between(origin->x.value, origin->y.value, other->x.value, other->y.value);
+            float distance = engine_math_distance_between(focused_gui_position->x.value, focused_gui_position->y.value, searching_gui_position->x.value, searching_gui_position->y.value);
+
+            // If the distance is closer than the last one
+            // we compared to, set it as the closest
             if(distance < shortest_distance){
                 shortest_distance = distance;
-                closest_gui_node_base = gui_node_base;
+                closest_gui_node_base = searching_gui_node_base;
             }
         }
 
@@ -186,10 +225,16 @@ void engine_gui_tick(){
     if(gui_toggle_button != 0 && check_just_pressed(gui_toggle_button)){
         engine_gui_toggle_focus();
 
-        // If unfocus GUI, make sure the focused node gets unfocused
+        // If unfocus GUI entirely, make sure the focused node gets unfocused
         if(focused_gui_node_base != NULL && gui_focused == false){
             engine_gui_button_2d_node_class_obj_t *focused_node = focused_gui_node_base->node;
-            focused_node->focused = false;
+
+            if(mp_obj_is_type(focused_gui_node_base, &engine_gui_bitmap_button_2d_node_class_type)){
+                ((engine_gui_bitmap_button_2d_node_class_obj_t*)focused_gui_node_base->node)->focused = false;
+            }else{
+                ((engine_gui_button_2d_node_class_obj_t*)focused_gui_node_base->node)->focused = false;
+            }
+
             focused_gui_node_base = NULL;
         }
     }
@@ -210,11 +255,29 @@ void engine_gui_tick(){
         engine_gui_select_closest(engine_gui_is_down_check);
     }
 
+    // Check if the focused/highlighted node should respond
+    // to the currently pressed hardware button
     if(focused_gui_node_base != NULL){
-        engine_gui_button_2d_node_class_obj_t *focused_node = focused_gui_node_base->node;
+        uint16_t button = 0;
 
-        if(check_pressed(focused_node->button)){
-            focused_node->pressed = true;
+        // Figure out what hardware button this button should respond to
+        if(mp_obj_is_type(focused_gui_node_base, &engine_gui_bitmap_button_2d_node_class_type)){
+            engine_gui_bitmap_button_2d_node_class_obj_t *focused_node = focused_gui_node_base->node;
+            button = focused_node->button;
+        }else{
+            engine_gui_button_2d_node_class_obj_t *focused_node = focused_gui_node_base->node;
+            button = focused_node->button;
+        }
+        
+        // Check if the button is pressed, if it is, indicate with flag that it is pressed
+        if(check_pressed(button)){
+            if(mp_obj_is_type(focused_gui_node_base, &engine_gui_bitmap_button_2d_node_class_type)){
+                engine_gui_bitmap_button_2d_node_class_obj_t *focused_node = focused_gui_node_base->node;
+                focused_node->pressed = true;
+            }else{
+                engine_gui_button_2d_node_class_obj_t *focused_node = focused_gui_node_base->node;
+                focused_node->pressed = true;
+            }
         }
     }   
 }

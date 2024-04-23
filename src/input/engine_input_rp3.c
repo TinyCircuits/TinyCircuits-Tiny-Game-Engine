@@ -22,7 +22,7 @@
 
 
 void engine_input_rp3_setup(){
-    ENGINE_FORCE_PRINTF("EngineInput: Setting up...");
+    ENGINE_PRINTF("EngineInput: Setting up...\n");
 
     gpio_init(GPIO_BUTTON_DPAD_UP);
     gpio_init(GPIO_BUTTON_DPAD_LEFT);
