@@ -1,3 +1,5 @@
+import engine_main
+
 import engine
 from engine_nodes import CameraNode, MeshNode
 from engine_math import Vector3, Matrix4x4

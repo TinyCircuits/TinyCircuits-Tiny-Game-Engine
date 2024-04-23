@@ -77,28 +77,32 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] If an object is passed to tween `start(...)` but the string for the attribute to tween is "", tween the value without a lookup
 [X] Add button nodes
 [X] Fix engine reset issue when switching from one file to the next that imports engine: Fixed, manually go through all nodes and mark for gc collect. Call their __del__ functions
-
+[X] Allow setting string to "" in Tween to directly interpolate value
+[X] Add different easing types ot Tween (https://www.reddit.com/r/godot/comments/sg2nqq/reference_gif_for_all_the_interpolation_methods/, https://easings.net/#)
+[X] Buttons
+[X] Add a git hook that runs a performance test on the hardware:
+   1. Build and upload the firmware with performance tests baked in
+   2. Run each performance test file using serial, Python, and REPL. Soft reset after each test. Each test should test performance of specific parts of the engine, nodes, audio, main loop, etc.
+   3. After collecting FPS from each test, create a new plot of the data and save as a png. 
+   4. Run `git add -A` to add this new performance data point and plot
+   5. Exit with returning zero to allow commit to complete
+[X] Line2DNode disappears when thickness is 1 and scale is slightly smaller than 1.0 due to camera zoom
+[X] Add outline and fill to each primitive
 [.] Add simple shader that happens per pixel for all drawing functions, still need to expose to users somehow
 
 [] Need to figure out what to do if user has two files that import engine that then resets the engine... Should be possible to import `engine` without resetting everything
-[] Should everything the engine allocates be manually de-allocated? Nodes are like this now but what about Vector2, Vector3, and resources? The GC should get them at some
-   point and they aren't drawn the screen, they just take up RAM so maybe not the end of the world to leave it for the GC to collect later
-[] Does it matter that on engine reset that we only delete native engine node types and not instance child classes? They will be collected later...
+
 [] Make GUIBitmap2DButton for main menu
 [] Tones need duration
 [] RTTTL Music implementation
 [] Figure out how to draw voxelspace at any angle
-
-
+[] Should everything the engine allocates be manually de-allocated? Nodes are like this now but what about Vector2, Vector3, and resources? The GC should get them at some
+   point and they aren't drawn the screen, they just take up RAM so maybe not the end of the world to leave it for the GC to collect later
+[] Does it matter that on engine reset that we only delete native engine node types and not instance child classes? They will be collected later...
 [] Test PWM RGB LED light
-
-
 [] When objects collide, figure out how to ensure another collision is found on the same object from its perspective
 [] When objects collide and one is static (not dynamic), move the dynamic object the full penetration distance instead of half (like what happens if two dynamic bodies collide)
-[] Allow setting sting to "" in Tween to directly interpolate value
-[] Add different easing types ot Tween (https://www.reddit.com/r/godot/comments/sg2nqq/reference_gif_for_all_the_interpolation_methods/, https://easings.net/#)
 [] Physics: got rotated circles and rectangles but still need to figure out a better way of separating nodes without an impulse, resolve angular velocity during collision
-[] Buttons
 [] Menu (carousel)
 Adam:
 [X] Need a just_pressed, just_released, and just_changed function for input buttons
@@ -106,54 +110,35 @@ Adam:
 [] Collision (lots of work/testing still needed)
 [X] Camera children for HUD
 [X] VoxelSpace
-
 X Need good title for influencer
 X Mock ups/concepts of other games
 X Voxel game for influencer
 X Menu?
-
-
-[] Add a git hook that runs a performance test on the hardware:
-   1. Build and upload the firmware with performance tests baked in
-   2. Run each performance test file using serial, Python, and REPL. Soft reset after each test. Each test should test performance of specific parts of the engine, nodes, audio, main loop, etc.
-   3. After collecting FPS from each test, create a new plot of the data and save as a png. 
-   4. Run `git add -A` to add this new performance data point and plot
-   5. Exit with returning zero to allow commit to complete
-
 [.] Figure out resetting engine when main loop ends
    * [X] Nodes
    * [.] Audio <- Needs special attention! (still has an error where if text played quickly on same channel at start up that it crashes the device in the ISR while calling `get_data`)
    * [X] Resources/Flash
-
 [] Make sure the other node in the collision is passed to the collision callback, doesn't seem to be the case for rect vs. circle collision
 [] Detect if a node adds itself as a child to itself
 [] Collision layers
+[] Need to revisit flash scratch space. Need to copy data faster. Would be best if we did not need this area...
 [] Flag on physics nodes that that make it not check for collision? Or maybe just an empty physics nodes? Want something for particles
 [] Need to try using engine_bit_collection to set known bits and see if it is working as intended (print the collection out after setting)
 [] Use DMA to clear background screen buffer (that's not being drawn to) after it is sent out to the screen and the game loop is still running (chaining?): https://e2e.ti.com/support/microcontrollers/c2000-microcontrollers-group/c2000/f/c2000-microcontrollers-forum/509048/fast-way-to-zero-out-an-array/1848882#1848882
 [] Clear physics collision buffer bit collection using DMA: https://e2e.ti.com/support/microcontrollers/c2000-microcontrollers-group/c2000/f/c2000-microcontrollers-forum/509048/fast-way-to-zero-out-an-array/1848882#1848882
 [] Allow the user to somehow indicate they want to init certain aspects of the engine themselves. This way they can control memory a little better
-[] Line2DNode disappears when thickness is 1 and scale is slightly smaller than 1.0 due to camera zoom
 [] Weird shaking on UNIX when line is a child of camera and the camera is rotating
 [] With lots of sprites on screen and big background, drawing or rotating slows down when rotated 90 degrees into the big 128x128 texture
-[] Figure out why physics doesn't always work on pong example
-[] Blending colors for partially transparent pixels in some sources (don't have any yet)
 [] Expose low level drawing functions through engine_draw
 [] Fix camera view ports not being taken into account when drawing. Defines offset and then clip. Need to think about how view ports should really work, offset and clip into destination buffer (camera destinations should be able to be set to other buffers other than screen buffer if want to render one camera to a texture and then the next camera renders that node with that texture (TV!))
-[] Filled polygons
 [] Basic culling per node that can be drawn. Two things can be done here
    1. Each node has a bounding box (scaled by node scale and camera zoom), quickly check if that box at all overlaps the camera view before doing the draw algorithm. This doesn't have to be perfect, if the node still gets drawn if close to the camera, that's alright, same for if the node is very big and that technically blank area overlaps the camera view. This will lead to a small performance penalty for games that always draw in bounds, but it provides a much higher flexibility of games to have the culling handled for them
    2. For each drawing algorithm we currently have per-pixel checks for bounds, if the algorithms drawing bounds could quickly be cropped that would be perfect, very very hard though..
 [.] Physics: just polygons, rotation (simple init for common shapes), no friction. Need to figure out what to do when physics collision shape is rotated, cache normals?
 [] Physics: smooth: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-core-engine--gamedev-7493t#:~:text=Here%20is%20a%20full%20example%3A
-[] UI
-[] Reset
 [] Performance, we'll see how it goes
-[] Allow for audio sources to play at different sample rates. This will mean
-   knowing where we are in the time of the file and interpolating between samples
-   if not exactly on a sample
 [] Round end caps for Line2DNode
-[] Should the scale of a parent node affect the position and scales of child nodes? Sounds more useful
+[] Should the scale of a parent node affect the position and scales of child nodes? Sounds more useful. What about opacity? What about if a person doesn't want this to happen, should that even be supported?
 
 Game ideas
 [] ATV Gameboy game
@@ -163,7 +148,6 @@ Game ideas
 [] Platformer
 [] Golf
 [] Rocketcup
-
 
 [] Implement audio on unix (need to break up implementation of unix and rp3 audio)
 [] Need to revisit Audio to get it working on the other core and with dual DMA (sort of working now)
@@ -186,8 +170,6 @@ Game ideas
 [] When core frequency is changed, wrap value of fractional PWM divisor needs to be adjusted
 [] Use voxelspace rotation to render the node? Might be too slow to do that for little gain
 [] Make voxelspace camera rotation->z correspond to line drawn at angle in radians. Make camera rotation->x correspond to radians (hard one)
-[] Add collision points to collision callback for polygon vs. polygon: https://dyn4j.org/2011/11/contact-points-using-clipping/
-[] Add outline and fill to each primitive
 [] Change node/math class prints to white with no newline and always forced
 [] Need to make sure collision normals are correct. Seem to be the same for both objects sometimes (circle vs circle).
 [] Turns out that we should only need to do mp_load_attr once into internal struct for each node! During physics, modifying the x and y parameters of the pointers to positions from mp_load_attr really did modify the attrs! Could also just directly create and store then load in each init!!!!! See Reference commit for attr loading... commit and look at commented out lines in engine_physics.c related to storing attrs that's not needed!
@@ -195,8 +177,6 @@ Game ideas
 [] Crash log file (what to do about time? Maybe just overwrite with latest crash info?)
 [] Start screen as early as possible and also make a bootloader that starts the screen too
 [] Implement file system operations for micropython webassembly
-
-[] Should a flag be set in sprite2dnode to enable transparency? Or just use special color 0b0000100000100001?
 [] VoxelSapce could be rendered faster and need to incorporate node parameters like position and rotation. Implement pixel transformer callbacks
 [.] Make child nodes rotate and be positioned correctly about parent (what about scale?)(need to handle all types when getting position and rotation since not all have those and some have 3D structures)
 [] Implement PhysicsShapes that are used by Physics2dNodes to define size and shape of collision box/polygon/circle
@@ -208,7 +188,6 @@ Game ideas
 [] Look into MICROPY_MODULE_ATTR_DELEGATION
 [] To avoid mp_load_attr calls, at the start of the game loop collect all node attributes into some local structure then load the local structure back into the Micropython object (only really matters if inherited because of weird MicroPython attr storage for that case)
 [] Add options to give names to each node and then get nodes by name (gives list of nodes if more than one have the same name)
-[] Main menu and utility scalable UI elements with element traversal based on inputs with UI is active (make best guess on next element to go to based on position). Good for consistency
 [] Saving games
 [] Grid renderer (with offset and cell scale)
 [] Game format?

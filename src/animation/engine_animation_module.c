@@ -1,5 +1,6 @@
 #include "engine_animation_module.h"
 #include "py/obj.h"
+#include "engine_main.h"
 
 
 // Holds a list of Tween and Delay
@@ -51,6 +52,13 @@ void engine_animation_tick(float dt){
 }
 
 
+STATIC mp_obj_t engine_animation_module_init(){
+    engine_main_raise_if_not_initialized();
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_0(engine_animation_module_init_obj, engine_animation_module_init);
+
+
 /* --- doc ---
    NAME: engine_animation
    DESC: Module for animating certain aspects of the engine
@@ -62,6 +70,7 @@ void engine_animation_tick(float dt){
 */
 STATIC const mp_rom_map_elem_t engine_animation_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_animation) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR___init__), (mp_obj_t)&engine_animation_module_init_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Tween), (mp_obj_t)&tween_class_type},
     { MP_OBJ_NEW_QSTR(MP_QSTR_Delay), (mp_obj_t)&delay_class_type},
     { MP_ROM_QSTR(MP_QSTR_LOOP), MP_ROM_INT(engine_animation_loop_loop) },

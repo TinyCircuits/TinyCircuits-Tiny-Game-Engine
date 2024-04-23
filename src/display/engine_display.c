@@ -14,7 +14,7 @@
 
 
 void engine_display_init(){
-    ENGINE_FORCE_PRINTF("EngineDisplay: Setting up...");
+    ENGINE_PRINTF("EngineDisplay: Setting up...\n");
 
     engine_init_screen_buffers();
 

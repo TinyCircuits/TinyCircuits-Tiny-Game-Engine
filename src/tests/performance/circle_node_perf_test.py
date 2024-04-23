@@ -1,3 +1,5 @@
+import engine_main
+
 import engine
 from engine_nodes import Circle2DNode, CameraNode
 

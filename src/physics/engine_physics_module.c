@@ -1,4 +1,5 @@
 #include "py/obj.h"
+#include "engine_main.h"
 #include "engine_physics_module.h"
 #include "nodes/node_base.h"
 #include "display/engine_display_common.h"
@@ -35,6 +36,13 @@ STATIC mp_obj_t engine_physics_get_gravity(){
 MP_DEFINE_CONST_FUN_OBJ_0(engine_physics_get_gravity_obj, engine_physics_get_gravity);
 
 
+STATIC mp_obj_t engine_physics_module_init(){
+    engine_main_raise_if_not_initialized();
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_0(engine_physics_module_init_obj, engine_physics_module_init);    
+
+
 /* --- doc ---
    NAME: engine_physics
    DESC: Module for controlling physics and for common physics collision shapes
@@ -43,6 +51,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_physics_get_gravity_obj, engine_physics_get_gra
 */
 STATIC const mp_rom_map_elem_t engine_physics_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_physics) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR___init__), (mp_obj_t)&engine_physics_module_init_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_CollisionContact2D), (mp_obj_t)&collision_contact_2d_class_type},
     { MP_OBJ_NEW_QSTR(MP_QSTR_set_gravity), (mp_obj_t)&engine_physics_set_gravity_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_get_gravity), (mp_obj_t)&engine_physics_get_gravity_obj },

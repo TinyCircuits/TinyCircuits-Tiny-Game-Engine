@@ -1,6 +1,7 @@
 ENGINE_MOD_DIR := $(USERMOD_DIR)
 
 # Add our source files to the respective variables.
+SRC_USERMOD += $(ENGINE_MOD_DIR)/engine_main.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/engine.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/math/engine_math.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/draw/engine_draw_module.c

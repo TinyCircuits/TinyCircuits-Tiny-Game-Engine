@@ -4,6 +4,7 @@
 #include "resources/engine_texture_resource.h"
 #include "engine_color.h"
 #include "debug/debug_print.h"
+#include "engine_main.h"
 
 
 /*  --- doc ---
@@ -39,6 +40,13 @@ STATIC mp_obj_t engine_draw_set_background(mp_obj_t module, mp_obj_t background)
 MP_DEFINE_CONST_FUN_OBJ_2(engine_draw_set_background_obj, engine_draw_set_background);
 
 
+STATIC mp_obj_t engine_draw_module_init(){
+    engine_main_raise_if_not_initialized();
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_0(engine_draw_module_init_obj, engine_draw_module_init);
+
+
 /*  --- doc ---
     NAME: engine_draw
     DESC: Module for drawing to the framebuffer
@@ -71,6 +79,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(engine_draw_set_background_obj, engine_draw_set_backgr
 */
 STATIC const mp_rom_map_elem_t engine_draw_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_draw) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR___init__), (mp_obj_t)&engine_draw_module_init_obj }
 };
 
 // Module init

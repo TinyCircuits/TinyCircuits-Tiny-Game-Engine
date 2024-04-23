@@ -1,3 +1,5 @@
+import engine_main
+
 import engine
 import engine_draw
 from engine_nodes import VoxelSpaceNode, CameraNode

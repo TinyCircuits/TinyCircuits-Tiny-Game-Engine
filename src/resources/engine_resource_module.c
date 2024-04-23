@@ -4,6 +4,14 @@
 #include "engine_tone_sound_resource.h"
 #include "engine_font_resource.h"
 #include "engine_noise_resource.h"
+#include "engine_main.h"
+
+
+STATIC mp_obj_t engine_resources_module_init(){
+    engine_main_raise_if_not_initialized();
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_0(engine_resources_module_init_obj, engine_resources_module_init);    
 
 
 /*  --- doc ---
@@ -16,6 +24,7 @@
 */
 STATIC const mp_rom_map_elem_t engine_resources_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_resources) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR___init__), (mp_obj_t)&engine_resources_module_init_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_TextureResource), (mp_obj_t)&texture_resource_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_WaveSoundResource), (mp_obj_t)&wave_sound_resource_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_ToneSoundResource), (mp_obj_t)&tone_sound_resource_class_type },

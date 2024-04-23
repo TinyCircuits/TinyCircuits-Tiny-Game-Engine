@@ -10,6 +10,7 @@
 #include "math/engine_math.h"
 #include "utility/engine_time.h"
 #include "utility/engine_defines.h"
+#include "engine_main.h"
 
 
 
@@ -268,7 +269,7 @@ void engine_audio_setup_playback(){
 
 
 void engine_audio_setup(){
-    ENGINE_FORCE_PRINTF("EngineAudio: Setting up...");
+    ENGINE_PRINTF("EngineAudio: Setting up...\n");
 
     // Fill channels array with channels. This has to be done
     // before any callbacks try to access the channels array
@@ -413,6 +414,14 @@ STATIC mp_obj_t engine_audio_get_volume(){
 MP_DEFINE_CONST_FUN_OBJ_0(engine_audio_get_volume_obj, engine_audio_get_volume);
 
 
+
+STATIC mp_obj_t engine_audio_module_init(){
+    engine_main_raise_if_not_initialized();
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_0(engine_audio_module_init_obj, engine_audio_module_init);
+
+
 /*  --- doc ---
     NAME: engine_audio
     DESC: Module for controlling/playing audio through four channels.
@@ -423,6 +432,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_audio_get_volume_obj, engine_audio_get_volume);
 */ 
 STATIC const mp_rom_map_elem_t engine_audio_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_audio) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR___init__), (mp_obj_t)&engine_audio_module_init_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_AudioChannel), (mp_obj_t)&audio_channel_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_play), (mp_obj_t)&engine_audio_play_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_stop), (mp_obj_t)&engine_audio_stop_obj },

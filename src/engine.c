@@ -20,10 +20,10 @@
 #include "py/mphal.h"
 #include "py/stream.h"
 
-#include "py/gc.h"
-
 #include "py/objtype.h"
 #include "py/objstr.h"
+
+#include "engine_main.h"
 
 // ### MODULE ###
 
@@ -33,7 +33,6 @@
 // Flag to indicate that the main engine.start() loop is running. Set
 // false to stop the engine after the current loop/tick ends
 bool is_engine_looping = false;
-bool is_engine_initialized = false;
 bool fps_limit_disabled = true;
 float engine_fps_limit_period_ms = 16.6667f;
 float engine_fps_time_at_last_tick_ms = 0.0f;
@@ -102,22 +101,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_get_running_fps_obj, engine_get_running_fps);
    RETURN: None
 */
 STATIC mp_obj_t engine_reset(){
-    ENGINE_FORCE_PRINTF("Resetting engine...");
-
-    // Reset contigious flash space manager
-    engine_audio_stop_all();
-    engine_resource_reset();
-
-    // engine_camera_clear_all();
-    // engine_gui_clear_all();
-    engine_objects_clear_all();
-
-    // gc_sweep_all();
-    gc_collect();
-
-    // mp_obj_t machine_module = mp_import_name(MP_QSTR_machine, mp_const_none, MP_OBJ_NEW_SMALL_INT(0));
-    // mp_call_function_0(mp_load_attr(machine_module, MP_QSTR_soft_reset));
-
+    engine_main_reset();
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_0(engine_reset_obj, engine_reset);
@@ -235,30 +219,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_start_obj, engine_start);
 
 
 STATIC mp_obj_t engine_module_init(){
-    if(is_engine_initialized == true){
-        // Always do a engine reset on import since there are
-        // cases when we can't catch the end of the script
-        engine_reset();
-        engine_audio_setup_playback();
-
-        return mp_const_none;
-    }
-    is_engine_initialized = true;
-
-    ENGINE_FORCE_PRINTF("Engine init!");
-
-    // Needs to be setup before hand since dynamicly inits array.
-    // Should make sure this doesn't happen more than once per
-    // lifetime. TODO
-    engine_audio_setup();
-    engine_audio_setup_playback();
-
-    engine_input_setup();
-    engine_display_init();
-    engine_display_send();
-    engine_physics_init();
-    engine_animation_init();
-
+    engine_main_raise_if_not_initialized();
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_0(engine_module_init_obj, engine_module_init);

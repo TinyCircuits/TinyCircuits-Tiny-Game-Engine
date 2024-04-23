@@ -1,6 +1,8 @@
 #include "py/obj.h"
 #include "engine_input_common.h"
 #include "engine_gui.h"
+#include "engine_main.h"
+
 
 #ifdef __unix__
     #include "engine_input_sdl.h"
@@ -176,6 +178,13 @@ STATIC mp_obj_t engine_toggle_gui_focus(mp_obj_t module){
 MP_DEFINE_CONST_FUN_OBJ_1(engine_toggle_gui_focus_obj, engine_toggle_gui_focus);
 
 
+STATIC mp_obj_t engine_input_module_init(){
+    engine_main_raise_if_not_initialized();
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_0(engine_input_module_init_obj, engine_input_module_init);
+
+
 /*  --- doc ---
     NAME: engine_input
     DESC: Module for checking button presses
@@ -197,6 +206,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_toggle_gui_focus_obj, engine_toggle_gui_focus);
 */ 
 STATIC const mp_rom_map_elem_t engine_input_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_input) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR___init__), (mp_obj_t)&engine_input_module_init_obj },
 };
 
 // Module init

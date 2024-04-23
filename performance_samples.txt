@@ -325,3 +325,19 @@ vox_node_perf_test.py, avg. FPS: 48.47466
 
 
 
+2024-04-23 11:32:44.366691 : e1fed59695c5a8e716c760d16c945a2c0038187f
+Require that the new engine_main module gets imported at least once so that the engine can be reset and initialized independent of the engine mdoule that has functions that may be used in other Python files (where you might not want the engine to be reset)
+
+{
+line_node_perf_test.py, avg. FPS: 239.0039
+test_opacity_perf_test.py, avg. FPS: 88.42712
+test_perf_test.py, avg. FPS: 108.6771
+circle_node_perf_test.py, avg. FPS: 241.5775
+vox_node_perf_test.py, avg. FPS: 46.84073
+}
+
+
+ ----- 
+
+
+

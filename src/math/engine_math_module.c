@@ -4,7 +4,15 @@
 #include "vector3.h"
 #include "matrix4x4.h"
 #include "rectangle.h"
+#include "engine_main.h"
 
+
+STATIC mp_obj_t engine_math_module_init(){
+    engine_main_raise_if_not_initialized();
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_0(engine_math_module_init_obj, engine_math_module_init);
+    
 
 /*  --- doc ---
     NAME: engine_math
@@ -15,6 +23,7 @@
 */
 STATIC const mp_rom_map_elem_t engine_math_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_math) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR___init__), (mp_obj_t)&engine_math_module_init_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Vector2), (mp_obj_t)&vector2_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Vector3), (mp_obj_t)&vector3_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Matrix4x4), (mp_obj_t)&matrix4x4_class_type },

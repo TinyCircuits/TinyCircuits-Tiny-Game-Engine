@@ -1,3 +1,5 @@
+import engine_main
+
 import engine
 import engine_draw
 from engine_nodes import Sprite2DNode, CameraNode
@@ -5,9 +7,9 @@ from engine_resources import TextureResource
 from engine_animation import Tween, Delay, ONE_SHOT, LOOP, PING_PONG, EASE_ELAST_OUT
 from engine_math import Vector2
 import random
-# import gc
 
-
+# Camera to render scene
+camera = CameraNode()
 
 class MainDelay(Delay):
     def __init__(self):
@@ -71,14 +73,13 @@ class MainDelay(Delay):
         self.RO_tween.start(self.RO_sprite, "position", self.RO_sprite.position, Vector2(41, 0), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
         self.R_tween.start(self.R_sprite, "position", self.R_sprite.position, Vector2(52, -1), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
 
-
+# Need to give the screen time to setup, wait 650ms before starting animation
 delay = MainDelay()
 delay.start(650.0)
 
-camera = CameraNode()
-
 while delay.finished == False or delay.T_tween.finished == False:
     engine.tick()
+
 
 # Need to stop all tweens since reference sprites will be gc collected
 delay.T_tween.pause()

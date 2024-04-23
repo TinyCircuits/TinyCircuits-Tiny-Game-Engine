@@ -5,6 +5,7 @@ set(ENGINE_MOD_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 # Add our source files to the lib
 target_sources(usermod_engine INTERFACE
+    ${ENGINE_MOD_DIR}/engine_main.c
     ${ENGINE_MOD_DIR}/engine.c
     ${ENGINE_MOD_DIR}/math/engine_math.c
     ${ENGINE_MOD_DIR}/draw/engine_draw_module.c

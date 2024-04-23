@@ -4,7 +4,7 @@
 void linked_list_init(linked_list *list) {
     list->start = list->end = NULL;
     list->count = 0;
-    list->initialzed = false;
+    list->initialized = false;
 }
 
 
@@ -32,15 +32,15 @@ linked_list_node *linked_list_add_obj(linked_list *list, void *obj){
     linked_list_node *new_node = setup_new_node(list);
     new_node->object = obj;
 
-    // Set the start node to the new node if not initialzed and point the end to it
-    if(list->initialzed == false){
+    // Set the start node to the new node if not initialized and point the end to it
+    if(list->initialized == false){
         ENGINE_INFO_PRINTF("Linked List: initializing list");
         new_node->previous = NULL;
         new_node->next = NULL;
         list->start = new_node;
         list->end = new_node;
         list->count = 1;    // One object added when list initialized
-        list->initialzed = true;
+        list->initialized = true;
     }else{
         new_node->previous = list->end;
         new_node->next = NULL;
@@ -62,7 +62,7 @@ void linked_list_del_list_node(linked_list *list, linked_list_node *node){
     // 'previous' and 'next' are NULL set list to uninitialized
     if(node != NULL){
         if(node->previous == NULL && node->next == NULL){   // Only one node in list, the 'start' node
-            list->initialzed = false;
+            list->initialized = false;
 
             // Important to set these to null. For example, when looping
             // through the list it might be common to check if 'start' is NULL
