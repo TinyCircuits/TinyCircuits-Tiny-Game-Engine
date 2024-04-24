@@ -234,14 +234,14 @@ STATIC mp_obj_t engine_battery_level(){
         // voltage divider (cutting it in half):
         // 5/2    = 2.5V
         // 4.2/2  = 2.1V    <- MAX
-        // 2.75/2 = 1.375V  <- MIN
+        // 3.3/2 = 1.65V    <- MIN
         float battery_half_voltage = battery_voltage_12_bit * ADC_CONV_FACTOR;
 
         // Clamp since we only care showing between 0.0 and 1.0 for this function
-        battery_half_voltage = engine_math_clamp(battery_half_voltage, 1.375f, 2.1f);
+        battery_half_voltage = engine_math_clamp(battery_half_voltage, 1.65f, 2.1f);
 
         // Map to the range we want to return
-        float battery_percentage = engine_math_map(battery_half_voltage, 1.375f, 2.1f, 0.0f, 1.0f);
+        float battery_percentage = engine_math_map(battery_half_voltage, 1.65f, 2.1f, 0.0f, 1.0f);
 
         return mp_obj_new_float(battery_percentage);
     #endif

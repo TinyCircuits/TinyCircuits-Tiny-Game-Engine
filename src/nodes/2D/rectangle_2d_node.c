@@ -71,7 +71,7 @@ void rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_base, mp_ob
 
     if(rectangle_outlined == false){
         engine_draw_rect(rectangle_color->value.val,
-                         rectangle_rotated_x, rectangle_rotated_y,
+                         floorf(rectangle_rotated_x), floorf(rectangle_rotated_y),
                          rectangle_width, rectangle_height,
                          rectangle_scale->x.value*camera_zoom, rectangle_scale->y.value*camera_zoom,
                        -(rectangle_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation),
@@ -83,17 +83,17 @@ void rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_base, mp_ob
 
         // Calculate the coordinates of the 4 corners of the rectangle, not rotated
         // NOTE: positive y is down
-        float tlx = rectangle_rotated_x - rectangle_half_width;
-        float tly = rectangle_rotated_y - rectangle_half_height;
+        float tlx = floorf(rectangle_rotated_x - rectangle_half_width);
+        float tly = floorf(rectangle_rotated_y - rectangle_half_height);
 
-        float trx = rectangle_rotated_x + rectangle_half_width;
-        float try = rectangle_rotated_y - rectangle_half_height;
+        float trx = floorf(rectangle_rotated_x + rectangle_half_width);
+        float try = floorf(rectangle_rotated_y - rectangle_half_height);
 
-        float brx = rectangle_rotated_x + rectangle_half_width;
-        float bry = rectangle_rotated_y + rectangle_half_height;
+        float brx = floorf(rectangle_rotated_x + rectangle_half_width);
+        float bry = floorf(rectangle_rotated_y + rectangle_half_height);
 
-        float blx = rectangle_rotated_x - rectangle_half_width;
-        float bly = rectangle_rotated_y + rectangle_half_height;
+        float blx = floorf(rectangle_rotated_x - rectangle_half_width);
+        float bly = floorf(rectangle_rotated_y + rectangle_half_height);
 
         // Rotate the points and then draw lines between them
         float angle = rectangle_resolved_hierarchy_rotation + camera_resolved_hierarchy_rotation;

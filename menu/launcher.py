@@ -3,8 +3,10 @@ import engine_main
 import engine
 import engine_draw
 import engine_input
+from engine_math import Vector2
 from engine_nodes import Sprite2DNode, CameraNode, GUIBitmapButton2DNode, Text2DNode
 from engine_resources import TextureResource, FontResource
+from engine_animation import Tween, ONE_SHOT, EASE_BACK_OUT
 
 import math
 
@@ -20,7 +22,8 @@ class BatteryIndicator(Sprite2DNode):
     def __init__(self):
         super().__init__(self)
         self.text_node = Text2DNode(text="0%", font=font)
-        self.position.y = -32
+        self.position.x = -45
+        self.position.y = -56
         self.add_child(self.text_node)
     
     def tick(self):
@@ -29,6 +32,8 @@ class BatteryIndicator(Sprite2DNode):
 
 battery = BatteryIndicator()
 
+tiles = []
+last_focused_tile = None
 
 class LauncherTile(GUIBitmapButton2DNode):
     def __init__(self):
@@ -41,28 +46,49 @@ class LauncherTile(GUIBitmapButton2DNode):
         self.scale.x = 0.35
         self.scale.y = 0.35
 
+        self.title_text_node = Text2DNode(text="Unknown", font=font, position=Vector2(0, -28))
+
         self.mark_sprite = Sprite2DNode(texture=launcher_tile_mark_texture)
         self.mark_sprite.scale.x = 0.35
         self.mark_sprite.scale.y = 0.35
 
         self.add_child(self.mark_sprite)
+        self.add_child(self.title_text_node)
 
         self.t = 0.0
+        self.set_opacity(0.65)
+
+        tiles.append(self)
+
+        self.tween = Tween()
     
     def on_focused(self):
         self.position.y = math.sin(self.t)
         self.t += 0.05
 
     def on_just_focused(self):
-        print("Focused", self.text)
+        global last_focused_tile
         self.set_opacity(1.0)
+        self.set_scale(0.4)
+
+        if last_focused_tile != None:
+            delta = 0
+            if self.position.x > last_focused_tile.position.x:
+                delta = -45
+            else:
+                delta = 45
+            
+            for tile in tiles:
+                tile.tween.stop()
+                tile.tween.start(tile, "position", tile.position, Vector2(tile.position.x+delta, 0), 250.0, 1.0, ONE_SHOT, EASE_BACK_OUT)
+
+        last_focused_tile = self
     
     def on_just_unfocused(self):
-        print("Unfocused", self.text)
         self.set_opacity(0.65)
+        self.set_scale(0.3)
         self.position.y = 0
 
-    
     def set_opacity(self, opacity):
         self.opacity = opacity
         self.mark_sprite.opacity = opacity
@@ -74,18 +100,23 @@ class LauncherTile(GUIBitmapButton2DNode):
         self.mark_sprite.scale.y = scale
 
 
-tile0 = LauncherTile()
-tile0.selected = True
+for i in range(5):
+    tile = LauncherTile()
+    tile.position.x = (i * 45)
+    tile.set_scale(0.3)
 
-tile1 = LauncherTile()
-tile1.position.x = -42
-tile1.set_scale(0.25)
-tile1.set_opacity(0.65)
 
-tile2 = LauncherTile()
-tile2.position.x = 42
-tile2.set_scale(0.25)
-tile2.set_opacity(0.65)
+# tile0 = LauncherTile()
+
+# tile1 = LauncherTile()
+# tile1.position.x = -42
+# tile1.set_scale(0.25)
+# tile1.set_opacity(0.65)
+
+# tile2 = LauncherTile()
+# tile2.position.x = 42
+# tile2.set_scale(0.25)
+# tile2.set_opacity(0.65)
 
 camera = CameraNode()
 

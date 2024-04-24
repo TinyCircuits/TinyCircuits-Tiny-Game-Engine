@@ -90,7 +90,7 @@ void gui_button_2d_node_class_draw(engine_node_base_t *button_node_base, mp_obj_
         }
 
         engine_draw_rect(outline_color->value.val,
-                         button_rotated_x, button_rotated_y,
+                         floorf(button_rotated_x), floorf(button_rotated_y),
                          button->width_outline, button->height_outline,
                          x_scale, y_scale,
                        -(button_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation),
@@ -98,7 +98,7 @@ void gui_button_2d_node_class_draw(engine_node_base_t *button_node_base, mp_obj_
                          shader);
 
         engine_draw_rect(background_color->value.val,
-                         button_rotated_x, button_rotated_y,
+                         floorf(button_rotated_x), floorf(button_rotated_y),
                          button->width_padded, button->height_padded,
                          x_scale, y_scale,
                        -(button_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation),
@@ -122,7 +122,7 @@ void gui_button_2d_node_class_draw(engine_node_base_t *button_node_base, mp_obj_
         }
 
         engine_draw_text(font, button->text,
-                         button_rotated_x, button_rotated_y,
+                         floorf(button_rotated_x), floorf(button_rotated_y),
                          button->width, button->height,
                          x_scale, y_scale,
                          button_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation,

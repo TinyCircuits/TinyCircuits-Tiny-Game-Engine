@@ -373,3 +373,19 @@ vox_node_perf_test.py, avg. FPS: 46.90078
 
 
 
+2024-04-24 13:20:36.542429 : 71288fce6ae71f47e1c097d1525c53da73defffd
+Add stop function to Tween stop it and set value to end value. Work on main menu. Floor all drawing nodes to reduce amount of position jitter relative to other nodes/sprites/bitmaps
+
+{
+line_node_perf_test.py, avg. FPS: 238.9483
+test_opacity_perf_test.py, avg. FPS: 90.03567
+test_perf_test.py, avg. FPS: 114.3531
+circle_node_perf_test.py, avg. FPS: 240.746
+vox_node_perf_test.py, avg. FPS: 48.52477
+}
+
+
+ ----- 
+
+
+

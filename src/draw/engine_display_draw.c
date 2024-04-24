@@ -480,7 +480,7 @@ void engine_draw_text(font_resource_class_obj_t *font, mp_obj_t text, float cent
         uint16_t char_bitmap_x_offset = font_resource_get_glyph_x_offset(font, current_char);
 
         engine_draw_blit(font->texture_resource->data+engine_math_2d_to_1d_index(char_bitmap_x_offset, 0, font->texture_resource->width),
-                        (final_char_x), (final_char_y),
+                        floorf(final_char_x), floorf(final_char_y),
                         char_width, font->glyph_height,
                         font->texture_resource->width,
                         x_scale,

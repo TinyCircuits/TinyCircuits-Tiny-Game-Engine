@@ -71,9 +71,9 @@ void circle_2d_node_class_draw(engine_node_base_t *circle_node_base, mp_obj_t ca
     }
 
     if(circle_outlined == false){
-        engine_draw_filled_circle(circle_color->value.val, circle_rotated_x, circle_rotated_y, circle_radius, circle_opacity, shader);
+        engine_draw_filled_circle(circle_color->value.val, floorf(circle_rotated_x), floorf(circle_rotated_y), circle_radius, circle_opacity, shader);
     }else{
-        engine_draw_outline_circle(circle_color->value.val, circle_rotated_x, circle_rotated_y, circle_radius, circle_opacity, shader);
+        engine_draw_outline_circle(circle_color->value.val, floorf(circle_rotated_x), floorf(circle_rotated_y), circle_radius, circle_opacity, shader);
     }
 }
 

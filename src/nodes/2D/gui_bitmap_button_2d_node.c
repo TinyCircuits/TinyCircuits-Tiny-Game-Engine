@@ -73,7 +73,7 @@ void gui_bitmap_button_2d_node_class_draw(engine_node_base_t *button_node_base, 
         float btn_y_scale = button_scale->y.value*camera_zoom;
 
         float text_x_scale = btn_x_scale * button_text_scale->x.value;
-        float text_y_scale = btn_x_scale * button_text_scale->x.value;
+        float text_y_scale = btn_y_scale * button_text_scale->x.value;
 
         // Decide which shader to use per-pixel
         engine_shader_t *shader = &empty_shader;
@@ -93,7 +93,7 @@ void gui_bitmap_button_2d_node_class_draw(engine_node_base_t *button_node_base, 
         }
 
         engine_draw_blit(bitmap->data,
-                     button_rotated_x, button_rotated_y,
+                     floorf(button_rotated_x), floorf(button_rotated_y),
                      bitmap->width, bitmap->height,
                      bitmap->width,
                      btn_x_scale,
@@ -119,7 +119,7 @@ void gui_bitmap_button_2d_node_class_draw(engine_node_base_t *button_node_base, 
         }
 
         engine_draw_text(font, button->text,
-                         button_rotated_x, button_rotated_y,
+                         floorf(button_rotated_x), floorf(button_rotated_y),
                          button->text_width, button->text_height,
                          text_x_scale, text_y_scale,
                          button_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation,

@@ -87,7 +87,7 @@ void sprite_2d_node_class_draw(engine_node_base_t *sprite_node_base, mp_obj_t ca
     }
 
     engine_draw_blit(sprite_pixel_data+sprite_frame_fb_start_index,
-                     sprite_rotated_x, sprite_rotated_y,
+                     floorf(sprite_rotated_x), floorf(sprite_rotated_y),
                      sprite_frame_width, sprite_frame_height,
                      spritesheet_width,
                      sprite_scale->x.value*camera_zoom,

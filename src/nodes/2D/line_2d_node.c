@@ -86,7 +86,7 @@ void line_2d_node_class_draw(engine_node_base_t *line_node_base, mp_obj_t camera
 
     if(line_outlined == false){
         engine_draw_rect(line_color->value.val,
-                         line_rotated_x, line_rotated_y,
+                         floorf(line_rotated_x), floorf(line_rotated_y),
                          line_thickness, line_length,
                          1.0f, 1.0f,
                        -(line_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation),
@@ -98,17 +98,17 @@ void line_2d_node_class_draw(engine_node_base_t *line_node_base, mp_obj_t camera
 
         // Calculate the coordinates of the 4 corners of the line, not rotated
         // NOTE: positive y is down
-        float tlx = line_rotated_x - line_half_width;
-        float tly = line_rotated_y - line_half_height;
+        float tlx = floorf(line_rotated_x - line_half_width);
+        float tly = floorf(line_rotated_y - line_half_height);
 
-        float trx = line_rotated_x + line_half_width;
-        float try = line_rotated_y - line_half_height;
+        float trx = floorf(line_rotated_x + line_half_width);
+        float try = floorf(line_rotated_y - line_half_height);
 
-        float brx = line_rotated_x + line_half_width;
-        float bry = line_rotated_y + line_half_height;
+        float brx = floorf(line_rotated_x + line_half_width);
+        float bry = floorf(line_rotated_y + line_half_height);
 
-        float blx = line_rotated_x - line_half_width;
-        float bly = line_rotated_y + line_half_height;
+        float blx = floorf(line_rotated_x - line_half_width);
+        float bly = floorf(line_rotated_y + line_half_height);
 
         // Rotate the points and then draw lines between them
         float angle = line_resolved_hierarchy_rotation + camera_resolved_hierarchy_rotation;

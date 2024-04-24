@@ -63,6 +63,61 @@ enum tween_value_types {tween_type_float, tween_type_vec2, tween_type_vec3, twee
 enum tween_direction {forwards, backwards};
 
 
+mp_obj_t get_tweening_value(tween_class_obj_t *tween){
+    // Always load the attribute since a reference might go stale
+    // if the object's attribute is assigned to during tweening
+    mp_obj_t tweening_value;
+    if(tween->attr == 0){
+        tweening_value = tween->object;
+    }else{
+        tweening_value = engine_mp_load_attr_maybe(tween->object, tween->attr);
+    }
+
+    // In case the attr or object is not available anymore, stop tweening
+    if(tweening_value == MP_OBJ_NULL || tweening_value == mp_const_none){
+        tween->finished = true;
+        tween->time = 0.0f;
+        tween->loop_type = engine_animation_loop_none;
+        return mp_const_none;
+    }
+
+    return tweening_value;
+}
+
+
+void set_value_to_end(tween_class_obj_t *tween){
+    // Get tweening value and make sure valid
+    mp_obj_t tweening_value = get_tweening_value(tween);
+    if(tweening_value == mp_const_none){
+        return mp_const_none;
+    }
+
+    if(tween->tween_type == tween_type_float){
+        ((mp_obj_float_t*)(tweening_value))->value = tween->end_0;
+
+        if(tween->attr != 0){
+            mp_store_attr(tweening_value, tween->attr, mp_obj_new_float(tween->end_0));
+        }
+    }else if(tween->tween_type == tween_type_vec2){
+        vector2_class_obj_t *value = tweening_value;
+        value->x.value = tween->end_0;
+        value->y.value = tween->end_1;
+    }else if(tween->tween_type == tween_type_vec3){
+        vector3_class_obj_t *value = tweening_value;
+        value->x.value = tween->end_0;
+        value->y.value = tween->end_1;
+        value->z.value = tween->end_2;
+    }else if(tween->tween_type == tween_type_color){
+        color_class_obj_t *value = tweening_value;
+        value->r.value = tween->end_0;
+        value->g.value = tween->end_1;
+        value->b.value = tween->end_2;
+        engine_color_sync_rgb_to_u16(value);
+    }
+}
+
+
+
 /* --- doc ---
    NAME: after
    DESC: Function that can be directly set or defined as a method in a class that is called after the tween completes (only called for ONE_SHOT mode)
@@ -126,21 +181,9 @@ STATIC mp_obj_t tween_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
     float dt = mp_obj_get_float(dt_obj);
     tween->time += (dt * tween->ping_pong_multiplier * tween->speed);
 
-    // Always load the attribute since a reference might go stale
-    // if the object's attribute is assigned to during tweening
-    mp_obj_t tweening_value;
-    if(tween->attr == 0){
-        tweening_value = tween->object;
-    }else{
-        // tweening_value = mp_load_attr(tween->object, tween->attr);
-        tweening_value = engine_mp_load_attr_maybe(tween->object, tween->attr);
-    }
-
-    // In case the attr or object is not available anymore, stop tweening
-    if(tweening_value == MP_OBJ_NULL || tweening_value == mp_const_none){
-        tween->finished = true;
-        tween->time = 0.0f;
-        tween->loop_type = engine_animation_loop_none;
+    // Get tweening value and make sure valid
+    mp_obj_t tweening_value = get_tweening_value(tween);
+    if(tweening_value == mp_const_none){
         return mp_const_none;
     }
 
@@ -152,28 +195,7 @@ STATIC mp_obj_t tween_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
         tween->time = 0.0f;
 
         // Set value exactly equal to the end value
-        if(tween->tween_type == tween_type_float){
-            ((mp_obj_float_t*)(tweening_value))->value = tween->end_0;
-
-            if(tween->attr != 0){
-                mp_store_attr(tweening_value, tween->attr, mp_obj_new_float(tween->end_0));
-            }
-        }else if(tween->tween_type == tween_type_vec2){
-            vector2_class_obj_t *value = tweening_value;
-            value->x.value = tween->end_0;
-            value->y.value = tween->end_1;
-        }else if(tween->tween_type == tween_type_vec3){
-            vector3_class_obj_t *value = tweening_value;
-            value->x.value = tween->end_0;
-            value->y.value = tween->end_1;
-            value->z.value = tween->end_2;
-        }else if(tween->tween_type == tween_type_color){
-            color_class_obj_t *value = tweening_value;
-            value->r.value = tween->end_0;
-            value->g.value = tween->end_1;
-            value->b.value = tween->end_2;
-            engine_color_sync_rgb_to_u16(value);
-        }
+        set_value_to_end(tween);
 
         return mp_const_none;
     }
@@ -187,6 +209,7 @@ STATIC mp_obj_t tween_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
         t = (tween->time / tween->duration);
     }
 
+    // Ease the factor depending on which ease function was selected
     t = ease[tween->ease_type](t);
 
     if(tween->tween_type == tween_type_float){
@@ -268,6 +291,7 @@ mp_obj_t tween_class_start(size_t n_args, const mp_obj_t *args){
 
     // self, always `tween_class_obj_t` since attr function handles getting base
     tween_class_obj_t *tween = args[0];
+
     tween->finished = false;
     tween->paused = false;
     tween->time = 0.0f;
@@ -366,6 +390,27 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(tween_class_start_obj, 4, 9, tween_cl
 
 
 /* --- doc ---
+   NAME: stop
+   DESC: Stops tweening a value and sets to end value
+   RETURN: None
+*/
+mp_obj_t tween_class_stop(mp_obj_t self_in){
+    ENGINE_INFO_PRINTF("Tween: stop");
+    tween_class_obj_t *tween = self_in;
+
+    tween->finished = true;
+    tween->paused = false;
+    tween->loop_type = engine_animation_loop_none;
+
+    set_value_to_end(tween);
+
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(tween_class_stop_obj, tween_class_stop);
+
+
+
+/* --- doc ---
    NAME: pause
    DESC: Pauses tweening a value
    RETURN: None
@@ -434,6 +479,11 @@ bool tween_load_attr(tween_class_obj_t *tween, qstr attribute, mp_obj_t *destina
         break;
         case MP_QSTR_start:
             destination[0] = MP_OBJ_FROM_PTR(&tween_class_start_obj);
+            destination[1] = tween;
+            return true;
+        break;
+        case MP_QSTR_stop:
+            destination[0] = MP_OBJ_FROM_PTR(&tween_class_stop_obj);
             destination[1] = tween;
             return true;
         break;
@@ -571,6 +621,7 @@ STATIC mp_attr_fun_t tween_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
    NAME: Tween
    DESC: Object for interpolating and easing parameters of objects
    ATTR:    [type=function]            [name={ref_link:start}]        [value=function]
+   ATTR:    [type=function]            [name={ref_link:stop}]         [value=function]
    ATTR:    [type=function]            [name={ref_link:pause}]        [value=function]
    ATTR:    [type=function]            [name={ref_link:unpause}]      [value=function]
    ATTR:    [type=function]            [name={ref_link:restart}]      [value=function]
