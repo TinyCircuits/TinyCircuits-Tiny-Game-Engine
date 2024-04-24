@@ -11,6 +11,13 @@
 #include "physics/engine_physics.h"
 #include "animation/engine_animation_module.h"
 
+#if defined(__arm__)
+    #include "hardware/adc.h"
+#endif
+
+#define BATTERY_ADC_GPIO_PIN 29
+#define BATTERY_ADC_PORT 3
+
 bool is_engine_initialized = false;
 
 
@@ -63,6 +70,12 @@ STATIC mp_obj_t engine_main_module_init(){
     engine_display_send();
     engine_physics_init();
     engine_animation_init();
+
+    #if defined(__arm__)
+        adc_init();
+        adc_gpio_init(BATTERY_ADC_GPIO_PIN);
+        adc_select_input(BATTERY_ADC_PORT);
+    #endif
 
     return mp_const_none;
 }

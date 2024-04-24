@@ -10,6 +10,7 @@
 #include "utility/engine_time.h"
 #include "audio/engine_audio_module.h"
 #include "math/engine_math.h"
+#include "utility/engine_defines.h"
 
 #include "display/engine_display.h"
 #include "draw/engine_display_draw.h"
@@ -24,6 +25,10 @@
 #include "py/objstr.h"
 
 #include "engine_main.h"
+
+#if defined(__arm__)
+    #include "hardware/adc.h"
+#endif
 
 // ### MODULE ###
 
@@ -218,6 +223,34 @@ STATIC mp_obj_t engine_start(){
 MP_DEFINE_CONST_FUN_OBJ_0(engine_start_obj, engine_start);
 
 
+STATIC mp_obj_t engine_battery_level(){
+    #if defined(__arm__)
+        // Read the 12-bit sample with ADC max ref voltage of 3.3V
+        uint16_t battery_voltage_12_bit = adc_read();
+
+        // Battery voltage is either 5V when charging or 4.2V to 2.75V on battery.
+        // The input voltage we're measuring is before the LDO. The measured voltage
+        // is dropped to below max readable reference voltage of 3.3V through 1/(1+1)
+        // voltage divider (cutting it in half):
+        // 5/2    = 2.5V
+        // 4.2/2  = 2.1V    <- MAX
+        // 2.75/2 = 1.375V  <- MIN
+        float battery_half_voltage = battery_voltage_12_bit * ADC_CONV_FACTOR;
+
+        // Clamp since we only care showing between 0.0 and 1.0 for this function
+        battery_half_voltage = engine_math_clamp(battery_half_voltage, 1.375f, 2.1f);
+
+        // Map to the range we want to return
+        float battery_percentage = engine_math_map(battery_half_voltage, 1.375f, 2.1f, 0.0f, 1.0f);
+
+        return mp_obj_new_float(battery_percentage);
+    #endif
+
+    return mp_obj_new_float(1.0f);
+}
+MP_DEFINE_CONST_FUN_OBJ_0(engine_battery_level_obj, engine_battery_level);
+
+
 STATIC mp_obj_t engine_module_init(){
     engine_main_raise_if_not_initialized();
     return mp_const_none;
@@ -246,6 +279,7 @@ STATIC const mp_rom_map_elem_t engine_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_start), (mp_obj_t)&engine_start_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_end), (mp_obj_t)&engine_end_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_reset), (mp_obj_t)&engine_reset_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_battery_level), (mp_obj_t)&engine_battery_level_obj }
 };
 
 // Module init

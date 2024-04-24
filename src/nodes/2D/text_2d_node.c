@@ -23,7 +23,7 @@ void text_2d_node_class_draw(engine_node_base_t *text_2d_node_base, mp_obj_t cam
     engine_text_2d_node_class_obj_t *text_2d_node = text_2d_node_base->node;
 
     // Very first thing is to early out if the text is not set
-    if(text_2d_node->text == mp_const_none){
+    if(text_2d_node->text == mp_const_none || text_2d_node->font_resource == mp_const_none){
         return mp_const_none;
     }
 

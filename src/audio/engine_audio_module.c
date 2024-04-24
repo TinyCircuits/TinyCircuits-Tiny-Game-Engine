@@ -34,6 +34,7 @@ volatile float master_volume = 1.0f;
     #include "hardware/dma.h"
     #include "hardware/structs/xip_ctrl.h"
     #include "hardware/pwm.h"
+    #include "hardware/adc.h"
     #include "hardware/timer.h"
     #include "pico/multicore.h"
 

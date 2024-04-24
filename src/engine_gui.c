@@ -108,7 +108,7 @@ engine_node_base_t *engine_gui_get_focused(){
 
 bool engine_gui_is_left_check(float angle_radians){
     // 135 to 225
-    if(angle_radians >= (3.0f*PI/4.0f) && angle_radians <= (5.0f*PI/4.0f)){
+    if(angle_radians >= 135.0f && angle_radians <= 225.0f){
         return true;
     }else{
         return false;
@@ -118,7 +118,7 @@ bool engine_gui_is_left_check(float angle_radians){
 
 bool engine_gui_is_right_check(float angle_radians){
     // 315 to 45
-    if((angle_radians >= -PI/4.0f && angle_radians <= PI/4.0f)){
+    if((angle_radians >= 315.0f && angle_radians <= 360.0f) || (angle_radians >= 0.0f && angle_radians <= 45.0f)){
         return true;
     }else{
         return false;
@@ -127,8 +127,8 @@ bool engine_gui_is_right_check(float angle_radians){
 
 
 bool engine_gui_is_up_check(float angle_radians){
-    // 225 to 315
-    if(angle_radians <= (3.0f*PI/4.0f) && angle_radians <= -PI/4.0f){
+    // 225 to 315 (remember positions towards the top of the screen are at -y)
+    if(angle_radians >= 225.0f && angle_radians <= 315.0f){
         return true;
     }else{
         return false;
@@ -138,7 +138,7 @@ bool engine_gui_is_up_check(float angle_radians){
 
 bool engine_gui_is_down_check(float angle_radians){
     // 45 to 135
-    if(angle_radians >= (PI/4.0f) && angle_radians <= (3.0f*PI/4.0f)){
+    if(angle_radians >= 45.0f && angle_radians <= 135.0f){
         return true;
     }else{
         return false;
@@ -192,6 +192,12 @@ void engine_gui_select_closest(bool (direction_check)(float)){
         // Get the angle between the focused node and
         // the node we looped to now
         float angle_radians = engine_math_angle_between(focused_gui_position->x.value, focused_gui_position->y.value, searching_gui_position->x.value, searching_gui_position->y.value);
+
+        // Convert from -180 ~ 180 to 0 ~ 360: https://stackoverflow.com/a/25725005
+        angle_radians = fmodf(angle_radians + TWICE_PI, TWICE_PI);
+
+        // Convert to degrees (for readability)
+        angle_radians = angle_radians * 180.0f / PI;
 
         // Using the passed function, see if the angle
         // is in the direction we want to go

@@ -11,3 +11,7 @@
 #endif
 
 #endif
+
+#define ADC_REF_VOLTAGE 3.3f
+#define ADC_RESOLUTION (1 << 12)
+#define ADC_CONV_FACTOR ADC_REF_VOLTAGE / ADC_RESOLUTION
