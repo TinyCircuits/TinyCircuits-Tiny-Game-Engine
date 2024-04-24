@@ -357,3 +357,19 @@ vox_node_perf_test.py, avg. FPS: 48.42994
 
 
 
+2024-04-24 10:30:48.935746 : 341eacb050aef6bfd94a3dd83716c1be03ff6f65
+Fix sprite seg fault when the sprite has no texture
+
+{
+line_node_perf_test.py, avg. FPS: 239.2817
+test_opacity_perf_test.py, avg. FPS: 90.03944
+test_perf_test.py, avg. FPS: 112.1122
+circle_node_perf_test.py, avg. FPS: 240.7442
+vox_node_perf_test.py, avg. FPS: 46.90078
+}
+
+
+ ----- 
+
+
+

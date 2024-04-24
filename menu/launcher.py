@@ -16,18 +16,18 @@ launcher_tile_texture = TextureResource("launcher-tile.bmp")
 launcher_tile_mark_texture = TextureResource("launcher-tile-mark.bmp")
 
 
-# class BatteryIndicator(Sprite2DNode):
-#     def __init__(self):
-#         super().__init__(self)
-#         self.text_node = Text2DNode(text="0%", font=font)
-#         self.position.y = -32
-#         self.add_child(self.text_node)
+class BatteryIndicator(Sprite2DNode):
+    def __init__(self):
+        super().__init__(self)
+        self.text_node = Text2DNode(text="0%", font=font)
+        self.position.y = -32
+        self.add_child(self.text_node)
     
-#     def tick(self):
-#         self.text_node.text = str(engine.battery_level() * 100.0) + "%"
+    def tick(self):
+        self.text_node.text = str(engine.battery_level() * 100.0) + "%"
 
 
-# battery = BatteryIndicator()
+battery = BatteryIndicator()
 
 
 class LauncherTile(GUIBitmapButton2DNode):
