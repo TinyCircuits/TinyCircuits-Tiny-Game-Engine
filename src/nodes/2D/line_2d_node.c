@@ -18,6 +18,12 @@ void line_2d_node_class_draw(engine_node_base_t *line_node_base, mp_obj_t camera
     
     engine_line_2d_node_class_obj_t *line_2d = line_node_base->node;
 
+    // Avoid drawing or doing anything if opacity is zero
+    float line_opacity = mp_obj_get_float(line_2d->opacity);
+    if(engine_math_compare_floats(line_opacity, 0.0f)){
+        return;
+    }
+
     engine_node_base_t *camera_node_base = camera_node;
 
     vector2_class_obj_t *line_start = line_2d->start;
@@ -25,8 +31,6 @@ void line_2d_node_class_draw(engine_node_base_t *line_node_base, mp_obj_t camera
     float line_thickness = mp_obj_get_float(line_2d->thickness);
     color_class_obj_t *line_color = line_2d->color;
     bool line_outlined = mp_obj_get_int(line_2d->outline);
-
-    float line_opacity = mp_obj_get_float(line_2d->opacity);
 
     // The line is drawn as a rectangle since we have a nice algorithm for doing that:
     float line_length = engine_math_distance_between(line_start->x.value, line_start->y.value, line_end->x.value, line_end->y.value);

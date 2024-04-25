@@ -21,13 +21,18 @@ void sprite_2d_node_class_draw(engine_node_base_t *sprite_node_base, mp_obj_t ca
     engine_node_base_t *camera_node_base = camera_node;
     engine_sprite_2d_node_class_obj_t *sprite_2d_node = sprite_node_base->node;
 
+    // Avoid drawing or doing anything if opacity is zero
+    float sprite_opacity = mp_obj_get_float(sprite_2d_node->opacity);
+    if(engine_math_compare_floats(sprite_opacity, 0.0f)){
+        return;
+    }
+
     if(sprite_2d_node->texture_resource == mp_const_none){
         return;
     }
 
     texture_resource_class_obj_t *sprite_texture = sprite_2d_node->texture_resource;
     vector2_class_obj_t *sprite_scale =  sprite_2d_node->scale;
-    float sprite_opacity = mp_obj_get_float(sprite_2d_node->opacity);
 
     vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
     rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);

@@ -14,7 +14,7 @@ import math
 
 engine.set_fps_limit(60)
 
-font = FontResource("9pt-roboto-font.bmp")
+font = FontResource("outrunner_outline.bmp")
 launcher_tile_texture = TextureResource("launcher-tile.bmp")
 launcher_tile_mark_texture = TextureResource("launcher-tile-mark.bmp")
 
@@ -23,12 +23,12 @@ class BatteryIndicator(Sprite2DNode):
     def __init__(self):
         super().__init__(self)
         self.text_node = Text2DNode(text="0%", font=font)
-        self.position.x = -45
+        self.position.x = -40
         self.position.y = -56
         self.add_child(self.text_node)
     
     def tick(self):
-        self.text_node.text = str(engine.battery_level() * 100.0) + "%"
+        self.text_node.text = str(round(engine.battery_level() * 100.0, 1)) + "%"
 
 
 battery = BatteryIndicator()
@@ -52,7 +52,7 @@ class LauncherTile(GUIBitmapButton2DNode):
         self.scale.x = 0.35
         self.scale.y = 0.35
 
-        self.title_text_node = Text2DNode(text="Unknown", font=font, position=Vector2(0, -28), opacity=0.0)
+        self.title_text_node = Text2DNode(text="Unknown", font=font, position=Vector2(0, -28), opacity=0.0, letter_spacing=1.0)
 
         self.mark_sprite = Sprite2DNode(texture=launcher_tile_mark_texture)
         self.mark_sprite.scale.x = 0.35

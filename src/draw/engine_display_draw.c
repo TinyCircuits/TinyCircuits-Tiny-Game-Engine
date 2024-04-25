@@ -416,7 +416,7 @@ void engine_draw_filled_circle(uint16_t color, float center_x, float center_y, f
 }
 
 
-void engine_draw_text(font_resource_class_obj_t *font, mp_obj_t text, float center_x, float center_y, float text_box_width, float text_box_height, float x_scale, float y_scale, float rotation_radians, float alpha, engine_shader_t *shader){    
+void engine_draw_text(font_resource_class_obj_t *font, mp_obj_t text, float center_x, float center_y, float text_box_width, float text_box_height, float letter_spacing, float line_spacing, float x_scale, float y_scale, float rotation_radians, float alpha, engine_shader_t *shader){    
     float sin_angle = sinf(rotation_radians);
     float cos_angle = cosf(rotation_radians);
 
@@ -459,8 +459,8 @@ void engine_draw_text(font_resource_class_obj_t *font, mp_obj_t text, float cent
             char_y += (sin_angle * current_row_width * x_scale);
 
             // Move to next line
-            char_x -= (cos_angle_perp * font->glyph_height * y_scale);
-            char_y += (sin_angle_perp * font->glyph_height * y_scale);
+            char_x -= (cos_angle_perp * (font->glyph_height+line_spacing) * y_scale);
+            char_y += (sin_angle_perp * (font->glyph_height+line_spacing) * y_scale);
 
             current_row_width = 0.0f;
             continue;
@@ -473,8 +473,8 @@ void engine_draw_text(font_resource_class_obj_t *font, mp_obj_t text, float cent
         float final_char_x = char_x;
         float final_char_y = char_y;
 
-        final_char_x += (cos_angle * char_width_half * x_scale);
-        final_char_y -= (sin_angle * char_width_half * x_scale);
+        final_char_x += (cos_angle * char_width_half * x_scale) + letter_spacing;
+        final_char_y -= (sin_angle * char_width_half * x_scale) + letter_spacing;
 
         // Offset inside the ASCII font bitmap (not into where we're drawing)
         uint16_t char_bitmap_x_offset = font_resource_get_glyph_x_offset(font, current_char);
@@ -491,9 +491,9 @@ void engine_draw_text(font_resource_class_obj_t *font, mp_obj_t text, float cent
                         shader);
 
         // Move to next character position in row
-        char_x += (cos_angle * char_width * x_scale);
-        char_y -= (sin_angle * char_width * x_scale);
+        char_x += (cos_angle * (char_width+letter_spacing) * x_scale);
+        char_y -= (sin_angle * (char_width+letter_spacing) * x_scale);
 
-        current_row_width += char_width;
+        current_row_width += char_width+letter_spacing;
     }
 }

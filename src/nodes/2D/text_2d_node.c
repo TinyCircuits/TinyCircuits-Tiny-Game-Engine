@@ -32,6 +32,11 @@ void text_2d_node_class_draw(engine_node_base_t *text_2d_node_base, mp_obj_t cam
     vector2_class_obj_t *text_scale =  text_2d_node->scale;
     float text_opacity = mp_obj_get_float(text_2d_node->opacity);
 
+    // Avoid drawing or doing anything if opacity is zero
+    if(engine_math_compare_floats(text_opacity, 0.0f)){
+        return;
+    }
+
     float text_box_width = mp_obj_get_float(text_2d_node->width);
     float text_box_height = mp_obj_get_float(text_2d_node->height);
 
@@ -55,6 +60,9 @@ void text_2d_node_class_draw(engine_node_base_t *text_2d_node_base, mp_obj_t cam
     float text_rotated_x = text_resolved_hierarchy_x - camera_resolved_hierarchy_x;
     float text_rotated_y = text_resolved_hierarchy_y - camera_resolved_hierarchy_y;
 
+    float text_letter_spacing = mp_obj_get_float(text_2d_node->letter_spacing);
+    float text_line_spacing = mp_obj_get_float(text_2d_node->line_spacing);
+
     if(text_is_child_of_camera == false){
         // Scale transformation due to camera zoom
         engine_math_scale_point(&text_rotated_x, &text_rotated_y, camera_position->x.value, camera_position->y.value, camera_zoom);
@@ -74,7 +82,7 @@ void text_2d_node_class_draw(engine_node_base_t *text_2d_node_base, mp_obj_t cam
         shader = &opacity_shader;
     }
 
-    engine_draw_text(text_2d_node->font_resource, text_2d_node->text, text_rotated_x, text_rotated_y, text_box_width, text_box_height, text_scale->x.value*camera_zoom, text_scale->y.value*camera_zoom, text_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation, text_opacity, shader);
+    engine_draw_text(text_2d_node->font_resource, text_2d_node->text, text_rotated_x, text_rotated_y, text_box_width, text_box_height, text_letter_spacing, text_line_spacing, text_scale->x.value*camera_zoom, text_scale->y.value*camera_zoom, text_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation, text_opacity, shader);
 }
 
 
@@ -90,7 +98,7 @@ STATIC void text_2d_node_class_calculate_dimensions(engine_text_2d_node_class_ob
 
     float text_box_width = 0.0f;
     float text_box_height = 0.0f;
-    font_resource_get_box_dimensions(text_2d_node->font_resource, text_2d_node->text, &text_box_width, &text_box_height);
+    font_resource_get_box_dimensions(text_2d_node->font_resource, text_2d_node->text, &text_box_width, &text_box_height, mp_obj_get_float(text_2d_node->letter_spacing), mp_obj_get_float(text_2d_node->line_spacing));
 
     text_2d_node->width = mp_obj_new_int((uint32_t)text_box_width);
     text_2d_node->height = mp_obj_new_int((uint32_t)text_box_height);
@@ -166,6 +174,14 @@ bool text_2d_node_load_attr(engine_node_base_t *self_node_base, qstr attribute, 
             destination[0] = self->opacity;
             return true;
         break;
+        case MP_QSTR_letter_spacing:
+            destination[0] = self->letter_spacing;
+            return true;
+        break;
+        case MP_QSTR_line_spacing:
+            destination[0] = self->line_spacing;
+            return true;
+        break;
         case MP_QSTR_width:
             destination[0] = self->width;
             return true;
@@ -214,6 +230,14 @@ bool text_2d_node_store_attr(engine_node_base_t *self_node_base, qstr attribute,
         break;
         case MP_QSTR_opacity:
             self->opacity = destination[1];
+            return true;
+        break;
+        case MP_QSTR_letter_spacing:
+            self->letter_spacing = destination[1];
+            return true;
+        break;
+        case MP_QSTR_line_spacing:
+            self->line_spacing = destination[1];
             return true;
         break;
         case MP_QSTR_width:
@@ -298,9 +322,11 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
         { MP_QSTR_rotation,             MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_scale,                MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_opacity,              MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_letter_spacing,       MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_line_spacing,         MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
-    enum arg_ids {child_class, position, font, text, rotation, scale, opacity};
+    enum arg_ids {child_class, position, font, text, rotation, scale, opacity, letter_spacing, line_spacing};
     bool inherited = false;
 
     // If there is one positional argument and it isn't the first 
@@ -326,6 +352,8 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
     if(parsed_args[rotation].u_obj == MP_OBJ_NULL) parsed_args[rotation].u_obj = mp_obj_new_float(0.0f);
     if(parsed_args[scale].u_obj == MP_OBJ_NULL) parsed_args[scale].u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)});
     if(parsed_args[opacity].u_obj == MP_OBJ_NULL) parsed_args[opacity].u_obj = mp_obj_new_float(1.0f);
+    if(parsed_args[letter_spacing].u_obj == MP_OBJ_NULL) parsed_args[letter_spacing].u_obj = mp_obj_new_float(0.0f);
+    if(parsed_args[line_spacing].u_obj == MP_OBJ_NULL) parsed_args[line_spacing].u_obj = mp_obj_new_float(0.0f);
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);
@@ -341,6 +369,8 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
     text_2d_node->rotation = parsed_args[rotation].u_obj;
     text_2d_node->scale = parsed_args[scale].u_obj;
     text_2d_node->opacity = parsed_args[opacity].u_obj;
+    text_2d_node->letter_spacing = parsed_args[letter_spacing].u_obj;
+    text_2d_node->line_spacing = parsed_args[line_spacing].u_obj;
     text_2d_node->width = mp_obj_new_int(0);
     text_2d_node->height = mp_obj_new_int(0);
 

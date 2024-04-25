@@ -389,3 +389,35 @@ vox_node_perf_test.py, avg. FPS: 48.52477
 
 
 
+2024-04-25 13:18:19.211569 : 0519ec1e5f13e09f38752592c41e54683f17a681
+Add letter and line spacing to nodes that draw text
+
+{
+line_node_perf_test.py, avg. FPS: 238.7817
+test_opacity_perf_test.py, avg. FPS: 87.53579
+test_perf_test.py, avg. FPS: 110.9827
+circle_node_perf_test.py, avg. FPS: 239.4127
+vox_node_perf_test.py, avg. FPS: 48.48932
+}
+
+
+ ----- 
+
+
+
+2024-04-25 13:49:56.377088 : b0b074b73689dead1a55f3d966fe5c39c0716b7d
+Add letter and line spacing to nodes that draw text
+
+{
+line_node_perf_test.py, avg. FPS: 238.7818
+test_opacity_perf_test.py, avg. FPS: 88.42722
+test_perf_test.py, avg. FPS: 109.6031
+circle_node_perf_test.py, avg. FPS: 241.0775
+vox_node_perf_test.py, avg. FPS: 46.82267
+}
+
+
+ ----- 
+
+
+

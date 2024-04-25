@@ -24,6 +24,12 @@ void gui_bitmap_button_2d_node_class_draw(engine_node_base_t *button_node_base, 
     
     engine_gui_bitmap_button_2d_node_class_obj_t *button = button_node_base->node;
 
+    // Avoid drawing or doing anything if opacity is zero
+    float button_opacity = mp_obj_get_float(button->opacity);
+    if(engine_math_compare_floats(button_opacity, 0.0f)){
+        return;
+    }
+
     if(button->bitmap_texture != mp_const_none && button->text != mp_const_none && button->font_resource != mp_const_none){
         engine_node_base_t *camera_node_base = camera_node;
 
@@ -71,6 +77,9 @@ void gui_bitmap_button_2d_node_class_draw(engine_node_base_t *button_node_base, 
 
         float btn_x_scale = button_scale->x.value*camera_zoom;
         float btn_y_scale = button_scale->y.value*camera_zoom;
+
+        float text_letter_spacing = mp_obj_get_float(button->letter_spacing);
+        float text_line_spacing = mp_obj_get_float(button->line_spacing);
 
         float text_x_scale = btn_x_scale * button_text_scale->x.value;
         float text_y_scale = btn_y_scale * button_text_scale->x.value;
@@ -121,6 +130,8 @@ void gui_bitmap_button_2d_node_class_draw(engine_node_base_t *button_node_base, 
         engine_draw_text(font, button->text,
                          floorf(button_rotated_x), floorf(button_rotated_y),
                          button->text_width, button->text_height,
+                         text_letter_spacing,
+                         text_line_spacing,
                          text_x_scale, text_y_scale,
                          button_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation,
                          button_opacity,
@@ -131,7 +142,7 @@ void gui_bitmap_button_2d_node_class_draw(engine_node_base_t *button_node_base, 
 
 void gui_bitmap_button_2d_node_calculate_dimensions(engine_gui_bitmap_button_2d_node_class_obj_t *button){
     if(button->text != mp_const_none && button->font_resource != mp_const_none){
-        font_resource_get_box_dimensions(button->font_resource, button->text, &button->text_width, &button->text_height);
+        font_resource_get_box_dimensions(button->font_resource, button->text, &button->text_width, &button->text_height, mp_obj_get_float(button->letter_spacing), mp_obj_get_float(button->line_spacing));
     }
 }
 
@@ -248,6 +259,15 @@ bool bitmap_button_2d_node_load_attr(engine_node_base_t *self_node_base, qstr at
         break;
         case MP_QSTR_opacity:
             destination[0] = self->opacity;
+            return true;
+        break;
+
+        case MP_QSTR_letter_spacing:
+            destination[0] = self->letter_spacing;
+            return true;
+        break;
+        case MP_QSTR_line_spacing:
+            destination[0] = self->line_spacing;
             return true;
         break;
 
@@ -384,6 +404,15 @@ bool bitmap_button_2d_node_store_attr(engine_node_base_t *self_node_base, qstr a
             return true;
         break;
 
+        case MP_QSTR_letter_spacing:
+            self->letter_spacing = destination[1];
+            return true;
+        break;
+        case MP_QSTR_line_spacing:
+            self->line_spacing = destination[1];
+            return true;
+        break;
+
         case MP_QSTR_tick:
             self->tick_cb = destination[1];
             return true;
@@ -500,6 +529,9 @@ mp_obj_t gui_bitmap_button_2d_node_class_new(const mp_obj_type_t *type, size_t n
         { MP_QSTR_scale,                        MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_text_scale,                   MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_opacity,                      MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+
+        { MP_QSTR_letter_spacing,       MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_line_spacing,         MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} }
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
     enum arg_ids {child_class, position, font, text,
@@ -514,7 +546,10 @@ mp_obj_t gui_bitmap_button_2d_node_class_new(const mp_obj_type_t *type, size_t n
 
                   transparent_color,
 
-                  rotation, scale, text_scale, opacity};
+                  rotation, scale, text_scale, opacity,
+                  
+                  letter_spacing,
+                  line_spacing};
 
     bool inherited = false;
 
@@ -554,6 +589,9 @@ mp_obj_t gui_bitmap_button_2d_node_class_new(const mp_obj_type_t *type, size_t n
     if(parsed_args[text_scale].u_obj == MP_OBJ_NULL) parsed_args[text_scale].u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)});
     if(parsed_args[opacity].u_obj == MP_OBJ_NULL) parsed_args[opacity].u_obj = mp_obj_new_float(1.0f);
 
+    if(parsed_args[letter_spacing].u_obj == MP_OBJ_NULL) parsed_args[letter_spacing].u_obj = mp_obj_new_float(0.0f);
+    if(parsed_args[line_spacing].u_obj == MP_OBJ_NULL) parsed_args[line_spacing].u_obj = mp_obj_new_float(0.0f);
+
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);
     node_base_init(node_base, &engine_gui_bitmap_button_2d_node_class_type, NODE_TYPE_GUI_BITMAP_BUTTON_2D);
@@ -589,6 +627,10 @@ mp_obj_t gui_bitmap_button_2d_node_class_new(const mp_obj_type_t *type, size_t n
     gui_bitmap_button_2d_node->scale = parsed_args[scale].u_obj;
     gui_bitmap_button_2d_node->text_scale = parsed_args[text_scale].u_obj;
     gui_bitmap_button_2d_node->opacity = parsed_args[opacity].u_obj;
+
+    gui_bitmap_button_2d_node->letter_spacing = parsed_args[letter_spacing].u_obj;
+    gui_bitmap_button_2d_node->line_spacing = parsed_args[line_spacing].u_obj;
+
     gui_bitmap_button_2d_node->focused = false;
     gui_bitmap_button_2d_node->pressed = false;
     gui_bitmap_button_2d_node->last_pressed = false;

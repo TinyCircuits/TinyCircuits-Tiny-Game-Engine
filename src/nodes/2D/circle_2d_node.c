@@ -15,8 +15,15 @@
 void circle_2d_node_class_draw(engine_node_base_t *circle_node_base, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("Circle2DNode: Drawing");
     
-    engine_node_base_t *camera_node_base = camera_node;
     engine_circle_2d_node_class_obj_t *circle_2d_node = circle_node_base->node;
+
+    // Avoid drawing or doing anything if opacity is zero
+    float circle_opacity = mp_obj_get_float(circle_2d_node->opacity);
+    if(engine_math_compare_floats(circle_opacity, 0.0f)){
+        return;
+    }
+
+    engine_node_base_t *camera_node_base = camera_node;
 
     vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
     rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
@@ -27,7 +34,6 @@ void circle_2d_node_class_draw(engine_node_base_t *circle_node_base, mp_obj_t ca
     bool circle_outlined = mp_obj_get_int(circle_2d_node->outline);
 
     color_class_obj_t *circle_color = circle_2d_node->color;
-    float circle_opacity = mp_obj_get_float(circle_2d_node->opacity);
 
     float camera_resolved_hierarchy_x = 0.0f;
     float camera_resolved_hierarchy_y = 0.0f;

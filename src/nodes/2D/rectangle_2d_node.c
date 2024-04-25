@@ -19,11 +19,16 @@ void rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_base, mp_ob
     engine_node_base_t *camera_node_base = camera_node;
     engine_rectangle_2d_node_class_obj_t *rectangle_2d_node = rectangle_node_base->node;
 
+    // Avoid drawing or doing anything if opacity is zero
+    float rectangle_opacity = mp_obj_get_float(rectangle_2d_node->opacity);
+    if(engine_math_compare_floats(rectangle_opacity, 0.0f)){
+        return;
+    }
+
     vector2_class_obj_t *rectangle_scale =  rectangle_2d_node->scale;
     uint16_t rectangle_width = mp_obj_get_float(rectangle_2d_node->width);
     uint16_t rectangle_height = mp_obj_get_float(rectangle_2d_node->height);
     color_class_obj_t *rectangle_color = rectangle_2d_node->color;
-    float rectangle_opacity = mp_obj_get_float(rectangle_2d_node->opacity);
     bool rectangle_outlined = mp_obj_get_int(rectangle_2d_node->outline);
 
     vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);

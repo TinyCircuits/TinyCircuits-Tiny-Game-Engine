@@ -12,6 +12,7 @@ from engine_resources import TextureResource, WaveSoundResource, FontResource
 import math
 import gc
 
+engine.set_fps_limit(60)
 
 
 line = Line2DNode(color=engine_draw.orange, start=Vector2(40, -15), end=Vector2(40, 15), thickness=1)
@@ -25,7 +26,7 @@ class MyText(Text2DNode):
         super().__init__(self, Vector2(0, 0), font9)
         self.text = "Hello World!\nLine 2\nLine 3\nLine 4                       hi"
 
-text = Text2DNode(text="Hello World!\nLine 2\nLine 3", font=font9, scale=Vector2(2.0, 2.0), position=Vector2(0, -0))
+text = Text2DNode(text="Hello World!\nLine 2\nLine 3", font=font9, scale=Vector2(2.0, 2.0), position=Vector2(0, -0), line_spacing = 2.0, letter_spacing=2)
 text.opacity = 1.0
 
 text0 = Text2DNode(text="Hello World!\nLine 2\nLine 3", font=font9, scale=Vector2(1.0, 1.0), position=Vector2(0, -0))

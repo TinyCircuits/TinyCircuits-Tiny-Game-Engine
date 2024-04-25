@@ -24,6 +24,12 @@ void gui_button_2d_node_class_draw(engine_node_base_t *button_node_base, mp_obj_
     
     engine_gui_button_2d_node_class_obj_t *button = button_node_base->node;
 
+    // Avoid drawing or doing anything if opacity is zero
+    float button_opacity = mp_obj_get_float(button->opacity);
+    if(engine_math_compare_floats(button_opacity, 0.0f)){
+        return;
+    }
+
     if(button->text != mp_const_none && button->font_resource != mp_const_none){
         engine_node_base_t *camera_node_base = camera_node;
 
@@ -44,7 +50,6 @@ void gui_button_2d_node_class_draw(engine_node_base_t *button_node_base, mp_obj_
 
         node_base_get_child_absolute_xy(&button_resolved_hierarchy_x, &button_resolved_hierarchy_y, &button_resolved_hierarchy_rotation, &button_is_child_of_camera, button_node_base);
 
-
         // Store the non-rotated x and y for a second
         float button_rotated_x = button_resolved_hierarchy_x - camera_resolved_hierarchy_x;
         float button_rotated_y = button_resolved_hierarchy_y - camera_resolved_hierarchy_y;
@@ -64,7 +69,9 @@ void gui_button_2d_node_class_draw(engine_node_base_t *button_node_base, mp_obj_
 
         font_resource_class_obj_t *font = button->font_resource;
         vector2_class_obj_t *button_scale = button->scale;
-        float button_opacity = mp_obj_get_float(button->opacity);
+
+        float text_letter_spacing = mp_obj_get_float(button->letter_spacing);
+        float text_line_spacing = mp_obj_get_float(button->line_spacing);
 
         float x_scale = button_scale->x.value*camera_zoom;
         float y_scale = button_scale->y.value*camera_zoom;
@@ -124,6 +131,8 @@ void gui_button_2d_node_class_draw(engine_node_base_t *button_node_base, mp_obj_
         engine_draw_text(font, button->text,
                          floorf(button_rotated_x), floorf(button_rotated_y),
                          button->width, button->height,
+                         text_letter_spacing,
+                         text_line_spacing,
                          x_scale, y_scale,
                          button_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation,
                          button_opacity,
@@ -134,7 +143,7 @@ void gui_button_2d_node_class_draw(engine_node_base_t *button_node_base, mp_obj_
 
 void gui_button_2d_node_calculate_dimensions(engine_gui_button_2d_node_class_obj_t *button){
     if(button->text != mp_const_none && button->font_resource != mp_const_none){
-        font_resource_get_box_dimensions(button->font_resource, button->text, &button->width, &button->height);
+        font_resource_get_box_dimensions(button->font_resource, button->text, &button->width, &button->height, mp_obj_get_float(button->letter_spacing), mp_obj_get_float(button->line_spacing));
         float padding = mp_obj_get_float(button->padding) * 2.0f;
         float outline = mp_obj_get_float(button->outline) * 2.0f;
         button->width_padded = button->width + padding;
@@ -269,6 +278,15 @@ bool button_2d_node_load_attr(engine_node_base_t *self_node_base, qstr attribute
         break;
         case MP_QSTR_opacity:
             destination[0] = self->opacity;
+            return true;
+        break;
+
+        case MP_QSTR_letter_spacing:
+            destination[0] = self->letter_spacing;
+            return true;
+        break;
+        case MP_QSTR_line_spacing:
+            destination[0] = self->line_spacing;
             return true;
         break;
 
@@ -419,6 +437,15 @@ bool button_2d_node_store_attr(engine_node_base_t *self_node_base, qstr attribut
             return true;
         break;
 
+        case MP_QSTR_letter_spacing:
+            self->letter_spacing = destination[1];
+            return true;
+        break;
+        case MP_QSTR_line_spacing:
+            self->line_spacing = destination[1];
+            return true;
+        break;
+
         case MP_QSTR_tick:
             self->tick_cb = destination[1];
             return true;
@@ -538,6 +565,9 @@ mp_obj_t gui_button_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, 
         { MP_QSTR_rotation,                     MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_scale,                        MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_opacity,                      MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+
+        { MP_QSTR_letter_spacing,       MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_line_spacing,         MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} }
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
     enum arg_ids {child_class, position, font, text, outline, padding,
@@ -554,7 +584,10 @@ mp_obj_t gui_button_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, 
                   focused_outline_color,
                   pressed_outline_color,
 
-                  rotation, scale, opacity};
+                  rotation, scale, opacity,
+                  
+                  letter_spacing,
+                  line_spacing};
 
     bool inherited = false;
 
@@ -597,6 +630,9 @@ mp_obj_t gui_button_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, 
     if(parsed_args[scale].u_obj == MP_OBJ_NULL) parsed_args[scale].u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)});
     if(parsed_args[opacity].u_obj == MP_OBJ_NULL) parsed_args[opacity].u_obj = mp_obj_new_float(1.0f);
 
+    if(parsed_args[letter_spacing].u_obj == MP_OBJ_NULL) parsed_args[letter_spacing].u_obj = mp_obj_new_float(0.0f);
+    if(parsed_args[line_spacing].u_obj == MP_OBJ_NULL) parsed_args[line_spacing].u_obj = mp_obj_new_float(0.0f);
+
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);
     node_base_init(node_base, &engine_gui_button_2d_node_class_type, NODE_TYPE_GUI_BUTTON_2D);
@@ -635,6 +671,10 @@ mp_obj_t gui_button_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, 
     gui_button_2d_node->rotation = parsed_args[rotation].u_obj;
     gui_button_2d_node->scale = parsed_args[scale].u_obj;
     gui_button_2d_node->opacity = parsed_args[opacity].u_obj;
+
+    gui_button_2d_node->letter_spacing = parsed_args[letter_spacing].u_obj;
+    gui_button_2d_node->line_spacing = parsed_args[line_spacing].u_obj;
+
     gui_button_2d_node->focused = false;
     gui_button_2d_node->pressed = false;
     gui_button_2d_node->last_pressed = false;
