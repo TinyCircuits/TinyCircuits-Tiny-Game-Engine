@@ -421,3 +421,19 @@ vox_node_perf_test.py, avg. FPS: 46.82267
 
 
 
+2024-04-25 14:34:58.388302 : 61c0162fec6f6b9207a44c54a0c7b63cde3633da
+Fix letter_spacing making text higher on the screen
+
+{
+line_node_perf_test.py, avg. FPS: 238.7818
+test_opacity_perf_test.py, avg. FPS: 89.20671
+test_perf_test.py, avg. FPS: 110.6773
+circle_node_perf_test.py, avg. FPS: 241.1111
+vox_node_perf_test.py, avg. FPS: 48.48451
+}
+
+
+ ----- 
+
+
+

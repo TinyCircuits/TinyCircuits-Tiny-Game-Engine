@@ -468,13 +468,13 @@ void engine_draw_text(font_resource_class_obj_t *font, mp_obj_t text, float cent
 
         // The width of this character, all heights are defined by bitmap font height-1
         const uint8_t char_width = font_resource_get_glyph_width(font, current_char);
-        const float char_width_half = char_width * 0.5f;
+        const float char_width_half = (char_width * 0.5f) + letter_spacing;
 
         float final_char_x = char_x;
         float final_char_y = char_y;
 
-        final_char_x += (cos_angle * char_width_half * x_scale) + letter_spacing;
-        final_char_y -= (sin_angle * char_width_half * x_scale) + letter_spacing;
+        final_char_x += (cos_angle * char_width_half * x_scale);
+        final_char_y -= (sin_angle * char_width_half * x_scale);
 
         // Offset inside the ASCII font bitmap (not into where we're drawing)
         uint16_t char_bitmap_x_offset = font_resource_get_glyph_x_offset(font, current_char);

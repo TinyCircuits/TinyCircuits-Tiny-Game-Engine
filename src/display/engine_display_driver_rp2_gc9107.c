@@ -115,6 +115,7 @@ void engine_display_gc9107_init(){
     sleep_ms(50);
     gpio_put(PIN_GP4__TO__RST, 1);
     sleep_ms(120);
+    
 
     gc9107_write_cmd(0xB0, (uint8_t[]){ 0xC0 }, 1);
     gc9107_write_cmd(0xB2, (uint8_t[]){ 0x2F }, 1);
@@ -148,6 +149,7 @@ void engine_display_gc9107_init(){
     // gc9107_write_cmd(0xF1, (uint8_t[]){ 0x00, 0x2D, 0x2F, 0x3C, 0x6F, 0x1C, 0x0B, 0x00, 0x00, 0x00, 0x07, 0x0D, 0x11, 0x0f }, 14);
 
     gc9107_write_cmd(0x21, NULL, 0);
+
 
     gc9107_write_cmd(0x11, NULL, 0);
     sleep_ms(120);

@@ -24,7 +24,7 @@ class BatteryIndicator(Sprite2DNode):
         super().__init__(self)
         self.text_node = Text2DNode(text="0%", font=font)
         self.position.x = -40
-        self.position.y = -56
+        self.position.y = -58
         self.add_child(self.text_node)
     
     def tick(self):

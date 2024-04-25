@@ -309,6 +309,8 @@ STATIC mp_attr_fun_t text_2d_node_class_attr(mp_obj_t self_in, qstr attribute, m
     ATTR:   [type=float]                      [name=rotation]                   [value=any (radians)]
     ATTR:   [type={ref_link:Vector2}]         [name=scale]                      [value={ref_link:Vector2}]
     ATTR:   [type=float]                      [name=opacity]                    [value=0 ~ 1.0]
+    ATTR:   [type=float]                      [name=letter_spacing]             [value=any]
+    ATTR:   [type=float]                      [name=line_spacing]               [value=any]
     OVRR:   [type=function]                   [name={ref_link:tick}]            [value=function]
 */
 mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
