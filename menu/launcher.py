@@ -3,6 +3,7 @@ import engine_main
 import engine
 import engine_draw
 import engine_input
+import time
 from engine_math import Vector2
 from engine_nodes import Sprite2DNode, CameraNode, GUIBitmapButton2DNode, Text2DNode
 from engine_resources import TextureResource, FontResource
@@ -34,6 +35,11 @@ battery = BatteryIndicator()
 
 tiles = []
 last_focused_tile = None
+rumble_intensity = 0.0
+
+def after_rumble(tween):
+    rumble_intensity = 0.0
+    engine_input.rumble(rumble_intensity)
 
 class LauncherTile(GUIBitmapButton2DNode):
     def __init__(self):
@@ -46,7 +52,7 @@ class LauncherTile(GUIBitmapButton2DNode):
         self.scale.x = 0.35
         self.scale.y = 0.35
 
-        self.title_text_node = Text2DNode(text="Unknown", font=font, position=Vector2(0, -28))
+        self.title_text_node = Text2DNode(text="Unknown", font=font, position=Vector2(0, -28), opacity=0.0)
 
         self.mark_sprite = Sprite2DNode(texture=launcher_tile_mark_texture)
         self.mark_sprite.scale.x = 0.35
@@ -61,6 +67,8 @@ class LauncherTile(GUIBitmapButton2DNode):
         tiles.append(self)
 
         self.tween = Tween()
+        self.rumble_tween = Tween()
+        self.rumble_tween.after = after_rumble
     
     def on_focused(self):
         self.position.y = math.sin(self.t)
@@ -70,6 +78,7 @@ class LauncherTile(GUIBitmapButton2DNode):
         global last_focused_tile
         self.set_opacity(1.0)
         self.set_scale(0.4)
+        self.title_text_node.opacity = 1.0
 
         if last_focused_tile != None:
             delta = 0
@@ -88,6 +97,12 @@ class LauncherTile(GUIBitmapButton2DNode):
         self.set_opacity(0.65)
         self.set_scale(0.3)
         self.position.y = 0
+        self.title_text_node.opacity = 0.0
+    
+    def on_just_pressed(self):
+        engine_input.rumble(0.2)
+        time.sleep(0.1)
+        engine_input.rumble(0.0)
 
     def set_opacity(self, opacity):
         self.opacity = opacity
@@ -104,19 +119,6 @@ for i in range(5):
     tile = LauncherTile()
     tile.position.x = (i * 45)
     tile.set_scale(0.3)
-
-
-# tile0 = LauncherTile()
-
-# tile1 = LauncherTile()
-# tile1.position.x = -42
-# tile1.set_scale(0.25)
-# tile1.set_opacity(0.65)
-
-# tile2 = LauncherTile()
-# tile2.position.x = 42
-# tile2.set_scale(0.25)
-# tile2.set_opacity(0.65)
 
 camera = CameraNode()
 

@@ -17,7 +17,7 @@ typedef struct{
     float speed;
 
     mp_obj_t tick;
-
+    mp_obj_t during;
     mp_obj_t after;
     bool after_called;
 

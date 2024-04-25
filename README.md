@@ -92,9 +92,12 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Need to figure out what to do if user has two files that import engine that then resets the engine... Should be possible to import `engine` without resetting everything: Now required to run `import engine_main` to start and reset engine consistently
 [X] Make GUIBitmap2DButton for main menu
 
+[.] Menu (carousel)
+
 [] Return something for width and height for GUIBitmap2DButton (what to do when the bitmap changes?)
 [] Decide on what text inside GUIBitmap2DButton should do (scale to unfocused, focused, and pressed bitmaps or not? Allow additional text scale to be set by the user)
 
+[] Games should have at least 2MB of flash scratch space but maybe that can be configurable per game. Some games may like to use a lot and an error could let the user know they need to allow for more space
 [] Tones need duration
 [] RTTTL Music implementation
 [] Figure out how to draw voxelspace at any angle
@@ -105,7 +108,6 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [] When objects collide, figure out how to ensure another collision is found on the same object from its perspective
 [] When objects collide and one is static (not dynamic), move the dynamic object the full penetration distance instead of half (like what happens if two dynamic bodies collide)
 [] Physics: got rotated circles and rectangles but still need to figure out a better way of separating nodes without an impulse, resolve angular velocity during collision
-[] Menu (carousel)
 Adam:
 [X] Need a just_pressed, just_released, and just_changed function for input buttons
 [.] Delete nodes, need a .destroy() node function

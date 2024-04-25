@@ -507,6 +507,11 @@ bool tween_load_attr(tween_class_obj_t *tween, qstr attribute, mp_obj_t *destina
             destination[1] = tween->self;   // Pass either native or instance class object depending
             return true;
         break;
+        case MP_QSTR_during:
+            destination[0] = tween->during;
+            destination[1] = tween->self;   // Pass either native or instance class object depending
+            return true;
+        break;
         case MP_QSTR_after:
             destination[0] = tween->after;
             destination[1] = tween->self;   // Pass either native or instance class object depending
@@ -567,6 +572,10 @@ bool tween_store_attr(tween_class_obj_t *tween, qstr attribute, mp_obj_t *destin
         break;
         case MP_QSTR_tick:
             tween->tick = destination[1];
+            return true;
+        break;
+        case MP_QSTR_during:
+            tween->during = destination[1];
             return true;
         break;
         case MP_QSTR_after:
@@ -663,6 +672,7 @@ mp_obj_t tween_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, 
     self->after_called = false;
     self->attr = mp_const_none;
     self->after = mp_const_none;
+    self->during = mp_const_none;
 
 
     if(inherited == true){
@@ -680,6 +690,13 @@ mp_obj_t tween_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, 
             self->tick = MP_OBJ_FROM_PTR(&tween_class_tick_obj);
         }else{                                                  // Likely found method (could be attribute)
             self->tick = dest[0];
+        }
+
+        mp_load_method_maybe(child_class_obj, MP_QSTR_during, dest);
+        if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
+            self->during = mp_const_none;
+        }else{                                                  // Likely found method (could be attribute)
+            self->during = dest[0];
         }
 
         mp_load_method_maybe(child_class_obj, MP_QSTR_after, dest);

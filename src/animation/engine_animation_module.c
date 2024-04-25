@@ -32,10 +32,16 @@ void engine_animation_tick(float dt){
         if(mp_obj_is_type(element, &tween_class_type)){
             tween_class_obj_t *tween = current->object;
 
+            if(tween->during != mp_const_none && tween->finished == false){
+                exec[0] = tween->during;
+                exec[1] = tween->self;
+                exec[2] = mp_obj_new_float(dt);
+                mp_call_method_n_kw(1, 0, exec);
+            }
+
             exec[0] = tween->tick;
             exec[1] = tween->self;
             exec[2] = mp_obj_new_float(dt);
-
             mp_call_method_n_kw(1, 0, exec);
         }else{
             delay_class_obj_t *delay = current->object;
