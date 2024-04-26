@@ -16,6 +16,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_resources_module_init_obj, engine_resources_mod
 
 /*  --- doc ---
     NAME: engine_resources
+    ID: engine_resources
     DESC: Resources are objects that are used as references to certain data (textures/bitmaps, audio, fonts, etc.)
     ATTR: [type=object]   [name={ref_link:TextureResource}]     [value=object] 
     ATTR: [type=object]   [name={ref_link:WaveSoundResource}]   [value=object]

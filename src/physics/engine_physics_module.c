@@ -10,6 +10,7 @@
 // Could add another method that takes a vector2 to set gravity, just this for now
 /* --- doc ---
    NAME: set_gravity
+   ID: set_gravity
    DESC: Sets the gravity that all objects are affected by. TODO: lighter objects do not fall slower currently...
    PARAM: [type=float] [name=x] [value=any]
    PARAM: [type=float] [name=y] [value=any]
@@ -26,6 +27,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(engine_physics_set_gravity_obj, engine_physics_set_gra
 
 /* --- doc ---
    NAME: get_gravity
+   ID: get_gravity
    DESC: Gets the gravity that all objects are affected by
    RETURN: {ref_link:Vector2}
 */
@@ -45,6 +47,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_physics_module_init_obj, engine_physics_module_
 
 /* --- doc ---
    NAME: engine_physics
+   ID: engine_physics
    DESC: Module for controlling physics and for common physics collision shapes
    ATTR: [type=function] [name={ref_link:set_gravity}]                     [value=function]
    ATTR: [type=function] [name={ref_link:get_gravity}]                     [value=function]

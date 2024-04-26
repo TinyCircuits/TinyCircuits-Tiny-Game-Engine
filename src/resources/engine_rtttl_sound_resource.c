@@ -57,6 +57,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(rtttl_sound_resource_class_del_obj, rtttl_sound_resour
 
 /*  --- doc ---
     NAME: RTTTLSoundResource
+    ID: RTTTLSoundResource
     DESC: Can be used to play a music based on a couple of tones
     ATTR:   [type=float]    [name=frequency]    [value=any]                                                                                                                                                                  
 */ 

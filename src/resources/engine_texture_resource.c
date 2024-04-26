@@ -119,6 +119,7 @@ uint16_t texture_resource_get_pixel(texture_resource_class_obj_t *texture, uint3
 
 /*  --- doc ---
     NAME: TextureResource
+    ID: TextureResource
     DESC: Object that holds information about bitmaps. The file needs to be a 16-bit RGB565 .bmp file
     PARAM:  [type=string]  [name=filepath]  [value=string]
     PARAM:  [type=boolean] [name=in_ram]    [value=True of False (False by default)]

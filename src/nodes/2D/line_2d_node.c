@@ -320,6 +320,7 @@ STATIC mp_attr_fun_t line_2d_node_class_attr(mp_obj_t self_in, qstr attribute, m
 
 /*  --- doc ---
     NAME: Line2DNode
+    ID: Line2DNode
     DESC: Draws a line from `start` to `end`. Changing `position` (the midpoint of the line) automaticaly translates `end` and `start`
     PARAM:  [type={ref_link:Vector2}]         [name=start]                      [value={ref_link:Vector2}]
     PARAM:  [type={ref_link:Vector2}]         [name=end]                        [value={ref_link:Vector2}]

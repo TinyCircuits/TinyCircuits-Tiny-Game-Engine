@@ -120,6 +120,7 @@ void set_value_to_end(tween_class_obj_t *tween){
 
 /* --- doc ---
    NAME: after
+   ID: after
    DESC: Function that can be directly set or defined as a method in a class that is called after the tween completes (only called for ONE_SHOT mode)
    PARAM: [type=object] [name=tween] [value=object (the tween object that just finished)]
    RETURN: None
@@ -275,6 +276,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(tween_class_tick_obj, tween_class_tick);
 
 /* --- doc ---
    NAME: start
+   ID: tween_start
    DESC: Starts tweening a value. See https://easings.net/ for plots of the various easing functions
    PARAM: [type=object]      [name=object]         [value=object (the object that has an attribute to be tweened)]
    PARAM: [type=string]      [name=attribute_name] [value=string]
@@ -391,6 +393,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(tween_class_start_obj, 4, 9, tween_cl
 
 /* --- doc ---
    NAME: stop
+   ID: stop
    DESC: Stops tweening a value and sets to end value
    RETURN: None
 */
@@ -412,6 +415,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(tween_class_stop_obj, tween_class_stop);
 
 /* --- doc ---
    NAME: pause
+   ID: pause
    DESC: Pauses tweening a value
    RETURN: None
 */
@@ -428,6 +432,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(tween_class_pause_obj, tween_class_pause);
 
 /* --- doc ---
    NAME: unpause
+   ID: unpause
    DESC: Resumes tweening a value after pause
    RETURN: None
 */
@@ -444,6 +449,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(tween_class_unpause_obj, tween_class_unpause);
 
 /* --- doc ---
    NAME: restart
+   ID: restart
    DESC: Restarts tweening a value
    RETURN: None
 */
@@ -628,8 +634,9 @@ STATIC mp_attr_fun_t tween_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
 
 /* --- doc ---
    NAME: Tween
+   ID: Tween
    DESC: Object for interpolating and easing parameters of objects
-   ATTR:    [type=function]            [name={ref_link:start}]        [value=function]
+   ATTR:    [type=function]            [name={ref_link:tween_start}]  [value=function]
    ATTR:    [type=function]            [name={ref_link:stop}]         [value=function]
    ATTR:    [type=function]            [name={ref_link:pause}]        [value=function]
    ATTR:    [type=function]            [name={ref_link:unpause}]      [value=function]

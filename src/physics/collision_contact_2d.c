@@ -32,6 +32,7 @@ mp_obj_t collision_contact_2d_class_new(const mp_obj_type_t *type, size_t n_args
 
 /* --- doc ---
    NAME: CollisionContact2D
+   ID: CollisionContact2D
    DESC: Object that contains information about a collision
    ATTR: [type={ref_link:Vector2}] [name=position]  [value={ref_link:Vector2} TODO: implement filling this out upon collision of polygons, not easy...]
    ATTR: [type={ref_link:Vector2}] [name=normal]    [value={ref_link:Vector2}]

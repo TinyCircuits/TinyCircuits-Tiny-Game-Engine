@@ -352,6 +352,7 @@ void engine_audio_play_on_channel(mp_obj_t sound_resource_obj, audio_channel_cla
 
 /*  --- doc ---
     NAME: stop
+    ID: audio_stop
     DESC: Stops playing audio on channel at index
     PARAM: [type=int]       [name=channel_index]  [value=0 ~ 3]                                                                                                          
     RETURN: None
@@ -372,8 +373,9 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_audio_stop_obj, engine_audio_stop);
 
 /*  --- doc ---
     NAME: play
+    ID: audio_play
     DESC: Starts playing an audio source on a given channel and looping or not. It is up to the user to change the gains of the returned channels so that the audio does not clip.
-    PARAM: [type=object]    [name=sound_resource] [value={ref_link:WaveSoundResource}]
+    PARAM: [type=object]    [name=sound_resource] [value={ref_link:WaveSoundResource} or {ref_link:ToneSoundResource}]
     PARAM: [type=int]       [name=channel_index]  [value=0 ~ 3]                                                          
     PARAM: [type=boolean]   [name=loop]           [value=True or False]                                                  
     RETURN: {ref_link:AudioChannel}
@@ -393,6 +395,7 @@ MP_DEFINE_CONST_FUN_OBJ_3(engine_audio_play_obj, engine_audio_play);
 
 /*  --- doc ---
     NAME: set_volume
+    ID: set_volume
     DESC: Sets the master volume clamped between 0.0 and 1.0. In the future, this will be persistent and stored/restored using a settings file (TODO)
     PARAM: [type=float] [name=set_volume] [value=0.0 ~ 1.0]
     RETURN: None
@@ -406,6 +409,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_audio_set_volume_obj, engine_audio_set_volume);
 
 /*  --- doc ---
     NAME: get_volume
+    ID: get_volume
     DESC: Returns the currently set master volume between 0.0 and 1.0
     RETURN: None
 */ 
@@ -425,9 +429,11 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_audio_module_init_obj, engine_audio_module_init
 
 /*  --- doc ---
     NAME: engine_audio
+    ID: engine_audio
     DESC: Module for controlling/playing audio through four channels.
     ATTR: [type=object]     [name={ref_link:AudioChannel}]  [value=function]
-    ATTR: [type=function]   [name={ref_link:play}]          [value=function] 
+    ATTR: [type=function]   [name={ref_link:audio_play}]    [value=function]
+    ATTR: [type=function]   [name={ref_link:audio_stop}]    [value=function] 
     ATTR: [type=function]   [name={ref_link:set_volume}]    [value=function]
     ATTR: [type=function]   [name={ref_link:get_volume}]    [value=function]
 */ 

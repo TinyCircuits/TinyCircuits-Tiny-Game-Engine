@@ -25,6 +25,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_nodes_module_init_obj, engine_nodes_module_init
 
 /*  --- doc ---
     NAME: engine_nodes
+    ID: engine_nodes
     DESC: Module containing nodes that get drawn to the framebuffer. Each node also has a tick function that can be overridden to run code every game loop.
     ATTR: [type=object]   [name={ref_link:EmptyNode}]               [value=object] 
     ATTR: [type=object]   [name={ref_link:CameraNode}]              [value=object]

@@ -6,6 +6,7 @@ import codecs
 
 header_marker = "--- doc ---"
 name_marker = "NAME: "
+id_marker = "ID: "
 desc_marker = "DESC: "
 return_marker = "RETURN: "
 param_marker = "PARAM: "

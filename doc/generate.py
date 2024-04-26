@@ -2,11 +2,11 @@ import os
 import shutil
 import glob
 import codecs
-from generate_common import get_attr_or_param_name_type_value, get_docstring_properties, header_marker, name_marker, desc_marker, return_marker, attr_marker, param_marker, ovrr_marker
+from generate_common import get_attr_or_param_name_type_value, get_docstring_properties, header_marker, name_marker, id_marker, desc_marker, return_marker, attr_marker, param_marker, ovrr_marker
 
 
-def create_fragment_html_file(path, name, desc, ret, attrs, params, ovrrs):
-    file = open('build/' + name + '.html', 'w')
+def create_fragment_html_file(path, name, id, desc, ret, attrs, params, ovrrs):
+    file = open('build/' + id + '.html', 'w')
 
     # Start HTML file
     file.write("<!DOCTYPE html>")
@@ -96,6 +96,7 @@ def extract_markdown(path, file_contents:str):
         docstring = file_contents[last_index:docstring_end]
 
         name = get_docstring_properties(docstring, name_marker, True)[0]
+        id = get_docstring_properties(docstring, id_marker, True)[0]
         desc = get_docstring_properties(docstring, desc_marker, False)
         ret = get_docstring_properties(docstring, return_marker, False)
         attrs = get_docstring_properties(docstring, attr_marker, False)
@@ -112,7 +113,7 @@ def extract_markdown(path, file_contents:str):
             print("ERROR: No name in docstring (all docstrings are required to have a name): " + docstring)
             return -1
         
-        if create_fragment_html_file(path, name, desc, ret, attrs, params, ovrrs) == -1:
+        if create_fragment_html_file(path, name, id, desc, ret, attrs, params, ovrrs) == -1:
             return -1
 
         # Find the next docstring to make a markdown file out of

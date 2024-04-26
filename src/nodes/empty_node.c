@@ -100,6 +100,7 @@ STATIC mp_attr_fun_t empty_node_class_attr(mp_obj_t self_in, qstr attribute, mp_
 
 /*  --- doc ---
     NAME: EmptyNode
+    ID: EmptyNode
     DESC: Node that does nothing except expose overrides for user implementation
     PARAM: [type={ref_link:Vector3}]    [name=position]                 [value={ref_link:Vector3}]
     PARAM: [type={ref_link:Vector3}]    [name=rotation]                 [value={ref_link:Vector3}]

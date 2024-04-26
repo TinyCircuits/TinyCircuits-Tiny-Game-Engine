@@ -11,6 +11,13 @@
 #include <string.h>
 
 
+/* --- doc ---
+   NAME: tick
+   ID: delay_tick
+   DESC: Main tick callback function of Delay. Override this in a class or set to a function that accepts a parameter dt to redefine how the delay works. After `delay` time the `after` function is called by default.
+   PARAM: [type=float]       [name=dt]          [value=time in milliseconds]
+   RETURN: None
+*/
 STATIC mp_obj_t delay_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
     ENGINE_INFO_PRINTF("Delay: tick!");
 
@@ -52,6 +59,14 @@ STATIC mp_obj_t delay_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
 MP_DEFINE_CONST_FUN_OBJ_2(delay_class_tick_obj, delay_class_tick);
 
 
+/* --- doc ---
+   NAME: start
+   ID: delay_start
+   DESC: Starts a delay that will call a function after a certain amount of time
+   PARAM: [type=float]       [name=delay]          [value=any value in milliseconds]
+   PARAM: [type=function]    [name=after]          [value=function to be called after delay]
+   RETURN: None
+*/
 mp_obj_t delay_class_start(size_t n_args, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("Delay: start");
 
@@ -153,6 +168,12 @@ bool delay_store_attr(delay_class_obj_t *delay, qstr attribute, mp_obj_t *destin
 }
 
 
+/* --- doc ---
+   NAME: after
+   ID: delay_after
+   DESC: After `delay` amount of time this callback function is called
+   RETURN: None
+*/
 STATIC mp_attr_fun_t delay_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing PhysicsCircle2DNode attr");
 
@@ -194,14 +215,15 @@ STATIC mp_attr_fun_t delay_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
 
 /* --- doc ---
    NAME: Delay
+   ID: Delay
    DESC: Object for executing code after a certain non-blocking delay
-   ATTR:    [type=function]            [name={ref_link:start}]        [value=function]
-   ATTR:    [type=function]            [name={ref_link:tick}]         [value=function]
-   ATTR:    [type=function]            [name={ref_link:after}]        [value=function]
+   ATTR:    [type=function]            [name={ref_link:delay_start}]  [value=function]
+   ATTR:    [type=function]            [name={ref_link:delay_tick}]   [value=function]
+   ATTR:    [type=function]            [name={ref_link:delay_after}]  [value=function]
    ATTR:    [type=float]               [name=delay]                   [value=any positive value representing milliseconds]
    ATTR:    [type=boolean]             [name=finished]                [value=True or False (read-only)]
-   OVRR:    [type=function]            [name={ref_link:tick}]         [value=function]
-   OVRR:    [type=function]            [name={ref_link:after}]        [value=function]
+   OVRR:    [type=function]            [name={ref_link:delay_tick}]   [value=function]
+   OVRR:    [type=function]            [name={ref_link:delay_after}]  [value=function]
 */
 mp_obj_t delay_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Delay");

@@ -9,6 +9,7 @@
 
 /*  --- doc ---
     NAME: set_background_color
+    ID: set_background_color
     DESC: Sets the background (the data that clears the framebuffer) to a color
     PARAM: [type=enum/int]   [name=background_color]  [value=enum/int (16-bit RGB565)]
     RETURN: None
@@ -23,6 +24,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(engine_draw_set_background_color_obj, engine_draw_set_
 
 /*  --- doc ---
     NAME: set_background
+    ID: set_background
     DESC: Sets the background (the data that clears the framebuffer) to a {ref_link:TextureResource}
     PARAM: [type=object]   [name=background]  [value={ref_link:TextureResource}]
     RETURN: None
@@ -49,6 +51,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_draw_module_init_obj, engine_draw_module_init);
 
 /*  --- doc ---
     NAME: engine_draw
+    ID: engine_draw
     DESC: Module for drawing to the framebuffer
     ATTR: [type=function]   [name={ref_link:set_background_color}]  [value=function] 
     ATTR: [type=function]   [name={ref_link:set_background}]        [value=function]

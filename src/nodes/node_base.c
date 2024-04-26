@@ -11,11 +11,13 @@
 
 /*  --- doc ---
     NAME: tick
+    ID: tick
     DESC: Overridable tick callback                                                                                                         
     RETURN: None
 */ 
 /*  --- doc ---
     NAME: draw
+    ID: draw
     DESC: Overridable draw callback 
     PARAM: [type=Node] [name=camera] [value=one of the camera nodes in the scene]                                                                                                         
     RETURN: None
@@ -82,6 +84,7 @@ mp_obj_t node_base_del(mp_obj_t self_in){
 
 /*  --- doc ---
     NAME: add_child
+    ID: add_child
     DESC: Adds child to the node this is being called on
     PARAM: [type=Node] [name=child] [value=any node]                                                                                                         
     RETURN: None
@@ -104,6 +107,7 @@ mp_obj_t node_base_add_child(mp_obj_t self_parent_in, mp_obj_t child_in){
 
 /*  --- doc ---
     NAME: get_child
+    ID: get_child
     DESC: Gets child
     PARAM: [type=int] [name=index] [value=any positive integer]                                                                                                        
     RETURN: Node
@@ -132,6 +136,7 @@ mp_obj_t node_base_get_child(mp_obj_t self_parent_in, mp_obj_t index_obj){
 
 /*  --- doc ---
     NAME: remove_child
+    ID: remove_child
     DESC: Removes child from the node this is being called on
     PARAM: [type=Node] [name=child] [value=any node]                                                                                                        
     RETURN: None
@@ -157,6 +162,7 @@ mp_obj_t node_base_remove_child(mp_obj_t self_parent_in, mp_obj_t child_in){
 
 /*  --- doc ---
     NAME: set_layer
+    ID: set_layer
     DESC: Sets the node to a different render layer. Draws layer 0 first and up to 7 last.
     PARAM: [type=int] [name=layer] [value=0 ~ 7]                                                                                                        
     RETURN: None
@@ -175,6 +181,7 @@ mp_obj_t node_base_set_layer(mp_obj_t self_in, mp_obj_t layer){
 
 /*  --- doc ---
     NAME: get_layer
+    ID: get_layer
     DESC: Gets the render layer the node is currently on                                                                                                     
     RETURN: 0 ~ 7
 */ 

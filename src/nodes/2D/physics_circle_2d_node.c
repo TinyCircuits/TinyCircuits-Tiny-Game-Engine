@@ -180,6 +180,7 @@ STATIC mp_attr_fun_t physics_circle_2d_node_class_attr(mp_obj_t self_in, qstr at
 
 /*  --- doc ---
     NAME: PhysicsCircle2DNode
+    ID: PhysicsCircle2DNode
     DESC: Node that is affected by physics. Usually other nodes are added as children to this node
     PARAM: [type={ref_link:Vector2}]                     [name=position]                 [value={ref_link:Vector2}]
     PARAM: [type=float]                                  [name=radius]                   [value=any]

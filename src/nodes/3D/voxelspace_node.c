@@ -278,6 +278,7 @@ STATIC mp_attr_fun_t voxelspace_node_class_attr(mp_obj_t self_in, qstr attribute
 
 /*  --- doc ---
     NAME: VoxelSpaceNode
+    ID: VoxelSpaceNode
     DESC: Node that gets rendered in a semi-3D fashion. See https://github.com/s-macke/VoxelSpace
     PARAM:  [type={ref_link:Vector3}]         [name=position]                   [value={ref_link:Vector3}]
     PARAM:  [type={ref_link:TextureResource}] [name=texture]                    [value={ref_link:TextureResource}]

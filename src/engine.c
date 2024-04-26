@@ -47,6 +47,7 @@ float dt;
 
 /* --- doc ---
    NAME: set_fps_limit
+   ID: set_fps_limit
    DESC: Sets the FPS limit that the game engine can run at. If the game runs fast enough to reach this, engine busy waits until it is time for the next frame
    PARAM: [type=float] [name=fps] [value=any positive value]
    RETURN: None
@@ -68,6 +69,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_set_fps_limit_obj, engine_set_fps_limit);
 
 /* --- doc ---
    NAME: disable_fps_limit
+   ID: disable_fps_limit
    DESC: Disables the FPS limit. The engine will tick uncapped
    RETURN: None
 */
@@ -81,6 +83,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_disable_fps_limit_obj, engine_disable_fps_limit
 
 /* --- doc ---
    NAME: get_running_fps
+   ID: get_running_fps
    DESC: Gets the actual FPS that the game loop is running at
    RETURN: float
 */
@@ -102,6 +105,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_get_running_fps_obj, engine_get_running_fps);
 // but exposed anyway to MicroPython
 /* --- doc ---
    NAME: reset
+   ID: engine_reset
    DESC: Resets internal state of engine (TODO: make sure all state is cleared, run when games end or go back to REPL or launcher)
    RETURN: None
 */
@@ -114,6 +118,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_reset_obj, engine_reset);
 
 /* --- doc ---
    NAME: end
+   ID: engine_end
    DESC: Stops the main loop if it is running, otherwise resets the internal engine state right away (for the case someone is calling engine.tick() themselves)
    RETURN: None
 */
@@ -135,6 +140,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_end_obj, engine_end);
 
 /* --- doc ---
    NAME: tick
+   ID: engine_tick
    DESC: Runs the main tick function of the engine. This is called in a loop when doing 'engine.start()' but can also be called manually if needed
    RETURN: None
 */
@@ -196,6 +202,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_tick_obj, engine_tick);
 
 /* --- doc ---
    NAME: start
+   ID: engine_start
    DESC: Starts the main engine loop to start calling 'engine.tick()'
    RETURN: None
 */
@@ -260,14 +267,15 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_module_init_obj, engine_module_init);
 
 /* --- doc ---
    NAME: engine
+   ID: engine
    DESC: Main component for controlling vital engine features
    ATTR: [type=function] [name={ref_link:set_fps_limit}]        [value=function]
    ATTR: [type=function] [name={ref_link:disable_fps_limit}]    [value=function (fps limit is disabled by default, use {ref_link:set_fps_limit} to enable it)]
    ATTR: [type=function] [name={ref_link:get_running_fps}]      [value=function]
-   ATTR: [type=function] [name={ref_link:tick}]                 [value=function]
-   ATTR: [type=function] [name={ref_link:start}]                [value=function]
-   ATTR: [type=function] [name={ref_link:end}]                  [value=function]
-   ATTR: [type=function] [name={ref_link:reset}]                [value=function]
+   ATTR: [type=function] [name={ref_link:engine_tick}]          [value=function]
+   ATTR: [type=function] [name={ref_link:engine_start}]         [value=function]
+   ATTR: [type=function] [name={ref_link:engine_end}]           [value=function]
+   ATTR: [type=function] [name={ref_link:engine_reset}]         [value=function]
 */
 STATIC const mp_rom_map_elem_t engine_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine) },

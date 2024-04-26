@@ -289,6 +289,7 @@ STATIC mp_attr_fun_t text_2d_node_class_attr(mp_obj_t self_in, qstr attribute, m
 
 /*  --- doc ---
     NAME: Text2DNode
+    ID: Text2DNode
     DESC: Simple 2D sprite node that displays text
     PARAM:  [type={ref_link:Vector2}]         [name=position]                   [value={ref_link:Vector2}]
     PARAM:  [type={ref_link:FontResource}]    [name=font]                       [value={ref_link:FontResource}]

@@ -29,6 +29,7 @@ mp_obj_t vector3_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw
 
 /*  --- doc ---
     NAME: Vector3
+    ID: Vector3
     DESC: Holds an X, Y, and Z value. Typically used for position
     PARAM: [type=float]  [name=x]    [value=any]
     PARAM: [type=float]  [name=y]    [value=any]

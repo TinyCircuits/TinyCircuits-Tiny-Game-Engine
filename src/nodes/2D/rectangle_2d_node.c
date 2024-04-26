@@ -279,6 +279,7 @@ STATIC mp_attr_fun_t rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribu
 
 /*  --- doc ---
     NAME: Rectangle2DNode
+    ID: Rectangle2DNode
     DESC: Simple 2D rectangle node
     PARAM:  [type={ref_link:Vector2}]         [name=position]                   [value={ref_link:Vector2}]
     PARAM:  [type=float]                      [name=width]                      [value=any]

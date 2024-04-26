@@ -30,6 +30,7 @@ mp_obj_t vector2_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw
 
 /*  --- doc ---
     NAME: Vector2
+    ID: Vector2
     DESC: Holds an X and Y value. Typically used for position
     PARAM: [type=float]  [name=x]    [value=any]
     PARAM: [type=float]  [name=y]    [value=any]                                                                                         

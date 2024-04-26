@@ -251,6 +251,7 @@ STATIC mp_attr_fun_t physics_rectangle_2d_node_class_attr(mp_obj_t self_in, qstr
 
 /*  --- doc ---
     NAME: PhysicsRectangle2DNode
+    ID: PhysicsRectangle2DNode
     DESC: Node that is affected by physics. Usually other nodes are added as children to this node
     PARAM: [type={ref_link:Vector2}]                     [name=position]                 [value={ref_link:Vector2}]
     PARAM: [type=float]                                  [name=width]                    [value=any]

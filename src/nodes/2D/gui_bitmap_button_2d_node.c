@@ -504,7 +504,83 @@ STATIC mp_attr_fun_t gui_bitmap_button_2d_node_class_attr(mp_obj_t self_in, qstr
 
 /*  --- doc ---
     NAME: GUIBitmapButton2DNode
-    DESC: 
+    ID: GUIBitmapButton2DNode
+    DESC: Like Button2DNode but uses bitmaps instead of colors to draw a custom button
+    PARAM:  [type={ref_link:Vector2}]         [name=position]                       [value={ref_link:Vector2}]
+    PARAM:  [type={ref_link:FontResource}]    [name=font]                           [value={ref_link:FontResource}]
+    PARAM:  [type=string]                     [name=text]                           [value=any]
+
+    PARAM:  [type={ref_link:Color}]           [name=text_color]                     [value=any {ref_link:Color} that the base text color should blend to (works best with white text)]
+    PARAM:  [type={ref_link:Color}]           [name=focused_text_color]             [value=any {ref_link:Color}]
+    PARAM:  [type={ref_link:Color}]           [name=pressed_text_color]             [value=any {ref_link:Color}]
+
+    PARAM:  [type={ref_link:TextureResource}] [name=bitmap]                         [value=any {ref_link:TextureResource}]
+    PARAM:  [type={ref_link:TextureResource}] [name=focused_bitmap]                 [value=any {ref_link:TextureResource}]
+    PARAM:  [type={ref_link:TextureResource}] [name=pressed_bitmap]                 [value=any {ref_link:TextureResource}]
+
+    PARAM:  [type={ref_link:Color}]           [name=transparent_color]              [value=any {ref_link:Color} (single color in all three bitmaps that should be drawn transparent (i.e. not drawn at all))]
+
+    PARAM:  [type=float]                      [name=rotation]                       [value=any (radians)]
+    PARAM:  [type={ref_link:Vector2}]         [name=scale]                          [value={ref_link:Vector2}]
+    PARAM:  [type={ref_link:Vector2}]         [name=text_scale]                     [value={ref_link:Vector2} (additional scale for the text that can be hand tweaked to fit the text inside the button bitmaps (might be automatic in the future: TODO))]
+    PARAM:  [type=float]                      [name=opacity]                        [value=0 ~ 1.0]
+
+    PARAM:  [type=float]                      [name=letter_spacing]                 [value=any]
+    PARAM:  [type=float]                      [name=line_spacing]                   [value=any]
+
+
+    ATTR:   [type=function]                   [name={ref_link:add_child}]           [value=function] 
+    ATTR:   [type=function]                   [name={ref_link:get_child}]           [value=function] 
+    ATTR:   [type=function]                   [name={ref_link:remove_child}]        [value=function]
+    ATTR:   [type=function]                   [name={ref_link:set_layer}]           [value=function]
+    ATTR:   [type=function]                   [name={ref_link:get_layer}]           [value=function]
+    ATTR:   [type=function]                   [name={ref_link:remove_child}]        [value=function]
+    ATTR:   [type=function]                   [name={ref_link:tick}]                [value=function]
+    ATTR:   [type=function]                   [name={ref_link:on_focused}]          [value=function]
+    ATTR:   [type=function]                   [name={ref_link:on_just_focused}]     [value=function]
+    ATTR:   [type=function]                   [name={ref_link:on_just_unfocused}]   [value=function]
+    ATTR:   [type=function]                   [name={ref_link:on_pressed}]          [value=function]
+    ATTR:   [type=function]                   [name={ref_link:on_just_pressed}]     [value=function]
+    ATTR:   [type=function]                   [name={ref_link:on_just_released}]    [value=function]
+
+    ATTR:   [type={ref_link:Vector2}]         [name=position]                       [value={ref_link:Vector2}]
+    ATTR:   [type={ref_link:FontResource}]    [name=font]                           [value={ref_link:FontResource}]
+    ATTR:   [type=string]                     [name=text]                           [value=any]
+    ATTR:   [type=float]                      [name=outline]                        [value=any (how thick the outline should be, in px)]
+    ATTR:   [type=float]                      [name=padding]                        [value=any (amount of empty space between the text and outline, in px)]
+
+    ATTR:   [type={ref_link:Color}]           [name=text_color]                     [value=any {ref_link:Color} that the base text color should blend to (works best with white text)]
+    ATTR:   [type={ref_link:Color}]           [name=focused_text_color]             [value=any {ref_link:Color}]
+    ATTR:   [type={ref_link:Color}]           [name=pressed_text_color]             [value=any {ref_link:Color}]
+
+    ATTR:   [type={ref_link:TextureResource}] [name=bitmap]                         [value=any {ref_link:TextureResource}]
+    ATTR:   [type={ref_link:TextureResource}] [name=focused_bitmap]                 [value=any {ref_link:TextureResource}]
+    ATTR:   [type={ref_link:TextureResource}] [name=pressed_bitmap]                 [value=any {ref_link:TextureResource}]
+
+    ATTR:   [type={ref_link:Color}]           [name=transparent_color]              [value=any {ref_link:Color} (single color in all three bitmaps that should be drawn transparent (i.e. not drawn at all))]
+
+    ATTR:   [type=float]                      [name=rotation]                       [value=any (radians)]
+    ATTR:   [type={ref_link:Vector2}]         [name=scale]                          [value={ref_link:Vector2}]
+    ATTR:   [type={ref_link:Vector2}]         [name=text_scale]                     [value={ref_link:Vector2} (additional scale for the text that can be hand tweaked to fit the text inside the button bitmaps (might be automatic in the future: TODO))]
+    ATTR:   [type=float]                      [name=opacity]                        [value=0 ~ 1.0]
+
+    ATTR:   [type=float]                      [name=letter_spacing]                 [value=any]
+    ATTR:   [type=float]                      [name=line_spacing]                   [value=any]
+
+    ATTR:   [type=boolean]                    [name=focused]                        [value=True or False (can be read to see if focused or set to focus it)]
+    ATTR:   [type=boolean]                    [name=pressed]                        [value=True or False (can be read to see if pressed or set to press it)]
+
+    ATTR:   [type=float]                      [name=width]                          [value=any (total width of the button, read-only): NOT IMPLEMENTED YET: TODO]
+    ATTR:   [type=float]                      [name=height]                         [value=any (total height of the button, read-only):  NOT IMPLEMENTED YET: TODO]
+
+    OVRR:   [type=function]                   [name={ref_link:tick}]                [value=function]
+    OVRR:   [type=function]                   [name={ref_link:on_focused}]          [value=function]
+    OVRR:   [type=function]                   [name={ref_link:on_just_focused}]     [value=function]
+    OVRR:   [type=function]                   [name={ref_link:on_just_unfocused}]   [value=function]
+    OVRR:   [type=function]                   [name={ref_link:on_pressed}]          [value=function]
+    OVRR:   [type=function]                   [name={ref_link:on_just_pressed}]     [value=function]
+    OVRR:   [type=function]                   [name={ref_link:on_just_released}]    [value=function]
+*/
 */
 mp_obj_t gui_bitmap_button_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New GUIBitmapButton2DNode");

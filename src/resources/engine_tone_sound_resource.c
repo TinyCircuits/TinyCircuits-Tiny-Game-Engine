@@ -80,6 +80,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(tone_sound_resource_class_del_obj, tone_sound_resource
 
 /*  --- doc ---
     NAME: ToneSoundResource
+    ID: ToneSoundResource
     DESC: Can be used to play a tone on an audio channel
     ATTR:   [type=float]    [name=frequency]    [value=any]                                                                                                                                                                  
 */ 

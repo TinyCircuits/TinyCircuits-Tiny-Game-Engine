@@ -49,6 +49,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(rectangle_class_overlapping_obj, rectangle_class_overl
 
 /*  --- doc ---
     NAME: Rectangle
+    ID: Rectangle
     DESC: Holds an X and Y plus width and height
     PARAM:  [type=float]  [name=x]      [value=any]
     PARAM:  [type=float]  [name=y]      [value=any]

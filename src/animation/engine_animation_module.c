@@ -67,6 +67,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_animation_module_init_obj, engine_animation_mod
 
 /* --- doc ---
    NAME: engine_animation
+   ID: engine_animation
    DESC: Module for animating certain aspects of the engine
    ATTR: [type=object]     [name={ref_link:Tween}]      [value=object] 
    ATTR: [type=object]     [name={ref_link:Delay}]      [value=object] 

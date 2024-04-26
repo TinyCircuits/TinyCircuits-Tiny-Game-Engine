@@ -5,6 +5,7 @@
 
 /*  --- doc ---
     NAME: disable_all
+    ID: disable_all
     DESC: Disables all debug levels/outputs
     RETURN: None
 */ 
@@ -21,6 +22,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_debug_disable_all_obj, engine_debug_disable_all
 
 /*  --- doc ---
     NAME: enable_all
+    ID: enable_all
     DESC: Enables all debug levels/outputs
     RETURN: None
 */ 
@@ -37,6 +39,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_debug_enable_all_obj, engine_debug_enable_all);
 
 /*  --- doc ---
     NAME: enable_setting
+    ID: enable_setting
     DESC: Enables a debug level/output
     PARAM: [type=enum/int]   [name=debug_setting]   [value=enum/int 0 ~ 3]
     RETURN: None
@@ -71,6 +74,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_debug_enable_setting_obj, engine_debug_enable_s
 
 /*  --- doc ---
     NAME: engine_debug
+    ID: engine_debug
     DESC: Module for what types of information gets printed from the engine
     ATTR: [type=function]   [name={ref_link:enable_all}]        [value=function] 
     ATTR: [type=function]   [name={ref_link:disable_all}]       [value=function]

@@ -240,6 +240,7 @@ STATIC mp_attr_fun_t circle_2d_node_class_attr(mp_obj_t self_in, qstr attribute,
 
 /* --- doc ---
    NAME: Circle2DNode
+   ID: Circle2DNode
    DESC: Simple node that draws a colored circle given a radius
    PARAM:   [type={ref_link:Vector2}]  [name=position]                    [value={ref_link:Vector2}]
    PARAM:   [type=float]               [name=radius]                      [value=any]

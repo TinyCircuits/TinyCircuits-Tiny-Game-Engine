@@ -82,6 +82,7 @@ uint16_t engine_input_get_gui_toggle_button(){
 
 /*  --- doc ---
     NAME: check_pressed
+    ID: check_pressed
     DESC: For checking button presses. OR'ing together values means this returns true when all OR'ed buttons are pressed
     PARAM: [type=int]   [name=button_mask]  [value=single or OR'ed together enum/ints (e.g. 'engine_input.A | engine_input.B')]
     RETURN: True or False
@@ -99,6 +100,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(engine_input_check_pressed_obj, engine_input_check_pre
 
 /*  --- doc ---
     NAME: check_just_changed
+    ID: check_just_changed
     DESC: For checking buttons that were either just released or pressed. OR'ing together values means this returns true when all OR'ed buttons were just changed
     PARAM: [type=int]   [name=button_mask]  [value=single or OR'ed together enum/ints (e.g. 'engine_input.A | engine_input.B')]
     RETURN: True or False
@@ -116,6 +118,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(engine_input_check_just_changed_obj, engine_input_chec
 
 /*  --- doc ---
     NAME: check_just_pressed
+    ID: check_just_pressed
     DESC: For checking buttons that were just pressed. OR'ing together values means this returns true when all OR'ed buttons were just pressed
     PARAM: [type=int]   [name=button_mask]  [value=single or OR'ed together enum/ints (e.g. 'engine_input.A | engine_input.B')]
     RETURN: True or False
@@ -133,6 +136,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(engine_input_check_just_pressed_obj, engine_input_chec
 
 /*  --- doc ---
     NAME: check_just_released
+    ID: check_just_released
     DESC: For checking buttons that were just released. OR'ing together values means this returns true when all OR'ed buttons were just released
     PARAM: [type=int]   [name=button_mask]  [value=single or OR'ed together enum/ints (e.g. 'engine_input.A | engine_input.B')]
     RETURN: True or False
@@ -149,8 +153,9 @@ MP_DEFINE_CONST_FUN_OBJ_2(engine_input_check_just_released_obj, engine_input_che
 
 
 /*  --- doc ---
-    NAME: engine_input_rumble
-    DESC: Run the internal vibration motor at an intensity
+    NAME: rumble
+    ID: rumble
+    DESC: Run the internal vibration motor at some intensity
     PARAM: [type=float]   [name=intensity]  [value=0.0 ~ 1.0]
     RETURN: None
 */ 
@@ -167,7 +172,8 @@ MP_DEFINE_CONST_FUN_OBJ_2(engine_input_rumble_obj, engine_input_rumble);
 
 
 /*  --- doc ---
-    NAME: engine_toggle_gui_focus
+    NAME: toggle_gui_focus
+    ID: toggle_gui_focus
     DESC: Toggle between button inputs being consumed by the game or gui elements
     RETURN: None
 */
@@ -187,13 +193,14 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_input_module_init_obj, engine_input_module_init
 
 /*  --- doc ---
     NAME: engine_input
+    ID: engine_input
     DESC: Module for checking button presses
     ATTR: [type=function]   [name={ref_link:check_pressed}]             [value=function]
     ATTR: [type=function]   [name={ref_link:check_just_changed}]        [value=function]
     ATTR: [type=function]   [name={ref_link:check_just_pressed}]        [value=function]
     ATTR: [type=function]   [name={ref_link:check_just_released}]       [value=function]
-    ATTR: [type=function]   [name={ref_link:engine_input_rumble}]       [value=function]
-    ATTR: [type=function]   [name={ref_link:engine_toggle_gui_focus}]   [value=function]
+    ATTR: [type=function]   [name={ref_link:rumble}]                    [value=function]
+    ATTR: [type=function]   [name={ref_link:toggle_gui_focus}]          [value=function]
     ATTR: [type=enum/int]   [name=A]                                    [value=0b0000000000000001]
     ATTR: [type=enum/int]   [name=B]                                    [value=0b0000000000000010]
     ATTR: [type=enum/int]   [name=DPAD_UP]                              [value=0b0000000000000100]

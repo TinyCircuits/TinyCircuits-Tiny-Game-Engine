@@ -16,6 +16,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_math_module_init_obj, engine_math_module_init);
 
 /*  --- doc ---
     NAME: engine_math
+    ID: engine_math
     DESC: Module for common math operations and objects
     ATTR: [type=object]   [name={ref_link:Vector2}]     [value=object]
     ATTR: [type=object]   [name={ref_link:Vector3}]     [value=object]

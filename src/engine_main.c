@@ -84,6 +84,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_main_module_init_obj, engine_main_module_init);
 
 /* --- doc ---
    NAME: engine_main
+   ID: engine_main
    DESC: This module needs to imported in main files using the engine. This sets up the device and engine plus resets everything every time it is imported. IMport this module anytime you want all engine nodes to be removed or when the engine should be setup
 */
 STATIC const mp_rom_map_elem_t engine_main_globals_table[] = {

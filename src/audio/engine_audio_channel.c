@@ -75,6 +75,7 @@ mp_obj_t audio_channel_class_new_dummy(const mp_obj_type_t *type, size_t n_args,
 
 /*  --- doc ---
     NAME: play
+    ID: audio_channel_play
     DESC: Starts playing an audio source on a given channel and looping or not. It is up to the user to change the gains of the returned channels so that the audio does not clip.
     PARAM: [type=object]    [name=sound_resource] [value={ref_link:WaveSoundResource}]
     PARAM: [type=boolean]   [name=loop]           [value=True or False] 
@@ -89,6 +90,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(audio_channel_play_obj, audio_channel_play);
 
 /*  --- doc ---
     NAME: stop
+    ID: audio_channel_stop
     DESC: Stops audio playing on channel
     RETURN: None
 */ 
@@ -137,13 +139,15 @@ MP_DEFINE_CONST_FUN_OBJ_1(audio_channel_stop_obj, audio_channel_stop);
 
 /*  --- doc ---
     NAME: AudioChannel
+    ID: AudioChannel
     DESC: Object for controlling audio on one of the 4 available channels
-    ATTR: [type=function]   [name={ref_link:stop}]          [value=function]
-    ATTR: [type=object]     [name=source]                   [value={ref_link:WaveSoundResource}]
-    ATTR: [type=float]      [name=gain]                     [value=any (default is 1.0)]
-    ATTR: [type=float]      [name=time]                     [value=0.0 to end of sound (read-only)]
-    ATTR: [type=boolean]    [name=loop]                     [value=True or False (whether to loop audio or not)]
-    ATTR: [type=boolean]    [name=done]                     [value=True or False (set True when audio finishes playing if not looping, read-only)]
+    ATTR: [type=function]   [name={ref_link:audio_channel_play}]    [value=function]
+    ATTR: [type=function]   [name={ref_link:audio_channel_stop}]    [value=function]
+    ATTR: [type=object]     [name=source]                           [value={ref_link:WaveSoundResource} or {ref_link:ToneSoundResource}]
+    ATTR: [type=float]      [name=gain]                             [value=any (default is 1.0)]
+    ATTR: [type=float]      [name=time]                             [value=0.0 to end of sound (read-only)]
+    ATTR: [type=boolean]    [name=loop]                             [value=True or False (whether to loop audio or not)]
+    ATTR: [type=boolean]    [name=done]                             [value=True or False (set True when audio finishes playing if not looping, read-only)]
 */ 
 STATIC void audio_channel_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing AudioChannel attr");

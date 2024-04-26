@@ -77,6 +77,17 @@ uint16_t ENGINE_FAST_FUNCTION(engine_color_alpha_blend)(uint16_t background, uin
 }
 
 
+/*  --- doc ---
+    NAME: Color
+    ID: Color
+    DESC: Simple object that holds an RGB color. Normal of constructing this is by passing 3 channels, but you can also pass it nothing to default to black or a single int in RGB565
+    PARAM:  [type=float]    [name=r]   [value=0.0 ~ 1.0]
+    PARAM:  [type=float]    [name=g]   [value=0.0 ~ 1.0]
+    PARAM:  [type=float]    [name=b]   [value=0.0 ~ 1.0]
+    ATTR:   [type=float]    [name=r]   [value=0.0 ~ 1.0]
+    ATTR:   [type=float]    [name=g]   [value=0.0 ~ 1.0]
+    ATTR:   [type=float]    [name=b]   [value=0.0 ~ 1.0]
+*/
 mp_obj_t color_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Color");
     color_class_obj_t *self = m_new_obj(color_class_obj_t);
