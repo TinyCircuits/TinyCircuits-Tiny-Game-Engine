@@ -468,3 +468,79 @@ vox_node_perf_test.py, avg. FPS: 44.69227
 
 
 
+2024-04-26 17:04:24.292776 : c880e390d8694bd763318332d5897347035701b8
+Finish adding more features to VoxelSpaceNode (get_abs_height)
+
+{
+line_node_perf_test.py, avg. FPS: 239.1152
+test_opacity_perf_test.py, avg. FPS: 87.15739
+test_perf_test.py, avg. FPS: 110.1959
+circle_node_perf_test.py, avg. FPS: 239.6282
+vox_node_perf_test.py, avg. FPS: 23.31124
+}
+
+
+ ----- 
+
+
+
+2024-04-26 17:26:06.844262 : d86d35502705e98bf83d84c01c597e27ed325036
+Finish adding more features to VoxelSpaceNode (get_abs_height)
+
+{
+vox_node_perf_test.py, avg. FPS: 19.95173
+}
+
+
+ ----- 
+
+
+
+2024-04-26 17:27:02.134802 : 320b3ffad76d5df4b423e2c7e311fd8e46eef41a
+Finish adding more features to VoxelSpaceNode (get_abs_height)
+
+{
+vox_node_perf_test.py, avg. FPS: 34.25202
+}
+
+
+ ----- 
+
+
+
+2024-04-29 10:24:05.854457 : c77895486222e2b22204b0ee2f350bfd7de11a90
+Finish adding more features to VoxelSpaceNode (get_abs_height)
+
+{
+vox_node_perf_test.py, avg. FPS: 29.87364
+}
+
+
+ ----- 
+
+
+
+2024-04-29 10:26:56.075302 : a11431d202a87ad11468c13dfbefc398357a6271
+Finish adding more features to VoxelSpaceNode (get_abs_height)
+
+{
+vox_node_perf_test.py, avg. FPS: 43.01453
+}
+
+
+ ----- 
+
+
+
+2024-04-29 10:35:49.207326 : 51fb0fda4b356541fe9a16391ab5adcf6c946377
+Finish adding more features to VoxelSpaceNode (get_abs_height)
+
+{
+vox_node_perf_test.py, avg. FPS: 44.65346
+}
+
+
+ ----- 
+
+
+

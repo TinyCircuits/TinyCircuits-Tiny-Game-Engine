@@ -34,6 +34,7 @@ vox0.repeat = True
 vox1 = VoxelSpaceNode(texture=C18W, heightmap=D18)
 vox1.position.x = 0
 vox1.position.y = -10
+vox1.position.z = 0
 vox1.scale.y = 15
 vox1.scale.x = 3
 vox1.scale.z = 3
@@ -46,27 +47,41 @@ class MyCam(CameraNode):
         self.mode = 0
         self.t = 0
 
+    def adjust(self):
+        vox0_height = vox0.get_abs_height(self.position.x, self.position.z)
+        vox1_height = vox1.get_abs_height(self.position.x, self.position.z)
+        print(vox1_height, self.position.y)
+
+        if(vox1_height != None and self.position.y < vox1_height):
+            self.position.y = vox1_height
+        
+        if(vox0_height != None and self.position.y > vox0_height):
+            self.position.y = vox0_height
+
     def forward(self):
         self.position.x += math.cos(self.rotation.y) * self.distance
         self.position.z += math.sin(self.rotation.y) * self.distance
-        print(self.position.x, self.position.y, self.position.z)
+        self.adjust()            
     
     def backward(self):
         self.position.x -= math.cos(self.rotation.y) * self.distance
         self.position.z -= math.sin(self.rotation.y) * self.distance
+        self.adjust() 
     
     def left(self):
         self.position.x -= math.cos(self.rotation.y+(math.pi/2)) * self.distance
         self.position.z -= math.sin(self.rotation.y+(math.pi/2)) * self.distance
+        self.adjust() 
     
     def right(self):
         self.position.x += math.cos(self.rotation.y+(math.pi/2)) * self.distance
         self.position.z += math.sin(self.rotation.y+(math.pi/2)) * self.distance
+        self.adjust()
 
     def tick(self):
-        print(engine.get_running_fps())
+        # print(engine.get_running_fps())
         self.t += 0.01
-        vox0.position.y = 20 + math.sin(self.t)
+        # vox0.position.y = 20 + math.sin(self.t)
 
         if engine_input.check_pressed(engine_input.BUMPER_RIGHT):
             if self.mode == 0:
@@ -74,7 +89,7 @@ class MyCam(CameraNode):
             elif self.mode == 2:
                 self.rotation.z += 0.05
             elif self.mode == 3:
-                vox0.lod += 0.001
+                # vox0.lod += 0.001
                 vox1.lod += 0.001
         if engine_input.check_pressed(engine_input.BUMPER_LEFT):
             if self.mode == 0:
@@ -82,7 +97,7 @@ class MyCam(CameraNode):
             elif self.mode == 2:
                 self.rotation.z -= 0.05
             elif self.mode == 3:
-                vox0.lod -= 0.001
+                # vox0.lod -= 0.001
                 vox1.lod -= 0.001
     
 
@@ -98,13 +113,13 @@ class MyCam(CameraNode):
         if engine_input.check_pressed(engine_input.A):
             if self.mode == 0:
                 self.position.y += 0.5
-                print(self.position.x, self.position.y, self.position.z)
+                self.adjust() 
             elif self.mode == 1:
                 self.rotation.x -= 0.1
         if engine_input.check_pressed(engine_input.B):
             if self.mode == 0:
                 self.position.y -= 0.5
-                print(self.position.x, self.position.y, self.position.z)
+                self.adjust() 
             elif self.mode == 1:
                 self.rotation.x += 0.1
         

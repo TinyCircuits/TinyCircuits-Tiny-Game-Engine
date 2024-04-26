@@ -14,13 +14,13 @@ D18 = TextureResource("D18.bmp", True)
 
 vox = VoxelSpaceNode(texture=C18W, heightmap=D18)
 vox.position.x = 200
-vox.position.y = -50
-vox.height_scale = 40
+vox.position.y = 0
+vox.scale.y = 10
 
 
 camera = CameraNode()
 camera.position.x = 175
-camera.position.y = 200
+camera.position.y = 10
 camera.position.z = 75
 camera.view_distance = 350
 camera.fov = 70 * (math.pi/180)

@@ -18,6 +18,45 @@
 int16_t height_buffer[SCREEN_WIDTH];
 
 
+float voxelspace_get_height(texture_resource_class_obj_t *heightmap, vector3_class_obj_t *voxelspace_scale, vector3_class_obj_t *voxelspace_position, uint32_t index, bool flip){
+    // Get each RGB channel as a float
+    float r = (heightmap->data[index] >> 0) & 0b00011111;
+    float g = (heightmap->data[index] >> 5) & 0b00111111;
+    float b = (heightmap->data[index] >> 11) & 0b00011111;
+
+    // Change from RGB565 (already normalized to 0.0 ~ 1.0 for each channel) to grayscale 0.0 ~ 1.0: https://en.wikipedia.org/wiki/Grayscale#:~:text=Ylinear%2C-,which%20is%20given%20by,-%5B6%5D
+    // Divided each channel coefficient by their respective bit resolution to avoid 3 divides
+    float altitude = (0.006858f*r + 0.01135f*g + 0.00233f*b);   // <- Convert to grayscale 0.0 ~ 1.0
+    if(flip == false) altitude = -altitude;                     // <- flip so that the camera is look at base/water level by default
+    altitude *= voxelspace_scale->y.value;                      // Scale height from 0.0 ~ 1.0 to y-axis scale
+    
+    return altitude;
+}
+
+
+bool voxelspace_get_height_abs(engine_voxelspace_node_class_obj_t *voxelspace, float x, float y, float *out_altitude, uint32_t *index){
+    texture_resource_class_obj_t *heightmap = voxelspace->heightmap_resource;
+    vector3_class_obj_t *position = voxelspace->position;
+    bool repeat = mp_obj_get_int(voxelspace->repeat);
+    bool flip = mp_obj_get_int(voxelspace->flip);
+
+    if(repeat == true){
+        x = fmodf(fabsf(x), heightmap->width);
+        y = fmodf(fabsf(y), heightmap->height);
+    }
+
+    if((x >= position->x.value && x < position->x.value + heightmap->width) && (y >= position->z.value && y < position->z.value+heightmap->height)){
+        *index = ((int32_t)y-position->z.value) * heightmap->width + ((int32_t)x-position->x.value);
+        *out_altitude = voxelspace_get_height(heightmap, voxelspace->scale, voxelspace->position, *index, flip);
+        *out_altitude -= position->y.value;   // Apply voxelspace node translation
+    }else{
+        return false;
+    }
+
+    return true;
+}
+
+
 void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("VoxelSpaceNode: Drawing");
 
@@ -95,36 +134,14 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
         pleft_y += camera_position->z.value;
 
         for(uint8_t i=0; i<SCREEN_WIDTH; i++){
-            int32_t x = 0;
-            int32_t y = 0;
+            float altitude = 0.0f;
+            uint32_t index = 0;
 
-            if(repeat == false){
-                x = pleft_x;
-                y = pleft_y;
-            }else{
-                x = fmodf(fabsf(pleft_x), heightmap->width);
-                y = fmodf(fabsf(pleft_y), heightmap->height);
-            }
-
-            if((x >= voxelspace_position->x.value && x < voxelspace_position->x.value + heightmap->width) && (y >= voxelspace_position->z.value && y < voxelspace_position->z.value+heightmap->height)){
-                uint32_t index = (y-voxelspace_position->z.value) * heightmap->width + (x-voxelspace_position->x.value);
-
-                // Get each RGB channel as a float
-                float r = (heightmap->data[index] >> 0) & 0b00011111;
-                float g = (heightmap->data[index] >> 5) & 0b00111111;
-                float b = (heightmap->data[index] >> 11) & 0b00011111;
-
-                // Change from RGB565 (already normalized to 0.0 ~ 1.0 for each channel) to grayscale 0.0 ~ 1.0: https://en.wikipedia.org/wiki/Grayscale#:~:text=Ylinear%2C-,which%20is%20given%20by,-%5B6%5D
-                // Divided each channel coefficient by their respective bit resolution to avoid 3 divides
-                float altitude = (0.006858f*r + 0.01135f*g + 0.00233f*b);   // <- Convert to grayscale 0.0 ~ 1.0
-                if(flip == false) altitude = -altitude;                                       // <- flip so that the camera is look at base/water level by default
-                altitude *= voxelspace_scale->y.value;                      // Scale height from 0.0 ~ 1.0 to y-axis scale
-                altitude -= voxelspace_position->y.value;                   // Apply voxelspace node translation
-                altitude += camera_position->y.value;                       // Apply camera view translation
+            if(voxelspace_get_height_abs(voxelspace_node, pleft_x, pleft_y, &altitude, &index)){
+                altitude += camera_position->y.value;       // Apply camera view translation
 
                 // Use camera_rotation for on x-axis for pitch (head going in up/down in 'yes' motion)
                 int16_t height_on_screen = (64.0f + (altitude / (z / camera_view_distance))) + view_angle;
-
 
                 // // https://news.ycombinator.com/item?id=21945633
                 // float roll = (camera_rotation->z.value*(((float)i)/((float)SCREEN_WIDTH)-0.5f) + 0.5f) * SCREEN_HEIGHT / 4;
@@ -147,7 +164,7 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
                         // towards a the bottom of the screen. By default, every
                         // tick/loop the height_buffer is filled with values of
                         // `SCREEN_HEIGHT`
-                        while(ipx > height_buffer[i]){
+                        while(ipx >= height_buffer[i]){
                             engine_draw_pixel(texture->data[index], i, ipx, 1.0f, &empty_shader);
                             ipx--;
                         }
@@ -195,6 +212,31 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
 }
 
 
+/*  --- doc ---
+    NAME: get_abs_height
+    ID: get_abs_height
+    DESC: Gets the absolute height at a position in the voxelspace node (takes position into account). If the position isn't inside the node at its current position and dimensions, returns None. 
+    PARAM:  [type=float]    [name=x]   [value=any]
+    PARAM:  [type=float]    [name=y]   [value=any]
+    RETURN: float or None
+*/
+STATIC mp_obj_t voxelspace_node_class_get_abs_height(mp_obj_t self, mp_obj_t x_obj, mp_obj_t z_obj){
+    engine_node_base_t *node_base = self;
+
+    float x = mp_obj_get_float(x_obj);
+    float z = mp_obj_get_float(z_obj);
+
+    float altitude = 0.0f;
+    uint32_t index = 0;
+    if(voxelspace_get_height_abs(node_base->node, x, z, &altitude, &index)){
+        return mp_obj_new_float(-altitude);
+    }
+
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_3(voxelspace_node_class_get_abs_height_obj, voxelspace_node_class_get_abs_height);
+
+
 // Return `true` if handled loading the attr from internal structure, `false` otherwise
 bool voxelspace_node_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_t *destination){
     // Get the underlying structure
@@ -234,6 +276,11 @@ bool voxelspace_node_load_attr(engine_node_base_t *self_node_base, qstr attribut
         case MP_QSTR_tick:
             destination[0] = MP_OBJ_FROM_PTR(&node_base_get_layer_obj);
             destination[1] = self_node_base->attr_accessor;
+            return true;
+        break;
+        case MP_QSTR_get_abs_height:
+            destination[0] = MP_OBJ_FROM_PTR(&voxelspace_node_class_get_abs_height_obj);
+            destination[1] = self_node_base;
             return true;
         break;
         case MP_QSTR_node_base:
@@ -360,7 +407,7 @@ STATIC mp_attr_fun_t voxelspace_node_class_attr(mp_obj_t self_in, qstr attribute
 /*  --- doc ---
     NAME: VoxelSpaceNode
     ID: VoxelSpaceNode
-    DESC: Node that gets rendered in a semi-3D fashion. See https://github.com/s-macke/VoxelSpace. If a camera is at 0,0,0 with rotation 0,0,0 and a voxelspace node is at 0,0,0 with rotation 0,0,0, the camera will be at a corner of the node where forward is following the node in the +x-axis direction and right is following the node in the +y-axis direction. If the voxelspace y-axis scale is set to 25 then full white pixels will be at 25 in height in world space as long as voxelsapce node's position is 0,0,0. Currently, the x-axis rotation is pitch (clamped and mapped to -90 or -pi/2 (ground) to 90 or pi/2 (sky)), y-axis rotation is yaw, and the z-axis rotation is a fake roll that is not mapped correctly currently but could be used for fake roll, to a degree.
+    DESC: Node that gets rendered in a semi-3D fashion. See https://github.com/s-macke/VoxelSpace. If a camera is at 0,0,0 with rotation 0,0,0 and a voxelspace node is at 0,0,0 with rotation 0,0,0, the camera will be at a corner of the node where forward is following the node in the +x-axis direction and right is following the node in the +y-axis direction. If the voxelspace y-axis scale is set to 25 then full white pixels will be at 25 in height in world space as long as voxelsapce node's position is 0,0,0. Currently, the x-axis rotation is pitch (clamped and mapped to -90 or -pi/2 (ground) to 90 or pi/2 (sky)), y-axis rotation is yaw, and the z-axis rotation is a fake roll (ROLL NOT IMPLEMENTED: TODO).
     PARAM:  [type={ref_link:Vector3}]         [name=position]                   [value={ref_link:Vector3}]
     PARAM:  [type={ref_link:TextureResource}] [name=texture]                    [value={ref_link:TextureResource}]
     PARAM:  [type={ref_link:TextureResource}] [name=heightmap]                  [value={ref_link:TextureResource}]
@@ -373,6 +420,7 @@ STATIC mp_attr_fun_t voxelspace_node_class_attr(mp_obj_t self_in, qstr attribute
     ATTR:   [type=function]                   [name={ref_link:get_layer}]       [value=function]
     ATTR:   [type=function]                   [name={ref_link:remove_child}]    [value=function]
     ATTR:   [type=function]                   [name={ref_link:tick}]            [value=function]
+    ATTR:   [type=function]                   [name={ref_link:get_abs_height}]  [value=function]
     ATTR:   [type={ref_link:Vector3}]         [name=position]                   [value={ref_link:Vector3}]
     ATTR:   [type={ref_link:TextureResource}] [name=texture]                    [value={ref_link:TextureResource}]
     ATTR:   [type={ref_link:TextureResource}] [name=heightmap]                  [value={ref_link:TextureResource}]
