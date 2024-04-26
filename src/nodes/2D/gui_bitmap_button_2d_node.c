@@ -581,7 +581,6 @@ STATIC mp_attr_fun_t gui_bitmap_button_2d_node_class_attr(mp_obj_t self_in, qstr
     OVRR:   [type=function]                   [name={ref_link:on_just_pressed}]     [value=function]
     OVRR:   [type=function]                   [name={ref_link:on_just_released}]    [value=function]
 */
-*/
 mp_obj_t gui_bitmap_button_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New GUIBitmapButton2DNode");
 
