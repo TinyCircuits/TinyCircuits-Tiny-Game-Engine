@@ -452,4 +452,19 @@ vox_node_perf_test.py, avg. FPS: 48.48499
  ----- 
 
 
+2024-04-26 14:43:56.953359 : ce64d158064ecee5adf204de751116e938230939
+Lots of small features added to VoxelSpace nodes. Still have lots to fix and do
+
+{
+line_node_perf_test.py, avg. FPS: 238.9484
+test_opacity_perf_test.py, avg. FPS: 87.46048
+test_perf_test.py, avg. FPS: 110.1219
+circle_node_perf_test.py, avg. FPS: 239.4568
+vox_node_perf_test.py, avg. FPS: 44.69227
+}
+
+
+ ----- 
+
+
 

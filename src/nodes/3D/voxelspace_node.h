@@ -9,8 +9,11 @@ typedef struct{
     mp_obj_t position;              // Vector3
     mp_obj_t texture_resource;      // TextureResource: how the ground looks
     mp_obj_t heightmap_resource;    // TextureResource: how tall the ground looks
-    mp_obj_t height_scale;          // Multiplier to make node taller or shorter
     mp_obj_t rotation;              // Vector3
+    mp_obj_t scale;
+    mp_obj_t repeat;
+    mp_obj_t flip;
+    mp_obj_t lod;
     mp_obj_t tick_cb;
 }engine_voxelspace_node_class_obj_t;
 

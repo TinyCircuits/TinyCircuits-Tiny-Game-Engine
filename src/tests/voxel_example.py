@@ -1,3 +1,5 @@
+import engine_main
+
 import engine
 import engine_draw
 import engine_debug
@@ -20,21 +22,34 @@ engine_draw.set_background_color(engine_draw.skyblue)
 C18W = TextureResource("C18W.bmp", True)
 D18 = TextureResource("D18.bmp", True)
 
-vox = VoxelSpaceNode(texture=C18W, heightmap=D18)
-vox.position.x = 200
-vox.position.y = -50
-vox.height_scale = 40
+vox0 = VoxelSpaceNode(texture=C18W, heightmap=D18)
+vox0.position.x = 0
+vox0.position.y = 20
+vox0.scale.y = 35
+vox0.scale.x = 2
+vox0.scale.z = 2
+vox0.flip = True
+vox0.repeat = True
+
+vox1 = VoxelSpaceNode(texture=C18W, heightmap=D18)
+vox1.position.x = 0
+vox1.position.y = -10
+vox1.scale.y = 15
+vox1.scale.x = 3
+vox1.scale.z = 3
+vox1.flip = False
 
 class MyCam(CameraNode):
     def __init__(self):
         super().__init__(self)
         self.distance = 0.75
         self.mode = 0
-        self.intensity = 0
+        self.t = 0
 
     def forward(self):
         self.position.x += math.cos(self.rotation.y) * self.distance
         self.position.z += math.sin(self.rotation.y) * self.distance
+        print(self.position.x, self.position.y, self.position.z)
     
     def backward(self):
         self.position.x -= math.cos(self.rotation.y) * self.distance
@@ -49,25 +64,31 @@ class MyCam(CameraNode):
         self.position.z += math.sin(self.rotation.y+(math.pi/2)) * self.distance
 
     def tick(self):
+        print(engine.get_running_fps())
+        self.t += 0.01
+        vox0.position.y = 20 + math.sin(self.t)
+
         if engine_input.check_pressed(engine_input.BUMPER_RIGHT):
             if self.mode == 0:
                 self.rotation.y += 0.05
             elif self.mode == 2:
                 self.rotation.z += 0.05
+            elif self.mode == 3:
+                vox0.lod += 0.001
+                vox1.lod += 0.001
         if engine_input.check_pressed(engine_input.BUMPER_LEFT):
             if self.mode == 0:
                 self.rotation.y -= 0.05
             elif self.mode == 2:
                 self.rotation.z -= 0.05
+            elif self.mode == 3:
+                vox0.lod -= 0.001
+                vox1.lod -= 0.001
     
 
         if engine_input.check_pressed(engine_input.DPAD_UP):
-            self.intensity += 0.005
-            engine_input.rumble(self.intensity)
             self.forward()
         if engine_input.check_pressed(engine_input.DPAD_DOWN):
-            self.intensity -= 0.005
-            engine_input.rumble(self.intensity)
             self.backward()
         if engine_input.check_pressed(engine_input.DPAD_LEFT):
             self.left()
@@ -76,30 +97,35 @@ class MyCam(CameraNode):
         
         if engine_input.check_pressed(engine_input.A):
             if self.mode == 0:
-                self.position.y -= 1
+                self.position.y += 0.5
+                print(self.position.x, self.position.y, self.position.z)
             elif self.mode == 1:
-                self.rotation.x -= 0.5
+                self.rotation.x -= 0.1
         if engine_input.check_pressed(engine_input.B):
             if self.mode == 0:
-                self.position.y += 1
+                self.position.y -= 0.5
+                print(self.position.x, self.position.y, self.position.z)
             elif self.mode == 1:
-                self.rotation.x += 0.5
+                self.rotation.x += 0.1
         
         if engine_input.check_just_pressed(engine_input.MENU):
+            # vox.scale.y += 0.5
+            # print(vox.scale.y)
             self.mode = self.mode + 1
-            if self.mode >= 3:
+            if self.mode >= 4:
                 self.mode = 0
             
             print(self.mode)
 
 
 camera = MyCam()
-camera.position.x = 175
-camera.position.y = 200
-camera.position.z = 175
+camera.position.x = 0
+camera.position.y = 0
+camera.position.z = 75
+# camera.rotation.x = 0.3
 camera.view_distance = 350
 camera.fov = 70 * (math.pi/180)
 
-camera.add_child(Circle2DNode(radius=3, color=engine_draw.green, outline=True))
+camera.add_child(Circle2DNode(radius=1, color=engine_draw.green, outline=True))
 
 engine.start()
