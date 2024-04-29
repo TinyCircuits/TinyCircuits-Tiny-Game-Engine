@@ -79,7 +79,7 @@ class MyCam(CameraNode):
         self.adjust()
 
     def tick(self):
-        # print(engine.get_running_fps())
+        print(engine.get_running_fps())
         self.t += 0.01
         # vox0.position.y = 20 + math.sin(self.t)
 

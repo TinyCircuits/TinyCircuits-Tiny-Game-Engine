@@ -484,11 +484,15 @@ vox_node_perf_test.py, avg. FPS: 23.31124
 
 
 
-2024-04-26 17:26:06.844262 : d86d35502705e98bf83d84c01c597e27ed325036
-Finish adding more features to VoxelSpaceNode (get_abs_height)
+2024-04-29 10:38:25.708752 : c553a4db688cb08d81074b354339b06879c8a505
+Fix voxelspace performance by making the code ugly, again
 
 {
-vox_node_perf_test.py, avg. FPS: 19.95173
+line_node_perf_test.py, avg. FPS: 238.8374
+test_opacity_perf_test.py, avg. FPS: 88.60451
+test_perf_test.py, avg. FPS: 107.9736
+circle_node_perf_test.py, avg. FPS: 241.2816
+vox_node_perf_test.py, avg. FPS: 44.66821
 }
 
 
@@ -496,11 +500,11 @@ vox_node_perf_test.py, avg. FPS: 19.95173
 
 
 
-2024-04-26 17:27:02.134802 : 320b3ffad76d5df4b423e2c7e311fd8e46eef41a
-Finish adding more features to VoxelSpaceNode (get_abs_height)
+2024-04-29 12:38:26.369545 : 77b056c1d9ec29aa7212f1b16065749a6b8a50b5
+Fix voxelspace performance by making the code ugly, again
 
 {
-vox_node_perf_test.py, avg. FPS: 34.25202
+vox_node_perf_test.py, avg. FPS: 39.29115
 }
 
 
@@ -508,11 +512,11 @@ vox_node_perf_test.py, avg. FPS: 34.25202
 
 
 
-2024-04-29 10:24:05.854457 : c77895486222e2b22204b0ee2f350bfd7de11a90
-Finish adding more features to VoxelSpaceNode (get_abs_height)
+2024-04-29 12:41:06.369246 : 8510459937745383be6298e5e211fcc77006908b
+Fix voxelspace performance by making the code ugly, again
 
 {
-vox_node_perf_test.py, avg. FPS: 29.87364
+vox_node_perf_test.py, avg. FPS: 41.55337
 }
 
 
@@ -520,23 +524,11 @@ vox_node_perf_test.py, avg. FPS: 29.87364
 
 
 
-2024-04-29 10:26:56.075302 : a11431d202a87ad11468c13dfbefc398357a6271
-Finish adding more features to VoxelSpaceNode (get_abs_height)
+2024-04-29 12:44:04.418301 : 237122dd76001339f67a0ab6836ebb3cf4c20b73
+Fix voxelspace performance by making the code ugly, again
 
 {
-vox_node_perf_test.py, avg. FPS: 43.01453
-}
-
-
- ----- 
-
-
-
-2024-04-29 10:35:49.207326 : 51fb0fda4b356541fe9a16391ab5adcf6c946377
-Finish adding more features to VoxelSpaceNode (get_abs_height)
-
-{
-vox_node_perf_test.py, avg. FPS: 44.65346
+vox_node_perf_test.py, avg. FPS: 43.21445
 }
 
 

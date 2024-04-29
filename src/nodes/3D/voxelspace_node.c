@@ -18,45 +18,6 @@
 int16_t height_buffer[SCREEN_WIDTH];
 
 
-float voxelspace_get_height(texture_resource_class_obj_t *heightmap, vector3_class_obj_t *voxelspace_scale, vector3_class_obj_t *voxelspace_position, uint32_t index, bool flip){
-    // Get each RGB channel as a float
-    float r = (heightmap->data[index] >> 0) & 0b00011111;
-    float g = (heightmap->data[index] >> 5) & 0b00111111;
-    float b = (heightmap->data[index] >> 11) & 0b00011111;
-
-    // Change from RGB565 (already normalized to 0.0 ~ 1.0 for each channel) to grayscale 0.0 ~ 1.0: https://en.wikipedia.org/wiki/Grayscale#:~:text=Ylinear%2C-,which%20is%20given%20by,-%5B6%5D
-    // Divided each channel coefficient by their respective bit resolution to avoid 3 divides
-    float altitude = (0.006858f*r + 0.01135f*g + 0.00233f*b);   // <- Convert to grayscale 0.0 ~ 1.0
-    if(flip == false) altitude = -altitude;                     // <- flip so that the camera is look at base/water level by default
-    altitude *= voxelspace_scale->y.value;                      // Scale height from 0.0 ~ 1.0 to y-axis scale
-    
-    return altitude;
-}
-
-
-bool voxelspace_get_height_abs(engine_voxelspace_node_class_obj_t *voxelspace, float x, float y, float *out_altitude, uint32_t *index){
-    texture_resource_class_obj_t *heightmap = voxelspace->heightmap_resource;
-    vector3_class_obj_t *position = voxelspace->position;
-    bool repeat = mp_obj_get_int(voxelspace->repeat);
-    bool flip = mp_obj_get_int(voxelspace->flip);
-
-    if(repeat == true){
-        x = fmodf(fabsf(x), heightmap->width);
-        y = fmodf(fabsf(y), heightmap->height);
-    }
-
-    if((x >= position->x.value && x < position->x.value + heightmap->width) && (y >= position->z.value && y < position->z.value+heightmap->height)){
-        *index = ((int32_t)y-position->z.value) * heightmap->width + ((int32_t)x-position->x.value);
-        *out_altitude = voxelspace_get_height(heightmap, voxelspace->scale, voxelspace->position, *index, flip);
-        *out_altitude -= position->y.value;   // Apply voxelspace node translation
-    }else{
-        return false;
-    }
-
-    return true;
-}
-
-
 void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("VoxelSpaceNode: Drawing");
 
@@ -90,9 +51,6 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
 
     float dz = 1.0f;
     float z = 1.0f;
-
-    float sin_angle = sinf(camera_rotation->z.value);
-    float cos_angle = cosf(camera_rotation->z.value);
 
     // View angle only shifts each sampled point towards the top of
     // the screen by an offset (making it look like the view is changing).
@@ -134,14 +92,36 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
         pleft_y += camera_position->z.value;
 
         for(uint8_t i=0; i<SCREEN_WIDTH; i++){
-            float altitude = 0.0f;
-            uint32_t index = 0;
+            int32_t x = 0;
+            int32_t y = 0;
 
-            if(voxelspace_get_height_abs(voxelspace_node, pleft_x, pleft_y, &altitude, &index)){
-                altitude += camera_position->y.value;       // Apply camera view translation
+            if(repeat == false){
+                x = pleft_x;
+                y = pleft_y;
+            }else{
+                x = fmodf(fabsf(pleft_x), heightmap->width);
+                y = fmodf(fabsf(pleft_y), heightmap->height);
+            }
+
+            if((x >= voxelspace_position->x.value && x < voxelspace_position->x.value + heightmap->width) && (y >= voxelspace_position->z.value && y < voxelspace_position->z.value+heightmap->height)){
+                uint32_t index = (y-voxelspace_position->z.value) * heightmap->width + (x-voxelspace_position->x.value);
+
+                // Get each RGB channel as a float
+                float r = (heightmap->data[index] >> 0) & 0b00011111;
+                float g = (heightmap->data[index] >> 5) & 0b00111111;
+                float b = (heightmap->data[index] >> 11) & 0b00011111;
+
+                // Change from RGB565 (already normalized to 0.0 ~ 1.0 for each channel) to grayscale 0.0 ~ 1.0: https://en.wikipedia.org/wiki/Grayscale#:~:text=Ylinear%2C-,which%20is%20given%20by,-%5B6%5D
+                // Divided each channel coefficient by their respective bit resolution to avoid 3 divides
+                float altitude = (0.006858f*r + 0.01135f*g + 0.00233f*b);   // <- Convert to grayscale 0.0 ~ 1.0
+                if(flip == false) altitude = -altitude;                                       // <- flip so that the camera is look at base/water level by default
+                altitude *= voxelspace_scale->y.value;                      // Scale height from 0.0 ~ 1.0 to y-axis scale
+                altitude -= voxelspace_position->y.value;                   // Apply voxelspace node translation
+                altitude += camera_position->y.value;                       // Apply camera view translation
 
                 // Use camera_rotation for on x-axis for pitch (head going in up/down in 'yes' motion)
                 int16_t height_on_screen = (64.0f + (altitude / (z / camera_view_distance))) + view_angle;
+
 
                 // // https://news.ycombinator.com/item?id=21945633
                 // float roll = (camera_rotation->z.value*(((float)i)/((float)SCREEN_WIDTH)-0.5f) + 0.5f) * SCREEN_HEIGHT / 4;
@@ -164,7 +144,7 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
                         // towards a the bottom of the screen. By default, every
                         // tick/loop the height_buffer is filled with values of
                         // `SCREEN_HEIGHT`
-                        while(ipx >= height_buffer[i]){
+                        while(ipx > height_buffer[i]){
                             engine_draw_pixel(texture->data[index], i, ipx, 1.0f, &empty_shader);
                             ipx--;
                         }
@@ -222,15 +202,44 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
 */
 STATIC mp_obj_t voxelspace_node_class_get_abs_height(mp_obj_t self, mp_obj_t x_obj, mp_obj_t z_obj){
     engine_node_base_t *node_base = self;
+    engine_voxelspace_node_class_obj_t *voxelspace = node_base->node;
+    vector3_class_obj_t *voxelspace_position = voxelspace->position;
+    vector3_class_obj_t *voxelspace_scale = voxelspace->scale;
+    texture_resource_class_obj_t *heightmap = voxelspace->heightmap_resource;
 
+    bool repeat = mp_obj_get_int(voxelspace->repeat);
     float x = mp_obj_get_float(x_obj);
     float z = mp_obj_get_float(z_obj);
 
-    float altitude = 0.0f;
-    uint32_t index = 0;
-    if(voxelspace_get_height_abs(node_base->node, x, z, &altitude, &index)){
-        return mp_obj_new_float(-altitude);
+    if(repeat == true){
+        x = fmodf(fabsf(x), heightmap->width);
+        z = fmodf(fabsf(z), heightmap->height);
     }
+
+    // Only need to check bounds if repeat is not true
+    if(repeat == true || ((x >= voxelspace_position->x.value && x < voxelspace_position->x.value + heightmap->width) && (z >= voxelspace_position->z.value && z < voxelspace_position->z.value+heightmap->height))){
+        uint32_t index = ((int32_t)z-voxelspace_position->z.value) * heightmap->width + ((int32_t)x-voxelspace_position->x.value);
+
+        // Get each RGB channel as a float
+        float r = (heightmap->data[index] >> 0) & 0b00011111;
+        float g = (heightmap->data[index] >> 5) & 0b00111111;
+        float b = (heightmap->data[index] >> 11) & 0b00011111;
+
+        // Change from RGB565 (already normalized to 0.0 ~ 1.0 for each channel) to grayscale 0.0 ~ 1.0: https://en.wikipedia.org/wiki/Grayscale#:~:text=Ylinear%2C-,which%20is%20given%20by,-%5B6%5D
+        // Divided each channel coefficient by their respective bit resolution to avoid 3 divides
+        float altitude = (0.006858f*r + 0.01135f*g + 0.00233f*b);   // <- Convert to grayscale 0.0 ~ 1.0
+
+        bool flip = mp_obj_get_int(voxelspace->flip);
+
+        if(flip == false) altitude = -altitude;     // <- flip so that the camera is look at base/water level by default
+        altitude *= voxelspace_scale->y.value;      // Scale height from 0.0 ~ 1.0 to y-axis scale
+        altitude -= voxelspace_position->y.value;   // Apply voxelspace node translation
+
+        return mp_obj_new_float(-altitude);
+    }else{
+        return mp_const_none;
+    }
+
 
     return mp_const_none;
 }
