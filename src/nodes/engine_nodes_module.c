@@ -3,6 +3,7 @@
 #include "empty_node.h"
 #include "3D/camera_node.h"
 #include "3D/voxelspace_node.h"
+#include "3D/voxelspace_sprite_node.h"
 #include "3D/mesh_node.h"
 #include "2D/sprite_2d_node.h"
 #include "2D/rectangle_2d_node.h"
@@ -30,6 +31,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_nodes_module_init_obj, engine_nodes_module_init
     ATTR: [type=object]   [name={ref_link:EmptyNode}]               [value=object] 
     ATTR: [type=object]   [name={ref_link:CameraNode}]              [value=object]
     ATTR: [type=object]   [name={ref_link:VoxelSpaceNode}]          [value=object]
+    ATTR: [type=object]   [name={ref_link:VoxelSpaceSpriteNode}]    [value=object]
     ATTR: [type=object]   [name={ref_link:MeshNode}]                [value=object]
     ATTR: [type=object]   [name={ref_link:Sprite2DNode}]            [value=object]
     ATTR: [type=object]   [name={ref_link:Rectangle2DNode}]         [value=object]
@@ -47,6 +49,7 @@ STATIC const mp_rom_map_elem_t engine_nodes_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_EmptyNode), (mp_obj_t)&engine_empty_node_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_CameraNode), (mp_obj_t)&engine_camera_node_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_VoxelSpaceNode), (mp_obj_t)&engine_voxelspace_node_class_type },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_VoxelSpaceSpriteNode), (mp_obj_t)&engine_voxelspace_sprite_node_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_MeshNode), (mp_obj_t)&engine_mesh_node_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Sprite2DNode), (mp_obj_t)&engine_sprite_2d_node_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Rectangle2DNode), (mp_obj_t)&engine_rectangle_2d_node_class_type },

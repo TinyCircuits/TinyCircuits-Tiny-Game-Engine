@@ -16,8 +16,9 @@
 #define NODE_TYPE_TEXT_2D               8
 
 #define NODE_TYPE_VOXELSPACE            9   // https://github.com/s-macke/VoxelSpace
-#define NODE_TYPE_MESH_3D               10  // https://www.scratchapixel.com/lessons/3d-basic-rendering/computing-pixel-coordinates-of-3d-point/mathematics-computing-2d-coordinates-of-3d-points.html
-#define NODE_TYPE_GUI_BUTTON_2D         11
-#define NODE_TYPE_GUI_BITMAP_BUTTON_2D  12
+#define NODE_TYPE_VOXELSPACE_SPRITE     10  // https://github.com/s-macke/VoxelSpace
+#define NODE_TYPE_MESH_3D               11  // https://www.scratchapixel.com/lessons/3d-basic-rendering/computing-pixel-coordinates-of-3d-point/mathematics-computing-2d-coordinates-of-3d-points.html
+#define NODE_TYPE_GUI_BUTTON_2D         12
+#define NODE_TYPE_GUI_BITMAP_BUTTON_2D  13
 
 #endif  // NODE_TYPES_H

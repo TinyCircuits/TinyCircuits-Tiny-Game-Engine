@@ -17,7 +17,7 @@
 
 int16_t height_buffer[SCREEN_WIDTH];
 
-// Not sure if there is a correct way to calcualte this, this seems to work well
+// Not sure if there is a correct way to calculate this, this seems to work well
 const float perspective_factor = 1.0f / SCREEN_HEIGHT_HALF;
 
 
@@ -42,7 +42,7 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
 
     vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
     vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
-    float camera_fov = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_fov));
+    float camera_fov_half = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_fov)) * 0.5f;
     float camera_view_distance = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_view_distance));
 
     // memset(height_buffer, SCREEN_HEIGHT, SCREEN_WIDTH*2);
@@ -85,17 +85,23 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
     float skew_roll_line_dy = sinf(camera_rotation->z.value);
     float skew_roll_start_offset = -SCREEN_WIDTH_HALF * tanf(camera_rotation->z.value);
 
+    float view_left_x = cosf(camera_rotation->y.value-camera_fov_half) * inverse_x_scale;
+    float view_left_y = sinf(camera_rotation->y.value-camera_fov_half) * inverse_z_scale;
+
+    float view_right_x = cosf(camera_rotation->y.value+camera_fov_half) * inverse_x_scale;
+    float view_right_y = sinf(camera_rotation->y.value+camera_fov_half) * inverse_z_scale;
+
     while(z < camera_view_distance){
         // Instead of rotating the points by the stepped view_distance z,
         // use z as the adjacent for triangle to figure out hypotenuse
         // and then use that as the radius. This means the view distance
         // will remain the same for every FOV
         // float hypot = z / cosf(camera_rotation->y-camera_fov/2); // Not working?
-        float pleft_x = z * cosf(camera_rotation->y.value-camera_fov/2) * inverse_x_scale;
-        float pleft_y = z * sinf(camera_rotation->y.value-camera_fov/2) * inverse_z_scale;
+        float pleft_x = z * view_left_x;
+        float pleft_y = z * view_left_y;
 
-        float pright_x = z * cosf(camera_rotation->y.value+camera_fov/2) * inverse_x_scale;
-        float pright_y = z * sinf(camera_rotation->y.value+camera_fov/2) * inverse_z_scale;
+        float pright_x = z * view_right_x;
+        float pright_y = z * view_right_y;
 
         float dx = (pright_x - pleft_x) * SCREEN_WIDTH_INVERSE;
         float dy = (pright_y - pleft_y) * SCREEN_HEIGHT_INVERSE;
@@ -147,7 +153,7 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
             altitude += camera_position->y.value;                       // Apply camera view translation
 
             // Use camera_rotation for on x-axis for pitch (head going in up/down in 'yes' motion)
-            int16_t height_on_screen = ((64.0f + (altitude / perspective)) + view_angle) + curvature + skew_roll_offset; // + roll_line_offset;
+            int16_t height_on_screen = ((64.0f + (altitude / perspective)) + view_angle) + curvature + skew_roll_offset;
             skew_roll_offset += skew_roll_line_dy;
 
             int16_t ipx = height_on_screen;
@@ -165,7 +171,7 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
                 // tick/loop the height_buffer is filled with values of
                 // `SCREEN_HEIGHT`
                 float drawn_thickness = 0;
-                while(ipx > height_buffer[i] && drawn_thickness < thickness){
+                while(ipx >= height_buffer[i] && drawn_thickness < thickness){
                     engine_draw_pixel(texture->data[index], i, ipx, 1.0f, &empty_shader);
                     ipx--;
                     drawn_thickness += perspective;
@@ -462,12 +468,12 @@ STATIC mp_attr_fun_t voxelspace_node_class_attr(mp_obj_t self_in, qstr attribute
     ATTR:   [type={ref_link:TextureResource}] [name=texture]                    [value={ref_link:TextureResource}]
     ATTR:   [type={ref_link:TextureResource}] [name=heightmap]                  [value={ref_link:TextureResource}]
     ATTR:   [type={ref_link:Vector3}]         [name=rotation]                   [value={ref_link:Vector3}]
-    ATTR:   [type={ref_link:Vector3}]         [name=scale]                      [value=any (x-axis makes terrain wider (default: 1.0), y-axis makes terrain taller (default: 10.0), and z-axis makes terrain longer (default: 1.0))]
+    ATTR:   [type={ref_link:Vector3}]         [name=scale]                      [value=any (x-axis makes terrain wider (default: 1.0), y-axis makes terrain taller/shorter (default: 10.0, this means the min height will be -10.0 and the max 10.0), and z-axis makes terrain longer (default: 1.0))]
     ATTR:   [type=boolean]                    [name=repeat]                     [value=True or False (if True, repeats the terrain forever in all directions, default: False)]
     ATTR:   [type=boolean]                    [name=flip]                       [value=True or False (flips drawing upsidedown if True and normal if False (default))]
     ATTR:   [type=float]                      [name=lod]                        [value=any (stand for Level Of Detail and affects the quality/number of samples as the view is rendered at further and further distances, default: 0.0085)]
     ATTR:   [type=float]                      [name=curvature]                  [value=any (radians, defines how much the terrain curves as the render distance increases, default: 0.0)]
-    ATTR:   [type=float]                      [name=thickness]                  [value=any (defines how thick the terrain should look if you can see its sides, default: 10.0)]
+    ATTR:   [type=float]                      [name=thickness]                  [value=any (defines how thick the terrain should look if you can see its sides, default: 128.0)]
     OVRR:   [type=function]                   [name={ref_link:tick}]            [value=function]
 */
 mp_obj_t voxelspace_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
@@ -516,7 +522,7 @@ mp_obj_t voxelspace_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
     if(parsed_args[flip].u_obj == MP_OBJ_NULL) parsed_args[flip].u_obj = mp_obj_new_bool(false);
     if(parsed_args[lod].u_obj == MP_OBJ_NULL) parsed_args[lod].u_obj = mp_obj_new_float(0.0085f);
     if(parsed_args[curvature].u_obj == MP_OBJ_NULL) parsed_args[curvature].u_obj = mp_obj_new_float(0.0f);
-    if(parsed_args[thickness].u_obj == MP_OBJ_NULL) parsed_args[thickness].u_obj = mp_obj_new_float(10.0f);;
+    if(parsed_args[thickness].u_obj == MP_OBJ_NULL) parsed_args[thickness].u_obj = mp_obj_new_float(128.0f);;
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);

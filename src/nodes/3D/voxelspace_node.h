@@ -4,6 +4,8 @@
 #include "py/obj.h"
 #include "nodes/node_base.h"
 
+const float perspective_factor;
+
 // https://github.com/s-macke/VoxelSpace
 typedef struct{
     mp_obj_t position;              // Vector3

@@ -94,6 +94,7 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Fix VoxelSpace performance after last changes
 
 [] Add 1 rendering pass for all voxel nodes, how to do layers?
+[] Sprite2DNode and VoxelSpaceBillboardSpriteNode use a lot of the same data and logic, should make a common sprite code base and combine
 
 [.] Menu (carousel)
 

@@ -2,6 +2,7 @@
 #include "nodes/empty_node.h"
 #include "nodes/3D/camera_node.h"
 #include "nodes/3D/voxelspace_node.h"
+#include "nodes/3D/voxelspace_sprite_node.h"
 #include "nodes/3D/mesh_node.h"
 #include "nodes/2D/rectangle_2d_node.h"
 #include "nodes/2D/line_2d_node.h"
@@ -114,6 +115,18 @@ void engine_invoke_all_node_callbacks(){
                         }
 
                         engine_camera_draw_for_each(voxelspace_node_class_draw, node_base);
+                    }
+                    break;
+                    case NODE_TYPE_VOXELSPACE_SPRITE:
+                    {
+                        engine_voxelspace_sprite_node_class_obj_t *voxelspace_sprite_node= node_base->node;
+                        if(voxelspace_sprite_node->tick_cb != mp_const_none){
+                            exec[0] = voxelspace_sprite_node->tick_cb;
+                            exec[1] = node_base->attr_accessor;
+                            mp_call_method_n_kw(0, 0, exec);
+                        }
+
+                        engine_camera_draw_for_each(voxelspace_sprite_node_class_draw, node_base);
                     }
                     break;
                     case NODE_TYPE_MESH_3D:

@@ -17,6 +17,7 @@ SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/physics_node_base.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/empty_node.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/3D/camera_node.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/3D/voxelspace_node.c
+SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/3D/voxelspace_sprite_node.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/3D/mesh_node.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/2D/sprite_2d_node.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/nodes/2D/rectangle_2d_node.c
