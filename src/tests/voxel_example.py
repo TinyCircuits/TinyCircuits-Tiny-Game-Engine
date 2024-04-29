@@ -24,7 +24,7 @@ D18 = TextureResource("D18.bmp", True)
 
 vox0 = VoxelSpaceNode(texture=C18W, heightmap=D18)
 vox0.position.x = 0
-vox0.position.y = 20
+vox0.position.y = 30
 vox0.scale.y = 35
 vox0.scale.x = 2
 vox0.scale.z = 2
@@ -35,10 +35,11 @@ vox1 = VoxelSpaceNode(texture=C18W, heightmap=D18)
 vox1.position.x = 0
 vox1.position.y = -10
 vox1.position.z = 0
-vox1.scale.y = 15
+vox1.scale.y = 20
 vox1.scale.x = 3
 vox1.scale.z = 3
 vox1.flip = False
+# vox1.thickness = 0.5
 
 class MyCam(CameraNode):
     def __init__(self):
@@ -79,7 +80,7 @@ class MyCam(CameraNode):
         self.adjust()
 
     def tick(self):
-        print(engine.get_running_fps())
+        # print(engine.get_running_fps())
         self.t += 0.01
         # vox0.position.y = 20 + math.sin(self.t)
 
@@ -87,18 +88,26 @@ class MyCam(CameraNode):
             if self.mode == 0:
                 self.rotation.y += 0.05
             elif self.mode == 2:
-                self.rotation.z += 0.05
+                self.rotation.z += 0.005
+                # self.rotation.x -= 0.005
             elif self.mode == 3:
                 # vox0.lod += 0.001
                 vox1.lod += 0.001
+            elif self.mode == 4:
+                vox0.curvature += 0.005
+                vox1.curvature += 0.005
         if engine_input.check_pressed(engine_input.BUMPER_LEFT):
             if self.mode == 0:
                 self.rotation.y -= 0.05
             elif self.mode == 2:
-                self.rotation.z -= 0.05
+                self.rotation.z -= 0.005
+                # self.rotation.x += 0.005
             elif self.mode == 3:
                 # vox0.lod -= 0.001
                 vox1.lod -= 0.001
+            elif self.mode == 4:
+                vox0.curvature -= 0.005
+                vox1.curvature -= 0.005
     
 
         if engine_input.check_pressed(engine_input.DPAD_UP):
@@ -127,7 +136,7 @@ class MyCam(CameraNode):
             # vox.scale.y += 0.5
             # print(vox.scale.y)
             self.mode = self.mode + 1
-            if self.mode >= 4:
+            if self.mode >= 5:
                 self.mode = 0
             
             print(self.mode)

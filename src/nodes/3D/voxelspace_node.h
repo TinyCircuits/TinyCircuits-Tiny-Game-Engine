@@ -14,6 +14,8 @@ typedef struct{
     mp_obj_t repeat;
     mp_obj_t flip;
     mp_obj_t lod;
+    mp_obj_t curvature;
+    mp_obj_t thickness;
     mp_obj_t tick_cb;
 }engine_voxelspace_node_class_obj_t;
 

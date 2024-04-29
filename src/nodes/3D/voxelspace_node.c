@@ -17,6 +17,9 @@
 
 int16_t height_buffer[SCREEN_WIDTH];
 
+// Not sure if there is a correct way to calcualte this, this seems to work well
+const float perspective_factor = 1.0f / SCREEN_HEIGHT_HALF;
+
 
 void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("VoxelSpaceNode: Drawing");
@@ -34,6 +37,8 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
     bool repeat = mp_obj_get_int(voxelspace_node->repeat);
     bool flip = mp_obj_get_int(voxelspace_node->flip);
     float lod = mp_obj_get_float(voxelspace_node->lod);
+    float curvature_angle = mp_obj_get_float(voxelspace_node->curvature);
+    float thickness = mp_obj_get_float(voxelspace_node->thickness);
 
     vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
     vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
@@ -73,6 +78,13 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
     float inverse_x_scale = 1.0f / voxelspace_scale->x.value;
     float inverse_z_scale = 1.0f / voxelspace_scale->z.value;
 
+    float curvature_dy = sinf(curvature_angle);
+    float curvature = 0.0f;
+
+    // https://news.ycombinator.com/item?id=21945633
+    float skew_roll_line_dy = sinf(camera_rotation->z.value);
+    float skew_roll_start_offset = -SCREEN_WIDTH_HALF * tanf(camera_rotation->z.value);
+
     while(z < camera_view_distance){
         // Instead of rotating the points by the stepped view_distance z,
         // use z as the adjacent for triangle to figure out hypotenuse
@@ -85,100 +97,99 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
         float pright_x = z * cosf(camera_rotation->y.value+camera_fov/2) * inverse_x_scale;
         float pright_y = z * sinf(camera_rotation->y.value+camera_fov/2) * inverse_z_scale;
 
-        float dx = (pright_x - pleft_x) / SCREEN_WIDTH;
-        float dy = (pright_y - pleft_y) / SCREEN_WIDTH;
+        float dx = (pright_x - pleft_x) * SCREEN_WIDTH_INVERSE;
+        float dy = (pright_y - pleft_y) * SCREEN_HEIGHT_INVERSE;
 
         pleft_x += camera_position->x.value;
         pleft_y += camera_position->z.value;
+
+        // Cumulative offset for roll skew as the screen width is traversed
+        float skew_roll_offset = skew_roll_start_offset;
+
+        // Factor to scale certain objects/lines/distances as the render distance gets further away
+        float perspective = z * perspective_factor;
 
         for(uint8_t i=0; i<SCREEN_WIDTH; i++){
             int32_t x = 0;
             int32_t y = 0;
 
+            // Check if the terrain should render forever (repeat) or only in bounds
             if(repeat == false){
                 x = pleft_x;
                 y = pleft_y;
+
+                // Only need to check bounds if repeat is not
+                // true, continue for-loop if out of bounds
+                if(x < voxelspace_position->x.value || x >= voxelspace_position->x.value + heightmap->width || y < voxelspace_position->z.value || y >= voxelspace_position->z.value+heightmap->height){
+                    pleft_x += dx;
+                    pleft_y += dy;
+                    continue;
+                }
             }else{
                 x = fmodf(fabsf(pleft_x), heightmap->width);
                 y = fmodf(fabsf(pleft_y), heightmap->height);
             }
 
-            if((x >= voxelspace_position->x.value && x < voxelspace_position->x.value + heightmap->width) && (y >= voxelspace_position->z.value && y < voxelspace_position->z.value+heightmap->height)){
-                uint32_t index = (y-voxelspace_position->z.value) * heightmap->width + (x-voxelspace_position->x.value);
+            // Now that we know we have a position to sample, sample it
+            uint32_t index = (y-voxelspace_position->z.value) * heightmap->width + (x-voxelspace_position->x.value);
 
-                // Get each RGB channel as a float
-                float r = (heightmap->data[index] >> 0) & 0b00011111;
-                float g = (heightmap->data[index] >> 5) & 0b00111111;
-                float b = (heightmap->data[index] >> 11) & 0b00011111;
+            // Get each RGB channel as a float
+            float r = (heightmap->data[index] >> 0) & 0b00011111;
+            float g = (heightmap->data[index] >> 5) & 0b00111111;
+            float b = (heightmap->data[index] >> 11) & 0b00011111;
 
-                // Change from RGB565 (already normalized to 0.0 ~ 1.0 for each channel) to grayscale 0.0 ~ 1.0: https://en.wikipedia.org/wiki/Grayscale#:~:text=Ylinear%2C-,which%20is%20given%20by,-%5B6%5D
-                // Divided each channel coefficient by their respective bit resolution to avoid 3 divides
-                float altitude = (0.006858f*r + 0.01135f*g + 0.00233f*b);   // <- Convert to grayscale 0.0 ~ 1.0
-                if(flip == false) altitude = -altitude;                                       // <- flip so that the camera is look at base/water level by default
-                altitude *= voxelspace_scale->y.value;                      // Scale height from 0.0 ~ 1.0 to y-axis scale
-                altitude -= voxelspace_position->y.value;                   // Apply voxelspace node translation
-                altitude += camera_position->y.value;                       // Apply camera view translation
+            // Change from RGB565 (already normalized to 0.0 ~ 1.0 for each channel) to grayscale 0.0 ~ 1.0: https://en.wikipedia.org/wiki/Grayscale#:~:text=Ylinear%2C-,which%20is%20given%20by,-%5B6%5D
+            // Divided each channel coefficient by their respective bit resolution to avoid 3 divides
+            float altitude = (0.006858f*r + 0.01135f*g + 0.00233f*b);   // <- Convert to grayscale 0.0 ~ 1.0
+            if(flip == false) altitude = -altitude;                     // <- flip so that the camera is look at base/water level by default
+            altitude *= voxelspace_scale->y.value;                      // Scale height from 0.0 ~ 1.0 to y-axis scale
+            altitude -= voxelspace_position->y.value;                   // Apply voxelspace node translation
+            altitude += camera_position->y.value;                       // Apply camera view translation
 
-                // Use camera_rotation for on x-axis for pitch (head going in up/down in 'yes' motion)
-                int16_t height_on_screen = (64.0f + (altitude / (z / camera_view_distance))) + view_angle;
+            // Use camera_rotation for on x-axis for pitch (head going in up/down in 'yes' motion)
+            int16_t height_on_screen = ((64.0f + (altitude / perspective)) + view_angle) + curvature + skew_roll_offset; // + roll_line_offset;
+            skew_roll_offset += skew_roll_line_dy;
 
+            int16_t ipx = height_on_screen;
 
-                // // https://news.ycombinator.com/item?id=21945633
-                // float roll = (camera_rotation->z.value*(((float)i)/((float)SCREEN_WIDTH)-0.5f) + 0.5f) * SCREEN_HEIGHT / 4;
+            // Clip to screen bounds so we don't draw more than needed
+            if(height_on_screen >= SCREEN_HEIGHT){
+                ipx = SCREEN_HEIGHT;
+            }else if(height_on_screen < 0){
+                ipx = 0;
+            }
 
-                // height_on_screen += (int16_t)roll;
-
-                if(height_on_screen < SCREEN_HEIGHT){
-
-                    if(flip){
-                        int16_t ipx = height_on_screen;
-
-                        // In case the height of the point on the screen
-                        // is negative, clip to top of screen so we don't
-                        // try to draw more pixels than needed
-                        if(ipx < 0){
-                            ipx = 0;
-                        }
-
-                        // Draw from a height close to the top of the screen
-                        // towards a the bottom of the screen. By default, every
-                        // tick/loop the height_buffer is filled with values of
-                        // `SCREEN_HEIGHT`
-                        while(ipx > height_buffer[i]){
-                            engine_draw_pixel(texture->data[index], i, ipx, 1.0f, &empty_shader);
-                            ipx--;
-                        }
-                    }else{
-                        int16_t ipx = height_on_screen;
-
-                        // In case the height of the point on the screen
-                        // is negative, clip to top of screen so we don't
-                        // try to draw more pixels than needed
-                        if(ipx < 0){
-                            ipx = 0;
-                        }
-
-                        // Draw from a height close to the top of the screen
-                        // towards a the bottom of the screen. By default, every
-                        // tick/loop the height_buffer is filled with values of
-                        // `SCREEN_HEIGHT`
-                        while(ipx < height_buffer[i]){
-                            engine_draw_pixel(texture->data[index], i, ipx, 1.0f, &empty_shader);
-                            ipx++;
-                        }
-                    }
+            if(flip){
+                // Draw from a height close to the top of the screen
+                // towards a the bottom of the screen. By default, every
+                // tick/loop the height_buffer is filled with values of
+                // `SCREEN_HEIGHT`
+                float drawn_thickness = 0;
+                while(ipx > height_buffer[i] && drawn_thickness < thickness){
+                    engine_draw_pixel(texture->data[index], i, ipx, 1.0f, &empty_shader);
+                    ipx--;
+                    drawn_thickness += perspective;
                 }
 
-                // Remember, the Y is flipped so pixels that have a lower
-                /// y value will be towards the top of the screen
-                if(flip){
-                    if(height_on_screen > height_buffer[i]){
-                        height_buffer[i] = height_on_screen;
-                    }
-                }else{
-                    if(height_on_screen < height_buffer[i]){
-                        height_buffer[i] = height_on_screen;
-                    }
+                // Track the height in the buffer
+                if(height_on_screen > height_buffer[i]){
+                    height_buffer[i] = height_on_screen;
+                }
+            }else{
+                // Draw from a height close to the top of the screen
+                // towards a the bottom of the screen. By default, every
+                // tick/loop the height_buffer is filled with values of
+                // `SCREEN_HEIGHT`
+                float drawn_thickness = 0;
+                while(ipx < height_buffer[i] && drawn_thickness < thickness){
+                    engine_draw_pixel(texture->data[index], i, ipx, 1.0f, &empty_shader);
+                    ipx++;
+                    drawn_thickness += perspective;
+                }
+
+                // Track the height in the buffer
+                if(height_on_screen < height_buffer[i]){
+                    height_buffer[i] = height_on_screen;
                 }
             }
 
@@ -188,6 +199,7 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
 
         z += dz;
         dz += lod;
+        curvature += curvature_dy;
     }
 }
 
@@ -328,6 +340,14 @@ bool voxelspace_node_load_attr(engine_node_base_t *self_node_base, qstr attribut
             destination[0] = self->lod;
             return true;
         break;
+        case MP_QSTR_curvature:
+            destination[0] = self->curvature;
+            return true;
+        break;
+        case MP_QSTR_thickness:
+            destination[0] = self->thickness;
+            return true;
+        break;
         default:
             return false; // Fail
     }
@@ -376,6 +396,14 @@ bool voxelspace_node_store_attr(engine_node_base_t *self_node_base, qstr attribu
             self->lod = destination[1];
             return true;
         break;
+        case MP_QSTR_curvature:
+            self->curvature = destination[1];
+            return true;
+        break;
+        case MP_QSTR_thickness:
+            self->thickness = destination[1];
+            return true;
+        break;
         default:
             return false; // Fail
     }
@@ -416,7 +444,7 @@ STATIC mp_attr_fun_t voxelspace_node_class_attr(mp_obj_t self_in, qstr attribute
 /*  --- doc ---
     NAME: VoxelSpaceNode
     ID: VoxelSpaceNode
-    DESC: Node that gets rendered in a semi-3D fashion. See https://github.com/s-macke/VoxelSpace. If a camera is at 0,0,0 with rotation 0,0,0 and a voxelspace node is at 0,0,0 with rotation 0,0,0, the camera will be at a corner of the node where forward is following the node in the +x-axis direction and right is following the node in the +y-axis direction. If the voxelspace y-axis scale is set to 25 then full white pixels will be at 25 in height in world space as long as voxelsapce node's position is 0,0,0. Currently, the x-axis rotation is pitch (clamped and mapped to -90 or -pi/2 (ground) to 90 or pi/2 (sky)), y-axis rotation is yaw, and the z-axis rotation is a fake roll (ROLL NOT IMPLEMENTED: TODO).
+    DESC: Node that gets rendered in a semi-3D fashion. See https://github.com/s-macke/VoxelSpace. If a camera is at 0,0,0 with rotation 0,0,0 and a voxelspace node is at 0,0,0 with rotation 0,0,0, the camera will be at a corner of the node where forward is following the node in the +x-axis direction and right is following the node in the +y-axis direction. If the voxelspace y-axis scale is set to 25 then full white pixels will be at 25 in height in world space as long as voxelsapce node's position is 0,0,0. Currently, camera the x-axis rotation is pitch (clamped and mapped to -90 or -pi/2 (ground) to 90 or pi/2 (sky)), y-axis rotation is yaw, and the z-axis rotation is a fake roll.
     PARAM:  [type={ref_link:Vector3}]         [name=position]                   [value={ref_link:Vector3}]
     PARAM:  [type={ref_link:TextureResource}] [name=texture]                    [value={ref_link:TextureResource}]
     PARAM:  [type={ref_link:TextureResource}] [name=heightmap]                  [value={ref_link:TextureResource}]
@@ -438,6 +466,8 @@ STATIC mp_attr_fun_t voxelspace_node_class_attr(mp_obj_t self_in, qstr attribute
     ATTR:   [type=boolean]                    [name=repeat]                     [value=True or False (if True, repeats the terrain forever in all directions, default: False)]
     ATTR:   [type=boolean]                    [name=flip]                       [value=True or False (flips drawing upsidedown if True and normal if False (default))]
     ATTR:   [type=float]                      [name=lod]                        [value=any (stand for Level Of Detail and affects the quality/number of samples as the view is rendered at further and further distances, default: 0.0085)]
+    ATTR:   [type=float]                      [name=curvature]                  [value=any (radians, defines how much the terrain curves as the render distance increases, default: 0.0)]
+    ATTR:   [type=float]                      [name=thickness]                  [value=any (defines how thick the terrain should look if you can see its sides, default: 10.0)]
     OVRR:   [type=function]                   [name={ref_link:tick}]            [value=function]
 */
 mp_obj_t voxelspace_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
@@ -453,9 +483,11 @@ mp_obj_t voxelspace_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
         { MP_QSTR_repeat,               MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_flip,                 MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_lod,                  MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_curvature,            MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_thickness,            MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
-    enum arg_ids {child_class, position, texture, heightmap, rotation, scale, repeat, flip, lod};
+    enum arg_ids {child_class, position, texture, heightmap, rotation, scale, repeat, flip, lod, curvature, thickness};
     bool inherited = false;
     
     // If there is one positional argument and it isn't the first 
@@ -483,6 +515,8 @@ mp_obj_t voxelspace_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
     if(parsed_args[repeat].u_obj == MP_OBJ_NULL) parsed_args[repeat].u_obj = mp_obj_new_bool(false);
     if(parsed_args[flip].u_obj == MP_OBJ_NULL) parsed_args[flip].u_obj = mp_obj_new_bool(false);
     if(parsed_args[lod].u_obj == MP_OBJ_NULL) parsed_args[lod].u_obj = mp_obj_new_float(0.0085f);
+    if(parsed_args[curvature].u_obj == MP_OBJ_NULL) parsed_args[curvature].u_obj = mp_obj_new_float(0.0f);
+    if(parsed_args[thickness].u_obj == MP_OBJ_NULL) parsed_args[thickness].u_obj = mp_obj_new_float(10.0f);;
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);
@@ -500,6 +534,8 @@ mp_obj_t voxelspace_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
     voxelspace_node->repeat = parsed_args[repeat].u_obj;
     voxelspace_node->flip = parsed_args[flip].u_obj;
     voxelspace_node->lod = parsed_args[lod].u_obj;
+    voxelspace_node->curvature = parsed_args[curvature].u_obj;
+    voxelspace_node->thickness = parsed_args[thickness].u_obj;
 
     if(inherited == true){  // Inherited (use existing object)
         // Get the Python class instance

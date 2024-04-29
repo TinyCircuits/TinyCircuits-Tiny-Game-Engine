@@ -496,15 +496,18 @@ vox_node_perf_test.py, avg. FPS: 44.66821
 }
 
 
- ----- 
+ -----
 
 
-
-2024-04-29 12:38:26.369545 : 77b056c1d9ec29aa7212f1b16065749a6b8a50b5
-Fix voxelspace performance by making the code ugly, again
+ 2024-04-29 12:57:30.817408 : ca5d02b5ca2ef96e6ef4fc65d8a6e5e14f89368c
+Tweak voxelspace rendering and add some more features like curvature
 
 {
-vox_node_perf_test.py, avg. FPS: 39.29115
+line_node_perf_test.py, avg. FPS: 239.282
+test_opacity_perf_test.py, avg. FPS: 86.60579
+test_perf_test.py, avg. FPS: 107.6404
+circle_node_perf_test.py, avg. FPS: 241.2816
+vox_node_perf_test.py, avg. FPS: 43.46833
 }
 
 
@@ -512,23 +515,11 @@ vox_node_perf_test.py, avg. FPS: 39.29115
 
 
 
-2024-04-29 12:41:06.369246 : 8510459937745383be6298e5e211fcc77006908b
-Fix voxelspace performance by making the code ugly, again
+2024-04-29 16:20:16.042252 : 3315491fec32c59394c9446ac6568cd1aa0e7441
+Tweak voxelspace rendering and add some more features like curvature
 
 {
-vox_node_perf_test.py, avg. FPS: 41.55337
-}
-
-
- ----- 
-
-
-
-2024-04-29 12:44:04.418301 : 237122dd76001339f67a0ab6836ebb3cf4c20b73
-Fix voxelspace performance by making the code ugly, again
-
-{
-vox_node_perf_test.py, avg. FPS: 43.21445
+vox_node_perf_test.py, avg. FPS: 42.27578
 }
 
 
