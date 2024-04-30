@@ -192,5 +192,5 @@ if len(fps_sample_strs) > 0:
 
     # Need to add the now written to `performance_samples.txt`
     # without editing message or running hooks again
-    execute(['git', 'add', 'performance_samples.txt'])
-    execute(['git', 'commit', '--amend', '--no-edit', '--no-verify'])
+    # execute(['git', 'add', 'performance_samples.txt'])
+    # execute(['git', 'commit', '--amend', '--no-edit', '--no-verify'])

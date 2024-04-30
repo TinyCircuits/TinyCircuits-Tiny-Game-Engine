@@ -48,7 +48,7 @@ tree = VoxelSpaceSpriteNode(texture=tree_bmp, position=Vector3(0, 0, 0), scale=V
 tree.transparent_color = engine_draw.white
 tree.opacity = 1.0
 tree.position.x = 150
-tree.position.y = 10
+tree.position.y = vox1.get_abs_height(self.position.x, self.position.z)
 tree.position.z = 0
 
 
@@ -167,7 +167,7 @@ camera.position.y = 0
 camera.position.z = 0
 # camera.rotation.x = 0.3
 camera.view_distance = 150
-camera.fov = 70 * (math.pi/180)
+camera.fov = 80 * (math.pi/180)
 
 camera.add_child(Circle2DNode(radius=1, color=engine_draw.green, outline=True))
 

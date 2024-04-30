@@ -530,3 +530,19 @@ vox_node_perf_test.py, avg. FPS: 43.95695
 
 
 
+2024-04-30 17:32:01.439775 : bc3e6b088f7a575f5630288111fc470da75e8008
+More work on VoxelSpaceSpriteNode
+
+{
+line_node_perf_test.py, avg. FPS: 239.2817
+test_opacity_perf_test.py, avg. FPS: 90.03989
+test_perf_test.py, avg. FPS: 112.0914
+circle_node_perf_test.py, avg. FPS: 239.7778
+vox_node_perf_test.py, avg. FPS: 42.75621
+}
+
+
+ ----- 
+
+
+

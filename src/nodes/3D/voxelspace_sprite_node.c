@@ -120,7 +120,7 @@ void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_
     float D = engine_math_distance_between(camera_position->x.value, camera_position->z.value, sprite_position->x.value, sprite_position->z.value);
     float angle = camera_rotation->y.value;
 
-    float a = angle + engine_math_angle_between(camera_position->x.value, camera_position->z.value, sprite_position->x.value, sprite_position->z.value);
+    float a = engine_math_angle_between(camera_position->x.value, camera_position->z.value, sprite_position->x.value, sprite_position->z.value) - angle;
     float proj_adjacent = D * cosf(a);
     float z = proj_adjacent / cos(camera_fov_half);
 
@@ -129,7 +129,7 @@ void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_
         return;
     }
 
-
+    // Figure out the y on screen
     float perspective = z * perspective_factor;
     float altitude = -sprite_position->y.value + camera_position->y.value;
     int16_t height_on_screen = (64.0f + (altitude / perspective)) + view_angle;
@@ -139,7 +139,7 @@ void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_
     float sprite_rotated_y = height_on_screen;// - (sprite_texture->height/2 * scale) + 1;
 
 
-
+    // Figure out the x on screen
     float view_left_x = cosf(camera_rotation->y.value-camera_fov_half);
     float view_left_z = sinf(camera_rotation->y.value-camera_fov_half);
 
@@ -159,72 +159,7 @@ void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_
 
     float real_distance_between = engine_math_distance_between(pleft_x, pleft_z, sprite_position->x.value, sprite_position->z.value);
     float sprite_rotated_x = SCREEN_WIDTH * (real_distance_between/max_distance_between);
-    // float sprite_rotated_x = 64.0f;
-
-
-    // float angle = camera_rotation->y.value;
-    // // float angle_to = engine_math_angle_between(camera_position->x.value, camera_position->z.value, sprite_position->x.value, sprite_position->z.value);
-
-    // // // toa -> tanO = opp/addj -> opp = addj * tanO
-    // // // soh -> sinO = opp/hypt -> opp = hypt * sinO
-    // float plane_length = camera_view_distance * tanf(camera_fov_half);
-
-    // float ax = plane_length * cosf(angle-HALF_PI);
-    // float az = plane_length * sinf(angle-HALF_PI);
-
-    // float v1x = ax;
-    // float v1z = az;
-
-    // float v2x = -ax;
-    // float v2z = -az;
-
-    // float sx = sprite_position->x.value - camera_position->x.value;
-    // float sz = sprite_position->z.value - camera_position->z.value;
-
-    // float e1x = v2x - v1x;
-    // float e1z = v2z - v1z;
-    
-    // float e2x = sx - v1x;
-    // float e2z = sz - v1z;
-
-    // float max = engine_math_dot_product(e1x, e1z, e1x, e1z);
-    // float value = engine_math_dot_product(e2x, e2z, e1x, e1z);
-
-    // if(value >= 0.0f && value < max){
-    //     sprite_rotated_x = SCREEN_WIDTH * (value/max);
-    // }else{
-    //     return;
-    // }
-
-    // float camera_resolved_hierarchy_x = 0.0f;
-    // float camera_resolved_hierarchy_y = 0.0f;
-    // float camera_resolved_hierarchy_rotation = 0.0f;
-    // node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
-    // camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
-
-    // float sprite_resolved_hierarchy_x = 0.0f;
-    // float sprite_resolved_hierarchy_y = 0.0f;
-    // float sprite_resolved_hierarchy_rotation = 0.0f;
-    // bool sprite_is_child_of_camera = false;
-    // node_base_get_child_absolute_xy(&sprite_resolved_hierarchy_x, &sprite_resolved_hierarchy_y, &sprite_resolved_hierarchy_rotation, &sprite_is_child_of_camera, sprite_node_base);
-
-    // // Store the non-rotated x and y for a second
-    // float sprite_rotated_x = sprite_resolved_hierarchy_x - camera_resolved_hierarchy_x;
-    // float sprite_rotated_y = sprite_resolved_hierarchy_y - camera_resolved_hierarchy_y;
-
-    // if(sprite_is_child_of_camera == false){
-    //     // Scale transformation due to camera zoom
-    //     engine_math_scale_point(&sprite_rotated_x, &sprite_rotated_y, camera_position->x.value, camera_position->y.value, camera_zoom);
-    // }else{
-    //     camera_zoom = 1.0f;
-    // }
-
-    // // Rotate sprite origin about the camera
-    // engine_math_rotate_point(&sprite_rotated_x, &sprite_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
-
-
-
-
+ 
 
     // Decide which shader to use per-pixel
     engine_shader_t *shader = &empty_shader;
@@ -232,16 +167,16 @@ void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_
         shader = &opacity_shader;
     }
 
-    // engine_draw_blit(sprite_pixel_data+sprite_frame_fb_start_index,
-    //                  floorf(sprite_rotated_x), floorf(sprite_rotated_y),
-    //                  sprite_frame_width, sprite_frame_height,
-    //                  spritesheet_width,
-    //                  scale,
-    //                  scale,
-    //                  0.0f,
-    //                  transparent_color->value.val,
-    //                  sprite_opacity,
-    //                  shader);
+    engine_draw_blit(sprite_pixel_data+sprite_frame_fb_start_index,
+                     floorf(sprite_rotated_x), floorf(sprite_rotated_y),
+                     sprite_frame_width, sprite_frame_height,
+                     spritesheet_width,
+                     scale,
+                     scale,
+                     0.0f,
+                     transparent_color->value.val,
+                     sprite_opacity,
+                     shader);
     
     engine_draw_pixel(0b1111100000000000, sprite_rotated_x, height_on_screen, 1.0f, shader);
 
