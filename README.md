@@ -93,13 +93,15 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Make GUIBitmap2DButton for main menu
 [X] Fix VoxelSpace performance after last changes
 
-[] Add 1 rendering pass for all voxel nodes, how to do layers?
+[] Figure out how to scale and rotate voxelspace sprites
+[] Add 1 rendering pass for all voxel nodes, how to do layers? Only works with depth buffer (required for sprites in 3D anyways)
 [] Sprite2DNode and VoxelSpaceBillboardSpriteNode use a lot of the same data and logic, should make a common sprite code base and combine
 
 [.] Menu (carousel)
 
 [] Return something for width and height for GUIBitmap2DButton (what to do when the bitmap changes?)
 [] Decide on what text inside GUIBitmap2DButton should do (scale to unfocused, focused, and pressed bitmaps or not? Allow additional text scale to be set by the user)
+[] Saving a game should be as easy as engine.save() to generate representations of all objects that can then be initialized again from flash (if possible)
 
 [] Games should have at least 2MB of flash scratch space but maybe that can be configurable per game. Some games may like to use a lot and an error could let the user know they need to allow for more space
 [] Tones need duration

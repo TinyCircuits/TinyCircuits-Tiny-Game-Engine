@@ -16,7 +16,7 @@
 */ 
 STATIC mp_obj_t engine_draw_set_background_color(mp_obj_t module, mp_obj_t background_color){
     color_class_obj_t *color = background_color;
-    engine_fill_color = color->value.val;
+    engine_display_set_fill_color(color->value.val);
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_2(engine_draw_set_background_color_obj, engine_draw_set_background_color);
@@ -36,7 +36,7 @@ STATIC mp_obj_t engine_draw_set_background(mp_obj_t module, mp_obj_t background)
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Could not background image, images dimensions are not equal to screen dimensions!"));
     }
 
-    engine_fill_background = background_texture_resource->data;
+    engine_display_set_fill_background(background_texture_resource->data);
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_2(engine_draw_set_background_obj, engine_draw_set_background);

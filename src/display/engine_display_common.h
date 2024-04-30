@@ -22,6 +22,9 @@
 uint16_t engine_fill_color;
 uint16_t *engine_fill_background;
 
+void engine_display_set_fill_color(uint16_t color);
+void engine_display_set_fill_background(uint16_t *data);
+
 void engine_init_screen_buffers();
 
 // Returns the active screen buffer

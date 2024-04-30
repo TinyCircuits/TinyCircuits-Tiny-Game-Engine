@@ -91,12 +91,18 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
     float view_right_x = cosf(camera_rotation->y.value+camera_fov_half) * inverse_x_scale;
     float view_right_y = sinf(camera_rotation->y.value+camera_fov_half) * inverse_z_scale;
 
-    while(z < camera_view_distance){
-        // Instead of rotating the points by the stepped view_distance z,
-        // use z as the adjacent for triangle to figure out hypotenuse
-        // and then use that as the radius. This means the view distance
-        // will remain the same for every FOV
-        // float hypot = z / cosf(camera_rotation->y-camera_fov/2); // Not working?
+    // Trying to render objects in front of the camera at `camera_view_distance` units away:
+    //  \-----|-----/
+    //   \    |v   /
+    //    \   |i  /
+    //     \  |e /
+    //      \ |w/
+    //       \|/
+    // Find the hypotenuse based on the `camera_view_distance` we
+    // want to render at
+    float hypot = camera_view_distance / cosf(camera_fov_half);
+
+    while(z < hypot){
         float pleft_x = z * view_left_x;
         float pleft_y = z * view_left_y;
 
@@ -104,7 +110,7 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
         float pright_y = z * view_right_y;
 
         float dx = (pright_x - pleft_x) * SCREEN_WIDTH_INVERSE;
-        float dy = (pright_y - pleft_y) * SCREEN_HEIGHT_INVERSE;
+        float dy = (pright_y - pleft_y) * SCREEN_WIDTH_INVERSE;
 
         pleft_x += camera_position->x.value;
         pleft_y += camera_position->z.value;
@@ -166,10 +172,6 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
             }
 
             if(flip){
-                // Draw from a height close to the top of the screen
-                // towards a the bottom of the screen. By default, every
-                // tick/loop the height_buffer is filled with values of
-                // `SCREEN_HEIGHT`
                 float drawn_thickness = 0;
                 while(ipx >= height_buffer[i] && drawn_thickness < thickness){
                     engine_draw_pixel(texture->data[index], i, ipx, 1.0f, &empty_shader);
@@ -182,10 +184,6 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
                     height_buffer[i] = height_on_screen;
                 }
             }else{
-                // Draw from a height close to the top of the screen
-                // towards a the bottom of the screen. By default, every
-                // tick/loop the height_buffer is filled with values of
-                // `SCREEN_HEIGHT`
                 float drawn_thickness = 0;
                 while(ipx < height_buffer[i] && drawn_thickness < thickness){
                     engine_draw_pixel(texture->data[index], i, ipx, 1.0f, &empty_shader);
@@ -468,7 +466,7 @@ STATIC mp_attr_fun_t voxelspace_node_class_attr(mp_obj_t self_in, qstr attribute
     ATTR:   [type={ref_link:TextureResource}] [name=texture]                    [value={ref_link:TextureResource}]
     ATTR:   [type={ref_link:TextureResource}] [name=heightmap]                  [value={ref_link:TextureResource}]
     ATTR:   [type={ref_link:Vector3}]         [name=rotation]                   [value={ref_link:Vector3}]
-    ATTR:   [type={ref_link:Vector3}]         [name=scale]                      [value=any (x-axis makes terrain wider (default: 1.0), y-axis makes terrain taller/shorter (default: 10.0, this means the min height will be -10.0 and the max 10.0), and z-axis makes terrain longer (default: 1.0))]
+    ATTR:   [type={ref_link:Vector3}]         [name=scale]                      [value=any (x-axis makes terrain wider (default: 1.0), y-axis makes terrain taller/shorter (default: 10.0, this means the min height will be 0.0 and the max 10.0 if the node position is 0,0,0), and z-axis makes terrain longer (default: 1.0))]
     ATTR:   [type=boolean]                    [name=repeat]                     [value=True or False (if True, repeats the terrain forever in all directions, default: False)]
     ATTR:   [type=boolean]                    [name=flip]                       [value=True or False (flips drawing upsidedown if True and normal if False (default))]
     ATTR:   [type=float]                      [name=lod]                        [value=any (stand for Level Of Detail and affects the quality/number of samples as the view is rendered at further and further distances, default: 0.0085)]

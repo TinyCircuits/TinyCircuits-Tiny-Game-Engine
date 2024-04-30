@@ -22,6 +22,16 @@ static uint8_t active_screen_buffer_index = 0;
 static uint16_t *active_screen_buffer;
 
 
+void engine_display_set_fill_color(uint16_t color){
+    engine_fill_color = color;
+}
+
+
+void engine_display_set_fill_background(uint16_t *data){
+    engine_fill_background = data;
+}
+
+
 void engine_init_screen_buffers(){
     ENGINE_INFO_PRINTF("Creating dual screen buffers of size %d bytes each on C heap", SCREEN_BUFFER_SIZE_BYTES);
     dual_screen_buffers = (uint16_t**)malloc(sizeof(uint16_t*) * 2);

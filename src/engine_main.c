@@ -8,6 +8,7 @@
 #include "audio/engine_audio_module.h"
 #include "input/engine_input_module.h"
 #include "display/engine_display.h"
+#include "display/engine_display_common.h"
 #include "physics/engine_physics.h"
 #include "animation/engine_animation_module.h"
 
@@ -30,6 +31,9 @@ void engine_main_raise_if_not_initialized(){
 
 void engine_main_reset(){
     ENGINE_PRINTF("EngineMain: Resetting engine...\n");
+
+    // Set back to default
+    engine_display_set_fill_color(0x000);
 
     // Reset contigious flash space manager
     engine_audio_stop_all();

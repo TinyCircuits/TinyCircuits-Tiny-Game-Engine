@@ -41,8 +41,8 @@ void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_
     vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
     rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
     float camera_zoom = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_zoom));
-    float camera_fov = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_fov));
-    float camera_view_distance = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_view_distance));
+    float camera_fov_half = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_fov)) * 0.5f;
+    float view_distance = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_view_distance));
 
     uint16_t sprite_frame_count_x = mp_obj_get_int(voxelspace_sprite_node->frame_count_x);
     uint16_t sprite_frame_count_y = mp_obj_get_int(voxelspace_sprite_node->frame_count_y);
@@ -66,64 +66,135 @@ void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_
     view_angle = engine_math_clamp(view_angle, -PI/2.0f, PI/2.0f);
     view_angle = engine_math_map(view_angle, -PI/2.0f, PI/2.0f, -SCREEN_HEIGHT*2.0f, SCREEN_HEIGHT*2.0f);
 
-    
+    // Will need to pick a z that is valid. The z should be
+    // such that it is picked on a line between 1.0 and
+    // `camera_view_distance / cosf(camera_fov_half)` at
+    // an angle camera_fov_half from the view direction line
+    // that has a length of `camera_view_distance`:
+    /*
+            
+                   opposite
+            \---------------------|                     /  ---
+             \         P          |                    /    |
+     ---     L?--------*----------|-------------------?R    |
+       \       \       |         p|                  /      |
+        \       \       \        r|                 /       | v
+         \      f\       |       o|                /        | i
+          \      u\      |       j|a              /         | e
+           \      l\      \      -|d             /          | w
+            \      l\      |     a|j            /           |
+             \      _\     |     d|a           /            | d 
+              \      l\   D \    j|c          /             | i
+              z\      e\     |   a|e         /              | s
+                \      n\    |   c|n        /               | t
+                 \      g\    \  e|t       /                | a
+                  \      t\    | n|       /                 | n
+                   \      h\   | t|      /                  | c
+                    \       \  \  |     /                   | e
+                     \       \  | |    /                    |
+                      \       \ |a|   /                     |
+                       \       \A\|  /                      |
+                        \       \ | /                      ---
+                        ---       *
+                                  C
 
-    float sprite_rotated_x = 0.0f;
-    
+        Based on the above diagram, we know:
+        * P's location in absolute space
+        * C'c location in absolute space
+        * Angle A = camera_fov_half
+        * adjacent = view_distance (is given/provided)
+        * full_length = view_distance / cosf(A) [soh-cah-toa -> cah -> cosO = addj/hypt -> full_length = view_distance / cosA]
+        * opposite = soh-cah-toa -> sinO = opp/hypt -> opposite = full_length * sinf(A)
+         
+        To do the correct projection we need to find a distance along 'full_length' that we can
+        use to find L and R based on the voxelspace calculations below. We need to choose this
+        distance based on the point P relative to C. Once we have L and R we can see how far along
+        P is from L to R and map that to 0 to SCREEN_WIDTH
 
-    float distance = engine_math_distance_between(camera_position->x.value, camera_position->z.value, sprite_position->x.value, sprite_position->z.value);
+        To find the distance z to use:
 
-    float perspective = distance * perspective_factor;
+        cah -> cosf(a) = proj_adjacent / D -> [proj_adjacent = D * cosf(a)]
 
-    int16_t height_on_screen = ((64.0f + ((-sprite_position->y.value + camera_position->y.value) / perspective)) + view_angle);
-
-    float scale = 1.0f - (distance * perspective_factor);
-
-
-    float sprite_rotated_y = height_on_screen;// + (sprite_texture->height/2 * scale);
-
-    // if(distance >= camera_view_distance){
-    //     return;
-    // }
-
-    
-
+        cah -> cosf(A) = proj_adjacent / z -> [z = proj_adjacent / cosf(camera_fov_half)]
+    */
+    float D = engine_math_distance_between(camera_position->x.value, camera_position->z.value, sprite_position->x.value, sprite_position->z.value);
     float angle = camera_rotation->y.value;
 
-    float ax = SCREEN_WIDTH_HALF * cosf(angle-HALF_PI);
-    float az = SCREEN_WIDTH_HALF * sinf(angle-HALF_PI);
+    float a = angle + engine_math_angle_between(camera_position->x.value, camera_position->z.value, sprite_position->x.value, sprite_position->z.value);
+    float proj_adjacent = D * cosf(a);
+    float z = proj_adjacent / cos(camera_fov_half);
 
-    float sx = sprite_position->x.value;
-    float sz = sprite_position->z.value;
-
-    float v1x = camera_position->x.value + ax;
-    float v1z = camera_position->z.value + az;
-
-    float v2x = camera_position->x.value - ax;
-    float v2z = camera_position->z.value - az;
-
-    // float p_proj = (sx - v1x + sz - v1z) * (v2x - v1x + v2z - v2z);
-    // float p3_proj = (v2x - v1x + v2z - v1z) * (v2x - v1x + v2z - v1z);
-
-    // if(p_proj >= 0.0f && p_proj < p3_proj){
-    //     sprite_rotated_x = SCREEN_WIDTH * (p_proj/p3_proj);
-    // }
-
-    float e1x = v2x - v1x;
-    float e1z = v2z - v1z;
-    
-    float e2x = sx - v1x;
-    float e2z = sz - v1z;
-
-    float max = engine_math_dot_product(e1x, e1z, e1x, e1z);
-    float value = engine_math_dot_product(e2x, e2z, e1x, e1z);
-    // ENGINE_PRINTF("%.03f %.03f\n", value, max);
-
-    if(value >= 0.0f && value < max){
-        sprite_rotated_x = SCREEN_WIDTH * (value/max) * (1.0f / camera_fov);
-    }else{
+    // Check if out of view along view direct
+    if(proj_adjacent > view_distance){
         return;
     }
+
+
+    float perspective = z * perspective_factor;
+    float altitude = -sprite_position->y.value + camera_position->y.value;
+    int16_t height_on_screen = (64.0f + (altitude / perspective)) + view_angle;
+
+    float scale = 1.0f - (z * perspective_factor);
+
+    float sprite_rotated_y = height_on_screen;// - (sprite_texture->height/2 * scale) + 1;
+
+
+
+    float view_left_x = cosf(camera_rotation->y.value-camera_fov_half);
+    float view_left_z = sinf(camera_rotation->y.value-camera_fov_half);
+
+    float view_right_x = cosf(camera_rotation->y.value+camera_fov_half);
+    float view_right_z = sinf(camera_rotation->y.value+camera_fov_half);
+
+    float pleft_x = z * view_left_x;
+    float pleft_z = z * view_left_z;
+
+    float pright_x = z * view_right_x;
+    float pright_z = z * view_right_z;
+
+    float max_distance_between = engine_math_distance_between(pleft_x, pleft_z, pright_x, pright_z);
+
+    pleft_x += camera_position->x.value;
+    pleft_z += camera_position->z.value;
+
+    float real_distance_between = engine_math_distance_between(pleft_x, pleft_z, sprite_position->x.value, sprite_position->z.value);
+    float sprite_rotated_x = SCREEN_WIDTH * (real_distance_between/max_distance_between);
+    // float sprite_rotated_x = 64.0f;
+
+
+    // float angle = camera_rotation->y.value;
+    // // float angle_to = engine_math_angle_between(camera_position->x.value, camera_position->z.value, sprite_position->x.value, sprite_position->z.value);
+
+    // // // toa -> tanO = opp/addj -> opp = addj * tanO
+    // // // soh -> sinO = opp/hypt -> opp = hypt * sinO
+    // float plane_length = camera_view_distance * tanf(camera_fov_half);
+
+    // float ax = plane_length * cosf(angle-HALF_PI);
+    // float az = plane_length * sinf(angle-HALF_PI);
+
+    // float v1x = ax;
+    // float v1z = az;
+
+    // float v2x = -ax;
+    // float v2z = -az;
+
+    // float sx = sprite_position->x.value - camera_position->x.value;
+    // float sz = sprite_position->z.value - camera_position->z.value;
+
+    // float e1x = v2x - v1x;
+    // float e1z = v2z - v1z;
+    
+    // float e2x = sx - v1x;
+    // float e2z = sz - v1z;
+
+    // float max = engine_math_dot_product(e1x, e1z, e1x, e1z);
+    // float value = engine_math_dot_product(e2x, e2z, e1x, e1z);
+
+    // if(value >= 0.0f && value < max){
+    //     sprite_rotated_x = SCREEN_WIDTH * (value/max);
+    // }else{
+    //     return;
+    // }
 
     // float camera_resolved_hierarchy_x = 0.0f;
     // float camera_resolved_hierarchy_y = 0.0f;
@@ -151,22 +222,31 @@ void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_
     // // Rotate sprite origin about the camera
     // engine_math_rotate_point(&sprite_rotated_x, &sprite_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
 
+
+
+
+
     // Decide which shader to use per-pixel
     engine_shader_t *shader = &empty_shader;
     if(sprite_opacity < 1.0f){
         shader = &opacity_shader;
     }
 
-    engine_draw_blit(sprite_pixel_data+sprite_frame_fb_start_index,
-                     floorf(sprite_rotated_x), floorf(sprite_rotated_y),
-                     sprite_frame_width, sprite_frame_height,
-                     spritesheet_width,
-                     scale,
-                     scale,
-                     0.0f,
-                     transparent_color->value.val,
-                     sprite_opacity,
-                     shader);
+    // engine_draw_blit(sprite_pixel_data+sprite_frame_fb_start_index,
+    //                  floorf(sprite_rotated_x), floorf(sprite_rotated_y),
+    //                  sprite_frame_width, sprite_frame_height,
+    //                  spritesheet_width,
+    //                  scale,
+    //                  scale,
+    //                  0.0f,
+    //                  transparent_color->value.val,
+    //                  sprite_opacity,
+    //                  shader);
+    
+    engine_draw_pixel(0b1111100000000000, sprite_rotated_x, height_on_screen, 1.0f, shader);
+
+
+
 
     // // After drawing, go to the next frame if it is time to and the animation is playing
     // if(sprite_playing == 1){
