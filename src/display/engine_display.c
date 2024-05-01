@@ -31,6 +31,7 @@ void engine_display_send(){
     // Send the screen buffer to the display
     #ifdef __unix__
         engine_display_sdl_update_screen(engine_get_active_screen_buffer());
+        // engine_display_sdl_update_screen(depth_buffer);
     #else
         engine_display_gc9107_update(engine_get_active_screen_buffer());
         // engine_display_st7789_update(engine_get_active_screen_buffer());

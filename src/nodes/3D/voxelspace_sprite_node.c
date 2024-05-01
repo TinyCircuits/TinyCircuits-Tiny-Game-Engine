@@ -104,7 +104,7 @@ void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_
         * Angle A = camera_fov_half
         * adjacent = view_distance (is given/provided)
         * full_length = view_distance / cosf(A) [soh-cah-toa -> cah -> cosO = addj/hypt -> full_length = view_distance / cosA]
-        * opposite = soh-cah-toa -> sinO = opp/hypt -> opposite = full_length * sinf(A)
+        * opposite = soh-cah-toa -> sinO = opp/hypt -> opposite = full_length * sinf(camera_fov_half)
          
         To do the correct projection we need to find a distance along 'full_length' that we can
         use to find L and R based on the voxelspace calculations below. We need to choose this
@@ -124,30 +124,23 @@ void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_
     float proj_adjacent = D * cosf(a);
     float z = proj_adjacent / cos(camera_fov_half);
 
+    // The z we calculate here can vary from 0 to view_distance / cosf(A),
+    // Normalize the view along the full_length (that's what z is crawling)
+    // and then scale to the max allowed in the depth buffer
+    float full_length = view_distance / cosf(camera_fov_half);
+    float depth = (z / full_length) * UINT16_MAX;
+
     // Is there a better way to check that the angle to the sprite
     // is within the FOV angles? IDK: TODO
-    float angle_check0 = fabsf(a);
+    float angle_check0 = fabsf(fmodf(a, TWICE_PI));
     float angle_check1 = fabsf(TWICE_PI - angle_check0);
     bool angle_in_bounds = angle_check0 < camera_fov_half || angle_check1 < camera_fov_half;
-
 
     // Check if out of view along view direct or if the angle
     // to the sprite is out of the FOV
     if(proj_adjacent > view_distance || angle_in_bounds == false){
         return;
     }
-
-    // Figure out the y on screen
-    float perspective = z * perspective_factor;
-    float altitude = -sprite_position->y.value + camera_position->y.value;
-    int16_t height_on_screen = (64.0f + (altitude / perspective)) + view_angle;
-
-    float scale = 1.0f - (z * perspective_factor);
-    // float scale = 1.0f;
-    // ENGINE_PRINTF("%.03f\n", scale);
-
-    float sprite_rotated_y = height_on_screen - (sprite_texture->height/2 * scale);
-
 
     // Figure out the x on screen
     float view_left_x = cosf(camera_rotation->y.value-camera_fov_half);
@@ -170,26 +163,63 @@ void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_
     float real_distance_between = engine_math_distance_between(pleft_x, pleft_z, sprite_position->x.value, sprite_position->z.value);
     
     float sprite_rotated_x = SCREEN_WIDTH * (real_distance_between/max_distance_between);
- 
+
+
+
+
+
+       // Figure out the perspective
+    float perspective = z * perspective_factor;
+    float inverse_perspective = 1.0f / perspective;
+
+    
+
+    // Figure out the scale
+    // This scales everything so that if you're one projected
+    // to view distance axis away, the sprite will show up as
+    // its own full height (not the screen)
+    // float aspect = (1.0f / (((1.0f) / cos(camera_fov_half)) * perspective_factor))/2.0f;
+    // float scale_x = inverse_perspective / aspect * sprite_scale->x.value;
+    // float scale_y = inverse_perspective / aspect * sprite_scale->y.value;
+
+    // Figure out the scale to due fov shift (not the best): TODO
+    // float opposite = full_length * sinf(camera_fov_half) * 2.0f;
+    // float opposite = full_length * sinf(camera_fov_half) * 2.0f;
+    // float fov_x_scale = SCREEN_WIDTH/opposite;
+    // float fov_x_scale = SCREEN_WIDTH/max_distance_between;
+    float fov_x_scale = PI/4.0f / (camera_fov_half*2.0f) * 0.707f;
+
+    float scale_x = inverse_perspective * sprite_scale->x.value * fov_x_scale;
+    float scale_y = inverse_perspective * sprite_scale->y.value;
+
+    // Figure out the y on screen
+    float altitude = -sprite_position->y.value + camera_position->y.value;
+    int16_t height_on_screen = (64.0f + (altitude * inverse_perspective)) + view_angle;
+
+    float sprite_rotated_y = height_on_screen - (sprite_texture->height/2 * scale_y);
+
+
+
+
+
 
     // Decide which shader to use per-pixel
     engine_shader_t *shader = &empty_shader;
     if(sprite_opacity < 1.0f){
         shader = &opacity_shader;
     }
-
-    engine_draw_blit(sprite_pixel_data+sprite_frame_fb_start_index,
+    
+    engine_draw_blit_depth(sprite_pixel_data+sprite_frame_fb_start_index,
                      floorf(sprite_rotated_x), floorf(sprite_rotated_y),
                      sprite_frame_width, sprite_frame_height,
                      spritesheet_width,
-                     scale,
-                     scale,
+                     scale_x,
+                     scale_y,
                      0.0f,
                      transparent_color->value.val,
                      sprite_opacity,
+                     depth,
                      shader);
-    
-    engine_draw_pixel(0b1111100000000000, sprite_rotated_x, height_on_screen, 1.0f, shader);
 
     // After drawing, go to the next frame if it is time to and the animation is playing
     if(sprite_playing == 1){

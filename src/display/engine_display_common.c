@@ -27,7 +27,7 @@ static uint16_t *active_screen_buffer;
 // their pixels for occlusion. If a node that requires
 // that is spawned, it will ensure this buffer is
 // generated only at the point
-static uint16_t *depth_buffer = NULL;
+uint16_t *depth_buffer = NULL;
 
 
 void engine_display_set_fill_color(uint16_t color){
@@ -89,13 +89,17 @@ void engine_display_free_depth_buffer(){
 }
 
 
-bool ENGINE_FAST_FUNCTION(engine_display_store_check_depth)(uint8_t sx, uint8_t sy, uint16_t depth){
-    uint16_t index = sy * SCREEN_WIDTH + sx;
-
+bool ENGINE_FAST_FUNCTION(engine_display_store_check_depth_index)(uint16_t index, uint16_t depth){
     if(depth < depth_buffer[index]){
         depth_buffer[index] = depth;
         return true;
     }
 
     return false;
+}
+
+
+bool ENGINE_FAST_FUNCTION(engine_display_store_check_depth)(uint8_t sx, uint8_t sy, uint16_t depth){
+    uint16_t index = sy * SCREEN_WIDTH + sx;
+    return engine_display_store_check_depth_index(index, depth);
 }

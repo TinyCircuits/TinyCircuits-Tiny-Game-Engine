@@ -121,6 +121,10 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
         // Factor to scale certain objects/lines/distances as the render distance gets further away
         float perspective = z * perspective_factor;
 
+        // Normalize the view along the hypot (that's what z is crawling)
+        // and then scale to the max allowed in the depth buffer
+        float depth = (z / hypot) * UINT16_MAX;
+
         for(uint8_t i=0; i<SCREEN_WIDTH; i++){
             int32_t x = 0;
             int32_t y = 0;
@@ -174,7 +178,7 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
             if(flip){
                 float drawn_thickness = 0;
                 while(ipx >= height_buffer[i] && drawn_thickness < thickness){
-                    if(engine_display_store_check_depth(i, ipx, z)){
+                    if(engine_display_store_check_depth(i, ipx, depth)){
                         engine_draw_pixel(texture->data[index], i, ipx, 1.0f, &empty_shader);
                     }
                     ipx--;
@@ -188,7 +192,7 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
             }else{
                 float drawn_thickness = 0;
                 while(ipx < height_buffer[i] && drawn_thickness < thickness){
-                    if(engine_display_store_check_depth(i, ipx, z)){
+                    if(engine_display_store_check_depth(i, ipx, depth)){
                         engine_draw_pixel(texture->data[index], i, ipx, 1.0f, &empty_shader);
                     }
                     ipx++;

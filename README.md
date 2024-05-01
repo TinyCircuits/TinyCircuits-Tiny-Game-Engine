@@ -93,6 +93,13 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Make GUIBitmap2DButton for main menu
 [X] Fix VoxelSpace performance after last changes
 
+[] Render voxel sprites with depth buffer
+[] When the camera is 1 unit from the sprite, it should take up the sprite_height number of pixels
+[] When the FOV of the camera is changed, the sprites should get wider
+[] Rotation of the sprites should be taken into account
+[] When the camera rotates and that shifts the terrain, should sprites also rotate a bit?
+[] Curvature of terrain needs to be taken into account for child nodes too
+
 [] Figure out how to scale and rotate voxelspace sprites
 [] Add 1 rendering pass for all voxel nodes, how to do layers? Only works with depth buffer (required for sprites in 3D anyways)
 [] Sprite2DNode and VoxelSpaceBillboardSpriteNode use a lot of the same data and logic, should make a common sprite code base and combine

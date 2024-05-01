@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-
+uint16_t *depth_buffer;;
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 128
 
@@ -46,6 +46,7 @@ void engine_display_free_depth_buffer();
 // Returns true if the passed depth is lower/closer
 // than the depth stored there before, also stores it if true.
 // Returns false if did not store it because it was lower
+bool engine_display_store_check_depth_index(uint16_t index, uint16_t depth);
 bool engine_display_store_check_depth(uint8_t sx, uint8_t sy, uint16_t depth);
 
 #endif  // ENGINE_DISPLAY_COMMON

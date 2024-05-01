@@ -224,6 +224,155 @@ void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t
     // ENGINE_PERFORMANCE_CYCLES_STOP();
 }
 
+
+void engine_draw_blit_depth(uint16_t *pixels, float center_x, float center_y, uint32_t window_width, uint32_t window_height, uint32_t pixels_stride, float x_scale, float y_scale, float rotation_radians, uint16_t transparent_color, float alpha, uint16_t depth, engine_shader_t *shader){
+    /*  https://cohost.org/tomforsyth/post/891823-rotation-with-three#:~:text=But%20the%20TL%3BDR%20is%20you%20do%20three%20shears%3A
+        https://stackoverflow.com/questions/65909025/rotating-a-bitmap-with-3-shears    Lots of inspiration from here
+        https://computergraphics.stackexchange.com/questions/10599/rotate-a-bitmap-with-shearing
+        https://news.ycombinator.com/item?id=34485871 lots of sources
+        https://graphicsinterface.org/wp-content/uploads/gi1986-15.pdf
+        https://gautamnagrawal.medium.com/rotating-image-by-any-angle-shear-transformation-using-only-numpy-d28d16eb5076
+        https://datagenetics.com/blog/august32013/index.html
+        https://www.ocf.berkeley.edu/~fricke/projects/israel/paeth/rotation_by_shearing.html
+        https://www.ocf.berkeley.edu/~fricke/projects/israel/paeth/rotation_by_shearing.html#:~:text=To%20do%20a%20shear%20operation%20on%20a%20raster%20image%20(that%20is%20to%20say%2C%20a%20bitmap)%2C%20we%20just%20shift%20all%20the%20pixels%20in%20a%20given%20row%20(column)%20by%20an%20easy%2Dto%2Dcalculate%20displacement
+
+        https://codereview.stackexchange.com/a/86546 <- Not trishear but might be good enough, it's what is used below
+
+        The last link above highlights the most important part about doing rotations by shears:
+        "To do a shear operation on a raster image (that is to say, a bitmap), we just shift all
+        the pixels in a given row (column) by an easy-to-calculate displacement"
+
+        As that link mentions, we'll do the rotation by doing three shears/displacements per-pixel per column.
+        The displacements are performed twice on the x-axis and once on the y axis in x y x order.
+    */
+
+    // ENGINE_PERFORMANCE_CYCLES_START();
+    uint16_t *screen_buffer = engine_get_active_screen_buffer();
+
+    float inverse_x_scale = 1.0f / x_scale;
+    float inverse_y_scale = 1.0f / y_scale;
+    
+    // https://codereview.stackexchange.com/a/86546
+    float sin_angle = sinf(rotation_radians);
+    float cos_angle = cosf(rotation_radians);
+
+    // Used to traverse about rotation
+    float sin_angle_inv_scaled = sin_angle * inverse_y_scale;
+    float cos_angle_inv_scaled = cos_angle * inverse_x_scale;
+
+    // Controls the scale of the destination rectangle,
+    // which in turn defines the total scale of the bitmap
+    float scaled_window_width = window_width * x_scale;
+    float scaled_window_height = window_height * y_scale;
+
+    float half_scaled_window_width = scaled_window_width * 0.5f;
+    float half_scaled_window_height = scaled_window_height * 0.5f;
+
+    // When rotated at 45 degrees, make sure corners don't get cut
+    // off: https://math.stackexchange.com/questions/2915935/radius-of-a-circle-touching-a-rectangle-both-of-which-are-inside-a-square
+    uint32_t dim = (uint32_t)sqrtf((scaled_window_width*scaled_window_width) + (scaled_window_height*scaled_window_height));
+    float dim_half = (dim / 2.0f);
+
+    // The top-left of the bitmap destination
+    int32_t top_left_x = center_x - dim_half;
+    int32_t top_left_y = center_y - dim_half;
+
+    // If the top-left is above the viewport but
+    // the bitmap may eventually showup, clip the
+    // top of the destination rectangle
+    int32_t j_start = 0;
+    if(top_left_y < 0){
+        j_start = abs(top_left_y);
+    }
+
+    // If the top-left is left of the viewport
+    // but the bitmap may eventually showup, clip
+    // the left of the destination rectangle
+    int32_t i_start = 0;
+    if(top_left_x < 0){
+        i_start = abs(top_left_x);
+    }
+
+    // 1D index into the screen buffer of where the bitmap will go
+    const uint32_t center_pixel_offset = (top_left_y+j_start) * SCREEN_WIDTH + (top_left_x+i_start);
+
+    // Used for tracking where we are in the screen_buffer
+    uint32_t dest_offset = center_pixel_offset;
+
+    // The stride to the next row usually consists of just the
+    // screen width, however, subtract the dimensions of the 
+    // destination rect so that we end up at the next row
+    // in the rect. Also proceed forward on the next row
+    // by the amount we are left clipping the dest rect
+    uint32_t next_dest_row_offset = SCREEN_WIDTH - dim + i_start;
+
+    int32_t i, j;
+
+    // Start from clipped top and go until max destination rectangle
+    // height (bounding-box) or until the start drawing out of bounds
+    // (clip bottom)
+    for(j=j_start; j<dim && top_left_y+j < SCREEN_HEIGHT; j++){
+        // Center inside destination rectangle.
+        // Offset where we are in the src bitmap
+        // by left-clip amount ('i_start')
+        float deltaY = j - dim_half;
+        float deltaX = 0 - dim_half + i_start;
+
+        // Calculate the location of the SRC pixel. If the destination
+        // gets scaled larger then we need to inversely scale into the
+        // src, and vice versa
+        float x = (half_scaled_window_width + deltaX * cos_angle + deltaY * sin_angle) * inverse_x_scale;
+        float y = (half_scaled_window_height - deltaX * sin_angle + deltaY * cos_angle) * inverse_y_scale;
+
+        for(i=i_start; i<dim; i++){
+            // Check if drawing to draw out of bounds to the right,
+            // if so, stop drawing the destination row early and
+            // move on to the next
+            if(top_left_x+i < SCREEN_WIDTH){
+                // Uncomment to see background. Drawing
+                // sprites that are thin could be optimized
+                // screen_buffer[dest_offset] = 0b11111000000000;
+
+                // Floor these otherwise get artifacts (don't exactly know why).
+                // Floor + int seems to be faster than comparing floats
+                int32_t rotX = floorf(x);
+                int32_t rotY = floorf(y);
+
+                // If statements are expensive! Don't need to check if withing screen
+                // bounds since those dimensions are clipped (destination rect)
+                if((rotX >= 0 && rotX < window_width) && (rotY >= 0 && rotY < window_height)){
+                    uint32_t src_offset = rotY * pixels_stride + rotX;
+                    uint16_t src_color = pixels[src_offset];
+
+                    if(engine_display_store_check_depth_index(dest_offset, depth) && (src_color != transparent_color || src_color == ENGINE_NO_TRANSPARENCY_COLOR)){
+                        screen_buffer[dest_offset] = shader->execute(screen_buffer[dest_offset], src_color, alpha, shader);
+                    }
+                }
+
+                // While in row, keep traversing about rotation
+                x += cos_angle_inv_scaled;
+                y -= sin_angle_inv_scaled;
+
+                // Go to next pixel next time to set it
+                dest_offset += 1;
+            }else{
+                // After this will be a subtraction by 'dim'
+                // but we need to be at the end of the row
+                // for that to work, set 'dest_offset' to end
+                // See 'next_dest_row_offset'
+                dest_offset += dim-i;
+                break;
+            }
+        }
+
+        // Go to next row but at the left of it (SCREEN_WIDTH - dim)
+        dest_offset += next_dest_row_offset;
+    }
+
+    // ENGINE_PERFORMANCE_CYCLES_STOP();
+}
+
+
 void engine_draw_rect(uint16_t color, float center_x, float center_y, uint32_t width, uint32_t height, float x_scale, float y_scale, float rotation_radians, float alpha, engine_shader_t *shader){
     /*  https://cohost.org/tomforsyth/post/891823-rotation-with-three#:~:text=But%20the%20TL%3BDR%20is%20you%20do%20three%20shears%3A
         https://stackoverflow.com/questions/65909025/rotating-a-bitmap-with-3-shears    Lots of inspiration from here

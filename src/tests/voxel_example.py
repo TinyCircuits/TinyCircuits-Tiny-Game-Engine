@@ -12,6 +12,9 @@ import gc
 import math
 import os
 import time
+import machine
+
+# machine.freq(250 * 1000 * 1000)
 
 engine_input.gui_toggle_button = None
 
@@ -19,9 +22,10 @@ engine.set_fps_limit(60)
 engine_draw.set_background_color(engine_draw.skyblue)
 
 
-C18W = TextureResource("C18W.bmp", True)
-D18 = TextureResource("D18.bmp", True)
+C18W = TextureResource("C18W_32.bmp", True)
+D18 = TextureResource("D18_32.bmp", True)
 tree_bmp = TextureResource("tree.bmp", True)
+tc_bmp = TextureResource("32x32.bmp", True)
 
 # vox0 = VoxelSpaceNode(texture=C18W, heightmap=D18)
 # vox0.position.x = 0
@@ -38,27 +42,37 @@ vox1 = VoxelSpaceNode(texture=C18W, heightmap=D18)
 vox1.position.x = 0
 vox1.position.y = 0
 vox1.position.z = 0
-vox1.scale.y = 10
+vox1.scale.y = 32
 vox1.scale.x = 1
 vox1.scale.z = 1
 vox1.flip = False
 vox1.thickness = 100
 # vox1.set_layer(1)
 
-tree = VoxelSpaceSpriteNode(texture=tree_bmp, position=Vector3(0, 0, 0), scale=Vector3(1.0, 1.0, 1.0))
-tree.transparent_color = engine_draw.white
-tree.opacity = 1.0
-tree.position.x = 75
-tree.position.z = 75
-tree.position.y = vox1.get_abs_height(tree.position.x, tree.position.z )
-# # tree.set_layer(0)
+# tree = VoxelSpaceSpriteNode(texture=tree_bmp, position=Vector3(0, 0, 0), scale=Vector3(1.0, 1.0, 1.0))
+# tree.transparent_color = engine_draw.white
+# tree.opacity = 1.0
+# tree.position.x = 16
+# tree.position.z = 16
+# # tree.position.y = vox1.get_abs_height(tree.position.x, tree.position.z)
+# # tree.scale.x = 10.25
+# # tree.scale.y = 10.25
+# # # tree.set_layer(0)
+
+
+bmp = VoxelSpaceSpriteNode(texture=D18, position=Vector3(0, 0, 0), scale=Vector3(1.0, 1.0, 1.0))
+# bmp.transparent_color = engine_draw.black
+bmp.opacity = 1.0
+bmp.position.x = 32
+bmp.position.z = 16
+# bmp.position.y = vox1.get_abs_height(bmp.position.x, bmp.position.z)
 
 
 
 class MyCam(CameraNode):
     def __init__(self):
         super().__init__(self)
-        self.distance = 0.75
+        self.distance = 0.25
         self.mode = 0
         self.t = 0
         
@@ -115,6 +129,8 @@ class MyCam(CameraNode):
             elif self.mode == 5:
                 # vox0.scale.y += 1
                 vox1.scale.y += 1
+            elif self.mode == 6:
+                self.fov += 0.05
         if engine_input.check_pressed(engine_input.BUMPER_LEFT):
             if self.mode == 0:
                 self.rotation.y -= 0.025
@@ -130,6 +146,8 @@ class MyCam(CameraNode):
             elif self.mode == 5:
                 # vox0.scale.y -= 1
                 vox1.scale.y -= 1
+            elif self.mode == 6:
+                self.fov -= 0.05
     
 
         if engine_input.check_pressed(engine_input.DPAD_UP):
@@ -143,13 +161,13 @@ class MyCam(CameraNode):
         
         if engine_input.check_pressed(engine_input.A):
             if self.mode == 0:
-                self.position.y += 0.5
+                self.position.y += 0.1
                 self.adjust() 
             elif self.mode == 1:
                 self.rotation.x -= 0.1
         if engine_input.check_pressed(engine_input.B):
             if self.mode == 0:
-                self.position.y -= 0.5
+                self.position.y -= 0.1
                 self.adjust() 
             elif self.mode == 1:
                 self.rotation.x += 0.1
@@ -158,7 +176,7 @@ class MyCam(CameraNode):
             # vox.scale.y += 0.5
             # print(vox.scale.y)
             self.mode = self.mode + 1
-            if self.mode >= 6:
+            if self.mode >= 7:
                 self.mode = 0
             
             print(self.mode)
@@ -169,8 +187,9 @@ camera.position.x = 0
 camera.position.y = 0
 camera.position.z = 0
 # camera.rotation.x = 0.3
-camera.view_distance = 150
-camera.fov = 80 * (math.pi/180)
+camera.view_distance = 350
+# camera.fov = 32 * (math.pi/180)
+camera.fov = 45 * (math.pi/180)
 
 camera.add_child(Circle2DNode(radius=1, color=engine_draw.green, outline=True))
 
