@@ -130,49 +130,45 @@ void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_
     float full_length = view_distance / cosf(camera_fov_half);
     float depth = (z / full_length) * UINT16_MAX;
 
-    // Is there a better way to check that the angle to the sprite
-    // is within the FOV angles? IDK: TODO
-    float angle_check0 = fabsf(fmodf(a, TWICE_PI));
-    float angle_check1 = fabsf(TWICE_PI - angle_check0);
-    bool angle_in_bounds = angle_check0 < camera_fov_half || angle_check1 < camera_fov_half;
-
     // Check if out of view along view direct or if the angle
     // to the sprite is out of the FOV
-    if(proj_adjacent > view_distance || angle_in_bounds == false){
+    if(proj_adjacent > view_distance){
         return;
     }
 
-    // Figure out the x on screen
     float view_left_x = cosf(camera_rotation->y.value-camera_fov_half);
     float view_left_z = sinf(camera_rotation->y.value-camera_fov_half);
 
     float view_right_x = cosf(camera_rotation->y.value+camera_fov_half);
     float view_right_z = sinf(camera_rotation->y.value+camera_fov_half);
 
-    float pleft_x = z * view_left_x;
-    float pleft_z = z * view_left_z;
+    float pleft_x = z * view_left_x + camera_position->x.value;
+    float pleft_z = z * view_left_z + camera_position->z.value;
 
-    float pright_x = z * view_right_x;
-    float pright_z = z * view_right_z;
+    float pright_x = z * view_right_x + camera_position->x.value;
+    float pright_z = z * view_right_z + camera_position->z.value;
 
-    float max_distance_between = engine_math_distance_between(pleft_x, pleft_z, pright_x, pright_z);
+    // https://www.sunshine2k.de/coding/java/PointOnLine/PointOnLine.html
+    // Project the sprite position onto the line formed
+    // py the points on the view area. This way positions
+    // outside of teh view can be found to that sprites
+    // don't just disappear at the edge
+    float sx = sprite_position->x.value;
+    float sz = sprite_position->z.value;
 
-    pleft_x += camera_position->x.value;
-    pleft_z += camera_position->z.value;
+    float e1x = pright_x - pleft_x;
+    float e1z = pright_z - pleft_z;
 
-    float real_distance_between = engine_math_distance_between(pleft_x, pleft_z, sprite_position->x.value, sprite_position->z.value);
-    
-    float sprite_rotated_x = SCREEN_WIDTH * (real_distance_between/max_distance_between);
+    float e2x = sx - pleft_x;
+    float e2z = sz - pleft_z;
 
+    float max = engine_math_dot_product(e1x, e1z, e1x, e1z);
+    float value = engine_math_dot_product(e1x, e1z, e2x, e2z);
+    float sprite_rotated_x = ((value/max) * SCREEN_WIDTH);
 
-
-
-
-       // Figure out the perspective
+    // Figure out the perspective
     float perspective = z * perspective_factor;
     float inverse_perspective = 1.0f / perspective;
-
-    
 
     // Figure out the scale
     // This scales everything so that if you're one projected
@@ -197,11 +193,6 @@ void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_
     int16_t height_on_screen = (64.0f + (altitude * inverse_perspective)) + view_angle;
 
     float sprite_rotated_y = height_on_screen - (sprite_texture->height/2 * scale_y);
-
-
-
-
-
 
     // Decide which shader to use per-pixel
     engine_shader_t *shader = &empty_shader;

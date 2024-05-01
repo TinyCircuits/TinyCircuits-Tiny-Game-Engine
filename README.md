@@ -92,10 +92,11 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Need to figure out what to do if user has two files that import engine that then resets the engine... Should be possible to import `engine` without resetting everything: Now required to run `import engine_main` to start and reset engine consistently
 [X] Make GUIBitmap2DButton for main menu
 [X] Fix VoxelSpace performance after last changes
+[X] Render voxel sprites with depth buffer
+[-] When the camera is 1 unit from the sprite, it should take up the sprite_height number of pixels: NO, they should be scaled and render at the same texel density as the terrain (done)
 
-[] Render voxel sprites with depth buffer
-[] When the camera is 1 unit from the sprite, it should take up the sprite_height number of pixels
-[] When the FOV of the camera is changed, the sprites should get wider
+[.] When the FOV of the camera is changed, the sprites should get wider: messed with this, could use some work
+
 [] Rotation of the sprites should be taken into account
 [] When the camera rotates and that shifts the terrain, should sprites also rotate a bit?
 [] Curvature of terrain needs to be taken into account for child nodes too

@@ -594,3 +594,19 @@ vox_node_perf_test.py, avg. FPS: 36.6067
 
 
 
+2024-05-01 17:28:48.418526 : a1492e1848d8658564708da24307aad144f985a0
+Work on some perspective for voxel sprites. Still needs work in x-axis fov scale
+
+{
+line_node_perf_test.py, avg. FPS: 239.1149
+test_opacity_perf_test.py, avg. FPS: 88.75212
+test_perf_test.py, avg. FPS: 109.2766
+circle_node_perf_test.py, avg. FPS: 239.7901
+vox_node_perf_test.py, avg. FPS: 36.74629
+}
+
+
+ ----- 
+
+
+
