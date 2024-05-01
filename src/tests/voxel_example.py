@@ -23,14 +23,14 @@ C18W = TextureResource("C18W.bmp", True)
 D18 = TextureResource("D18.bmp", True)
 tree_bmp = TextureResource("tree.bmp", True)
 
-# vox0 = VoxelSpaceNode(texture=C18W, heightmap=D18)
-# vox0.position.x = 0
-# vox0.position.y = 30
-# vox0.scale.y = 35
-# vox0.scale.x = 2
-# vox0.scale.z = 2
-# vox0.flip = True
-# vox0.repeat = True
+vox0 = VoxelSpaceNode(texture=C18W, heightmap=D18)
+vox0.position.x = 0
+vox0.position.y = 30
+vox0.scale.y = 35
+vox0.scale.x = 2
+vox0.scale.z = 2
+vox0.flip = True
+vox0.repeat = True
 
 
 
@@ -43,13 +43,15 @@ vox1.scale.x = 1
 vox1.scale.z = 1
 vox1.flip = False
 vox1.thickness = 100
+# vox1.set_layer(1)
 
 tree = VoxelSpaceSpriteNode(texture=tree_bmp, position=Vector3(0, 0, 0), scale=Vector3(1.0, 1.0, 1.0))
 tree.transparent_color = engine_draw.white
 tree.opacity = 1.0
-tree.position.x = 150
-tree.position.y = vox1.get_abs_height(self.position.x, self.position.z)
-tree.position.z = 0
+tree.position.x = 75
+tree.position.z = 75
+tree.position.y = vox1.get_abs_height(tree.position.x, tree.position.z )
+# tree.set_layer(0)
 
 
 
@@ -64,7 +66,7 @@ class MyCam(CameraNode):
     def adjust(self):
         # vox0_height = vox0.get_abs_height(self.position.x, self.position.z)
         vox1_height = vox1.get_abs_height(self.position.x, self.position.z)
-        print(self.position.x, self.position.y, self.position.z)
+        # print(self.position.x, self.position.y, self.position.z)
 
         if(vox1_height != None and self.position.y < vox1_height):
             self.position.y = vox1_height

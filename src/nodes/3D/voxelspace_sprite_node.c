@@ -124,8 +124,9 @@ void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_
     float proj_adjacent = D * cosf(a);
     float z = proj_adjacent / cos(camera_fov_half);
 
-    // Check if out of view along view direct
-    if(proj_adjacent > view_distance){
+    // Check if out of view along view direct or if the angle
+    // to the sprite is out of the FOV
+    if(proj_adjacent > view_distance /*|| fabsf(a - angle) >= camera_fov_half*/){
         return;
     }
 
@@ -135,8 +136,10 @@ void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_
     int16_t height_on_screen = (64.0f + (altitude / perspective)) + view_angle;
 
     float scale = 1.0f - (z * perspective_factor);
+    // float scale = 1.0f;
+    ENGINE_PRINTF("%.03f\n", scale);
 
-    float sprite_rotated_y = height_on_screen;// - (sprite_texture->height/2 * scale) + 1;
+    float sprite_rotated_y = height_on_screen;// - (sprite_texture->height/2 * scale);
 
 
     // Figure out the x on screen
@@ -180,35 +183,32 @@ void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_
     
     engine_draw_pixel(0b1111100000000000, sprite_rotated_x, height_on_screen, 1.0f, shader);
 
+    // After drawing, go to the next frame if it is time to and the animation is playing
+    if(sprite_playing == 1){
+        float sprite_fps = mp_obj_get_float(mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_fps));
+        uint16_t sprite_period = (uint16_t)((1.0f/sprite_fps) * 1000.0f);
 
+        uint32_t current_ms_time = millis();
+        if(current_ms_time - voxelspace_sprite_node->time_at_last_animation_update_ms >= sprite_period){
+            sprite_frame_current_x++;
 
+            // If reach end of x-axis frames, go to the next line and restart x
+            if(sprite_frame_current_x >= sprite_frame_count_x){
+                sprite_frame_current_x = 0;
+                sprite_frame_current_y++;
+            }
 
-    // // After drawing, go to the next frame if it is time to and the animation is playing
-    // if(sprite_playing == 1){
-    //     float sprite_fps = mp_obj_get_float(mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_fps));
-    //     uint16_t sprite_period = (uint16_t)((1.0f/sprite_fps) * 1000.0f);
+            // If reach end of y-axis frames, restart at x=0 and y=0
+            if(sprite_frame_current_y >= sprite_frame_count_y){
+                sprite_frame_current_y = 0;
+            }
 
-    //     uint32_t current_ms_time = millis();
-    //     if(current_ms_time - voxelspace_sprite_node->time_at_last_animation_update_ms >= sprite_period){
-    //         sprite_frame_current_x++;
-
-    //         // If reach end of x-axis frames, go to the next line and restart x
-    //         if(sprite_frame_current_x >= sprite_frame_count_x){
-    //             sprite_frame_current_x = 0;
-    //             sprite_frame_current_y++;
-    //         }
-
-    //         // If reach end of y-axis frames, restart at x=0 and y=0
-    //         if(sprite_frame_current_y >= sprite_frame_count_y){
-    //             sprite_frame_current_y = 0;
-    //         }
-
-    //         // Update/store the current frame index
-    //         mp_store_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_current_x, mp_obj_new_int(sprite_frame_current_x));
-    //         mp_store_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_current_y, mp_obj_new_int(sprite_frame_current_y));
-    //         voxelspace_sprite_node->time_at_last_animation_update_ms = millis();
-    //     }
-    // }
+            // Update/store the current frame index
+            mp_store_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_current_x, mp_obj_new_int(sprite_frame_current_x));
+            mp_store_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_current_y, mp_obj_new_int(sprite_frame_current_y));
+            voxelspace_sprite_node->time_at_last_animation_update_ms = millis();
+        }
+    }
 }
 
 
@@ -444,6 +444,9 @@ STATIC mp_attr_fun_t voxelspace_sprite_node_class_attr(mp_obj_t self_in, qstr at
 */
 mp_obj_t voxelspace_sprite_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New VoxelSpaceSpriteNode");
+
+    // This node uses a depth buffer to be drawn correctly
+    engine_display_check_depth_buffer_created();
 
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_child_class,          MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },

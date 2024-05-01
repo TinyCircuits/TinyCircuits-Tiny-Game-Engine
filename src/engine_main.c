@@ -33,7 +33,7 @@ void engine_main_reset(){
     ENGINE_PRINTF("EngineMain: Resetting engine...\n");
 
     // Set back to default
-    engine_display_set_fill_color(0x000);
+    engine_display_set_fill_color(0x0000);
 
     // Reset contigious flash space manager
     engine_audio_stop_all();
@@ -42,6 +42,8 @@ void engine_main_reset(){
     engine_objects_clear_all();
 
     gc_collect();
+
+    engine_display_free_depth_buffer();
 
     // mp_obj_t machine_module = mp_import_name(MP_QSTR_machine, mp_const_none, MP_OBJ_NEW_SMALL_INT(0));
     // mp_call_function_0(mp_load_attr(machine_module, MP_QSTR_soft_reset));

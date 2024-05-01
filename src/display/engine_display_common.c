@@ -1,7 +1,8 @@
 #include "engine_display_common.h"
 #include "draw/engine_display_draw.h"
 #include "debug/debug_print.h"
-#include <stdbool.h>
+#include "py/obj.h"
+#include "py/misc.h"
 #include <stdlib.h>
 
 uint16_t engine_fill_color = 0x0000;
@@ -20,6 +21,12 @@ static uint8_t active_screen_buffer_index = 0;
 // The current screen buffer that should be getting drawn to (the other
 // one is likely being sent to the screen while this is active)
 static uint16_t *active_screen_buffer;
+
+// Certain nodes need a way of tracking the depth of
+// their pixels for occlusion. If a node that requires
+// that is spawned, it will ensure this buffer is
+// generated only at the point
+static uint16_t *depth_buffer = NULL;
 
 
 void engine_display_set_fill_color(uint16_t color){
@@ -57,4 +64,37 @@ void engine_switch_active_screen_buffer(){
     active_screen_buffer_index = 1 - active_screen_buffer_index;
 
     active_screen_buffer = dual_screen_buffers[active_screen_buffer_index];
+}
+
+
+void engine_display_clear_depth_buffer(){
+    if(depth_buffer != NULL) engine_draw_fill_color(UINT16_MAX, depth_buffer);
+}
+
+
+void engine_display_check_depth_buffer_created(){
+    if(depth_buffer == NULL){
+        depth_buffer = m_tracked_calloc(2, SCREEN_WIDTH*SCREEN_HEIGHT);
+        engine_display_clear_depth_buffer();
+    }
+}
+
+
+void engine_display_free_depth_buffer(){
+    if(depth_buffer != NULL){
+        m_tracked_free(depth_buffer);
+        depth_buffer = NULL;
+    }
+}
+
+
+bool engine_display_store_check_depth(uint8_t sx, uint8_t sy, uint16_t depth){
+    uint16_t index = sy * SCREEN_WIDTH + sx;
+
+    if(depth < depth_buffer[index]){
+        depth_buffer[index] = depth;
+        return true;
+    }
+
+    return false;
 }

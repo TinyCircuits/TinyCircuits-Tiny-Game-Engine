@@ -168,13 +168,15 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
             if(height_on_screen >= SCREEN_HEIGHT){
                 ipx = SCREEN_HEIGHT;
             }else if(height_on_screen < 0){
-                ipx = 0;
+                ipx = -1;
             }
 
             if(flip){
                 float drawn_thickness = 0;
                 while(ipx >= height_buffer[i] && drawn_thickness < thickness){
-                    engine_draw_pixel(texture->data[index], i, ipx, 1.0f, &empty_shader);
+                    if(engine_display_store_check_depth(i, ipx, z)){
+                        engine_draw_pixel(texture->data[index], i, ipx, 1.0f, &empty_shader);
+                    }
                     ipx--;
                     drawn_thickness += perspective;
                 }
@@ -186,7 +188,9 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
             }else{
                 float drawn_thickness = 0;
                 while(ipx < height_buffer[i] && drawn_thickness < thickness){
-                    engine_draw_pixel(texture->data[index], i, ipx, 1.0f, &empty_shader);
+                    if(engine_display_store_check_depth(i, ipx, z)){
+                        engine_draw_pixel(texture->data[index], i, ipx, 1.0f, &empty_shader);
+                    }
                     ipx++;
                     drawn_thickness += perspective;
                 }
@@ -476,6 +480,9 @@ STATIC mp_attr_fun_t voxelspace_node_class_attr(mp_obj_t self_in, qstr attribute
 */
 mp_obj_t voxelspace_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New VoxelSpaceNode");
+
+    // This node uses a depth buffer to be drawn correctly
+    engine_display_check_depth_buffer_created();
 
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_child_class,          MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },

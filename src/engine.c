@@ -2,6 +2,7 @@
 
 #include "engine_object_layers.h"
 #include "display/engine_display.h"
+#include "display/engine_display_common.h"
 #include "input/engine_input_module.h"
 #include "physics/engine_physics.h"
 #include "resources/engine_resource_manager.h"
@@ -12,7 +13,6 @@
 #include "math/engine_math.h"
 #include "utility/engine_defines.h"
 
-#include "display/engine_display.h"
 #include "draw/engine_display_draw.h"
 
 #include "animation/engine_animation_module.h"
@@ -179,6 +179,9 @@ STATIC mp_obj_t engine_tick(){
 
         // After every game cycle send the current active screen buffer to the display
         engine_display_send();
+
+        // Clear the depth buffer, if needed
+        engine_display_clear_depth_buffer();
     }
 
     // Not sure why this is needed exactly for handling ctrl-c 

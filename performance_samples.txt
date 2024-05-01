@@ -546,3 +546,19 @@ vox_node_perf_test.py, avg. FPS: 42.75621
 
 
 
+2024-04-30 17:46:59.474978 : f0d2f5fba6d17161fe47752fec9881c179d6eb79
+Fix angle calculation issue for VoxelSpaceSpriteNode. Still need depth buffer, inheritance, and fov scaling on sprites
+
+{
+line_node_perf_test.py, avg. FPS: 239.2818
+test_opacity_perf_test.py, avg. FPS: 89.61049
+test_perf_test.py, avg. FPS: 109.4921
+circle_node_perf_test.py, avg. FPS: 241.4409
+vox_node_perf_test.py, avg. FPS: 42.74595
+}
+
+
+ ----- 
+
+
+
