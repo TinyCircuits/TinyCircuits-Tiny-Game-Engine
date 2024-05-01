@@ -1,6 +1,7 @@
 #include "engine_display_common.h"
 #include "draw/engine_display_draw.h"
 #include "debug/debug_print.h"
+#include "utility/engine_defines.h"
 #include "py/obj.h"
 #include "py/misc.h"
 #include <stdlib.h>
@@ -67,7 +68,7 @@ void engine_switch_active_screen_buffer(){
 }
 
 
-void engine_display_clear_depth_buffer(){
+void ENGINE_FAST_FUNCTION(engine_display_clear_depth_buffer)(){
     if(depth_buffer != NULL) engine_draw_fill_color(UINT16_MAX, depth_buffer);
 }
 
@@ -88,7 +89,7 @@ void engine_display_free_depth_buffer(){
 }
 
 
-bool engine_display_store_check_depth(uint8_t sx, uint8_t sy, uint16_t depth){
+bool ENGINE_FAST_FUNCTION(engine_display_store_check_depth)(uint8_t sx, uint8_t sy, uint16_t depth){
     uint16_t index = sy * SCREEN_WIDTH + sx;
 
     if(depth < depth_buffer[index]){

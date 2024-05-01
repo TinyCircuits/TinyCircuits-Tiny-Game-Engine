@@ -124,9 +124,16 @@ void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_
     float proj_adjacent = D * cosf(a);
     float z = proj_adjacent / cos(camera_fov_half);
 
+    // Is there a better way to check that the angle to the sprite
+    // is within the FOV angles? IDK: TODO
+    float angle_check0 = fabsf(a);
+    float angle_check1 = fabsf(TWICE_PI - angle_check0);
+    bool angle_in_bounds = angle_check0 < camera_fov_half || angle_check1 < camera_fov_half;
+
+
     // Check if out of view along view direct or if the angle
     // to the sprite is out of the FOV
-    if(proj_adjacent > view_distance /*|| fabsf(a - angle) >= camera_fov_half*/){
+    if(proj_adjacent > view_distance || angle_in_bounds == false){
         return;
     }
 
@@ -137,9 +144,9 @@ void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_
 
     float scale = 1.0f - (z * perspective_factor);
     // float scale = 1.0f;
-    ENGINE_PRINTF("%.03f\n", scale);
+    // ENGINE_PRINTF("%.03f\n", scale);
 
-    float sprite_rotated_y = height_on_screen;// - (sprite_texture->height/2 * scale);
+    float sprite_rotated_y = height_on_screen - (sprite_texture->height/2 * scale);
 
 
     // Figure out the x on screen
@@ -161,6 +168,7 @@ void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_
     pleft_z += camera_position->z.value;
 
     float real_distance_between = engine_math_distance_between(pleft_x, pleft_z, sprite_position->x.value, sprite_position->z.value);
+    
     float sprite_rotated_x = SCREEN_WIDTH * (real_distance_between/max_distance_between);
  
 
@@ -410,8 +418,8 @@ STATIC mp_attr_fun_t voxelspace_sprite_node_class_attr(mp_obj_t self_in, qstr at
 /*  --- doc ---
     NAME: VoxelSpaceSpriteNode
     ID: VoxelSpaceSpriteNode
-    DESC: Simple 2D sprite node that can be animated or static
-    PARAM:  [type={ref_link:Vector2}]         [name=position]                   [value={ref_link:Vector2}]
+    DESC: Simple 3D sprite node that can be animated or static for VoxelSpace rendering. Acts as a billboard that always faces the camera
+    PARAM:  [type={ref_link:Vector3}]         [name=position]                   [value={ref_link:Vector3}]
     PARAM:  [type={ref_link:TextureResource}] [name=texture]                    [value={ref_link:TextureResource}]
     PARAM:  [type=int]                        [name=transparent_color]          [value=any 16-bit RGB565 color]
     PARAM:  [type=float]                      [name=fps]                        [value=any]

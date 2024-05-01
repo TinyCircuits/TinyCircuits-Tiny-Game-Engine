@@ -23,14 +23,14 @@ C18W = TextureResource("C18W.bmp", True)
 D18 = TextureResource("D18.bmp", True)
 tree_bmp = TextureResource("tree.bmp", True)
 
-vox0 = VoxelSpaceNode(texture=C18W, heightmap=D18)
-vox0.position.x = 0
-vox0.position.y = 30
-vox0.scale.y = 35
-vox0.scale.x = 2
-vox0.scale.z = 2
-vox0.flip = True
-vox0.repeat = True
+# vox0 = VoxelSpaceNode(texture=C18W, heightmap=D18)
+# vox0.position.x = 0
+# vox0.position.y = 30
+# vox0.scale.y = 35
+# vox0.scale.x = 1
+# vox0.scale.z = 1
+# vox0.flip = True
+# vox0.repeat = True
 
 
 
@@ -51,7 +51,7 @@ tree.opacity = 1.0
 tree.position.x = 75
 tree.position.z = 75
 tree.position.y = vox1.get_abs_height(tree.position.x, tree.position.z )
-# tree.set_layer(0)
+# # tree.set_layer(0)
 
 
 
@@ -95,6 +95,7 @@ class MyCam(CameraNode):
         self.adjust()
 
     def tick(self):
+        gc.collect()
         # print(engine.get_running_fps())
         self.t += 0.01
         # vox0.position.y = 20 + math.sin(self.t)

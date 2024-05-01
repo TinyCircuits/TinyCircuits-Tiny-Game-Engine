@@ -103,10 +103,15 @@ float engine_math_angle_between(float px0, float py0, float px1, float py1){
 }
 
 
-float engine_math_distance_between(float px0, float py0, float px1, float py1){
+float engine_math_distance_between_sqrd(float px0, float py0, float px1, float py1){
     float dx = px1 - px0;
     float dy = py1 - py0;
-    return sqrtf((dx*dx) + (dy*dy));
+    return (dx*dx) + (dy*dy);
+}
+
+
+float engine_math_distance_between(float px0, float py0, float px1, float py1){
+    return sqrtf(engine_math_distance_between_sqrd(px0, py0, px1, py1));
 }
 
 bool engine_math_int32_between(int32_t value, int32_t min, int32_t max){

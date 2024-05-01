@@ -44,6 +44,7 @@ void engine_math_swap(float *val0, float *val1);
 bool engine_math_compare_floats(float value0, float value1);
 
 float engine_math_angle_between(float px0, float py0, float px1, float py1);
+float engine_math_distance_between_sqrd(float px0, float py0, float px1, float py1);
 float engine_math_distance_between(float px0, float py0, float px1, float py1);
 bool engine_math_int32_between(int32_t value, int32_t min, int32_t max);
 
