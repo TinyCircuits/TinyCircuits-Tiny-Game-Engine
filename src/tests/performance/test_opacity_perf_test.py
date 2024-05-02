@@ -38,7 +38,7 @@ class MyCircle(Circle2DNode):
     def __init__(self):
         super().__init__(self)
     
-    def tick(self):
+    def tick(self, dt):
         self.rotation += 0.005
 
 

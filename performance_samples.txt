@@ -626,3 +626,19 @@ vox_node_perf_test.py, avg. FPS: 36.21948
 
 
 
+2024-05-02 11:54:27.810001 : fb72fc9f61e9f04bcd5b6cf7eeee07d7c71b7507
+Fix sprites voxel sprites being rendered when behind the camera, add texture_offset and fov_distort flag
+
+{
+line_node_perf_test.py, avg. FPS: 239.2817
+test_opacity_perf_test.py, avg. FPS: 87.33412
+test_perf_test.py, avg. FPS: 109.721
+circle_node_perf_test.py, avg. FPS: 241.4483
+vox_node_perf_test.py, avg. FPS: 36.73388
+}
+
+
+ ----- 
+
+
+

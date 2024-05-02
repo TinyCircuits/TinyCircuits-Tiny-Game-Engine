@@ -12,7 +12,8 @@
 /*  --- doc ---
     NAME: tick
     ID: tick
-    DESC: Overridable tick callback                                                                                                         
+    DESC: Overridable tick callback
+    PARAM: [type=float] [name=dt] [value=positive float in seconds]                                                                                                  
     RETURN: None
 */ 
 /*  --- doc ---

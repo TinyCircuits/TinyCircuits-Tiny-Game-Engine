@@ -12,7 +12,7 @@ import gc
 import math
 import os
 import time
-import machine
+# import machine
 
 # machine.freq(250 * 1000 * 1000)
 
@@ -58,6 +58,7 @@ tree.position.y = vox1.get_abs_height(tree.position.x, tree.position.z)
 tree.scale.x = 0.1
 tree.scale.y = 0.1
 tree.texture_offset.y = tree_bmp.height/2
+tree.rotation = math.pi
 # tree.texture_offset.x = tree_bmp.width/2
 tree.fov_distort = False
 # # tree.set_layer(0)
@@ -110,7 +111,7 @@ class MyCam(CameraNode):
         self.position.z += math.sin(self.rotation.y+(math.pi/2)) * self.distance
         self.adjust()
 
-    def tick(self):
+    def tick(self, dt):
         gc.collect()
         # print(engine.get_running_fps())
         self.t += 0.01

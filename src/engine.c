@@ -150,6 +150,7 @@ STATIC mp_obj_t engine_tick(){
     MP_THREAD_GIL_EXIT();
 
     dt = millis() - engine_fps_time_at_last_tick_ms;
+    float dt_s = dt * 0.001f; 
 
     if(fps_limit_disabled || dt >= engine_fps_limit_period_ms){
         engine_fps_time_at_before_last_tick_ms = engine_fps_time_at_last_tick_ms;
@@ -162,7 +163,7 @@ STATIC mp_obj_t engine_tick(){
         engine_input_update_pressed_buttons();
 
         // Call every instanced node's callbacks
-        engine_invoke_all_node_callbacks();
+        engine_invoke_all_node_callbacks(dt_s);
 
         // Now that all the node callbacks were called and potentially moved
         // physics nodes around, step the physics engine another tick.

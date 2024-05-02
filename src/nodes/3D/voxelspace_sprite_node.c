@@ -35,6 +35,7 @@ void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_
 
     texture_resource_class_obj_t *sprite_texture = voxelspace_sprite_node->texture_resource;
     vector3_class_obj_t *sprite_position = voxelspace_sprite_node->position;
+    float sprite_rotation = mp_obj_get_float(voxelspace_sprite_node->rotation);
     vector2_class_obj_t *sprite_scale =  voxelspace_sprite_node->scale;
     bool sprite_fov_distort = mp_obj_get_int(voxelspace_sprite_node->fov_distort);
     vector2_class_obj_t *sprite_texture_offset =  voxelspace_sprite_node->texture_offset;
@@ -228,7 +229,7 @@ void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_
                      spritesheet_width,
                      scale_x,
                      scale_y,
-                     0.0f,
+                     -sprite_rotation,
                      transparent_color->value.val,
                      sprite_opacity,
                      depth,
@@ -490,6 +491,8 @@ STATIC mp_attr_fun_t voxelspace_sprite_node_class_attr(mp_obj_t self_in, qstr at
     PARAM:  [type={ref_link:Vector2}]         [name=scale]                      [value={ref_link:Vector2}]
     PARAM:  [type=float]                      [name=opacity]                    [value=0 ~ 1.0] 
     PARAM:  [type=boolean]                    [name=playing]                    [value=boolean]
+    PARAM:  [type=boolean]                    [name=fov_distort]                [value=boolean (True means the sprite will be scaled by the FOV (TODO: review implementation, not perfect) and False means it will not be distorted, default: True)]
+    PARAM:  [type={ref_link:Vector2}]         [name=texture_offset]             [value={ref_link:Vector2} (local offset of the texture at the rendered origin. Sprites render at center/origin by default, use this to shift them)]
     ATTR:   [type=function]                   [name={ref_link:add_child}]       [value=function] 
     ATTR:   [type=function]                   [name={ref_link:get_child}]       [value=function] 
     ATTR:   [type=function]                   [name={ref_link:remove_child}]    [value=function]
@@ -510,7 +513,7 @@ STATIC mp_attr_fun_t voxelspace_sprite_node_class_attr(mp_obj_t self_in, qstr at
     ATTR:   [type=int]                        [name=frame_current_x]            [value=any positive integer]
     ATTR:   [type=int]                        [name=frame_current_y]            [value=any positive integer]
     ATTR:   [type=boolean]                    [name=fov_distort]                [value=boolean (True means the sprite will be scaled by the FOV (TODO: review implementation, not perfect) and False means it will not be distorted, default: True)]
-    ATTR:   [type={ref_link:Vector2}]         [name=texture_offset]             [value={ref_link:Vector2} (local offset of teh texture at the rendered origin. Sprites render at center/origin by default, use this to shift them)]
+    ATTR:   [type={ref_link:Vector2}]         [name=texture_offset]             [value={ref_link:Vector2} (local offset of the texture at the rendered origin. Sprites render at center/origin by default, use this to shift them)]
     OVRR:   [type=function]                   [name={ref_link:tick}]            [value=function]
 */
 mp_obj_t voxelspace_sprite_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){

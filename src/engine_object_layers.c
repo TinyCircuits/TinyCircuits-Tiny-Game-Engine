@@ -69,7 +69,7 @@ void engine_remove_object_from_layer(linked_list_node *object_list_node, uint16_
 // callback while others will also have a 'draw()' callback.
 //
 // Nodes with a draw callback will be rendered
-void engine_invoke_all_node_callbacks(){
+void engine_invoke_all_node_callbacks(float dt){
     linked_list_node *current_linked_list_node = NULL;
 
     for(uint16_t ilx=0; ilx<engine_object_layer_count; ilx++){
@@ -80,7 +80,7 @@ void engine_invoke_all_node_callbacks(){
         while(current_linked_list_node != NULL){
             // Get the base node that every node is stored under
             engine_node_base_t *node_base = current_linked_list_node->object;
-            mp_obj_t exec[2];
+            mp_obj_t exec[3];
 
             // As long as this node was not just added, figure out its type and what callbacks it has
             if(node_base_is_just_added(node_base) == false){
@@ -91,7 +91,8 @@ void engine_invoke_all_node_callbacks(){
                         if(empty_node->tick_cb != mp_const_none){
                             exec[0] = empty_node->tick_cb;
                             exec[1] = node_base->attr_accessor;
-                            mp_call_method_n_kw(0, 0, exec);
+                            exec[2] = mp_obj_new_float(dt);
+                            mp_call_method_n_kw(1, 0, exec);
                         }
                     }
                     break;
@@ -101,7 +102,8 @@ void engine_invoke_all_node_callbacks(){
                         if(camera_node->tick_cb != mp_const_none){
                             exec[0] = camera_node->tick_cb;
                             exec[1] = node_base->attr_accessor;
-                            mp_call_method_n_kw(0, 0, exec);
+                            exec[2] = mp_obj_new_float(dt);
+                            mp_call_method_n_kw(1, 0, exec);
                         }
                     }
                     break;
@@ -111,7 +113,8 @@ void engine_invoke_all_node_callbacks(){
                         if(voxelspace_node->tick_cb != mp_const_none){
                             exec[0] = voxelspace_node->tick_cb;
                             exec[1] = node_base->attr_accessor;
-                            mp_call_method_n_kw(0, 0, exec);
+                            exec[2] = mp_obj_new_float(dt);
+                            mp_call_method_n_kw(1, 0, exec);
                         }
 
                         engine_camera_draw_for_each(voxelspace_node_class_draw, node_base);
@@ -123,7 +126,8 @@ void engine_invoke_all_node_callbacks(){
                         if(voxelspace_sprite_node->tick_cb != mp_const_none){
                             exec[0] = voxelspace_sprite_node->tick_cb;
                             exec[1] = node_base->attr_accessor;
-                            mp_call_method_n_kw(0, 0, exec);
+                            exec[2] = mp_obj_new_float(dt);
+                            mp_call_method_n_kw(1, 0, exec);
                         }
 
                         engine_camera_draw_for_each(voxelspace_sprite_node_class_draw, node_base);
@@ -134,7 +138,8 @@ void engine_invoke_all_node_callbacks(){
                         engine_mesh_node_class_obj_t *mesh_node = node_base->node;
                         exec[0] = mesh_node->tick_cb;
                         exec[1] = node_base->attr_accessor;
-                        mp_call_method_n_kw(0, 0, exec);
+                        exec[2] = mp_obj_new_float(dt);
+                        mp_call_method_n_kw(1, 0, exec);
 
                         engine_camera_draw_for_each(mesh_node_class_draw, node_base);
                     }
@@ -145,7 +150,8 @@ void engine_invoke_all_node_callbacks(){
                         if(rectangle_2d_node->tick_cb != mp_const_none){
                             exec[0] = rectangle_2d_node->tick_cb;
                             exec[1] = node_base->attr_accessor;
-                            mp_call_method_n_kw(0, 0, exec);
+                            exec[2] = mp_obj_new_float(dt);
+                            mp_call_method_n_kw(1, 0, exec);
                         }
 
                         engine_camera_draw_for_each(rectangle_2d_node_class_draw, node_base);
@@ -157,7 +163,8 @@ void engine_invoke_all_node_callbacks(){
                         if(line_2d_node->tick_cb != mp_const_none){
                             exec[0] = line_2d_node->tick_cb;
                             exec[1] = node_base->attr_accessor;
-                            mp_call_method_n_kw(0, 0, exec);
+                            exec[2] = mp_obj_new_float(dt);
+                            mp_call_method_n_kw(1, 0, exec);
                         }
 
                         engine_camera_draw_for_each(line_2d_node_class_draw, node_base);
@@ -169,7 +176,8 @@ void engine_invoke_all_node_callbacks(){
                         if(circle_2d_node->tick_cb != mp_const_none){
                             exec[0] = circle_2d_node->tick_cb;
                             exec[1] = node_base->attr_accessor;
-                            mp_call_method_n_kw(0, 0, exec);
+                            exec[2] = mp_obj_new_float(dt);
+                            mp_call_method_n_kw(1, 0, exec);
                         }
 
                         engine_camera_draw_for_each(circle_2d_node_class_draw, node_base);
@@ -181,7 +189,8 @@ void engine_invoke_all_node_callbacks(){
                         if(sprite_2d_node->tick_cb != mp_const_none){
                             exec[0] = sprite_2d_node->tick_cb;
                             exec[1] = node_base->attr_accessor;
-                            mp_call_method_n_kw(0, 0, exec);
+                            exec[2] = mp_obj_new_float(dt);
+                            mp_call_method_n_kw(1, 0, exec);
                         }
 
                         engine_camera_draw_for_each(sprite_2d_node_class_draw, node_base);
@@ -193,7 +202,8 @@ void engine_invoke_all_node_callbacks(){
                         if(text_2d_node->tick_cb != mp_const_none){
                             exec[0] = text_2d_node->tick_cb;
                             exec[1] = node_base->attr_accessor;
-                            mp_call_method_n_kw(0, 0, exec);
+                            exec[2] = mp_obj_new_float(dt);
+                            mp_call_method_n_kw(1, 0, exec);
                         }
 
                         engine_camera_draw_for_each(text_2d_node_class_draw, node_base);
@@ -203,40 +213,41 @@ void engine_invoke_all_node_callbacks(){
                     {
                         engine_gui_button_2d_node_class_obj_t *button_2d_node = node_base->node;
                         exec[1] = node_base->attr_accessor;
+                        exec[2] = mp_obj_new_float(dt);
 
                         if(button_2d_node->tick_cb != mp_const_none){
                             exec[0] = button_2d_node->tick_cb;
-                            mp_call_method_n_kw(0, 0, exec);
+                            mp_call_method_n_kw(1, 0, exec);
                         }
 
                         if(button_2d_node->on_focused_cb != mp_const_none && button_2d_node->focused == true){
                             exec[0] = button_2d_node->on_focused_cb;
-                            mp_call_method_n_kw(0, 0, exec);
+                            mp_call_method_n_kw(1, 0, exec);
                         }
 
                         if(button_2d_node->on_just_focused_cb != mp_const_none && button_2d_node->last_focused == false && button_2d_node->focused == true){
                             exec[0] = button_2d_node->on_just_focused_cb;
-                            mp_call_method_n_kw(0, 0, exec);
+                            mp_call_method_n_kw(1, 0, exec);
                         }
 
                         if(button_2d_node->on_just_unfocused_cb != mp_const_none && button_2d_node->last_focused == true && button_2d_node->focused == false){
                             exec[0] = button_2d_node->on_just_unfocused_cb;
-                            mp_call_method_n_kw(0, 0, exec);
+                            mp_call_method_n_kw(1, 0, exec);
                         }
 
                         if(button_2d_node->on_pressed_cb != mp_const_none && button_2d_node->pressed == true){
                             exec[0] = button_2d_node->on_pressed_cb;
-                            mp_call_method_n_kw(0, 0, exec);
+                            mp_call_method_n_kw(1, 0, exec);
                         }
 
                         if(button_2d_node->on_just_pressed_cb != mp_const_none && button_2d_node->last_pressed == false && button_2d_node->pressed == true){
                             exec[0] = button_2d_node->on_just_pressed_cb;
-                            mp_call_method_n_kw(0, 0, exec);
+                            mp_call_method_n_kw(1, 0, exec);
                         }
 
                         if(button_2d_node->on_just_released_cb != mp_const_none && button_2d_node->last_pressed == true && button_2d_node->pressed == false){
                             exec[0] = button_2d_node->on_just_released_cb;
-                            mp_call_method_n_kw(0, 0, exec);
+                            mp_call_method_n_kw(1, 0, exec);
                         }
 
 
@@ -258,40 +269,41 @@ void engine_invoke_all_node_callbacks(){
                     {
                         engine_gui_bitmap_button_2d_node_class_obj_t *bitmap_button_2d_node = node_base->node;
                         exec[1] = node_base->attr_accessor;
+                        exec[2] = mp_obj_new_float(dt);
 
                         if(bitmap_button_2d_node->tick_cb != mp_const_none){
                             exec[0] = bitmap_button_2d_node->tick_cb;
-                            mp_call_method_n_kw(0, 0, exec);
+                            mp_call_method_n_kw(1, 0, exec);
                         }
 
                         if(bitmap_button_2d_node->on_focused_cb != mp_const_none && bitmap_button_2d_node->focused == true){
                             exec[0] = bitmap_button_2d_node->on_focused_cb;
-                            mp_call_method_n_kw(0, 0, exec);
+                            mp_call_method_n_kw(1, 0, exec);
                         }
 
                         if(bitmap_button_2d_node->on_just_focused_cb != mp_const_none && bitmap_button_2d_node->last_focused == false && bitmap_button_2d_node->focused == true){
                             exec[0] = bitmap_button_2d_node->on_just_focused_cb;
-                            mp_call_method_n_kw(0, 0, exec);
+                            mp_call_method_n_kw(1, 0, exec);
                         }
 
                         if(bitmap_button_2d_node->on_just_unfocused_cb != mp_const_none && bitmap_button_2d_node->last_focused == true && bitmap_button_2d_node->focused == false){
                             exec[0] = bitmap_button_2d_node->on_just_unfocused_cb;
-                            mp_call_method_n_kw(0, 0, exec);
+                            mp_call_method_n_kw(1, 0, exec);
                         }
 
                         if(bitmap_button_2d_node->on_pressed_cb != mp_const_none && bitmap_button_2d_node->pressed == true){
                             exec[0] = bitmap_button_2d_node->on_pressed_cb;
-                            mp_call_method_n_kw(0, 0, exec);
+                            mp_call_method_n_kw(1, 0, exec);
                         }
 
                         if(bitmap_button_2d_node->on_just_pressed_cb != mp_const_none && bitmap_button_2d_node->last_pressed == false && bitmap_button_2d_node->pressed == true){
                             exec[0] = bitmap_button_2d_node->on_just_pressed_cb;
-                            mp_call_method_n_kw(0, 0, exec);
+                            mp_call_method_n_kw(1, 0, exec);
                         }
 
                         if(bitmap_button_2d_node->on_just_released_cb != mp_const_none && bitmap_button_2d_node->last_pressed == true && bitmap_button_2d_node->pressed == false){
                             exec[0] = bitmap_button_2d_node->on_just_released_cb;
-                            mp_call_method_n_kw(0, 0, exec);
+                            mp_call_method_n_kw(1, 0, exec);
                         }
 
 
@@ -315,7 +327,8 @@ void engine_invoke_all_node_callbacks(){
                         if(physics_node_base->tick_cb != mp_const_none){
                             exec[0] = physics_node_base->tick_cb;
                             exec[1] = node_base->attr_accessor;
-                            mp_call_method_n_kw(0, 0, exec);
+                            exec[2] = mp_obj_new_float(dt);
+                            mp_call_method_n_kw(1, 0, exec);
                         }
                     }
                     break;
@@ -325,7 +338,8 @@ void engine_invoke_all_node_callbacks(){
                         if(physics_node_base->tick_cb != mp_const_none){
                             exec[0] = physics_node_base->tick_cb;
                             exec[1] = node_base->attr_accessor;
-                            mp_call_method_n_kw(0, 0, exec);
+                            exec[2] = mp_obj_new_float(dt);
+                            mp_call_method_n_kw(1, 0, exec);
                         }
                     }
                     break;
