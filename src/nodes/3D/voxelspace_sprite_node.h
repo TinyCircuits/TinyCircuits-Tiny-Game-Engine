@@ -19,6 +19,8 @@ typedef struct{
     mp_obj_t scale;                 // Vector2
     mp_obj_t opacity;
     mp_obj_t playing;               // Bool: is the animation running or not
+    mp_obj_t fov_distort;
+    mp_obj_t texture_offset;
     mp_obj_t tick_cb;
     uint32_t time_at_last_animation_update_ms;
 }engine_voxelspace_sprite_node_class_obj_t;

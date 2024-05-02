@@ -344,8 +344,10 @@ void engine_draw_blit_depth(uint16_t *pixels, float center_x, float center_y, ui
                     uint32_t src_offset = rotY * pixels_stride + rotX;
                     uint16_t src_color = pixels[src_offset];
 
-                    if(engine_display_store_check_depth_index(dest_offset, depth) && (src_color != transparent_color || src_color == ENGINE_NO_TRANSPARENCY_COLOR)){
-                        screen_buffer[dest_offset] = shader->execute(screen_buffer[dest_offset], src_color, alpha, shader);
+                    if(src_color != transparent_color || src_color == ENGINE_NO_TRANSPARENCY_COLOR){
+                        if(engine_display_store_check_depth_index(dest_offset, depth)){
+                            screen_buffer[dest_offset] = shader->execute(screen_buffer[dest_offset], src_color, alpha, shader);
+                        }
                     }
                 }
 

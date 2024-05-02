@@ -610,3 +610,19 @@ vox_node_perf_test.py, avg. FPS: 36.74629
 
 
 
+2024-05-01 17:46:52.708689 : 9d2d36b9d158ee0bc6bdd6f6b143e1b0561d5725
+Fix sprites disappearing at edge of screen for voxelspace
+
+{
+line_node_perf_test.py, avg. FPS: 238.9484
+test_opacity_perf_test.py, avg. FPS: 88.65137
+test_perf_test.py, avg. FPS: 107.1958
+circle_node_perf_test.py, avg. FPS: 239.4568
+vox_node_perf_test.py, avg. FPS: 36.21948
+}
+
+
+ ----- 
+
+
+

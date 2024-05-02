@@ -97,6 +97,8 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 
 [.] When the FOV of the camera is changed, the sprites should get wider: messed with this, could use some work
 
+[] Add option for fog, fog start, and fog color on voxelspace nodes
+
 [] Rotation of the sprites should be taken into account
 [] When the camera rotates and that shifts the terrain, should sprites also rotate a bit?
 [] Curvature of terrain needs to be taken into account for child nodes too

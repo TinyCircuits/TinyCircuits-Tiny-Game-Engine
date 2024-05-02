@@ -36,6 +36,8 @@ void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_
     texture_resource_class_obj_t *sprite_texture = voxelspace_sprite_node->texture_resource;
     vector3_class_obj_t *sprite_position = voxelspace_sprite_node->position;
     vector2_class_obj_t *sprite_scale =  voxelspace_sprite_node->scale;
+    bool sprite_fov_distort = mp_obj_get_int(voxelspace_sprite_node->fov_distort);
+    vector2_class_obj_t *sprite_texture_offset =  voxelspace_sprite_node->texture_offset;
 
     vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
     vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
@@ -136,6 +138,10 @@ void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_
         return;
     }
 
+    // Figure out the perspective
+    float perspective = z * perspective_factor;
+    float inverse_perspective = 1.0f / perspective;
+
     float view_left_x = cosf(camera_rotation->y.value-camera_fov_half);
     float view_left_z = sinf(camera_rotation->y.value-camera_fov_half);
 
@@ -162,13 +168,24 @@ void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_
     float e2x = sx - pleft_x;
     float e2z = sz - pleft_z;
 
+    float ax = view_right_x + camera_position->x.value;
+    float az = view_right_z + camera_position->z.value;
+
+    float bx = view_left_x + camera_position->x.value;
+    float bz = view_left_z + camera_position->z.value;
+
+    // Do 2D cross product and test sign to see which
+    // side of the view the sprite wants to render on:
+    // behind or in front
+    // https://stackoverflow.com/a/3461533
+    float cross = (bx - ax)*(sz - az) - (bz - az)*(sx - ax);
+    if(cross < 0.0f){
+        return;
+    }
+
     float max = engine_math_dot_product(e1x, e1z, e1x, e1z);
     float value = engine_math_dot_product(e1x, e1z, e2x, e2z);
     float sprite_rotated_x = ((value/max) * SCREEN_WIDTH);
-
-    // Figure out the perspective
-    float perspective = z * perspective_factor;
-    float inverse_perspective = 1.0f / perspective;
 
     // Figure out the scale
     // This scales everything so that if you're one projected
@@ -183,7 +200,10 @@ void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_
     // float opposite = full_length * sinf(camera_fov_half) * 2.0f;
     // float fov_x_scale = SCREEN_WIDTH/opposite;
     // float fov_x_scale = SCREEN_WIDTH/max_distance_between;
-    float fov_x_scale = PI/4.0f / (camera_fov_half*2.0f) * 0.707f;
+    float fov_x_scale = 1.0f;
+    if(sprite_fov_distort == true){
+        fov_x_scale = PI/4.0f / (camera_fov_half*2.0f) * 0.707f;
+    }
 
     float scale_x = inverse_perspective * sprite_scale->x.value * fov_x_scale;
     float scale_y = inverse_perspective * sprite_scale->y.value;
@@ -192,7 +212,9 @@ void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_
     float altitude = -sprite_position->y.value + camera_position->y.value;
     int16_t height_on_screen = (64.0f + (altitude * inverse_perspective)) + view_angle;
 
-    float sprite_rotated_y = height_on_screen - (sprite_texture->height/2 * scale_y);
+    // Apply x and y
+    sprite_rotated_x += (sprite_texture_offset->x.value * scale_x);
+    float sprite_rotated_y = height_on_screen - (sprite_texture_offset->y.value * scale_y);
 
     // Decide which shader to use per-pixel
     engine_shader_t *shader = &empty_shader;
@@ -211,6 +233,8 @@ void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_
                      sprite_opacity,
                      depth,
                      shader);
+    
+    // engine_draw_pixel(0b1111100000000000, floorf(((value/max) * SCREEN_WIDTH)), floorf(sprite_rotated_y), 1.0f, shader);
 
     // After drawing, go to the next frame if it is time to and the animation is playing
     if(sprite_playing == 1){
@@ -334,6 +358,14 @@ bool voxelspace_sprite_node_load_attr(engine_node_base_t *self_node_base, qstr a
             destination[0] = self->frame_current_y;
             return true;
         break;
+        case MP_QSTR_fov_distort:
+            destination[0] = self->fov_distort;
+            return true;
+        break;
+        case MP_QSTR_texture_offset:
+            destination[0] = self->texture_offset;
+            return true;
+        break;
         default:
             return false; // Fail
     }
@@ -396,6 +428,14 @@ bool voxelspace_sprite_node_store_attr(engine_node_base_t *self_node_base, qstr 
         break;
         case MP_QSTR_frame_current_y:
             self->frame_current_y = destination[1];
+            return true;
+        break;
+        case MP_QSTR_fov_distort:
+            self->fov_distort = destination[1];
+            return true;
+        break;
+        case MP_QSTR_texture_offset:
+            self->texture_offset = destination[1];
             return true;
         break;
         default:
@@ -469,6 +509,8 @@ STATIC mp_attr_fun_t voxelspace_sprite_node_class_attr(mp_obj_t self_in, qstr at
     ATTR:   [type=boolean]                    [name=playing]                    [value=boolean]
     ATTR:   [type=int]                        [name=frame_current_x]            [value=any positive integer]
     ATTR:   [type=int]                        [name=frame_current_y]            [value=any positive integer]
+    ATTR:   [type=boolean]                    [name=fov_distort]                [value=boolean (True means the sprite will be scaled by the FOV (TODO: review implementation, not perfect) and False means it will not be distorted, default: True)]
+    ATTR:   [type={ref_link:Vector2}]         [name=texture_offset]             [value={ref_link:Vector2} (local offset of teh texture at the rendered origin. Sprites render at center/origin by default, use this to shift them)]
     OVRR:   [type=function]                   [name={ref_link:tick}]            [value=function]
 */
 mp_obj_t voxelspace_sprite_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
@@ -489,9 +531,11 @@ mp_obj_t voxelspace_sprite_node_class_new(const mp_obj_type_t *type, size_t n_ar
         { MP_QSTR_scale,                MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_opacity,              MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_playing,              MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_fov_distort,          MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_texture_offset,       MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
-    enum arg_ids {child_class, position, texture, transparent_color, fps, frame_count_x, frame_count_y, rotation, scale, opacity, playing};
+    enum arg_ids {child_class, position, texture, transparent_color, fps, frame_count_x, frame_count_y, rotation, scale, opacity, playing, fov_distort, texture_offset};
     bool inherited = false;
 
     // If there is one positional argument and it isn't the first 
@@ -521,6 +565,8 @@ mp_obj_t voxelspace_sprite_node_class_new(const mp_obj_type_t *type, size_t n_ar
     if(parsed_args[scale].u_obj == MP_OBJ_NULL) parsed_args[scale].u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)});
     if(parsed_args[opacity].u_obj == MP_OBJ_NULL) parsed_args[opacity].u_obj = mp_obj_new_float(1.0f);
     if(parsed_args[playing].u_obj == MP_OBJ_NULL) parsed_args[playing].u_obj = mp_obj_new_bool(true);
+    if(parsed_args[fov_distort].u_obj == MP_OBJ_NULL) parsed_args[fov_distort].u_obj = mp_obj_new_bool(true);
+    if(parsed_args[texture_offset].u_obj == MP_OBJ_NULL) parsed_args[texture_offset].u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL);
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);
@@ -543,6 +589,8 @@ mp_obj_t voxelspace_sprite_node_class_new(const mp_obj_type_t *type, size_t n_ar
     voxelspace_sprite_node->playing = parsed_args[playing].u_obj;
     voxelspace_sprite_node->frame_current_x = mp_obj_new_int(0);
     voxelspace_sprite_node->frame_current_y = mp_obj_new_int(0);
+    voxelspace_sprite_node->fov_distort = parsed_args[fov_distort].u_obj;
+    voxelspace_sprite_node->texture_offset = parsed_args[texture_offset].u_obj;
 
     if(inherited == true){  // Inherited (use existing object)
         // Get the Python class instance

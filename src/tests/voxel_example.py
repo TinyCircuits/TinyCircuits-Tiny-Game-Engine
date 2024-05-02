@@ -22,8 +22,8 @@ engine.set_fps_limit(60)
 engine_draw.set_background_color(engine_draw.skyblue)
 
 
-C18W = TextureResource("C18W_32.bmp", True)
-D18 = TextureResource("D18_32.bmp", True)
+C18W = TextureResource("C18W.bmp", True)
+D18 = TextureResource("D18.bmp", True)
 tree_bmp = TextureResource("tree.bmp", True)
 tc_bmp = TextureResource("32x32.bmp", True)
 
@@ -49,23 +49,26 @@ vox1.flip = False
 vox1.thickness = 100
 # vox1.set_layer(1)
 
-# tree = VoxelSpaceSpriteNode(texture=tree_bmp, position=Vector3(0, 0, 0), scale=Vector3(1.0, 1.0, 1.0))
-# tree.transparent_color = engine_draw.white
-# tree.opacity = 1.0
-# tree.position.x = 16
-# tree.position.z = 16
-# # tree.position.y = vox1.get_abs_height(tree.position.x, tree.position.z)
-# # tree.scale.x = 10.25
-# # tree.scale.y = 10.25
-# # # tree.set_layer(0)
+tree = VoxelSpaceSpriteNode(texture=tree_bmp, position=Vector3(0, 0, 0), scale=Vector3(1.0, 1.0, 1.0))
+tree.transparent_color = engine_draw.white
+tree.opacity = 1.0
+tree.position.x = 75
+tree.position.z = 75
+tree.position.y = vox1.get_abs_height(tree.position.x, tree.position.z)
+tree.scale.x = 0.1
+tree.scale.y = 0.1
+tree.texture_offset.y = tree_bmp.height/2
+# tree.texture_offset.x = tree_bmp.width/2
+tree.fov_distort = False
+# # tree.set_layer(0)
 
 
-bmp = VoxelSpaceSpriteNode(texture=D18, position=Vector3(0, 0, 0), scale=Vector3(1.0, 1.0, 1.0))
+bmp = VoxelSpaceSpriteNode(texture=tc_bmp, position=Vector3(0, 0, 0), scale=Vector3(1.0, 1.0, 1.0))
 # bmp.transparent_color = engine_draw.black
 bmp.opacity = 1.0
 bmp.position.x = 32
 bmp.position.z = 16
-# bmp.position.y = vox1.get_abs_height(bmp.position.x, bmp.position.z)
+bmp.position.y = vox1.get_abs_height(bmp.position.x, bmp.position.z)
 
 
 
@@ -75,7 +78,6 @@ class MyCam(CameraNode):
         self.distance = 0.25
         self.mode = 0
         self.t = 0
-        
 
     def adjust(self):
         # vox0_height = vox0.get_abs_height(self.position.x, self.position.z)
@@ -189,7 +191,7 @@ camera.position.z = 0
 # camera.rotation.x = 0.3
 camera.view_distance = 350
 # camera.fov = 32 * (math.pi/180)
-camera.fov = 45 * (math.pi/180)
+camera.fov = 70 * (math.pi/180)
 
 camera.add_child(Circle2DNode(radius=1, color=engine_draw.green, outline=True))
 
