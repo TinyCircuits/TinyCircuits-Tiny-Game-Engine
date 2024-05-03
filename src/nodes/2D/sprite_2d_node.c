@@ -56,12 +56,6 @@ void sprite_2d_node_class_draw(engine_node_base_t *sprite_node_base, mp_obj_t ca
     uint32_t sprite_frame_abs_y = sprite_frame_height*sprite_frame_current_y;
     uint32_t sprite_frame_fb_start_index = sprite_frame_abs_y * spritesheet_width + sprite_frame_abs_x;
 
-    float camera_resolved_hierarchy_x = 0.0f;
-    float camera_resolved_hierarchy_y = 0.0f;
-    float camera_resolved_hierarchy_rotation = 0.0f;
-    node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
-    camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
-
     float sprite_resolved_hierarchy_x = 0.0f;
     float sprite_resolved_hierarchy_y = 0.0f;
     float sprite_resolved_hierarchy_rotation = 0.0f;
@@ -69,18 +63,30 @@ void sprite_2d_node_class_draw(engine_node_base_t *sprite_node_base, mp_obj_t ca
     node_base_get_child_absolute_xy(&sprite_resolved_hierarchy_x, &sprite_resolved_hierarchy_y, &sprite_resolved_hierarchy_rotation, &sprite_is_child_of_camera, sprite_node_base);
 
     // Store the non-rotated x and y for a second
-    float sprite_rotated_x = sprite_resolved_hierarchy_x - camera_resolved_hierarchy_x;
-    float sprite_rotated_y = sprite_resolved_hierarchy_y - camera_resolved_hierarchy_y;
+    float sprite_rotated_x = sprite_resolved_hierarchy_x;
+    float sprite_rotated_y = sprite_resolved_hierarchy_y;
+    float sprite_rotation = sprite_resolved_hierarchy_rotation;
 
     if(sprite_is_child_of_camera == false){
+        float camera_resolved_hierarchy_x = 0.0f;
+        float camera_resolved_hierarchy_y = 0.0f;
+        float camera_resolved_hierarchy_rotation = 0.0f;
+        node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
+        camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
+
+        sprite_rotated_x -= camera_resolved_hierarchy_x;
+        sprite_rotated_y -= camera_resolved_hierarchy_y;
+
         // Scale transformation due to camera zoom
         engine_math_scale_point(&sprite_rotated_x, &sprite_rotated_y, camera_position->x.value, camera_position->y.value, camera_zoom);
+
+        // Rotate rectangle origin about the camera
+        engine_math_rotate_point(&sprite_rotated_x, &sprite_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
+
+        sprite_rotation += camera_resolved_hierarchy_rotation;
     }else{
         camera_zoom = 1.0f;
     }
-
-    // Rotate sprite origin about the camera
-    engine_math_rotate_point(&sprite_rotated_x, &sprite_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
 
     sprite_rotated_x += camera_viewport->width/2;
     sprite_rotated_y += camera_viewport->height/2;
@@ -97,7 +103,7 @@ void sprite_2d_node_class_draw(engine_node_base_t *sprite_node_base, mp_obj_t ca
                      spritesheet_width,
                      sprite_scale->x.value*camera_zoom,
                      sprite_scale->y.value*camera_zoom,
-                     -(sprite_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation),
+                    -sprite_rotation,
                      transparent_color->value.val,
                      sprite_opacity,
                      shader);

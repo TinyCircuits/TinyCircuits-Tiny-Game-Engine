@@ -8,6 +8,9 @@ import math
 from engine_math import Vector2
 from engine_nodes import Rectangle2DNode, Circle2DNode, CameraNode, PhysicsRectangle2DNode, PhysicsCircle2DNode
 
+engine.set_fps_limit(60)
+engine_physics.set_gravity(0, 0)
+
 
 ball_dia_mm = 57.15 # https://images.app.goo.gl/sfgWqEnEr52cXHUD8
 hole_dia_mm = 133   # https://images.app.goo.gl/YDCsrbHLMnVDQ7eu7
@@ -19,11 +22,6 @@ table_wall_thickness_mm = (1500 - 1120) / 2
 
 stick_len_mm = 1447.8
 stick_dia_mm = 25.4
-
-
-
-engine.set_fps_limit(60)
-engine_physics.set_gravity(0, 0)
 
 
 class Border(PhysicsRectangle2DNode):
@@ -132,7 +130,7 @@ left_border = Border("v", table_inside_len_mm-(hole_dia_mm*2), Vector2(-(table_i
 right_border = Border("v", table_inside_len_mm-(hole_dia_mm*2), Vector2(table_inside_wid_mm/2 + table_wall_thickness_mm/2, 0))
 
 ball = Ball(power_indicator)
-# ball.add_child(camera)
+ball.add_child(camera)
 
 
 engine.start()

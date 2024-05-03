@@ -37,12 +37,6 @@ void gui_bitmap_button_2d_node_class_draw(engine_node_base_t *button_node_base, 
         rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
         float camera_zoom = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_zoom));
 
-        float camera_resolved_hierarchy_x = 0.0f;
-        float camera_resolved_hierarchy_y = 0.0f;
-        float camera_resolved_hierarchy_rotation = 0.0f;
-        node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
-        camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
-
         float button_resolved_hierarchy_x = 0.0f;
         float button_resolved_hierarchy_y = 0.0f;
         float button_resolved_hierarchy_rotation = 0.0f;
@@ -52,20 +46,31 @@ void gui_bitmap_button_2d_node_class_draw(engine_node_base_t *button_node_base, 
 
         node_base_get_child_absolute_xy(&button_resolved_hierarchy_x, &button_resolved_hierarchy_y, &button_resolved_hierarchy_rotation, &button_is_child_of_camera, button_node_base);
 
-
         // Store the non-rotated x and y for a second
-        float button_rotated_x = button_resolved_hierarchy_x - camera_resolved_hierarchy_x;
-        float button_rotated_y = button_resolved_hierarchy_y - camera_resolved_hierarchy_y;
+        float button_rotated_x = button_resolved_hierarchy_x;
+        float button_rotated_y = button_resolved_hierarchy_y;
+        float button_rotation = button_resolved_hierarchy_rotation;
 
         if(button_is_child_of_camera == false){
+            float camera_resolved_hierarchy_x = 0.0f;
+            float camera_resolved_hierarchy_y = 0.0f;
+            float camera_resolved_hierarchy_rotation = 0.0f;
+            node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
+            camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
+
+            button_rotated_x -= camera_resolved_hierarchy_x;
+            button_rotated_y -= camera_resolved_hierarchy_y;
+
             // Scale transformation due to camera zoom
             engine_math_scale_point(&button_rotated_x, &button_rotated_y, camera_position->x.value, camera_position->y.value, camera_zoom);
+
+            // Rotate rectangle origin about the camera
+            engine_math_rotate_point(&button_rotated_x, &button_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
+
+            button_rotation += camera_resolved_hierarchy_rotation;
         }else{
             camera_zoom = 1.0f;
         }
-
-        // Rotate text origin about the camera
-        engine_math_rotate_point(&button_rotated_x, &button_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
 
         button_rotated_x += camera_viewport->width/2;
         button_rotated_y += camera_viewport->height/2;
@@ -107,7 +112,7 @@ void gui_bitmap_button_2d_node_class_draw(engine_node_base_t *button_node_base, 
                      bitmap->width,
                      btn_x_scale,
                      btn_y_scale,
-                     -(button_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation),
+                    -button_rotation,
                      transparent_color->value.val,
                      button_opacity,
                      shader);
@@ -133,7 +138,7 @@ void gui_bitmap_button_2d_node_class_draw(engine_node_base_t *button_node_base, 
                          text_letter_spacing,
                          text_line_spacing,
                          text_x_scale, text_y_scale,
-                         button_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation,
+                         button_rotation,
                          button_opacity,
                          text_shader);
     }

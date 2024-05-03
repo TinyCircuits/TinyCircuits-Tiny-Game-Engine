@@ -257,10 +257,13 @@ void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, bool *
                     parent_rotation_radians = (float)mp_obj_get_float(parent_rotation_obj);
                 }
 
-                *x += parent_x;
-                *y += parent_y;
-                *rotation += parent_rotation_radians;
-                engine_math_rotate_point(x, y, parent_x, parent_y, parent_rotation_radians);
+                if(is_child_of_camera == NULL || (is_child_of_camera != NULL && *is_child_of_camera == false)){
+                    *x += parent_x;
+                    *y += parent_y;
+                    *rotation += parent_rotation_radians;
+                    
+                    engine_math_rotate_point(x, y, parent_x, parent_y, parent_rotation_radians);
+                }
             }else{
                 // Done, reached top-most parent
                 break;

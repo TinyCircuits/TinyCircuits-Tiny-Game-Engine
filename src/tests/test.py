@@ -42,7 +42,7 @@ class MyCircle(Circle2DNode):
     def __init__(self):
         super().__init__(self)
     
-    def tick(self):
+    def tick(self, dt):
         self.rotation += 0.005
 
 
@@ -72,7 +72,7 @@ class MyCam(CameraNode):
     def __init__(self):
         super().__init__(self)
     
-    def tick(self):
+    def tick(self, dt):
         print(engine.get_running_fps())
         if engine_input.check_pressed(engine_input.A):
             self.zoom -= 0.005

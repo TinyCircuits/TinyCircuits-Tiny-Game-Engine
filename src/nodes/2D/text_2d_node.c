@@ -44,12 +44,6 @@ void text_2d_node_class_draw(engine_node_base_t *text_2d_node_base, mp_obj_t cam
     rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
     float camera_zoom = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_zoom));
 
-    float camera_resolved_hierarchy_x = 0.0f;
-    float camera_resolved_hierarchy_y = 0.0f;
-    float camera_resolved_hierarchy_rotation = 0.0f;
-    node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
-    camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
-
     float text_resolved_hierarchy_x = 0.0f;
     float text_resolved_hierarchy_y = 0.0f;
     float text_resolved_hierarchy_rotation = 0.0f;
@@ -57,24 +51,36 @@ void text_2d_node_class_draw(engine_node_base_t *text_2d_node_base, mp_obj_t cam
     node_base_get_child_absolute_xy(&text_resolved_hierarchy_x, &text_resolved_hierarchy_y, &text_resolved_hierarchy_rotation, &text_is_child_of_camera, text_2d_node_base);
 
     // Store the non-rotated x and y for a second
-    float text_rotated_x = text_resolved_hierarchy_x - camera_resolved_hierarchy_x;
-    float text_rotated_y = text_resolved_hierarchy_y - camera_resolved_hierarchy_y;
-
-    float text_letter_spacing = mp_obj_get_float(text_2d_node->letter_spacing);
-    float text_line_spacing = mp_obj_get_float(text_2d_node->line_spacing);
+    float text_rotated_x = text_resolved_hierarchy_x;
+    float text_rotated_y = text_resolved_hierarchy_y;
+    float text_rotation = text_resolved_hierarchy_rotation;
 
     if(text_is_child_of_camera == false){
+        float camera_resolved_hierarchy_x = 0.0f;
+        float camera_resolved_hierarchy_y = 0.0f;
+        float camera_resolved_hierarchy_rotation = 0.0f;
+        node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
+        camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
+
+        text_rotated_x -= camera_resolved_hierarchy_x;
+        text_rotated_y -= camera_resolved_hierarchy_y;
+
         // Scale transformation due to camera zoom
         engine_math_scale_point(&text_rotated_x, &text_rotated_y, camera_position->x.value, camera_position->y.value, camera_zoom);
+
+        // Rotate rectangle origin about the camera
+        engine_math_rotate_point(&text_rotated_x, &text_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
+
+        text_rotation += camera_resolved_hierarchy_rotation;
     }else{
         camera_zoom = 1.0f;
     }
 
-    // Rotate text origin about the camera
-    engine_math_rotate_point(&text_rotated_x, &text_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
-
     text_rotated_x += camera_viewport->width/2;
     text_rotated_y += camera_viewport->height/2;
+
+    float text_letter_spacing = mp_obj_get_float(text_2d_node->letter_spacing);
+    float text_line_spacing = mp_obj_get_float(text_2d_node->line_spacing);
 
     // Decide which shader to use per-pixel
     engine_shader_t *shader = &empty_shader;
@@ -82,7 +88,7 @@ void text_2d_node_class_draw(engine_node_base_t *text_2d_node_base, mp_obj_t cam
         shader = &opacity_shader;
     }
 
-    engine_draw_text(text_2d_node->font_resource, text_2d_node->text, text_rotated_x, text_rotated_y, text_box_width, text_box_height, text_letter_spacing, text_line_spacing, text_scale->x.value*camera_zoom, text_scale->y.value*camera_zoom, text_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation, text_opacity, shader);
+    engine_draw_text(text_2d_node->font_resource, text_2d_node->text, text_rotated_x, text_rotated_y, text_box_width, text_box_height, text_letter_spacing, text_line_spacing, text_scale->x.value*camera_zoom, text_scale->y.value*camera_zoom, text_rotation, text_opacity, shader);
 }
 
 

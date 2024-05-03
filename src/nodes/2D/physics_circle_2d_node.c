@@ -34,13 +34,6 @@ void physics_circle_2d_node_class_draw(engine_node_base_t *circle_node_base, mp_
 
     float circle_radius =  mp_obj_get_float(physics_circle_2d_node->radius);
     
-
-    float camera_resolved_hierarchy_x = 0.0f;
-    float camera_resolved_hierarchy_y = 0.0f;
-    float camera_resolved_hierarchy_rotation = 0.0f;
-    node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
-    camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
-
     float circle_resolved_hierarchy_x = 0.0f;
     float circle_resolved_hierarchy_y = 0.0f;
     float circle_resolved_hierarchy_rotation = 0.0f;
@@ -48,12 +41,27 @@ void physics_circle_2d_node_class_draw(engine_node_base_t *circle_node_base, mp_
     node_base_get_child_absolute_xy(&circle_resolved_hierarchy_x, &circle_resolved_hierarchy_y, &circle_resolved_hierarchy_rotation, &circle_is_child_of_camera, circle_node_base);
 
     // Store the non-rotated x and y for a second
-    float circle_rotated_x = circle_resolved_hierarchy_x-camera_resolved_hierarchy_x;
-    float circle_rotated_y = circle_resolved_hierarchy_y-camera_resolved_hierarchy_y;
+    float circle_rotated_x = circle_resolved_hierarchy_x;
+    float circle_rotated_y = circle_resolved_hierarchy_y;
+    float circle_rotation = circle_resolved_hierarchy_rotation;
 
     if(circle_is_child_of_camera == false){
+        float camera_resolved_hierarchy_x = 0.0f;
+        float camera_resolved_hierarchy_y = 0.0f;
+        float camera_resolved_hierarchy_rotation = 0.0f;
+        node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
+        camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
+
+        circle_rotated_x -= camera_resolved_hierarchy_x;
+        circle_rotated_y -= camera_resolved_hierarchy_y;
+
         // Scale transformation due to camera zoom
-        engine_math_scale_point(&circle_rotated_x, &circle_rotated_y, camera_position->x.value, camera_position->y.value, camera_zoom);   
+        engine_math_scale_point(&circle_rotated_x, &circle_rotated_y, camera_position->x.value, camera_position->y.value, camera_zoom);
+
+        // Rotate rectangle origin about the camera
+        engine_math_rotate_point(&circle_rotated_x, &circle_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
+
+        circle_rotation += camera_resolved_hierarchy_rotation;
     }else{
         camera_zoom = 1.0f;
     }
@@ -63,9 +71,6 @@ void physics_circle_2d_node_class_draw(engine_node_base_t *circle_node_base, mp_
     // Do this after determining if a child of a camera at any point
     // since in that case zoom shouldn't have an effect
     circle_radius = (circle_radius*camera_zoom);
-
-    // Rotate circle origin about the camera
-    engine_math_rotate_point(&circle_rotated_x, &circle_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
 
     circle_rotated_x += camera_viewport->width/2;
     circle_rotated_y += camera_viewport->height/2;

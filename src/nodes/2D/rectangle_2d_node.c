@@ -36,12 +36,6 @@ void rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_base, mp_ob
     rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
     float camera_zoom = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_zoom));
 
-    float camera_resolved_hierarchy_x = 0.0f;
-    float camera_resolved_hierarchy_y = 0.0f;
-    float camera_resolved_hierarchy_rotation = 0.0f;
-    node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
-    camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
-
     float rectangle_resolved_hierarchy_x = 0.0f;
     float rectangle_resolved_hierarchy_y = 0.0f;
     float rectangle_resolved_hierarchy_rotation = 0.0f;
@@ -49,21 +43,33 @@ void rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_base, mp_ob
     node_base_get_child_absolute_xy(&rectangle_resolved_hierarchy_x, &rectangle_resolved_hierarchy_y, &rectangle_resolved_hierarchy_rotation, &rectangle_is_child_of_camera, rectangle_node_base);
 
     // Store the non-rotated x and y for a second
-    float rectangle_rotated_x = rectangle_resolved_hierarchy_x-camera_resolved_hierarchy_x;
-    float rectangle_rotated_y = rectangle_resolved_hierarchy_y-camera_resolved_hierarchy_y;
+    float rectangle_rotated_x = rectangle_resolved_hierarchy_x;
+    float rectangle_rotated_y = rectangle_resolved_hierarchy_y;
+    float rectangle_rotation = rectangle_resolved_hierarchy_rotation;
 
     if(rectangle_is_child_of_camera == false){
+        float camera_resolved_hierarchy_x = 0.0f;
+        float camera_resolved_hierarchy_y = 0.0f;
+        float camera_resolved_hierarchy_rotation = 0.0f;
+        node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
+        camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
+
+        rectangle_rotated_x -= camera_resolved_hierarchy_x;
+        rectangle_rotated_y -= camera_resolved_hierarchy_y;
+
         // Scale transformation due to camera zoom
         engine_math_scale_point(&rectangle_rotated_x, &rectangle_rotated_y, camera_position->x.value, camera_position->y.value, camera_zoom);
+
+        // Rotate rectangle origin about the camera
+        engine_math_rotate_point(&rectangle_rotated_x, &rectangle_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
+
+        rectangle_rotation += camera_resolved_hierarchy_rotation;
     }else{
         camera_zoom = 1.0f;
     }
 
     rectangle_width = rectangle_width*camera_zoom;
     rectangle_height = rectangle_height*camera_zoom;
-
-    // Rotate rectangle origin about the camera
-    engine_math_rotate_point(&rectangle_rotated_x, &rectangle_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
 
     rectangle_rotated_x += camera_viewport->width/2;
     rectangle_rotated_y += camera_viewport->height/2;
@@ -79,7 +85,7 @@ void rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_base, mp_ob
                          floorf(rectangle_rotated_x), floorf(rectangle_rotated_y),
                          rectangle_width, rectangle_height,
                          rectangle_scale->x.value*camera_zoom, rectangle_scale->y.value*camera_zoom,
-                       -(rectangle_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation),
+                         -rectangle_rotation,
                          rectangle_opacity,
                          shader);
     }else{
@@ -101,11 +107,10 @@ void rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_base, mp_ob
         float bly = floorf(rectangle_rotated_y + rectangle_half_height);
 
         // Rotate the points and then draw lines between them
-        float angle = rectangle_resolved_hierarchy_rotation + camera_resolved_hierarchy_rotation;
-        engine_math_rotate_point(&tlx, &tly, rectangle_rotated_x, rectangle_rotated_y, angle);
-        engine_math_rotate_point(&trx, &try, rectangle_rotated_x, rectangle_rotated_y, angle);
-        engine_math_rotate_point(&brx, &bry, rectangle_rotated_x, rectangle_rotated_y, angle);
-        engine_math_rotate_point(&blx, &bly, rectangle_rotated_x, rectangle_rotated_y, angle);
+        engine_math_rotate_point(&tlx, &tly, rectangle_rotated_x, rectangle_rotated_y, rectangle_rotation);
+        engine_math_rotate_point(&trx, &try, rectangle_rotated_x, rectangle_rotated_y, rectangle_rotation);
+        engine_math_rotate_point(&brx, &bry, rectangle_rotated_x, rectangle_rotated_y, rectangle_rotation);
+        engine_math_rotate_point(&blx, &bly, rectangle_rotated_x, rectangle_rotated_y, rectangle_rotation);
 
         engine_draw_line(rectangle_color->value.val, tlx, tly, trx, try, camera_node, rectangle_opacity, shader);
         engine_draw_line(rectangle_color->value.val, trx, try, brx, bry, camera_node, rectangle_opacity, shader);

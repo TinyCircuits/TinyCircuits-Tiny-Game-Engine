@@ -34,20 +34,11 @@ void line_2d_node_class_draw(engine_node_base_t *line_node_base, mp_obj_t camera
 
     // The line is drawn as a rectangle since we have a nice algorithm for doing that:
     float line_length = engine_math_distance_between(line_start->x.value, line_start->y.value, line_end->x.value, line_end->y.value);
-    float line_rotation = engine_math_angle_between(line_start->x.value, line_start->y.value, line_end->x.value, line_end->y.value) - HALF_PI;
-    line_rotation *= -1.0f; // https://stackoverflow.com/a/62486304
-
+    
     // Grab camera
     vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
     rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
     float camera_zoom = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_zoom));
-
-    // Get camera transformation if it is a child
-    float camera_resolved_hierarchy_x = 0.0f;
-    float camera_resolved_hierarchy_y = 0.0f;
-    float camera_resolved_hierarchy_rotation = 0.0f;
-    node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
-    camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
 
     // Get line transformation if it is a child
     float line_resolved_hierarchy_x = 0.0f;
@@ -57,12 +48,27 @@ void line_2d_node_class_draw(engine_node_base_t *line_node_base, mp_obj_t camera
     node_base_get_child_absolute_xy(&line_resolved_hierarchy_x, &line_resolved_hierarchy_y, &line_resolved_hierarchy_rotation, &line_is_child_of_camera, line_node_base);
 
     // Store the non-rotated x and y for a second
-    float line_rotated_x = line_resolved_hierarchy_x-camera_resolved_hierarchy_x;
-    float line_rotated_y = line_resolved_hierarchy_y-camera_resolved_hierarchy_y;
+    float line_rotated_x = line_resolved_hierarchy_x;
+    float line_rotated_y = line_resolved_hierarchy_y;
+    float line_rotation = line_resolved_hierarchy_rotation;
 
     if(line_is_child_of_camera == false){
+        float camera_resolved_hierarchy_x = 0.0f;
+        float camera_resolved_hierarchy_y = 0.0f;
+        float camera_resolved_hierarchy_rotation = 0.0f;
+        node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
+        camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
+
+        line_rotated_x -= camera_resolved_hierarchy_x;
+        line_rotated_y -= camera_resolved_hierarchy_y;
+
         // Scale transformation due to camera zoom
         engine_math_scale_point(&line_rotated_x, &line_rotated_y, camera_position->x.value, camera_position->y.value, camera_zoom);
+
+        // Rotate rectangle origin about the camera
+        engine_math_rotate_point(&line_rotated_x, &line_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
+
+        line_rotation += camera_resolved_hierarchy_rotation;
     }else{
         camera_zoom = 1.0f;
     }
@@ -75,9 +81,6 @@ void line_2d_node_class_draw(engine_node_base_t *line_node_base, mp_obj_t camera
     if(line_thickness < 1.0f){
         line_thickness = 1.0f;
     }
-
-    // Rotate rectangle origin about the camera
-    engine_math_rotate_point(&line_rotated_x, &line_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
 
     line_rotated_x += camera_viewport->width/2;
     line_rotated_y += camera_viewport->height/2;
@@ -93,7 +96,7 @@ void line_2d_node_class_draw(engine_node_base_t *line_node_base, mp_obj_t camera
                          floorf(line_rotated_x), floorf(line_rotated_y),
                          line_thickness, line_length,
                          1.0f, 1.0f,
-                       -(line_resolved_hierarchy_rotation+camera_resolved_hierarchy_rotation),
+                        -line_rotation,
                          line_opacity,
                          shader);
     }else{
@@ -115,11 +118,10 @@ void line_2d_node_class_draw(engine_node_base_t *line_node_base, mp_obj_t camera
         float bly = floorf(line_rotated_y + line_half_height);
 
         // Rotate the points and then draw lines between them
-        float angle = line_resolved_hierarchy_rotation + camera_resolved_hierarchy_rotation;
-        engine_math_rotate_point(&tlx, &tly, line_rotated_x, line_rotated_y, angle);
-        engine_math_rotate_point(&trx, &try, line_rotated_x, line_rotated_y, angle);
-        engine_math_rotate_point(&brx, &bry, line_rotated_x, line_rotated_y, angle);
-        engine_math_rotate_point(&blx, &bly, line_rotated_x, line_rotated_y, angle);
+        engine_math_rotate_point(&tlx, &tly, line_rotated_x, line_rotated_y, line_rotation);
+        engine_math_rotate_point(&trx, &try, line_rotated_x, line_rotated_y, line_rotation);
+        engine_math_rotate_point(&brx, &bry, line_rotated_x, line_rotated_y, line_rotation);
+        engine_math_rotate_point(&blx, &bly, line_rotated_x, line_rotated_y, line_rotation);
 
         engine_draw_line(line_color->value.val, tlx, tly, trx, try, camera_node, line_opacity, shader);
         engine_draw_line(line_color->value.val, trx, try, brx, bry, camera_node, line_opacity, shader);
