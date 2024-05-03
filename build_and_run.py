@@ -54,24 +54,14 @@ if clean_or_path_arg == "clean":
     print("\n\nSUCCESS: Done cleaning rp3 port!\n")
     exit(1)
 elif os.path.isdir(clean_or_path_arg):
-    shutil.copytree(clean_or_path_arg, '../../../ports/rp3/modules', dirs_exist_ok=True)
     files_to_run = os.listdir(clean_or_path_arg)
     print("Done copying folder contents tp ports/rp3/modules")
 elif os.path.isfile(clean_or_path_arg):
-    shutil.copy(clean_or_path_arg, '../../../ports/rp3/modules')
     files_to_run.append(clean_or_path_arg)
     print("Done copying file to ports/rp3/modules")
 else:
     print("\n\nERROR: Argument was not `clean` or a valid path:", clean_or_path_arg, "\n")
     exit(1)
-
-
-# ### Step 3: Strip filenames so that each can be run on REPL as `import <filename>`
-imports_to_run = []
-for file in files_to_run:
-    start = file.rfind("/")+1
-    end = file.find(".py")
-    imports_to_run.append(file[start:end])
 
 
 # ### Step 4: Now that everything is copied, build the firmware (which will freeze everything in `modules`)
@@ -141,29 +131,16 @@ print("Starting to run frozen files...\n")
 
 fps_sample_strs = []
 
-for to_import in imports_to_run:
-    print("\nIMPORTING:", to_import)
+for file in files_to_run:
+    print("Running:", clean_or_path_arg + "/" + file)
 
-    # Stop any running program
-    ser.write("\x03".encode("utf-8"))
+    output = subprocess.check_output(['python3', 'run.py', clean_or_path_arg + "/" + file]).decode("utf-8")
+    print(output)
 
-    # Soft reset
-    ser.write("\x04".encode("utf-8"))
-
-    # Import the frozen module to run it
-    ser.write(("import " + to_import + "\r\n").encode("utf-8"))
-
-    reading = ""
-    while "]-" not in reading:
-        read = ser.read().decode("utf-8")
-        print(read, end='')
-        reading += read
-    
-    fps_sample_start = reading.rfind("-[")+2
-    fps_sample_end = reading.rfind("]-")
-    fps_sample_strs.append(reading[fps_sample_start:fps_sample_end])
-    
-ser.close()
+    if "-[" in output:    
+        fps_sample_start = output.rfind("-[")+2
+        fps_sample_end = output.rfind("]-")
+        fps_sample_strs.append(output[fps_sample_start:fps_sample_end])
 
 
 # If samples were gathered, add to list of samples

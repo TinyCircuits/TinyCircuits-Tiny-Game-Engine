@@ -658,3 +658,19 @@ vox_node_perf_test.py, avg. FPS: 36.76242
 
 
 
+2024-05-03 16:23:00.224837 : 351507b60a6621304b6741e570d54e5f69560652
+Hopefully fix jitter when nodes are children of a camera
+
+{
+line_node_perf_test.py, avg. FPS: 239.1136
+test_opacity_perf_test.py, avg. FPS: 89.52583
+test_perf_test.py, avg. FPS: 110.453
+circle_node_perf_test.py, avg. FPS: 241.3396
+vox_node_perf_test.py, avg. FPS: 36.75231
+}
+
+
+ ----- 
+
+
+

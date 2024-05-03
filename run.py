@@ -149,5 +149,8 @@ while True:
     data = ser.read_all().decode("utf8")
     if len(data) > 0:
         print(data, end='')
+    
+    if "MPY: soft reboot" in data:
+        break
 
 ser.close()

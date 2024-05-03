@@ -116,3 +116,6 @@ while ticks < ticks_end:
 
 
 print("-[test_perf_test.py, avg. FPS: " + str(fps_total / ticks_end) + "]-")
+
+import machine
+machine.soft_reset()
