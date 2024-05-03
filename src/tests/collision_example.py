@@ -63,7 +63,7 @@ class Player(PhysicsCircle2DNode):
         self.count = 0
         print(self.count)
     
-    def tick(self):
+    def tick(self, dt):
         if engine_input.check_pressed(engine_input.DPAD_LEFT):
             self.velocity.x = -0.3
         elif engine_input.check_pressed(engine_input.DPAD_RIGHT):
@@ -105,7 +105,7 @@ class rect(PhysicsRectangle2DNode):
         self.rotation=math.pi/4
         self.dynamic=False
     
-    def tick(self):
+    def tick(self, dt):
         self.rotation -= 0.0025
     
 

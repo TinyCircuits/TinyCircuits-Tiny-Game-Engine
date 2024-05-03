@@ -136,10 +136,12 @@ void engine_invoke_all_node_callbacks(float dt){
                     case NODE_TYPE_MESH_3D:
                     {
                         engine_mesh_node_class_obj_t *mesh_node = node_base->node;
-                        exec[0] = mesh_node->tick_cb;
-                        exec[1] = node_base->attr_accessor;
-                        exec[2] = mp_obj_new_float(dt);
-                        mp_call_method_n_kw(1, 0, exec);
+                        if(mesh_node->tick_cb != mp_const_none){
+                            exec[0] = mesh_node->tick_cb;
+                            exec[1] = node_base->attr_accessor;
+                            exec[2] = mp_obj_new_float(dt);
+                            mp_call_method_n_kw(1, 0, exec);
+                        }
 
                         engine_camera_draw_for_each(mesh_node_class_draw, node_base);
                     }
@@ -213,41 +215,41 @@ void engine_invoke_all_node_callbacks(float dt){
                     {
                         engine_gui_button_2d_node_class_obj_t *button_2d_node = node_base->node;
                         exec[1] = node_base->attr_accessor;
-                        exec[2] = mp_obj_new_float(dt);
 
                         if(button_2d_node->tick_cb != mp_const_none){
                             exec[0] = button_2d_node->tick_cb;
+                            exec[2] = mp_obj_new_float(dt);
                             mp_call_method_n_kw(1, 0, exec);
                         }
 
                         if(button_2d_node->on_focused_cb != mp_const_none && button_2d_node->focused == true){
                             exec[0] = button_2d_node->on_focused_cb;
-                            mp_call_method_n_kw(1, 0, exec);
+                            mp_call_method_n_kw(0, 0, exec);
                         }
 
                         if(button_2d_node->on_just_focused_cb != mp_const_none && button_2d_node->last_focused == false && button_2d_node->focused == true){
                             exec[0] = button_2d_node->on_just_focused_cb;
-                            mp_call_method_n_kw(1, 0, exec);
+                            mp_call_method_n_kw(0, 0, exec);
                         }
 
                         if(button_2d_node->on_just_unfocused_cb != mp_const_none && button_2d_node->last_focused == true && button_2d_node->focused == false){
                             exec[0] = button_2d_node->on_just_unfocused_cb;
-                            mp_call_method_n_kw(1, 0, exec);
+                            mp_call_method_n_kw(0, 0, exec);
                         }
 
                         if(button_2d_node->on_pressed_cb != mp_const_none && button_2d_node->pressed == true){
                             exec[0] = button_2d_node->on_pressed_cb;
-                            mp_call_method_n_kw(1, 0, exec);
+                            mp_call_method_n_kw(0, 0, exec);
                         }
 
                         if(button_2d_node->on_just_pressed_cb != mp_const_none && button_2d_node->last_pressed == false && button_2d_node->pressed == true){
                             exec[0] = button_2d_node->on_just_pressed_cb;
-                            mp_call_method_n_kw(1, 0, exec);
+                            mp_call_method_n_kw(0, 0, exec);
                         }
 
                         if(button_2d_node->on_just_released_cb != mp_const_none && button_2d_node->last_pressed == true && button_2d_node->pressed == false){
                             exec[0] = button_2d_node->on_just_released_cb;
-                            mp_call_method_n_kw(1, 0, exec);
+                            mp_call_method_n_kw(0, 0, exec);
                         }
 
 
@@ -269,41 +271,41 @@ void engine_invoke_all_node_callbacks(float dt){
                     {
                         engine_gui_bitmap_button_2d_node_class_obj_t *bitmap_button_2d_node = node_base->node;
                         exec[1] = node_base->attr_accessor;
-                        exec[2] = mp_obj_new_float(dt);
 
                         if(bitmap_button_2d_node->tick_cb != mp_const_none){
                             exec[0] = bitmap_button_2d_node->tick_cb;
+                            exec[2] = mp_obj_new_float(dt);
                             mp_call_method_n_kw(1, 0, exec);
                         }
 
                         if(bitmap_button_2d_node->on_focused_cb != mp_const_none && bitmap_button_2d_node->focused == true){
                             exec[0] = bitmap_button_2d_node->on_focused_cb;
-                            mp_call_method_n_kw(1, 0, exec);
+                            mp_call_method_n_kw(0, 0, exec);
                         }
 
                         if(bitmap_button_2d_node->on_just_focused_cb != mp_const_none && bitmap_button_2d_node->last_focused == false && bitmap_button_2d_node->focused == true){
                             exec[0] = bitmap_button_2d_node->on_just_focused_cb;
-                            mp_call_method_n_kw(1, 0, exec);
+                            mp_call_method_n_kw(0, 0, exec);
                         }
 
                         if(bitmap_button_2d_node->on_just_unfocused_cb != mp_const_none && bitmap_button_2d_node->last_focused == true && bitmap_button_2d_node->focused == false){
                             exec[0] = bitmap_button_2d_node->on_just_unfocused_cb;
-                            mp_call_method_n_kw(1, 0, exec);
+                            mp_call_method_n_kw(0, 0, exec);
                         }
 
                         if(bitmap_button_2d_node->on_pressed_cb != mp_const_none && bitmap_button_2d_node->pressed == true){
                             exec[0] = bitmap_button_2d_node->on_pressed_cb;
-                            mp_call_method_n_kw(1, 0, exec);
+                            mp_call_method_n_kw(0, 0, exec);
                         }
 
                         if(bitmap_button_2d_node->on_just_pressed_cb != mp_const_none && bitmap_button_2d_node->last_pressed == false && bitmap_button_2d_node->pressed == true){
                             exec[0] = bitmap_button_2d_node->on_just_pressed_cb;
-                            mp_call_method_n_kw(1, 0, exec);
+                            mp_call_method_n_kw(0, 0, exec);
                         }
 
                         if(bitmap_button_2d_node->on_just_released_cb != mp_const_none && bitmap_button_2d_node->last_pressed == true && bitmap_button_2d_node->pressed == false){
                             exec[0] = bitmap_button_2d_node->on_just_released_cb;
-                            mp_call_method_n_kw(1, 0, exec);
+                            mp_call_method_n_kw(0, 0, exec);
                         }
 
 
@@ -330,6 +332,8 @@ void engine_invoke_all_node_callbacks(float dt){
                             exec[2] = mp_obj_new_float(dt);
                             mp_call_method_n_kw(1, 0, exec);
                         }
+
+                        engine_camera_draw_for_each(physics_rectangle_2d_node_class_draw, node_base);
                     }
                     break;
                     case NODE_TYPE_PHYSICS_CIRCLE_2D:
@@ -341,6 +345,8 @@ void engine_invoke_all_node_callbacks(float dt){
                             exec[2] = mp_obj_new_float(dt);
                             mp_call_method_n_kw(1, 0, exec);
                         }
+
+                        engine_camera_draw_for_each(physics_circle_2d_node_class_draw, node_base);
                     }
                     break;
                     default:

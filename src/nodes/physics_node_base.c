@@ -85,6 +85,10 @@ bool physics_node_base_load_attr(engine_node_base_t *self_node_base, qstr attrib
             destination[0] = self->gravity_scale;
             return true;
         break;
+        case MP_QSTR_outline:
+            destination[0] = self->outline;
+            return true;
+        break;
         default:
             return false; // Fail
     }
@@ -135,6 +139,10 @@ bool physics_node_base_store_attr(engine_node_base_t *self_node_base, qstr attri
         break;
         case MP_QSTR_gravity_scale:
             self->gravity_scale = destination[1];
+            return true;
+        break;
+        case MP_QSTR_outline:
+            self->outline = destination[1];
             return true;
         break;
         default:

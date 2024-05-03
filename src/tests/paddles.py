@@ -1,3 +1,5 @@
+import engine_main
+
 import engine
 import engine_debug
 import engine_draw
@@ -6,6 +8,8 @@ import engine_physics
 from engine_math import Vector2
 from engine_nodes import Rectangle2DNode, Circle2DNode, CameraNode, PhysicsRectangle2DNode, PhysicsCircle2DNode
 import random
+
+engine.set_fps_limit(30)
 
 # Don't want gravity in pong, zero out the axes
 engine_physics.set_gravity(0, 0)
@@ -51,7 +55,7 @@ class PlayerPaddle(PhysicsRectangle2DNode):
 
         self.contact_anim_counter = 100
     
-    def tick(self):
+    def tick(self, dt):
         self.velocity.x = 0
         self.position.x = -50
 
@@ -86,7 +90,7 @@ class AIPaddle(PhysicsRectangle2DNode):
 
         self.contact_anim_counter = 100
     
-    def tick(self):
+    def tick(self, dt):
         self.velocity.x = 0
         self.position.x = 50
         self.color = engine_draw.yellow

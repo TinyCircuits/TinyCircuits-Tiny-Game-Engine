@@ -23,6 +23,8 @@ typedef struct{
 
     mp_obj_t gravity_scale;                 // Vector2 allowing scaling affects of gravity. Set to 0,0 for no gravity
 
+    mp_obj_t outline;
+
     uint8_t physics_id;
 
     float mass;

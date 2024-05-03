@@ -22,13 +22,6 @@
 #include "../lib/cglm/include/cglm/cam.h"
 
 
-STATIC mp_obj_t mesh_node_class_tick(mp_obj_t self_in){
-    ENGINE_WARNING_PRINTF("MeshNode: Tick function not overridden");
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_1(mesh_node_class_tick_obj, mesh_node_class_tick);
-
-
 void mesh_node_class_draw(engine_node_base_t *mesh_node_base, mp_obj_t camera_node){
     engine_mesh_node_class_obj_t *mesh_node = mesh_node_base->node;
     engine_node_base_t *camera_node_base = camera_node;
@@ -291,7 +284,7 @@ mp_obj_t mesh_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_
     node_base->node = mesh_node;
     node_base->attr_accessor = node_base;
 
-    mesh_node->tick_cb = MP_OBJ_FROM_PTR(&mesh_node_class_tick_obj);
+    mesh_node->tick_cb = mp_const_none;
 
     mesh_node->position = parsed_args[position].u_obj;
     mesh_node->vertices = parsed_args[vertices].u_obj;
@@ -304,7 +297,7 @@ mp_obj_t mesh_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_
         mp_obj_t dest[2];
         mp_load_method_maybe(node_instance, MP_QSTR_tick, dest);
         if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
-            mesh_node->tick_cb = MP_OBJ_FROM_PTR(&mesh_node_class_tick_obj);
+            mesh_node->tick_cb = mp_const_none;
         }else{                                                  // Likely found method (could be attribute)
             mesh_node->tick_cb = dest[0];
         }

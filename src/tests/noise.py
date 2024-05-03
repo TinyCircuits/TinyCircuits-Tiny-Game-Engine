@@ -34,7 +34,7 @@ class MyCam(CameraNode):
         self.position.x += math.cos(self.rotation.y+(math.pi/2)) * self.distance
         self.position.z += math.sin(self.rotation.y+(math.pi/2)) * self.distance
 
-    def tick(self):
+    def tick(self, dt):
         # print(engine.get_running_fps())
 
         if engine_input.check_pressed(engine_input.BUMPER_RIGHT):

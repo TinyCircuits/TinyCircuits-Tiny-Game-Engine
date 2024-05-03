@@ -27,14 +27,14 @@ D18 = TextureResource("D18.bmp", True)
 tree_bmp = TextureResource("tree.bmp", True)
 tc_bmp = TextureResource("32x32.bmp", True)
 
-# vox0 = VoxelSpaceNode(texture=C18W, heightmap=D18)
-# vox0.position.x = 0
-# vox0.position.y = 30
-# vox0.scale.y = 35
-# vox0.scale.x = 1
-# vox0.scale.z = 1
-# vox0.flip = True
-# vox0.repeat = True
+vox0 = VoxelSpaceNode(texture=C18W, heightmap=D18)
+vox0.position.x = 0
+vox0.position.y = 30
+vox0.scale.y = 35
+vox0.scale.x = 1
+vox0.scale.z = 1
+vox0.flip = True
+vox0.repeat = True
 
 
 
@@ -81,15 +81,14 @@ class MyCam(CameraNode):
         self.t = 0
 
     def adjust(self):
-        # vox0_height = vox0.get_abs_height(self.position.x, self.position.z)
+        vox0_height = vox0.get_abs_height(self.position.x, self.position.z)
         vox1_height = vox1.get_abs_height(self.position.x, self.position.z)
-        # print(self.position.x, self.position.y, self.position.z)
 
         if(vox1_height != None and self.position.y < vox1_height):
             self.position.y = vox1_height
         
-        # if(vox0_height != None and self.position.y > vox0_height):
-        #     self.position.y = vox0_height
+        if(vox0_height != None and self.position.y > vox0_height):
+            self.position.y = vox0_height
 
     def forward(self):
         self.position.x += math.cos(self.rotation.y) * self.distance
@@ -124,13 +123,13 @@ class MyCam(CameraNode):
                 self.rotation.z += 0.005
                 # self.rotation.x -= 0.005
             elif self.mode == 3:
-                # vox0.lod += 0.001
+                vox0.lod += 0.001
                 vox1.lod += 0.001
             elif self.mode == 4:
-                # vox0.curvature += 0.005
+                vox0.curvature += 0.005
                 vox1.curvature += 0.005
             elif self.mode == 5:
-                # vox0.scale.y += 1
+                vox0.scale.y += 1
                 vox1.scale.y += 1
             elif self.mode == 6:
                 self.fov += 0.05
@@ -139,15 +138,15 @@ class MyCam(CameraNode):
                 self.rotation.y -= 0.025
             elif self.mode == 2:
                 self.rotation.z -= 0.005
-                # self.rotation.x += 0.005
+                self.rotation.x += 0.005
             elif self.mode == 3:
-                # vox0.lod -= 0.001
+                vox0.lod -= 0.001
                 vox1.lod -= 0.001
             elif self.mode == 4:
-                # vox0.curvature -= 0.005
+                vox0.curvature -= 0.005
                 vox1.curvature -= 0.005
             elif self.mode == 5:
-                # vox0.scale.y -= 1
+                vox0.scale.y -= 1
                 vox1.scale.y -= 1
             elif self.mode == 6:
                 self.fov -= 0.05

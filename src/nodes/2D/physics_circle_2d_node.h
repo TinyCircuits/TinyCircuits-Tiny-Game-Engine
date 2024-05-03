@@ -18,4 +18,6 @@ extern const mp_obj_type_t engine_physics_circle_2d_node_class_type;
 // node so that the shape (if needed) can be updated
 void engine_physics_circle_2d_node_update(engine_physics_circle_2d_node_class_obj_t *self);
 
+void physics_circle_2d_node_class_draw(engine_node_base_t *circle_node_base, mp_obj_t camera_node);
+
 #endif  // PHYSICS_CIRCLE_2D_NODE_H

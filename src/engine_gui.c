@@ -38,6 +38,13 @@ void engine_gui_clear_all(){
 }
 
 
+void engine_gui_reset(){
+    focused_gui_node_base = NULL;
+    gui_focused = false;
+    engine_input_reset_gui_toggle_button();
+}
+
+
 bool engine_gui_get_focus(){
     return gui_focused;
 }

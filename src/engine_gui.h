@@ -8,6 +8,7 @@
 linked_list_node *engine_gui_track(engine_node_base_t *obj);
 void engine_gui_untrack(linked_list_node *gui_list_node);
 void engine_gui_clear_all();
+void engine_gui_reset();
 
 void engine_gui_focus_node(engine_node_base_t *gui_node);
 bool engine_gui_get_focus();

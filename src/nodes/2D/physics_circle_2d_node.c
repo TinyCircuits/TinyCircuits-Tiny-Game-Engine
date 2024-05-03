@@ -9,11 +9,69 @@
 #include "engine_object_layers.h"
 #include "math/vector2.h"
 #include "math/vector3.h"
+#include "math/rectangle.h"
 #include "draw/engine_display_draw.h"
 #include "math/engine_math.h"
 #include "draw/engine_display_draw.h"
 #include "physics/engine_physics.h"
 #include "physics/engine_physics_ids.h"
+
+
+void physics_circle_2d_node_class_draw(engine_node_base_t *circle_node_base, mp_obj_t camera_node){
+    engine_physics_node_base_t *physics_node_base = circle_node_base->node;
+    engine_physics_circle_2d_node_class_obj_t *physics_circle_2d_node = physics_node_base->unique_data;
+    bool circle_outlined = mp_obj_get_int(physics_node_base->outline);
+
+    if(circle_outlined == false){
+        return;
+    }
+
+    engine_node_base_t *camera_node_base = camera_node;
+
+    vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
+    rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
+    float camera_zoom = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_zoom));
+
+    float circle_radius =  mp_obj_get_float(physics_circle_2d_node->radius);
+    
+
+    float camera_resolved_hierarchy_x = 0.0f;
+    float camera_resolved_hierarchy_y = 0.0f;
+    float camera_resolved_hierarchy_rotation = 0.0f;
+    node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
+    camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
+
+    float circle_resolved_hierarchy_x = 0.0f;
+    float circle_resolved_hierarchy_y = 0.0f;
+    float circle_resolved_hierarchy_rotation = 0.0f;
+    bool circle_is_child_of_camera = false;
+    node_base_get_child_absolute_xy(&circle_resolved_hierarchy_x, &circle_resolved_hierarchy_y, &circle_resolved_hierarchy_rotation, &circle_is_child_of_camera, circle_node_base);
+
+    // Store the non-rotated x and y for a second
+    float circle_rotated_x = circle_resolved_hierarchy_x-camera_resolved_hierarchy_x;
+    float circle_rotated_y = circle_resolved_hierarchy_y-camera_resolved_hierarchy_y;
+
+    if(circle_is_child_of_camera == false){
+        // Scale transformation due to camera zoom
+        engine_math_scale_point(&circle_rotated_x, &circle_rotated_y, camera_position->x.value, camera_position->y.value, camera_zoom);   
+    }else{
+        camera_zoom = 1.0f;
+    }
+
+    // The final circle radius to draw the circle at is a combination of
+    // the set radius, times the set scale, times the set camera zoom.
+    // Do this after determining if a child of a camera at any point
+    // since in that case zoom shouldn't have an effect
+    circle_radius = (circle_radius*camera_zoom);
+
+    // Rotate circle origin about the camera
+    engine_math_rotate_point(&circle_rotated_x, &circle_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
+
+    circle_rotated_x += camera_viewport->width/2;
+    circle_rotated_y += camera_viewport->height/2;
+
+    engine_draw_outline_circle(0xffff, floorf(circle_rotated_x), floorf(circle_rotated_y), circle_radius, 1.0f, &empty_shader);
+}
 
 
 mp_obj_t physics_circle_2d_node_class_del(mp_obj_t self_in){
@@ -191,6 +249,7 @@ STATIC mp_attr_fun_t physics_circle_2d_node_class_attr(mp_obj_t self_in, qstr at
     PARAM: [type=boolean]                                [name=dynamic]                  [value=True or False]
     PARAM: [type=boolean]                                [name=solid]                    [value=True or False]
     PARAM: [type={ref_link:Vector2}]                     [name=gravity_scale]            [value={ref_link:Vector2}]
+    PARAM: [type=boolean]                                [name=outline]                  [value=True or False (default: False)]
     ATTR:  [type=function]                               [name={ref_link:add_child}]     [value=function]
     ATTR:  [type=function]                               [name={ref_link:get_child}]     [value=function] 
     ATTR:  [type=function]                               [name={ref_link:remove_child}]  [value=function]
@@ -207,6 +266,7 @@ STATIC mp_attr_fun_t physics_circle_2d_node_class_attr(mp_obj_t self_in, qstr at
     ATTR:  [type=boolean]                                [name=dynamic]                  [value=True or False]
     ATTR:  [type=boolean]                                [name=solid]                    [value=True or False]
     ATTR:  [type={ref_link:Vector2}]                     [name=gravity_scale]            [value={ref_link:Vector2}]
+    ATTR:  [type=boolean]                                [name=outline]                  [value=True or False (default: False)]
     OVRR:  [type=function]                               [name={ref_link:tick}]          [value=function]
 */
 mp_obj_t physics_circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
@@ -225,9 +285,10 @@ mp_obj_t physics_circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_ar
         { MP_QSTR_dynamic,          MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_solid,            MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_gravity_scale,    MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_outline,          MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
-    enum arg_ids {child_class, position, radius, velocity, angular_velocity, rotation, density, friction, bounciness, dynamic, solid, gravity_scale};
+    enum arg_ids {child_class, position, radius, velocity, angular_velocity, rotation, density, friction, bounciness, dynamic, solid, gravity_scale, outline};
     bool inherited = false;
 
     // If there is one positional argument and it isn't the first 
@@ -258,6 +319,7 @@ mp_obj_t physics_circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_ar
     if(parsed_args[dynamic].u_obj == MP_OBJ_NULL) parsed_args[dynamic].u_obj = mp_obj_new_int(1);
     if(parsed_args[solid].u_obj == MP_OBJ_NULL) parsed_args[solid].u_obj = mp_obj_new_int(1);
     if(parsed_args[gravity_scale].u_obj == MP_OBJ_NULL) parsed_args[gravity_scale].u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)});
+    if(parsed_args[outline].u_obj == MP_OBJ_NULL) parsed_args[outline].u_obj = mp_obj_new_int(0);
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);
@@ -282,6 +344,8 @@ mp_obj_t physics_circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_ar
     physics_node_base->dynamic = parsed_args[dynamic].u_obj;
     physics_node_base->solid = parsed_args[solid].u_obj;
     physics_node_base->gravity_scale = parsed_args[gravity_scale].u_obj;
+    physics_node_base->outline = parsed_args[outline].u_obj;
+
     physics_node_base->physics_id = engine_physics_ids_take_available();
     physics_node_base->mass = 0.0f;
     physics_node_base->total_position_correction_x = 0.0f;

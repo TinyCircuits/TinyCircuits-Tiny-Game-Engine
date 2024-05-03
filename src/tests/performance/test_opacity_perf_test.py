@@ -68,7 +68,7 @@ class MyCam(CameraNode):
     def __init__(self):
         super().__init__(self)
     
-    def tick(self):
+    def tick(self, dt):
         if engine_input.check_pressed(engine_input.A):
             self.zoom -= 0.005
         if engine_input.check_pressed(engine_input.B):

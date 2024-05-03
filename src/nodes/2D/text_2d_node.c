@@ -297,6 +297,8 @@ STATIC mp_attr_fun_t text_2d_node_class_attr(mp_obj_t self_in, qstr attribute, m
     PARAM:  [type=float]                      [name=rotation]                   [value=any (radians)]
     PARAM:  [type={ref_link:Vector2}]         [name=scale]                      [value={ref_link:Vector2}]
     PARAM:  [type=float]                      [name=opacity]                    [value=0 ~ 1.0]
+    PARAM:  [type=float]                      [name=letter_spacing]             [value=any]
+    PARAM:  [type=float]                      [name=line_spacing]               [value=any]
     ATTR:   [type=function]                   [name={ref_link:add_child}]       [value=function] 
     ATTR:   [type=function]                   [name={ref_link:get_child}]       [value=function] 
     ATTR:   [type=function]                   [name={ref_link:remove_child}]    [value=function]

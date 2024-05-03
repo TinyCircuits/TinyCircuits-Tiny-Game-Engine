@@ -80,6 +80,11 @@ uint16_t engine_input_get_gui_toggle_button(){
 }
 
 
+uint16_t engine_input_reset_gui_toggle_button(){
+    gui_toggle_button = BUTTON_MENU;
+}
+
+
 /*  --- doc ---
     NAME: check_pressed
     ID: check_pressed

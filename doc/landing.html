@@ -131,7 +131,7 @@ class Player(Sprite2DNode):
         self.transparent_color = engine_draw.black
     
     # Define a callback that the engine will invoke every game tick
-    def tick(self):
+    def tick(self, dt):
         # NOTE: Game coordinate system is -y = to top of screen, +y = to bottom of screen
         if engine_input.check_pressed(engine_input.DPAD_UP):
             self.position.y -= 1

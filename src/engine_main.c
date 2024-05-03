@@ -11,6 +11,7 @@
 #include "display/engine_display_common.h"
 #include "physics/engine_physics.h"
 #include "animation/engine_animation_module.h"
+#include "engine_gui.h"
 
 #if defined(__arm__)
     #include "hardware/adc.h"
@@ -38,6 +39,7 @@ void engine_main_reset(){
     // Reset contigious flash space manager
     engine_audio_stop_all();
     engine_resource_reset();
+    engine_gui_reset();
 
     engine_objects_clear_all();
 

@@ -8,6 +8,13 @@ from engine_resources import TextureResource
 import math
 
 
+class AnimatedJumpingSprite(Sprite2DNode):
+    def __init__(self, texture):
+        super().__init__(self)
+        self.texture = texture
+        self.time = 0
+
+
 background = Color(0.647, 0.612, 0.808)
 engine_draw.set_background_color(background)
 
@@ -17,7 +24,7 @@ gear_sprite.position.x = 32
 gear_sprite.position.y = 32
 
 dpad_direction_texture = TextureResource("dpad_direction.bmp")
-dpad_direction = Sprite2DNode(texture=dpad_direction_texture)
+dpad_direction = AnimatedJumpingSprite(dpad_direction_texture)
 
 texture = TextureResource("thumby_color.bmp")
 sprite = Sprite2DNode(texture=texture, rotation=math.pi/6)
@@ -28,5 +35,5 @@ camera = CameraNode()
 
 # engine.start()
 while True:
-    print(engine.get_running_fps())
+    # print(engine.get_running_fps())
     engine.tick()

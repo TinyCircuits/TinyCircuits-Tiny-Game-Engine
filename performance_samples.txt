@@ -642,3 +642,19 @@ vox_node_perf_test.py, avg. FPS: 36.73388
 
 
 
+2024-05-02 14:12:53.301403 : aacd23b8d1909756c6eaa0a392fb8858d0fd7b31
+Add dt to all tick callbacks (breaking change that should be done now)
+
+{
+line_node_perf_test.py, avg. FPS: 239.2818
+test_opacity_perf_test.py, avg. FPS: 86.85848
+test_perf_test.py, avg. FPS: 107.0848
+circle_node_perf_test.py, avg. FPS: 241.2816
+vox_node_perf_test.py, avg. FPS: 36.76242
+}
+
+
+ ----- 
+
+
+

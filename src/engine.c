@@ -194,7 +194,7 @@ STATIC mp_obj_t engine_tick(){
     // to end
     mp_handle_pending(false);
 
-    // If there's an exception, make sure the engine loop ends (reset happens on `engine` import)
+    // If there's an exception, make sure the engine loop ends (reset happens on `engine_main` import)
     if(MP_STATE_THREAD(mp_pending_exception) != MP_OBJ_NULL){
         engine_end();
     }
