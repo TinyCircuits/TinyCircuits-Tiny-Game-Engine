@@ -3,6 +3,7 @@
 #include "nodes/node_types.h"
 #include "debug/debug_print.h"
 #include "engine_object_layers.h"
+#include "nodes/3D/camera_node.h"
 #include "math/vector2.h"
 #include "math/vector3.h"
 #include "math/rectangle.h"
@@ -24,10 +25,11 @@ void circle_2d_node_class_draw(engine_node_base_t *circle_node_base, mp_obj_t ca
     }
 
     engine_node_base_t *camera_node_base = camera_node;
+    engine_camera_node_class_obj_t *camera = camera_node_base->node;
 
-    vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
-    rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
-    float camera_zoom = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_zoom));
+    vector3_class_obj_t *camera_position = camera->position;
+    rectangle_class_obj_t *camera_viewport = camera->viewport;
+    float camera_zoom = mp_obj_get_float(camera->zoom);
 
     float circle_scale =  mp_obj_get_float(circle_2d_node->scale);
     float circle_radius =  mp_obj_get_float(circle_2d_node->radius);

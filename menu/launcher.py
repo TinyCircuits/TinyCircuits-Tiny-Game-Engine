@@ -123,14 +123,22 @@ class LauncherTile(GUIBitmapButton2DNode):
             engine.end()
             
     def set_opacity(self, opacity):
-        self.opacity = opacity
-        self.icon_sprite.opacity = opacity
+        pass
+        # self.opacity = opacity
+        # self.icon_sprite.opacity = opacity
     
     def set_scale(self, scale):
-        self.scale.x = scale
-        self.scale.y = scale
-        self.icon_sprite.scale.x = scale
-        self.icon_sprite.scale.y = scale
+        pass
+        # self.scale.x = scale
+        # self.scale.y = scale
+        # self.icon_sprite.scale.x = scale
+        # self.icon_sprite.scale.y = scale
+    
+    def set_icon_texture(self, texture):
+        self.icon_sprite.texture = texture
+        self.icon_sprite.scale.x = (texture.width/self.bitmap.width) + 0.05
+        self.icon_sprite.scale.y = (texture.height/self.bitmap.height) + 0.05
+
 
 camera = CameraNode()
 
@@ -267,7 +275,7 @@ for game_info in game_infos:
     tile.game_info = game_info
 
     if(game_info.game_icon_path != None):
-        tile.icon_sprite.texture = TextureResource(game_info.game_icon_path)
+        tile.set_icon_texture(TextureResource(game_info.game_icon_path))
 
     index += 1
 

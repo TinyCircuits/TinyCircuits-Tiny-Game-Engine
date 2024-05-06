@@ -13,6 +13,8 @@ class AnimatedJumpingSprite(Sprite2DNode):
         super().__init__(self)
         self.texture = texture
         self.time = 0
+        self.scale.x = 0.6
+        self.scale.y = 0.6
 
 
 background = Color(0.647, 0.612, 0.808)

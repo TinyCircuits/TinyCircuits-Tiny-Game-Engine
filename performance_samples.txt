@@ -674,3 +674,19 @@ vox_node_perf_test.py, avg. FPS: 36.75231
 
 
 
+2024-05-03 16:24:22.379564 : 1cebbe818a5795a79641cc1e6a041dd77a7f6ed5
+Fix build_and_run script to use run.py
+
+{
+line_node_perf_test.py, avg. FPS: 239.1136
+test_opacity_perf_test.py, avg. FPS: 87.90957
+test_perf_test.py, avg. FPS: 110.4833
+circle_node_perf_test.py, avg. FPS: 241.3388
+vox_node_perf_test.py, avg. FPS: 36.19683
+}
+
+
+ ----- 
+
+
+

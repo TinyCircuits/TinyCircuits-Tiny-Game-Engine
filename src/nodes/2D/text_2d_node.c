@@ -5,6 +5,7 @@
 #include "nodes/node_types.h"
 #include "debug/debug_print.h"
 #include "engine_object_layers.h"
+#include "nodes/3D/camera_node.h"
 #include "math/vector2.h"
 #include "math/vector3.h"
 #include "math/rectangle.h"
@@ -27,8 +28,6 @@ void text_2d_node_class_draw(engine_node_base_t *text_2d_node_base, mp_obj_t cam
         return mp_const_none;
     }
 
-    engine_node_base_t *camera_node_base = camera_node;
-
     vector2_class_obj_t *text_scale =  text_2d_node->scale;
     float text_opacity = mp_obj_get_float(text_2d_node->opacity);
 
@@ -40,9 +39,12 @@ void text_2d_node_class_draw(engine_node_base_t *text_2d_node_base, mp_obj_t cam
     float text_box_width = mp_obj_get_float(text_2d_node->width);
     float text_box_height = mp_obj_get_float(text_2d_node->height);
 
-    vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
-    rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
-    float camera_zoom = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_zoom));
+    engine_node_base_t *camera_node_base = camera_node;
+    engine_camera_node_class_obj_t *camera = camera_node_base->node;
+
+    vector3_class_obj_t *camera_position = camera->position;
+    rectangle_class_obj_t *camera_viewport = camera->viewport;
+    float camera_zoom = mp_obj_get_float(camera->zoom);
 
     float text_resolved_hierarchy_x = 0.0f;
     float text_resolved_hierarchy_y = 0.0f;

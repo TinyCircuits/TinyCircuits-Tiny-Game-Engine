@@ -4,6 +4,7 @@
 #include "py/objtype.h"
 #include "nodes/node_types.h"
 #include "nodes/2D/text_2d_node.h"
+#include "nodes/3D/camera_node.h"
 #include "debug/debug_print.h"
 #include "engine_object_layers.h"
 #include "math/vector3.h"
@@ -32,10 +33,11 @@ void gui_bitmap_button_2d_node_class_draw(engine_node_base_t *button_node_base, 
 
     if(button->bitmap_texture != mp_const_none && button->text != mp_const_none && button->font_resource != mp_const_none){
         engine_node_base_t *camera_node_base = camera_node;
+        engine_camera_node_class_obj_t *camera = camera_node_base->node;
 
-        vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
-        rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
-        float camera_zoom = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_zoom));
+        vector3_class_obj_t *camera_position = camera->position;
+        rectangle_class_obj_t *camera_viewport = camera->viewport;
+        float camera_zoom = mp_obj_get_float(camera->zoom);
 
         float button_resolved_hierarchy_x = 0.0f;
         float button_resolved_hierarchy_y = 0.0f;

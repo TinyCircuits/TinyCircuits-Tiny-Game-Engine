@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-uint16_t *depth_buffer;;
+uint16_t *depth_buffer;
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 128
 
