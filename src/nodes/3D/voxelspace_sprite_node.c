@@ -4,6 +4,7 @@
 #include "nodes/node_types.h"
 #include "debug/debug_print.h"
 #include "engine_object_layers.h"
+#include "nodes/3D/camera_node.h"
 #include "math/vector2.h"
 #include "math/vector3.h"
 #include "math/rectangle.h"
@@ -21,6 +22,8 @@ void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_
     ENGINE_INFO_PRINTF("VoxelSpaceSpriteNode: Drawing");
 
     engine_node_base_t *camera_node_base = camera_node;
+    engine_camera_node_class_obj_t *camera = camera_node_base->node;
+
     engine_voxelspace_sprite_node_class_obj_t *voxelspace_sprite_node = sprite_node_base->node;
 
     // Avoid drawing or doing anything if opacity is zero
@@ -40,12 +43,12 @@ void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_
     bool sprite_fov_distort = mp_obj_get_int(voxelspace_sprite_node->fov_distort);
     vector2_class_obj_t *sprite_texture_offset =  voxelspace_sprite_node->texture_offset;
 
-    vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
-    vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
-    rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
-    float camera_zoom = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_zoom));
-    float camera_fov_half = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_fov)) * 0.5f;
-    float view_distance = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_view_distance));
+    vector3_class_obj_t *camera_position = camera->position;
+    vector3_class_obj_t *camera_rotation = camera->rotation;
+    rectangle_class_obj_t *camera_viewport = camera->viewport;
+    float camera_zoom = mp_obj_get_float(camera->zoom);
+    float camera_fov_half = mp_obj_get_float(camera->fov) * 0.5f;
+    float view_distance = mp_obj_get_float(camera->view_distance);
 
     uint16_t sprite_frame_count_x = mp_obj_get_int(voxelspace_sprite_node->frame_count_x);
     uint16_t sprite_frame_count_y = mp_obj_get_int(voxelspace_sprite_node->frame_count_y);

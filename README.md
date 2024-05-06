@@ -97,6 +97,11 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 
 [.] When the FOV of the camera is changed, the sprites should get wider: messed with this, could use some work
 
+
+[] Tones need duration
+[] RTTTL Music implementation
+
+
 [] Add option for fog, fog start, and fog color on voxelspace nodes
 
 [] Rotation of the sprites should be taken into account for voxelspace
@@ -114,8 +119,6 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [] Saving a game should be as easy as engine.save() to generate representations of all objects that can then be initialized again from flash (if possible)
 
 [] Games should have at least 2MB of flash scratch space but maybe that can be configurable per game. Some games may like to use a lot and an error could let the user know they need to allow for more space
-[] Tones need duration
-[] RTTTL Music implementation
 [] Figure out how to draw voxelspace at any angle
 [] Should everything the engine allocates be manually de-allocated? Nodes are like this now but what about Vector2, Vector3, and resources? The GC should get them at some
    point and they aren't drawn the screen, they just take up RAM so maybe not the end of the world to leave it for the GC to collect later

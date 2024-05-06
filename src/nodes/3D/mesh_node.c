@@ -5,6 +5,7 @@
 #include "nodes/node_types.h"
 #include "debug/debug_print.h"
 #include "engine_object_layers.h"
+#include "nodes/3D/camera_node.h"
 #include "math/vector3.h"
 #include "math/rectangle.h"
 #include "draw/engine_display_draw.h"
@@ -24,9 +25,11 @@
 
 void mesh_node_class_draw(engine_node_base_t *mesh_node_base, mp_obj_t camera_node){
     engine_mesh_node_class_obj_t *mesh_node = mesh_node_base->node;
-    engine_node_base_t *camera_node_base = camera_node;
 
-    vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
+    engine_node_base_t *camera_node_base = camera_node;
+    engine_camera_node_class_obj_t *camera = camera_node_base->node;
+
+    vector3_class_obj_t *camera_position = camera->position;
 
     vec3 cam_position = {camera_position->x.value, camera_position->y.value, camera_position->z.value};
     vec3 cam_target = GLM_VEC3_ZERO_INIT;

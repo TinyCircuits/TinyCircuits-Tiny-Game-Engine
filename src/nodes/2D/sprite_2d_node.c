@@ -3,6 +3,7 @@
 #include "nodes/node_types.h"
 #include "debug/debug_print.h"
 #include "engine_object_layers.h"
+#include "nodes/3D/camera_node.h"
 #include "math/vector2.h"
 #include "math/vector3.h"
 #include "math/rectangle.h"
@@ -19,6 +20,8 @@ void sprite_2d_node_class_draw(engine_node_base_t *sprite_node_base, mp_obj_t ca
     ENGINE_INFO_PRINTF("Sprite2DNode: Drawing");
 
     engine_node_base_t *camera_node_base = camera_node;
+    engine_camera_node_class_obj_t *camera = camera_node_base->node;
+
     engine_sprite_2d_node_class_obj_t *sprite_2d_node = sprite_node_base->node;
 
     // Avoid drawing or doing anything if opacity is zero
@@ -34,9 +37,9 @@ void sprite_2d_node_class_draw(engine_node_base_t *sprite_node_base, mp_obj_t ca
     texture_resource_class_obj_t *sprite_texture = sprite_2d_node->texture_resource;
     vector2_class_obj_t *sprite_scale =  sprite_2d_node->scale;
 
-    vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
-    rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
-    float camera_zoom = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_zoom));
+    vector3_class_obj_t *camera_position = camera->position;
+    rectangle_class_obj_t *camera_viewport = camera->viewport;
+    float camera_zoom = mp_obj_get_float(camera->zoom);
 
     uint16_t sprite_frame_count_x = mp_obj_get_int(sprite_2d_node->frame_count_x);
     uint16_t sprite_frame_count_y = mp_obj_get_int(sprite_2d_node->frame_count_y);

@@ -3,6 +3,7 @@
 #include "nodes/node_types.h"
 #include "debug/debug_print.h"
 #include "engine_object_layers.h"
+#include "nodes/3D/camera_node.h"
 #include "math/vector3.h"
 #include "math/engine_math.h"
 #include "utility/linked_list.h"
@@ -24,8 +25,9 @@ const float perspective_factor = 1.0f / SCREEN_HEIGHT_HALF;
 void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("VoxelSpaceNode: Drawing");
 
-    // engine_voxelspace_node_common_data_t *common_data = voxelspace_node_base->node_common_data;
     engine_node_base_t *camera_node_base = camera_node;
+    engine_camera_node_class_obj_t *camera = camera_node_base->node;
+
     engine_voxelspace_node_class_obj_t *voxelspace_node = voxelspace_node_base->node;
 
     texture_resource_class_obj_t *texture = voxelspace_node->texture_resource;
@@ -40,10 +42,10 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
     float curvature_angle = mp_obj_get_float(voxelspace_node->curvature);
     float thickness = mp_obj_get_float(voxelspace_node->thickness);
 
-    vector3_class_obj_t *camera_rotation = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_rotation);
-    vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
-    float camera_fov_half = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_fov)) * 0.5f;
-    float camera_view_distance = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_view_distance));
+    vector3_class_obj_t *camera_rotation = camera->rotation;
+    vector3_class_obj_t *camera_position = camera->position;
+    float camera_fov_half = mp_obj_get_float(camera->fov) * 0.5f;
+    float camera_view_distance = mp_obj_get_float(camera->view_distance);
 
     // memset(height_buffer, SCREEN_HEIGHT, SCREEN_WIDTH*2);
     for(uint16_t i=0; i<SCREEN_WIDTH; i++){

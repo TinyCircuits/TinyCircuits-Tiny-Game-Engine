@@ -5,6 +5,7 @@
 #include "nodes/node_types.h"
 #include "debug/debug_print.h"
 #include "engine_object_layers.h"
+#include "nodes/3D/camera_node.h"
 #include "math/vector3.h"
 #include "math/rectangle.h"
 #include "draw/engine_display_draw.h"
@@ -25,6 +26,7 @@ void line_2d_node_class_draw(engine_node_base_t *line_node_base, mp_obj_t camera
     }
 
     engine_node_base_t *camera_node_base = camera_node;
+    engine_camera_node_class_obj_t *camera = camera_node_base->node;
 
     vector2_class_obj_t *line_start = line_2d->start;
     vector2_class_obj_t *line_end = line_2d->end;
@@ -36,9 +38,9 @@ void line_2d_node_class_draw(engine_node_base_t *line_node_base, mp_obj_t camera
     float line_length = engine_math_distance_between(line_start->x.value, line_start->y.value, line_end->x.value, line_end->y.value);
     
     // Grab camera
-    vector3_class_obj_t *camera_position = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_position);
-    rectangle_class_obj_t *camera_viewport = mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_viewport);
-    float camera_zoom = mp_obj_get_float(mp_load_attr(camera_node_base->attr_accessor, MP_QSTR_zoom));
+    vector3_class_obj_t *camera_position = camera->position;
+    rectangle_class_obj_t *camera_viewport = camera->viewport;
+    float camera_zoom = mp_obj_get_float(camera->zoom);
 
     // Get line transformation if it is a child
     float line_resolved_hierarchy_x = 0.0f;
