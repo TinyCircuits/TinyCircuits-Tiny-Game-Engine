@@ -22,9 +22,11 @@
         <a href="build/engine_debug.html">engine_debug</a><br>
         <a href="build/engine_animation.html">engine_animation</a><br>
         
+
         <br>
         <hr>
         <br>
+
 
         <h>
             WARNING: It is not recommended to save files to Thumby Color. Make sure everything is saved to a computer, opened in Thonny, and then the green run/play button (explained later) is used to upload and run the script. Assets need to be saved/uploaded to the device, make sure those are also backed up on a computer.
@@ -159,8 +161,46 @@ engine.start()
         <hr>
         <br>
 
+        
         <h3>Version History:</h3>
         <h>02-26-2024: Updated firmware to hopefully allow for pressing the green run button multiple times <b>without</b> turning off and on</h>
+
+
+        <br>
+        <hr>
+        <br>
+
+
+        <h3>Launcher Folder Structure:</h3>
+        <h>
+            <b>Minimal example</b>:
+            <br> <code>- /Games/mygame</code>
+            <br> <code>- /Games/mygame/main.py</code>
+            <br> The game doesn't have to exist in <code>/Games</code>, it could just exist in <code>/mygame</code> and it would still be found. It's only required that a <code>main.py</code> exist for a game to launchable. This type of format will show up with a question mark as the icon and the folder name as the game name.
+
+            <br>
+            <br>
+
+            <b>Minimal example with icon</b>:
+            <br> <code>- /Games/mygame</code>
+            <br> <code>- /Games/mygame/main.py</code>
+            <br> <code>- /Games/mygame/icon.bmp</code>
+            <br> Instead of a question mark, the game will show up with <code>icon.bmp</code> as the icon. For now, the only supported resolution is 64x64.
+
+            <br>
+            <br>
+
+            <b>Full example</b>:
+            <br> <code>- /Games/mygame</code>
+            <br> <code>- /Games/mygame/game.py</code>
+            <br> <code>- /Games/mygame/game_icon.bmp</code>
+            <br> <code>- /Games/mygame/game_settings.ini</code>
+            <br> In this example, the names of all the assets doesn't matter. The only file that needs to exist is one ending with <code>.ini</code>. Inside the <code>.ini</code> the following lines can be defined to point to each file:
+            <br> <code>* main=game.py</code>
+            <br> <code>* name=AnyNameIWant</code>
+            <br> <code>* icon=game_icon.bmp</code>
+        </h>
+
 
 
     </body>

@@ -165,7 +165,7 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
             altitude += camera_position->y.value;                       // Apply camera view translation
 
             // Use camera_rotation for on x-axis for pitch (head going in up/down in 'yes' motion)
-            int16_t height_on_screen = ((64.0f + (altitude / perspective)) + view_angle) + curvature + skew_roll_offset;
+            int16_t height_on_screen = ((SCREEN_HEIGHT_HALF + (altitude / perspective)) + view_angle) + curvature + skew_roll_offset;
             skew_roll_offset += skew_roll_line_dy;
 
             int16_t ipx = height_on_screen;

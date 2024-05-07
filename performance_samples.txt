@@ -706,3 +706,19 @@ vox_node_perf_test.py, avg. FPS: 36.72353
 
 
 
+2024-05-06 17:20:57.592171 : ee60e2378997c9de1fad8611bf1eea7bd9ab9bc0
+When drawing nodes, use camera struct directly instead of looking up attrs
+
+{
+line_node_perf_test.py, avg. FPS: 239.1137
+test_opacity_perf_test.py, avg. FPS: 88.41113
+test_perf_test.py, avg. FPS: 109.5576
+circle_node_perf_test.py, avg. FPS: 241.5063
+vox_node_perf_test.py, avg. FPS: 36.64981
+}
+
+
+ ----- 
+
+
+

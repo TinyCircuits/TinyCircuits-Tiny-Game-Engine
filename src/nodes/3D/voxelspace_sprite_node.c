@@ -214,7 +214,7 @@ void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_
 
     // Figure out the y on screen
     float altitude = -sprite_position->y.value + camera_position->y.value;
-    int16_t height_on_screen = (64.0f + (altitude * inverse_perspective)) + view_angle;
+    int16_t height_on_screen = (SCREEN_HEIGHT_HALF + (altitude * inverse_perspective)) + view_angle;
 
     // Apply x and y
     sprite_rotated_x += (sprite_texture_offset->x.value * scale_x);
