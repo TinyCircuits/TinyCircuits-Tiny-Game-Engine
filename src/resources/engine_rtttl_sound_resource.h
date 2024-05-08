@@ -8,6 +8,16 @@
 typedef struct{
     mp_obj_base_t base;
     audio_channel_class_obj_t *channel;
+    mp_obj_t tone;
+    uint8_t *data;
+    uint32_t data_size;
+    uint32_t cursor;
+
+    uint8_t default_d;
+    uint8_t default_o;
+    uint16_t b;
+    float seconds_per_beat;
+    float seconds_since_beat;
 }rtttl_sound_resource_class_obj_t;
 
 extern const mp_obj_type_t rtttl_sound_resource_class_type;

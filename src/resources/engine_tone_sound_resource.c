@@ -59,6 +59,19 @@ mp_obj_t tone_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
 }
 
 
+void tone_sound_resource_set_frequency(tone_sound_resource_class_obj_t *self, float frequency){
+    if(self->channel == NULL){
+        self->frequency = frequency;
+        self->omega = 2.0f * PI * self->frequency;
+        self->next_frequency_ready = false;
+    }else{
+        self->next_frequency = frequency;
+        self->next_omega = 2.0f * PI * self->next_frequency;
+        self->next_frequency_ready = true;
+    }
+}
+
+
 // Class methods
 STATIC mp_obj_t tone_sound_resource_class_del(mp_obj_t self_in){
     ENGINE_INFO_PRINTF("ToneSoundResource: Deleted (freeing sound data)");
@@ -105,15 +118,7 @@ STATIC void tone_sound_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_
         switch(attribute){
             case MP_QSTR_frequency:
             {
-                if(self->channel == NULL){
-                    self->frequency = mp_obj_get_float(destination[1]);
-                    self->omega = 2.0f * PI * self->frequency;
-                    self->next_frequency_ready = false;
-                }else{
-                    self->next_frequency = mp_obj_get_float(destination[1]);
-                    self->next_omega = 2.0f * PI * self->next_frequency;
-                    self->next_frequency_ready = true;
-                }
+                tone_sound_resource_set_frequency(self, mp_obj_get_float(destination[1]));
             }
             break;
             default:

@@ -8,6 +8,7 @@
 #include "resources/engine_sound_resource_base.h"
 #include "resources/engine_wave_sound_resource.h"
 #include "resources/engine_tone_sound_resource.h"
+#include "resources/engine_rtttl_sound_resource.h"
 
 
 mp_obj_t audio_channel_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
@@ -109,8 +110,10 @@ mp_obj_t audio_channel_stop(mp_obj_t self_in){
     if(channel->source != NULL){
         if(mp_obj_is_type(channel->source, &wave_sound_resource_class_type)){
             ((sound_resource_base_class_obj_t*)channel->source)->channel = NULL;
-        }else{
+        }else if(mp_obj_is_type(channel->source, &tone_sound_resource_class_type)){
             ((tone_sound_resource_class_obj_t*)channel->source)->channel = NULL;
+        }else if(mp_obj_is_type(channel->source, &rtttl_sound_resource_class_type)){
+            ((rtttl_sound_resource_class_obj_t*)channel->source)->channel = NULL;
         }
     }
 

@@ -19,9 +19,9 @@ game_path_to_execute = None
 
 engine.set_fps_limit(60)
 
-font = FontResource("outrunner_outline.bmp")
-launcher_tile_texture = TextureResource("launcher-tile.bmp")
-launcher_tile_mark_texture = TextureResource("launcher-tile-mark.bmp")
+font = FontResource("/launcher/outrunner_outline.bmp")
+launcher_tile_texture = TextureResource("/launcher/launcher-tile.bmp")
+launcher_tile_mark_texture = TextureResource("/launcher/launcher-tile-mark.bmp")
 
 
 class BatteryIndicator(Sprite2DNode):
@@ -278,7 +278,6 @@ for game_info in game_infos:
         tile.set_icon_texture(TextureResource(game_info.game_icon_path))
 
     index += 1
-
 
 # Toggle the gui elements and do not let the user
 # toggle back out of it

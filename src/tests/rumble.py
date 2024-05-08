@@ -5,4 +5,6 @@ import engine_input
 
 engine_input.rumble(1.0)
 
-engine.start()
+while True:
+    print("TEST")
+    engine.tick()

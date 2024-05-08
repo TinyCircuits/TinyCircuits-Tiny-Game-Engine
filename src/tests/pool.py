@@ -115,9 +115,20 @@ class Ball(PhysicsCircle2DNode):
         percent = self.power / self.max_power
         self.power_indicator.set_percent(self.power / self.max_power)
         # self.stick.position.y = self.stick.height/2 + (25.4*12 * percent)
-            
 
-camera = CameraNode()
+
+class GameCamera(CameraNode):
+    def __init__(self):
+        super().__init__(self)
+    
+    def tick(self, dt):
+        if engine_input.check_pressed(engine_input.A):
+            self.zoom += 0.005
+        elif engine_input.check_pressed(engine_input.B):
+            self.zoom -= 0.005
+
+
+camera = GameCamera()
 camera.zoom = 0.045
 
 power_indicator = PowerIndicator()

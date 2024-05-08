@@ -4,6 +4,7 @@
 #include "resources/engine_sound_resource_base.h"
 #include "resources/engine_wave_sound_resource.h"
 #include "resources/engine_tone_sound_resource.h"
+#include "resources/engine_rtttl_sound_resource.h"
 #include "debug/debug_print.h"
 #include <stdlib.h>
 #include <string.h>
@@ -201,6 +202,11 @@ volatile float master_volume = 1.0f;
     }
 
 
+    float ENGINE_FAST_FUNCTION(get_rtttl_sample)(audio_channel_class_obj_t *channel){
+        return rtttl_sound_resource_get_sample(channel->source);
+    }
+
+
     // Samples each channel, adds, normalizes, and sets PWM
     void ENGINE_FAST_FUNCTION(repeating_audio_callback)(void){
         float total_sample = 0;
@@ -219,8 +225,10 @@ volatile float master_volume = 1.0f;
 
             if(mp_obj_is_type(channel->source, &wave_sound_resource_class_type)){
                 total_sample += get_wave_sample(channel);
-            }else{
+            }else if(mp_obj_is_type(channel->source, &tone_sound_resource_class_type)){
                 total_sample += get_tone_sample(channel);
+            }else if(mp_obj_is_type(channel->source, &rtttl_sound_resource_class_type)){
+                total_sample += get_rtttl_sample(channel);
             }
         }
         
@@ -325,15 +333,22 @@ void engine_audio_play_on_channel(mp_obj_t sound_resource_obj, audio_channel_cla
     // doesn't use it
     channel->busy = true;
 
-    if(mp_obj_is_type(channel->source, &wave_sound_resource_class_type)){
+    if(mp_obj_is_type(sound_resource_obj, &wave_sound_resource_class_type)){
         sound_resource_base_class_obj_t *source = sound_resource_obj;
 
         // Very important to set this link! The source needs access to the channel that
         // is playing it (if one is) so that it can remove itself from the linked channel's
         // source
         source->channel = channel;
-    }else{
+    }else if(mp_obj_is_type(sound_resource_obj, &tone_sound_resource_class_type)){
         tone_sound_resource_class_obj_t *source = sound_resource_obj;
+
+        // Very important to set this link! The source needs access to the channel that
+        // is playing it (if one is) so that it can remove itself from the linked channel's
+        // source
+        source->channel = channel;
+    }else if(mp_obj_is_type(sound_resource_obj, &rtttl_sound_resource_class_type)){
+        rtttl_sound_resource_class_obj_t *source = sound_resource_obj;
 
         // Very important to set this link! The source needs access to the channel that
         // is playing it (if one is) so that it can remove itself from the linked channel's

@@ -4,6 +4,7 @@
 #include "engine_tone_sound_resource.h"
 #include "engine_font_resource.h"
 #include "engine_noise_resource.h"
+#include "engine_rtttl_sound_resource.h"
 #include "engine_main.h"
 
 
@@ -31,6 +32,7 @@ STATIC const mp_rom_map_elem_t engine_resources_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_ToneSoundResource), (mp_obj_t)&tone_sound_resource_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_FontResource), (mp_obj_t)&font_resource_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_NoiseResource), (mp_obj_t)&noise_resource_class_type },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_RTTTLSoundResource), (mp_obj_t)&rtttl_sound_resource_class_type },
 };
 
 // Module init

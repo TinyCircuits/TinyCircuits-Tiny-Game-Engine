@@ -722,3 +722,19 @@ vox_node_perf_test.py, avg. FPS: 36.64981
 
 
 
+2024-05-07 11:55:21.337495 : ce968c2ae1a5a9efae84325ee53f20c75ad85cc3
+Document launcher folder format
+
+{
+line_node_perf_test.py, avg. FPS: 239.1137
+test_opacity_perf_test.py, avg. FPS: 90.03116
+test_perf_test.py, avg. FPS: 109.5577
+circle_node_perf_test.py, avg. FPS: 241.5067
+vox_node_perf_test.py, avg. FPS: 36.09865
+}
+
+
+ ----- 
+
+
+
