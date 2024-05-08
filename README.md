@@ -100,7 +100,7 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 
 [] Tones need duration
 [] RTTTL Music implementation
-
+[] Reset fps limit to disabled when the engine resets
 
 [] Add option for fog, fog start, and fog color on voxelspace nodes
 

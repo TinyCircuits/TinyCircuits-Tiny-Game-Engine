@@ -6,6 +6,7 @@ from engine_nodes import VoxelSpaceNode, CameraNode
 from engine_resources import TextureResource
 import math
 
+engine.disable_fps_limit()
 
 engine_draw.set_background_color(engine_draw.skyblue)
 

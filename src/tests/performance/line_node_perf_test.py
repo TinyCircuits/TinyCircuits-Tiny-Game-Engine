@@ -3,6 +3,8 @@ import engine_main
 import engine
 from engine_nodes import Line2DNode, CameraNode
 
+engine.disable_fps_limit()
+
 line = Line2DNode()
 
 camera = CameraNode()

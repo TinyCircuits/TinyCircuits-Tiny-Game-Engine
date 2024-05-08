@@ -110,6 +110,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_get_running_fps_obj, engine_get_running_fps);
    RETURN: None
 */
 STATIC mp_obj_t engine_reset(){
+    fps_limit_disabled = true;
     engine_main_reset();
     return mp_const_none;
 }

@@ -1,5 +1,6 @@
 import sys
 import os
+import time
 import shutil
 import string
 import psutil
@@ -57,7 +58,8 @@ elif os.path.isdir(clean_or_path_arg):
     files_to_run = os.listdir(clean_or_path_arg)
     print("Done copying folder contents tp ports/rp3/modules")
 elif os.path.isfile(clean_or_path_arg):
-    files_to_run.append(clean_or_path_arg)
+    files_to_run.append(clean_or_path_arg[clean_or_path_arg.rfind("/")+1:])
+    clean_or_path_arg = clean_or_path_arg[:clean_or_path_arg.rfind("/")+1]
     print("Done copying file to ports/rp3/modules")
 else:
     print("\n\nERROR: Argument was not `clean` or a valid path:", clean_or_path_arg, "\n")
@@ -76,11 +78,12 @@ print("Looking for serial port to reset...")
 for port, desc, hwid in sorted(serial.tools.list_ports.comports()):
     if("VID:PID=2E8A:0005" in hwid):
         print("Found serial port! Connecting...", desc)
-        ser = serial.Serial(port, 9600)
+        ser = serial.Serial(port, 115200)
 
         ser.write("\x03".encode("utf-8"))
         ser.write("import machine\r\n".encode("utf-8"))
         ser.write("machine.bootloader()\r\n".encode("utf-8"))
+        print(ser.read_all())
         ser.close()
 
         print("Connected and reset!\n")
@@ -102,39 +105,15 @@ while done == False:
 print("Found drive! " + mount)
 
 print("Copying firmware to device...")
-# shutil.copyfile("../../../ports/rp3/build-THUMBY_COLOR/firmware.uf2 ", mount + "/firmware.uf2")
 execute(['sudo', 'cp', '../../../ports/rp3/build-THUMBY_COLOR/firmware.uf2', mount + "/firmware.uf2"])
 print("SUCCESS: Copied firmware to device!\n")
-
-
-# ### Step 8: Now that the firmware was uploaded, run the frozen modules
-print("Finding and connecting to device to run files... ")
-device_port = None
-while device_port == None:
-    for port, desc, hwid in sorted(serial.tools.list_ports.comports()):
-        if("VID:PID=2E8A:0005" in hwid):
-            device_port = port
-            print("Found port!")
-
-
-print("Connecting to serial port...")
-ser = None
-while True:
-    try:
-        ser = serial.Serial(device_port, 115200, timeout=0.25)
-        print("Connected!")
-        break
-    except:
-        pass
-
-print("Starting to run frozen files...\n")
 
 fps_sample_strs = []
 
 for file in files_to_run:
     print("Running:", clean_or_path_arg + "/" + file)
 
-    output = subprocess.check_output(['python3', 'run.py', clean_or_path_arg + "/" + file]).decode("utf-8")
+    output = subprocess.check_output(['sudo', 'python3', 'run.py', clean_or_path_arg + "/" + file]).decode("utf-8")
     print(output)
 
     if "-[" in output:    

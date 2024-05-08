@@ -45,7 +45,7 @@ mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, si
 
     // Check header ID field
     if(bitmap_id != 19778){
-        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("TextureResource: BMP header ID field incorrect!"));
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("TextureResource: BMP header ID field incorrect! Not a BMP file or file doesn't exist!"));
     }
 
     if(bitmap_bits_per_pixel != 16){

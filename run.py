@@ -105,13 +105,16 @@ while ser == None:
         if("VID:PID=2E8A:0005" in hwid):
             print("Found serial port! Connecting...", desc)
             ser = serial.Serial(port, 115200)
+            print("Connected!")
             break
 
 # Stop running scripts
 write_str(ser, "\x03\x03")
 
-# Soft reset
-write_str(ser, "\x04")
+# # Soft reset
+# write_str(ser, "\x04")
+
+print("Reset!")
 
 # Replace string in command with real file name
 cmd = cmd.replace("file_path", file_name)

@@ -12,6 +12,7 @@ from engine_resources import TextureResource, WaveSoundResource, FontResource
 import math
 import gc
 
+engine.disable_fps_limit()
 
 
 line = Line2DNode(color=engine_draw.orange, start=Vector2(40, -15), end=Vector2(40, 15), thickness=1)

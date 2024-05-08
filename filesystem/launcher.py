@@ -9,6 +9,7 @@ from engine_nodes import Sprite2DNode, CameraNode, GUIBitmapButton2DNode, Text2D
 from engine_resources import TextureResource, FontResource
 from engine_animation import Tween, ONE_SHOT, EASE_BACK_OUT
 import os
+import sys
 import array
 
 import math
@@ -19,9 +20,9 @@ game_path_to_execute = None
 
 engine.set_fps_limit(60)
 
-font = FontResource("/launcher/outrunner_outline.bmp")
-launcher_tile_texture = TextureResource("/launcher/launcher-tile.bmp")
-launcher_tile_mark_texture = TextureResource("/launcher/launcher-tile-mark.bmp")
+font = FontResource("assets/outrunner_outline.bmp")
+launcher_tile_texture = TextureResource("assets/launcher-tile.bmp")
+launcher_tile_mark_texture = TextureResource("assets/launcher-tile-mark.bmp")
 
 
 class BatteryIndicator(Sprite2DNode):
@@ -287,4 +288,12 @@ engine_input.gui_toggle_button = None
 
 engine.start()
 
-execfile(game_path_to_execute)
+
+game_dir = game_path_to_execute[:game_path_to_execute.rfind("/")]
+game_file_name = game_path_to_execute[game_path_to_execute.rfind("/")+1:]
+
+# Change to game directory so that games can use
+# relative paths inside their folder to open files
+# then execute from that relative path
+os.chdir(game_dir)
+execfile(game_file_name)
