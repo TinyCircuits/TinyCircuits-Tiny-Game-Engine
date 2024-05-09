@@ -93,16 +93,20 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Make GUIBitmap2DButton for main menu
 [X] Fix VoxelSpace performance after last changes
 [X] Render voxel sprites with depth buffer
+[X] RTTTL Music implementation
+[X] Weird shaking on UNIX when line is a child of camera and the camera is rotating: should be fixed now, child nodes were still be translated by little bits
 [-] When the camera is 1 unit from the sprite, it should take up the sprite_height number of pixels: NO, they should be scaled and render at the same texel density as the terrain (done)
-
 [.] When the FOV of the camera is changed, the sprites should get wider: messed with this, could use some work
 
+[] Instead of focusing GUI nodes, make menu button bring up default menu to exit game
+
+[] Make physics independent of FPS
+
+[] Saving a game should be as easy as engine.save() to generate representations of all objects that can then be initialized again from flash (if possible)
+[] Saving games
 
 [] Tones need duration
-[] RTTTL Music implementation
 [] Reset fps limit to disabled when the engine resets
-
-[] Add option for fog, fog start, and fog color on voxelspace nodes
 
 [] Rotation of the sprites should be taken into account for voxelspace
 [] When the camera rotates and that shifts the terrain, should sprites also rotate a bit?
@@ -116,7 +120,6 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 
 [] Return something for width and height for GUIBitmap2DButton (what to do when the bitmap changes?)
 [] Decide on what text inside GUIBitmap2DButton should do (scale to unfocused, focused, and pressed bitmaps or not? Allow additional text scale to be set by the user)
-[] Saving a game should be as easy as engine.save() to generate representations of all objects that can then be initialized again from flash (if possible)
 
 [] Games should have at least 2MB of flash scratch space but maybe that can be configurable per game. Some games may like to use a lot and an error could let the user know they need to allow for more space
 [] Figure out how to draw voxelspace at any angle
@@ -150,7 +153,6 @@ X Menu?
 [] Use DMA to clear background screen buffer (that's not being drawn to) after it is sent out to the screen and the game loop is still running (chaining?): https://e2e.ti.com/support/microcontrollers/c2000-microcontrollers-group/c2000/f/c2000-microcontrollers-forum/509048/fast-way-to-zero-out-an-array/1848882#1848882
 [] Clear physics collision buffer bit collection using DMA: https://e2e.ti.com/support/microcontrollers/c2000-microcontrollers-group/c2000/f/c2000-microcontrollers-forum/509048/fast-way-to-zero-out-an-array/1848882#1848882
 [] Allow the user to somehow indicate they want to init certain aspects of the engine themselves. This way they can control memory a little better
-[] Weird shaking on UNIX when line is a child of camera and the camera is rotating
 [] With lots of sprites on screen and big background, drawing or rotating slows down when rotated 90 degrees into the big 128x128 texture
 [] Expose low level drawing functions through engine_draw
 [] Fix camera view ports not being taken into account when drawing. Defines offset and then clip. Need to think about how view ports should really work, offset and clip into destination buffer (camera destinations should be able to be set to other buffers other than screen buffer if want to render one camera to a texture and then the next camera renders that node with that texture (TV!))
@@ -160,7 +162,6 @@ X Menu?
 [.] Physics: just polygons, rotation (simple init for common shapes), no friction. Need to figure out what to do when physics collision shape is rotated, cache normals?
 [] Physics: smooth: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-core-engine--gamedev-7493t#:~:text=Here%20is%20a%20full%20example%3A
 [] Performance, we'll see how it goes
-[] Round end caps for Line2DNode
 [] Should the scale of a parent node affect the position and scales of child nodes? Sounds more useful. What about opacity? What about if a person doesn't want this to happen, should that even be supported?
 
 Game ideas
@@ -174,15 +175,6 @@ Game ideas
 
 [] Implement audio on unix (need to break up implementation of unix and rp3 audio)
 [] Need to revisit Audio to get it working on the other core and with dual DMA (sort of working now)
-[] Audio: since the playback timer is on the other core, the following needs to be taken care of
-         1.   When setting 'source', 'gain', or 'looping' on an audio channel from core0, make sure
-               core1 isn't also reading/setting those values
-         2. If an audio source (wave, tone) is collected, make sure the other core using that does not
-            crash. Maybe when a source is set, copy the source to the other core. When an attribute on
-            the source is changed, change the copy. When deleted, mark the copy for deletion on the other
-            core
-         3. Eventually, ToneSoundResource will be able to be regenerated. At that point each sound resource
-            accessed by the each core should be safely locked behind mutexes too.
 [] In the future, probably in a soft atomic API for the cases where a sound resource
    gets deleted on core0 and is still being used by core1. It would just be copies
    of the data that get switched out when assigned. Reading will just the one active copy
@@ -190,13 +182,11 @@ Game ideas
 [] Second core could be used to run draw functions while physics is run at the same time.
    Use a queue and block when full to run draw functions to make more room. Would help
    all games but especially those that only draw a small amount of nodes
-[] When core frequency is changed, wrap value of fractional PWM divisor needs to be adjusted
+[] When core frequency is changed, wrap value of fractional PWM divisor needs to be adjusted for audio
 [] Use voxelspace rotation to render the node? Might be too slow to do that for little gain
 [] Make voxelspace camera rotation->z correspond to line drawn at angle in radians. Make camera rotation->x correspond to radians (hard one)
-[] Change node/math class prints to white with no newline and always forced
 [] Need to make sure collision normals are correct. Seem to be the same for both objects sometimes (circle vs circle).
 [] Turns out that we should only need to do mp_load_attr once into internal struct for each node! During physics, modifying the x and y parameters of the pointers to positions from mp_load_attr really did modify the attrs! Could also just directly create and store then load in each init!!!!! See Reference commit for attr loading... commit and look at commented out lines in engine_physics.c related to storing attrs that's not needed!
-[] Test that collisions work correctly (at least the contact points) in each quad of the cord system
 [] Crash log file (what to do about time? Maybe just overwrite with latest crash info?)
 [] Start screen as early as possible and also make a bootloader that starts the screen too
 [] Implement file system operations for micropython webassembly
@@ -205,18 +195,14 @@ Game ideas
 [] Implement PhysicsShapes that are used by Physics2dNodes to define size and shape of collision box/polygon/circle
 [.] Figure out how to clear all linked lists at game startup, game end (engine.stop(), so repl is clean), and when wanted on the repl (engine.stop()). Added engine.stop and reset but still need to figure out game start and back to repl
 [] Make all drawing functions take in camera node and then rotate, offset, and clip based on position and viewport (write to buffer raw if camera is null)
-[] Expose enough drawing functions to be able to mimic Thumby games
 [] Write tests for all math, physics, and node functions
 [] Figure out physics timing, dt, gravity, and frequency for arm/rp2 and UNIX ports
 [] Look into MICROPY_MODULE_ATTR_DELEGATION
-[] To avoid mp_load_attr calls, at the start of the game loop collect all node attributes into some local structure then load the local structure back into the Micropython object (only really matters if inherited because of weird MicroPython attr storage for that case)
 [] Add options to give names to each node and then get nodes by name (gives list of nodes if more than one have the same name)
-[] Saving games
 [] Grid renderer (with offset and cell scale)
-[] Game format?
-[] Fast sin/cos/tan lookups to replace math functions (only need to be fast, not accurate)
 [] Tests for different configurations of child/parent relations (physics objects colliding with child physics objects, cameras are children of nodes, empty nodes without positions, etc.)
 [] Particle node that keeps track of a bunch of different particles and allows users to define velocity, direction, and duration
 [] If we went back to PIO DMA for SPI to the screen, could we do per-pixel operations are they are being sent out? Would PIO be flexible enough to support a very very simple shading language (most for changing pixel based on screen position)
 [] Listen to serial for commands like button inputs or stop
 [] Battery indicator and soft shutoff when close to minimum useful voltage
+[] Add option for fog, fog start, and fog color on voxelspace nodes

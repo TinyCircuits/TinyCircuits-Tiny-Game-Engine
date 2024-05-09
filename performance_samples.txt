@@ -786,3 +786,19 @@ vox_node_perf_test.py, avg. FPS: 36.04927
 
 
 
+2024-05-09 12:18:37.178099 : 0ecb42b4c1315d82fe811a0541adb6ebb808c0d0
+Got RTTTL playback work pretty much correctly
+
+{
+line_node_perf_test.py, avg. FPS: 239.2804
+test_opacity_perf_test.py, avg. FPS: 90.27954
+test_perf_test.py, avg. FPS: 111.7798
+circle_node_perf_test.py, avg. FPS: 241.5067
+vox_node_perf_test.py, avg. FPS: 36.65404
+}
+
+
+ ----- 
+
+
+
