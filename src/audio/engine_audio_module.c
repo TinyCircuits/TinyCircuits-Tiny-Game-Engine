@@ -235,7 +235,7 @@ volatile float master_volume = 1.0f;
         if(play_sample){
             // Up to the user to make sure all playing channels do not add up and
             // go out of -1.0 ~ 1.0 range. First clamp the total sample sum since
-            // very likely it could end of out of bounds and then map to PWM levels
+            // very likely it could end of out of bounds, and then map to PWM levels
             // NOTE: Set PWM wrap to 512 levels so it will use values from 0 to 511
             total_sample = engine_math_clamp(total_sample, -1.0f, 1.0f);
             total_sample = engine_math_map(total_sample, -1.0f, 1.0f, 0.0f, 511.0f);

@@ -144,4 +144,16 @@ ball = Ball(power_indicator)
 ball.add_child(camera)
 
 
+balls = []
+x = ball_dia_mm/2 - ball_dia_mm - ball_dia_mm/2 - 2
+
+for i in range(5):
+    b = PhysicsCircle2DNode()
+    b.outline = True
+    b.radius = ball_dia_mm/2
+    b.position.x = x
+    x += ball_dia_mm + 1
+    balls.append(b)
+
+
 engine.start()

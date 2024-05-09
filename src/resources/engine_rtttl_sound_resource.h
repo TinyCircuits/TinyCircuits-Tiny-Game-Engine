@@ -18,6 +18,10 @@ typedef struct{
     uint16_t b;
     float seconds_per_beat;
     float seconds_since_beat;
+
+    uint8_t note_beat_duration;     // Duration, in beats, of the current note
+    uint8_t note_beat_count;        // Count of number of beats this note has been held
+    bool rest;                      // When a rest is found, need to hold the rest for a duration (do nothing)
 }rtttl_sound_resource_class_obj_t;
 
 extern const mp_obj_type_t rtttl_sound_resource_class_type;
