@@ -16,8 +16,8 @@ typedef struct{
     uint8_t default_d;
     uint8_t default_o;
     uint16_t b;
-    float seconds_per_beat;
-    float seconds_since_beat;
+    float seconds_per_8th_beat;
+    float seconds_since_8th_beat;
 
     uint8_t note_beat_duration;     // Duration, in beats, of the current note
     uint8_t note_beat_count;        // Count of number of beats this note has been held
@@ -26,7 +26,7 @@ typedef struct{
 
 extern const mp_obj_type_t rtttl_sound_resource_class_type;
 
-float ENGINE_FAST_FUNCTION(rtttl_sound_resource_get_sample)(rtttl_sound_resource_class_obj_t *self);
+float ENGINE_FAST_FUNCTION(rtttl_sound_resource_get_sample)(rtttl_sound_resource_class_obj_t *self, bool *complete);
 mp_obj_t rtttl_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args);
 
 #endif  // ENGINE_RTTTL_SOUND_RESOURCE_H

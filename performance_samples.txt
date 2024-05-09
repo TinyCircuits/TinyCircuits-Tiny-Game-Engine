@@ -770,3 +770,19 @@ vox_node_perf_test.py, avg. FPS: 36.70269
 
 
 
+2024-05-09 11:08:52.103460 : 81e2df2b4f69235fa16b7da21f8ed8e29902ad8d
+WOrk on RTTTL parsing, still need to work on playing at the correct durations
+
+{
+line_node_perf_test.py, avg. FPS: 239.2805
+test_opacity_perf_test.py, avg. FPS: 88.63821
+test_perf_test.py, avg. FPS: 109.9279
+circle_node_perf_test.py, avg. FPS: 239.839
+vox_node_perf_test.py, avg. FPS: 36.04927
+}
+
+
+ ----- 
+
+
+

@@ -53,15 +53,13 @@ const uint8_t ascii_to_note_offset_small = 97;
 const uint8_t octave_base = 4;
 
 
-float ENGINE_FAST_FUNCTION(rtttl_sound_resource_get_sample)(rtttl_sound_resource_class_obj_t *self){
-    self->seconds_since_beat += ENGINE_AUDIO_SAMPLE_DT;
+float ENGINE_FAST_FUNCTION(rtttl_sound_resource_get_sample)(rtttl_sound_resource_class_obj_t *self, bool *complete){
+    self->seconds_since_8th_beat += ENGINE_AUDIO_SAMPLE_DT;
 
-    // Only play the next note at rate of `b` or `beats-per-minute`
-    // A beat is the smallest amount of time between notes.
-    // Depending on the hold duration/number of beats
-    // the next note may or may not be switched to now
-    if(self->seconds_since_beat >= self->seconds_per_beat){
-        self->seconds_since_beat = 0.0f;
+    // Notes are played/checked at smallest time division
+    // of eighth notes
+    if(self->seconds_since_8th_beat >= self->seconds_per_8th_beat){
+        self->seconds_since_8th_beat = 0.0f;
         self->note_beat_count++;
 
         // Only change notes when the current note has played
@@ -78,16 +76,15 @@ float ENGINE_FAST_FUNCTION(rtttl_sound_resource_get_sample)(rtttl_sound_resource
             self->rest = false;
             float note_octave = self->default_o;
 
-            // When/if a note if found, save it's index.
+            // When/if a note is found, save it's index.
             // If a flat/# is found, add 1 to this index
             uint8_t note_index = 0;
             bool note_collected = false;
 
             // Duration (1, 2, 4, 8, 16, 32) and octave (4, 5, 6, 7) will both be stored here
             char duration_digits[3] = {'0', '\0', '\0'};
-            uint8_t duration_digit_index = 0;
-
             char octave_digits[2] = {'0', '\0'};
+            uint8_t duration_digit_index = 0;
 
             bool dotted = false;
 
@@ -95,7 +92,7 @@ float ENGINE_FAST_FUNCTION(rtttl_sound_resource_get_sample)(rtttl_sound_resource
             uint8_t current_char = self->data[self->cursor];
 
             // While not a comma, collect note and configure tone afterwards
-            while(current_char != 44 && self->cursor < self->data_size){
+            while(current_char != 44){
                 // Evaluate current character and set flags for state-machine
 
                 // Is this an ASCII base-10 number/digit?
@@ -124,7 +121,6 @@ float ENGINE_FAST_FUNCTION(rtttl_sound_resource_get_sample)(rtttl_sound_resource
                     dotted = true;
                 }else{
                     // Handle note
-
                     // Depending on if upper or lower case char,
                     // get the correct pitch from the table
                     if(current_char >= 65 && current_char <= 71){           // Upper
@@ -140,6 +136,11 @@ float ENGINE_FAST_FUNCTION(rtttl_sound_resource_get_sample)(rtttl_sound_resource
 
                 // Progress to the next char
                 self->cursor++;
+
+                if(self->cursor >= self->data_size){
+                    break;
+                }
+
                 current_char = self->data[self->cursor];
             }
 
@@ -147,6 +148,12 @@ float ENGINE_FAST_FUNCTION(rtttl_sound_resource_get_sample)(rtttl_sound_resource
             // Now that the information is extracted, set the duration and tone
             if(duration_digit_index > 0){
                 self->note_beat_duration = atoi(duration_digits);
+
+                // A note divisor of 1 means this note gets 4 beats
+                // but needs to last 4 * 8 = 32 8th notes (that's the playback rate)
+                // A note divisor of 32 means this note gets 1/8th beat
+                // but needs to last 4/32 * 8 = 1 8th note
+                self->note_beat_duration = (4.0f / self->note_beat_duration) * 8.0f;
 
                 // https://www.mobilefish.com/tutorials/rtttl/rtttl_quickguide_specification.html#:~:text=A%20dotted%20duration%20is%20one%20in%20which%20a%20note%20is%20given%20the%20duration%20of%20%22itself%20%2B%20half%20of%20itself.%22
                 if(dotted){
@@ -170,6 +177,7 @@ float ENGINE_FAST_FUNCTION(rtttl_sound_resource_get_sample)(rtttl_sound_resource
             // If we end, loop, otherwise skip comma
             if(self->cursor >= self->data_size){
                 self->cursor = 0;
+                *complete = true;
             }else{
                 // Skip comma
                 self->cursor++;
@@ -188,8 +196,11 @@ float ENGINE_FAST_FUNCTION(rtttl_sound_resource_get_sample)(rtttl_sound_resource
 
 void rtttl_sound_resource_set_b(rtttl_sound_resource_class_obj_t *self, uint16_t b){
     self->b = b;
-    self->seconds_per_beat = 60.0f / (float)self->b;
-    self->seconds_since_beat = 0.0f;
+
+    // Calculate beats per minute and divide by 8 to account for 1/32 notes:
+    // https://images.app.goo.gl/J4eHkGHcoSyJuZ5W6
+    self->seconds_per_8th_beat = (60.0f / (float)self->b) / 8.0f;
+    self->seconds_since_8th_beat = 0.0f;
 }
 
 
@@ -250,18 +261,21 @@ mp_obj_t rtttl_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args
             {
                 gathering_default = 'd';
                 self->cursor++; // Skip `=`
+                self->data_size--;
             }
             break;
             case 111:   // o
             {
                 gathering_default = 'o';
                 self->cursor++; // Skip `=`
+                self->data_size--;
             }
             break;
             case 98:    // b
             {
                 gathering_default = 'b';
                 self->cursor++; // Skip `=`
+                self->data_size--;
             }
             break;
             default:
@@ -286,6 +300,7 @@ mp_obj_t rtttl_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args
         current_char = engine_file_get_u8(self->cursor);
     }
 
+    // Actually assign the default values from the extracted strings
     if(duration_digit_index > 0){
         self->default_d = atoi(default_duration_digits);
     }
@@ -318,6 +333,7 @@ mp_obj_t rtttl_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args
 
     // Reset cursor to play music instead of seek through file
     self->cursor = 0;
+    self->data_size--;  // <- not exactly sure why one less is needed not to seg fault
 
     return MP_OBJ_FROM_PTR(self);
 }

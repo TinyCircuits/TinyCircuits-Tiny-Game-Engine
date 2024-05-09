@@ -48,7 +48,7 @@ volatile float master_volume = 1.0f;
 
     uint8_t *current_source_data = NULL;
 
-    void ENGINE_FAST_FUNCTION(engine_audio_handle_buffer)(audio_channel_class_obj_t *channel){
+    void ENGINE_FAST_FUNCTION(engine_audio_handle_buffer)(audio_channel_class_obj_t *channel, bool *complete){
         // When 'buffer_byte_offset = 0' that means the buffer hasn't been filled before, fill it (see that after this function it is immediately incremented)
         // When 'buffer_byte_offset >= channel->buffer_end' that means the index has run out of data, fill it with more
         if(channel->buffers_byte_offsets[channel->reading_buffer_index] == 0 || channel->buffers_byte_offsets[channel->reading_buffer_index] >= channel->buffers_ends[channel->reading_buffer_index]){
@@ -111,10 +111,10 @@ volatile float master_volume = 1.0f;
                 // If not looping, disable/remove the source and stop this
                 // channel from being played, otherwise, fill with start data
                 if(channel->loop == false){
-                    audio_channel_stop(channel);
+                    *complete = true;
                 }else{
                     // Run right away to fill buffer with starting data since looping
-                    engine_audio_handle_buffer(channel);
+                    engine_audio_handle_buffer(channel, complete);
                 }
             }
 
@@ -129,13 +129,13 @@ volatile float master_volume = 1.0f;
                 channel->filling_buffer_index = 1 - channel->filling_buffer_index;
 
                 // Fill the other buffer right now
-                engine_audio_handle_buffer(channel);
+                engine_audio_handle_buffer(channel, complete);
             }
         }
     }
 
 
-    float ENGINE_FAST_FUNCTION(get_wave_sample)(audio_channel_class_obj_t *channel){
+    float ENGINE_FAST_FUNCTION(get_wave_sample)(audio_channel_class_obj_t *channel, bool *complete){
         sound_resource_base_class_obj_t *source = channel->source;
 
         // Depending on engine_playback sample rate
@@ -155,7 +155,7 @@ volatile float master_volume = 1.0f;
         }
 
         // Fill buffer with data whether first time or looping
-        engine_audio_handle_buffer(channel);
+        engine_audio_handle_buffer(channel, complete);
 
         uint8_t buffer_index = channel->reading_buffer_index;
         uint16_t buffer_byte_offset = channel->buffers_byte_offsets[buffer_index];
@@ -202,8 +202,8 @@ volatile float master_volume = 1.0f;
     }
 
 
-    float ENGINE_FAST_FUNCTION(get_rtttl_sample)(audio_channel_class_obj_t *channel){
-        return rtttl_sound_resource_get_sample(channel->source);
+    float ENGINE_FAST_FUNCTION(get_rtttl_sample)(audio_channel_class_obj_t *channel, bool *complete){
+        return rtttl_sound_resource_get_sample(channel->source, complete);
     }
 
 
@@ -211,9 +211,9 @@ volatile float master_volume = 1.0f;
     void ENGINE_FAST_FUNCTION(repeating_audio_callback)(void){
         float total_sample = 0;
         bool play_sample = false;
-
+        
         for(uint8_t icx=0; icx<CHANNEL_COUNT; icx++){
-
+            bool complete = false;
             audio_channel_class_obj_t *channel = channels[icx];
 
             if(channel->source == NULL || channel->busy){
@@ -224,11 +224,15 @@ volatile float master_volume = 1.0f;
             play_sample = true;
 
             if(mp_obj_is_type(channel->source, &wave_sound_resource_class_type)){
-                total_sample += get_wave_sample(channel);
+                total_sample += get_wave_sample(channel, &complete);
             }else if(mp_obj_is_type(channel->source, &tone_sound_resource_class_type)){
                 total_sample += get_tone_sample(channel);
             }else if(mp_obj_is_type(channel->source, &rtttl_sound_resource_class_type)){
-                total_sample += get_rtttl_sample(channel);
+                total_sample += get_rtttl_sample(channel, &complete);
+            }
+
+            if(complete && channel->loop == false){
+                audio_channel_stop(channel);
             }
         }
         
@@ -247,6 +251,7 @@ volatile float master_volume = 1.0f;
         }
 
         pwm_clear_irq(audio_callback_pwm_pin_slice);
+
         return;
     }
 #endif

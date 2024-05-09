@@ -19,6 +19,6 @@ class Rect(Rectangle2DNode):
 r = Rect()
 c = CameraNode()
 
-engine_audio.play(rtttl, 0, False)
+engine_audio.play(rtttl, 0, True)
 
 engine.start()
