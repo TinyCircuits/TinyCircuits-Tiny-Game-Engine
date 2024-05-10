@@ -7,6 +7,7 @@ from engine_resources import TextureResource
 from engine_animation import Tween, Delay, ONE_SHOT, LOOP, PING_PONG, EASE_ELAST_OUT
 from engine_math import Vector2
 import random
+import os
 
 engine.set_fps_limit(60)
 
@@ -96,5 +97,13 @@ delay.L_tween.pause()
 delay.RO_tween.pause()
 delay.R_tween.pause()
 
-execfile("launcher.py")
-execfile("main.py")
+# Before doing anything else, record where the base
+# executing directory is (when a game ends, want to
+# change back to here)
+cwd = os.getcwd()
+
+# Every time the launcher completes (meaning when the
+# game it executes completes) launch the launcher again
+while True:
+    os.chdir(cwd)
+    execfile(cwd + "/launcher.py")

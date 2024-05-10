@@ -98,7 +98,7 @@ ob1.set_x(64+64)
 
 tick = 0
 
-while tick < 3000:
+while tick < 180:
 
     # Only execute code as fast as the engine ticks (due to FPS limit)
     if engine.tick():

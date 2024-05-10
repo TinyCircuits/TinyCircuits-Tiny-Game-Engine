@@ -296,4 +296,5 @@ game_file_name = game_path_to_execute[game_path_to_execute.rfind("/")+1:]
 # relative paths inside their folder to open files
 # then execute from that relative path
 os.chdir(game_dir)
+
 execfile(game_file_name)

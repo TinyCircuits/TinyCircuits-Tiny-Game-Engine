@@ -834,3 +834,19 @@ vox_node_perf_test.py, avg. FPS: 35.99564
 
 
 
+2024-05-10 13:13:09.006115 : cc86fe512cbc7b09c057512dafb3cc329eecd246
+Open files using the cwd
+
+{
+line_node_perf_test.py, avg. FPS: 241.341
+test_opacity_perf_test.py, avg. FPS: 88.74316
+test_perf_test.py, avg. FPS: 107.9279
+circle_node_perf_test.py, avg. FPS: 239.8398
+vox_node_perf_test.py, avg. FPS: 35.99608
+}
+
+
+ ----- 
+
+
+

@@ -162,7 +162,7 @@ void engine_file_open(const char *filename){
             mounted = true;
         }
 
-        // Get CWD (current-working-directory) adn the lengths of everything
+        // Get CWD (current-working-directory) and the lengths of everything
         // TODO: Is there a better way to get the CWD that doesn't make a new string that could get garbage collected?
         mp_obj_str_t *cwd = mp_vfs_getcwd();
         uint16_t filename_len = strlen(filename);
