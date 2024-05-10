@@ -818,3 +818,19 @@ vox_node_perf_test.py, avg. FPS: 36.55171
 
 
 
+2024-05-10 12:42:14.727977 : 5f92db14d5cfb66a7e5802f1206f24ec81196b44
+Add return from engine.tick() when actually ticks due to FPS limit and fix upload and run scripts to be more automatic
+
+{
+line_node_perf_test.py, avg. FPS: 241.5077
+test_opacity_perf_test.py, avg. FPS: 88.74709
+test_perf_test.py, avg. FPS: 109.5642
+circle_node_perf_test.py, avg. FPS: 239.8392
+vox_node_perf_test.py, avg. FPS: 35.99564
+}
+
+
+ ----- 
+
+
+

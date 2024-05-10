@@ -168,7 +168,8 @@ for path in file_paths:
         fps_sample_end = output.rfind("]-")
         fps_sample_strs.append(output[fps_sample_start:fps_sample_end])
     
-    time.sleep(6)
+    # Wait for logo screen to end
+    time.sleep(5)
 
 
 ser.close()

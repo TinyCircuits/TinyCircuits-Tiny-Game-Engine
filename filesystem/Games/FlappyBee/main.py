@@ -103,7 +103,7 @@ while tick < 3000:
     # Only execute code as fast as the engine ticks (due to FPS limit)
     if engine.tick():
         if engine_input.check_pressed(engine_input.A):
-            bird.velocity.y -= 0.3
+            bird.velocity.y -= 0.2
 
         if collided:
             tick += 1

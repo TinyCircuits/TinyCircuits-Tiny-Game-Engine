@@ -162,29 +162,27 @@ void engine_file_open(const char *filename){
             mounted = true;
         }
 
+        // Get CWD (current-working-directory) adn the lengths of everything
+        // TODO: Is there a better way to get the CWD that doesn't make a new string that could get garbage collected?
         mp_obj_str_t *cwd = mp_vfs_getcwd();
-        ENGINE_FORCE_PRINTF("TEST");
+        uint16_t filename_len = strlen(filename);
+        uint16_t cwd_len = strlen(cwd->data);
 
-        if(cwd != NULL){
-            // ENGINE_FORCE_PRINTF("%s/%s", cwd->data, filename);
+        // Make some space for the full path
+        char *full_path = malloc(filename_len+cwd_len+2);
 
-            uint16_t filename_len = strlen(filename);
-            // uint16_t cwd_len = cwd->len;
-
-            // char *full_path = malloc(filename_len+cwd_len);
-
-            // memcpy(full_path, cwd->data, cwd_len);
-            // memcpy(full_path+cwd_len, filename, filename_len);
-
-            ENGINE_FORCE_PRINTF("%d", filename_len);
-        }
+        // Construct the full path
+        memcpy(full_path, cwd->data, cwd_len);
+        full_path[cwd_len] = '/';
+        memcpy(full_path+cwd_len+1, filename, filename_len);
+        full_path[cwd_len+filename_len+1] = '\0';
 
         // Need to use this cfg function since MicroPython is compiled without malloc (therefore need to supply)
-        ENGINE_INFO_PRINTF("Engine File: Opening file '%s'...", filename);
-        lfs2_file_opencfg(&littlefs2, &littlefs2_file, filename, LFS2_O_RDWR, &littlefs2_file_cfg);
-        ENGINE_INFO_PRINTF("Engine File: Opening file '%s' complete!", filename);
+        ENGINE_INFO_PRINTF("Engine File: Opening file '%s'...", full_path);
+        lfs2_file_opencfg(&littlefs2, &littlefs2_file, full_path, LFS2_O_RDWR, &littlefs2_file_cfg);
+        ENGINE_INFO_PRINTF("Engine File: Opening file '%s' complete!", full_path);
 
-        // free(full_path);
+        free(full_path);
     #endif
 }
 
