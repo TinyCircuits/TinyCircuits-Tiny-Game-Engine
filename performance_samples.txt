@@ -850,3 +850,19 @@ vox_node_perf_test.py, avg. FPS: 35.99608
 
 
 
+2024-05-10 13:46:43.433071 : 9e43b3763c99ed0b79c142317801bc5d4287429a
+Make main.py and launcher.py work so that when a game ends it goes back to the launcher
+
+{
+line_node_perf_test.py, avg. FPS: 239.8412
+test_opacity_perf_test.py, avg. FPS: 88.71789
+test_perf_test.py, avg. FPS: 107.8537
+circle_node_perf_test.py, avg. FPS: 239.8396
+vox_node_perf_test.py, avg. FPS: 36.54284
+}
+
+
+ ----- 
+
+
+

@@ -23,6 +23,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_resources_module_init_obj, engine_resources_mod
     ATTR: [type=object]   [name={ref_link:WaveSoundResource}]   [value=object]
     ATTR: [type=object]   [name={ref_link:ToneSoundResource}]   [value=object]
     ATTR: [type=object]   [name={ref_link:FontResource}]        [value=object]
+    ATTR: [type=object]   [name={ref_link:RTTTLSoundResource}]  [value=object]
 */
 STATIC const mp_rom_map_elem_t engine_resources_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_resources) },
