@@ -9,9 +9,10 @@ import engine_draw
 from engine_nodes import Rectangle2DNode, CameraNode, Sprite2DNode, PhysicsRectangle2DNode, EmptyNode, Text2DNode
 from engine_resources import TextureResource, FontResource
 from engine_math import Vector2
+import os
 
-font = FontResource("/Games/FlappyBee/outrunner_outline.bmp")
-texture = TextureResource("/Games/FlappyBee/bee.bmp")
+font = FontResource("outrunner_outline.bmp")
+texture = TextureResource("bee.bmp")
 
 engine.set_fps_limit(60)
 engine_physics.set_gravity(0, -0.02)
@@ -99,10 +100,10 @@ tick = 0
 
 while tick < 3000:
 
-    if engine_input.check_pressed(engine_input.A):
-        bird.velocity.y -= 0.0004
+    # Only execute code as fast as the engine ticks (due to FPS limit)
+    if engine.tick():
+        if engine_input.check_pressed(engine_input.A):
+            bird.velocity.y -= 0.3
 
-    engine.tick()
-
-    if collided:
-        tick += 1
+        if collided:
+            tick += 1

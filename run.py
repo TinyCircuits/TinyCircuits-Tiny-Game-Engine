@@ -16,25 +16,19 @@ import serial.tools.list_ports
 
 
 
-# ### Step 1: Get arguments
+# ### Step 1: Get arguments and then file paths
 arguments = sys.argv[1:]
-file_path = arguments[0]
-file_name = ""
-file_data = None
-file_size = 0
 
-if len(arguments) == 1:    
-    file_name = file_path[file_path.rfind("/")+1:]
-    file = open(file_path, "r")
-    file_data = file.read()
-    file_size = len(file_data)
-    file.close()
-
-    print("File:", file_path, file_name, file_size)
+file_paths = []
+if len(arguments) == 1:
+    if os.path.isfile(arguments[0]):
+        file_paths.append(arguments[0])
+    elif os.path.isdir(arguments[0]):
+        for file in os.listdir(arguments[0]):
+            file_paths.append(arguments[0] + "/" + file)
 else:
     print("ERROR: Expected path to file to upload and run")
     exit()
-
 
 # https://forum.micropython.org/viewtopic.php?t=7325#p42665
 cmd = """
@@ -108,52 +102,103 @@ while ser == None:
             print("Connected!")
             break
 
-# Stop running scripts
-write_str(ser, "\x03\x03")
-
 # # Soft reset
 # write_str(ser, "\x04")
+# print("Reset!")
 
-print("Reset!")
+fps_sample_strs = []
 
-# Replace string in command with real file name
-cmd = cmd.replace("file_path", file_name)
+for path in file_paths:
 
-# Go into paste mode, paste file, and then execute code
-write_str(ser, "\x05")
-write_str(ser, cmd)
-write_str(ser, "\x04")
+    file_name = path[path.rfind("/")+1:]
+    file = open(path, "r")
+    file_data = file.read()
+    file_size = len(file_data)
+    file.close()
 
-# Do not execute proceeding code until read last
-# line echoed back from the above command
-ser.read_until(cmd.splitlines()[-1].encode()).decode("utf-8")
 
-# Wait for string from MicroPython asking
-# for number of bytes to be expected
-ser.read_until("What size?".encode()).decode("utf-8")
+    # Replace string in command with real file name
+    current_cmd = cmd.replace("file_path", file_name)
 
-# Create a string containing the file size
-file_size_str = str(file_size)
-while len(file_size_str) < 8:
-    file_size_str = "0" + file_size_str
-write_str(ser, file_size_str)
+    # Stop running scripts
+    write_str(ser, "\x03")
 
-ser.read_until("Waiting on file data...".encode()).decode("utf-8")
-write_str(ser, file_data, True)
+    # Go into paste mode, paste file, and then execute code
+    write_str(ser, "\x05")
+    write_str(ser, current_cmd)
+    write_str(ser, "\x04")
 
-# Only execute if Python file, otherwise just upload
-if ".py" in file_name:
-    write_str(ser, "execfile(\"" + file_name + "\")\r\n", True)
+    # Do not execute proceeding code until read last
+    # line echoed back from the above command
+    ser.read_until(current_cmd.splitlines()[-1].encode()).decode("utf-8")
 
-ser.read_until("Got all file data!".encode()).decode("utf-8")
-print("Uploaded", file_path)
+    # Wait for string from MicroPython asking
+    # for number of bytes to be expected
+    ser.read_until("What size?".encode()).decode("utf-8")
 
-while True:
-    data = ser.read_all().decode("utf8")
-    if len(data) > 0:
-        print(data, end='')
+    # Create a string containing the file size
+    file_size_str = str(file_size)
+    while len(file_size_str) < 8:
+        file_size_str = "0" + file_size_str
+    write_str(ser, file_size_str)
+
+    ser.read_until("Waiting on file data...".encode()).decode("utf-8")
+    write_str(ser, file_data, True)
+
+    # Only execute if Python file, otherwise just upload
+    if ".py" in file_name:
+        write_str(ser, "execfile(\"" + file_name + "\")\r\n", True)
+
+    ser.read_until("Got all file data!".encode()).decode("utf-8")
+    print("Uploaded", path)
+
+    output = ""
+
+    while True:
+        data = ser.read_all().decode("utf8")
+        output += data
+        if len(data) > 0:
+            print(data, end='')
+        
+        if "MPY: soft reboot" in data:
+            break
     
-    if "MPY: soft reboot" in data:
-        break
+    if "-[" in output:    
+        fps_sample_start = output.rfind("-[")+2
+        fps_sample_end = output.rfind("]-")
+        fps_sample_strs.append(output[fps_sample_start:fps_sample_end])
+    
+    time.sleep(6)
+
 
 ser.close()
+
+
+# If samples were gathered, add to list of samples
+if len(fps_sample_strs) > 0:
+    to_write = ""
+
+    to_write += str(datetime.datetime.now())
+    to_write += " : "
+
+    to_write += subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode("utf-8")
+
+    to_write += subprocess.check_output(['git', 'log', '-1', '--pretty=%B']).decode("utf-8")
+
+    to_write += "{\n"
+    for sample_str in fps_sample_strs:
+        to_write += sample_str + "\n"
+    to_write += "}"
+
+    to_write += "\n\n\n ----- \n\n\n\n"
+
+    print(to_write)
+
+    file = open("performance_samples.txt", "a")
+    file.write(to_write)
+    file.close()
+
+    # Need to add the now written to `performance_samples.txt`
+    # without editing message or running hooks again
+    # execute(['git', 'add', 'performance_samples.txt'])
+    # execute(['git', 'commit', '--amend', '--no-edit', '--no-verify'])

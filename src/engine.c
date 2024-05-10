@@ -139,13 +139,7 @@ STATIC mp_obj_t engine_end(){
 MP_DEFINE_CONST_FUN_OBJ_0(engine_end_obj, engine_end);
 
 
-/* --- doc ---
-   NAME: tick
-   ID: engine_tick
-   DESC: Runs the main tick function of the engine. This is called in a loop when doing 'engine.start()' but can also be called manually if needed
-   RETURN: None
-*/
-STATIC mp_obj_t engine_tick(){
+bool engine_tick(){
     // Not sure why this is needed exactly for handling ctrl-c 
     // correctly, just replicating what happens in modutime.c
     MP_THREAD_GIL_EXIT();
@@ -184,6 +178,8 @@ STATIC mp_obj_t engine_tick(){
 
         // Clear the depth buffer, if needed
         engine_display_clear_depth_buffer();
+
+        return true;
     }
 
     // Not sure why this is needed exactly for handling ctrl-c 
@@ -200,9 +196,20 @@ STATIC mp_obj_t engine_tick(){
         engine_end();
     }
 
-    return mp_const_none;
+    return false;
 }
-MP_DEFINE_CONST_FUN_OBJ_0(engine_tick_obj, engine_tick);
+
+
+/* --- doc ---
+   NAME: tick
+   ID: engine_tick
+   DESC: Runs the main tick function of the engine. This is called in a loop when doing 'engine.start()' but can also be called manually if needed. Returns True if the tick ran and False otherwise (due to FPS limit)
+   RETURN: True or False
+*/
+STATIC mp_obj_t engine_mp_tick(){
+    return mp_obj_new_bool(engine_tick());
+}
+MP_DEFINE_CONST_FUN_OBJ_0(engine_mp_tick_obj, engine_mp_tick);
 
 
 /* --- doc ---
@@ -288,7 +295,7 @@ STATIC const mp_rom_map_elem_t engine_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_set_fps_limit), (mp_obj_t)&engine_set_fps_limit_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_disable_fps_limit), (mp_obj_t)&engine_disable_fps_limit_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_get_running_fps), (mp_obj_t)&engine_get_running_fps_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_tick), (mp_obj_t)&engine_tick_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_tick), (mp_obj_t)&engine_mp_tick_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_start), (mp_obj_t)&engine_start_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_end), (mp_obj_t)&engine_end_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_reset), (mp_obj_t)&engine_reset_obj },

@@ -1,5 +1,7 @@
 #include "engine_file.h"
 #include "debug/debug_print.h"
+#include "extmod/vfs.h"
+#include "py/objstr.h"
 
 
 #if defined(__EMSCRIPTEN__)
@@ -11,10 +13,12 @@
 #elif defined(__arm__)
     // See extmod/vfs_lfs.c + https://github.com/littlefs-project/littlefs
     #include "lib/littlefs/lfs2.h"
+    #include "extmod/vfs_lfs.h"
     #include "pico/stdlib.h"
     #include "hardware/flash.h"
     #include <math.h>
     #include <stdlib.h>
+    #include <string.h>
 
     #define MICROPY_HW_FLASH_STORAGE_BASE (PICO_FLASH_SIZE_BYTES - MICROPY_HW_FLASH_STORAGE_BYTES)
     #define ENGINE_HW_FLASH_SPRITE_SPACE_BASE MICROPY_HW_FLASH_STORAGE_BYTES
@@ -146,9 +150,11 @@
 
 
 void engine_file_open(const char *filename){
+
     #if defined(__EMSCRIPTEN__)
 
     #elif defined(__unix__)
+        // mp_vfs_mount_t *vfs = MP_STATE_VM(vfs_cur);
         file_fd = open(filename, O_RDONLY);
     #elif defined(__arm__)
         if(mounted == false){
@@ -156,10 +162,29 @@ void engine_file_open(const char *filename){
             mounted = true;
         }
 
+        mp_obj_str_t *cwd = mp_vfs_getcwd();
+        ENGINE_FORCE_PRINTF("TEST");
+
+        if(cwd != NULL){
+            // ENGINE_FORCE_PRINTF("%s/%s", cwd->data, filename);
+
+            uint16_t filename_len = strlen(filename);
+            // uint16_t cwd_len = cwd->len;
+
+            // char *full_path = malloc(filename_len+cwd_len);
+
+            // memcpy(full_path, cwd->data, cwd_len);
+            // memcpy(full_path+cwd_len, filename, filename_len);
+
+            ENGINE_FORCE_PRINTF("%d", filename_len);
+        }
+
         // Need to use this cfg function since MicroPython is compiled without malloc (therefore need to supply)
         ENGINE_INFO_PRINTF("Engine File: Opening file '%s'...", filename);
         lfs2_file_opencfg(&littlefs2, &littlefs2_file, filename, LFS2_O_RDWR, &littlefs2_file_cfg);
         ENGINE_INFO_PRINTF("Engine File: Opening file '%s' complete!", filename);
+
+        // free(full_path);
     #endif
 }
 
