@@ -3,7 +3,7 @@ import engine_main
 import random
 
 import engine
-import engine_input
+import engine_io
 import engine_physics
 import engine_draw
 from engine_nodes import Rectangle2DNode, CameraNode, Sprite2DNode, PhysicsRectangle2DNode, EmptyNode, Text2DNode
@@ -102,7 +102,7 @@ while tick < 180:
 
     # Only execute code as fast as the engine ticks (due to FPS limit)
     if engine.tick():
-        if engine_input.check_pressed(engine_input.A):
+        if engine_io.check_pressed(engine_io.A):
             bird.velocity.y -= 0.2
 
         if collided:

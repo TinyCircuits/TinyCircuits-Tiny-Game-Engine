@@ -6,7 +6,7 @@
 #include "engine_object_layers.h"
 #include "resources/engine_resource_manager.h"
 #include "audio/engine_audio_module.h"
-#include "input/engine_input_module.h"
+#include "io/engine_io_module.h"
 #include "display/engine_display.h"
 #include "display/engine_display_common.h"
 #include "physics/engine_physics.h"
@@ -73,7 +73,7 @@ STATIC mp_obj_t engine_main_module_init(){
     engine_audio_setup();
     engine_audio_setup_playback();
 
-    engine_input_setup();
+    engine_io_setup();
     engine_display_init();
     engine_display_send();
     engine_physics_init();

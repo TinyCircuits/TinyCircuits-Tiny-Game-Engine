@@ -2,7 +2,7 @@ import engine_main
 
 import engine
 import engine_draw
-import engine_input
+import engine_io
 import engine_physics
 import math
 from engine_math import Vector2
@@ -91,19 +91,19 @@ class Ball(PhysicsCircle2DNode):
         self.max_power = 10
     
     def tick(self, dt):
-        if engine_input.check_pressed(engine_input.BUMPER_LEFT):
+        if engine_io.check_pressed(engine_io.BUMPER_LEFT):
             self.rotation -= 0.05
-        elif engine_input.check_pressed(engine_input.BUMPER_RIGHT):
+        elif engine_io.check_pressed(engine_io.BUMPER_RIGHT):
             self.rotation += 0.05
         
-        if engine_input.check_pressed(engine_input.DPAD_DOWN):
+        if engine_io.check_pressed(engine_io.DPAD_DOWN):
             self.power += 0.25
             print(self.power)
 
             if self.power > self.max_power:
                 self.power = self.max_power
         
-        if engine_input.check_just_released(engine_input.DPAD_DOWN):
+        if engine_io.check_just_released(engine_io.DPAD_DOWN):
             self.velocity.x = -math.cos(self.rotation - math.pi/2) * self.power
             self.velocity.y = math.sin(self.rotation - math.pi/2) * self.power
 
@@ -122,9 +122,9 @@ class GameCamera(CameraNode):
         super().__init__(self)
     
     def tick(self, dt):
-        if engine_input.check_pressed(engine_input.A):
+        if engine_io.check_pressed(engine_io.A):
             self.zoom += 0.005
-        elif engine_input.check_pressed(engine_input.B):
+        elif engine_io.check_pressed(engine_io.B):
             self.zoom -= 0.005
 
 

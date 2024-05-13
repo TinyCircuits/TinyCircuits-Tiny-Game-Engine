@@ -15,7 +15,7 @@
         <a href="build/engine_nodes.html">engine_nodes</a><br>
         <a href="build/engine_draw.html">engine_draw</a><br>
         <a href="build/engine_resources.html">engine_resources</a><br>
-        <a href="build/engine_input.html">engine_input</a><br>
+        <a href="build/engine_io.html">engine_io</a><br>
         <a href="build/engine_audio.html">engine_audio</a><br>
         <a href="build/engine_physics.html">engine_physics</a><br>
         <a href="build/engine_math.html">engine_math</a><br>
@@ -107,7 +107,7 @@ import engine_main
 
 import engine
 import engine_draw
-import engine_input
+import engine_io
 from engine_nodes import Sprite2DNode, CameraNode
 from engine_resources import TextureResource
 
@@ -137,15 +137,15 @@ class Player(Sprite2DNode):
     # Define a callback that the engine will invoke every game tick
     def tick(self, dt):
         # NOTE: Game coordinate system is -y = to top of screen, +y = to bottom of screen
-        if engine_input.check_pressed(engine_input.DPAD_UP):
+        if engine_io.check_pressed(engine_io.DPAD_UP):
             self.position.y -= 1
-        elif engine_input.check_pressed(engine_input.DPAD_DOWN):
+        elif engine_io.check_pressed(engine_io.DPAD_DOWN):
             self.position.y += 1
         
         # X axis works how it should
-        if engine_input.check_pressed(engine_input.DPAD_LEFT):
+        if engine_io.check_pressed(engine_io.DPAD_LEFT):
             self.position.x -= 1
-        elif engine_input.check_pressed(engine_input.DPAD_RIGHT):
+        elif engine_io.check_pressed(engine_io.DPAD_RIGHT):
             self.position.x += 1
 
 # Make an instance of our class

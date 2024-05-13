@@ -1,6 +1,6 @@
 #include "engine_gui.h"
-#include "input/engine_input_common.h"
-#include "input/engine_input_module.h"
+#include "io/engine_io_common.h"
+#include "io/engine_io_module.h"
 #include "nodes/2D/gui_button_2d_node.h"
 #include "nodes/2D/gui_bitmap_button_2d_node.h"
 #include "math/engine_math.h"
@@ -41,7 +41,7 @@ void engine_gui_clear_all(){
 void engine_gui_reset(){
     focused_gui_node_base = NULL;
     gui_focused = false;
-    engine_input_reset_gui_toggle_button();
+    engine_io_reset_gui_toggle_button();
 }
 
 
@@ -234,7 +234,7 @@ void engine_gui_tick(){
     // Every tick, see if the button to toggle GUI focus was pressed.
     // If the GUI toggle button is 0 that means None was set for the
     // toggle button and that we should not automaticaly switch focus
-    uint16_t gui_toggle_button = engine_input_get_gui_toggle_button();
+    uint16_t gui_toggle_button = engine_io_get_gui_toggle_button();
     if(gui_toggle_button != 0 && check_just_pressed(gui_toggle_button)){
         engine_gui_toggle_focus();
 
@@ -253,7 +253,7 @@ void engine_gui_tick(){
     }
 
     // Only run the GUI selection logic when the
-    // gui is focused due to the input module
+    // gui is focused due to the io module
     if(gui_focused == false){
         return;
     }

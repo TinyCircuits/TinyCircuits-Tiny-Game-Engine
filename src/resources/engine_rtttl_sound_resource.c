@@ -363,7 +363,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(rtttl_sound_resource_class_del_obj, rtttl_sound_resour
     ID: RTTTLSoundResource
     DESC: Can be used to play a music in a ringtone format (TODO: better docs): https://en.wikipedia.org/wiki/Ring_Tone_Text_Transfer_Language
     PARAM:  [type=string]   [name=filepath] [value=any]
-    ATTR:   [type=float]    [name=tempo]    [value=any]                                                                                                                                                                  
+    ATTR:   [type=int]      [name=tempo]    [value=any positive value]                                                                                                                                                                  
 */ 
 STATIC void rtttl_sound_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing RTTTLSoundResource attr");

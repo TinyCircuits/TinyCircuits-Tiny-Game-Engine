@@ -2,7 +2,7 @@ import engine_main
 
 import engine
 import engine_draw
-import engine_input
+import engine_io
 import time
 from engine_math import Vector2
 from engine_nodes import Sprite2DNode, CameraNode, GUIBitmapButton2DNode, Text2DNode
@@ -34,7 +34,7 @@ class BatteryIndicator(Sprite2DNode):
         self.add_child(self.text_node)
     
     def tick(self, dt):
-        self.text_node.text = str(round(engine.battery_level() * 100.0, 1)) + "%"
+        self.text_node.text = str(round(engine_io.battery_level() * 100.0, 1)) + "%"
 
 
 battery = BatteryIndicator()
@@ -45,7 +45,7 @@ rumble_intensity = 0.0
 
 def after_rumble(tween):
     rumble_intensity = 0.0
-    engine_input.rumble(rumble_intensity)
+    engine_io.rumble(rumble_intensity)
 
 
 class GameInfo():
@@ -114,9 +114,9 @@ class LauncherTile(GUIBitmapButton2DNode):
         self.title_text_node.opacity = 0.0
     
     def on_just_pressed(self):
-        engine_input.rumble(0.2)
+        engine_io.rumble(0.2)
         time.sleep(0.1)
-        engine_input.rumble(0.0)
+        engine_io.rumble(0.0)
 
         if self.game_info != None and self.game_info.game_main_path != None:
             global game_path_to_execute
@@ -282,8 +282,8 @@ for game_info in game_infos:
 
 # Toggle the gui elements and do not let the user
 # toggle back out of it
-engine_input.toggle_gui_focus()
-engine_input.gui_toggle_button = None
+engine_io.toggle_gui_focus()
+engine_io.gui_toggle_button = None
 
 
 engine.start()

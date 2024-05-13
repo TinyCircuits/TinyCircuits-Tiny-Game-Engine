@@ -13,9 +13,9 @@ target_sources(usermod_engine INTERFACE
     ${ENGINE_MOD_DIR}/draw/engine_shader.c
     ${ENGINE_MOD_DIR}/math/engine_math_module.c
     ${ENGINE_MOD_DIR}/nodes/engine_nodes_module.c
-    ${ENGINE_MOD_DIR}/input/engine_input_module.c
-    ${ENGINE_MOD_DIR}/input/engine_input_rp3.c
-    ${ENGINE_MOD_DIR}/input/engine_input_common.c
+    ${ENGINE_MOD_DIR}/io/engine_io_module.c
+    ${ENGINE_MOD_DIR}/io/engine_io_rp3.c
+    ${ENGINE_MOD_DIR}/io/engine_io_common.c
     ${ENGINE_MOD_DIR}/nodes/node_base.c
     ${ENGINE_MOD_DIR}/nodes/physics_node_base.c
     ${ENGINE_MOD_DIR}/nodes/empty_node.c

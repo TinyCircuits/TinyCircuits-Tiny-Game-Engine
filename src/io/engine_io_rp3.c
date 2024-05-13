@@ -1,5 +1,5 @@
-#include "engine_input_rp3.h"
-#include "engine_input_common.h"
+#include "engine_io_rp3.h"
+#include "engine_io_common.h"
 #include "debug/debug_print.h"
 
 #include "pico/stdlib.h"
@@ -21,7 +21,7 @@
 #define GPIO_RUMBLE                 5
 
 
-void engine_input_rp3_setup(){
+void engine_io_rp3_setup(){
     ENGINE_PRINTF("EngineInput: Setting up...\n");
 
     gpio_init(GPIO_BUTTON_DPAD_UP);
@@ -66,7 +66,7 @@ void engine_input_rp3_setup(){
 }
 
 
-void engine_input_rp3_update_pressed_mask(){
+void engine_io_rp3_update_pressed_mask(){
     // Reset this to all unpressed before checking if pressed
     pressed_buttons = 0;
 
@@ -85,7 +85,7 @@ void engine_input_rp3_update_pressed_mask(){
 }
 
 
-void engine_input_rp3_rumble(float intensity){
+void engine_io_rp3_rumble(float intensity){
     intensity = engine_math_clamp(intensity, 0.0f, 1.0f);
 
     if(engine_math_compare_floats(intensity, 0.0f)){

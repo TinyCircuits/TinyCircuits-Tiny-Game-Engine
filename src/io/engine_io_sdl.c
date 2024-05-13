@@ -1,10 +1,10 @@
-#include "engine_input_sdl.h"
-#include "engine_input_common.h"
+#include "engine_io_sdl.h"
+#include "engine_io_common.h"
 #include <SDL2/SDL.h>
 
 static SDL_Event event;
 
-void engine_input_sdl_update_pressed_mask(){
+void engine_io_sdl_update_pressed_mask(){
     // Poll queued SDL input events (mouse and keyboard but only keyboard used)
     while(SDL_PollEvent(&event)){
         if(event.type == SDL_KEYDOWN){

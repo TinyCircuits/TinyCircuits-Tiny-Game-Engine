@@ -98,6 +98,7 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [-] When the camera is 1 unit from the sprite, it should take up the sprite_height number of pixels: NO, they should be scaled and render at the same texel density as the terrain (done)
 [.] When the FOV of the camera is changed, the sprites should get wider: messed with this, could use some work
 
+[] Change engine_input to engine_io so that it makes more sense for rumble to be in there
 [] In engine_file.c, need to find a better way of getting cwd without creating a new string. The string object could get collected and cause a seg fault, could happen!
 
 [] Instead of focusing GUI nodes, make menu button bring up default menu to exit game

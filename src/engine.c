@@ -3,7 +3,7 @@
 #include "engine_object_layers.h"
 #include "display/engine_display.h"
 #include "display/engine_display_common.h"
-#include "input/engine_input_module.h"
+#include "io/engine_io_module.h"
 #include "physics/engine_physics.h"
 #include "resources/engine_resource_manager.h"
 #include "engine_cameras.h"
@@ -155,7 +155,7 @@ bool engine_tick(){
         ENGINE_PERFORMANCE_START(ENGINE_PERF_TIMER_1);
 
         // Update/grab which buttons are pressed before calling all node callbacks
-        engine_input_update_pressed_buttons();
+        engine_io_update_pressed_buttons();
 
         // Call every instanced node's callbacks
         engine_invoke_all_node_callbacks(dt_s);
@@ -242,33 +242,6 @@ STATIC mp_obj_t engine_start(){
 MP_DEFINE_CONST_FUN_OBJ_0(engine_start_obj, engine_start);
 
 
-STATIC mp_obj_t engine_battery_level(){
-    #if defined(__arm__)
-        // Read the 12-bit sample with ADC max ref voltage of 3.3V
-        uint16_t battery_voltage_12_bit = adc_read();
-
-        // Battery voltage is either 5V when charging or 4.2V to 2.75V on battery.
-        // The input voltage we're measuring is before the LDO. The measured voltage
-        // is dropped to below max readable reference voltage of 3.3V through 1/(1+1)
-        // voltage divider (cutting it in half):
-        // 5/2    = 2.5V
-        // 4.2/2  = 2.1V    <- MAX
-        // 3.3/2 = 1.65V    <- MIN
-        float battery_half_voltage = battery_voltage_12_bit * ADC_CONV_FACTOR;
-
-        // Clamp since we only care showing between 0.0 and 1.0 for this function
-        battery_half_voltage = engine_math_clamp(battery_half_voltage, 1.65f, 2.1f);
-
-        // Map to the range we want to return
-        float battery_percentage = engine_math_map(battery_half_voltage, 1.65f, 2.1f, 0.0f, 1.0f);
-
-        return mp_obj_new_float(battery_percentage);
-    #endif
-
-    return mp_obj_new_float(1.0f);
-}
-MP_DEFINE_CONST_FUN_OBJ_0(engine_battery_level_obj, engine_battery_level);
-
 
 STATIC mp_obj_t engine_module_init(){
     engine_main_raise_if_not_initialized();
@@ -299,7 +272,6 @@ STATIC const mp_rom_map_elem_t engine_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_start), (mp_obj_t)&engine_start_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_end), (mp_obj_t)&engine_end_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_reset), (mp_obj_t)&engine_reset_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_battery_level), (mp_obj_t)&engine_battery_level_obj }
 };
 
 // Module init
