@@ -30,9 +30,19 @@ void engine_math_cross_product_v_float(float in_x, float in_y, float value, floa
 }
 
 
+float engine_math_vector_length(float vx, float vy){
+    return sqrtf((vx) * (vx) + (vy) * (vy));
+}
+
+
+float engine_math_3d_vector_length(float vx, float vy, float vz){
+    return sqrtf((vx) * (vx) + (vy) * (vy) + (vz) * (vz));
+}
+
+
 // https://github.com/RandyGaul/ImpulseEngine/blob/8d5f4d9113876f91a53cfb967879406e975263d1/IEMath.h#L144-L155
 void engine_math_normalize(float *vx, float *vy){
-    float length = sqrtf((*vx) * (*vx) + (*vy) * (*vy));
+    float length = engine_math_vector_length(*vx, *vy);
 
     // https://stackoverflow.com/a/66446497
     if(engine_math_compare_floats(length, 0.0)){
@@ -47,7 +57,7 @@ void engine_math_normalize(float *vx, float *vy){
 
 // https://stackoverflow.com/a/19301193
 void engine_math_3d_normalize(float *vx, float *vy, float *vz){
-    float length = sqrtf((*vx) * (*vx) + (*vy) * (*vy) + (*vz) * (*vz));
+    float length = engine_math_3d_vector_length(*vx, *vy, *vz);
 
     // https://stackoverflow.com/a/66446497
     if(engine_math_compare_floats(length, 0.0)){

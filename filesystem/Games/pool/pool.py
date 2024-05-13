@@ -13,6 +13,7 @@ engine_physics.set_gravity(0, 0)
 
 
 ball_dia_mm = 57.15 # https://images.app.goo.gl/sfgWqEnEr52cXHUD8
+ball_dia_with_margin_mm = ball_dia_mm + 5
 hole_dia_mm = 133   # https://images.app.goo.gl/YDCsrbHLMnVDQ7eu7
 
 # https://images.app.goo.gl/nDPWRLb662uDcdA2A
@@ -70,51 +71,63 @@ class PowerIndicator(Rectangle2DNode):
 
 
 class Ball(PhysicsCircle2DNode):
-    def __init__(self, power_indicator):
+    def __init__(self):
         super().__init__(self)
-
-        self.power_indicator = power_indicator
 
         self.outline = True
         self.radius = ball_dia_mm/2
-        self.position.y = table_inside_len_mm/3
+    
+    def tick(self, dt):    
+        vel_length = self.velocity.length()
+        if vel_length > 0.5:
+            normal = self.velocity.normalized()
+            self.velocity.x += -normal.x * 0.07
+            self.velocity.y += -normal.y * 0.07
+        elif vel_length > 0.0 and vel_length <= 0.5:
+            self.velocity.x = 0
+            self.velocity.y = 0
 
-        self.stick = Rectangle2DNode(outline=True)
-        self.stick.width = stick_dia_mm
-        self.stick.height = stick_len_mm
-        self.stick.position.y = self.stick.height/2 + 25.4*4
-        self.stick.color = engine_draw.brown
 
-        self.add_child(self.stick)
+class Stick(Rectangle2DNode):
+    def __init__(self, ball, power_indicator):
+        super().__init__(self)
+
+        self.ball = ball
+        self.ball.add_child(self)
+
+        self.power_indicator = power_indicator
 
         self.power = 0
-        self.max_power = 10
-    
+        self.max_power = 35
+
+        self.outline = True
+        self.width = stick_dia_mm
+        self.height = stick_len_mm
+        self.position.y = self.height/2 + 25.4*4
+        self.color = engine_draw.brown
+
     def tick(self, dt):
+        # Rotation
         if engine_io.check_pressed(engine_io.BUMPER_LEFT):
-            self.rotation -= 0.05
+            self.ball.rotation -= 0.025
         elif engine_io.check_pressed(engine_io.BUMPER_RIGHT):
-            self.rotation += 0.05
+            self.ball.rotation += 0.025
         
+        # Power
         if engine_io.check_pressed(engine_io.DPAD_DOWN):
-            self.power += 0.25
-            print(self.power)
+            self.power += 1
 
             if self.power > self.max_power:
                 self.power = self.max_power
         
-        if engine_io.check_just_released(engine_io.DPAD_DOWN):
-            self.velocity.x = -math.cos(self.rotation - math.pi/2) * self.power
-            self.velocity.y = math.sin(self.rotation - math.pi/2) * self.power
-
-            self.power = 0
-            print("Shot!")
-
-            print(self.velocity.x, self.velocity.y)
-        
         percent = self.power / self.max_power
         self.power_indicator.set_percent(self.power / self.max_power)
-        # self.stick.position.y = self.stick.height/2 + (25.4*12 * percent)
+        
+        # Shoot
+        if engine_io.check_just_released(engine_io.DPAD_DOWN):
+            self.ball.velocity.x = -math.cos(self.ball.rotation - math.pi/2) * self.power
+            self.ball.velocity.y = math.sin(self.ball.rotation - math.pi/2) * self.power
+            self.power = 0
 
 
 class GameCamera(CameraNode):
@@ -140,20 +153,28 @@ bot_border = Border("h", table_inside_wid_mm-(hole_dia_mm*2), Vector2(0, -(table
 left_border = Border("v", table_inside_len_mm-(hole_dia_mm*2), Vector2(-(table_inside_wid_mm/2 + table_wall_thickness_mm/2), 0))
 right_border = Border("v", table_inside_len_mm-(hole_dia_mm*2), Vector2(table_inside_wid_mm/2 + table_wall_thickness_mm/2, 0))
 
-ball = Ball(power_indicator)
+ball = Ball()
 ball.add_child(camera)
+ball.position.y = table_inside_len_mm/3
 
+stick = Stick(ball, power_indicator)
 
 balls = []
-x = ball_dia_mm/2 - ball_dia_mm - ball_dia_mm/2 - 2
 
-for i in range(5):
-    b = PhysicsCircle2DNode()
-    b.outline = True
-    b.radius = ball_dia_mm/2
-    b.position.x = x
-    x += ball_dia_mm + 1
-    balls.append(b)
+def rack_row(ball_count, x, y):
+    for i in range(ball_count):
+        b = Ball()
+        b.outline = True
+        b.radius = ball_dia_with_margin_mm/2
+        b.position.x = x
+        b.position.y = y
+        x += ball_dia_with_margin_mm
+        balls.append(b)
 
+rack_row(5, -ball_dia_with_margin_mm/2 - ball_dia_with_margin_mm - ball_dia_with_margin_mm/2, 0)
+rack_row(4, -ball_dia_with_margin_mm/2 - ball_dia_with_margin_mm, ball_dia_with_margin_mm)
+rack_row(3, -ball_dia_with_margin_mm, ball_dia_with_margin_mm*2)
+rack_row(2, -ball_dia_with_margin_mm/2, ball_dia_with_margin_mm*3)
+rack_row(1, 0, ball_dia_with_margin_mm*4)
 
 engine.start()

@@ -1,5 +1,6 @@
 #include "vector3.h"
 #include "debug/debug_print.h"
+#include "math/engine_math.h"
 
 
 mp_obj_t vector3_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
@@ -28,15 +29,51 @@ mp_obj_t vector3_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw
 
 
 /*  --- doc ---
+    NAME: length
+    ID: vector3_length
+    DESC: Calculates and returns length of the {ref_link:Vector3}                                                                                                        
+    RETURN: float
+*/ 
+mp_obj_t vector3_class_length(mp_obj_t self_in){
+    vector3_class_obj_t *self = self_in;
+
+    return mp_obj_new_float(engine_math_3d_vector_length(self->x.value, self->y.value, self->z.value));
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_length_obj, vector3_class_length);
+
+
+/*  --- doc ---
+    NAME: normalized
+    ID: vector3_normalized
+    DESC: Calculates and returns normalized verion of the {ref_link:Vector3}                                                                                                        
+    RETURN: {ref_link:Vector3}
+*/ 
+mp_obj_t vector3_class_normalized(mp_obj_t self_in){
+    vector3_class_obj_t *self = self_in;
+
+    float normalized_x = self->x.value;
+    float normalized_y = self->y.value;
+    float normalized_z = self->y.value;
+
+    engine_math_3d_normalize(&normalized_x, &normalized_y, &normalized_z);
+
+    return vector3_class_new(&vector3_class_type, 3, 0, (mp_obj_t[]){mp_obj_new_float(normalized_x), mp_obj_new_float(normalized_y), mp_obj_new_float(normalized_z)}); 
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_normalized_obj, vector3_class_normalized);
+
+
+/*  --- doc ---
     NAME: Vector3
     ID: Vector3
     DESC: Holds an X, Y, and Z value. Typically used for position
-    PARAM: [type=float]  [name=x]    [value=any]
-    PARAM: [type=float]  [name=y]    [value=any]
-    PARAM: [type=float]  [name=z]    [value=any]                                                                                      
-    ATTR: [type=float]  [name=x]    [value=any]                                
-    ATTR: [type=float]  [name=y]    [value=any]
-    ATTR: [type=float]  [name=z]    [value=any]                                                               
+    PARAM: [type=float]      [name=x]                               [value=any]
+    PARAM: [type=float]      [name=y]                               [value=any]
+    PARAM: [type=float]      [name=z]                               [value=any]                                                                                      
+    ATTR:  [type=float]      [name=x]                               [value=any]                                
+    ATTR:  [type=float]      [name=y]                               [value=any]
+    ATTR:  [type=float]      [name=z]                               [value=any]
+    ATTR:  [type=function]   [name={ref_link:vector3_length}]       [value=function] 
+    ATTR:  [type=function]   [name={ref_link:vector3_normalized}]   [value=function]                                                      
 */ 
 STATIC void vector3_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Vector3 attr");
@@ -45,6 +82,16 @@ STATIC void vector3_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *desti
 
     if(destination[0] == MP_OBJ_NULL){          // Load
         switch(attribute) {
+            case MP_QSTR_length:
+                destination[0] = MP_OBJ_FROM_PTR(&vector3_class_length_obj);
+                destination[1] = self;
+                return true;
+            break;
+            case MP_QSTR_normalized:
+                destination[0] = MP_OBJ_FROM_PTR(&vector3_class_normalized_obj);
+                destination[1] = self;
+                return true;
+            break;
             case MP_QSTR_x:
                 destination[0] = mp_obj_new_float(self->x.value);
             break;

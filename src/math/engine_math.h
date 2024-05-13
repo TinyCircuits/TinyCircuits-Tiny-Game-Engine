@@ -29,6 +29,8 @@ void engine_math_cross_product_float_v(float value, float in_x, float in_y, floa
 void engine_math_cross_product_v_float(float in_x, float in_y, float value, float *out_x, float *out_y);
 
 
+float engine_math_vector_length(float vx, float vy);
+float engine_math_3d_vector_length(float vx, float vy, float vz);
 
 void engine_math_normalize(float *vx, float *vy);
 void engine_math_3d_normalize(float *vx, float *vy, float *vz);

@@ -97,16 +97,13 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Weird shaking on UNIX when line is a child of camera and the camera is rotating: should be fixed now, child nodes were still be translated by little bits
 [-] When the camera is 1 unit from the sprite, it should take up the sprite_height number of pixels: NO, they should be scaled and render at the same texel density as the terrain (done)
 [.] When the FOV of the camera is changed, the sprites should get wider: messed with this, could use some work
-
-[] Change engine_input to engine_io so that it makes more sense for rumble to be in there
-[] In engine_file.c, need to find a better way of getting cwd without creating a new string. The string object could get collected and cause a seg fault, could happen!
+[X] Change engine_input to engine_io so that it makes more sense for rumble to be in there
 
 [] Instead of focusing GUI nodes, make menu button bring up default menu to exit game
 
 [] Make physics independent of FPS
 
 [] Saving a game should be as easy as engine.save() to generate representations of all objects that can then be initialized again from flash (if possible)
-[] Saving games
 
 [] Tones need duration
 [] Reset fps limit to disabled when the engine resets
@@ -147,15 +144,11 @@ X Menu?
    * [X] Nodes
    * [.] Audio <- Needs special attention! (still has an error where if text played quickly on same channel at start up that it crashes the device in the ISR while calling `get_data`)
    * [X] Resources/Flash
-[] Make sure the other node in the collision is passed to the collision callback, doesn't seem to be the case for rect vs. circle collision
 [] Detect if a node adds itself as a child to itself
 [] Collision layers
 [] Need to revisit flash scratch space. Need to copy data faster. Would be best if we did not need this area...
-[] Flag on physics nodes that that make it not check for collision? Or maybe just an empty physics nodes? Want something for particles
-[] Need to try using engine_bit_collection to set known bits and see if it is working as intended (print the collection out after setting)
 [] Use DMA to clear background screen buffer (that's not being drawn to) after it is sent out to the screen and the game loop is still running (chaining?): https://e2e.ti.com/support/microcontrollers/c2000-microcontrollers-group/c2000/f/c2000-microcontrollers-forum/509048/fast-way-to-zero-out-an-array/1848882#1848882
 [] Clear physics collision buffer bit collection using DMA: https://e2e.ti.com/support/microcontrollers/c2000-microcontrollers-group/c2000/f/c2000-microcontrollers-forum/509048/fast-way-to-zero-out-an-array/1848882#1848882
-[] Allow the user to somehow indicate they want to init certain aspects of the engine themselves. This way they can control memory a little better
 [] With lots of sprites on screen and big background, drawing or rotating slows down when rotated 90 degrees into the big 128x128 texture
 [] Expose low level drawing functions through engine_draw
 [] Fix camera view ports not being taken into account when drawing. Defines offset and then clip. Need to think about how view ports should really work, offset and clip into destination buffer (camera destinations should be able to be set to other buffers other than screen buffer if want to render one camera to a texture and then the next camera renders that node with that texture (TV!))
@@ -189,7 +182,6 @@ Game ideas
 [] Use voxelspace rotation to render the node? Might be too slow to do that for little gain
 [] Make voxelspace camera rotation->z correspond to line drawn at angle in radians. Make camera rotation->x correspond to radians (hard one)
 [] Need to make sure collision normals are correct. Seem to be the same for both objects sometimes (circle vs circle).
-[] Turns out that we should only need to do mp_load_attr once into internal struct for each node! During physics, modifying the x and y parameters of the pointers to positions from mp_load_attr really did modify the attrs! Could also just directly create and store then load in each init!!!!! See Reference commit for attr loading... commit and look at commented out lines in engine_physics.c related to storing attrs that's not needed!
 [] Crash log file (what to do about time? Maybe just overwrite with latest crash info?)
 [] Start screen as early as possible and also make a bootloader that starts the screen too
 [] Implement file system operations for micropython webassembly
@@ -209,3 +201,4 @@ Game ideas
 [] Listen to serial for commands like button inputs or stop
 [] Battery indicator and soft shutoff when close to minimum useful voltage
 [] Add option for fog, fog start, and fog color on voxelspace nodes
+[] In engine_file.c, need to find a better way of getting cwd without creating a new string. The string object could get collected and cause a seg fault, could happen!

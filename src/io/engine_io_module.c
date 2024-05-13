@@ -2,13 +2,14 @@
 #include "engine_io_common.h"
 #include "engine_gui.h"
 #include "engine_main.h"
-#include "engine_defines.h"
+#include "utility/engine_defines.h"
 
 
 #ifdef __unix__
     #include "engine_io_sdl.h"
 #else
     #include "engine_io_rp3.h"
+    #include "hardware/adc.h"
 #endif
 
 

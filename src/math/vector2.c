@@ -1,5 +1,6 @@
 #include "vector2.h"
 #include "debug/debug_print.h"
+#include "math/engine_math.h"
 
 
 mp_obj_t vector2_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
@@ -29,13 +30,48 @@ mp_obj_t vector2_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw
 
 
 /*  --- doc ---
+    NAME: length
+    ID: vector2_length
+    DESC: Calculates and returns length of the {ref_link:Vector2}                                                                                                        
+    RETURN: float
+*/ 
+mp_obj_t vector2_class_length(mp_obj_t self_in){
+    vector2_class_obj_t *self = self_in;
+
+    return mp_obj_new_float(engine_math_vector_length(self->x.value, self->y.value));
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(vector2_class_length_obj, vector2_class_length);
+
+
+/*  --- doc ---
+    NAME: normalized
+    ID: vector2_normalized
+    DESC: Calculates and returns normalized verion of the {ref_link:Vector2}                                                                                                        
+    RETURN: {ref_link:Vector2}
+*/ 
+mp_obj_t vector2_class_normalized(mp_obj_t self_in){
+    vector2_class_obj_t *self = self_in;
+
+    float normalized_x = self->x.value;
+    float normalized_y = self->y.value;
+
+    engine_math_normalize(&normalized_x, &normalized_y);
+
+    return vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(normalized_x), mp_obj_new_float(normalized_y)}); 
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(vector2_class_normalized_obj, vector2_class_normalized);
+
+
+/*  --- doc ---
     NAME: Vector2
     ID: Vector2
     DESC: Holds an X and Y value. Typically used for position
-    PARAM: [type=float]  [name=x]    [value=any]
-    PARAM: [type=float]  [name=y]    [value=any]                                                                                         
-    ATTR: [type=float]  [name=x]    [value=any]                                
-    ATTR: [type=float]  [name=y]    [value=any]                                                                             
+    PARAM:  [type=float]        [name=x]                                [value=any]
+    PARAM:  [type=float]        [name=y]                                [value=any]                                                                                         
+    ATTR:   [type=float]        [name=x]                                [value=any]                                
+    ATTR:   [type=float]        [name=y]                                [value=any]
+    ATTR:   [type=function]     [name={ref_link:vector2_length}]        [value=function]
+    ATTR:   [type=function]     [name={ref_link:vector2_normalized}]    [value=function]                                                                     
 */ 
 STATIC void vector2_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Vector2 attr");
@@ -43,7 +79,17 @@ STATIC void vector2_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *desti
     vector2_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
 
     if(destination[0] == MP_OBJ_NULL){          // Load
-        switch(attribute) {
+        switch(attribute){
+            case MP_QSTR_length:
+                destination[0] = MP_OBJ_FROM_PTR(&vector2_class_length_obj);
+                destination[1] = self;
+                return true;
+            break;
+            case MP_QSTR_normalized:
+                destination[0] = MP_OBJ_FROM_PTR(&vector2_class_normalized_obj);
+                destination[1] = self;
+                return true;
+            break;
             case MP_QSTR_x:
                 destination[0] = mp_obj_new_float(self->x.value);
             break;

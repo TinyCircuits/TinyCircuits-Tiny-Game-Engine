@@ -26,10 +26,6 @@
 
 #include "engine_main.h"
 
-#if defined(__arm__)
-    #include "hardware/adc.h"
-#endif
-
 // ### MODULE ###
 
 // Module functions
