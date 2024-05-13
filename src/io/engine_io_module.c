@@ -2,6 +2,7 @@
 #include "engine_io_common.h"
 #include "engine_gui.h"
 #include "engine_main.h"
+#include "engine_defines.h"
 
 
 #ifdef __unix__
