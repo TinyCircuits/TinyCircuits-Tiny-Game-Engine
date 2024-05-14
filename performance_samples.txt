@@ -882,3 +882,19 @@ vox_node_perf_test.py, avg. FPS: 36.54345
 
 
 
+2024-05-14 12:01:56.634284 : ec5fdc3c2784a6ecf2e437587471770a47305f0b
+Get rid of function call to get active screen buffer and add draw filled triangle function
+
+{
+line_node_perf_test.py, avg. FPS: 239.2786
+test_opacity_perf_test.py, avg. FPS: 94.3083
+test_perf_test.py, avg. FPS: 118.3894
+circle_node_perf_test.py, avg. FPS: 241.5006
+vox_node_perf_test.py, avg. FPS: 37.88422
+}
+
+
+ ----- 
+
+
+

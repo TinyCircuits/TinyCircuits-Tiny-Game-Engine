@@ -4,7 +4,6 @@
 #include "py/obj.h"
 #include "nodes/node_base.h"
 
-// A basic 2d circle node
 typedef struct{
     mp_obj_t position;  // Vector3
     mp_obj_list_t *vertices;

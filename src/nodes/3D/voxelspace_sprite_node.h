@@ -4,8 +4,6 @@
 #include "py/obj.h"
 #include "nodes/node_base.h"
 
-
-
 typedef struct{
     mp_obj_t position;              // Vector3
     mp_obj_t texture_resource;      // TextureResource

@@ -372,13 +372,13 @@ void engine_physics_tick(){
     while(time_accumulator > engine_fps_limit_period_ms){
         engine_physics_update(engine_fps_limit_period_ms);
         time_accumulator -= engine_fps_limit_period_ms;
-    }
 
-    // Apply impulses/move objects due to physics before
-    // checking for collisions. Doing it this way means
-    // you don't see when objects are overlapping and moved
-    // back (looks more stable)
-    engine_physics_apply_impulses(engine_fps_limit_period_ms, alpha);
+        // Apply impulses/move objects due to physics before
+        // checking for collisions. Doing it this way means
+        // you don't see when objects are overlapping and moved
+        // back (looks more stable)
+        engine_physics_apply_impulses(engine_fps_limit_period_ms, alpha);
+    }
 }
 
 
