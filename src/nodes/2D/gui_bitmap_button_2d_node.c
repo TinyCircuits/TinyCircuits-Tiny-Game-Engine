@@ -16,6 +16,7 @@
 #include "resources/engine_font_resource.h"
 #include "engine_gui.h"
 #include "io/engine_io_common.h"
+#include "engine_collections.h"
 
 #include <string.h>
 
@@ -159,7 +160,7 @@ mp_obj_t gui_bitmap_button_2d_node_class_del(mp_obj_t self_in){
 
     engine_node_base_t *node_base = self_in;
     engine_gui_bitmap_button_2d_node_class_obj_t *gui_button = node_base->node;
-    engine_gui_untrack(gui_button->gui_list_node);
+    engine_collections_untrack_gui(gui_button->gui_list_node);
 
     node_base_del(self_in);
 
@@ -681,7 +682,7 @@ mp_obj_t gui_bitmap_button_2d_node_class_new(const mp_obj_type_t *type, size_t n
     node_base->node = gui_bitmap_button_2d_node;
     node_base->attr_accessor = node_base;
 
-    gui_bitmap_button_2d_node->gui_list_node = engine_gui_track(node_base);
+    gui_bitmap_button_2d_node->gui_list_node = engine_collections_track_gui(node_base);
 
     gui_bitmap_button_2d_node->tick_cb = mp_const_none;
     gui_bitmap_button_2d_node->on_focused_cb = mp_const_none;

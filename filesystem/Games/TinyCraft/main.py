@@ -75,7 +75,7 @@ class MyCam(CameraNode):
 camera = MyCam()
 mesh = MeshNode()
 noise = NoiseResource()
-
+a
 
 def add_quad(v1, v2, v3, v4):
     mesh.vertices.append(v1)

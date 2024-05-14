@@ -1,14 +1,13 @@
 #include "camera_node.h"
 
 #include "nodes/node_types.h"
-#include "nodes/node_base.h"
 #include "debug/debug_print.h"
 #include "engine_object_layers.h"
 #include "math/rectangle.h"
 #include "utility/linked_list.h"
 #include "display/engine_display_common.h"
-#include "engine_cameras.h"
 #include "math/engine_math.h"
+#include "engine_collections.h"
 
 
 // https://stackoverflow.com/a/54958473
@@ -104,7 +103,7 @@ mp_obj_t camera_node_class_del(mp_obj_t self_in){
 
     engine_node_base_t *node_base = self_in;
     engine_camera_node_class_obj_t *camera_node = node_base->node;
-    engine_camera_untrack(camera_node->camera_list_node);
+    engine_collections_untrack_camera(camera_node->camera_list_node);
 
     node_base_del(self_in);
 
@@ -339,7 +338,7 @@ mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t 
     // Track the node base for this camera so that it can be
     // passed to draw callbacks, determined if inherited or not,
     // and then atributes looked up and used for drawing
-    camera_node->camera_list_node = engine_camera_track(node_base);
+    camera_node->camera_list_node = engine_collections_track_camera(node_base);
     camera_node->tick_cb = mp_const_none;
     camera_node->position = parsed_args[position].u_obj;
     camera_node->zoom = parsed_args[zoom].u_obj;
@@ -383,6 +382,42 @@ mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t 
     }
 
     return MP_OBJ_FROM_PTR(node_base);
+}
+
+
+void engine_camera_draw_for_each_obj(mp_obj_t dest[2]){
+    linked_list_node *current_camera_list_node = engine_camera_nodes_collection.start;
+    if(current_camera_list_node == NULL){
+        ENGINE_WARNING_PRINTF("No cameras exist, not calling draw callbacks!");
+    }
+
+    mp_obj_t arguments[3];
+    arguments[0] = dest[0];
+    arguments[1] = dest[1];
+
+    while(current_camera_list_node != NULL){
+        engine_node_base_t *camera_node_base = current_camera_list_node->object;
+        arguments[2] = camera_node_base;
+        
+        mp_call_method_n_kw(1, 0, arguments);
+        current_camera_list_node = current_camera_list_node->next;
+    }
+}
+
+
+void engine_camera_draw_for_each(void (*draw_cb)(mp_obj_t, mp_obj_t), engine_node_base_t *node_base){
+    linked_list_node *current_camera_list_node = engine_camera_nodes_collection.start;
+    if(current_camera_list_node == NULL){
+        ENGINE_WARNING_PRINTF("No cameras exist, not calling draw callbacks!");
+    }
+
+    while(current_camera_list_node != NULL){
+        engine_node_base_t *camera_node_base = current_camera_list_node->object;
+        
+        draw_cb(node_base, camera_node_base);
+
+        current_camera_list_node = current_camera_list_node->next;
+    }
 }
 
 

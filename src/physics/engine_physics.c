@@ -13,14 +13,13 @@
 #include "physics/engine_physics_collision.h"
 #include "utility/engine_time.h"
 #include "engine.h"
+#include "engine_collections.h"
 
 // Bit array/collection to track nodes that have collided. In the `init` function
 // this is sized so that the output indices from a simple paring function can fit
 // (https://math.stackexchange.com/a/531914)
 engine_bit_collection_t collided_physics_nodes;
 
-
-linked_list engine_physics_nodes;
 float engine_physics_gravity_x = 0.0f;
 float engine_physics_gravity_y = -0.00981f;
 
@@ -41,7 +40,7 @@ void engine_physics_init(){
 
 
 void engine_physics_apply_impulses(float dt, float alpha){
-    linked_list_node *physics_link_node = engine_physics_nodes.start;
+    linked_list_node *physics_link_node = engine_physics_nodes_collection.start;
     while(physics_link_node != NULL){
         engine_node_base_t *node_base = physics_link_node->object;
         engine_physics_node_base_t *physics_node_base = node_base->node;
@@ -325,10 +324,10 @@ void engine_physics_update(float dt){
     // Loop through all nodes and test for collision against
     // all other nodes (not optimized checking of if nodes are
     // even possibly close to each other)
-    linked_list_node *physics_link_node_a = engine_physics_nodes.start;
+    linked_list_node *physics_link_node_a = engine_physics_nodes_collection.start;
     while(physics_link_node_a != NULL){
         // Now check 'a' against all nodes 'b'
-        linked_list_node *physics_link_node_b = engine_physics_nodes.start;
+        linked_list_node *physics_link_node_b = engine_physics_nodes_collection.start;
 
         while(physics_link_node_b != NULL){
             // Make sure we are not checking against ourselves
@@ -379,22 +378,4 @@ void engine_physics_tick(){
         // back (looks more stable)
         engine_physics_apply_impulses(engine_fps_limit_period_ms, alpha);
     }
-}
-
-
-linked_list_node *engine_physics_track_node(engine_node_base_t *obj){
-    ENGINE_INFO_PRINTF("Tracking physics node %p", obj);
-    return linked_list_add_obj(&engine_physics_nodes, obj);
-}
-
-
-void engine_physics_untrack_node(linked_list_node *physics_list_node){
-    ENGINE_INFO_PRINTF("Untracking physics node");
-    linked_list_del_list_node(&engine_physics_nodes, physics_list_node);
-}
-
-
-void engine_physics_clear_all(){
-    ENGINE_INFO_PRINTF("Untracking physics nodes...");
-    linked_list_clear(&engine_physics_nodes);
 }

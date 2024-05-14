@@ -7,6 +7,7 @@ set(ENGINE_MOD_DIR ${CMAKE_CURRENT_LIST_DIR})
 target_sources(usermod_engine INTERFACE
     ${ENGINE_MOD_DIR}/engine_main.c
     ${ENGINE_MOD_DIR}/engine.c
+    ${ENGINE_MOD_DIR}/engine_collections.c
     ${ENGINE_MOD_DIR}/math/engine_math.c
     ${ENGINE_MOD_DIR}/draw/engine_draw_module.c
     ${ENGINE_MOD_DIR}/draw/engine_color.c
@@ -44,7 +45,6 @@ target_sources(usermod_engine INTERFACE
     ${ENGINE_MOD_DIR}/utility/engine_mp.c
     ${ENGINE_MOD_DIR}/utility/engine_bit_collection.c
     ${ENGINE_MOD_DIR}/engine_object_layers.c
-    ${ENGINE_MOD_DIR}/engine_cameras.c
     ${ENGINE_MOD_DIR}/engine_gui.c
     ${ENGINE_MOD_DIR}/display/engine_display.c
     # ${ENGINE_MOD_DIR}/display/engine_display_driver_rp2_st7789.c

@@ -29,7 +29,7 @@ class MyButton(GUIButton2DNode):
     def __init__(self):
         super().__init__(self)
     
-    def tick(self):
+    def tick(self, dt):
         pass
     
     def on_focused(self):
@@ -76,7 +76,7 @@ class MyCam(CameraNode):
         self.zoom = 1
 
     
-    def tick(self):
+    def tick(self, dt):
         if(engine_io.focused != None):
             self.position.x = engine_io.focused.position.x
             self.position.y = engine_io.focused.position.y

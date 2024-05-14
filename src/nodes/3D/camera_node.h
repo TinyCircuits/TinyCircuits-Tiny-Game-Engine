@@ -5,6 +5,7 @@
 #include "utility/linked_list.h"
 #include "math/vector3.h"
 #include "utility/engine_mp.h"
+#include "nodes/node_base.h"
 
 
 // https://stackoverflow.com/a/54958473
@@ -24,5 +25,11 @@ typedef struct{
 }engine_camera_node_class_obj_t;
 
 extern const mp_obj_type_t engine_camera_node_class_type;
+
+// For each camera instance that is not disabled,
+// pass each camera to the draw callback
+void engine_camera_draw_for_each_obj(mp_obj_t dest[2]);
+
+void engine_camera_draw_for_each(void (*draw_cb)(mp_obj_t, mp_obj_t), engine_node_base_t *node_base);
 
 #endif  // CAMERA_NODE_H

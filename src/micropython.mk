@@ -3,6 +3,7 @@ ENGINE_MOD_DIR := $(USERMOD_DIR)
 # Add our source files to the respective variables.
 SRC_USERMOD += $(ENGINE_MOD_DIR)/engine_main.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/engine.c
+SRC_USERMOD += $(ENGINE_MOD_DIR)/engine_collections.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/math/engine_math.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/draw/engine_draw_module.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/draw/engine_color.c
@@ -40,7 +41,6 @@ SRC_USERMOD += $(ENGINE_MOD_DIR)/utility/engine_file.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/utility/engine_mp.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/utility/engine_bit_collection.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/engine_object_layers.c
-SRC_USERMOD += $(ENGINE_MOD_DIR)/engine_cameras.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/engine_gui.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/display/engine_display.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/display/engine_display_driver_unix_sdl.c

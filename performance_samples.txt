@@ -898,3 +898,19 @@ vox_node_perf_test.py, avg. FPS: 37.88422
 
 
 
+2024-05-14 12:25:10.790652 : 1e3c45ebe18bcf6d9e77ef42813aa3fa0841c40a
+Move physics logic around to hopefully make it not depend on running FPS as much
+
+{
+line_node_perf_test.py, avg. FPS: 241.3359
+test_opacity_perf_test.py, avg. FPS: 92.86024
+test_perf_test.py, avg. FPS: 114.4464
+circle_node_perf_test.py, avg. FPS: 241.3397
+vox_node_perf_test.py, avg. FPS: 37.75498
+}
+
+
+ ----- 
+
+
+

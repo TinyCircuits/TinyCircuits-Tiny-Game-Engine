@@ -4,38 +4,14 @@
 #include "nodes/2D/gui_button_2d_node.h"
 #include "nodes/2D/gui_bitmap_button_2d_node.h"
 #include "math/engine_math.h"
+#include "engine_collections.h"
 #include <float.h>
 
 
-linked_list engine_guis;
 engine_node_base_t *focused_gui_node_base = NULL;
 
 
 bool gui_focused = false;
-
-
-linked_list_node *engine_gui_track(engine_node_base_t *obj){
-    ENGINE_INFO_PRINTF("Tracking new gui node");
-    return linked_list_add_obj(&engine_guis, obj);
-}
-
-
-void engine_gui_untrack(linked_list_node *gui_list_node){
-    ENGINE_INFO_PRINTF("Untracking gui node");
-    linked_list_del_list_node(&engine_guis, gui_list_node);
-}
-
-
-void engine_gui_clear_all(){
-    ENGINE_INFO_PRINTF("Untracking all gui nodes...");
-    
-    linked_list_node *current = engine_guis.start;
-    while(current != NULL){
-        m_del_obj((mp_obj_type_t*)((mp_obj_base_t*)current->object)->type, current->object);
-
-        current = current->next;
-    }
-}
 
 
 void engine_gui_reset(){
@@ -80,8 +56,8 @@ void engine_gui_toggle_focus(){
 
     // If just focused, loop through all elements and focus
     // the first node if no other node is already focused
-    if(gui_focused && engine_guis.start != NULL){
-        linked_list_node *current_gui_list_node = engine_guis.start;
+    if(gui_focused && engine_gui_nodes_collection.start != NULL){
+        linked_list_node *current_gui_list_node = engine_gui_nodes_collection.start;
 
         while(current_gui_list_node != NULL){
             engine_node_base_t *gui_node_base = current_gui_list_node->object;
@@ -103,7 +79,7 @@ void engine_gui_toggle_focus(){
         }
 
         // Made it this far, must mean that no gui nodes are focused, focus the first one
-        engine_gui_focus_node(engine_guis.start->object);
+        engine_gui_focus_node(engine_gui_nodes_collection.start->object);
     }
 }
 
@@ -170,7 +146,7 @@ void engine_gui_select_closest(bool (direction_check)(float)){
     }
 
     // Setup for looping through all GUI nodes and finding closest
-    linked_list_node *current_gui_list_node = engine_guis.start;
+    linked_list_node *current_gui_list_node = engine_gui_nodes_collection.start;
     engine_node_base_t *closest_gui_node_base = NULL;
     float shortest_distance = FLT_MAX;
 
@@ -240,8 +216,6 @@ void engine_gui_tick(){
 
         // If unfocus GUI entirely, make sure the focused node gets unfocused
         if(focused_gui_node_base != NULL && gui_focused == false){
-            engine_gui_button_2d_node_class_obj_t *focused_node = focused_gui_node_base->node;
-
             if(mp_obj_is_type(focused_gui_node_base, &engine_gui_bitmap_button_2d_node_class_type)){
                 ((engine_gui_bitmap_button_2d_node_class_obj_t*)focused_gui_node_base->node)->focused = false;
             }else{

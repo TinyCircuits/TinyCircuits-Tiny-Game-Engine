@@ -106,4 +106,4 @@ cwd = os.getcwd()
 # game it executes completes) launch the launcher again
 while True:
     os.chdir(cwd)
-    execfile(cwd + "launcher.py")
+    execfile(cwd + "/launcher.py")

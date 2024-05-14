@@ -161,7 +161,7 @@ mp_obj_t physics_rectangle_2d_node_class_del(mp_obj_t self_in){
     engine_node_base_t *node_base = self_in;
     engine_physics_node_base_t *physics_node_base = node_base->node;
     // engine_physics_rectangle_2d_node_class_obj_t *node = physics_node_base->unique_data;
-    engine_physics_untrack_node(physics_node_base->physics_list_node);
+    engine_collections_untrack_physics(physics_node_base->physics_list_node);
     engine_physics_ids_give_back(physics_node_base->physics_id);
 
     node_base_del(self_in);
@@ -459,7 +459,7 @@ mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n
 
     // Track the node base for this physics node so that it can
     // be looped over quickly in a linked list
-    physics_node_base->physics_list_node = engine_physics_track_node(node_base);
+    physics_node_base->physics_list_node = engine_collections_track_physics(node_base);
 
     physics_node_base->tick_cb = mp_const_none;
     physics_node_base->collision_cb = mp_const_none;

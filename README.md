@@ -98,8 +98,7 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [-] When the camera is 1 unit from the sprite, it should take up the sprite_height number of pixels: NO, they should be scaled and render at the same texel density as the terrain (done)
 [.] When the FOV of the camera is changed, the sprites should get wider: messed with this, could use some work
 [X] Change engine_input to engine_io so that it makes more sense for rumble to be in there
-
-[] Somehow get better error when a game raises an exception in launcher
+[.] Somehow get better error when a game raises an exception in launcher: made it a little better, says <module> instead of file name though...
 
 [] Instead of focusing GUI nodes, make menu button bring up default menu to exit game
 

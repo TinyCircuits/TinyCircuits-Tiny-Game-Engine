@@ -300,11 +300,14 @@ try:
     execfile(game_file_name)
 except Exception as ex:
     import sys
-    crash_file = open(cwd + "last_crash.txt", 'w')
-    crash_file.write("While executing file `" + game_dir + "/" + game_file_name + "` an error occurred:\n\n")
-    crash_file.write(str(ex))
-    # sys.print_exception(ex, crash_file)
+
+    crash_file = open(cwd + "/last_crash.txt", 'w')
+    crash_file.write("While executing file `" + game_dir + "/" + game_file_name + "` an error occurred (<module> refers to the game file):\n\n")
+    sys.print_exception(ex, crash_file)
     crash_file.close()
 
     os.chdir(cwd)
     execfile("crash.py")
+
+    # Raise again so that it prints: https://forum.micropython.org/viewtopic.php?t=2175#p12312
+    raise ex
