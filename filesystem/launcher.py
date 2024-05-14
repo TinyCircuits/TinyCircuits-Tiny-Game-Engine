@@ -9,10 +9,6 @@ from engine_nodes import Sprite2DNode, CameraNode, GUIBitmapButton2DNode, Text2D
 from engine_resources import TextureResource, FontResource
 from engine_animation import Tween, ONE_SHOT, EASE_BACK_OUT
 import os
-import sys
-import array
-
-import math
 
 
 game_path_to_execute = None
@@ -292,9 +288,23 @@ engine.start()
 game_dir = game_path_to_execute[:game_path_to_execute.rfind("/")]
 game_file_name = game_path_to_execute[game_path_to_execute.rfind("/")+1:]
 
+# Track this for saving crash log
+cwd = os.getcwd()
+
 # Change to game directory so that games can use
 # relative paths inside their folder to open files
 # then execute from that relative path
 os.chdir(game_dir)
 
-execfile(game_file_name)
+try:
+    execfile(game_file_name)
+except Exception as ex:
+    import sys
+    crash_file = open(cwd + "last_crash.txt", 'w')
+    crash_file.write("While executing file `" + game_dir + "/" + game_file_name + "` an error occurred:\n\n")
+    crash_file.write(str(ex))
+    # sys.print_exception(ex, crash_file)
+    crash_file.close()
+
+    os.chdir(cwd)
+    execfile("crash.py")

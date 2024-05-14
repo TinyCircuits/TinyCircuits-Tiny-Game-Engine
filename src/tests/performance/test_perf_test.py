@@ -3,7 +3,7 @@ import engine_main
 import engine
 import engine_draw
 import engine_debug
-import engine_input
+import engine_io
 import engine_physics
 import engine_audio
 from engine_nodes import EmptyNode, Sprite2DNode, Rectangle2DNode, Circle2DNode, CameraNode, VoxelSpaceNode, Text2DNode, Line2DNode
@@ -69,24 +69,24 @@ class MyCam(CameraNode):
         super().__init__(self)
     
     def tick(self, dt):
-        if engine_input.check_pressed(engine_input.A):
+        if engine_io.check_pressed(engine_io.A):
             self.zoom -= 0.005
-        if engine_input.check_pressed(engine_input.B):
+        if engine_io.check_pressed(engine_io.B):
             self.zoom += 0.005
         
-        if engine_input.check_pressed(engine_input.DPAD_UP):
+        if engine_io.check_pressed(engine_io.DPAD_UP):
             self.position.y -= 0.25
-        if engine_input.check_pressed(engine_input.DPAD_DOWN):
+        if engine_io.check_pressed(engine_io.DPAD_DOWN):
             self.position.y += 0.25
         
-        if engine_input.check_pressed(engine_input.DPAD_LEFT):
+        if engine_io.check_pressed(engine_io.DPAD_LEFT):
             self.position.x -= 0.25
-        if engine_input.check_pressed(engine_input.DPAD_RIGHT):
+        if engine_io.check_pressed(engine_io.DPAD_RIGHT):
             self.position.x += 0.25
         
-        if engine_input.check_pressed(engine_input.BUMPER_LEFT):
+        if engine_io.check_pressed(engine_io.BUMPER_LEFT):
             self.rotation.z += 0.005
-        if engine_input.check_pressed(engine_input.BUMPER_RIGHT):
+        if engine_io.check_pressed(engine_io.BUMPER_RIGHT):
             self.rotation.z -= 0.005
 
 

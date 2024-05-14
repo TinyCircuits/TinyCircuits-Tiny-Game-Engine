@@ -2,7 +2,7 @@ import engine_main
 
 import engine
 import engine_draw
-import engine_input
+import engine_io
 import engine_physics
 from engine_math import Vector2
 from engine_nodes import Rectangle2DNode, Circle2DNode, CameraNode, PhysicsRectangle2DNode, PhysicsCircle2DNode
@@ -64,19 +64,19 @@ class Player(PhysicsCircle2DNode):
         print(self.count)
     
     def tick(self, dt):
-        if engine_input.check_pressed(engine_input.DPAD_LEFT):
+        if engine_io.check_pressed(engine_io.DPAD_LEFT):
             self.velocity.x = -0.3
-        elif engine_input.check_pressed(engine_input.DPAD_RIGHT):
+        elif engine_io.check_pressed(engine_io.DPAD_RIGHT):
             self.velocity.x = 0.3
 
-        if engine_input.check_pressed(engine_input.DPAD_UP):
+        if engine_io.check_pressed(engine_io.DPAD_UP):
             self.velocity.y = -0.3
-        elif engine_input.check_pressed(engine_input.DPAD_DOWN):
+        elif engine_io.check_pressed(engine_io.DPAD_DOWN):
             self.velocity.y = 0.3
 
-        if engine_input.check_pressed(engine_input.BUMPER_LEFT):
+        if engine_io.check_pressed(engine_io.BUMPER_LEFT):
             self.rotation += 0.0045
-        elif engine_input.check_pressed(engine_input.BUMPER_RIGHT):
+        elif engine_io.check_pressed(engine_io.BUMPER_RIGHT):
             self.rotation -= 0.0045
     
     def collision(self, contact):

@@ -1,5 +1,5 @@
 import engine
-import engine_input
+import engine_io
 from engine_nodes import Rectangle2DNode, Text2DNode, CameraNode
 from engine_resources import FontResource
 from engine_math import Vector2
@@ -19,24 +19,24 @@ class MyCam(CameraNode):
         super().__init__(self)
     
     def tick(self):
-        if engine_input.check_pressed(engine_input.A):
+        if engine_io.check_pressed(engine_io.A):
             self.zoom -= 0.0025
-        if engine_input.check_pressed(engine_input.B):
+        if engine_io.check_pressed(engine_io.B):
             self.zoom += 0.0025
         
-        if engine_input.check_pressed(engine_input.DPAD_UP):
+        if engine_io.check_pressed(engine_io.DPAD_UP):
             self.position.y -= 0.25
-        if engine_input.check_pressed(engine_input.DPAD_DOWN):
+        if engine_io.check_pressed(engine_io.DPAD_DOWN):
             self.position.y += 0.25
         
-        if engine_input.check_pressed(engine_input.DPAD_LEFT):
+        if engine_io.check_pressed(engine_io.DPAD_LEFT):
             self.position.x -= 0.25
-        if engine_input.check_pressed(engine_input.DPAD_RIGHT):
+        if engine_io.check_pressed(engine_io.DPAD_RIGHT):
             self.position.x += 0.25
         
-        if engine_input.check_pressed(engine_input.BUMPER_LEFT):
+        if engine_io.check_pressed(engine_io.BUMPER_LEFT):
             self.rotation.z += 0.005
-        if engine_input.check_pressed(engine_input.BUMPER_RIGHT):
+        if engine_io.check_pressed(engine_io.BUMPER_RIGHT):
             self.rotation.z -= 0.005
 
 # Make the camera and add the text as a child of it

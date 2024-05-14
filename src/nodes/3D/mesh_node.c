@@ -35,7 +35,6 @@ void mesh_node_class_draw(engine_node_base_t *mesh_node_base, mp_obj_t camera_no
     vec3 cam_target = GLM_VEC3_ZERO_INIT;
     vec3 cam_up = {world_north.x.value, world_north.y.value, world_north.z.value};
 
-
     if(mesh_node->vertices->len < 3){
         return;
     }
@@ -92,25 +91,28 @@ void mesh_node_class_draw(engine_node_base_t *mesh_node_base, mp_obj_t camera_no
             int32_t x2 = out_2[0];
             int32_t y2 = out_2[1];
 
-            bool endpoint_0_on_screen = engine_math_int32_between(x0, 0, SCREEN_WIDTH_MINUS_1) && engine_math_int32_between(y0, 0, SCREEN_HEIGHT_MINUS_1);
-            bool endpoint_1_on_screen = engine_math_int32_between(x1, 0, SCREEN_WIDTH_MINUS_1) && engine_math_int32_between(y1, 0, SCREEN_HEIGHT_MINUS_1);
-            bool endpoint_2_on_screen = engine_math_int32_between(x2, 0, SCREEN_WIDTH_MINUS_1) && engine_math_int32_between(y2, 0, SCREEN_HEIGHT_MINUS_1);
+            engine_draw_filled_triangle(0b1111100000000000, x0, y0, x1, y1, x2, y2, 1.0f, &empty_shader);
 
-            // If either endpoint is on screen, draw the full line
-            // This avoids drawing lines that are out of bounds on
-            // the camera's view plane and increases performance a
-            // ton
-            if(endpoint_0_on_screen || endpoint_1_on_screen){
-                engine_draw_line(0xffff, out_0[0], out_0[1], out_1[0], out_1[1], NULL, 1.0f, &empty_shader);
-            }
+            // // Wireframe
+            // bool endpoint_0_on_screen = engine_math_int32_between(x0, 0, SCREEN_WIDTH_MINUS_1) && engine_math_int32_between(y0, 0, SCREEN_HEIGHT_MINUS_1);
+            // bool endpoint_1_on_screen = engine_math_int32_between(x1, 0, SCREEN_WIDTH_MINUS_1) && engine_math_int32_between(y1, 0, SCREEN_HEIGHT_MINUS_1);
+            // bool endpoint_2_on_screen = engine_math_int32_between(x2, 0, SCREEN_WIDTH_MINUS_1) && engine_math_int32_between(y2, 0, SCREEN_HEIGHT_MINUS_1);
 
-            if(endpoint_1_on_screen || endpoint_2_on_screen){
-                engine_draw_line(0xffff, out_1[0], out_1[1], out_2[0], out_2[1], NULL, 1.0f, &empty_shader);
-            }
+            // // If either endpoint is on screen, draw the full line
+            // // This avoids drawing lines that are out of bounds on
+            // // the camera's view plane and increases performance a
+            // // ton
+            // if(endpoint_0_on_screen || endpoint_1_on_screen){
+            //     engine_draw_line(0xffff, out_0[0], out_0[1], out_1[0], out_1[1], NULL, 1.0f, &empty_shader);
+            // }
 
-            if(endpoint_2_on_screen || endpoint_0_on_screen){
-                engine_draw_line(0xffff, out_2[0], out_2[1], out_0[0], out_0[1], NULL, 1.0f, &empty_shader);
-            }
+            // if(endpoint_1_on_screen || endpoint_2_on_screen){
+            //     engine_draw_line(0xffff, out_1[0], out_1[1], out_2[0], out_2[1], NULL, 1.0f, &empty_shader);
+            // }
+
+            // if(endpoint_2_on_screen || endpoint_0_on_screen){
+            //     engine_draw_line(0xffff, out_2[0], out_2[1], out_0[0], out_0[1], NULL, 1.0f, &empty_shader);
+            // }
         }
     }
 }
@@ -248,6 +250,10 @@ STATIC mp_attr_fun_t mesh_node_class_attr(mp_obj_t self_in, qstr attribute, mp_o
     OVRR:  [type=function]                       [name={ref_link:tick}]          [value=function]
 */
 mp_obj_t mesh_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
+
+    // This node uses a depth buffer to be drawn correctly
+    engine_display_check_depth_buffer_created();
+
     ENGINE_INFO_PRINTF("New MeshNode");
 
     static const mp_arg_t allowed_args[] = {

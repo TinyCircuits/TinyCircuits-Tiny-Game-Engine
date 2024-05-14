@@ -1,7 +1,7 @@
 import engine
 import engine_draw
 import engine_debug
-import engine_input
+import engine_io
 import engine_physics
 import engine_audio
 from engine_physics import EmptyPolyCollisionShape2D, RectanglePolyCollisionShape2D, HexagonPolyCollisionShape2D
@@ -27,20 +27,20 @@ class MySprite(Sprite2DNode):
     
     # def tick(self):
         # print(c1.time)
-    #     if engine_input.is_dpad_up_pressed():
+    #     if engine_io.is_dpad_up_pressed():
     #         self.position.y -= 1
-    #     if engine_input.is_dpad_down_pressed():
+    #     if engine_io.is_dpad_down_pressed():
     #         self.position.y += 1
         
-    #     if engine_input.is_dpad_left_pressed():
+    #     if engine_io.is_dpad_left_pressed():
     #         self.position.x -= 1
-    #     if engine_input.is_dpad_right_pressed():
+    #     if engine_io.is_dpad_right_pressed():
     #         self.position.x += 1
         
         
-    #     if engine_input.is_bumper_left_pressed():
+    #     if engine_io.is_bumper_left_pressed():
     #         self.rotation += 0.1
-    #     if engine_input.is_bumper_right_pressed():
+    #     if engine_io.is_bumper_right_pressed():
     #         self.rotation -= 0.1
 
 
@@ -70,25 +70,25 @@ class MyCam(CameraNode):
         super().__init__(self)
     
     def tick(self):
-        if engine_input.is_a_pressed():
+        if engine_io.is_a_pressed():
             self.zoom -= 0.1
-        if engine_input.is_b_pressed():
+        if engine_io.is_b_pressed():
             self.zoom += 0.1
         
-        if engine_input.is_dpad_up_pressed():
+        if engine_io.is_dpad_up_pressed():
             self.position.y -= 1
-        if engine_input.is_dpad_down_pressed():
+        if engine_io.is_dpad_down_pressed():
             self.position.y += 1
         
-        if engine_input.is_dpad_left_pressed():
+        if engine_io.is_dpad_left_pressed():
             self.position.x -= 1
-        if engine_input.is_dpad_right_pressed():
+        if engine_io.is_dpad_right_pressed():
             self.position.x += 1
         
         
-        if engine_input.is_bumper_left_pressed():
+        if engine_io.is_bumper_left_pressed():
             self.rotation.z += 0.1
-        if engine_input.is_bumper_right_pressed():
+        if engine_io.is_bumper_right_pressed():
             self.rotation.z -= 0.1
 
 

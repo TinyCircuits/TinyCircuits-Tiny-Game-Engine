@@ -1,6 +1,6 @@
 import engine
 import engine_draw
-import engine_input
+import engine_io
 from engine_draw import Color
 from engine_math import Vector2, Vector3
 from engine_nodes import Circle2DNode, CameraNode, VoxelSpaceNode
@@ -74,13 +74,13 @@ class cam(CameraNode):
         self.intensity = 0.0
 
     def tick(self):
-        if engine_input.check_pressed(engine_input.BUMPER_RIGHT):
+        if engine_io.check_pressed(engine_io.BUMPER_RIGHT):
             self.intensity += 0.05
-            engine_input.rumble(self.intensity)
+            engine_io.rumble(self.intensity)
             print(self.intensity)
-        if engine_input.check_pressed(engine_input.BUMPER_LEFT):
+        if engine_io.check_pressed(engine_io.BUMPER_LEFT):
             self.intensity -= 0.05
-            engine_input.rumble(self.intensity)
+            engine_io.rumble(self.intensity)
             print(self.intensity)
 
         lookat_x = self.target.x - self.position.x

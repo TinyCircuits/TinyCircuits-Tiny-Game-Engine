@@ -5,14 +5,14 @@ from engine_nodes import GUIButton2DNode, GUIBitmapButton2DNode, CameraNode
 from engine_resources import FontResource, TextureResource
 from engine_math import Vector2
 import engine_draw
-import engine_input
+import engine_io
 from engine_animation import Tween, ONE_SHOT, LOOP, PING_PONG, EASE_CIRC_IN_OUT, EASE_BOUNCE_IN, EASE_BOUNCE_OUT
 
 engine.set_fps_limit(120)
 
 font = FontResource("9pt-roboto-font.bmp")
 
-# engine_input.gui_toggle_button = None
+# engine_io.gui_toggle_button = None
 
 # button0 = GUIButton2DNode(position=Vector2(-32,   0), font=font, text="Button 0", rotation=0, scale=Vector2(1, 1), padding=2, outline=2, opacity=1.0)
 # button1 = GUIButton2DNode(position=Vector2(  0, -32), font=font, text="Button 1", rotation=0, scale=Vector2(1, 1), padding=2, outline=2, opacity=1.0)
@@ -77,28 +77,28 @@ class MyCam(CameraNode):
 
     
     def tick(self):
-        if(engine_input.focused != None):
-            self.position.x = engine_input.focused.position.x
-            self.position.y = engine_input.focused.position.y
+        if(engine_io.focused != None):
+            self.position.x = engine_io.focused.position.x
+            self.position.y = engine_io.focused.position.y
 
-        if engine_input.check_pressed(engine_input.B):
+        if engine_io.check_pressed(engine_io.B):
             self.zoom -= 0.025
-        if engine_input.check_pressed(engine_input.A):
+        if engine_io.check_pressed(engine_io.A):
             self.zoom += 0.025
         
-        if engine_input.check_pressed(engine_input.DPAD_UP):
+        if engine_io.check_pressed(engine_io.DPAD_UP):
             self.position.y -= 0.5
-        if engine_input.check_pressed(engine_input.DPAD_DOWN):
+        if engine_io.check_pressed(engine_io.DPAD_DOWN):
             self.position.y += 0.5
         
-        if engine_input.check_pressed(engine_input.DPAD_LEFT):
+        if engine_io.check_pressed(engine_io.DPAD_LEFT):
             self.position.x -= 0.5
-        if engine_input.check_pressed(engine_input.DPAD_RIGHT):
+        if engine_io.check_pressed(engine_io.DPAD_RIGHT):
             self.position.x += 0.5
         
-        if engine_input.check_pressed(engine_input.BUMPER_LEFT):
+        if engine_io.check_pressed(engine_io.BUMPER_LEFT):
             self.rotation.z += 0.0085
-        if engine_input.check_pressed(engine_input.BUMPER_RIGHT):
+        if engine_io.check_pressed(engine_io.BUMPER_RIGHT):
             self.rotation.z -= 0.0085
 
 

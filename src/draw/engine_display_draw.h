@@ -35,4 +35,6 @@ void engine_draw_filled_circle(uint16_t color, float center_x, float center_y, f
 
 void engine_draw_text(font_resource_class_obj_t *font, mp_obj_t text, float center_x, float center_y, float text_box_width, float text_box_height, float letter_spacing, float line_spacing, float x_scale, float y_scale, float rotation_radians, float alpha, engine_shader_t *shader);
 
+void engine_draw_filled_triangle(uint16_t color, float x0, float y0, float x1, float y1, float x2, float y2, float alpha, engine_shader_t *shader);
+
 #endif  // ENGINE_DISPLAY_DRAW_H

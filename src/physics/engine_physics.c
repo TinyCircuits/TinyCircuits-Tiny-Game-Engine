@@ -165,7 +165,8 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
         // Calculate restitution/bounciness
         float physics_node_a_bounciness = mp_obj_get_float(physics_node_base_a->bounciness);
         float physics_node_b_bounciness = mp_obj_get_float(physics_node_base_b->bounciness);
-        float bounciness = (physics_node_a_bounciness+physics_node_b_bounciness) * 0.5f; // Restitution: https://github.com/victorfisac/Physac/blob/29d9fc06860b54571a02402fff6fa8572d19bd12/src/physac.h#L1664
+        // float bounciness = (physics_node_a_bounciness+physics_node_b_bounciness) * 0.5f; // Restitution: https://github.com/victorfisac/Physac/blob/29d9fc06860b54571a02402fff6fa8572d19bd12/src/physac.h#L1664
+        float bounciness = sqrtf(physics_node_a_bounciness*physics_node_b_bounciness);
 
         // if(engine_math_vector_length_sqr(contact.relative_velocity_x, contact.relative_velocity_y) < engine_math_vector_length_sqr(engine_physics_gravity_x, engine_physics_gravity_y) + EPSILON){
         //     bounciness = 0.0f;
@@ -350,7 +351,7 @@ void engine_physics_update(float dt){
 
 
 void engine_physics_tick(){
-    // // https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-core-engine--gamedev-7493t#timestepping:~:text=Here%20is%20a%20full%20example%3A
+    // https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-core-engine--gamedev-7493t#timestepping:~:text=Here%20is%20a%20full%20example%3A
     const float alpha = time_accumulator / engine_fps_limit_period_ms;
 
     const float current_time_ms = millis();

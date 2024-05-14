@@ -12,13 +12,17 @@
 #define DEG2RAD (PI/180.0f)
 #define EPSILON 1e-9
 
+#ifndef min
+#define min(a,b)            (((a) < (b)) ? (a) : (b))
+#endif
+
 #ifndef max
 #define max(a,b)            (((a) > (b)) ? (a) : (b))
 #endif
 
-#ifndef min
-#define min(a,b)            (((a) < (b)) ? (a) : (b))
-#endif
+// https://stackoverflow.com/a/5441379
+#define min3(a,b,c)         min(min(a, b), c)
+#define max3(a,b,c)         max(max(a, b), c) 
 
 float engine_math_dot_product(float x0, float y0, float x1, float y1);
 

@@ -648,3 +648,62 @@ void engine_draw_text(font_resource_class_obj_t *font, mp_obj_t text, float cent
         current_row_width += char_width+letter_spacing;
     }
 }
+
+
+float orient2d(float x0, float y0, float x1, float y1, float x2, float y2){
+    return (x1-x0)*(y2-y0) - (y1-y0)*(x2-x0);
+}
+
+
+// https://fgiesen.wordpress.com/2013/02/08/triangle-rasterization-in-practice/#:~:text=trivial%20to%20traverse.-,This%20gives%3A,-void%20drawTri(const
+// https://fgiesen.wordpress.com/2013/02/10/optimizing-the-basic-rasterizer/#:~:text=In%20our%20basic%20triangle%20rasterization%20loop
+void engine_draw_filled_triangle(uint16_t color, float x0, float y0, float x1, float y1, float x2, float y2, float alpha, engine_shader_t *shader){
+    // Triangle setup
+    int16_t A01 = y0 - y1, B01 = x1 - x0;
+    int16_t A12 = y1 - y2, B12 = x2 - x1;
+    int16_t A20 = y2 - y0, B20 = x0 - x2;
+
+    // Compute triangle bounding box
+    int16_t minX = min3(x0, x1, x2);
+    int16_t minY = min3(y0, y1, y2);
+    int16_t maxX = max3(x0, x1, x2);
+    int16_t maxY = max3(y0, y1, y2);
+
+    // Clip against screen bounds
+    minX = max(minX, 0);
+    minY = max(minY, 0);
+    maxX = min(maxX, SCREEN_WIDTH_MINUS_1);
+    maxY = min(maxY, SCREEN_HEIGHT_MINUS_1);
+
+    int16_t px = minX;
+    int16_t py = minY;
+
+    int16_t w0_row = orient2d(x1, y1, x2, y2, px, py);
+    int16_t w1_row = orient2d(x2, y2, x0, y0, px, py);
+    int16_t w2_row = orient2d(x0, y0, x1, y1, px, py);
+
+    // Rasterize
+    for(py = minY; py <= maxY; py++){
+        // Barycentric coordinates at start of row
+        int16_t w0 = w0_row;
+        int16_t w1 = w1_row;
+        int16_t w2 = w2_row;
+
+        for(px = minX; px <= maxX; px++){
+            // If p is on or inside all edges, render pixel.
+            if (w0 >= 0 && w1 >= 0 && w2 >= 0){
+                engine_draw_pixel(color, px, py, alpha, shader);
+            }
+
+            // One step to the right
+            w0 += A12;
+            w1 += A20;
+            w2 += A01;
+        }
+
+        // One row step
+        w0_row += B12;
+        w1_row += B20;
+        w2_row += B01;
+    }
+}

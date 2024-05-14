@@ -10,7 +10,7 @@
 import engine
 import engine_draw
 import engine_debug
-import engine_input
+import engine_io
 import engine_physics
 from engine_physics import CircleCollisionShape2D, RectangleCollisionShape2D
 from engine_nodes import EmptyNode, Sprite2DNode, Rectangle2DNode, Circle2DNode, CameraNode, VoxelSpaceNode, Physics2DNode
@@ -110,28 +110,28 @@ engine.start()
 #         global texture1
 #         global switched
 #         global just_pressed
-#         if engine_input.is_bumper_right_pressed():
+#         if engine_io.is_bumper_right_pressed():
 #             rot_speed -= 0.0001
-#         if engine_input.is_bumper_left_pressed():
+#         if engine_io.is_bumper_left_pressed():
 #             rot_speed += 0.0001
         
-#         if engine_input.is_a_pressed():
+#         if engine_io.is_a_pressed():
 #             self.scale.x += 0.01
 #             self.scale.y += 0.01
-#         if engine_input.is_b_pressed():
+#         if engine_io.is_b_pressed():
 #             self.scale.x -= 0.01
 #             self.scale.y -= 0.01
 
-#         if engine_input.is_dpad_up_pressed():
+#         if engine_io.is_dpad_up_pressed():
 #             self.position.y -= 0.1
-#         if engine_input.is_dpad_down_pressed():
+#         if engine_io.is_dpad_down_pressed():
 #             self.position.y += 0.1
-#         if engine_input.is_dpad_left_pressed():
+#         if engine_io.is_dpad_left_pressed():
 #             self.position.x -= 0.1
-#         if engine_input.is_dpad_right_pressed():
+#         if engine_io.is_dpad_right_pressed():
 #             self.position.x += 0.1
 
-#         if just_pressed == False and engine_input.is_menu_pressed():
+#         if just_pressed == False and engine_io.is_menu_pressed():
 #             just_pressed = True
 #             if switched == False:
 #                 switched = True
@@ -140,7 +140,7 @@ engine.start()
 #                 switched = False
 #                 self.texture_resource = texture0
         
-#         if just_pressed == True and engine_input.is_menu_pressed() == False:
+#         if just_pressed == True and engine_io.is_menu_pressed() == False:
 #             just_pressed = False
 #         # self.rotation = (3*math.pi)/4
 #         self.rotation = 0

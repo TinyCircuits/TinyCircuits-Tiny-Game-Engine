@@ -99,6 +99,8 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [.] When the FOV of the camera is changed, the sprites should get wider: messed with this, could use some work
 [X] Change engine_input to engine_io so that it makes more sense for rumble to be in there
 
+[] Somehow get better error when a game raises an exception in launcher
+
 [] Instead of focusing GUI nodes, make menu button bring up default menu to exit game
 
 [] Make physics independent of FPS
