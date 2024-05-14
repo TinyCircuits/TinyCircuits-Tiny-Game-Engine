@@ -36,11 +36,16 @@ void ENGINE_FAST_FUNCTION(engine_draw_fill_buffer)(uint16_t* src_buffer, uint16_
 
 void ENGINE_FAST_FUNCTION(engine_draw_pixel)(uint16_t color, int32_t x, int32_t y, float alpha, engine_shader_t *shader){
     if((x >= 0 && x < SCREEN_WIDTH) && (y >= 0 && y < SCREEN_HEIGHT)){
-        uint16_t *screen_buffer = engine_get_active_screen_buffer();
         uint16_t index = y * SCREEN_WIDTH + x;
 
-        screen_buffer[index] = shader->execute(screen_buffer[index], color, alpha, shader);
+        active_screen_buffer[index] = shader->execute(active_screen_buffer[index], color, alpha, shader);
     }
+}
+
+
+void ENGINE_FAST_FUNCTION(engine_draw_pixel_no_check)(uint16_t color, int32_t x, int32_t y, float alpha, engine_shader_t *shader){
+    uint16_t index = y * SCREEN_WIDTH + x;
+    active_screen_buffer[index] = shader->execute(active_screen_buffer[index], color, alpha, shader);
 }
 
 
@@ -99,8 +104,6 @@ void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t
     */
 
     // ENGINE_PERFORMANCE_CYCLES_START();
-    uint16_t *screen_buffer = engine_get_active_screen_buffer();
-
     float inverse_x_scale = 1.0f / x_scale;
     float inverse_y_scale = 1.0f / y_scale;
     
@@ -197,7 +200,7 @@ void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t
                     uint16_t src_color = pixels[src_offset];
 
                     if(src_color != transparent_color || src_color == ENGINE_NO_TRANSPARENCY_COLOR){
-                        screen_buffer[dest_offset] = shader->execute(screen_buffer[dest_offset], src_color, alpha, shader);
+                        active_screen_buffer[dest_offset] = shader->execute(active_screen_buffer[dest_offset], src_color, alpha, shader);
                     }
                 }
 
@@ -247,8 +250,6 @@ void engine_draw_blit_depth(uint16_t *pixels, float center_x, float center_y, ui
     */
 
     // ENGINE_PERFORMANCE_CYCLES_START();
-    uint16_t *screen_buffer = engine_get_active_screen_buffer();
-
     float inverse_x_scale = 1.0f / x_scale;
     float inverse_y_scale = 1.0f / y_scale;
     
@@ -346,7 +347,7 @@ void engine_draw_blit_depth(uint16_t *pixels, float center_x, float center_y, ui
 
                     if(src_color != transparent_color || src_color == ENGINE_NO_TRANSPARENCY_COLOR){
                         if(engine_display_store_check_depth_index(dest_offset, depth)){
-                            screen_buffer[dest_offset] = shader->execute(screen_buffer[dest_offset], src_color, alpha, shader);
+                            active_screen_buffer[dest_offset] = shader->execute(active_screen_buffer[dest_offset], src_color, alpha, shader);
                         }
                     }
                 }
@@ -397,8 +398,6 @@ void engine_draw_rect(uint16_t color, float center_x, float center_y, uint32_t w
     */
 
     // ENGINE_PERFORMANCE_CYCLES_START();
-    uint16_t *screen_buffer = engine_get_active_screen_buffer();
-
     float inverse_x_scale = 1.0f / x_scale;
     float inverse_y_scale = 1.0f / y_scale;
     
@@ -491,7 +490,7 @@ void engine_draw_rect(uint16_t color, float center_x, float center_y, uint32_t w
                 // If statements are expensive! Don't need to check if withing screen
                 // bounds since those dimensions are clipped (destination rect)
                 if((rotX >= 0 && rotX < width) && (rotY >= 0 && rotY < height)){
-                    screen_buffer[dest_offset] = shader->execute(screen_buffer[dest_offset], color, alpha, shader);
+                    active_screen_buffer[dest_offset] = shader->execute(active_screen_buffer[dest_offset], color, alpha, shader);
                 }
 
                 // While in row, keep traversing about rotation

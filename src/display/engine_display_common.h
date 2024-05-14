@@ -3,7 +3,14 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+
+// The current screen buffer that should be getting drawn to (the other
+// one is likely being sent to the screen while this is active)
+uint16_t *active_screen_buffer;
+
 uint16_t *depth_buffer;
+
+
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 128
 
@@ -27,9 +34,6 @@ void engine_display_set_fill_color(uint16_t color);
 void engine_display_set_fill_background(uint16_t *data);
 
 void engine_init_screen_buffers();
-
-// Returns the active screen buffer
-uint16_t *engine_get_active_screen_buffer();
 
 // Switches active screen buffer
 void engine_switch_active_screen_buffer();

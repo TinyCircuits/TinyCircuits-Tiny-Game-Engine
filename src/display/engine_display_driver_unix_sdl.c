@@ -40,5 +40,5 @@ void engine_display_sdl_init(){
 
     SDL_SetWindowSize(window, SCREEN_WIDTH*7, SCREEN_HEIGHT*7);
 
-    engine_display_sdl_update_screen(engine_get_active_screen_buffer());
+    engine_display_sdl_update_screen(active_screen_buffer);
 }

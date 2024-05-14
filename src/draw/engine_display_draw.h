@@ -21,6 +21,8 @@ void ENGINE_FAST_FUNCTION(engine_draw_fill_buffer)(uint16_t* src_buffer, uint16_
 // Sets a single pixel in the screen buffer to 'color'
 void ENGINE_FAST_FUNCTION(engine_draw_pixel)(uint16_t color, int32_t x, int32_t y, float alpha, engine_shader_t *shader);
 
+void ENGINE_FAST_FUNCTION(engine_draw_pixel_no_check)(uint16_t color, int32_t x, int32_t y, float alpha, engine_shader_t *shader);
+
 void engine_draw_line(uint16_t color, float x_start, float y_start, float x_end, float y_end, mp_obj_t camera_node_base, float alpha, engine_shader_t *shader);
 
 void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t window_width, uint32_t window_height, uint32_t pixels_stride, float x_scale, float y_scale, float rotation_radians, uint16_t transparent_color, float alpha, engine_shader_t *shader);

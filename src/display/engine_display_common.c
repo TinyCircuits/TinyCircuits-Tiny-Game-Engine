@@ -19,10 +19,6 @@ static uint16_t **dual_screen_buffers;
 // (gets switched when the screen buffer is sent out over DMA)
 static uint8_t active_screen_buffer_index = 0;
 
-// The current screen buffer that should be getting drawn to (the other
-// one is likely being sent to the screen while this is active)
-static uint16_t *active_screen_buffer;
-
 // Certain nodes need a way of tracking the depth of
 // their pixels for occlusion. If a node that requires
 // that is spawned, it will ensure this buffer is
@@ -52,11 +48,6 @@ void engine_init_screen_buffers(){
     engine_draw_fill_color(0x0, dual_screen_buffers[1]);
 
     active_screen_buffer = dual_screen_buffers[0];
-}
-
-
-uint16_t *engine_get_active_screen_buffer(){
-    return active_screen_buffer;
 }
 
 
