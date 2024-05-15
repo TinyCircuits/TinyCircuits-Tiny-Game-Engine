@@ -649,6 +649,7 @@ void engine_draw_text(font_resource_class_obj_t *font, mp_obj_t text, float cent
 }
 
 
+// https://fgiesen.wordpress.com/2013/02/08/triangle-rasterization-in-practice/#:~:text=int%20x%2C%20y%3B%0A%7D%3B-,int%20orient2d,-(const%20Point2D%26%20a
 float orient2d(float x0, float y0, float x1, float y1, float x2, float y2){
     return (x1-x0)*(y2-y0) - (y1-y0)*(x2-x0);
 }
@@ -690,8 +691,11 @@ void engine_draw_filled_triangle(uint16_t color, float x0, float y0, float x1, f
 
         for(px = minX; px <= maxX; px++){
             // If p is on or inside all edges, render pixel.
-            if (w0 >= 0 && w1 >= 0 && w2 >= 0){
-                engine_draw_pixel(color, px, py, alpha, shader);
+            // https://fgiesen.wordpress.com/2013/02/10/optimizing-the-basic-rasterizer/#:~:text=if%20((w0%20%7C%20w1%20%7C%20w2)%20%3E%3D%200)
+            if ((w0 | w1 | w2) >= 0){
+                // if(engine_display_store_check_depth(px, py, depth)){
+                    engine_draw_pixel_no_check(color, px, py, alpha, shader);
+                // }
             }
 
             // One step to the right

@@ -1,6 +1,7 @@
-While executing file `Games/TinyCraft/main.py` an error occurred (<module> refers to the game file):
+While executing file `Games/VoxelSpaceExample/voxel_example.py` an error occurred (<module> refers to the game file):
 
 Traceback (most recent call last):
   File "/home/devy/Desktop/micropython-rp2350-1.22.0-engine/examples/usercmodule/TinyCircuits-Tiny-Game-Engine/filesystem/launcher.py", line 300, in <module>
-  File "main.py", line 78, in <module>
-NameError: name 'a' isn't defined
+  File "sum", line 199, in <module>
+  File "sum", line 115, in sum
+AttributeError: 'function' object has no attribute 'sum'

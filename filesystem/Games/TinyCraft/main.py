@@ -36,6 +36,7 @@ class MyCam(CameraNode):
 
     def tick(self, dt):
         # print(engine.get_running_fps())
+        # print(self.position.x, self.position.y, self.position.z)
 
         if engine_io.check_pressed(engine_io.BUMPER_RIGHT):
             self.rotation.y += 0.05
@@ -75,16 +76,16 @@ class MyCam(CameraNode):
 camera = MyCam()
 mesh = MeshNode()
 noise = NoiseResource()
-a
+
 
 def add_quad(v1, v2, v3, v4):
     mesh.vertices.append(v1)
     mesh.vertices.append(v2)
     mesh.vertices.append(v3)
 
-    mesh.vertices.append(v1)
-    mesh.vertices.append(v4)
     mesh.vertices.append(v3)
+    mesh.vertices.append(v4)
+    mesh.vertices.append(v1)
 
 
 def is_solid(x, y, z):
@@ -105,22 +106,40 @@ for x in range(16):
             this_solid = is_solid(x, y, z)
             
             if this_solid != is_solid(x+1, y, z):
-                add_quad(Vector3(gx, gy-size, gz-size),
-                         Vector3(gx, gy,      gz-size),
-                         Vector3(gx, gy,      gz),
-                         Vector3(gx, gy-size, gz))
+                if this_solid:
+                    add_quad(Vector3(gx, gy-size, gz-size),
+                             Vector3(gx, gy,      gz-size),
+                             Vector3(gx, gy,      gz),
+                             Vector3(gx, gy-size, gz))
+                else:
+                    add_quad(Vector3(gx, gy-size, gz-size),
+                             Vector3(gx, gy-size, gz),
+                             Vector3(gx, gy,      gz),
+                             Vector3(gx, gy,      gz-size))
             
             if this_solid != is_solid(x, y+1, z):
-                add_quad(Vector3(gx-size, gy, gz-size),
-                         Vector3(gx,      gy, gz-size),
-                         Vector3(gx,      gy, gz),
-                         Vector3(gx-size, gy, gz))
+                if this_solid:
+                    add_quad(Vector3(gx-size, gy, gz-size),
+                            Vector3(gx-size, gy, gz),
+                            Vector3(gx,      gy, gz),
+                            Vector3(gx,      gy, gz-size))
+                else:
+                    add_quad(Vector3(gx-size, gy, gz-size),
+                             Vector3(gx,      gy, gz-size),
+                             Vector3(gx,      gy, gz),
+                             Vector3(gx-size, gy, gz))
             
             if this_solid != is_solid(x, y, z+1):
-                add_quad(Vector3(gx-size, gy-size, gz),
-                         Vector3(gx,      gy-size, gz),
-                         Vector3(gx,      gy,      gz),
-                         Vector3(gx-size, gy,      gz))
+                if this_solid:
+                    add_quad(Vector3(gx-size, gy-size, gz),
+                             Vector3(gx,      gy-size, gz),
+                             Vector3(gx,      gy,      gz),
+                             Vector3(gx-size, gy,      gz))
+                else:
+                    add_quad(Vector3(gx-size, gy-size, gz),
+                             Vector3(gx-size, gy,      gz),
+                             Vector3(gx,      gy,      gz),
+                             Vector3(gx,      gy-size, gz))
 
 
 

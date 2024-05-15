@@ -30,6 +30,7 @@ void mesh_node_class_draw(engine_node_base_t *mesh_node_base, mp_obj_t camera_no
     engine_camera_node_class_obj_t *camera = camera_node_base->node;
 
     vector3_class_obj_t *camera_position = camera->position;
+    float camera_view_distance = mp_obj_get_float(camera->view_distance);
 
     vec3 cam_position = {camera_position->x.value, camera_position->y.value, camera_position->z.value};
     vec3 cam_target = GLM_VEC3_ZERO_INIT;
@@ -43,7 +44,7 @@ void mesh_node_class_draw(engine_node_base_t *mesh_node_base, mp_obj_t camera_no
     glm_lookat(cam_position, cam_target, cam_up, m_view);
 
     mat4 m_projection = GLM_MAT4_ZERO_INIT;
-    glm_perspective(1.571, SCREEN_WIDTH/SCREEN_HEIGHT, 1.0f, 350.0f, m_projection);
+    glm_perspective(1.571, SCREEN_WIDTH/SCREEN_HEIGHT, 0.5f, camera_view_distance, m_projection);
 
     // mat4 m_model = GLM_MAT4_IDENTITY_INIT;
 

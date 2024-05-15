@@ -139,7 +139,6 @@ bool engine_tick(){
     // correctly, just replicating what happens in modutime.c
     MP_THREAD_GIL_EXIT();
 
-
     // Now that all the node callbacks were called and potentially moved
     // physics nodes around, step the physics engine another tick.
     // NOTE: Before each nodes' callbacks are called the position
@@ -147,7 +146,6 @@ bool engine_tick(){
     // all the callbacks for the physics nodes are done, the positions
     // from the engine node are synced back to the physics body
     engine_physics_tick();
-
 
     dt = millis() - engine_fps_time_at_last_tick_ms;
     float dt_s = dt * 0.001f; 

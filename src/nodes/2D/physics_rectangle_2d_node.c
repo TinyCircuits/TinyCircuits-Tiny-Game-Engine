@@ -14,11 +14,12 @@
 #include "draw/engine_display_draw.h"
 #include "physics/engine_physics.h"
 #include "physics/engine_physics_ids.h"
+#include "engine_collections.h"
 
 
 void physics_rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_base, mp_obj_t camera_node){
     engine_physics_node_base_t *physics_node_base = rectangle_node_base->node;
-    engine_physics_rectangle_2d_node_class_obj_t *physics_rectanlge_2d_node = physics_node_base->unique_data;
+    engine_physics_rectangle_2d_node_class_obj_t *physics_rectangle_2d_node = physics_node_base->unique_data;
     bool rectangle_outlined = mp_obj_get_int(physics_node_base->outline);
 
     if(rectangle_outlined == false){
@@ -29,8 +30,8 @@ void physics_rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_bas
     engine_node_base_t *camera_node_base = camera_node;
     engine_camera_node_class_obj_t *camera = camera_node_base->node;
 
-    uint16_t rectangle_width = mp_obj_get_float(physics_rectanlge_2d_node->width);
-    uint16_t rectangle_height = mp_obj_get_float(physics_rectanlge_2d_node->height);
+    uint16_t rectangle_width = mp_obj_get_float(physics_rectangle_2d_node->width);
+    uint16_t rectangle_height = mp_obj_get_float(physics_rectangle_2d_node->height);
 
     vector3_class_obj_t *camera_position = camera->position;
     rectangle_class_obj_t *camera_viewport = camera->viewport;

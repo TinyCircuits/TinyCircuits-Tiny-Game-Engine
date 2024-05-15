@@ -7,10 +7,10 @@
 #include "py/obj.h"
 
 /*
-    Certain aspects of the engine rely of being able to
-    loop through certain types of nodes quickly. For example,
+    Certain aspects of the engine rely on being able to
+    loop through certain objects quickly. For example,
     it would be a waste of time to loop through all nodes every
-    time a node needs a camera to render itself, it because of
+    time a node needs a camera to render itself, it's because of
     this that duplicate references are kept in shorter lists
 */
 
