@@ -100,6 +100,11 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Change engine_input to engine_io so that it makes more sense for rumble to be in there
 [.] Somehow get better error when a game raises an exception in launcher: made it a little better, says <module> instead of file name though...
 
+[] Game saving:
+   1. When a node is given a name, it can be saved. When a node is instantiated, if the name is provided then it look at the saving module's save location for the nodes properties
+   2. Take the entire heap and save it as a file (might be fun if possible)
+   3. Add engine_save, engine_save.save(name, object), engine_save.load(name, object, default), engine_save.set_location(location)
+
 [] Instead of focusing GUI nodes, make menu button bring up default menu to exit game
 
 [] Make physics independent of FPS
@@ -169,6 +174,7 @@ Game ideas
 [] Platformer
 [] Golf
 [] Rocketcup
+[] FTL
 
 [] Implement audio on unix (need to break up implementation of unix and rp3 audio)
 [] Need to revisit Audio to get it working on the other core and with dual DMA (sort of working now)

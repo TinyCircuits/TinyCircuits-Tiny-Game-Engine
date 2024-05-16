@@ -26,7 +26,7 @@ mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, si
     #endif
 
     // BMP parsing: https://en.wikipedia.org/wiki/BMP_file_format
-    engine_file_open(mp_obj_str_get_str(args[0]));
+    engine_file_open(args[0]);
 
     uint16_t bitmap_id = engine_file_get_u16(0);
     uint32_t bitmap_pixel_data_offset = engine_file_get_u32(10);

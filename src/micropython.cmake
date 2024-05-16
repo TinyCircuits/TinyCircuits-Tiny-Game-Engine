@@ -69,6 +69,7 @@ target_sources(usermod_engine INTERFACE
     ${ENGINE_MOD_DIR}/animation/engine_animation_module.c
     ${ENGINE_MOD_DIR}/animation/engine_animation_tween.c
     ${ENGINE_MOD_DIR}/animation/engine_animation_delay.c
+    ${ENGINE_MOD_DIR}/save/engine_save_module.c
 )
 
 # Add the current directory as an include directory.

@@ -226,7 +226,7 @@ mp_obj_t rtttl_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args
     self->rest = false;
 
     // Open one-time file
-    engine_file_open(mp_obj_str_get_str(args[0]));
+    engine_file_open(args[0]);
     self->data_size = engine_file_size();
 
     // ### STEP 1: Don't care about the name, subtract name colon from the size ###

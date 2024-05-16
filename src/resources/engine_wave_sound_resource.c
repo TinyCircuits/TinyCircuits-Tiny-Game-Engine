@@ -35,7 +35,7 @@ mp_obj_t wave_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
     uint16_t format_type = 0;
     uint16_t channel_count = 0;
 
-    engine_file_open(mp_obj_str_get_str(args[0]));
+    engine_file_open(args[0]);
 
     // Check that this is a riff file
     engine_file_read(temporary_string, 4);
