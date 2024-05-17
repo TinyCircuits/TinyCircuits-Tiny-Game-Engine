@@ -946,3 +946,19 @@ vox_node_perf_test.py, avg. FPS: 38.10767
 
 
 
+2024-05-16 13:21:29.865263 : dc3f04ad4111f70178b6cff936171523607fbb0d
+Change to using vfs for file access to that multiple platforms do not need to be maintained
+
+{
+line_node_perf_test.py, avg. FPS: 241.3414
+test_opacity_perf_test.py, avg. FPS: 93.22379
+test_perf_test.py, avg. FPS: 119.0853
+circle_node_perf_test.py, avg. FPS: 239.6731
+vox_node_perf_test.py, avg. FPS: 38.03704
+}
+
+
+ ----- 
+
+
+

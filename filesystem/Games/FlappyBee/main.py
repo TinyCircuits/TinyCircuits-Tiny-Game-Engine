@@ -105,5 +105,5 @@ while tick < 180:
         if engine_io.check_pressed(engine_io.A):
             bird.velocity.y -= 0.2
 
-    if collided:
-        tick += 1
+        if collided:
+            tick += 1

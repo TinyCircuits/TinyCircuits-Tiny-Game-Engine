@@ -160,11 +160,13 @@ bool engine_tick(){
         // Update/grab which buttons are pressed before calling all node callbacks
         engine_io_update_pressed_buttons();
 
+        // Goes through all animation components.
+        // Do this first in case a camera is being
+        // tweened or anything like that
+        engine_animation_tick(dt);
+
         // Call every instanced node's callbacks
         engine_invoke_all_node_callbacks(dt_s);
-
-        // Goes through all animation components
-        engine_animation_tick(dt);
 
         engine_gui_tick();
 

@@ -5,83 +5,108 @@
 #include "py/stream.h"
 
 // The file that we currently have open
-mp_obj_t file;
-mp_stream_p_t *file_stream;
+
 struct mp_stream_seek_t file_seek;
 int file_errcode = 0;
 
+mp_obj_t files[2];
+mp_stream_p_t *file_streams[2];
 
-void engine_file_open(mp_obj_str_t *filename){
+
+void engine_file_open_read(uint8_t file_index, mp_obj_str_t *filename){
     mp_obj_t file_open_args[2] = {
         filename,
-        MP_ROM_QSTR(MP_QSTR_rb)
+        MP_ROM_QSTR(MP_QSTR_rb) // See extmod/vfs_posix_file.c and extmod/vfs_lfsx_file.c
     };
 
     // Could this get garbage collected in the time we use it? Maybe? TODO
-    file = mp_vfs_open(2, &file_open_args[0], (mp_map_t*)&mp_const_empty_map);
-    file_stream = mp_get_stream(file);
+    files[file_index] = mp_vfs_open(2, &file_open_args[0], (mp_map_t*)&mp_const_empty_map);
+    file_streams[file_index] = mp_get_stream(files[file_index]);
 }
 
 
-void engine_file_close(){
-    mp_stream_close(file);
+void engine_file_open_create_write(uint8_t file_index, mp_obj_str_t *filename){
+    mp_obj_t file_open_args[2] = {
+        filename,
+        MP_ROM_QSTR(MP_QSTR_wb) // See extmod/vfs_posix_file.c and extmod/vfs_lfsx_file.c
+    };
+
+    // Could this get garbage collected in the time we use it? Maybe? TODO
+    files[file_index] = mp_vfs_open(2, &file_open_args[0], (mp_map_t*)&mp_const_empty_map);
+    file_streams[file_index] = mp_get_stream(files[file_index]);
 }
+
+
+void engine_file_close(uint8_t file_index){
+    mp_stream_close(files[file_index]);
+}
+
+
+void engine_file_read(uint8_t file_index, void *buffer, uint32_t size){
+    mp_stream_rw(files[file_index], buffer, size, &file_errcode, MP_STREAM_RW_READ);
+}
+
+
+void engine_file_write(uint8_t file_index, void *buffer, uint32_t size){
+    mp_stream_rw(files[file_index], buffer, size, &file_errcode, MP_STREAM_RW_WRITE);
+}
+
+
+void engine_file_seek(uint8_t file_index, uint32_t offset){
+    file_seek.offset = offset;
+    file_seek.whence = MP_SEEK_SET;
+    file_streams[file_index]->ioctl(files[file_index], MP_STREAM_SEEK, (mp_uint_t)(uintptr_t)&file_seek, &file_errcode);
+}
+
+
+uint8_t engine_file_get_u8(uint8_t file_index, uint32_t u8_byte_offset){
+    uint8_t the_u8_byte = 0;
+    engine_file_seek(file_index, u8_byte_offset);
+    engine_file_read(file_index, &the_u8_byte, 1);
+    return the_u8_byte;
+}
+
+
+uint16_t engine_file_get_u16(uint8_t file_index, uint32_t u8_byte_offset){
+    uint16_t the_u16_byte = 0;
+    engine_file_seek(file_index, u8_byte_offset);
+    engine_file_read(file_index, &the_u16_byte, 2);
+    return the_u16_byte;
+}
+
+
+uint32_t engine_file_get_u32(uint8_t file_index, uint32_t u8_byte_offset){
+    uint32_t the_u32_byte = 0;
+    engine_file_seek(file_index, u8_byte_offset);
+    engine_file_read(file_index, &the_u32_byte, 4);
+    return the_u32_byte;
+}
+
+
+uint32_t engine_file_size(uint8_t file_index){
+    file_seek.offset = 0;
+    file_seek.whence = MP_SEEK_END;
+    return file_streams[file_index]->ioctl(files[file_index], MP_STREAM_SEEK, (mp_uint_t)(uintptr_t)&file_seek, &file_errcode);
+}
+
 
 void engine_file_remove(mp_obj_str_t *filename){
     mp_vfs_remove(filename);
 }
 
 
-void engine_file_read(void *buffer, uint32_t size){
-    mp_stream_rw(file, buffer, size, &file_errcode, MP_STREAM_RW_READ);
-}
-
-
-void engine_file_write(void *buffer, uint32_t size){
-    mp_stream_rw(file, buffer, size, &file_errcode, MP_STREAM_RW_WRITE);
-}
-
-
-void engine_file_seek(uint32_t offset){
-    file_seek.offset = offset;
-    file_seek.whence = MP_SEEK_SET;
-    file_stream->ioctl(file, MP_STREAM_SEEK, (mp_uint_t)(uintptr_t)&file_seek, &file_errcode);
-}
-
-
-uint8_t engine_file_get_u8(uint32_t u8_byte_offset){
-    uint8_t the_u8_byte = 0;
-    engine_file_seek(u8_byte_offset);
-    engine_file_read(&the_u8_byte, 1);
-    return the_u8_byte;
-}
-
-
-uint16_t engine_file_get_u16(uint32_t u8_byte_offset){
-    uint16_t the_u16_byte = 0;
-    engine_file_seek(u8_byte_offset);
-    engine_file_read(&the_u16_byte, 2);
-    return the_u16_byte;
-}
-
-
-uint32_t engine_file_get_u32(uint32_t u8_byte_offset){
-    uint32_t the_u32_byte = 0;
-    engine_file_seek(u8_byte_offset);
-    engine_file_read(&the_u32_byte, 4);
-    return the_u32_byte;
-}
-
-
-uint32_t engine_file_size(){
-    file_seek.offset = 0;
-    file_seek.whence = MP_SEEK_END;
-    return file_stream->ioctl(file, MP_STREAM_SEEK, (mp_uint_t)(uintptr_t)&file_seek, &file_errcode);
-}
-
-
 void engine_file_rename(mp_obj_str_t *old, mp_obj_str_t *new){
     mp_vfs_rename(old, new);
+}
+
+
+bool engine_file_exists(mp_obj_str_t *filename){
+    // This does some copying and stuff at a low level, maybe could get away from that: TODO
+    if(mp_vfs_import_stat(mp_obj_str_get_str(filename)) == MP_IMPORT_STAT_NO_EXIST){
+        return false;
+    }
+
+    return true;
 }
 
 

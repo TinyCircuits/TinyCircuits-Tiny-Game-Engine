@@ -12,6 +12,41 @@ engine.set_fps_limit(120)
 
 font = FontResource("9pt-roboto-font.bmp")
 
+class MyCam(CameraNode):
+    def __init__(self):
+        super().__init__(self)
+        self.zoom = 1
+
+    
+    def tick(self, dt):
+        if(engine_io.focused != None):
+            self.position.x = engine_io.focused.position.x
+            self.position.y = engine_io.focused.position.y
+
+
+        if engine_io.check_pressed(engine_io.B):
+            self.zoom -= 0.025
+        if engine_io.check_pressed(engine_io.A):
+            self.zoom += 0.025
+        
+        if engine_io.check_pressed(engine_io.DPAD_UP):
+            self.position.y -= 0.5
+        if engine_io.check_pressed(engine_io.DPAD_DOWN):
+            self.position.y += 0.5
+        
+        if engine_io.check_pressed(engine_io.DPAD_LEFT):
+            self.position.x -= 0.5
+        if engine_io.check_pressed(engine_io.DPAD_RIGHT):
+            self.position.x += 0.5
+        
+        if engine_io.check_pressed(engine_io.BUMPER_LEFT):
+            self.rotation.z += 0.0085
+        if engine_io.check_pressed(engine_io.BUMPER_RIGHT):
+            self.rotation.z -= 0.0085
+
+
+camera = MyCam()
+
 # engine_io.gui_toggle_button = None
 
 # button0 = GUIButton2DNode(position=Vector2(-32,   0), font=font, text="Button 0", rotation=0, scale=Vector2(1, 1), padding=2, outline=2, opacity=1.0)
@@ -69,40 +104,6 @@ for x in range(5):
         button.opacity = 1.0
         buttons.append(button)
 
-
-class MyCam(CameraNode):
-    def __init__(self):
-        super().__init__(self)
-        self.zoom = 1
-
-    
-    def tick(self, dt):
-        if(engine_io.focused != None):
-            self.position.x = engine_io.focused.position.x
-            self.position.y = engine_io.focused.position.y
-
-        if engine_io.check_pressed(engine_io.B):
-            self.zoom -= 0.025
-        if engine_io.check_pressed(engine_io.A):
-            self.zoom += 0.025
-        
-        if engine_io.check_pressed(engine_io.DPAD_UP):
-            self.position.y -= 0.5
-        if engine_io.check_pressed(engine_io.DPAD_DOWN):
-            self.position.y += 0.5
-        
-        if engine_io.check_pressed(engine_io.DPAD_LEFT):
-            self.position.x -= 0.5
-        if engine_io.check_pressed(engine_io.DPAD_RIGHT):
-            self.position.x += 0.5
-        
-        if engine_io.check_pressed(engine_io.BUMPER_LEFT):
-            self.rotation.z += 0.0085
-        if engine_io.check_pressed(engine_io.BUMPER_RIGHT):
-            self.rotation.z -= 0.0085
-
-
-camera = MyCam()
 
 # camera.add_child(button0)
 # camera.add_child(button1)

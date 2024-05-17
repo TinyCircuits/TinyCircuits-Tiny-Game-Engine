@@ -10,7 +10,7 @@
 #define TWICE_PI 6.28318530717958647692f
 #define RAD2DEG (180.0f/PI)
 #define DEG2RAD (PI/180.0f)
-#define EPSILON 1e-9
+#define EPSILON 1e-6
 
 #ifndef min
 #define min(a,b)            (((a) < (b)) ? (a) : (b))

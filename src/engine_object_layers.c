@@ -15,6 +15,7 @@
 #include "nodes/2D/physics_circle_2d_node.h"
 #include "nodes/node_types.h"
 #include "nodes/node_base.h"
+#include "engine_collections.h"
 
 #include "py/gc.h"
 
