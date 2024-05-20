@@ -994,3 +994,19 @@ vox_node_perf_test.py, avg. FPS: 38.1386
 
 
 
+2024-05-20 10:19:04.911137 : 1e72968b005797f55748e8525aa2e459a78a0789
+Update TODO readme
+
+{
+line_node_perf_test.py, avg. FPS: 239.6745
+test_opacity_perf_test.py, avg. FPS: 93.99648
+test_perf_test.py, avg. FPS: 117.65
+circle_node_perf_test.py, avg. FPS: 239.6719
+vox_node_perf_test.py, avg. FPS: 37.58708
+}
+
+
+ ----- 
+
+
+

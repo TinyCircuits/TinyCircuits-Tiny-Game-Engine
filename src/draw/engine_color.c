@@ -64,14 +64,16 @@ uint16_t ENGINE_FAST_FUNCTION(engine_color_alpha_blend)(uint16_t background, uin
     const uint16_t fg_g = (foreground >> 5)  & bitmask_6_bit;
     const uint16_t fg_b = (foreground >> 0)  & bitmask_5_bit;
 
-    const uint16_t out_r = (fg_r * alpha + bg_r * (bitmask_5_bit - (uint16_t)(alpha*bitmask_5_bit)));
-    const uint16_t out_g = (fg_g * alpha + bg_g * (bitmask_6_bit - (uint16_t)(alpha*bitmask_6_bit)));
-    const uint16_t out_b = (fg_b * alpha + bg_b * (bitmask_5_bit - (uint16_t)(alpha*bitmask_5_bit)));
+    const uint16_t out_r = (fg_r * alpha + bg_r * (1.0-alpha));
+    const uint16_t out_g = (fg_g * alpha + bg_g * (1.0-alpha));
+    const uint16_t out_b = (fg_b * alpha + bg_b * (1.0-alpha));
 
     uint16_t result = 0;
-    result |= (out_r << 11);
-    result |= (out_g << 5);
-    result |= (out_b << 0);
+
+    // Clamp color values to maximum
+    result |= (out_r & bitmask_5_bit) << 11;
+    result |= (out_g & bitmask_6_bit) << 5;
+    result |= (out_b & bitmask_5_bit) << 0;
 
     return result;
 }

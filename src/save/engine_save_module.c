@@ -87,34 +87,73 @@ void engine_save_end(){
 }
 
 
-STATIC mp_obj_t engine_save(mp_obj_t save_name, mp_obj_t obj){
+STATIC mp_obj_t engine_save(mp_obj_t save_name_obj, mp_obj_t obj){
     ENGINE_INFO_PRINTF("EngineSave: Saving");
 
-    if(mp_obj_is_str(save_name) == false){
+    if(mp_obj_is_str(save_name_obj) == false){
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineSave: ERROR: save name is not a string, cannot save!"));
     }
 
+    // Setup for finding line to save new data at
+    const char *save_name = mp_obj_str_get_str(save_name_obj);
+    GET_STR_LEN(save_name_obj, save_name_len);
+    uint8_t save_name_index = 0;
+
+    // Where we are in the file and what we just read from it
+    uint32_t file_cursor = 0;
+    char character = ' ';
+
+    // Open read and write files (create read file too if needed)
     engine_save_start();
 
-    // Go through current file and copy lines over to
-    // temporary file. If at any point a line is read
-    // that contains `save_name` serialize `obj` then.
-    // If get to the end and `save_name` wasn't found,
-    // append the serialization of `obj` to the end of
-    // the file
-    char c = ' ';
-    uint32_t index = 0;
-    while(c != '\n' && index < file_size){
-        c = engine_file_get_u8(0, index);
+    while(file_cursor < file_size){
+        // Get the character and copy the charater to the other file
+        character = engine_file_get_u8(0, file_cursor);
+        engine_file_write(0, &character, 1);
 
-        ENGINE_PRINTF("%c", c);
+        // If we find a character that's in the save name,
+        // increase index into save name and keep checking
+        // else reset if miss a character
+        if(character == save_name[save_name_index]){
+            save_name_index++;
+        }else{
+            save_name_index = 0;
+        }
 
-        index++;
+        // If we found all characters in the same name, write
+        // out the data to save to the writing file
+        if(save_name_index == save_name_len){
+            // Do not need to keep searching
+            break;
+        }
+
+        file_cursor++;
     }
-    ENGINE_PRINTF("\n", c);
-    // engine_file_read(0, line_buffer, 256);
 
+    // Close read and write files (delete old file and rename temporary file)
     engine_save_end();
+
+
+    // // Open read and write files (create read file too if needed)
+    // engine_save_start();
+
+    // // Go through current file and copy lines over to
+    // // temporary file. If at any point a line is read
+    // // that contains `save_name` serialize `obj` then.
+    // // If get to the end and `save_name` wasn't found,
+    // // append the serialization of `obj` to the end of
+    // // the file
+    // char c = ' ';
+    // uint32_t index = 0;
+    // while(c != '\n' && index < file_size){
+    //     c = engine_file_get_u8(0, index);
+
+    //     index++;
+    // }
+    // // engine_file_read(0, line_buffer, 256);
+
+    // // Close read and write files (delete old file and rename temporary file)
+    // engine_save_end();
 
     return mp_const_none;
 }
