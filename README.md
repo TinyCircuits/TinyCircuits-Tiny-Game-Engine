@@ -101,12 +101,6 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [.] Somehow get better error when a game raises an exception in launcher: made it a little better, says <module> instead of file name though...
 
 
-Adam:
-[] 
-[] 
-[] 
-
-
 [] Game saving:
    1. When a node is given a name, it can be saved. When a node is instantiated, if the name is provided then it look at the saving module's save location for the nodes properties
    2. Take the entire heap and save it as a file (might be fun if possible)
