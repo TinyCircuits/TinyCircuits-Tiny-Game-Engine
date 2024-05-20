@@ -44,7 +44,7 @@ mp_obj_t wave_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
     }
 
     // Get file size
-    file_size = engine_file_get_u32(0, 4);
+    file_size = engine_file_seek_get_u32(0, 4);
 
     // Check that this is a wave file
     engine_file_read(0, temporary_string, 4);
@@ -53,13 +53,13 @@ mp_obj_t wave_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
     }
 
     // Get and check that the sample format type is PCM
-    format_type = engine_file_get_u16(0, 20);
+    format_type = engine_file_seek_get_u16(0, 20);
     if(format_type != 1){
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("WaveSoundResource Error: samples are not in PCM format. Compressed formats are not supported"));
     }
 
     // Get and check that the number of channels is 1 (do not support multi-channel wave files)
-    channel_count = engine_file_get_u16(0, 22);
+    channel_count = engine_file_seek_get_u16(0, 22);
     if(channel_count != 1){
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("WaveSoundResource Error: Either no channels detected or too many. Only single channel wave files are supported"));
     }
@@ -67,8 +67,8 @@ mp_obj_t wave_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
     // Get sample rate that this wave file should be played back at and
     // the bytes that each sample needs (gets bits per sample and divides
     // by size of a byte)
-    self->sample_rate = engine_file_get_u32(0, 24);
-    self->bytes_per_sample = engine_file_get_u16(0, 34) / 8;
+    self->sample_rate = engine_file_seek_get_u32(0, 24);
+    self->bytes_per_sample = engine_file_seek_get_u16(0, 34) / 8;
 
     // Check for data marker
     engine_file_read(0, temporary_string, 4);
@@ -77,7 +77,7 @@ mp_obj_t wave_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
     }
 
     // Get how large the data section is in bytes
-    self->total_data_size = engine_file_get_u32(0, 40);
+    self->total_data_size = engine_file_seek_get_u32(0, 40);
 
     // Given the size of all the data
     self->total_sample_count = self->total_data_size / self->bytes_per_sample;
@@ -97,7 +97,7 @@ mp_obj_t wave_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
     engine_resource_start_storing(self->extra_data, false);
 
     for(uint32_t i=0; i<self->total_data_size; i++){
-        engine_resource_store_u8(engine_file_get_u8(0, 44 + i));
+        engine_resource_store_u8(engine_file_seek_get_u8(0, 44 + i));
     }
 
     // Stop storing so that any pending non completely filled pages are written

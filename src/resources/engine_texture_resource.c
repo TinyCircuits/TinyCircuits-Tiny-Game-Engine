@@ -28,12 +28,12 @@ mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, si
     // BMP parsing: https://en.wikipedia.org/wiki/BMP_file_format
     engine_file_open_read(0, args[0]);
 
-    uint16_t bitmap_id = engine_file_get_u16(0, 0);
-    uint32_t bitmap_pixel_data_offset = engine_file_get_u32(0, 10);
-    uint32_t bitmap_width = engine_file_get_u32(0, 18);
-    uint32_t bitmap_height = engine_file_get_u32(0, 22);
-    uint32_t bitmap_bits_per_pixel = engine_file_get_u16(0, 28);
-    uint32_t bitmap_data_size = engine_file_get_u32(0, 34);
+    uint16_t bitmap_id = engine_file_seek_get_u16(0, 0);
+    uint32_t bitmap_pixel_data_offset = engine_file_seek_get_u32(0, 10);
+    uint32_t bitmap_width = engine_file_seek_get_u32(0, 18);
+    uint32_t bitmap_height = engine_file_seek_get_u32(0, 22);
+    uint32_t bitmap_bits_per_pixel = engine_file_seek_get_u16(0, 28);
+    uint32_t bitmap_data_size = engine_file_seek_get_u32(0, 34);
 
     ENGINE_INFO_PRINTF("TextureResource: BMP parameters parsed from '%s':", mp_obj_str_get_str(args[0]));
     ENGINE_INFO_PRINTF("\tbitmap_id:\t\t\t%d", bitmap_id);
@@ -73,7 +73,7 @@ mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, si
         // Each row has padded bytes to make each row a multiple
         // of 4, use that width for calculating the index
         uint32_t bitmap_pixel_src_index = bitmap_pixel_src_y * padded_multiple_4_width + bitmap_pixel_src_x;
-        engine_resource_store_u16(engine_file_get_u16(0, bitmap_pixel_data_offset + (bitmap_pixel_src_index*2)));
+        engine_resource_store_u16(engine_file_seek_get_u16(0, bitmap_pixel_data_offset + (bitmap_pixel_src_index*2)));
 
         bitmap_pixel_src_x++;
         if(bitmap_pixel_src_x >= bitmap_width){

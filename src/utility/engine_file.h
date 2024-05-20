@@ -15,12 +15,19 @@ void engine_file_open_create_write(uint8_t file_index, mp_obj_str_t *filename);
 // the engine handle multiple files at the same time)
 void engine_file_close(uint8_t file_index);
 
-void engine_file_read(uint8_t file_index, void *buffer, uint32_t size);
-void engine_file_write(uint8_t file_index, void *buffer, uint32_t size);
-void engine_file_seek(uint8_t file_index, uint32_t offset);
-uint8_t engine_file_get_u8(uint8_t file_index, uint32_t u8_byte_offset);
-uint16_t engine_file_get_u16(uint8_t file_index, uint32_t u8_byte_offset);
-uint32_t engine_file_get_u32(uint8_t file_index, uint32_t u8_byte_offset);
+uint32_t engine_file_read(uint8_t file_index, void *buffer, uint32_t size);
+uint32_t engine_file_write(uint8_t file_index, void *buffer, uint32_t size);
+
+uint32_t engine_file_seek(uint8_t file_index, uint32_t offset, uint8_t whence);
+uint32_t engine_file_seek_until(uint8_t file_index, const char *str, uint32_t str_len);
+
+uint8_t engine_file_get_u8(uint8_t file_index);
+uint16_t engine_file_get_u16(uint8_t file_index);
+uint32_t engine_file_get_u32(uint8_t file_index);
+
+uint8_t engine_file_seek_get_u8(uint8_t file_index, uint32_t u8_byte_offset);
+uint16_t engine_file_seek_get_u16(uint8_t file_index, uint32_t u8_byte_offset);
+uint32_t engine_file_seek_get_u32(uint8_t file_index, uint32_t u8_byte_offset);
 
 uint32_t engine_file_size(uint8_t file_index);
 

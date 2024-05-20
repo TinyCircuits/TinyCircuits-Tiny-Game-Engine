@@ -42,44 +42,82 @@ void engine_file_close(uint8_t file_index){
 }
 
 
-void engine_file_read(uint8_t file_index, void *buffer, uint32_t size){
-    mp_stream_rw(files[file_index], buffer, size, &file_errcode, MP_STREAM_RW_READ);
+uint32_t engine_file_read(uint8_t file_index, void *buffer, uint32_t size){
+    return mp_stream_rw(files[file_index], buffer, size, &file_errcode, MP_STREAM_RW_READ);
 }
 
 
-void engine_file_write(uint8_t file_index, void *buffer, uint32_t size){
-    mp_stream_rw(files[file_index], buffer, size, &file_errcode, MP_STREAM_RW_WRITE);
+uint32_t engine_file_write(uint8_t file_index, void *buffer, uint32_t size){
+    return mp_stream_rw(files[file_index], buffer, size, &file_errcode, MP_STREAM_RW_WRITE);
 }
 
 
-void engine_file_seek(uint8_t file_index, uint32_t offset){
+uint32_t engine_file_seek(uint8_t file_index, uint32_t offset, uint8_t whence){
     file_seek.offset = offset;
-    file_seek.whence = MP_SEEK_SET;
+    file_seek.whence = whence;
     file_streams[file_index]->ioctl(files[file_index], MP_STREAM_SEEK, (mp_uint_t)(uintptr_t)&file_seek, &file_errcode);
+    return file_seek.offset;
 }
 
 
-uint8_t engine_file_get_u8(uint8_t file_index, uint32_t u8_byte_offset){
+uint32_t engine_file_seek_until(uint8_t file_index, const char *str, uint32_t str_len){
+    char character;
+    uint32_t index = 0;
+
+    while(engine_file_read(file_index, &character, 1) != 0){
+        if(character == str[index]){
+            index++;
+        }else{
+            index = 0;
+        }
+
+        if(index == str_len){
+            break;
+        }
+    }
+
+    // No matter what, return where we are in the file
+    // (could be the end or the end of the `str`)
+    return engine_file_seek(file_index, 0, MP_SEEK_CUR);
+}
+
+
+uint8_t engine_file_get_u8(uint8_t file_index){
     uint8_t the_u8_byte = 0;
-    engine_file_seek(file_index, u8_byte_offset);
     engine_file_read(file_index, &the_u8_byte, 1);
     return the_u8_byte;
 }
 
 
-uint16_t engine_file_get_u16(uint8_t file_index, uint32_t u8_byte_offset){
+uint16_t engine_file_get_u16(uint8_t file_index){
     uint16_t the_u16_byte = 0;
-    engine_file_seek(file_index, u8_byte_offset);
     engine_file_read(file_index, &the_u16_byte, 2);
     return the_u16_byte;
 }
 
 
-uint32_t engine_file_get_u32(uint8_t file_index, uint32_t u8_byte_offset){
+uint32_t engine_file_get_u32(uint8_t file_index){
     uint32_t the_u32_byte = 0;
-    engine_file_seek(file_index, u8_byte_offset);
     engine_file_read(file_index, &the_u32_byte, 4);
     return the_u32_byte;
+}
+
+
+uint8_t engine_file_seek_get_u8(uint8_t file_index, uint32_t u8_byte_offset){
+    engine_file_seek(file_index, u8_byte_offset, MP_SEEK_SET);
+    return engine_file_get_u8(file_index);
+}
+
+
+uint16_t engine_file_seek_get_u16(uint8_t file_index, uint32_t u8_byte_offset){
+    engine_file_seek(file_index, u8_byte_offset, MP_SEEK_SET);
+    return engine_file_get_u16(file_index);
+}
+
+
+uint32_t engine_file_seek_get_u32(uint8_t file_index, uint32_t u8_byte_offset){
+    engine_file_seek(file_index, u8_byte_offset, MP_SEEK_SET);
+    return engine_file_get_u32(file_index);
 }
 
 
@@ -348,7 +386,7 @@ bool engine_file_exists(mp_obj_str_t *filename){
 // }
 
 
-// uint8_t engine_file_get_u8(uint32_t u8_byte_offset){
+// uint8_t engine_file_seek_get_u8(uint32_t u8_byte_offset){
 //     #if defined(__EMSCRIPTEN__)
 
 //     #elif defined(__unix__)
@@ -365,7 +403,7 @@ bool engine_file_exists(mp_obj_str_t *filename){
 // }
 
 
-// uint16_t engine_file_get_u16(uint32_t u8_byte_offset){
+// uint16_t engine_file_seek_get_u16(uint32_t u8_byte_offset){
 //     #if defined(__EMSCRIPTEN__)
 
 //     #elif defined(__unix__)
@@ -382,7 +420,7 @@ bool engine_file_exists(mp_obj_str_t *filename){
 // }
 
 
-// uint32_t engine_file_get_u32(uint32_t u8_byte_offset){
+// uint32_t engine_file_seek_get_u32(uint32_t u8_byte_offset){
 //     #if defined(__EMSCRIPTEN__)
 
 //     #elif defined(__unix__)

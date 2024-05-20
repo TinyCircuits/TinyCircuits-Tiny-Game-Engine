@@ -106,6 +106,8 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
    2. Take the entire heap and save it as a file (might be fun if possible)
    3. Add engine_save, engine_save.save(name, object), engine_save.load(name, object, default), engine_save.set_location(location)
 
+[] Revisit opacity after fix, seems to be a lot slower
+
 [] Issue of camera being moved by other things causing flicker. See UI game example. If the camera instantiation is moved before the creation
    of the buttons, then the tick callback for the camera is called and moved over the focused button, which is correct, otherwise get flicker
 

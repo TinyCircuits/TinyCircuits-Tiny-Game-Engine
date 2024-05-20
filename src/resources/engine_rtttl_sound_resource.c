@@ -234,11 +234,11 @@ mp_obj_t rtttl_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args
     // Subtract a byte until we find first colon or at
     // least stop if no colon is found and the data is all
     // the way subtracted
-    uint8_t current_char = engine_file_get_u8(0, self->cursor);
+    uint8_t current_char = engine_file_seek_get_u8(0, self->cursor);
     while(current_char != 58 && self->data_size != 0){
         self->cursor++;
         self->data_size--;
-        current_char = engine_file_get_u8(0, self->cursor);
+        current_char = engine_file_seek_get_u8(0, self->cursor);
     }
 
     // Skip the colon and subtract the first colon from the size
@@ -254,7 +254,7 @@ mp_obj_t rtttl_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args
     uint8_t beats_digit_index = 0;
     char gathering_default = ' ';
 
-    current_char = engine_file_get_u8(0, self->cursor);
+    current_char = engine_file_seek_get_u8(0, self->cursor);
     while(current_char != 58 && self->data_size != 0){  // ;
         switch(current_char){
             case 100:   // d
@@ -297,7 +297,7 @@ mp_obj_t rtttl_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args
 
         self->cursor++;
         self->data_size--;
-        current_char = engine_file_get_u8(0, self->cursor);
+        current_char = engine_file_seek_get_u8(0, self->cursor);
     }
 
     // Actually assign the default values from the extracted strings
@@ -323,7 +323,7 @@ mp_obj_t rtttl_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args
 
     // One byte at a time, copy data from LFS to scratch space
     for(uint32_t idx=0; idx<self->data_size; idx++){
-        engine_resource_store_u8(engine_file_get_u8(0, self->cursor));
+        engine_resource_store_u8(engine_file_seek_get_u8(0, self->cursor));
         self->cursor++;
     }
     

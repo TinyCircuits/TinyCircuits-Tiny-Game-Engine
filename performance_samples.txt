@@ -1010,3 +1010,16 @@ vox_node_perf_test.py, avg. FPS: 37.58708
 
 
 
+2024-05-20 11:56:35.442913 : c0d75a255186f390ebb763839ef114fde7509697
+Fix opacity (Mason)
+
+{
+line_node_perf_test.py, avg. FPS: 239.5078
+test_opacity_perf_test.py, avg. FPS: 39.40163
+test_perf_test.py, avg. FPS: 118.0666
+circle_node_perf_test.py, avg. FPS: 241.1725
+vox_node_perf_test.py, avg. FPS: 37.57868
+}
+
+
+ ----- 
