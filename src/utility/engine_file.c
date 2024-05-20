@@ -86,7 +86,8 @@ uint32_t engine_file_get_u32(uint8_t file_index, uint32_t u8_byte_offset){
 uint32_t engine_file_size(uint8_t file_index){
     file_seek.offset = 0;
     file_seek.whence = MP_SEEK_END;
-    return file_streams[file_index]->ioctl(files[file_index], MP_STREAM_SEEK, (mp_uint_t)(uintptr_t)&file_seek, &file_errcode);
+    file_streams[file_index]->ioctl(files[file_index], MP_STREAM_SEEK, (mp_uint_t)(uintptr_t)&file_seek, &file_errcode);
+    return file_seek.offset;
 }
 
 

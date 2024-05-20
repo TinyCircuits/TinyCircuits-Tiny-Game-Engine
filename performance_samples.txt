@@ -962,3 +962,19 @@ vox_node_perf_test.py, avg. FPS: 38.03704
 
 
 
+2024-05-17 12:17:35.311353 : 9517f33af5b87d37658342ccb92475e1565f60e3
+Hopefully fix camera flicker when tweening camera
+
+{
+line_node_perf_test.py, avg. FPS: 241.3401
+test_opacity_perf_test.py, avg. FPS: 92.47131
+test_perf_test.py, avg. FPS: 116.4834
+circle_node_perf_test.py, avg. FPS: 239.8409
+vox_node_perf_test.py, avg. FPS: 37.70178
+}
+
+
+ ----- 
+
+
+

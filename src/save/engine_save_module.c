@@ -22,6 +22,10 @@ mp_obj_str_t temporary_location = {
     .len = 0,
 };
 
+// Lines are read from the current save file, to ram, to the temp save file
+char *line_buffer[256];
+uint32_t file_size = 0;
+
 
 STATIC mp_obj_t engine_set_location(mp_obj_t location){
     ENGINE_INFO_PRINTF("EngineSave: Setting location");
@@ -63,6 +67,8 @@ void engine_save_start(){
     // Open the the file to read from
     engine_file_open_read(0, &current_location);
 
+    file_size = engine_file_size(0);
+
     // Open the file to write to (temporary)
     engine_file_open_create_write(1, &temporary_location);
 }
@@ -96,6 +102,17 @@ STATIC mp_obj_t engine_save(mp_obj_t save_name, mp_obj_t obj){
     // If get to the end and `save_name` wasn't found,
     // append the serialization of `obj` to the end of
     // the file
+    char c = ' ';
+    uint32_t index = 0;
+    while(c != '\n' && index < file_size){
+        c = engine_file_get_u8(0, index);
+
+        ENGINE_PRINTF("%c", c);
+
+        index++;
+    }
+    ENGINE_PRINTF("\n", c);
+    // engine_file_read(0, line_buffer, 256);
 
     engine_save_end();
 
