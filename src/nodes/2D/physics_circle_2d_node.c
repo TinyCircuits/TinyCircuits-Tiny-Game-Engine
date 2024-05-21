@@ -144,6 +144,21 @@ bool physics_circle_2d_load_attr(engine_node_base_t *self_node_base, qstr attrib
             destination[1] = self_node_base;
             return true;
         break;
+        case MP_QSTR_destroy:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_destroy_all:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_all_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_destroy_children:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_children_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
         case MP_QSTR_add_child:
             destination[0] = MP_OBJ_FROM_PTR(&node_base_add_child_obj);
             destination[1] = self_node_base;
@@ -151,6 +166,11 @@ bool physics_circle_2d_load_attr(engine_node_base_t *self_node_base, qstr attrib
         break;
         case MP_QSTR_get_child:
             destination[0] = MP_OBJ_FROM_PTR(&node_base_get_child_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_get_child_count:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_child_count_obj);
             destination[1] = self_node_base;
             return true;
         break;
@@ -248,34 +268,38 @@ STATIC mp_attr_fun_t physics_circle_2d_node_class_attr(mp_obj_t self_in, qstr at
     NAME: PhysicsCircle2DNode
     ID: PhysicsCircle2DNode
     DESC: Node that is affected by physics. Usually other nodes are added as children to this node
-    PARAM: [type={ref_link:Vector2}]                     [name=position]                 [value={ref_link:Vector2}]
-    PARAM: [type=float]                                  [name=radius]                   [value=any]
-    PARAM: [type={ref_link:Vector2}]                     [name=velocity]                 [value={ref_link:Vector2}]
-    PARAM: [type=float]                                  [name=rotation]                 [value=any]
-    PARAM: [type=float]                                  [name=density]                  [value=any]
-    PARAM: [type=float]                                  [name=bounciness]               [value=any]
-    PARAM: [type=boolean]                                [name=dynamic]                  [value=True or False]
-    PARAM: [type=boolean]                                [name=solid]                    [value=True or False]
-    PARAM: [type={ref_link:Vector2}]                     [name=gravity_scale]            [value={ref_link:Vector2}]
-    PARAM: [type=boolean]                                [name=outline]                  [value=True or False (default: False)]
-    ATTR:  [type=function]                               [name={ref_link:add_child}]     [value=function]
-    ATTR:  [type=function]                               [name={ref_link:get_child}]     [value=function] 
-    ATTR:  [type=function]                               [name={ref_link:remove_child}]  [value=function]
-    ATTR:  [type=function]                               [name={ref_link:set_layer}]     [value=function]
-    ATTR:  [type=function]                               [name={ref_link:get_layer}]     [value=function]
-    ATTR:  [type=function]                               [name={ref_link:remove_child}]  [value=function]
-    ATTR:  [type=function]                               [name={ref_link:tick}]          [value=function]
-    ATTR:  [type={ref_link:Vector2}]                     [name=position]                 [value={ref_link:Vector2}]
-    ATTR:  [type=float]                                  [name=radius]                   [value=any]
-    ATTR:  [type={ref_link:Vector2}]                     [name=velocity]                 [value={ref_link:Vector2}]
-    ATTR:  [type=float]                                  [name=rotation]                 [value=any]
-    ATTR:  [type=float]                                  [name=density]                  [value=any]
-    ATTR:  [type=float]                                  [name=bounciness]               [value=any]
-    ATTR:  [type=boolean]                                [name=dynamic]                  [value=True or False]
-    ATTR:  [type=boolean]                                [name=solid]                    [value=True or False]
-    ATTR:  [type={ref_link:Vector2}]                     [name=gravity_scale]            [value={ref_link:Vector2}]
-    ATTR:  [type=boolean]                                [name=outline]                  [value=True or False (default: False)]
-    OVRR:  [type=function]                               [name={ref_link:tick}]          [value=function]
+    PARAM: [type={ref_link:Vector2}]                     [name=position]                                    [value={ref_link:Vector2}]
+    PARAM: [type=float]                                  [name=radius]                                      [value=any]
+    PARAM: [type={ref_link:Vector2}]                     [name=velocity]                                    [value={ref_link:Vector2}]
+    PARAM: [type=float]                                  [name=rotation]                                    [value=any]
+    PARAM: [type=float]                                  [name=density]                                     [value=any]
+    PARAM: [type=float]                                  [name=bounciness]                                  [value=any]
+    PARAM: [type=boolean]                                [name=dynamic]                                     [value=True or False]
+    PARAM: [type=boolean]                                [name=solid]                                       [value=True or False]
+    PARAM: [type={ref_link:Vector2}]                     [name=gravity_scale]                               [value={ref_link:Vector2}]
+    PARAM: [type=boolean]                                [name=outline]                                     [value=True or False (default: False)]
+    ATTR:  [type=function]                               [name={ref_link:add_child}]                        [value=function]
+    ATTR:  [type=function]                               [name={ref_link:get_child}]                        [value=function]
+    ATTR:  [type=function]                               [name={ref_link:get_child_count}]                  [value=function]
+    ATTR:  [type=function]                               [name={ref_link:node_base_destroy}]                [value=function]
+    ATTR:  [type=function]                               [name={ref_link:node_base_destroy_all}]            [value=function]
+    ATTR:  [type=function]                               [name={ref_link:node_base_destroy_children}]       [value=function]
+    ATTR:  [type=function]                               [name={ref_link:remove_child}]                     [value=function]
+    ATTR:  [type=function]                               [name={ref_link:set_layer}]                        [value=function]
+    ATTR:  [type=function]                               [name={ref_link:get_layer}]                        [value=function]
+    ATTR:  [type=function]                               [name={ref_link:remove_child}]                     [value=function]
+    ATTR:  [type=function]                               [name={ref_link:tick}]                             [value=function]
+    ATTR:  [type={ref_link:Vector2}]                     [name=position]                                    [value={ref_link:Vector2}]
+    ATTR:  [type=float]                                  [name=radius]                                      [value=any]
+    ATTR:  [type={ref_link:Vector2}]                     [name=velocity]                                    [value={ref_link:Vector2}]
+    ATTR:  [type=float]                                  [name=rotation]                                    [value=any]
+    ATTR:  [type=float]                                  [name=density]                                     [value=any]
+    ATTR:  [type=float]                                  [name=bounciness]                                  [value=any]
+    ATTR:  [type=boolean]                                [name=dynamic]                                     [value=True or False]
+    ATTR:  [type=boolean]                                [name=solid]                                       [value=True or False]
+    ATTR:  [type={ref_link:Vector2}]                     [name=gravity_scale]                               [value={ref_link:Vector2}]
+    ATTR:  [type=boolean]                                [name=outline]                                     [value=True or False (default: False)]
+    OVRR:  [type=function]                               [name={ref_link:tick}]                             [value=function]
 */
 mp_obj_t physics_circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New PhysicsCircle2DNode");

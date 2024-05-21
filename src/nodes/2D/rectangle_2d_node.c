@@ -134,8 +134,28 @@ bool rectangle_2d_node_load_attr(engine_node_base_t *self_node_base, qstr attrib
             destination[1] = self_node_base;
             return true;
         break;
+        case MP_QSTR_destroy:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_destroy_all:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_all_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_destroy_children:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_children_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
         case MP_QSTR_add_child:
             destination[0] = MP_OBJ_FROM_PTR(&node_base_add_child_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_get_child_count:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_child_count_obj);
             destination[1] = self_node_base;
             return true;
         break;
@@ -289,30 +309,34 @@ STATIC mp_attr_fun_t rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribu
     NAME: Rectangle2DNode
     ID: Rectangle2DNode
     DESC: Simple 2D rectangle node
-    PARAM:  [type={ref_link:Vector2}]         [name=position]                   [value={ref_link:Vector2}]
-    PARAM:  [type=float]                      [name=width]                      [value=any]
-    PARAM:  [type=float]                      [name=height]                     [value=any]
-    PARAM:  [type=int]                        [name=color]                      [value=any 16-bit RGB565 integer]
-    PARAM:  [type=float]                      [name=opacity]                    [value=0 ~ 1.0] 
-    PARAM:  [type=bool]                       [name=outline]                    [value=True or False]
-    PARAM:  [type=float]                      [name=rotation]                   [value=any (radians)]
-    PARAM:  [type={ref_link:Vector2}]         [name=scale]                      [value={ref_link:Vector2}]
-    ATTR:   [type=function]                   [name={ref_link:add_child}]       [value=function]
-    ATTR:   [type=function]                   [name={ref_link:get_child}]       [value=function] 
-    ATTR:   [type=function]                   [name={ref_link:remove_child}]    [value=function]
-    ATTR:   [type=function]                   [name={ref_link:set_layer}]       [value=function]
-    ATTR:   [type=function]                   [name={ref_link:get_layer}]       [value=function]
-    ATTR:   [type=function]                   [name={ref_link:remove_child}]    [value=function]
-    ATTR:   [type=function]                   [name={ref_link:tick}]            [value=function]
-    ATTR:   [type={ref_link:Vector2}]         [name=position]                   [value={ref_link:Vector2}]
-    ATTR:   [type=float]                      [name=width]                      [value=any]
-    ATTR:   [type=float]                      [name=height]                     [value=any]
-    ATTR:   [type=int]                        [name=color]                      [value=any 16-bit RGB565 integer]
-    ATTR:   [type=float]                      [name=opacity]                    [value=0 ~ 1.0] 
-    ATTR:   [type=bool]                       [name=outline]                    [value=True or False]
-    ATTR:   [type=float]                      [name=rotation]                   [value=any (radians)]
-    ATTR:   [type={ref_link:Vector2}]         [name=scale]                      [value={ref_link:Vector2}]
-    OVRR:   [type=function]                   [name={ref_link:tick}]            [value=function]
+    PARAM:  [type={ref_link:Vector2}]         [name=position]                                   [value={ref_link:Vector2}]
+    PARAM:  [type=float]                      [name=width]                                      [value=any]
+    PARAM:  [type=float]                      [name=height]                                     [value=any]
+    PARAM:  [type=int]                        [name=color]                                      [value=any 16-bit RGB565 integer]
+    PARAM:  [type=float]                      [name=opacity]                                    [value=0 ~ 1.0] 
+    PARAM:  [type=bool]                       [name=outline]                                    [value=True or False]
+    PARAM:  [type=float]                      [name=rotation]                                   [value=any (radians)]
+    PARAM:  [type={ref_link:Vector2}]         [name=scale]                                      [value={ref_link:Vector2}]
+    ATTR:   [type=function]                   [name={ref_link:add_child}]                       [value=function]
+    ATTR:   [type=function]                   [name={ref_link:get_child}]                       [value=function]
+    ATTR:   [type=function]                   [name={ref_link:get_child_count}]                 [value=function]
+    ATTR:   [type=function]                   [name={ref_link:node_base_destroy}]               [value=function]
+    ATTR:   [type=function]                   [name={ref_link:node_base_destroy_all}]           [value=function]
+    ATTR:   [type=function]                   [name={ref_link:node_base_destroy_children}]      [value=function]
+    ATTR:   [type=function]                   [name={ref_link:remove_child}]                    [value=function]
+    ATTR:   [type=function]                   [name={ref_link:set_layer}]                       [value=function]
+    ATTR:   [type=function]                   [name={ref_link:get_layer}]                       [value=function]
+    ATTR:   [type=function]                   [name={ref_link:remove_child}]                    [value=function]
+    ATTR:   [type=function]                   [name={ref_link:tick}]                            [value=function]
+    ATTR:   [type={ref_link:Vector2}]         [name=position]                                   [value={ref_link:Vector2}]
+    ATTR:   [type=float]                      [name=width]                                      [value=any]
+    ATTR:   [type=float]                      [name=height]                                     [value=any]
+    ATTR:   [type=int]                        [name=color]                                      [value=any 16-bit RGB565 integer]
+    ATTR:   [type=float]                      [name=opacity]                                    [value=0 ~ 1.0] 
+    ATTR:   [type=bool]                       [name=outline]                                    [value=True or False]
+    ATTR:   [type=float]                      [name=rotation]                                   [value=any (radians)]
+    ATTR:   [type={ref_link:Vector2}]         [name=scale]                                      [value={ref_link:Vector2}]
+    OVRR:   [type=function]                   [name={ref_link:tick}]                            [value=function]
 */
 mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Rectangle2DNode");

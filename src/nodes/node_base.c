@@ -84,6 +84,59 @@ mp_obj_t node_base_del(mp_obj_t self_in){
 
 
 /*  --- doc ---
+    NAME: destroy
+    ID: node_base_destroy
+    DESC: Destroys node. Calls finalizer and frees memory for MicroPython to use later                                                                         
+    RETURN: None
+*/ 
+mp_obj_t node_base_destroy(mp_obj_t self_in){
+    engine_node_base_t *node_base = self_in;
+
+    // m_del_obj does not call finalizer, call it ourselves then delete the mp object
+    mp_obj_t final = mp_load_attr(node_base, MP_QSTR___del__);
+    mp_call_function_0(final);
+    m_del_obj(mp_obj_get_type(node_base), node_base);
+}
+
+
+/*  --- doc ---
+    NAME: destroy_children
+    ID: node_base_destroy_children
+    DESC: Destroys only the children of this node as well as the childrens' children. Calls finalizer and frees memory for MicroPython to use later                                                                         
+    RETURN: None
+*/ 
+mp_obj_t node_base_destroy_children(mp_obj_t self_in){
+    engine_node_base_t *node_base = self_in;
+
+    // If this node has child nodes, go through all children and destroy them
+    if(node_base->children_node_bases.count == 0){
+        return mp_const_none;
+    }
+
+    linked_list_node *current_child_link_node = node_base->children_node_bases.start;
+    while(current_child_link_node != NULL){
+        engine_node_base_t *child_node_base = current_child_link_node->object;
+        node_base_destroy_children(child_node_base);
+        node_base_destroy(child_node_base);
+        current_child_link_node = node_base->children_node_bases.start;
+    }
+}
+
+
+/*  --- doc ---
+    NAME: destroy_all
+    ID: node_base_destroy_all
+    DESC: Destroys node, its children, and the childrens' children. Calls finalizer and frees memory for MicroPython to use later for each node                                                                                              
+    RETURN: None
+*/ 
+mp_obj_t node_base_destroy_all(mp_obj_t self_in){
+    engine_node_base_t *node_base = self_in;
+    node_base_destroy_children(self_in);
+    node_base_destroy(node_base);
+}
+
+
+/*  --- doc ---
     NAME: add_child
     ID: add_child
     DESC: Adds child to the node this is being called on
@@ -132,6 +185,20 @@ mp_obj_t node_base_get_child(mp_obj_t self_parent_in, mp_obj_t index_obj){
     }
 
     return current_child_node->object;
+}
+
+
+/*  --- doc ---
+    NAME: get_child_count
+    ID: get_child_count
+    DESC: Gets the count of children directly descended from this node but not the children of the children                                                                                                       
+    RETURN: 0 or positive integer
+*/ 
+mp_obj_t node_base_get_child_count(mp_obj_t self_parent_in){
+    ENGINE_INFO_PRINTF("Node Base: Getting child count...");
+
+    engine_node_base_t *parent_node_base = self_parent_in;
+    return mp_obj_new_int(parent_node_base->children_node_bases.count);
 }
 
 

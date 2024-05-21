@@ -16,33 +16,61 @@ bool empty_node_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp
         case MP_QSTR___del__:
             destination[0] = MP_OBJ_FROM_PTR(&node_base_del_obj);
             destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_destroy:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_destroy_all:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_all_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_destroy_children:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_children_obj);
+            destination[1] = self_node_base;
+            return true;
         break;
         case MP_QSTR_add_child:
             destination[0] = MP_OBJ_FROM_PTR(&node_base_add_child_obj);
             destination[1] = self_node_base;
+            return true;
         break;
         case MP_QSTR_get_child:
             destination[0] = MP_OBJ_FROM_PTR(&node_base_get_child_obj);
             destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_get_child_count:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_child_count_obj);
+            destination[1] = self_node_base;
+            return true;
         break;
         case MP_QSTR_remove_child:
             destination[0] = MP_OBJ_FROM_PTR(&node_base_remove_child_obj);
             destination[1] = self_node_base;
+            return true;
         break;
         case MP_QSTR_set_layer:
             destination[0] = MP_OBJ_FROM_PTR(&node_base_set_layer_obj);
             destination[1] = self_node_base;
+            return true;
         break;
         case MP_QSTR_get_layer:
             destination[0] = MP_OBJ_FROM_PTR(&node_base_get_layer_obj);
             destination[1] = self_node_base;
+            return true;
         break;
         case MP_QSTR_tick:
             destination[0] = MP_OBJ_FROM_PTR(&node_base_get_layer_obj);
             destination[1] = self_node_base->attr_accessor;
+            return true;
         break;
         case MP_QSTR_node_base:
             destination[0] = self_node_base;
+            return true;
         break;
         default:
             return false; // Fail
@@ -102,18 +130,22 @@ STATIC mp_attr_fun_t empty_node_class_attr(mp_obj_t self_in, qstr attribute, mp_
     NAME: EmptyNode
     ID: EmptyNode
     DESC: Node that does nothing except expose overrides for user implementation
-    PARAM: [type={ref_link:Vector3}]    [name=position]                 [value={ref_link:Vector3}]
-    PARAM: [type={ref_link:Vector3}]    [name=rotation]                 [value={ref_link:Vector3}]
-    ATTR: [type=function]               [name={ref_link:add_child}]     [value=function] 
-    ATTR: [type=function]               [name={ref_link:get_child}]     [value=function]
-    ATTR: [type=function]               [name={ref_link:remove_child}]  [value=function]
-    ATTR: [type=function]               [name={ref_link:set_layer}]     [value=function]
-    ATTR: [type=function]               [name={ref_link:get_layer}]     [value=function]
-    ATTR: [type=function]               [name={ref_link:remove_child}]  [value=function]
-    ATTR: [type=function]               [name={ref_link:tick}]          [value=function]
-    ATTR: [type={ref_link:Vector3}]     [name=position]                 [value={ref_link:Vector3}]
-    ATTR: [type={ref_link:Vector3}]     [name=rotation]                 [value={ref_link:Vector3}]
-    OVRR: [type=function]               [name={ref_link:tick}]          [value=function]
+    PARAM: [type={ref_link:Vector3}]     [name=position]                                    [value={ref_link:Vector3}]
+    PARAM: [type={ref_link:Vector3}]     [name=rotation]                                    [value={ref_link:Vector3}]
+    ATTR:  [type=function]               [name={ref_link:add_child}]                        [value=function] 
+    ATTR:  [type=function]               [name={ref_link:get_child}]                        [value=function]
+    ATTR:  [type=function]               [name={ref_link:get_child_count}]                  [value=function]
+    ATTR:  [type=function]               [name={ref_link:node_base_destroy}]                [value=function]
+    ATTR:  [type=function]               [name={ref_link:node_base_destroy_all}]            [value=function]
+    ATTR:  [type=function]               [name={ref_link:node_base_destroy_children}]       [value=function]
+    ATTR:  [type=function]               [name={ref_link:remove_child}]                     [value=function]
+    ATTR:  [type=function]               [name={ref_link:set_layer}]                        [value=function]
+    ATTR:  [type=function]               [name={ref_link:get_layer}]                        [value=function]
+    ATTR:  [type=function]               [name={ref_link:remove_child}]                     [value=function]
+    ATTR:  [type=function]               [name={ref_link:tick}]                             [value=function]
+    ATTR:  [type={ref_link:Vector3}]     [name=position]                                    [value={ref_link:Vector3}]
+    ATTR:  [type={ref_link:Vector3}]     [name=rotation]                                    [value={ref_link:Vector3}]
+    OVRR:  [type=function]               [name={ref_link:tick}]                             [value=function]
 */
 STATIC mp_obj_t empty_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New EmptyNode");

@@ -189,6 +189,21 @@ bool button_2d_node_load_attr(engine_node_base_t *self_node_base, qstr attribute
             destination[1] = self_node_base;
             return true;
         break;
+        case MP_QSTR_destroy:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_destroy_all:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_all_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_destroy_children:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_children_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
         case MP_QSTR_add_child:
             destination[0] = MP_OBJ_FROM_PTR(&node_base_add_child_obj);
             destination[1] = self_node_base;
@@ -196,6 +211,11 @@ bool button_2d_node_load_attr(engine_node_base_t *self_node_base, qstr attribute
         break;
         case MP_QSTR_get_child:
             destination[0] = MP_OBJ_FROM_PTR(&node_base_get_child_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_get_child_count:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_child_count_obj);
             destination[1] = self_node_base;
             return true;
         break;
@@ -591,84 +611,88 @@ STATIC mp_attr_fun_t gui_button_2d_node_class_attr(mp_obj_t self_in, qstr attrib
     NAME: GUIButton2DNode
     ID: GUIButton2DNode
     DESC: Draws a simple square button with an outline, background color, and text. The text, padding, and outline thicknesses define how large the button will be. There is no way to set the button to an exact size other than by hand tweaking the scale
-    PARAM:  [type={ref_link:Vector2}]         [name=position]                       [value={ref_link:Vector2}]
-    PARAM:  [type={ref_link:FontResource}]    [name=font]                           [value={ref_link:FontResource}]
-    PARAM:  [type=string]                     [name=text]                           [value=any]
-    PARAM:  [type=float]                      [name=outline]                        [value=any (how thick the outline should be, in px)]
-    PARAM:  [type=float]                      [name=padding]                        [value=any (amount of empty space between the text and outline, in px)]
+    PARAM:  [type={ref_link:Vector2}]         [name=position]                                   [value={ref_link:Vector2}]
+    PARAM:  [type={ref_link:FontResource}]    [name=font]                                       [value={ref_link:FontResource}]
+    PARAM:  [type=string]                     [name=text]                                       [value=any]
+    PARAM:  [type=float]                      [name=outline]                                    [value=any (how thick the outline should be, in px)]
+    PARAM:  [type=float]                      [name=padding]                                    [value=any (amount of empty space between the text and outline, in px)]
 
-    PARAM:  [type={ref_link:Color}]           [name=text_color]                     [value=any {ref_link:Color} that the base text color should blend to (works best with white text)]
-    PARAM:  [type={ref_link:Color}]           [name=focused_text_color]             [value=any {ref_link:Color}]
-    PARAM:  [type={ref_link:Color}]           [name=pressed_text_color]             [value=any {ref_link:Color}]
+    PARAM:  [type={ref_link:Color}]           [name=text_color]                                 [value=any {ref_link:Color} that the base text color should blend to (works best with white text)]
+    PARAM:  [type={ref_link:Color}]           [name=focused_text_color]                         [value=any {ref_link:Color}]
+    PARAM:  [type={ref_link:Color}]           [name=pressed_text_color]                         [value=any {ref_link:Color}]
 
-    PARAM:  [type={ref_link:Color}]           [name=background_color]               [value=any {ref_link:Color}]
-    PARAM:  [type={ref_link:Color}]           [name=focused_background_color]       [value=any {ref_link:Color}]
-    PARAM:  [type={ref_link:Color}]           [name=pressed_background_color]       [value=any {ref_link:Color}]
+    PARAM:  [type={ref_link:Color}]           [name=background_color]                           [value=any {ref_link:Color}]
+    PARAM:  [type={ref_link:Color}]           [name=focused_background_color]                   [value=any {ref_link:Color}]
+    PARAM:  [type={ref_link:Color}]           [name=pressed_background_color]                   [value=any {ref_link:Color}]
 
-    PARAM:  [type={ref_link:Color}]           [name=outline_color]                  [value=any {ref_link:Color}]
-    PARAM:  [type={ref_link:Color}]           [name=focused_outline_color]          [value=any {ref_link:Color}]
-    PARAM:  [type={ref_link:Color}]           [name=pressed_outline_color]          [value=any {ref_link:Color}]
+    PARAM:  [type={ref_link:Color}]           [name=outline_color]                              [value=any {ref_link:Color}]
+    PARAM:  [type={ref_link:Color}]           [name=focused_outline_color]                      [value=any {ref_link:Color}]
+    PARAM:  [type={ref_link:Color}]           [name=pressed_outline_color]                      [value=any {ref_link:Color}]
 
-    PARAM:  [type=float]                      [name=rotation]                       [value=any (radians)]
-    PARAM:  [type={ref_link:Vector2}]         [name=scale]                          [value={ref_link:Vector2}]
-    PARAM:  [type=float]                      [name=opacity]                        [value=0 ~ 1.0]
+    PARAM:  [type=float]                      [name=rotation]                                   [value=any (radians)]
+    PARAM:  [type={ref_link:Vector2}]         [name=scale]                                      [value={ref_link:Vector2}]
+    PARAM:  [type=float]                      [name=opacity]                                    [value=0 ~ 1.0]
 
-    PARAM:  [type=float]                      [name=letter_spacing]                 [value=any]
-    PARAM:  [type=float]                      [name=line_spacing]                   [value=any]
+    PARAM:  [type=float]                      [name=letter_spacing]                             [value=any]
+    PARAM:  [type=float]                      [name=line_spacing]                               [value=any]
 
 
-    ATTR:   [type=function]                   [name={ref_link:add_child}]           [value=function] 
-    ATTR:   [type=function]                   [name={ref_link:get_child}]           [value=function] 
-    ATTR:   [type=function]                   [name={ref_link:remove_child}]        [value=function]
-    ATTR:   [type=function]                   [name={ref_link:set_layer}]           [value=function]
-    ATTR:   [type=function]                   [name={ref_link:get_layer}]           [value=function]
-    ATTR:   [type=function]                   [name={ref_link:remove_child}]        [value=function]
-    ATTR:   [type=function]                   [name={ref_link:tick}]                [value=function]
-    ATTR:   [type=function]                   [name={ref_link:on_focused}]          [value=function]
-    ATTR:   [type=function]                   [name={ref_link:on_just_focused}]     [value=function]
-    ATTR:   [type=function]                   [name={ref_link:on_just_unfocused}]   [value=function]
-    ATTR:   [type=function]                   [name={ref_link:on_pressed}]          [value=function]
-    ATTR:   [type=function]                   [name={ref_link:on_just_pressed}]     [value=function]
-    ATTR:   [type=function]                   [name={ref_link:on_just_released}]    [value=function]
+    ATTR:   [type=function]                   [name={ref_link:add_child}]                       [value=function] 
+    ATTR:   [type=function]                   [name={ref_link:get_child}]                       [value=function]
+    ATTR:   [type=function]                   [name={ref_link:get_child_count}]                 [value=function]
+    ATTR:   [type=function]                   [name={ref_link:node_base_destroy}]               [value=function]
+    ATTR:   [type=function]                   [name={ref_link:node_base_destroy_all}]           [value=function]
+    ATTR:   [type=function]                   [name={ref_link:node_base_destroy_children}]      [value=function]
+    ATTR:   [type=function]                   [name={ref_link:remove_child}]                    [value=function]
+    ATTR:   [type=function]                   [name={ref_link:set_layer}]                       [value=function]
+    ATTR:   [type=function]                   [name={ref_link:get_layer}]                       [value=function]
+    ATTR:   [type=function]                   [name={ref_link:remove_child}]                    [value=function]
+    ATTR:   [type=function]                   [name={ref_link:tick}]                            [value=function]
+    ATTR:   [type=function]                   [name={ref_link:on_focused}]                      [value=function]
+    ATTR:   [type=function]                   [name={ref_link:on_just_focused}]                 [value=function]
+    ATTR:   [type=function]                   [name={ref_link:on_just_unfocused}]               [value=function]
+    ATTR:   [type=function]                   [name={ref_link:on_pressed}]                      [value=function]
+    ATTR:   [type=function]                   [name={ref_link:on_just_pressed}]                 [value=function]
+    ATTR:   [type=function]                   [name={ref_link:on_just_released}]                [value=function]
 
-    ATTR:   [type={ref_link:Vector2}]         [name=position]                       [value={ref_link:Vector2}]
-    ATTR:   [type={ref_link:FontResource}]    [name=font]                           [value={ref_link:FontResource}]
-    ATTR:   [type=string]                     [name=text]                           [value=any]
-    ATTR:   [type=float]                      [name=outline]                        [value=any (how thick the outline should be, in px)]
-    ATTR:   [type=float]                      [name=padding]                        [value=any (amount of empty space between the text and outline, in px)]
+    ATTR:   [type={ref_link:Vector2}]         [name=position]                                   [value={ref_link:Vector2}]
+    ATTR:   [type={ref_link:FontResource}]    [name=font]                                       [value={ref_link:FontResource}]
+    ATTR:   [type=string]                     [name=text]                                       [value=any]
+    ATTR:   [type=float]                      [name=outline]                                    [value=any (how thick the outline should be, in px)]
+    ATTR:   [type=float]                      [name=padding]                                    [value=any (amount of empty space between the text and outline, in px)]
 
-    ATTR:   [type={ref_link:Color}]           [name=text_color]                     [value=any {ref_link:Color} that the base text color should blend to (works best with white text)]
-    ATTR:   [type={ref_link:Color}]           [name=focused_text_color]             [value=any {ref_link:Color}]
-    ATTR:   [type={ref_link:Color}]           [name=pressed_text_color]             [value=any {ref_link:Color}]
+    ATTR:   [type={ref_link:Color}]           [name=text_color]                                 [value=any {ref_link:Color} that the base text color should blend to (works best with white text)]
+    ATTR:   [type={ref_link:Color}]           [name=focused_text_color]                         [value=any {ref_link:Color}]
+    ATTR:   [type={ref_link:Color}]           [name=pressed_text_color]                         [value=any {ref_link:Color}]
 
-    ATTR:   [type={ref_link:Color}]           [name=background_color]               [value=any {ref_link:Color}]
-    ATTR:   [type={ref_link:Color}]           [name=focused_background_color]       [value=any {ref_link:Color}]
-    ATTR:   [type={ref_link:Color}]           [name=pressed_background_color]       [value=any {ref_link:Color}]
+    ATTR:   [type={ref_link:Color}]           [name=background_color]                           [value=any {ref_link:Color}]
+    ATTR:   [type={ref_link:Color}]           [name=focused_background_color]                   [value=any {ref_link:Color}]
+    ATTR:   [type={ref_link:Color}]           [name=pressed_background_color]                   [value=any {ref_link:Color}]
 
-    ATTR:   [type={ref_link:Color}]           [name=outline_color]                  [value=any {ref_link:Color}]
-    ATTR:   [type={ref_link:Color}]           [name=focused_outline_color]          [value=any {ref_link:Color}]
-    ATTR:   [type={ref_link:Color}]           [name=pressed_outline_color]          [value=any {ref_link:Color}]
+    ATTR:   [type={ref_link:Color}]           [name=outline_color]                              [value=any {ref_link:Color}]
+    ATTR:   [type={ref_link:Color}]           [name=focused_outline_color]                      [value=any {ref_link:Color}]
+    ATTR:   [type={ref_link:Color}]           [name=pressed_outline_color]                      [value=any {ref_link:Color}]
 
-    ATTR:   [type=float]                      [name=rotation]                       [value=any (radians)]
-    ATTR:   [type={ref_link:Vector2}]         [name=scale]                          [value={ref_link:Vector2}]
-    ATTR:   [type=float]                      [name=opacity]                        [value=0 ~ 1.0]
+    ATTR:   [type=float]                      [name=rotation]                                   [value=any (radians)]
+    ATTR:   [type={ref_link:Vector2}]         [name=scale]                                      [value={ref_link:Vector2}]
+    ATTR:   [type=float]                      [name=opacity]                                    [value=0 ~ 1.0]
 
-    ATTR:   [type=float]                      [name=letter_spacing]                 [value=any]
-    ATTR:   [type=float]                      [name=line_spacing]                   [value=any]
+    ATTR:   [type=float]                      [name=letter_spacing]                             [value=any]
+    ATTR:   [type=float]                      [name=line_spacing]                               [value=any]
 
-    ATTR:   [type=boolean]                    [name=focused]                        [value=True or False (can be read to see if focused or set to focus it)]
-    ATTR:   [type=boolean]                    [name=pressed]                        [value=True or False (can be read to see if pressed or set to press it)]
+    ATTR:   [type=boolean]                    [name=focused]                                    [value=True or False (can be read to see if focused or set to focus it)]
+    ATTR:   [type=boolean]                    [name=pressed]                                    [value=True or False (can be read to see if pressed or set to press it)]
 
-    ATTR:   [type=float]                      [name=width]                          [value=any (total width of the button, read-only)]
-    ATTR:   [type=float]                      [name=height]                         [value=any (total height of the button, read-only)]
+    ATTR:   [type=float]                      [name=width]                                      [value=any (total width of the button, read-only)]
+    ATTR:   [type=float]                      [name=height]                                     [value=any (total height of the button, read-only)]
 
-    OVRR:   [type=function]                   [name={ref_link:tick}]                [value=function]
-    OVRR:   [type=function]                   [name={ref_link:on_focused}]          [value=function]
-    OVRR:   [type=function]                   [name={ref_link:on_just_focused}]     [value=function]
-    OVRR:   [type=function]                   [name={ref_link:on_just_unfocused}]   [value=function]
-    OVRR:   [type=function]                   [name={ref_link:on_pressed}]          [value=function]
-    OVRR:   [type=function]                   [name={ref_link:on_just_pressed}]     [value=function]
-    OVRR:   [type=function]                   [name={ref_link:on_just_released}]    [value=function]
+    OVRR:   [type=function]                   [name={ref_link:tick}]                            [value=function]
+    OVRR:   [type=function]                   [name={ref_link:on_focused}]                      [value=function]
+    OVRR:   [type=function]                   [name={ref_link:on_just_focused}]                 [value=function]
+    OVRR:   [type=function]                   [name={ref_link:on_just_unfocused}]               [value=function]
+    OVRR:   [type=function]                   [name={ref_link:on_pressed}]                      [value=function]
+    OVRR:   [type=function]                   [name={ref_link:on_just_pressed}]                 [value=function]
+    OVRR:   [type=function]                   [name={ref_link:on_just_released}]                [value=function]
 */
 mp_obj_t gui_button_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New GUIButton2DNode");

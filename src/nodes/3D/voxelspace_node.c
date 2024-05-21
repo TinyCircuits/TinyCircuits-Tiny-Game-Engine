@@ -282,6 +282,21 @@ bool voxelspace_node_load_attr(engine_node_base_t *self_node_base, qstr attribut
             destination[1] = self_node_base;
             return true;
         break;
+        case MP_QSTR_destroy:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_destroy_all:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_all_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_destroy_children:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_children_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
         case MP_QSTR_add_child:
             destination[0] = MP_OBJ_FROM_PTR(&node_base_add_child_obj);
             destination[1] = self_node_base;
@@ -289,6 +304,11 @@ bool voxelspace_node_load_attr(engine_node_base_t *self_node_base, qstr attribut
         break;
         case MP_QSTR_get_child:
             destination[0] = MP_OBJ_FROM_PTR(&node_base_add_child_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_get_child_count:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_child_count_obj);
             destination[1] = self_node_base;
             return true;
         break;
@@ -458,30 +478,34 @@ STATIC mp_attr_fun_t voxelspace_node_class_attr(mp_obj_t self_in, qstr attribute
     NAME: VoxelSpaceNode
     ID: VoxelSpaceNode
     DESC: Node that gets rendered in a semi-3D fashion. See https://github.com/s-macke/VoxelSpace. If a camera is at 0,0,0 with rotation 0,0,0 and a voxelspace node is at 0,0,0 with rotation 0,0,0, the camera will be at a corner of the node where forward is following the node in the +x-axis direction and right is following the node in the +y-axis direction. If the voxelspace y-axis scale is set to 25 then full white pixels will be at 25 in height in world space as long as voxelsapce node's position is 0,0,0. Currently, camera the x-axis rotation is pitch (clamped and mapped to -90 or -pi/2 (ground) to 90 or pi/2 (sky)), y-axis rotation is yaw, and the z-axis rotation is a fake roll.
-    PARAM:  [type={ref_link:Vector3}]         [name=position]                   [value={ref_link:Vector3}]
-    PARAM:  [type={ref_link:TextureResource}] [name=texture]                    [value={ref_link:TextureResource}]
-    PARAM:  [type={ref_link:TextureResource}] [name=heightmap]                  [value={ref_link:TextureResource}]
-    PARAM:  [type=float]                      [name=height_scale]               [value=any]
-    PARAM:  [type={ref_link:Vector3}]         [name=rotation]                   [value={ref_link:Vector3}]
-    ATTR:   [type=function]                   [name={ref_link:add_child}]       [value=function]
-    ATTR:   [type=function]                   [name={ref_link:get_child}]       [value=function] 
-    ATTR:   [type=function]                   [name={ref_link:remove_child}]    [value=function]
-    ATTR:   [type=function]                   [name={ref_link:set_layer}]       [value=function]
-    ATTR:   [type=function]                   [name={ref_link:get_layer}]       [value=function]
-    ATTR:   [type=function]                   [name={ref_link:remove_child}]    [value=function]
-    ATTR:   [type=function]                   [name={ref_link:tick}]            [value=function]
-    ATTR:   [type=function]                   [name={ref_link:get_abs_height}]  [value=function]
-    ATTR:   [type={ref_link:Vector3}]         [name=position]                   [value={ref_link:Vector3}]
-    ATTR:   [type={ref_link:TextureResource}] [name=texture]                    [value={ref_link:TextureResource}]
-    ATTR:   [type={ref_link:TextureResource}] [name=heightmap]                  [value={ref_link:TextureResource}]
-    ATTR:   [type={ref_link:Vector3}]         [name=rotation]                   [value={ref_link:Vector3}]
-    ATTR:   [type={ref_link:Vector3}]         [name=scale]                      [value=any (x-axis makes terrain wider (default: 1.0), y-axis makes terrain taller/shorter (default: 10.0, this means the min height will be 0.0 and the max 10.0 if the node position is 0,0,0), and z-axis makes terrain longer (default: 1.0))]
-    ATTR:   [type=boolean]                    [name=repeat]                     [value=True or False (if True, repeats the terrain forever in all directions, default: False)]
-    ATTR:   [type=boolean]                    [name=flip]                       [value=True or False (flips drawing upsidedown if True and normal if False (default))]
-    ATTR:   [type=float]                      [name=lod]                        [value=any (stand for Level Of Detail and affects the quality/number of samples as the view is rendered at further and further distances, default: 0.0085)]
-    ATTR:   [type=float]                      [name=curvature]                  [value=any (radians, defines how much the terrain curves as the render distance increases, default: 0.0)]
-    ATTR:   [type=float]                      [name=thickness]                  [value=any (defines how thick the terrain should look if you can see its sides, default: 128.0)]
-    OVRR:   [type=function]                   [name={ref_link:tick}]            [value=function]
+    PARAM:  [type={ref_link:Vector3}]         [name=position]                                   [value={ref_link:Vector3}]
+    PARAM:  [type={ref_link:TextureResource}] [name=texture]                                    [value={ref_link:TextureResource}]
+    PARAM:  [type={ref_link:TextureResource}] [name=heightmap]                                  [value={ref_link:TextureResource}]
+    PARAM:  [type=float]                      [name=height_scale]                               [value=any]
+    PARAM:  [type={ref_link:Vector3}]         [name=rotation]                                   [value={ref_link:Vector3}]
+    ATTR:   [type=function]                   [name={ref_link:add_child}]                       [value=function]
+    ATTR:   [type=function]                   [name={ref_link:get_child}]                       [value=function]
+    ATTR:   [type=function]                   [name={ref_link:get_child_count}]                 [value=function]
+    ATTR:   [type=function]                   [name={ref_link:node_base_destroy}]               [value=function]
+    ATTR:   [type=function]                   [name={ref_link:node_base_destroy_all}]           [value=function]
+    ATTR:   [type=function]                   [name={ref_link:node_base_destroy_children}]      [value=function]
+    ATTR:   [type=function]                   [name={ref_link:remove_child}]                    [value=function]
+    ATTR:   [type=function]                   [name={ref_link:set_layer}]                       [value=function]
+    ATTR:   [type=function]                   [name={ref_link:get_layer}]                       [value=function]
+    ATTR:   [type=function]                   [name={ref_link:remove_child}]                    [value=function]
+    ATTR:   [type=function]                   [name={ref_link:tick}]                            [value=function]
+    ATTR:   [type=function]                   [name={ref_link:get_abs_height}]                  [value=function]
+    ATTR:   [type={ref_link:Vector3}]         [name=position]                                   [value={ref_link:Vector3}]
+    ATTR:   [type={ref_link:TextureResource}] [name=texture]                                    [value={ref_link:TextureResource}]
+    ATTR:   [type={ref_link:TextureResource}] [name=heightmap]                                  [value={ref_link:TextureResource}]
+    ATTR:   [type={ref_link:Vector3}]         [name=rotation]                                   [value={ref_link:Vector3}]
+    ATTR:   [type={ref_link:Vector3}]         [name=scale]                                      [value=any (x-axis makes terrain wider (default: 1.0), y-axis makes terrain taller/shorter (default: 10.0, this means the min height will be 0.0 and the max 10.0 if the node position is 0,0,0), and z-axis makes terrain longer (default: 1.0))]
+    ATTR:   [type=boolean]                    [name=repeat]                                     [value=True or False (if True, repeats the terrain forever in all directions, default: False)]
+    ATTR:   [type=boolean]                    [name=flip]                                       [value=True or False (flips drawing upsidedown if True and normal if False (default))]
+    ATTR:   [type=float]                      [name=lod]                                        [value=any (stand for Level Of Detail and affects the quality/number of samples as the view is rendered at further and further distances, default: 0.0085)]
+    ATTR:   [type=float]                      [name=curvature]                                  [value=any (radians, defines how much the terrain curves as the render distance increases, default: 0.0)]
+    ATTR:   [type=float]                      [name=thickness]                                  [value=any (defines how thick the terrain should look if you can see its sides, default: 128.0)]
+    OVRR:   [type=function]                   [name={ref_link:tick}]                            [value=function]
 */
 mp_obj_t voxelspace_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New VoxelSpaceNode");

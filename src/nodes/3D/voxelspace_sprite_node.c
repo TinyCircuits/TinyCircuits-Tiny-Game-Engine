@@ -280,6 +280,21 @@ bool voxelspace_sprite_node_load_attr(engine_node_base_t *self_node_base, qstr a
             destination[1] = self_node_base;
             return true;
         break;
+        case MP_QSTR_destroy:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_destroy_all:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_all_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_destroy_children:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_children_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
         case MP_QSTR_add_child:
             destination[0] = MP_OBJ_FROM_PTR(&node_base_add_child_obj);
             destination[1] = self_node_base;
@@ -287,6 +302,11 @@ bool voxelspace_sprite_node_load_attr(engine_node_base_t *self_node_base, qstr a
         break;
         case MP_QSTR_get_child:
             destination[0] = MP_OBJ_FROM_PTR(&node_base_get_child_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_get_child_count:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_child_count_obj);
             destination[1] = self_node_base;
             return true;
         break;
@@ -484,40 +504,44 @@ STATIC mp_attr_fun_t voxelspace_sprite_node_class_attr(mp_obj_t self_in, qstr at
     NAME: VoxelSpaceSpriteNode
     ID: VoxelSpaceSpriteNode
     DESC: Simple 3D sprite node that can be animated or static for VoxelSpace rendering. Acts as a billboard that always faces the camera
-    PARAM:  [type={ref_link:Vector3}]         [name=position]                   [value={ref_link:Vector3}]
-    PARAM:  [type={ref_link:TextureResource}] [name=texture]                    [value={ref_link:TextureResource}]
-    PARAM:  [type=int]                        [name=transparent_color]          [value=any 16-bit RGB565 color]
-    PARAM:  [type=float]                      [name=fps]                        [value=any]
-    PARAM:  [type=int]                        [name=frame_count_x]              [value=any positive integer]
-    PARAM:  [type=int]                        [name=frame_count_y]              [value=any positive integer]
-    PARAM:  [type=float]                      [name=rotation]                   [value=any (radians)]
-    PARAM:  [type={ref_link:Vector2}]         [name=scale]                      [value={ref_link:Vector2}]
-    PARAM:  [type=float]                      [name=opacity]                    [value=0 ~ 1.0] 
-    PARAM:  [type=boolean]                    [name=playing]                    [value=boolean]
-    PARAM:  [type=boolean]                    [name=fov_distort]                [value=boolean (True means the sprite will be scaled by the FOV (TODO: review implementation, not perfect) and False means it will not be distorted, default: True)]
-    PARAM:  [type={ref_link:Vector2}]         [name=texture_offset]             [value={ref_link:Vector2} (local offset of the texture at the rendered origin. Sprites render at center/origin by default, use this to shift them)]
-    ATTR:   [type=function]                   [name={ref_link:add_child}]       [value=function] 
-    ATTR:   [type=function]                   [name={ref_link:get_child}]       [value=function] 
-    ATTR:   [type=function]                   [name={ref_link:remove_child}]    [value=function]
-    ATTR:   [type=function]                   [name={ref_link:set_layer}]       [value=function]
-    ATTR:   [type=function]                   [name={ref_link:get_layer}]       [value=function]
-    ATTR:   [type=function]                   [name={ref_link:remove_child}]    [value=function]
-    ATTR:   [type=function]                   [name={ref_link:tick}]            [value=function]
-    ATTR:   [type={ref_link:Vector2}]         [name=position]                   [value={ref_link:Vector2}]
-    ATTR:   [type={ref_link:TextureResource}] [name=texture]                    [value={ref_link:TextureResource}]
-    ATTR:   [type=int]                        [name=transparent_color]          [value=any 16-bit RGB565 color]
-    ATTR:   [type=float]                      [name=fps]                        [value=any]
-    ATTR:   [type=int]                        [name=frame_count_x]              [value=any positive integer]
-    ATTR:   [type=int]                        [name=frame_count_y]              [value=any positive integer]
-    ATTR:   [type=float]                      [name=rotation]                   [value=any (radians)]
-    ATTR:   [type={ref_link:Vector2}]         [name=scale]                      [value={ref_link:Vector2}]
-    ATTR:   [type=float]                      [name=opacity]                    [value=0 ~ 1.0]
-    ATTR:   [type=boolean]                    [name=playing]                    [value=boolean]
-    ATTR:   [type=int]                        [name=frame_current_x]            [value=any positive integer]
-    ATTR:   [type=int]                        [name=frame_current_y]            [value=any positive integer]
-    ATTR:   [type=boolean]                    [name=fov_distort]                [value=boolean (True means the sprite will be scaled by the FOV (TODO: review implementation, not perfect) and False means it will not be distorted, default: True)]
-    ATTR:   [type={ref_link:Vector2}]         [name=texture_offset]             [value={ref_link:Vector2} (local offset of the texture at the rendered origin. Sprites render at center/origin by default, use this to shift them)]
-    OVRR:   [type=function]                   [name={ref_link:tick}]            [value=function]
+    PARAM:  [type={ref_link:Vector3}]         [name=position]                                   [value={ref_link:Vector3}]
+    PARAM:  [type={ref_link:TextureResource}] [name=texture]                                    [value={ref_link:TextureResource}]
+    PARAM:  [type=int]                        [name=transparent_color]                          [value=any 16-bit RGB565 color]
+    PARAM:  [type=float]                      [name=fps]                                        [value=any]
+    PARAM:  [type=int]                        [name=frame_count_x]                              [value=any positive integer]
+    PARAM:  [type=int]                        [name=frame_count_y]                              [value=any positive integer]
+    PARAM:  [type=float]                      [name=rotation]                                   [value=any (radians)]
+    PARAM:  [type={ref_link:Vector2}]         [name=scale]                                      [value={ref_link:Vector2}]
+    PARAM:  [type=float]                      [name=opacity]                                    [value=0 ~ 1.0] 
+    PARAM:  [type=boolean]                    [name=playing]                                    [value=boolean]
+    PARAM:  [type=boolean]                    [name=fov_distort]                                [value=boolean (True means the sprite will be scaled by the FOV (TODO: review implementation, not perfect) and False means it will not be distorted, default: True)]
+    PARAM:  [type={ref_link:Vector2}]         [name=texture_offset]                             [value={ref_link:Vector2} (local offset of the texture at the rendered origin. Sprites render at center/origin by default, use this to shift them)]
+    ATTR:   [type=function]                   [name={ref_link:add_child}]                       [value=function] 
+    ATTR:   [type=function]                   [name={ref_link:get_child}]                       [value=function]
+    ATTR:   [type=function]                   [name={ref_link:get_child_count}]                 [value=function]
+    ATTR:   [type=function]                   [name={ref_link:node_base_destroy}]               [value=function]
+    ATTR:   [type=function]                   [name={ref_link:node_base_destroy_all}]           [value=function]
+    ATTR:   [type=function]                   [name={ref_link:node_base_destroy_children}]      [value=function]
+    ATTR:   [type=function]                   [name={ref_link:remove_child}]                    [value=function]
+    ATTR:   [type=function]                   [name={ref_link:set_layer}]                       [value=function]
+    ATTR:   [type=function]                   [name={ref_link:get_layer}]                       [value=function]
+    ATTR:   [type=function]                   [name={ref_link:remove_child}]                    [value=function]
+    ATTR:   [type=function]                   [name={ref_link:tick}]                            [value=function]
+    ATTR:   [type={ref_link:Vector2}]         [name=position]                                   [value={ref_link:Vector2}]
+    ATTR:   [type={ref_link:TextureResource}] [name=texture]                                    [value={ref_link:TextureResource}]
+    ATTR:   [type=int]                        [name=transparent_color]                          [value=any 16-bit RGB565 color]
+    ATTR:   [type=float]                      [name=fps]                                        [value=any]
+    ATTR:   [type=int]                        [name=frame_count_x]                              [value=any positive integer]
+    ATTR:   [type=int]                        [name=frame_count_y]                              [value=any positive integer]
+    ATTR:   [type=float]                      [name=rotation]                                   [value=any (radians)]
+    ATTR:   [type={ref_link:Vector2}]         [name=scale]                                      [value={ref_link:Vector2}]
+    ATTR:   [type=float]                      [name=opacity]                                    [value=0 ~ 1.0]
+    ATTR:   [type=boolean]                    [name=playing]                                    [value=boolean]
+    ATTR:   [type=int]                        [name=frame_current_x]                            [value=any positive integer]
+    ATTR:   [type=int]                        [name=frame_current_y]                            [value=any positive integer]
+    ATTR:   [type=boolean]                    [name=fov_distort]                                [value=boolean (True means the sprite will be scaled by the FOV (TODO: review implementation, not perfect) and False means it will not be distorted, default: True)]
+    ATTR:   [type={ref_link:Vector2}]         [name=texture_offset]                             [value={ref_link:Vector2} (local offset of the texture at the rendered origin. Sprites render at center/origin by default, use this to shift them)]
+    OVRR:   [type=function]                   [name={ref_link:tick}]                            [value=function]
 */
 mp_obj_t voxelspace_sprite_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New VoxelSpaceSpriteNode");

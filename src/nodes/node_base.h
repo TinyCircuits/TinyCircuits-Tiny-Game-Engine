@@ -44,11 +44,23 @@ engine_node_base_t *node_base_get(mp_obj_t object, bool *is_obj_instance);
 mp_obj_t node_base_del(mp_obj_t self_in);
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(node_base_del_obj, node_base_del);
 
+mp_obj_t node_base_destroy(mp_obj_t self_in);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(node_base_destroy_obj, node_base_destroy);
+
+mp_obj_t node_base_destroy_children(mp_obj_t self_in);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(node_base_destroy_children_obj, node_base_destroy_children);
+
+mp_obj_t node_base_destroy_all(mp_obj_t self_in);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(node_base_destroy_all_obj, node_base_destroy_all);
+
 mp_obj_t node_base_add_child(mp_obj_t self_parent_in, mp_obj_t child_in);
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(node_base_add_child_obj, node_base_add_child);
 
 mp_obj_t node_base_get_child(mp_obj_t self_parent_in, mp_obj_t index_obj);
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(node_base_get_child_obj, node_base_get_child);
+
+mp_obj_t node_base_get_child_count(mp_obj_t self_parent_in);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(node_base_get_child_count_obj, node_base_get_child_count);
 
 mp_obj_t node_base_remove_child(mp_obj_t self_parent_in, mp_obj_t child_in);
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(node_base_remove_child_obj, node_base_remove_child);

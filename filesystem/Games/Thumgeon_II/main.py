@@ -35,8 +35,9 @@ grass_patch = TextureResource("GrassPatch1_16bit.bmp")
 perlin = NoiseResource()
 
 engine_physics.set_gravity(0, 0.0)
-engine.set_fps_limit(120)
-machine.freq(250000000)
+#engine.set_fps_limit(120)
+engine.disable_fps_limit()
+
 
 class DrawTile(Sprite2DNode):
     def __init__(self):
@@ -50,21 +51,29 @@ class DrawTile(Sprite2DNode):
         #self.tween = Tween()
         
         self.deco = []
-        
+    
+    @micropython.native
     def add_deco(self, deco):
         if deco is not None:
             deco_sprite = Sprite2DNode()
             deco_sprite.texture = deco
             deco_sprite.set_layer(2)
             deco_sprite.transparent_color = Color(0x07e0)
+            #deco_sprite.opacity = 0.6
             self.add_child(deco_sprite)
             self.deco.append(deco_sprite)
-        
+            
+    @micropython.native
     def reset_deco(self):
+        '''
         for d in self.deco:
             self.remove_child(d)
+            d.destroy()
         self.deco.clear()
         pass
+        '''
+        self.deco.clear()
+        self.destroy_children()
         
     def collision(self, contact):
         pass
@@ -82,29 +91,33 @@ for x in range(0, 6):
         renderer_tiles[y*6+x] = DrawTile()
         renderer_tiles[y*6+x].position = Vector2(32*(x), 32*(y))
 
-WORLD_WIDTH = const(32)
-WORLD_HEIGHT = const(32)
+WORLD_WIDTH = const(96)
+WORLD_HEIGHT = const(96)
 
 world_tiles = bytearray(WORLD_WIDTH*WORLD_HEIGHT*3)
 
+@micropython.native
 def get_tile_id(x, y):
     global world_tiles
     if((x < 0) or (x > WORLD_WIDTH-1) or (y < 0) or (y > WORLD_HEIGHT - 1)):
         return -1
     return world_tiles[(y*WORLD_WIDTH+x)*3]
 
+@micropython.native
 def get_tile_data0(x, y):
     global world_tiles
     if((x < 0) or (x > WORLD_WIDTH-1) or (y < 0) or (y > WORLD_HEIGHT - 1)):
         return -1
     return world_tiles[(y*WORLD_WIDTH+x)*3+1]
 
+@micropython.native
 def get_tile_data1(x, y):
     global world_tiles
     if((x < 0) or (x > WORLD_WIDTH-1) or (y < 0) or (y > WORLD_HEIGHT - 1)):
         return -1
     return world_tiles[(y*WORLD_WIDTH+x)*3+2]
 
+@micropython.native
 def tile_id_to_sprite(tile_id):
     global grass1
     global grass2
@@ -125,6 +138,7 @@ def tile_id_to_sprite(tile_id):
     else:
         return None
     
+@micropython.native
 def tile_data_to_deco(tile_data):
     global grass1
     global grass2
@@ -210,7 +224,7 @@ def load_renderer_tiles(cx, cy):
             renderer_tiles[y*6+x].id = get_tile_id(cx+x, cy+y)
             renderer_tiles[y*6+x].texture = tile_id_to_sprite(renderer_tiles[y*6+x].id)
             renderer_tiles[y*6+x].set_layer(1)
-            renderer_tiles[y*6+x].add_deco(grass_patch)
+            renderer_tiles[y*6+x].add_deco(tile_data_to_deco(get_tile_data0(cx+x, cy+y)))
     
     
 tween_snap = 80 # Controls camera tween speed
@@ -218,6 +232,7 @@ indicator_snap = 50 # Controls indicator tween speed
 
 camera_z = 0.0
 
+@micropython.native
 def generate_left(x, y):
     global world_tiles
     global adjacency_likelihoods
@@ -231,6 +246,7 @@ def generate_left(x, y):
             sum += adjacency_likelihoods[id][adj]
         world_tiles[(y*WORLD_WIDTH+x-1)*3] = adj
         
+@micropython.native
 def generate_right(x, y):
     global world_tiles
     global adjacency_likelihoods
@@ -243,7 +259,8 @@ def generate_right(x, y):
             adj += 1
             sum += adjacency_likelihoods[id][adj]
         world_tiles[(y*WORLD_WIDTH+x+1)*3] = adj
-        
+
+@micropython.native
 def generate_top(x, y):
     global world_tiles
     global adjacency_likelihoods
@@ -295,6 +312,17 @@ def generate_water():
             if(perlin.noise_2d(x*10, y*10) < 0.10):
                 world_tiles[(y*WORLD_WIDTH+x)*3] = 4
                 
+def generate_deco():
+    global world_tiles
+    for y in range(0, WORLD_HEIGHT):
+        for x in range(0, WORLD_WIDTH):
+            tile_id = get_tile_id(x, y)
+            if(tile_id == 0 or tile_id == 1):
+                # 10% chance of having grass decoration
+                if(urandom.random() < 0.1):
+                    world_tiles[(y*WORLD_WIDTH+x)*3 + 1] = 1
+                
+                
 def draw_minimap():
     # Very slow to generate
     pass
@@ -307,6 +335,7 @@ for y in range(0, WORLD_HEIGHT):
         
 generate_tiles()
 generate_water()
+generate_deco()
 
 def move_tiles_right():
     load_renderer_tiles(renderer_x-1, renderer_y)
@@ -362,9 +391,9 @@ while True:
     if engine.tick():
         
         #print(urandom.random())
+        #gc.collect()
         print(engine.get_running_fps())
         print(gc.mem_free())
-        gc.collect()
         #print(gc.mem_free())
         #print(str(renderer_x) + ", " + str(renderer_y))
         action_dir = -1

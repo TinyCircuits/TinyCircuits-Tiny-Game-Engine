@@ -1042,3 +1042,19 @@ vox_node_perf_test.py, avg. FPS: 37.41532
 
 
 
+2024-05-21 13:10:31.994036 : 1f1d9753373d1a036969fe5bc5940cc87e97ade3
+Got string saving complete, need to work on restore and delete
+
+{
+line_node_perf_test.py, avg. FPS: 239.8412
+test_opacity_perf_test.py, avg. FPS: 99.51672
+test_perf_test.py, avg. FPS: 117.2426
+circle_node_perf_test.py, avg. FPS: 239.6724
+vox_node_perf_test.py, avg. FPS: 37.41541
+}
+
+
+ ----- 
+
+
+
