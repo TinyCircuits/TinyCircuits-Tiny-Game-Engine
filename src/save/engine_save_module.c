@@ -7,7 +7,6 @@
 #include "py/objstr.h"
 #include <string.h>
 
-
 mp_obj_str_t current_location = {
     .base.type = &mp_type_str,
     .hash = 0,
@@ -23,9 +22,14 @@ mp_obj_str_t temporary_location = {
     .len = 0,
 };
 
-// Lines are read from the current save file, to ram, to the temp save file
-char *line_buffer[256];
-uint32_t file_size = 0;
+// Buffer used for storing items from files. Example,
+// if a float is being restored then it's ASCII
+// representation will be stored here
+uint8_t buffer[256];
+
+uint32_t reading_file_size = 0;
+
+enum entry_types {NONE, STR, INT, FLT};
 
 
 STATIC mp_obj_t engine_set_location(mp_obj_t location){
@@ -68,10 +72,14 @@ void engine_save_start(){
     // Open the the file to read from
     engine_file_open_read(0, &current_location);
 
-    file_size = engine_file_size(0);
+    reading_file_size = engine_file_size(0);
 
     // Open the file to write to (temporary)
     engine_file_open_create_write(1, &temporary_location);
+
+    // Seek to start of files, just in case
+    engine_file_seek(0, 0, MP_SEEK_SET);
+    engine_file_seek(1, 0, MP_SEEK_SET);
 }
 
 
@@ -88,14 +96,40 @@ void engine_save_end(){
 }
 
 
+void engine_restore_start(){
+    // Open the the file to read from
+    engine_file_open_read(0, &current_location);
+
+    reading_file_size = engine_file_size(0);
+
+    // Seek to start of file, just in case
+    engine_file_seek(0, 0, MP_SEEK_SET);
+}
+
+
+void engine_restore_end(){
+    // Close the reading and writing files
+    engine_file_close(0);
+}
+
+
 void engine_save_store_obj(uint8_t file_index, mp_obj_t obj){
     if(mp_obj_is_str(obj)){
         const char* obj_str = mp_obj_str_get_str(obj);
         GET_STR_LEN(obj, obj_str_len);
 
+        engine_file_write(file_index, "TYPE=STR\n", 9);
         engine_file_write(file_index, obj_str, obj_str_len);
+    }else if(mp_obj_is_int(obj)){
+        engine_file_write(file_index, "TYPE=INT\n", 9);
+        uint32_t len = snprintf(buffer, 256, "%d", mp_obj_get_int(obj));
+    }else if(mp_obj_is_float(obj)){
+        engine_file_write(file_index, "TYPE=FLT\n", 9);
+    }else{
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineSave: ERROR: Saving this type of object is not implemented!"));
     }
 
+    // After the type, write the newline
     engine_file_write(1, "\n", 1);
 }
 
@@ -115,12 +149,11 @@ STATIC mp_obj_t engine_save(mp_obj_t entry_name_obj, mp_obj_t obj){
     GET_STR_LEN(entry_name_obj, entry_name_len);
     uint8_t entry_name_index = 0;
 
-    char character;
+    char character = ' ';
     bool entry_already_existed = false;
 
     // While not at end of file, read file, check for name, and copy
     while(engine_file_read(0, &character, 1) != 0){
-        ENGINE_PRINTF("%c", character);
         // Copy to temporary save file
         engine_file_write(1, &character, 1);
 
@@ -133,99 +166,97 @@ STATIC mp_obj_t engine_save(mp_obj_t entry_name_obj, mp_obj_t obj){
             entry_name_index = 0;
         }
 
-        // If we found all characters in the same name, 
-        // stop the loop for writing the object out
-        if(entry_name_index == entry_name_len-1){
+        // If we found all characters in the entry name, 
+        // stop the loop then write the object out
+        if(entry_name_index == entry_name_len){
             entry_already_existed = true;
             break;
         }
     }
 
+    // If the name was not found, add it, otherwise
+    // just do newline since consumed in the search
     if(entry_already_existed == false){
         engine_file_write(1, "NAME=", 5);
         engine_file_write(1, entry_name, entry_name_len);
         engine_file_write(1, "\n", 1);
+    }else{
+        engine_file_write(1, "\n", 1);
     }
-
 
     // Save the object to the file
     engine_save_store_obj(1, obj);
 
     // In the reading file, skip the old overwritten
     // data and copy the rest of the file to temporary
-    engine_file_seek_until(0, "NAME=", 5);
+    uint32_t position = engine_file_seek_until(0, "NAME=", 5);
+
+    // Make sure we aren't really at the end of the
+    // file, if not, go back to before `NAME=` and copy
+    if(position != reading_file_size){
+        engine_file_seek(0, -5, MP_SEEK_CUR);
+    }
+
+    // Copy the rest of the file
     while(engine_file_read(0, &character, 1) != 0){
         // Copy to temporary save file
         engine_file_write(1, &character, 1);
     }
 
-
-    // Close read and write files (delete old file and rename temporary file)
+    // Close read and write files (delete
+    // old file and rename temporary file)
     engine_save_end();
-
-
-
-    // // Where we are in the file and what we just read from it
-    // uint32_t file_cursor = 0;
-    // char character = ' ';
-
-    // // Set true when saved so that
-    // // only copying is done afterwards
-    // bool saved = false;
-
-    // while(file_cursor < file_size){
-    //     // Get the character and copy the charater to the other file
-    //     character = engine_file_seek_get_u8(0, file_cursor);
-    //     engine_file_write(1, &character, 1);
-    //     file_cursor++;
-
-    //     // If saved, stop looking for name and only copy
-    //     if(saved){
-    //         continue;
-    //     }
-
-    //     // If we find a character that's in the save name,
-    //     // increase index into save name and keep checking
-    //     // else reset if miss a character
-    //     if(character == save_name[save_name_index]){
-    //         save_name_index++;
-    //     }else{
-    //         save_name_index = 0;
-    //     }
-
-    //     // If we found all characters in the same name, write
-    //     // out the data to save to the writing file
-    //     if(save_name_index == save_name_len){
-    //         // Save the object to the file
-    //         engine_save_store_obj(1, obj);
-
-    //         // Do not need to keep searching
-    //         saved = true;
-    //     }
-    // }
-
-    // // Never found name, write name and then object
-    // if(saved == false){
-    //     engine_file_write(1, "NAME=", 5);
-    //     engine_file_write(1, save_name, save_name_len);
-    //     engine_file_write(1, "\n", 1);
-
-    //     // Save the object to the file
-    //     engine_save_store_obj(1, obj);
-    // }
-
-    // // Close read and write files (delete old file and rename temporary file)
-    // engine_save_end();
 
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_2(engine_save_obj, engine_save);
 
 
-STATIC mp_obj_t engine_save_restore(mp_obj_t save_name_obj, mp_obj_t obj){
+STATIC mp_obj_t engine_save_restore(mp_obj_t entry_name_obj, mp_obj_t obj){
     ENGINE_INFO_PRINTF("EngineSave: Restoring");    
 
+    engine_restore_start();
 
+    // Setup for finding line to save new data at
+    const char *entry_name = mp_obj_str_get_str(entry_name_obj);
+    GET_STR_LEN(entry_name_obj, entry_name_len);
+
+    // Seek until end of file or until the end of entry name
+    uint32_t position = engine_file_seek_until(0, entry_name, entry_name_len);
+
+    // If we're not at the end of the file, then
+    // we found the name, get the type and edit
+    // the data inside the object with the restored
+    // data
+    if(position != reading_file_size){
+        position = engine_file_seek_until(0, "TYPE=", 5);
+
+        // Read the 3 digit type string (plus the newline)
+        engine_file_read(0, buffer, 4);
+
+        // Determine entry type
+        uint8_t entry_type = NONE;
+        if(strncmp(buffer, "STR\n", 4)){
+            entry_type = STR;
+        }else if(strncmp(buffer, "INT\n", 4)){
+            entry_type = INT;
+        }else if(strncmp(buffer, "FLT\n", 4)){
+            entry_type = FLT;
+        }
+
+        // Read the entry into the buffer
+        char character = ' ';
+        uint8_t restore_index = 0;
+
+        while(character != '\n'){
+            engine_file_read(0, &character, 1);
+            buffer[restore_index] = character;
+            restore_index++;
+            ENGINE_PRINTF("%c", character);
+        }
+    }
+
+    engine_restore_end();
 
     return mp_const_none;
 }

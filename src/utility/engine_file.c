@@ -2,7 +2,6 @@
 #include "debug/debug_print.h"
 #include "extmod/vfs.h"
 #include "py/objstr.h"
-#include "py/stream.h"
 
 // The file that we currently have open
 
@@ -52,7 +51,7 @@ uint32_t engine_file_write(uint8_t file_index, void *buffer, uint32_t size){
 }
 
 
-uint32_t engine_file_seek(uint8_t file_index, uint32_t offset, uint8_t whence){
+uint32_t engine_file_seek(uint8_t file_index, int32_t offset, uint8_t whence){
     file_seek.offset = offset;
     file_seek.whence = whence;
     file_streams[file_index]->ioctl(files[file_index], MP_STREAM_SEEK, (mp_uint_t)(uintptr_t)&file_seek, &file_errcode);

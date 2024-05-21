@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "py/objstr.h"
+#include "py/stream.h"
 
 // Open a file instance until it is closed (cannot use this
 // across the engine to open multiple files at the same time)
@@ -18,7 +19,7 @@ void engine_file_close(uint8_t file_index);
 uint32_t engine_file_read(uint8_t file_index, void *buffer, uint32_t size);
 uint32_t engine_file_write(uint8_t file_index, void *buffer, uint32_t size);
 
-uint32_t engine_file_seek(uint8_t file_index, uint32_t offset, uint8_t whence);
+uint32_t engine_file_seek(uint8_t file_index, int32_t offset, uint8_t whence);
 uint32_t engine_file_seek_until(uint8_t file_index, const char *str, uint32_t str_len);
 
 uint8_t engine_file_get_u8(uint8_t file_index);
