@@ -1074,3 +1074,19 @@ vox_node_perf_test.py, avg. FPS: 36.61673
 
 
 
+2024-05-22 11:36:27.117674 : 6ab0022759a53faca39f8352de207bae76cfc92d
+Finish save, load, and delete methods for engine_save. Still need docs and support for Vector2, Vector3, and Color
+
+{
+line_node_perf_test.py, avg. FPS: 239.8403
+test_opacity_perf_test.py, avg. FPS: 95.63807
+test_perf_test.py, avg. FPS: 113.1502
+circle_node_perf_test.py, avg. FPS: 241.3412
+vox_node_perf_test.py, avg. FPS: 36.68385
+}
+
+
+ ----- 
+
+
+

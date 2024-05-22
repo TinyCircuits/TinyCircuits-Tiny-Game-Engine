@@ -1,6 +1,12 @@
 #include "vector2.h"
 #include "debug/debug_print.h"
 #include "math/engine_math.h"
+#include "utility/engine_mp.h"
+
+
+STATIC void vector2_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
+    ENGINE_PRINTF("%.15f %.15f", ((mp_obj_float_t)((vector2_class_obj_t*)self_in)->x).value, ((mp_obj_float_t)((vector2_class_obj_t*)self_in)->y).value);
+}
 
 
 mp_obj_t vector2_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
@@ -83,12 +89,10 @@ STATIC void vector2_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *desti
             case MP_QSTR_length:
                 destination[0] = MP_OBJ_FROM_PTR(&vector2_class_length_obj);
                 destination[1] = self;
-                return true;
             break;
             case MP_QSTR_normalized:
                 destination[0] = MP_OBJ_FROM_PTR(&vector2_class_normalized_obj);
                 destination[1] = self;
-                return true;
             break;
             case MP_QSTR_x:
                 destination[0] = mp_obj_new_float(self->x.value);
@@ -142,5 +146,6 @@ MP_DEFINE_CONST_OBJ_TYPE(
 
     make_new, vector2_class_new,
     attr, vector2_class_attr,
+    print, vector2_class_print,
     locals_dict, &vector2_class_locals_dict
 );

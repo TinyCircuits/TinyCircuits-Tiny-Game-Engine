@@ -3,6 +3,11 @@
 #include "math/engine_math.h"
 
 
+STATIC void vector3_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
+    ENGINE_PRINTF("%.15f %.15f %.15f", ((mp_obj_float_t)((vector3_class_obj_t*)self_in)->x).value, ((mp_obj_float_t)((vector3_class_obj_t*)self_in)->y).value, ((mp_obj_float_t)((vector3_class_obj_t*)self_in)->z).value);
+}
+
+
 mp_obj_t vector3_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Vector3");
     vector3_class_obj_t *self = m_new_obj(vector3_class_obj_t);
@@ -85,12 +90,10 @@ STATIC void vector3_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *desti
             case MP_QSTR_length:
                 destination[0] = MP_OBJ_FROM_PTR(&vector3_class_length_obj);
                 destination[1] = self;
-                return true;
             break;
             case MP_QSTR_normalized:
                 destination[0] = MP_OBJ_FROM_PTR(&vector3_class_normalized_obj);
                 destination[1] = self;
-                return true;
             break;
             case MP_QSTR_x:
                 destination[0] = mp_obj_new_float(self->x.value);
@@ -139,5 +142,6 @@ MP_DEFINE_CONST_OBJ_TYPE(
 
     make_new, vector3_class_new,
     attr, vector3_class_attr,
+    print, vector3_class_print,
     locals_dict, &vector3_class_locals_dict
 );

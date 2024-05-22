@@ -79,6 +79,11 @@ uint16_t ENGINE_FAST_FUNCTION(engine_color_alpha_blend)(uint16_t background, uin
 }
 
 
+STATIC void color_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
+    ENGINE_PRINTF("%.15f %.15f %.15f", ((mp_obj_float_t)((color_class_obj_t*)self_in)->r).value, ((mp_obj_float_t)((color_class_obj_t*)self_in)->g).value, ((mp_obj_float_t)((color_class_obj_t*)self_in)->b).value);
+}
+
+
 /*  --- doc ---
     NAME: Color
     ID: Color
@@ -178,5 +183,6 @@ MP_DEFINE_CONST_OBJ_TYPE(
 
     make_new, color_class_new,
     attr, color_class_attr,
+    print, color_class_print,
     locals_dict, &color_class_locals_dict
 );

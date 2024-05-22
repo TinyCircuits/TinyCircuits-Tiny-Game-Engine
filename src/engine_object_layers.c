@@ -87,7 +87,7 @@ void engine_invoke_all_node_callbacks(float dt){
                 case NODE_TYPE_EMPTY:
                 {
                     engine_empty_node_class_obj_t *empty_node = node_base->node;
-                    if(node_base_is_just_added(node_base) == false && empty_node->tick_cb != mp_const_none){
+                    if(empty_node->tick_cb != mp_const_none){
                         exec[0] = empty_node->tick_cb;
                         exec[1] = node_base->attr_accessor;
                         exec[2] = mp_obj_new_float(dt);

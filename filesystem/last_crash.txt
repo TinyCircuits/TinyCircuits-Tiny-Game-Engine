@@ -2,5 +2,5 @@ While executing file `Games/Saving/saving.py` an error occurred (<module> refers
 
 Traceback (most recent call last):
   File "/home/devy/Desktop/micropython-rp2350-1.22.0-engine/examples/usercmodule/TinyCircuits-Tiny-Game-Engine/filesystem/launcher.py", line 300, in <module>
-  File "saving.py", line 20, in <module>
-TypeError: can't convert 'int' object to str implicitly
+  File "saving.py", line 49, in <module>
+RuntimeError: EngineSave: ERROR: Tried to load data into an object with an unsupported type or the types do not match!
