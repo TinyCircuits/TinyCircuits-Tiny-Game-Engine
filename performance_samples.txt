@@ -1058,3 +1058,19 @@ vox_node_perf_test.py, avg. FPS: 37.41541
 
 
 
+2024-05-21 16:22:18.542103 : 0a0e3005ae57f36801f17513eef0ca2b6325e6da
+Add destroy methods to all nodes to get rid of them RIGHT NOW
+
+{
+line_node_perf_test.py, avg. FPS: 239.8412
+test_opacity_perf_test.py, avg. FPS: 95.94606
+test_perf_test.py, avg. FPS: 113.5018
+circle_node_perf_test.py, avg. FPS: 239.6725
+vox_node_perf_test.py, avg. FPS: 36.61673
+}
+
+
+ ----- 
+
+
+

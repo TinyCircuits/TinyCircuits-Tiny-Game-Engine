@@ -2,15 +2,21 @@
 
 #include "py/obj.h"
 #include "engine_main.h"
+#include "utility/engine_mp.h"
 #include "utility/engine_file.h"
 #include "debug/debug_print.h"
 #include "py/objstr.h"
+#include "py/objint.h"
 #include <string.h>
+#include <stdlib.h>
+
+#define SAVE_LOCATION_LENGTH_MAX 256
+#define SAVE_ENTRY_LENGTH_MAX 256
 
 mp_obj_str_t current_location = {
     .base.type = &mp_type_str,
     .hash = 0,
-    .data = (byte[256]){},
+    .data = (byte[SAVE_LOCATION_LENGTH_MAX]){},
     .len = 0,
 };
 
@@ -18,18 +24,18 @@ mp_obj_str_t current_location = {
 mp_obj_str_t temporary_location = {
     .base.type = &mp_type_str,
     .hash = 0,
-    .data = (byte[256]){},
+    .data = (byte[SAVE_LOCATION_LENGTH_MAX]){},
     .len = 0,
 };
 
 // Buffer used for storing items from files. Example,
 // if a float is being restored then it's ASCII
 // representation will be stored here
-uint8_t buffer[256];
+char buffer[SAVE_ENTRY_LENGTH_MAX];
 
 uint32_t reading_file_size = 0;
 
-enum entry_types {NONE, STR, INT, FLT};
+enum entry_types {NONE=0, STR=1, INT=2, FLT=3};
 
 
 STATIC mp_obj_t engine_set_location(mp_obj_t location){
@@ -42,7 +48,7 @@ STATIC mp_obj_t engine_set_location(mp_obj_t location){
     const char *location_str = mp_obj_str_get_data(location, &current_location.len);
 
     // Cannot be larger than this since `temp-` takes up 5 characters
-    if(current_location.len > 250){
+    if(current_location.len > SAVE_LOCATION_LENGTH_MAX-5){
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineSave: ERROR: location path too long (max length: 250)"));
     }
 
@@ -96,7 +102,7 @@ void engine_save_end(){
 }
 
 
-void engine_restore_start(){
+void engine_load_start(){
     // Open the the file to read from
     engine_file_open_read(0, &current_location);
 
@@ -107,12 +113,13 @@ void engine_restore_start(){
 }
 
 
-void engine_restore_end(){
+void engine_load_end(){
     // Close the reading and writing files
     engine_file_close(0);
 }
 
 
+// TODO: check lengths of data when saving!
 void engine_save_store_obj(uint8_t file_index, mp_obj_t obj){
     if(mp_obj_is_str(obj)){
         const char* obj_str = mp_obj_str_get_str(obj);
@@ -122,9 +129,12 @@ void engine_save_store_obj(uint8_t file_index, mp_obj_t obj){
         engine_file_write(file_index, obj_str, obj_str_len);
     }else if(mp_obj_is_int(obj)){
         engine_file_write(file_index, "TYPE=INT\n", 9);
-        uint32_t len = snprintf(buffer, 256, "%d", mp_obj_get_int(obj));
+        uint32_t len = snprintf(buffer, SAVE_ENTRY_LENGTH_MAX, "%ld", mp_obj_get_int(obj));
+        engine_file_write(file_index, buffer, len);
     }else if(mp_obj_is_float(obj)){
         engine_file_write(file_index, "TYPE=FLT\n", 9);
+        uint32_t len = snprintf(buffer, SAVE_ENTRY_LENGTH_MAX, "%.15f", mp_obj_get_float(obj));
+        engine_file_write(file_index, buffer, len);
     }else{
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineSave: ERROR: Saving this type of object is not implemented!"));
     }
@@ -212,10 +222,97 @@ STATIC mp_obj_t engine_save(mp_obj_t entry_name_obj, mp_obj_t obj){
 MP_DEFINE_CONST_FUN_OBJ_2(engine_save_obj, engine_save);
 
 
-STATIC mp_obj_t engine_save_restore(mp_obj_t entry_name_obj, mp_obj_t obj){
-    ENGINE_INFO_PRINTF("EngineSave: Restoring");    
+// Doesn't work since some things are passed by value (int) and instead of new version needs to be returned
+// STATIC mp_obj_t engine_save_restore(mp_obj_t entry_name_obj, mp_obj_t obj){
+//     ENGINE_INFO_PRINTF("EngineSave: Restoring");    
 
-    engine_restore_start();
+//     engine_restore_start();
+
+//     // Setup for finding line to save new data at
+//     const char *entry_name = mp_obj_str_get_str(entry_name_obj);
+//     GET_STR_LEN(entry_name_obj, entry_name_len);
+
+//     // Seek until end of file or until the end of entry name
+//     uint32_t position = engine_file_seek_until(0, entry_name, entry_name_len);
+
+//     // If we're not at the end of the file, then
+//     // we found the name, get the type and edit
+//     // the data inside the object with the restored
+//     // data
+//     if(position != reading_file_size){
+//         position = engine_file_seek_until(0, "TYPE=", 5);
+
+//         // Read the 3 digit type string (plus the newline)
+//         engine_file_read(0, buffer, 4);
+
+//         // Determine entry type and restore from buffer to object
+//         uint8_t entry_type = NONE;
+//         if(strncmp(buffer, "STR", 3) == 0){
+//             entry_type = STR;
+//         }else if(strncmp(buffer, "INT", 3) == 0){
+//             entry_type = INT;
+//         }else if(strncmp(buffer, "FLT", 3) == 0){
+//             entry_type = FLT;
+//         }
+
+//         // Read the entry into the buffer
+//         char character = ' ';
+//         uint8_t restore_index = 0;
+
+//         while(character != '\n'){
+//             engine_file_read(0, &character, 1);
+//             buffer[restore_index] = character;
+//             restore_index++;
+//         }
+
+//         // Restore data from read buffer to object
+//         if(entry_type == STR){
+//             // mp_obj_str_set_data()
+//             // mp_obj_str_make_new()
+//         }else if(entry_type == INT){
+//             if(mp_obj_is_exact_type(obj, &mp_type_int)){
+//                 ENGINE_FORCE_PRINTF("TEST0");
+//             }else if(mp_obj_is_small_int(obj)){
+//                 ENGINE_FORCE_PRINTF("%p", obj);
+//                 // ENGINE_FORCE_PRINTF("TEST1");
+//                 // *((mp_int_t*)obj) = 1;
+//                 // MP_OBJ_SMALL_INT_VALUE()
+//                 // mp_int_t i = *((mp_int_t*)obj);
+//                 // i = strtol(buffer, NULL, 10);
+//                 // ENGINE_FORCE_PRINTF("%d", i);
+//                 // *((mp_int_t*)obj) = MP_OBJ_NEW_SMALL_INT(999);
+//                 ENGINE_FORCE_PRINTF("TEST4");
+//             }else{
+//                 ENGINE_FORCE_PRINTF("TEST2");
+//             }
+//         }else if(entry_type == FLT){
+//             ((mp_obj_float_t*)obj)->value = strtof(buffer, NULL);
+//         }
+//     }
+
+//     engine_restore_end();
+
+//     return mp_const_none;
+// }
+// MP_DEFINE_CONST_FUN_OBJ_2(engine_save_restore_obj, engine_save_restore);
+
+
+STATIC mp_obj_t engine_save_load(size_t n_args, const mp_obj_t *args){
+    ENGINE_INFO_PRINTF("EngineSave: Loading");
+
+    mp_obj_t entry_name_obj = args[0];
+    mp_obj_t default_value = mp_const_none;
+
+    // If a default value was passed, set that instead of None
+    if(n_args == 2){
+        default_value = args[1];
+    }
+
+    if(mp_obj_is_str(entry_name_obj) == false){
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineSave: ERROR: entry name is not a string, cannot load!"));
+    }
+
+    engine_load_start();
 
     // Setup for finding line to save new data at
     const char *entry_name = mp_obj_str_get_str(entry_name_obj);
@@ -236,41 +333,107 @@ STATIC mp_obj_t engine_save_restore(mp_obj_t entry_name_obj, mp_obj_t obj){
 
         // Determine entry type
         uint8_t entry_type = NONE;
-        if(strncmp(buffer, "STR\n", 4)){
+        if(strncmp(buffer, "STR", 3) == 0){
             entry_type = STR;
-        }else if(strncmp(buffer, "INT\n", 4)){
+        }else if(strncmp(buffer, "INT", 3) == 0){
             entry_type = INT;
-        }else if(strncmp(buffer, "FLT\n", 4)){
+        }else if(strncmp(buffer, "FLT", 3) == 0){
             entry_type = FLT;
         }
 
         // Read the entry into the buffer
         char character = ' ';
-        uint8_t restore_index = 0;
+        uint16_t restore_index = 0;
 
-        while(character != '\n'){
+        while(character != '\r' && character != '\n'){
             engine_file_read(0, &character, 1);
             buffer[restore_index] = character;
             restore_index++;
-            ENGINE_PRINTF("%c", character);
+
+            if(restore_index >= SAVE_ENTRY_LENGTH_MAX){
+                mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineSave: ERROR: Trying to load an entry that will overflow an internal buffer! Entry too long!"));
+            }
+        }
+
+        // Restore data from read buffer to object
+        if(entry_type == STR){
+            return mp_obj_new_str_of_type(&mp_type_str, buffer, restore_index-1);   // minus 1 to remove newline
+        }else if(entry_type == INT){
+            return mp_obj_new_int(strtol(buffer, NULL, 10));
+        }else if(entry_type == FLT){
+            return mp_obj_new_float(strtof(buffer, NULL));
         }
     }
 
-    engine_restore_end();
+    engine_load_end();
 
-    return mp_const_none;
+    // If we didn't return anything else then the
+    // entry must have not been saved before,
+    // return the default value
+    return default_value;
 }
-MP_DEFINE_CONST_FUN_OBJ_2(engine_save_restore_obj, engine_save_restore);
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_save_load_obj, 1, 2, engine_save_load);
 
 
-STATIC mp_obj_t engine_save_delete(mp_obj_t save_name_obj, mp_obj_t obj){
+STATIC mp_obj_t engine_save_delete(mp_obj_t entry_name_obj){
     ENGINE_INFO_PRINTF("EngineSave: Deleting entry");
 
+    if(mp_obj_is_str(entry_name_obj) == false){
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineSave: ERROR: entry name is not a string, cannot delete!"));
+    }
 
+    // Open read and write files (create read file too if needed)
+    engine_save_start();
+
+    // Setup for finding line to delete data at
+    const char *entry_name = mp_obj_str_get_str(entry_name_obj);
+    GET_STR_LEN(entry_name_obj, entry_name_len);
+    uint8_t entry_name_index = 0;
+    
+    // Temporary for copying
+    char character = ' ';
+
+    // Figure out where the entry name is
+    // so that it can be deleted as well
+    // as the data
+    uint32_t entry_name_end_index = engine_file_seek_until(0, entry_name, entry_name_len);
+    uint32_t entry_name_start_index = entry_name_end_index - entry_name_len - 5;    /// Minus 5 for `Name=`
+
+    // If the name was found we won't be at the end of the file
+    if(entry_name_end_index != reading_file_size){
+        // Copy from start to `entry_name_start_index` 1 byte at a time
+        engine_file_seek(0, 0, MP_SEEK_SET);
+        uint32_t bytes_copied = 0;
+
+        while(engine_file_read(0, &character, 1) != 0 && bytes_copied < entry_name_start_index){
+            engine_file_write(1, &character, 1);
+            bytes_copied++;
+        }
+    }
+
+    // In the reading file, skip the old overwritten
+    // data and copy the rest of the file to temporary
+    uint32_t position = engine_file_seek_until(0, "NAME=", 5);
+
+    // Make sure we aren't really at the end of the
+    // file, if not, go back to before `NAME=` and copy
+    if(position != reading_file_size){
+        engine_file_seek(0, -5, MP_SEEK_CUR);
+    }
+
+    // Copy the rest of the file
+    while(engine_file_read(0, &character, 1) != 0){
+        // Copy to temporary save file
+        engine_file_write(1, &character, 1);
+    }
+
+    // Close read and write files (delete
+    // old file and rename temporary file)
+    engine_save_end();
 
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_2(engine_save_delete_obj, engine_save_delete);
+MP_DEFINE_CONST_FUN_OBJ_1(engine_save_delete_obj, engine_save_delete);
 
 
 STATIC mp_obj_t engine_save_delete_location(){
@@ -298,7 +461,8 @@ STATIC const mp_rom_map_elem_t engine_save_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_save) },
     { MP_OBJ_NEW_QSTR(MP_QSTR___init__), (mp_obj_t)&engine_save_module_init_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_save), (mp_obj_t)&engine_save_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_restore), (mp_obj_t)&engine_save_restore_obj },
+    // { MP_OBJ_NEW_QSTR(MP_QSTR_restore), (mp_obj_t)&engine_save_restore_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_load), (mp_obj_t)&engine_save_load_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_delete), (mp_obj_t)&engine_save_delete_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_delete_location), (mp_obj_t)&engine_save_delete_location_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_set_location), (mp_obj_t)&engine_set_location_obj },
