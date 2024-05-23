@@ -1090,3 +1090,19 @@ vox_node_perf_test.py, avg. FPS: 36.68385
 
 
 
+2024-05-22 17:45:55.057186 : 8ccda04cb9c0944b1b2a84c5f81bdb92f65d7676
+Got save, load, and load_inot working but need to introduce length for parameters since something like a string or bytearray make contain a newline and then mess up loading
+
+{
+line_node_perf_test.py, avg. FPS: 239.6742
+test_opacity_perf_test.py, avg. FPS: 95.27927
+test_perf_test.py, avg. FPS: 112.613
+circle_node_perf_test.py, avg. FPS: 239.5063
+vox_node_perf_test.py, avg. FPS: 36.6789
+}
+
+
+ ----- 
+
+
+

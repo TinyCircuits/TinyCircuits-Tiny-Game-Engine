@@ -65,6 +65,7 @@ SRC_USERMOD += $(ENGINE_MOD_DIR)/animation/engine_animation_module.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/animation/engine_animation_tween.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/animation/engine_animation_delay.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/save/engine_save_module.c
+SRC_USERMOD += $(ENGINE_MOD_DIR)/save/engine_save.c
 
 
 # We can add our module folder to include paths if needed
