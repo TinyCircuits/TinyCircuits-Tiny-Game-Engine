@@ -1106,3 +1106,19 @@ vox_node_perf_test.py, avg. FPS: 36.6789
 
 
 
+2024-05-23 14:40:47.090098 : 4086f7951b67ecbda7c3a767f504573f1086ea87
+Hopefully fix issue in Tweening by restricting to attributes and making new versions of data
+
+{
+line_node_perf_test.py, avg. FPS: 239.674
+test_opacity_perf_test.py, avg. FPS: 94.21859
+test_perf_test.py, avg. FPS: 111.1593
+circle_node_perf_test.py, avg. FPS: 239.673
+vox_node_perf_test.py, avg. FPS: 36.44076
+}
+
+
+ ----- 
+
+
+

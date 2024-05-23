@@ -66,7 +66,12 @@ enum tween_direction {forwards, backwards};
 mp_obj_t get_tweening_value(tween_class_obj_t *tween){
     // Always load the attribute since a reference might go stale
     // if the object's attribute is assigned to during tweening
-    mp_obj_t tweening_value = engine_mp_load_attr_maybe(tween->object, tween->attr);
+    mp_obj_t tweening_value;
+    if(tween->attr == 0){
+        tweening_value = tween->object;
+    }else{
+        tweening_value = engine_mp_load_attr_maybe(tween->object, tween->attr);
+    }
 
     // In case the attr or object is not available anymore, stop tweening
     if(tweening_value == MP_OBJ_NULL || tweening_value == mp_const_none){
@@ -81,17 +86,29 @@ mp_obj_t get_tweening_value(tween_class_obj_t *tween){
 
 
 void set_value_to_end(tween_class_obj_t *tween){
+    // Get tweening value and make sure valid
+    mp_obj_t tweening_value = get_tweening_value(tween);
+    if(tweening_value == mp_const_none){
+        return mp_const_none;
+    }
+
     if(tween->tween_type == tween_type_float){
         mp_store_attr(tween->object, tween->attr, mp_obj_new_float(tween->end_0));
     }else if(tween->tween_type == tween_type_vec2){
-        mp_store_attr(tween->object, tween->attr, vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(tween->end_0), mp_obj_new_float(tween->end_1)}));
+        vector2_class_obj_t *value = tweening_value;
+        value->x.value = tween->end_0;
+        value->y.value = tween->end_1;
     }else if(tween->tween_type == tween_type_vec3){
-        mp_store_attr(tween->object, tween->attr, vector3_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(tween->end_0), mp_obj_new_float(tween->end_1), mp_obj_new_float(tween->end_2)}));
+        vector3_class_obj_t *value = tweening_value;
+        value->x.value = tween->end_0;
+        value->y.value = tween->end_1;
+        value->z.value = tween->end_2;
     }else if(tween->tween_type == tween_type_color){
-        mp_store_attr(tween->object, tween->attr, color_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(tween->end_0), mp_obj_new_float(tween->end_1), mp_obj_new_float(tween->end_2)}));
-
-        mp_obj_t tweening_value = get_tweening_value(tween);
-        engine_color_sync_rgb_to_u16(tweening_value);
+        color_class_obj_t *value = tweening_value;
+        value->r.value = tween->end_0;
+        value->g.value = tween->end_1;
+        value->b.value = tween->end_2;
+        engine_color_sync_rgb_to_u16(value);
     }
 }
 
@@ -195,6 +212,8 @@ STATIC mp_obj_t tween_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
     if(tween->tween_type == tween_type_float){
         mp_store_attr(tween->object, tween->attr, mp_obj_new_float(tween->initial_0 + ((tween->end_0 - tween->initial_0) * t)));
     }else if(tween->tween_type == tween_type_vec2){
+        vector2_class_obj_t *value = tweening_value;
+
         float x0 = tween->initial_0;
         float y0 = tween->initial_1;
 
@@ -202,8 +221,11 @@ STATIC mp_obj_t tween_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
         float y1 = tween->end_1;
 
         // https://stackoverflow.com/a/51067982
-        mp_store_attr(tween->object, tween->attr, vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(x0 + t * (x1 - x0)), mp_obj_new_float(y0 + t * (y1 - y0))}));
+        value->x.value = x0 + t * (x1 - x0);
+        value->y.value = y0 + t * (y1 - y0);
     }else if(tween->tween_type == tween_type_vec3){
+        vector3_class_obj_t *value = tweening_value;
+
         float x0 = tween->initial_0;
         float y0 = tween->initial_1;
         float z0 = tween->initial_2;
@@ -213,8 +235,12 @@ STATIC mp_obj_t tween_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
         float z1 = tween->end_2;
 
         // https://stackoverflow.com/a/51067982
-        mp_store_attr(tween->object, tween->attr, vector3_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(x0 + t * (x1 - x0)), mp_obj_new_float(y0 + t * (y1 - y0)), mp_obj_new_float(z0 + t * (z1 - z0))}));
+        value->x.value = x0 + t * (x1 - x0);
+        value->y.value = y0 + t * (y1 - y0);
+        value->z.value = z0 + t * (z1 - z0);
     }else if(tween->tween_type == tween_type_color){
+        color_class_obj_t *value = tweening_value;
+
         float r0 = tween->initial_0;
         float g0 = tween->initial_1;
         float b0 = tween->initial_2;
@@ -225,8 +251,11 @@ STATIC mp_obj_t tween_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
 
         // https://www.alanzucconi.com/2016/01/06/colour-interpolation/#:~:text=can%20be%20done-,as%20such,-%3A
         // Lame way of interpolating RGB: TODO
-        mp_store_attr(tween->object, tween->attr, color_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(r0 + (r1 - r0) * t), mp_obj_new_float(g0 + (g1 - g0) * t), mp_obj_new_float(b0 + (b1 - b0) * t)}));
-        engine_color_sync_rgb_to_u16(tweening_value);
+        value->r.value = r0 + (r1 - r0) * t;
+        value->g.value = g0 + (g1 - g0) * t;
+        value->b.value = b0 + (b1 - b0) * t;
+
+        engine_color_sync_rgb_to_u16(value);
     }
 
     return mp_const_none;
