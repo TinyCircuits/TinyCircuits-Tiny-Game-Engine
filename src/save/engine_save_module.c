@@ -22,7 +22,7 @@
 /* --- doc ---
    NAME: set_location
    ID: engine_save_set_location
-   DESC: Sets the current file location that entries will be saved to (required that this is don't before trying to save, load, or delete entries)
+   DESC: Sets the current file location that entries will be saved to (required that this is done before trying to save, load, or delete entries)
    PARAM:   [type=str]  [name=filepath]   [value=str]
    RETURN: None
 */
