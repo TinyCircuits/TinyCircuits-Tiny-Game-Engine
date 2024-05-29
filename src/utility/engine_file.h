@@ -30,7 +30,11 @@ uint8_t engine_file_seek_get_u8(uint8_t file_index, uint32_t u8_byte_offset);
 uint16_t engine_file_seek_get_u16(uint8_t file_index, uint32_t u8_byte_offset);
 uint32_t engine_file_seek_get_u32(uint8_t file_index, uint32_t u8_byte_offset);
 
+uint32_t engine_file_position(uint8_t file_index);
 uint32_t engine_file_size(uint8_t file_index);
+
+uint32_t engine_file_copy_amount_from_to(uint8_t from_file_index, uint8_t to_file_index, uint32_t amount, void *buffer, uint32_t buffer_len);
+uint32_t engine_file_copy_from_to_until(uint8_t from_file_index, uint8_t to_file_index, uint32_t until_offset, void *buffer, uint32_t buffer_len);
 
 void engine_file_remove(mp_obj_str_t *filename);
 void engine_file_rename(mp_obj_str_t *old, mp_obj_str_t *new);

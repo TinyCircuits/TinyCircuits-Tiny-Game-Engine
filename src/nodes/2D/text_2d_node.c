@@ -28,7 +28,6 @@ void text_2d_node_class_draw(engine_node_base_t *text_2d_node_base, mp_obj_t cam
         return mp_const_none;
     }
 
-    vector2_class_obj_t *text_scale =  text_2d_node->scale;
     float text_opacity = mp_obj_get_float(text_2d_node->opacity);
 
     // Avoid drawing or doing anything if opacity is zero
@@ -36,6 +35,7 @@ void text_2d_node_class_draw(engine_node_base_t *text_2d_node_base, mp_obj_t cam
         return;
     }
 
+    vector2_class_obj_t *text_scale =  text_2d_node->scale;
     float text_box_width = mp_obj_get_float(text_2d_node->width);
     float text_box_height = mp_obj_get_float(text_2d_node->height);
 
@@ -423,7 +423,6 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
 
         // Look for function overrides otherwise use the defaults
         mp_obj_t dest[2];
-
         mp_load_method_maybe(node_base->node, MP_QSTR_tick, dest);
         if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
             text_2d_node->tick_cb = mp_const_none;

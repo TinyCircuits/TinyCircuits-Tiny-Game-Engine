@@ -41,6 +41,39 @@ STATIC mp_obj_t engine_save_set_location(mp_obj_t location){
 MP_DEFINE_CONST_FUN_OBJ_1(engine_save_set_location_obj, engine_save_set_location);
 
 
+/* --- doc ---
+   NAME: delete_location
+   ID: engine_save_delete_location
+   DESC: Deletes the set save file
+   RETURN: None
+*/
+STATIC mp_obj_t engine_save_delete_location(){
+    ENGINE_INFO_PRINTF("EngineSave: Deleting save location!");
+    engine_save_del_set_location();
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_0(engine_save_delete_location_obj, engine_save_delete_location);
+
+
+/* --- doc ---
+   NAME: save
+   ID: engine_save_save
+   DESC: Saves the value/object to the save file under the given entry name
+   PARAM:   [type=str]  [name=entry_name]   [value=str]
+   PARAM:   [type=str, bytearray, int, float, {ref_link:Vector2}, {ref_link:Vector3}, {ref_link:Color}]  [name=value]   [value=str, int, float, {ref_link:Vector2}, {ref_link:Vector3}, {ref_link:Color}]
+   RETURN: None
+*/
+STATIC mp_obj_t engine_save(mp_obj_t entry_name_obj, mp_obj_t obj){
+    ENGINE_INFO_PRINTF("EngineSave: Saving");
+
+    GET_STR_DATA_LEN(entry_name_obj, entry_name, entry_name_len);
+    engine_save_entry(entry_name, entry_name_len, obj);
+
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_2(engine_save_obj, engine_save);
+
+
 // // TODO: check lengths of data when saving! Except for bytearray and str, those can be any length
 // void engine_save_store_raw(uint8_t file_index, mp_obj_t obj){
 //     if(mp_obj_is_str(obj)){
@@ -323,103 +356,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_save_set_location_obj, engine_save_set_location
 // }
 
 
-// /* --- doc ---
-//    NAME: save
-//    ID: engine_save_save
-//    DESC: Saves the value/object to the save file under the given entry name
-//    PARAM:   [type=str]  [name=entry_name]   [value=str]
-//    PARAM:   [type=str, bytearray, int, float, {ref_link:Vector2}, {ref_link:Vector3}, {ref_link:Color}]  [name=value]   [value=str, int, float, {ref_link:Vector2}, {ref_link:Vector3}, {ref_link:Color}]
-//    RETURN: None
-// */
-// STATIC mp_obj_t engine_save(mp_obj_t entry_name_obj, mp_obj_t obj){
-//     ENGINE_INFO_PRINTF("EngineSave: Saving");
 
-//     if(mp_obj_is_str(entry_name_obj) == false){
-//         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineSave: ERROR: entry name is not a string, cannot save!"));
-//     }
-
-//     // Open read and write files (create read file too if needed)
-//     engine_save_start();
-
-//     // Setup for finding line to save new data at
-//     const char *entry_name = mp_obj_str_get_str(entry_name_obj);
-//     GET_STR_LEN(entry_name_obj, entry_name_len);
-//     uint8_t entry_name_index = 0;
-
-//     char character = ' ';
-//     bool entry_already_existed = false;
-
-//     // Write the save file unique string to the start
-//     // of the file and seek past it in reading file so
-//     // it doesn't get copied
-//     engine_file_write(1, "THUMBY_SAVE\n", 12);
-//     engine_file_seek(0, 12, MP_SEEK_CUR);
-
-//     // Write the save version string to the save file
-//     // and seek past it in the read file so it doesn't
-//     // get copied
-//     uint32_t len = snprintf(buffer, BUFFER_LENGTH_MAX, "%d.%d.%d\n", SAVE_VER_MAJOR, SAVE_VER_MINOR, SAVE_VER_PATCH);
-//     engine_file_write(1, buffer, len);
-//     engine_file_seek(0, len, MP_SEEK_CUR);
-
-//     // While not at end of file, read file, check for name, and copy
-//     while(engine_file_read(0, &character, 1) != 0){
-//         // Copy to temporary save file
-//         engine_file_write(1, &character, 1);
-
-//         // If we find a character that's in the save name,
-//         // increase index into save name and keep checking
-//         // else reset if miss a character
-//         if(character == entry_name[entry_name_index]){
-//             entry_name_index++;
-//         }else{
-//             entry_name_index = 0;
-//         }
-
-//         // If we found all characters in the entry name, 
-//         // stop the loop then write the object out
-//         if(entry_name_index == entry_name_len){
-//             entry_already_existed = true;
-//             break;
-//         }
-//     }
-
-//     // If the name was not found, add it, otherwise
-//     // just do newline since consumed in the search
-//     if(entry_already_existed == false){
-//         engine_file_write(1, "NAME=", 5);
-//         engine_file_write(1, entry_name, entry_name_len);
-//         engine_file_write(1, "\n", 1);
-//     }else{
-//         engine_file_write(1, "\n", 1);
-//     }
-
-//     // Save the object to the file
-//     engine_save_store_raw(1, obj);
-
-//     // In the reading file, skip the old overwritten
-//     // data and copy the rest of the file to temporary
-//     uint32_t position = engine_file_seek_until(0, "NAME=", 5);
-
-//     // Make sure we aren't really at the end of the
-//     // file, if not, go back to before `NAME=` and copy
-//     if(position != reading_file_size){
-//         engine_file_seek(0, -5, MP_SEEK_CUR);
-//     }
-
-//     // Copy the rest of the file
-//     while(engine_file_read(0, &character, 1) != 0){
-//         // Copy to temporary save file
-//         engine_file_write(1, &character, 1);
-//     }
-
-//     // Close read and write files (delete
-//     // old file and rename temporary file)
-//     engine_save_end();
-
-//     return mp_const_none;
-// }
-// MP_DEFINE_CONST_FUN_OBJ_2(engine_save_obj, engine_save);
 
 
 // /* --- doc ---
@@ -519,20 +456,6 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_save_set_location_obj, engine_save_set_location
 // MP_DEFINE_CONST_FUN_OBJ_1(engine_save_delete_obj, engine_save_delete);
 
 
-/* --- doc ---
-   NAME: delete_location
-   ID: engine_save_delete_location
-   DESC: Deletes the set save file
-   RETURN: None
-*/
-STATIC mp_obj_t engine_save_delete_location(){
-    ENGINE_INFO_PRINTF("EngineSave: Deleting save location!");
-    engine_save_del_set_location();
-    return mp_const_none;
-}
-MP_DEFINE_CONST_FUN_OBJ_0(engine_save_delete_location_obj, engine_save_delete_location);
-
-
 STATIC mp_obj_t engine_save_module_init(){
     return mp_const_none;
 }
@@ -553,7 +476,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_save_module_init_obj, engine_save_module_init);
 STATIC const mp_rom_map_elem_t engine_save_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_save) },
     { MP_OBJ_NEW_QSTR(MP_QSTR___init__), (mp_obj_t)&engine_save_module_init_obj },
-    // { MP_OBJ_NEW_QSTR(MP_QSTR_save), (mp_obj_t)&engine_save_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_save), (mp_obj_t)&engine_save_obj },
     // { MP_OBJ_NEW_QSTR(MP_QSTR_load), (mp_obj_t)&engine_save_load_obj },
     // { MP_OBJ_NEW_QSTR(MP_QSTR_load_into), (mp_obj_t)&engine_save_load_into_obj },
     // { MP_OBJ_NEW_QSTR(MP_QSTR_delete), (mp_obj_t)&engine_save_delete_obj },

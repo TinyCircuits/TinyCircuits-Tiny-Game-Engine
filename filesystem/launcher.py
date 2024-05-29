@@ -9,6 +9,7 @@ from engine_nodes import Sprite2DNode, CameraNode, GUIBitmapButton2DNode, Text2D
 from engine_resources import TextureResource, FontResource
 from engine_animation import Tween, ONE_SHOT, EASE_BACK_OUT
 import os
+import sys
 
 
 game_path_to_execute = None
@@ -295,6 +296,12 @@ cwd = os.getcwd()
 # relative paths inside their folder to open files
 # then execute from that relative path
 os.chdir(game_dir)
+
+# Add the game directory as part of the import paths
+if(cwd == "/"):
+    sys.path.append(cwd + game_dir)
+else:
+    sys.path.append(cwd + "/" + game_dir)
 
 try:
     execfile(game_file_name)

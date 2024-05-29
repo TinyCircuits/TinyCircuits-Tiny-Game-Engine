@@ -101,6 +101,7 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [.] Somehow get better error when a game raises an exception in launcher: made it a little better, says <module> instead of file name though...
 
 [] Major bug!!! If you set a value to 0.0 in Python and then change that value directly in c, it changes the value of 0.0... See TweenTest/main.py
+[] Tween ints
 
 [] Game saving:
    1. When a node is given a name, it can be saved. When a node is instantiated, if the name is provided then it look at the saving module's save location for the nodes properties

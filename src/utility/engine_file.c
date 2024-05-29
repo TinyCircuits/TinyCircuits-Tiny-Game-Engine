@@ -1,4 +1,5 @@
 #include "engine_file.h"
+#include "math/engine_math.h"
 #include "debug/debug_print.h"
 #include "extmod/vfs.h"
 #include "py/objstr.h"
@@ -120,11 +121,51 @@ uint32_t engine_file_seek_get_u32(uint8_t file_index, uint32_t u8_byte_offset){
 }
 
 
-uint32_t engine_file_size(uint8_t file_index){
+uint32_t engine_file_position(uint8_t file_index){
+    engine_file_seek(file_index, 0, MP_SEEK_CUR);
+
     file_seek.offset = 0;
-    file_seek.whence = MP_SEEK_END;
+    file_seek.whence = MP_SEEK_CUR;
     file_streams[file_index]->ioctl(files[file_index], MP_STREAM_SEEK, (mp_uint_t)(uintptr_t)&file_seek, &file_errcode);
     return file_seek.offset;
+}
+
+
+uint32_t engine_file_size(uint8_t file_index){
+    uint32_t pos = engine_file_position(file_index);
+    uint32_t size = engine_file_seek(file_index, 0, MP_SEEK_END);
+    engine_file_seek(file_index, pos, MP_SEEK_SET);
+    return size;
+}
+
+
+uint32_t engine_file_copy_amount_from_to(uint8_t from_file_index, uint8_t to_file_index, uint32_t amount, void *buffer, uint32_t buffer_len){
+    uint32_t total_copied = 0;
+    
+    uint32_t read_file_size = engine_file_size(from_file_index);
+    uint32_t read_start = engine_file_position(from_file_index);
+    uint32_t read_end = min(read_start + amount, read_file_size);
+    uint32_t read_cursor = read_start;
+
+    while(total_copied < amount && read_cursor < read_end){
+        uint32_t amount_to_copy = min(buffer_len, read_end-read_cursor);
+
+        engine_file_read(from_file_index, buffer, amount_to_copy);
+        engine_file_write(to_file_index, buffer, amount_to_copy);
+
+        read_cursor += amount_to_copy;
+        total_copied += amount_to_copy;
+    }
+
+    return total_copied;
+}
+
+
+uint32_t engine_file_copy_from_to_until(uint8_t from_file_index, uint8_t to_file_index, uint32_t until_offset, void *buffer, uint32_t buffer_len){
+    uint32_t read_start = engine_file_position(from_file_index);
+    uint32_t amount = until_offset - read_start;
+
+    return engine_file_copy_amount_from_to(from_file_index, to_file_index, amount, buffer, buffer_len);
 }
 
 

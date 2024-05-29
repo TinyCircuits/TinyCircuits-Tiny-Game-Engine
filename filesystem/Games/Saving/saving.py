@@ -7,7 +7,7 @@ from engine_nodes import CameraNode
 
 engine_save.set_location("save.data")
 
-# engine_save.save("test0", "Hi there!!!!")
+engine_save.save("test0", "Hi there!!!!")
 # engine_save.save("test1", 9174987.0/19438198743.0)
 # engine_save.save("test2", 1000)
 # engine_save.save("test3", Vector2(0.1, 0.2))
