@@ -7,13 +7,12 @@
 #include <stdint.h>
 
 
-void engine_save_set_file_location(const char *location, uint32_t location_len, uint16_t key_count);
-void engine_save_del_set_location();
+void engine_saving_set_file_location(const char *location, uint32_t location_len);
+void engine_saving_del_set_location();
 
-void engine_save_entry(const char* entry_name, uint16_t entry_name_len, mp_obj_t entry);
-void engine_load_entry();
-void engine_load_entry_into();
-void engine_delete_entry();
+void engine_saving_save_entry(const char* entry_name, uint16_t entry_name_len, mp_obj_t entry);
+mp_obj_t engine_saving_load_entry(const char* entry_name, uint16_t entry_name_len);
+void engine_saving_delete_entry(const char* entry_name, uint16_t entry_name_len);
 
 
 #endif  // ENGINE_SAVE_H

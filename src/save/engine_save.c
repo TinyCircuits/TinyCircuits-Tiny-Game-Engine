@@ -30,9 +30,8 @@
 
 #define TABLE_THUMBY_CLR_SCREEN_LEN 4
 #define TABLE_VERSION_LEN 2
-#define TABLE_KEY_COUNT_LEN 2
 
-#define TABLE_SIZE TABLE_THUMBY_CLR_SCREEN_LEN + TABLE_VERSION_LEN + TABLE_KEY_COUNT_LEN
+#define TABLE_SIZE TABLE_THUMBY_CLR_SCREEN_LEN + TABLE_VERSION_LEN
 
 mp_obj_str_t current_location = {
     .base.type = &mp_type_str,
@@ -61,7 +60,7 @@ uint32_t reading_file_size = 0;
 enum entry_types {SAVE_NONE=0, SAVE_STRING=1, SAVE_INTEGER=2, SAVE_FLOAT=3, SAVE_VECTOR2=4, SAVE_VECTOR3=5, SAVE_COLOR=6, SAVE_BYTEARRAY=7};
 
 
-void engine_save_start_read_write(){
+void engine_saving_start_read_write(){
     // Open the the file to read from and get size
     engine_file_open_read(0, &current_location);
     reading_file_size = engine_file_size(0);
@@ -74,7 +73,7 @@ void engine_save_start_read_write(){
     engine_file_seek(1, 0, MP_SEEK_SET);
 }
 
-void engine_save_stop_read_write(){
+void engine_saving_stop_read_write(){
     // Close the reading and writing files
     engine_file_close(0);
     engine_file_close(1);
@@ -87,7 +86,7 @@ void engine_save_stop_read_write(){
 }
 
 
-void engine_save_start_read(){
+void engine_saving_start_read(){
     // Open the the file to read from and get size
     engine_file_open_read(0, &current_location);
     reading_file_size = engine_file_size(0);
@@ -97,22 +96,16 @@ void engine_save_start_read(){
 }
 
 
-void engine_save_stop_read(){
+void engine_saving_stop_read(){
     // Close the reading and writing files
     engine_file_close(0);
 }
 
 
-void engine_save_write_table(uint8_t file_index, uint16_t save_version, uint16_t key_count){
-    engine_file_write(file_index, THUMBY_CLR_SCREEN, TABLE_THUMBY_CLR_SCREEN_LEN);
-    engine_file_write(file_index, &save_version, TABLE_VERSION_LEN);
-    engine_file_write(file_index, &key_count, TABLE_KEY_COUNT_LEN);
-}
-
-
-uint32_t engine_save_get_entry_data_len(mp_obj_t entry){
+uint32_t engine_saving_get_entry_data_len(mp_obj_t entry){
     if(mp_obj_is_str(entry)){
-        return ((mp_obj_str_t*)entry)->len;
+        GET_STR_LEN(entry, str_len);
+        return str_len;
     }else if(mp_obj_is_int(entry)){
         return 4;
     }else if(mp_obj_is_float(entry)){
@@ -131,44 +124,163 @@ uint32_t engine_save_get_entry_data_len(mp_obj_t entry){
 }
 
 
-void engine_save_write_bucket_entry(uint8_t file_index, mp_obj_t entry, const char* entry_name, uint16_t entry_name_len){
-    uint32_t entry_len = engine_save_get_entry_data_len(entry);
+mp_obj_t engine_saving_read_entry(uint8_t file_index, uint32_t entry_data_len, uint8_t entry_data_type){
+    switch(entry_data_type){
+        case SAVE_STRING:
+        {
+            // Do all of this so that strings can be any length
+            // See `mp_obj_new_str_copy` in py/objstr.c
+            mp_obj_str_t *str = mp_obj_malloc(mp_obj_str_t, &mp_type_str);
+            str->len = entry_data_len;
 
-    // Each entry in each bucket is prepended with this metadata:
+            // Create the string data
+            byte *data = m_new(byte, entry_data_len);
+
+            // Read into new str memory (copy)
+            engine_file_read(file_index, data, entry_data_len);
+
+            // Search for interned/cached string without
+            // See `mp_obj_new_str` in py/objstr.c
+            qstr q = qstr_find_strn(data, entry_data_len);
+
+            if(q != MP_QSTRnull){
+                // qstr with this data already exists, return reference
+                // unique str after deleting the string we just allocated
+                m_del(byte, data, entry_data_len);
+                return MP_OBJ_NEW_QSTR(q);
+            }else{
+                // no existing qstr, don't make one
+                // and return the new string object
+                str->hash = qstr_compute_hash(data, entry_data_len);
+                str->data = data;
+                return str;
+            }
+        }
+        break;
+        case SAVE_INTEGER:
+        {
+            mp_int_t integer = 0;
+            engine_file_read(file_index, &integer, entry_data_len);
+            return mp_obj_new_int(integer);
+        }
+        break;
+        case SAVE_FLOAT:
+        {
+            float flt = 0.0f;
+            engine_file_read(file_index, &flt, entry_data_len);
+            return mp_obj_new_float(flt);
+        }
+        break;
+        case SAVE_VECTOR2:
+        {
+            float xf = 0.0f;
+            float yf = 0.0f;
+            engine_file_read(file_index, &xf, 4);
+            engine_file_read(file_index, &yf, 4);
+            return vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(xf), mp_obj_new_float(yf)});
+        }
+        break;
+        case SAVE_VECTOR3:
+        {
+            float xf = 0.0f;
+            float yf = 0.0f;
+            float zf = 0.0f;
+            engine_file_read(file_index, &xf, 4);
+            engine_file_read(file_index, &yf, 4);
+            engine_file_read(file_index, &zf, 4);
+            return vector3_class_new(&vector3_class_type, 3, 0, (mp_obj_t[]){mp_obj_new_float(xf), mp_obj_new_float(yf), mp_obj_new_float(zf)});
+        }
+        break;
+        case SAVE_COLOR:
+        {
+            float rf = 0.0f;
+            float gf = 0.0f;
+            float bf = 0.0f;
+            engine_file_read(file_index, &rf, 4);
+            engine_file_read(file_index, &gf, 4);
+            engine_file_read(file_index, &bf, 4);
+            return color_class_new(&color_class_type, 3, 0, (mp_obj_t[]){mp_obj_new_float(rf), mp_obj_new_float(gf), mp_obj_new_float(bf)});
+        }
+        break;
+        case SAVE_BYTEARRAY:
+        {
+            // Create empty bytearray first (see `bytearray_make_new` and `array_new` in py/objarray.c)
+            mp_obj_array_t *array = m_new_obj(mp_obj_array_t);
+            array->base.type = &mp_type_bytearray;
+            array->typecode = BYTEARRAY_TYPECODE;
+            array->free = 0;
+            array->len = entry_data_len;
+            array->items = m_new(byte, array->len);
+            memset(array->items, 0, array->len);
+            engine_file_read(0, array->items, array->len);
+            return (mp_obj_t)array;
+        }
+        break;
+        default:
+        {
+            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineSave: ERROR: Could not load entry! Type unknown!"));
+        }
+    }
+
+    return mp_const_none;
+}
+
+
+void engine_saving_write_entry(uint8_t file_index, mp_obj_t entry, const char* entry_name, uint16_t entry_name_len){
+    uint32_t entry_data_len = engine_saving_get_entry_data_len(entry);
+    uint8_t entry_data_type = SAVE_NONE;
+
+    // Each entry is prepended with this metadata:
     //  * entry_name_len
     //  * entry_name
-    //  * entry_len (amount of data in the entry)
+    //  * entry_data_len
     engine_file_write(file_index, &entry_name_len, 2);
     engine_file_write(file_index, entry_name, entry_name_len);
-    engine_file_write(file_index, &entry_len, 4);
+    engine_file_write(file_index, &entry_data_len, 4);
 
     // Write the entry data
     if(mp_obj_is_str(entry)){
-        engine_file_write(file_index, ((mp_obj_str_t*)entry)->data, entry_len);
+        entry_data_type = SAVE_STRING;
+        GET_STR_DATA_LEN(entry, str_data, str_len);
+        engine_file_write(file_index, &entry_data_type, 1);
+        engine_file_write(file_index, str_data, entry_data_len);
     }else if(mp_obj_is_int(entry)){
-        engine_file_write(file_index, (mp_int_t*)entry, entry_len);
+        entry_data_type = SAVE_INTEGER;
+        int value = mp_obj_get_int(entry);
+        engine_file_write(file_index, &entry_data_type, 1);
+        engine_file_write(file_index, &value, entry_data_len);
     }else if(mp_obj_is_float(entry)){
-        engine_file_write(file_index, &((mp_obj_float_t*)entry)->value, entry_len);
+        entry_data_type = SAVE_FLOAT;
+        engine_file_write(file_index, &entry_data_type, 1);
+        engine_file_write(file_index, &((mp_obj_float_t*)entry)->value, entry_data_len);
     }else if(mp_obj_is_type(entry, &vector2_class_type)){
+        entry_data_type = SAVE_VECTOR2;
+        engine_file_write(file_index, &entry_data_type, 1);
         engine_file_write(file_index, &((vector2_class_obj_t*)entry)->x.value, 4);
         engine_file_write(file_index, &((vector2_class_obj_t*)entry)->y.value, 4);
     }else if(mp_obj_is_type(entry, &vector3_class_type)){
+        entry_data_type = SAVE_VECTOR3;
+        engine_file_write(file_index, &entry_data_type, 1);
         engine_file_write(file_index, &((vector3_class_obj_t*)entry)->x.value, 4);
         engine_file_write(file_index, &((vector3_class_obj_t*)entry)->y.value, 4);
         engine_file_write(file_index, &((vector3_class_obj_t*)entry)->z.value, 4);
     }else if(mp_obj_is_type(entry, &color_class_type)){
+        entry_data_type = SAVE_COLOR;
+        engine_file_write(file_index, &entry_data_type, 1);
         engine_file_write(file_index, &((color_class_obj_t*)entry)->r.value, 4);
         engine_file_write(file_index, &((color_class_obj_t*)entry)->g.value, 4);
         engine_file_write(file_index, &((color_class_obj_t*)entry)->b.value, 4);
     }else if(mp_obj_is_type(entry, &mp_type_bytearray)){
-        engine_file_write(file_index, ((mp_obj_array_t*)entry)->items, entry_len);
+        entry_data_type = SAVE_BYTEARRAY;
+        engine_file_write(file_index, &entry_data_type, 1);
+        engine_file_write(file_index, ((mp_obj_array_t*)entry)->items, entry_data_len);
     }else{
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineSave: ERROR: Saving this type of object is not implemented!"));
     }
 }
 
 
-void engine_save_get_table_info(uint8_t file_index, uint16_t *version, uint16_t *key_count){
+void engine_saving_get_meta_table(uint8_t file_index, uint16_t *version){
     // Read entire table from save file into ram
     engine_file_read(file_index, buffer, TABLE_SIZE);
 
@@ -178,12 +290,99 @@ void engine_save_get_table_info(uint8_t file_index, uint16_t *version, uint16_t 
     }
 
     // Fill in info
-    memcpy(version,     buffer+TABLE_THUMBY_CLR_SCREEN_LEN,                                     TABLE_VERSION_LEN);
-    memcpy(key_count,   buffer+TABLE_THUMBY_CLR_SCREEN_LEN+TABLE_VERSION_LEN,                   TABLE_KEY_COUNT_LEN);
+    memcpy(version, buffer+TABLE_THUMBY_CLR_SCREEN_LEN, TABLE_VERSION_LEN);
 }
 
 
-void engine_save_set_file_location(const char *location, uint32_t location_len, uint16_t key_count){
+void engine_saving_save_meta_table(uint8_t file_index, uint16_t save_version){
+    engine_file_write(file_index, THUMBY_CLR_SCREEN, TABLE_THUMBY_CLR_SCREEN_LEN);
+    engine_file_write(file_index, &save_version, TABLE_VERSION_LEN);
+}
+
+
+uint16_t engine_saving_seek_compare_string_in_file(uint8_t file_index, const char *str, uint32_t str_len, bool *entry_name_found){
+    // Go through the name from the file and the passed
+    // name char by char. If at any point the name does
+    // not match, break out of the parsing loop below
+    uint16_t str_index = 0;
+    char entry_name_char = ' ';
+
+    while(engine_file_read(0, &entry_name_char, 1) != 0 && str_index < str_len){
+        if(entry_name_char == str[str_index]){
+            str_index++;
+        }else{
+            *entry_name_found = false;
+            break;
+        }
+
+        if(str_index == str_len){
+            *entry_name_found = true;
+            break;
+        }
+    }
+
+    return str_index;
+}
+
+
+bool engine_saving_seek_copy_to_entry_in_file(uint8_t from_file_index, uint8_t to_file_index, const char *entry_name, uint32_t entry_name_len, uint32_t *out_data_len, uint8_t *out_data_type, bool copy){
+    bool entry_name_found = false;
+
+    while(entry_name_found == false){
+        // Parsing entry names starts by getting name length
+        uint16_t entry_name_len = 0;
+        engine_file_read(from_file_index, &entry_name_len, 2);
+
+        // If len still zero after reading, must be at end of file,
+        // stop reading
+        if(entry_name_len == 0){
+            break;
+        }
+
+        // Seek and find string from where we are currently in
+        // the reading file
+        uint16_t entry_name_index = engine_saving_seek_compare_string_in_file(from_file_index, entry_name, entry_name_len, &entry_name_found);
+
+        // If the name was found or not, skip to end of entry_name
+        // and get the entry_data_len so we can skip or copy it
+        uint32_t entry_data_len = 0;
+        if(entry_name_found == false) engine_file_seek(from_file_index, (entry_name_len-1)-entry_name_index, MP_SEEK_CUR);
+        engine_file_read(from_file_index, &entry_data_len, 4);
+
+        // Read the data type but don't do anything with it
+        uint8_t entry_data_type = SAVE_NONE;
+        engine_file_read(from_file_index, &entry_data_type, 1);
+
+        // If we found the entry name, skip past old data
+        // If did not find name, skip data and keep looking
+        // for the entry
+        if(entry_name_found){
+            // Seek past old data in reading file so it doesn't get
+            // copied later
+            if(copy) engine_file_seek(from_file_index, entry_data_len, MP_SEEK_CUR);
+            if(out_data_len != NULL) *out_data_len = entry_data_len;
+            if(out_data_type != NULL) *out_data_type = entry_data_type;
+
+            // Found and replaced, break out
+            break;
+        }else{
+            // entry_name_len + entry_name + entry_data_len + entry_data_type -> data
+            uint32_t entry_entire_tag_length = 2+entry_name_len+4+1;
+
+            if(copy){
+                engine_file_seek(from_file_index, -(entry_entire_tag_length), MP_SEEK_CUR);
+                engine_file_copy_amount_from_to(from_file_index, to_file_index, entry_entire_tag_length+entry_data_len, buffer, BUFFER_LENGTH_MAX);
+            }else{
+                engine_file_seek(from_file_index, entry_data_len, MP_SEEK_CUR);
+            }
+        }
+    }
+
+    return entry_name_found;
+}
+
+
+void engine_saving_set_file_location(const char *location, uint32_t location_len){
     // Cannot be larger than this since `temp-` takes up 5 characters
     if(location_len > SAVE_LOCATION_LENGTH_MAX-5){
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineSave: ERROR: location path too long (max length: 250)"));
@@ -201,18 +400,11 @@ void engine_save_set_file_location(const char *location, uint32_t location_len, 
     memcpy(temporary_location.data + temporary_location.len, "-temp", 5);
     temporary_location.len += 5;
 
-    // If the file we are going to read from does not exist already, create it
-    // and write the initial table and special data to it
+    // If the file we are going to read from does not exist already,
+    // create it and write the initial table and special data to it
     if(engine_file_exists(&current_location) == false){
         engine_file_open_create_write(0, &current_location);
-        engine_save_write_table(0, SAVE_VERSION, key_count);
-
-        // Write the empty keys
-        uint32_t offset_default = 0;
-        for(uint16_t key_index=0; key_index<key_count; key_index++){
-            engine_file_write(0, &offset_default, 4);
-        }
-
+        engine_saving_save_meta_table(0, SAVE_VERSION);
         engine_file_close(0);
     }else{
         // Looks likes the file already exists, check that it has the
@@ -229,172 +421,75 @@ void engine_save_set_file_location(const char *location, uint32_t location_len, 
 }
 
 
-void engine_save_del_set_location(){
+void engine_saving_del_set_location(){
     if(engine_file_exists(&current_location)){
         engine_file_remove(&current_location);
     } 
 }
 
 
-void engine_save_entry(const char* entry_name, uint16_t entry_name_len, mp_obj_t entry){
+void engine_saving_save_entry(const char* entry_name, uint16_t entry_name_len, mp_obj_t entry){
     // STEP #1: Open files and get table info and copy to new file
-    engine_save_start_read_write();
+    // NOTE: read and write file cursors are at: 0 0
+    engine_saving_start_read_write();
 
     uint16_t version = 0;
-    uint16_t key_count = 0;
+    engine_saving_get_meta_table(0, &version);
+    engine_saving_save_meta_table(1, version);
 
-    engine_save_get_table_info(0, &version, &key_count);
-    engine_save_write_table(1, version, key_count);
-    ENGINE_FORCE_PRINTF("version=%d key_count=%d", version, key_count);
+    // STEP #2: Go through all keys in file until we find this
+    // entry's key str/name
+    engine_saving_seek_copy_to_entry_in_file(0, 1, entry_name, entry_name_len, NULL, NULL, true);
 
-    // STEP #2: Use micropython hashing
-    // function to get a pretty good hash
-    uint32_t key = qstr_compute_hash(entry_name, entry_name_len);
-    
-    // Only have so many fixed slots for offsets
-    // in file. If key_count=256 then there are
-    // indices at 0 to 255, get the index into
-    // the offsets
-    key = key % key_count;
+    // STEP #3: Save the entry
+    engine_saving_write_entry(1, entry, entry_name, entry_name_len);
 
-    // STEP #3: Now figure out how many more bytes to
-    // seek before we reach the bytes for the offset
-    // into the bucket section
-    // (each hash/key/offset is 32-bits or 4 bytes and
-    // we're already at the end of the table info section)
-    uint32_t rel_file_offset_into_offsets = key * 4;
-    engine_file_seek(0, rel_file_offset_into_offsets, MP_SEEK_CUR);
-
-    // STEP #4: Read the offset for the offset into the buckets
-    uint32_t abs_file_offset_into_buckets = 0;
-    engine_file_read(0, &abs_file_offset_into_buckets, 4);
-    ENGINE_FORCE_PRINTF("abs_file_offset_into_buckets=%ld", abs_file_offset_into_buckets);
-
-    // STEP #5: Seek to the start of the keys again (for copying/searching)
-    engine_file_seek(0, TABLE_SIZE, MP_SEEK_SET);
-
-    // STEP #6: If the absolute offset is 0, then this offset has not
-    // been set before, come up with a new offset for these keys to
-    // lead to. Otherwise, go to offset and start append process
-    if(abs_file_offset_into_buckets == 0){
-        abs_file_offset_into_buckets = reading_file_size;   // Will start new bucket at end of file
-
-        // Unless we find the key we want to set, copy keys
-        uint32_t offset = 0;
-        for(uint32_t key_index=0; key_index<key_count; key_index++){
-            if(key_index == key){
-                // Set
-                engine_file_write(1, &abs_file_offset_into_buckets, 4);
-            }else{
-                // Copy
-                engine_file_read(0, &offset, 4);
-                engine_file_write(1, &offset, 4);
-            }
-        }
-    }else{
-        // Only copy keys
-        engine_file_copy_amount_from_to(0, 1, key_count*4, buffer, BUFFER_LENGTH_MAX);
-    }
-
-    // STEP #7: At this point both the read and write files
-    // are at the end of the keys/offset table, copy all data
-    // from the end of keys/offsets (start of data) to start
-    // of the bucket we want to put an entry into
-    engine_file_copy_from_to_until(0, 1, abs_file_offset_into_buckets, buffer, BUFFER_LENGTH_MAX);
-
-    // STEP #8: At the start of the bucket now where
-    // each entry in the bucket has the format:
-    // bucket_len,entry_name_len,entry_name,entry_data_len,entry,entry_name_len,entry_name,entry_data_len,entry
-    // Get the bucket size
-    uint32_t bucket_len = 0;                // This includes everything `entry_name_len,entry_name,entry_len,entry` ...
-    engine_file_read(0, &bucket_len, 4);
-    uint32_t bucket_amount_read = 0;
-    bool entry_found = false;
-    uint16_t read_entry_name_len = 0;
-    uint32_t entry_data_len = 0;
-
-    ENGINE_FORCE_PRINTF("bucket_len=%ld", bucket_len);
-
-    // Go through buckets and find the entry
-    while(bucket_amount_read < bucket_len && entry_found == false){
-        // Read the length of the entry name
-        bucket_amount_read += engine_file_read(0, &read_entry_name_len, 2);
-        
-        // Setup to read the entry name
-        uint16_t entry_name_index = 0;
-        char entry_name_char = ' ';
-
-        // Read the entry name until missing a char in the
-        // sequence, read until end of entry, or the entry
-        // name is found
-        while(entry_name_index < read_entry_name_len){
-            // Read a entry_name character
-            bucket_amount_read += engine_file_read(0, &entry_name_char, 1);
-
-            if(entry_name_char != entry_name[entry_name_index]){
-                // Did not find the entry, skip the rest of the entry name
-                engine_file_seek(0, read_entry_name_len-entry_name_index, MP_SEEK_CUR);
-                
-                // Read the entry_data_Len
-                engine_file_read(0, &entry_data_len, 4);
-
-                // Seek past the entry data
-                engine_file_seek(0, entry_data_len, MP_SEEK_CUR);
-
-                // Add up where we are in the bucket
-                bucket_amount_read += read_entry_name_len + 4 + entry_data_len;
-                break;
-            }else{
-                entry_name_index++;
-            }
-
-            if(entry_name_index == read_entry_name_len){
-                // Mark as found and stop saving routine
-                entry_found = true;
-                ENGINE_FORCE_PRINTF("FOUND!");
-                break;
-            }
-        }
-    }
-
-    // STEP #9: Entry in bucket may or may not have been found,
-    // update bucket size depending on which occurred
-    if(entry_found){
-        // Add the difference in entry size to the bucket length.
-        // If the old `entry_data_len` is now smaller than the new
-        // entry size, the bucket gets larger in size
-        bucket_len += engine_save_get_entry_data_len(entry) - entry_data_len;
-    }else{
-        bucket_len += engine_save_get_entry_data_len(entry);
-    }
-
-    // STEP #10: Write the updated bucket size
-    engine_file_write(1, &bucket_len, 4);
-
-    // STEP #11: Copy data from before and upto the entry (inside bucket)
-    engine_file_seek(0, abs_file_offset_into_buckets, MP_SEEK_SET);
-    engine_file_copy_amount_from_to(0, 1, bucket_amount_read-(read_entry_name_len-2), buffer, BUFFER_LENGTH_MAX);
-
-    // STEP #12: Save entry
-    engine_save_write_bucket_entry(1, entry, entry_name, entry_name_len);
-
-    // STEP #13: Copy the rest of the data from the old file to the new file
+    // STEP #4: Copy the rest of the file
     engine_file_copy_from_to_until(0, 1, reading_file_size, buffer, BUFFER_LENGTH_MAX);
 
-    engine_save_stop_read_write();
+    engine_saving_stop_read_write();
 }
 
 
-void engine_load_entry(){
+mp_obj_t engine_saving_load_entry(const char* entry_name, uint16_t entry_name_len){
+    mp_obj_t entry = mp_const_none;
 
+    // STEP #1: Open file to read from and get file version
+    // (also checks that the file is a save file)
+    engine_saving_start_read();
+
+    uint16_t version = 0;
+    engine_saving_get_meta_table(0, &version);
+
+    uint32_t entry_data_len = 0;
+    uint8_t entry_data_type = SAVE_NONE;
+
+    // STEP #2: Search for entry and restore
+    if(engine_saving_seek_copy_to_entry_in_file(0, 1, entry_name, entry_name_len, &entry_data_len, &entry_data_type, false)){
+        entry = engine_saving_read_entry(0, entry_data_len, entry_data_type);
+    }
+
+    engine_saving_stop_read();
+
+    return entry;
 }
 
 
-void engine_load_entry_into(){
+void engine_saving_delete_entry(const char* entry_name, uint16_t entry_name_len){
+    // STEP #1: Open files and get table info and copy to new file
+    // NOTE: read and write file cursors are at: 0 0
+    engine_saving_start_read_write();
 
-}
+    uint16_t version = 0;
+    engine_saving_get_meta_table(0, &version);
+    engine_saving_save_meta_table(1, version);
 
+    // STEP #2: Go through all keys in file until we find this
+    // entry's key str/name
+    engine_saving_seek_copy_to_entry_in_file(0, 1, entry_name, entry_name_len, NULL, NULL, true);
 
-void engine_delete_entry(){
+    // STEP #3: Copy the rest of the file
+    engine_file_copy_from_to_until(0, 1, reading_file_size, buffer, BUFFER_LENGTH_MAX);
 
+    engine_saving_stop_read_write();
 }
