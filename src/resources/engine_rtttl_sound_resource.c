@@ -353,6 +353,9 @@ STATIC mp_obj_t rtttl_sound_resource_class_del(mp_obj_t self_in){
         audio_channel_stop(channel);
     }
 
+    // Free the resource fast space
+    m_tracked_free(self->data);
+
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(rtttl_sound_resource_class_del_obj, rtttl_sound_resource_class_del);

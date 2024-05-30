@@ -6,7 +6,7 @@
 
 void engine_bit_collection_create(engine_bit_collection_t *collection, uint32_t bit_count){
     collection->byte_count = (uint32_t)ceilf((float)bit_count / 8.0f);
-    collection->bit_collection = malloc(sizeof(uint8_t) * collection->byte_count);
+    collection->bit_collection = m_tracked_calloc(1, sizeof(uint8_t) * collection->byte_count);
     collection->dirty = false;
 }
 

@@ -5,6 +5,7 @@
 #include "debug/debug_print.h"
 #include "py/obj.h"
 #include "utility/engine_file.h"
+#include "py/misc.h"
 
 
 #ifndef __unix__
@@ -50,11 +51,11 @@ uint8_t *engine_resource_get_space(uint32_t space_size, bool fast_space){
 
     #ifdef __unix__
         ENGINE_INFO_PRINTF("EngineResourceManager: Allocating ram for unix resource");
-        space = (uint8_t*)malloc(space_size);
+        space = (uint8_t*)m_tracked_calloc(1, space_size);
     #elif __arm__
         if(fast_space){
             ENGINE_INFO_PRINTF("EngineResourceManager: Allocating ram for rp3 resource");
-            space = (uint8_t*)m_malloc(space_size);    // Will this get collected by gc?
+            space = (uint8_t*)m_tracked_calloc(1, space_size);    // Will this get collected by gc?
         }else{
             ENGINE_INFO_PRINTF("EngineResourceManager: Allocating flash for rp3 resource");
 

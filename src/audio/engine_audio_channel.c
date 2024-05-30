@@ -15,10 +15,10 @@ mp_obj_t audio_channel_class_new(const mp_obj_type_t *type, size_t n_args, size_
     ENGINE_INFO_PRINTF("New AudioChannel");
     mp_arg_check_num(n_args, n_kw, 0, 0, false);
 
-    // Allocate on C heap so it doesn't get collected. Each channel lives for as long as the device is on.
+    // Each channel lives for as long as the device is on.
     // This was verified to work by disabling the audio interrupts and printing out `print((dir(chan)))` of
     // a channel started by `chan = engine_audio.play(...)`
-    audio_channel_class_obj_t *self = (audio_channel_class_obj_t*)malloc(sizeof(audio_channel_class_obj_t));
+    audio_channel_class_obj_t *self = (audio_channel_class_obj_t*)m_tracked_calloc(1, sizeof(audio_channel_class_obj_t));
     self->base.type = &audio_channel_class_type;
 
     self->source = NULL;   // Set to NULL to indicate that source/channel not active
@@ -27,8 +27,8 @@ mp_obj_t audio_channel_class_new(const mp_obj_type_t *type, size_t n_args, size_
     self->time = 0.0f;
     self->done = true;
     self->loop = false;
-    self->buffers[0] = (uint8_t*)malloc(CHANNEL_BUFFER_SIZE);   // Use C heap. Easier to avoid gc and we have a consistent number of buffers anyways
-    self->buffers[1] = (uint8_t*)malloc(CHANNEL_BUFFER_SIZE);   // Use C heap. Easier to avoid gc and we have a consistent number of buffers anyways
+    self->buffers[0] = (uint8_t*)m_tracked_calloc(1, CHANNEL_BUFFER_SIZE);   // Use C heap. Easier to avoid gc and we have a consistent number of buffers anyways
+    self->buffers[1] = (uint8_t*)m_tracked_calloc(1, CHANNEL_BUFFER_SIZE);   // Use C heap. Easier to avoid gc and we have a consistent number of buffers anyways
     self->buffers_ends[0] = CHANNEL_BUFFER_SIZE;
     self->buffers_ends[1] = CHANNEL_BUFFER_SIZE;
     self->buffers_byte_offsets[0] = 0;
