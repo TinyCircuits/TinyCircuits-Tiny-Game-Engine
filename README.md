@@ -18,6 +18,9 @@ This engine is tightly coupled with MicroPython (https://github.com/micropython/
 
 Unfortunately, MicroPython's port make/cmake scripts are not flexible enough to allow configuration from the external c module build scripts. Because of that, customized versions of the supported ports are zipped and stored in the `mp_ports` folder. 
 
+# Updating MicroPython version
+Make sure to check that the copied structures in src/utility/engine_mp.h are still the same in the version of MicroPython you're updating to
+
 # Building and Using
 1. Unzip and drop a port from `mp_ports` folder into the `micropython/ports` folder
 2. Read the port's `README.md` and run the setup commands (probably involves build `mpy-cross` and getting submodules)

@@ -2,6 +2,7 @@
 #include "engine_display_common.h"
 #include "draw/engine_display_draw.h"
 #include "debug/debug_print.h"
+#include "py/obj.h"
 
 
 // https://stackoverflow.com/questions/43287103/predefined-macro-to-distinguish-arm-none-eabi-gcc-from-gcc

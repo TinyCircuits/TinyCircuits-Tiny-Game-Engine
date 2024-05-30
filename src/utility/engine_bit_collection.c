@@ -1,4 +1,6 @@
 #include "engine_bit_collection.h"
+#include "py/obj.h"
+#include "py/misc.h"
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
