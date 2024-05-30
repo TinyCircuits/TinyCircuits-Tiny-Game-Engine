@@ -12,7 +12,7 @@ void linked_list_init(linked_list *list) {
 linked_list_node *setup_new_node(linked_list *list){
     // Allocate a new node, set defaults
     linked_list_node *new_node = list->end->next;
-    new_node = malloc(sizeof(linked_list_node));
+    new_node = m_tracked_calloc(1, sizeof(linked_list_node));
     new_node->next = NULL;
     new_node->previous = NULL;
     new_node->object = NULL;
@@ -82,7 +82,7 @@ void linked_list_del_list_node(linked_list *list, linked_list_node *node){
             node->next->previous = node->previous;
         }
 
-        free(node);
+        m_tracked_free(node);
     }
 
     // Decrease the count of elemets in this linked list
