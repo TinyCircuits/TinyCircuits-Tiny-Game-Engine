@@ -1,9 +1,11 @@
 from engine_nodes import Sprite2DNode
 from engine_draw import Color
 from engine_resources import TextureResource
+from engine_math import Vector2
 
 import Render
 import Tiles
+import math
 
 player_texture = TextureResource("PlayerTile2_16bit.bmp")
 
@@ -31,10 +33,13 @@ rune7_texture = TextureResource("items/Rune7_16bit.bmp")
 rune8_texture = TextureResource("items/Rune8_16bit.bmp")
 sword_texture = TextureResource("items/Sword_16bit.bmp")
 
+frame_texture = TextureResource("items/ItemFrame_16bit.bmp")
+
 MAX_WEIGHT = 30
 
 MAX_HP = 20
 MAX_MP = 20
+MAX_WT = 30
 
 item_ids = {
     "none": 0,
@@ -91,33 +96,6 @@ spell_ids = {
     "novice_leech": 16,
     "intermediate_leech": 17,
     "advanced_leech": 18,
-}
-
-item_textures = {
-    item_ids["none"]: None,
-    item_ids["apple"]: apple_texture,
-    item_ids["bomb"]: bomb_texture,
-    item_ids["red_book"]: redbook_texture,
-    item_ids["blue_book"]: bluebook_texture,
-    item_ids["bow"]: bow_texture,
-    item_ids["cat_bomb"]: catbomb_texture,
-    item_ids["dagger"]: dagger_texture,
-    item_ids["gold_coins"]: goldcoins_texture,
-    item_ids["gold_bars"]: goldbars_texture,
-    item_ids["ham"]: ham_texture,
-    item_ids["honey"]: honey_texture,
-    item_ids["clover"]: clover_texture,
-    item_ids["blue_pot"]: bluepot_texture,
-    item_ids["red_pot"]: redpot_texture,
-    item_ids["rune1"]: rune1_texture,
-    item_ids["rune2"]: rune2_texture,
-    item_ids["rune3"]: rune3_texture,
-    item_ids["rune4"]: rune4_texture,
-    item_ids["rune5"]: rune5_texture,
-    item_ids["rune6"]: rune6_texture,
-    item_ids["rune7"]: rune7_texture,
-    item_ids["rune8"]: rune8_texture,
-    item_ids["sword"]: sword_texture,
 }
 
 item_textures = {
@@ -256,11 +234,12 @@ dmg_values = {
 }
 
 class Item:
-    def __init__(self):
-        self.id = 0
+    def __init__(self, i = 0):
+        self.id = i
         self.quality = -1
         self.use_func = None
-        self.texture = None
+        self.texture = item_textures[i]
+        self.frame_count = item_frame_count[i]
         pass
 
 class Inventory:
@@ -268,6 +247,8 @@ class Inventory:
         self.wt = 0
         self.max_wt = MAX_WEIGHT
         self.items = [None]
+        
+s_and_s_factor= 0.90
 
 class Player(Sprite2DNode):
     def __init__(self):
@@ -281,23 +262,54 @@ class Player(Sprite2DNode):
         self.transparent_color = Color(0x07e0)
         self.width = 32
         self.height = 32
+        self.inventory = []
         
         Render.cam.add_child(self)
         
         self.wt = 0
+        self.maxwt = MAX_WT
         self.hp = MAX_HP
         self.mp = MAX_MP
         self.maxhp = MAX_HP
         self.maxmp = MAX_MP
-        self.held_item = Item()
+        self.gp = 0
+        self.held_item = Item(item_ids["bow"])
+        
+        self.time = 0
+        
+        self.look_ang = 0.0
         
         self.held_item_spr = Sprite2DNode()
         self.held_item_spr.frame_count_x = 2
         self.held_item_spr.playing = False
-        self.held_item_spr.texture = item_textures[item_ids["bow"]]
         self.held_item_spr.transparent_color  = Color(0x07e0)
-        self.held_item_spr.set_layer(7)
+        self.held_item_spr.set_layer(6)
         self.add_child(self.held_item_spr)
+    
+    def add_inv_item(self, item):
+        if(item_weights[item] + self.wt <= self.maxwt):
+            self.inventory.append(Item(item))
+            self.wt += item_weights[item]
+            return True
+        else:
+            return False
+    
+    def tick(self, dt):
+        self.time += dt
+        
+        
+        self.scale.x = 1.0
+        self.held_item_spr.texture = self.held_item.texture
+        self.held_item_spr.position = Vector2(8, 0)
+        if(self.look_ang < -math.pi/2 or self.look_ang > math.pi/2):
+            self.scale.x = -1.0
+            self.held_item_spr.position = Vector2(-8, 0)
+        self.held_item_spr.rotation = self.look_ang
+        
+        sint = math.sin(4*self.time)
+        self.scale.x *= (s_and_s_factor + ((1-s_and_s_factor)/2)*(1-sint))
+        self.scale.y *= (s_and_s_factor + ((1-s_and_s_factor)/2)*sint)
+        
     
     
     

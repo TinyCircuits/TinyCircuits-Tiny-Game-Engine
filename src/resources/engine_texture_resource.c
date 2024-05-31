@@ -98,9 +98,9 @@ STATIC mp_obj_t texture_resource_class_del(mp_obj_t self_in){
 
     if(self->in_ram){
         #if defined(__unix__)
-            m_tracked_free(self->data);
+            free(self->data);
         #elif (__arm__)
-            m_tracked_free(self->data);
+            m_free(self->data);
         #else
             #error "TextureResource: Unknown platform"
         #endif

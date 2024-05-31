@@ -423,7 +423,7 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
 
         // Look for function overrides otherwise use the defaults
         mp_obj_t dest[2];
-        mp_load_method_maybe(node_base->node, MP_QSTR_tick, dest);
+        mp_load_method_maybe(node_instance, MP_QSTR_tick, dest);
         if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
             text_2d_node->tick_cb = mp_const_none;
         }else{                                                  // Likely found method (could be attribute)

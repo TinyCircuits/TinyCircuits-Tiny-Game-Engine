@@ -1,4 +1,5 @@
 from engine_resources import TextureResource
+from engine_math import Vector2
 
 grass1 = TextureResource("GrassTile1_16bit.bmp")
 grass2 = TextureResource("GrassTile2_16bit.bmp")
@@ -11,6 +12,7 @@ water2 = TextureResource("Water2_16bit.bmp")
 trapdoor_sheet = TextureResource("trapdoor_sheet_16bit.bmp")
 door_sheet = TextureResource("Door-Sheet_16bit.bmp")
 spikes_sheet = TextureResource("Spikes-Sheet_16bit.bmp")
+ladder_sheet = TextureResource("StoneLadder_16bit.bmp")
 
 action_indicator = TextureResource("Indicator1_16bit.bmp") # Yellow indicator
 attack_indicator = TextureResource("Indicator3_16bit.bmp") # Red indicator
@@ -44,6 +46,7 @@ deco_ids = {
     "grass_patch": 1,
     "door_sheet": 2,
     "trapdoor_sheet": 3,
+    "ladder_sheet": 4,
 }
 
 deco_textures = {
@@ -51,6 +54,7 @@ deco_textures = {
     deco_ids["grass_patch"]: grass_patch,
     deco_ids["door_sheet"]: door_sheet,
     deco_ids["trapdoor_sheet"]: trapdoor_sheet,
+    deco_ids["ladder_sheet"]: ladder_sheet,
 }
 
 deco_frame_count = {
@@ -58,6 +62,7 @@ deco_frame_count = {
     deco_ids["grass_patch"]: 1,
     deco_ids["door_sheet"]: 3,
     deco_ids["trapdoor_sheet"]: 2,
+    deco_ids["ladder_sheet"]: 1
 }
 
 class Tilemap:
@@ -66,6 +71,8 @@ class Tilemap:
         self.HEIGHT = h
         self.tiles = bytearray(self.WIDTH*self.HEIGHT*3)
         self.border_tile = 2
+        self.entryway = Vector2(1,1)
+        self.monster_list = []
     
     def get_tile_id(self, x, y):
         if((x < 0) or (x > self.WIDTH-1) or (y < 0) or (y > self.HEIGHT - 1)):

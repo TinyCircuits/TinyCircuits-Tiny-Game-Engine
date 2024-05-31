@@ -1,6 +1,6 @@
-While executing file `Games/Saving/saving.py` an error occurred (<module> refers to the game file):
+While executing file `Games/Thumgeon_II/main.py` an error occurred (<module> refers to the game file):
 
 Traceback (most recent call last):
-  File "launcher.py", line 307, in <module>
-  File "saving.py", line 20, in <module>
-RuntimeError: EngineSave: ERROR: Could not load entry! Type unknown!
+  File "/home/devy/Desktop/micropython-rp2350-1.22.0-engine/examples/usercmodule/TinyCircuits-Tiny-Game-Engine/filesystem/launcher.py", line 307, in <module>
+  File "main.py", line 28, in <module>
+AttributeError: 'module' object has no attribute 'freq'

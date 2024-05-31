@@ -1,5 +1,6 @@
 #include "linked_list.h"
 #include "py/obj.h"
+#include "py/misc.h"
 
 void linked_list_init(linked_list *list) {
     list->start = list->end = NULL;
@@ -12,7 +13,7 @@ void linked_list_init(linked_list *list) {
 linked_list_node *setup_new_node(linked_list *list){
     // Allocate a new node, set defaults
     linked_list_node *new_node = list->end->next;
-    new_node = m_tracked_calloc(1, sizeof(linked_list_node));
+    new_node = malloc(sizeof(linked_list_node));
     new_node->next = NULL;
     new_node->previous = NULL;
     new_node->object = NULL;
@@ -82,7 +83,7 @@ void linked_list_del_list_node(linked_list *list, linked_list_node *node){
             node->next->previous = node->previous;
         }
 
-        m_tracked_free(node);
+        free(node);
     }
 
     // Decrease the count of elemets in this linked list

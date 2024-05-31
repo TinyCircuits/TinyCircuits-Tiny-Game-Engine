@@ -82,7 +82,7 @@ uint16_t engine_io_get_gui_toggle_button(){
 }
 
 
-uint16_t engine_io_reset_gui_toggle_button(){
+void engine_io_reset_gui_toggle_button(){
     gui_toggle_button = BUTTON_MENU;
 }
 
@@ -253,11 +253,6 @@ STATIC const mp_rom_map_elem_t engine_io_globals_table[] = {
 
 // Module init
 STATIC MP_DEFINE_CONST_DICT (mp_module_engine_io_globals, engine_io_globals_table);
-
-
-STATIC void input_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
-    ENGINE_FORCE_PRINTF("print(): Input");
-}
 
 
 STATIC void io_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){

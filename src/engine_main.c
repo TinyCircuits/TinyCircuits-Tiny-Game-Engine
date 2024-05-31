@@ -12,6 +12,7 @@
 #include "physics/engine_physics.h"
 #include "animation/engine_animation_module.h"
 #include "engine_gui.h"
+#include "py/mpstate.h"
 
 #if defined(__arm__)
     #include "hardware/adc.h"
@@ -43,9 +44,9 @@ void engine_main_reset(){
 
     engine_objects_clear_all();
 
-    gc_collect();
-
     engine_display_free_depth_buffer();
+
+    gc_collect();
 
     // mp_obj_t machine_module = mp_import_name(MP_QSTR_machine, mp_const_none, MP_OBJ_NEW_SMALL_INT(0));
     // mp_call_function_0(mp_load_attr(machine_module, MP_QSTR_soft_reset));

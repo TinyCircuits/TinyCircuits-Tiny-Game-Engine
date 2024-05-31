@@ -39,9 +39,9 @@ void engine_display_set_fill_background(uint16_t *data){
 
 void engine_init_screen_buffers(){
     ENGINE_INFO_PRINTF("Creating dual screen buffers of size %d bytes each on C heap", SCREEN_BUFFER_SIZE_BYTES);
-    dual_screen_buffers = (uint16_t**)m_tracked_calloc(1, sizeof(uint16_t*) * 2);
-    dual_screen_buffers[0] = (uint16_t*)m_tracked_calloc(1, SCREEN_BUFFER_SIZE_BYTES);
-    dual_screen_buffers[1] = (uint16_t*)m_tracked_calloc(1, SCREEN_BUFFER_SIZE_BYTES);
+    dual_screen_buffers = (uint16_t**)malloc(sizeof(uint16_t*) * 2);
+    dual_screen_buffers[0] = (uint16_t*)malloc(SCREEN_BUFFER_SIZE_BYTES);
+    dual_screen_buffers[1] = (uint16_t*)malloc(SCREEN_BUFFER_SIZE_BYTES);
 
     // Make sure both screen buffers are set to all zeros
     ENGINE_INFO_PRINTF("Filling both screen buffers with 0x0");

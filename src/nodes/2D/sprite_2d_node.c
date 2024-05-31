@@ -112,7 +112,7 @@ void sprite_2d_node_class_draw(engine_node_base_t *sprite_node_base, mp_obj_t ca
                      shader);
 
     // After drawing, go to the next frame if it is time to and the animation is playing
-    if(sprite_playing == 1){
+    if(sprite_playing == true){
         float sprite_fps = mp_obj_get_float(mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_fps));
         uint16_t sprite_period = (uint16_t)((1.0f/sprite_fps) * 1000.0f);
 
@@ -474,7 +474,6 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
 
         // Look for function overrides otherwise use the defaults
         mp_obj_t dest[2];
-
         mp_load_method_maybe(node_instance, MP_QSTR_tick, dest);
         if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
             sprite_2d_node->tick_cb = mp_const_none;

@@ -1,4 +1,5 @@
 from engine_resources import NoiseResource
+from engine_math import Vector2
 import urandom
 import utime
 
@@ -6,10 +7,10 @@ import Tiles
 import Player
 
 adjacency_likelihoods = {
-    0: (0.75, 0.125, 7*0.125/8, 0.125/8), # Grass0
-    1: (0.125, 0.75, 7*0.125/8, 0.125/8), # Grass1
-    2: (0.125, 0.125, 0.5, 0.25),		  # Stone
-    3: (0.125, 0.125, 0.5, 0.25),		  # Cracked stone
+    Tiles.tile_ids["grass1"]: {Tiles.tile_ids["grass1"]: 0.75, Tiles.tile_ids["grass2"]: 0.25, Tiles.tile_ids["stone1"]: 0.0, Tiles.tile_ids["stonecracked1"]: 0.0}, # Grass0
+    Tiles.tile_ids["grass2"]: {Tiles.tile_ids["grass1"]: 0.25, Tiles.tile_ids["grass2"]: 0.75, Tiles.tile_ids["stone1"]: 0.0, Tiles.tile_ids["stonecracked1"]: 0.0}, # Grass1
+    Tiles.tile_ids["stone1"]: {Tiles.tile_ids["grass1"]: 0.125, Tiles.tile_ids["grass2"]: 0.125, Tiles.tile_ids["stone1"]: 0.5, Tiles.tile_ids["stonecracked1"]: 0.25},		  # Stone
+    Tiles.tile_ids["stonecracked1"]: {Tiles.tile_ids["grass1"]: 0.125, Tiles.tile_ids["grass2"]: 0.125, Tiles.tile_ids["stone1"]: 0.5, Tiles.tile_ids["stonecracked1"]: 0.25},		  # Cracked stone
 }
 
 def shuffle(arr):
@@ -103,17 +104,47 @@ def generate_deco(tilemap):
             tile_id = tilemap.get_tile_id(x, y)
             if(tile_id == Tiles.tile_ids["grass1"] or tile_id == Tiles.tile_ids["grass2"]):
                 # 10% chance of having grass decoration
-                if(urandom.random() < 0.3):
+                if(urandom.random() < 0.1):
                     tilemap.set_tile_data0(x, y, Tiles.deco_ids["grass_patch"])
                     tilemap.set_deco_under(x, y, False)
+            '''
             elif(tile_id == Tiles.tile_ids["stone1"]):
-                # 10% chance of having grass decoration
                 if(urandom.random() < 0.1):
                     tilemap.set_tile_data0(x, y, Tiles.deco_ids["door_sheet"])
                     tilemap.set_deco_under(x, y, True)
+            '''
+    for i in range(12):
+        # Generate dungeon entrances
+        dx = urandom.randrange(tilemap.WIDTH)
+        dy = urandom.randrange(tilemap.HEIGHT)
+        looking = True
+        while(tilemap.get_tile_data0(dx, dy) != 0):
+            looking = False
+            for y in range(dy-2, dy+2):
+                for x in range(dx-2, dx+2):
+                    if(tilemap.get_tile_data0(dx, dy) != 0):
+                        looking = True
+            if(looking == True):
+                dx += 1
+                if(dx >= tilemap.WIDTH):
+                    dx = 0
+                    dy += 1
+                if(dy >= tilemap.HEIGHT):
+                    dy = 0
+        for y in range(dy-2, dy+1):
+            for x in range(dx-1, dx+2):
+                tilemap.set_tile_id(x, y, Tiles.tile_ids["stone1"])
+                tilemap.set_tile_data0(x, y, 0)
+                tilemap.set_tile_solid(x, y, True)
+        tilemap.set_tile_id(dx, dy, Tiles.tile_ids["stone1"])
+        tilemap.set_tile_data0(dx, dy, Tiles.deco_ids["door_sheet"])
+        tilemap.set_deco_under(dx, dy, True)
+        tilemap.set_tile_solid(dx, dy, True)
+        
+        
 
 @micropython.native
-def generate_empty_dungeon(tilemap):
+def generate_empty_dungeon(tilemap, door = True):
     for y in range(1, tilemap.HEIGHT-1):
         for x in range(1, tilemap.WIDTH-1):
             tilemap.set_tile_id(x, y, Tiles.tile_ids["stonefloor1"])
@@ -127,30 +158,39 @@ def generate_empty_dungeon(tilemap):
         tilemap.set_tile_data1(x, 0, 1)
         tilemap.set_tile_id(x, tilemap.HEIGHT-1, Tiles.tile_ids["stone1"])
         tilemap.set_tile_data1(x, tilemap.HEIGHT-1, 1)
-    
-    exit_side = urandom.randrange(4)
-    if exit_side == 0:
-        door_offset = urandom.randrange(1, tilemap.WIDTH-1)
-        tilemap.set_tile_data0(door_offset, 0, Tiles.deco_ids["door_sheet"])
-        tilemap.set_deco_under(door_offset, 0, True)
-    elif exit_side == 1:
-        door_offset = urandom.randrange(1, tilemap.WIDTH-1)
-        tilemap.set_tile_data0(door_offset, tilemap.HEIGHT-1, Tiles.deco_ids["door_sheet"])
-        tilemap.set_deco_under(door_offset, tilemap.HEIGHT-1, True)
-    elif exit_side == 2:
-        door_offset = urandom.randrange(1, tilemap.HEIGHT-1)
-        tilemap.set_tile_data0(0, door_offset, Tiles.deco_ids["door_sheet"])
-        tilemap.set_deco_under(0, door_offset, True)
-    elif exit_side == 3:
-        door_offset = urandom.randrange(1, tilemap.HEIGHT-1)
-        tilemap.set_tile_data0(0, door_offset, Tiles.deco_ids["door_sheet"])
-        tilemap.set_deco_under(0, door_offset, True)
+    if(door == True):
+        exit_side = urandom.randrange(4)
+        if exit_side == 0:
+            door_offset = urandom.randrange(1, tilemap.WIDTH-1)
+            tilemap.set_tile_data0(door_offset, 0, Tiles.deco_ids["door_sheet"])
+            tilemap.set_deco_under(door_offset, 0, True)
+            tilemap.entryway = Vector2(door_offset, 1)
+        elif exit_side == 1:
+            door_offset = urandom.randrange(1, tilemap.WIDTH-1)
+            tilemap.set_tile_data0(door_offset, tilemap.HEIGHT-1, Tiles.deco_ids["door_sheet"])
+            tilemap.set_deco_under(door_offset, tilemap.HEIGHT-1, True)
+            tilemap.entryway = Vector2(door_offset, tilemap.HEIGHT-2)
+        elif exit_side == 2:
+            door_offset = urandom.randrange(1, tilemap.HEIGHT-1)
+            tilemap.set_tile_data0(0, door_offset, Tiles.deco_ids["door_sheet"])
+            tilemap.set_deco_under(0, door_offset, True)
+            tilemap.entryway = Vector2(1, door_offset)
+        elif exit_side == 3:
+            door_offset = urandom.randrange(1, tilemap.HEIGHT-1)
+            tilemap.set_tile_data0(tilemap.WIDTH-1, door_offset, Tiles.deco_ids["door_sheet"])
+            tilemap.entryway = Vector2(tilemap.WIDTH-2, door_offset)
         
-def generate_dungeon_level(tilemap):
-    exit_x = urandom.randrange(1, tilemap.WIDTH-1)
-    exit_y = urandom.randrange(1, tilemap.HEIGHT-1)
-    tilemap.set_tile_data0(exit_x, exit_y, Tiles.deco_ids["trapdoor_sheet"])
-    tilemap.set_deco_under(exit_x, exit_y, True)
+def generate_dungeon_level(tilemap, ladder = True, trapdoor = True):
+    if(trapdoor == True):
+        exit_x = urandom.randrange(1, tilemap.WIDTH-1)
+        exit_y = urandom.randrange(1, tilemap.HEIGHT-1)
+        tilemap.set_tile_data0(exit_x, exit_y, Tiles.deco_ids["trapdoor_sheet"])
+        tilemap.set_deco_under(exit_x, exit_y, True)
+    if(ladder == True):
+        ladder_x = urandom.randrange(1, tilemap.WIDTH-1)
+        tilemap.set_tile_data0(ladder_x, 0, Tiles.deco_ids["ladder_sheet"])
+        tilemap.set_deco_under(ladder_x, 0, True)
+        tilemap.entryway = Vector2(ladder_x, 1)
     for i in range(3):
         item_x = urandom.randrange(1, tilemap.WIDTH-1)
         item_y = urandom.randrange(1, tilemap.HEIGHT-1)

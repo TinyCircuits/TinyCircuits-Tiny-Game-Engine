@@ -354,7 +354,13 @@ STATIC mp_obj_t rtttl_sound_resource_class_del(mp_obj_t self_in){
     }
 
     // Free the resource fast space
-    m_tracked_free(self->data);
+    #if defined(__unix__)
+        free(self->data);
+    #elif (__arm__)
+        m_free(self->data);
+    #else
+        #error "TextureResource: Unknown platform"
+    #endif
 
     return mp_const_none;
 }

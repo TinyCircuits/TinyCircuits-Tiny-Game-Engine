@@ -7,6 +7,7 @@
 #include "math/vector2.h"
 #include "math/vector3.h"
 #include "utility/engine_mp.h"
+#include "py/misc.h"
 
 
 /*  --- doc ---
@@ -71,7 +72,7 @@ mp_obj_t node_base_del(mp_obj_t self_in){
             linked_list_node *next_child_node_base = current_child_node_base->next;
 
             // This linked list is being deleted, free each node as we go
-            m_tracked_free(current_child_node_base);
+            free(current_child_node_base);
 
             current_child_node_base = next_child_node_base;
         }

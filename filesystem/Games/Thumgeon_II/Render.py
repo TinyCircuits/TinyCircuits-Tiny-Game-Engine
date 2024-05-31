@@ -9,6 +9,7 @@ from engine_animation import Tween
 from engine_draw import Color
 import Tiles
 import Player
+import Monsters
 
 from engine_animation import Tween, Delay, ONE_SHOT, LOOP, PING_PONG, EASE_ELAST_OUT, EASE_ELAST_IN_OUT, EASE_BOUNCE_IN_OUT, EASE_SINE_IN, EASE_QUAD_IN, EASE_ELAST_OUT
 
@@ -21,6 +22,7 @@ class DrawTile(Sprite2DNode):
         self.height = 32
         #self.scale = Vector2(urandom.random(), urandom.random())
         self.id = 0
+        self.monster = None
         self.set_layer(1)
         self.tween = Tween()
         self.deco = None
@@ -59,6 +61,7 @@ class DrawTile(Sprite2DNode):
     @micropython.native
     def reset_deco(self):
         self.deco = None
+        self.monster = None
         self.destroy_children()
 
 renderer_tiles = [None] * 6 * 6
@@ -71,7 +74,7 @@ for x in range(0, 6):
 cam = CameraNode()
 camera_tween = Tween()
 camera_offset = Vector2(64, 64)
-
+ 
 anim_tween = Tween()
 
 anim_snap = 600
@@ -90,7 +93,23 @@ def tile_animate_action(x, y, after = None):
             start = -start
         anim_tween.start(renderer_tiles[y*6+x].deco, "rotation", start, 0.0, anim_snap, 1.0, ONE_SHOT, EASE_ELAST_OUT)
         anim_tween.after = after
-        
+
+@micropython.native
+def load_renderer_monsters(tilemap, offset = Vector2(0,0)):
+    for m in tilemap.monster_list:
+        mx = int(m.position.x - renderer_x + offset.x)
+        my = int(m.position.y - renderer_y + offset.y)
+        if(mx >= 0 and mx < 6 and my >= 0 and my < 6):
+            m_sprite = Monsters.Monster()
+            m_sprite.texture = m.texture
+            m_sprite.position = Vector2(0, 0)
+            m_sprite.transparent_color = Color(0x07e0)
+            m_sprite.set_layer(6)
+            #m_sprite.tick = m.tick
+            print("Loading monster at "+str(mx)+", "+str(my))
+            renderer_tiles[my*6+mx].monster = m_sprite
+            renderer_tiles[my*6+mx].add_child(m_sprite)
+
 @micropython.native
 def load_renderer_tiles(tilemap, cx, cy):
     cam.position = Vector3(64,64,1)
@@ -103,4 +122,5 @@ def load_renderer_tiles(tilemap, cx, cy):
             if((tilemap.get_tile_data1(int(cx+x), int(cy+y)) & (1 << 2)) != 0):
                 renderer_tiles[y*6+x].add_item(tilemap.get_tile_data0(int(cx+x), int(cy+y)))
             else:
-                renderer_tiles[y*6+x].add_deco(tilemap.get_tile_data0(int(cx+x), int(cy+y)), 5 if ((tilemap.get_tile_data1(int(cx+x), int(cy+y)) & 0x2) != 0) else 7)
+                renderer_tiles[y*6+x].add_deco(tilemap.get_tile_data0(int(cx+x), int(cy+y)), 4 if ((tilemap.get_tile_data1(int(cx+x), int(cy+y)) & 0x2) != 0) else 6)
+    #load_renderer_monsters(Vector2(0,0))
