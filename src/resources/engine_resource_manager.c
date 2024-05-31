@@ -56,7 +56,7 @@ uint8_t *engine_resource_get_space(uint32_t space_size, bool fast_space){
     #elif __arm__
         if(fast_space){
             ENGINE_INFO_PRINTF("EngineResourceManager: Allocating ram for rp3 resource");
-            space = m_malloc(space_size);
+            space = malloc(space_size);
         }else{
             ENGINE_INFO_PRINTF("EngineResourceManager: Allocating flash for rp3 resource");
 

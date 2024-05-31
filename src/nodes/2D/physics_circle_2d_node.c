@@ -299,7 +299,9 @@ STATIC mp_attr_fun_t physics_circle_2d_node_class_attr(mp_obj_t self_in, qstr at
     ATTR:  [type=boolean]                                [name=solid]                                       [value=True or False]
     ATTR:  [type={ref_link:Vector2}]                     [name=gravity_scale]                               [value={ref_link:Vector2}]
     ATTR:  [type=boolean]                                [name=outline]                                     [value=True or False (default: False)]
+    ATTR:  [type=function]                               [name={ref_link:collision}]                        [value=function]
     OVRR:  [type=function]                               [name={ref_link:tick}]                             [value=function]
+    OVRR:  [type=function]                               [name={ref_link:collision}]                        [value=function]
 */
 mp_obj_t physics_circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New PhysicsCircle2DNode");

@@ -49,6 +49,11 @@ bool physics_node_base_load_attr(engine_node_base_t *self_node_base, qstr attrib
             destination[1] = self_node_base;
             return true;
         break;
+        case MP_QSTR_collision:
+            destination[0] = MP_OBJ_FROM_PTR(&self->collision_cb);
+            destination[1] = self_node_base;
+            return true;
+        break;
         case MP_QSTR_position:
             destination[0] = self->position;
             return true;
@@ -95,6 +100,16 @@ bool physics_node_base_load_attr(engine_node_base_t *self_node_base, qstr attrib
 }
 
 
+/*  --- doc ---
+    NAME: collision
+    ID: collision
+    DESC: Callback that is invoked when physics nodes collide
+    PARAM: [type=object]                            [name=self]         [value=object]
+    PARAM: [type={ref_link:CollisionContact2D}]     [name=contact]      [value={ref_link:CollisionContact2D}]
+    RETURN: None
+*/
+
+
 // Return `true` if handled storing the attr from internal structure, `false` otherwise
 bool physics_node_base_store_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_t *destination){
     // Get the underlying structure
@@ -103,6 +118,10 @@ bool physics_node_base_store_attr(engine_node_base_t *self_node_base, qstr attri
     switch(attribute){
         case MP_QSTR_tick:
             self->tick_cb = destination[1];
+            return true;
+        break;
+        case MP_QSTR_collision:
+            self->collision_cb = destination[1];
             return true;
         break;
         case MP_QSTR_position:
