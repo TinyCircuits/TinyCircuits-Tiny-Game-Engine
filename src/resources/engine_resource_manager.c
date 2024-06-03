@@ -46,19 +46,18 @@ void engine_resource_reset(){
 }
 
 
-uint8_t *engine_resource_get_space(uint32_t space_size, bool fast_space){    
-    uint8_t *space = NULL;
+mp_obj_t engine_resource_get_space_bytearray(uint32_t space_size, bool fast_space){
+    mp_obj_array_t *array = m_new_obj(mp_obj_array_t);
+    array->base.type = &mp_type_bytearray;
+    array->typecode = BYTEARRAY_TYPECODE;
+    array->free = 0;
+    array->len = space_size;
 
-    #ifdef __unix__
-        ENGINE_INFO_PRINTF("EngineResourceManager: Allocating ram for unix resource");
-        space = malloc(space_size);
-    #elif __arm__
-        if(fast_space){
-            ENGINE_INFO_PRINTF("EngineResourceManager: Allocating ram for rp3 resource");
-            space = malloc(space_size);
-        }else{
-            ENGINE_INFO_PRINTF("EngineResourceManager: Allocating flash for rp3 resource");
-
+    if(fast_space){
+        array->items = m_new(byte, array->len);
+        memset(array->items, 0, array->len);
+    }else{
+        #ifdef __arm__
             // How many flash pages will be needed to fit 'space_size' data? 
             // Pages are 256 bytes and data must be written in that page size:
             // https://www.raspberrypi.com/documentation/pico-sdk/hardware.html#rpip8ee511575881aa0f3936
@@ -98,22 +97,18 @@ uint8_t *engine_resource_get_space(uint32_t space_size, bool fast_space){
             restore_interrupts(paused_interrupts);
 
             // Stored in contiguous flash location
-            space = (uint8_t*)(XIP_BASE + ENGINE_HW_FLASH_RESOURCE_SPACE_BASE + (used_pages_count*FLASH_PAGE_SIZE));
+            array->items = (uint8_t*)(XIP_BASE + ENGINE_HW_FLASH_RESOURCE_SPACE_BASE + (used_pages_count*FLASH_PAGE_SIZE));
 
             used_pages_count += required_pages_count;
-        }
-    #else
-        #error "EngineResourceManager: Unknown platform"
-    #endif
+        #endif
+    }
 
-    ENGINE_INFO_PRINTF("EngineResourceManager: Done allocating!");
-
-    return space;
+    return array;
 }
 
 
-void engine_resource_start_storing(uint8_t *location, bool in_ram){
-    current_storing_location = location;
+void engine_resource_start_storing(mp_obj_t bytearray, bool in_ram){
+    current_storing_location = ENGINE_BYTEARRAY_OBJ_TO_DATA(bytearray);
     index_in_storing_location = 0;
     storing_in_ram = in_ram;
 

@@ -89,7 +89,8 @@ float ENGINE_FAST_FUNCTION(rtttl_sound_resource_get_sample)(rtttl_sound_resource
             bool dotted = false;
 
             // Get the character at current cursor position
-            uint8_t current_char = self->data[self->cursor];
+            uint8_t *data = ENGINE_BYTEARRAY_OBJ_TO_DATA(self->data);
+            uint8_t current_char = data[self->cursor];
 
             // While not a comma, collect note and configure tone afterwards
             while(current_char != 44){
@@ -141,7 +142,7 @@ float ENGINE_FAST_FUNCTION(rtttl_sound_resource_get_sample)(rtttl_sound_resource
                     break;
                 }
 
-                current_char = self->data[self->cursor];
+                current_char = data[self->cursor];
             }
 
 
@@ -318,7 +319,7 @@ mp_obj_t rtttl_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args
     self->data_size--;
 
     // Get space in ram for notes to live
-    self->data = engine_resource_get_space(self->data_size, true);
+    self->data = engine_resource_get_space_bytearray(self->data_size, true);
     engine_resource_start_storing(self->data, true);
 
     // One byte at a time, copy data from LFS to scratch space
@@ -353,15 +354,6 @@ STATIC mp_obj_t rtttl_sound_resource_class_del(mp_obj_t self_in){
         audio_channel_stop(channel);
     }
 
-    // Free the resource fast space
-    #if defined(__unix__)
-        free(self->data);
-    #elif (__arm__)
-        free(self->data);
-    #else
-        #error "TextureResource: Unknown platform"
-    #endif
-
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(rtttl_sound_resource_class_del_obj, rtttl_sound_resource_class_del);
@@ -371,8 +363,9 @@ MP_DEFINE_CONST_FUN_OBJ_1(rtttl_sound_resource_class_del_obj, rtttl_sound_resour
     NAME: RTTTLSoundResource
     ID: RTTTLSoundResource
     DESC: Can be used to play a music in a ringtone format (TODO: better docs): https://en.wikipedia.org/wiki/Ring_Tone_Text_Transfer_Language
-    PARAM:  [type=string]   [name=filepath] [value=any]
-    ATTR:   [type=int]      [name=tempo]    [value=any positive value]                                                                                                                                                                  
+    PARAM:  [type=string]         [name=filepath] [value=any]
+    ATTR:   [type=int]            [name=tempo]    [value=any positive value]
+    ATTR:   [type=bytearray]      [name=data]     [value=bytearray consisting of values between 0 and 13 corresponding to notes in lookup table]                                                                                                                                                               
 */ 
 STATIC void rtttl_sound_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing RTTTLSoundResource attr");
@@ -391,6 +384,9 @@ STATIC void rtttl_sound_resource_class_attr(mp_obj_t self_in, qstr attribute, mp
             case MP_QSTR_tempo:
                 destination[0] = mp_obj_new_int(self->b);   // beats per minute
             break;
+            case MP_QSTR_data:
+                destination[0] = self->data;
+            break;
             default:
                 return; // Fail
         }
@@ -399,6 +395,10 @@ STATIC void rtttl_sound_resource_class_attr(mp_obj_t self_in, qstr attribute, mp
             case MP_QSTR_tempo:
                 self->b = mp_obj_get_int(destination[1]);
             break;
+            case MP_QSTR_data:
+                self->data = destination[1];
+                self->data_size = ENGINE_BYTEARRAY_OBJ_LEN(self->data);
+            break; 
             default:
                 return; // Fail
         }

@@ -4,6 +4,14 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "py/obj.h"
+#include "py/misc.h"
+#include "py/binary.h"
+#include "py/objarray.h"
+
+#define ENGINE_BYTEARRAY_OBJ_TO_DATA(bytearray) ((mp_obj_array_t*)bytearray)->items
+#define ENGINE_BYTEARRAY_OBJ_LEN(bytearray) ((mp_obj_array_t*)bytearray)->len
+
 // Resets counters and positions so that assets can be written to flash
 // from the start, again
 void engine_resource_reset();
@@ -11,13 +19,13 @@ void engine_resource_reset();
 // Return pointer to space to store resources like sprite data, font, sound, etc.
 // On the rp3 platform this can be flash or ram if fast. On unix, it will only
 // ever be in ram
-uint8_t *engine_resource_get_space(uint32_t space_size, bool fast_space);
+mp_obj_t engine_resource_get_space_bytearray(uint32_t space_size, bool fast_space);
 
 // Because the RP3 port requires that flash be programmed in 256
 // sized blocks, define functions to serially store data in a
 // resource location. All platforms should serially load assets
 // in to resource space locations since RP3 port has to anyway
-void engine_resource_start_storing(uint8_t *location, bool in_ram);
+void engine_resource_start_storing(mp_obj_t bytearray, bool in_ram);
 
 // No offset since expects that data will be stored serially
 // to allow constrained embedded devices to program flash

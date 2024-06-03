@@ -1,9 +1,6 @@
 #include "engine_texture_resource.h"
 #include "debug/debug_print.h"
 #include "resources/engine_resource_manager.h"
-#include "py/misc.h"
-#include "py/binary.h"
-#include "py/objarray.h"
 #include <stdlib.h>
 #include <math.h>
 
@@ -58,21 +55,9 @@ mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, si
     self->width = bitmap_width;
     self->height = bitmap_height;
 
-    if(self->in_ram){
-        mp_obj_array_t *array = m_new_obj(mp_obj_array_t);
-        array->base.type = &mp_type_bytearray;
-        array->typecode = BYTEARRAY_TYPECODE;
-        array->free = 0;
-        array->len = bitmap_data_size;
-        array->items = m_new(byte, array->len);
-        memset(array->items, 0, array->len);
-
-        self->data = array;
-    }else{
-        self->data = mp_obj_new_bytearray_by_ref(bitmap_data_size, engine_resource_get_space(bitmap_data_size, false));
-    }
+    self->data = engine_resource_get_space_bytearray(bitmap_data_size, self->in_ram);
     
-    engine_resource_start_storing(((mp_obj_array_t*)self->data)->items, self->in_ram);
+    engine_resource_start_storing(self->data, self->in_ram);
 
     uint16_t bitmap_pixel_src_x = 0;
     uint16_t bitmap_pixel_src_y = bitmap_height-1;
@@ -175,6 +160,7 @@ STATIC void texture_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj
                 if(cur_bytearray->len != new_bytearray->len){
                     mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("TextureResource: ERROR: Can't set texture data to new bytearray, lengths do not match!"));
                 }
+                self->data = destination[1];
             }
             break;
             default:

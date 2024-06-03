@@ -12,7 +12,8 @@ uint8_t *wave_sound_resource_fill_destination(void *channel_in, uint16_t max_buf
     sound_resource_base_class_obj_t *source = channel->source;
 
     *leftover_size = fminf(source->total_data_size - channel->source_byte_offset, max_buffer_size);
-    return ((uint8_t*)source->extra_data) + channel->source_byte_offset;
+    uint8_t *data = ENGINE_BYTEARRAY_OBJ_TO_DATA(source->extra_data);
+    return data + channel->source_byte_offset;
 }
 
 
@@ -93,7 +94,7 @@ mp_obj_t wave_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
     ENGINE_INFO_PRINTF("\tbytes_per_sample:\t\t%lu", self->bytes_per_sample);
 
     // Get space in continuous flash area (stored in extra data for this type 'wave_sound_resource_class_type')
-    self->extra_data = (uint8_t*)engine_resource_get_space(self->total_data_size, false);
+    self->extra_data = engine_resource_get_space_bytearray(self->total_data_size, false);
     engine_resource_start_storing(self->extra_data, false);
 
     for(uint32_t i=0; i<self->total_data_size; i++){
@@ -134,7 +135,8 @@ MP_DEFINE_CONST_FUN_OBJ_1(wave_sound_resource_class_del_obj, wave_sound_resource
     NAME: WaveSoundResource
     ID: WaveSoundResource
     DESC: Holds audio data from a .wav file. `.wav` files can be 8 or 16-bit PCM and only 22050Hz or 11025Hz sample rate
-    PARAM:  [type=string]   [name=filepath] [value=string]                                                                                                                                                                   
+    PARAM:  [type=string]       [name=filepath] [value=string]
+    ATTR:   [type=bytearray]    [name=data]     [value of bytearray containing the audio samples]                                                                                                                                                                
 */ 
 STATIC void wave_sound_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing WaveSoundResource attr");
@@ -147,11 +149,17 @@ STATIC void wave_sound_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_
                 destination[0] = MP_OBJ_FROM_PTR(&wave_sound_resource_class_del_obj);
                 destination[1] = self_in;
             break;
+            case MP_QSTR_data:
+                destination[0] = self->extra_data;
+            break;
             default:
                 return; // Fail
         }
     }else if(destination[1] != MP_OBJ_NULL){    // Store
         switch(attribute){
+            case MP_QSTR_data:
+                self->extra_data = destination[1];
+            break;
             default:
                 return; // Fail
         }
