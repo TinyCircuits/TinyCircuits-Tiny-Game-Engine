@@ -36,7 +36,8 @@ STATIC mp_obj_t engine_draw_set_background(mp_obj_t module, mp_obj_t background)
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Could not background image, images dimensions are not equal to screen dimensions!"));
     }
 
-    engine_display_set_fill_background(background_texture_resource->data);
+    uint16_t *texture_data = ((mp_obj_array_t*)background_texture_resource->data)->items;
+    engine_display_set_fill_background(texture_data);
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_2(engine_draw_set_background_obj, engine_draw_set_background);

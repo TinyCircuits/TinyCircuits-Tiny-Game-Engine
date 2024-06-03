@@ -46,7 +46,6 @@ void engine_resource_reset(){
 }
 
 
-// uint8_t *engine_resource_get_space_and_fill(const char *filename, uint32_t space_size, bool fast_space, uint32_t offset){
 uint8_t *engine_resource_get_space(uint32_t space_size, bool fast_space){    
     uint8_t *space = NULL;
 

@@ -99,6 +99,7 @@ void gui_bitmap_button_2d_node_class_draw(engine_node_base_t *button_node_base, 
         }
 
         texture_resource_class_obj_t *bitmap = button->bitmap_texture;
+        uint16_t *texture_data = ((mp_obj_array_t*)bitmap->data)->items;
         color_class_obj_t *text_color = button->text_color;
 
         if(button->pressed){
@@ -109,7 +110,7 @@ void gui_bitmap_button_2d_node_class_draw(engine_node_base_t *button_node_base, 
             if(button->focused_bitmap_texture != mp_const_none) bitmap = button->focused_bitmap_texture;
         }
 
-        engine_draw_blit(bitmap->data,
+        engine_draw_blit(texture_data,
                      floorf(button_rotated_x), floorf(button_rotated_y),
                      bitmap->width, bitmap->height,
                      bitmap->width,

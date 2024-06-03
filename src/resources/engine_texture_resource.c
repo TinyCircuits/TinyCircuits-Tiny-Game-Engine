@@ -2,6 +2,8 @@
 #include "debug/debug_print.h"
 #include "resources/engine_resource_manager.h"
 #include "py/misc.h"
+#include "py/binary.h"
+#include "py/objarray.h"
 #include <stdlib.h>
 #include <math.h>
 
@@ -55,10 +57,22 @@ mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, si
 
     self->width = bitmap_width;
     self->height = bitmap_height;
+
+    if(self->in_ram){
+        mp_obj_array_t *array = m_new_obj(mp_obj_array_t);
+        array->base.type = &mp_type_bytearray;
+        array->typecode = BYTEARRAY_TYPECODE;
+        array->free = 0;
+        array->len = bitmap_data_size;
+        array->items = m_new(byte, array->len);
+        memset(array->items, 0, array->len);
+
+        self->data = array;
+    }else{
+        self->data = mp_obj_new_bytearray_by_ref(bitmap_data_size, engine_resource_get_space(bitmap_data_size, false));
+    }
     
-    // Pass the size of the pixel data, and if it is in fast ram or not
-    self->data = (uint16_t*)engine_resource_get_space(bitmap_data_size, self->in_ram);
-    engine_resource_start_storing((uint8_t*)self->data, self->in_ram);
+    engine_resource_start_storing(((mp_obj_array_t*)self->data)->items, self->in_ram);
 
     uint16_t bitmap_pixel_src_x = 0;
     uint16_t bitmap_pixel_src_y = bitmap_height-1;
@@ -96,17 +110,17 @@ STATIC mp_obj_t texture_resource_class_del(mp_obj_t self_in){
 
     texture_resource_class_obj_t *self = self_in;
 
-    if(self->in_ram){
-        #if defined(__unix__)
-            free(self->data);
-        #elif (__arm__)
-            free(self->data);
-        #else
-            #error "TextureResource: Unknown platform"
-        #endif
-    }else{
-        // Nothing done if not in ram, that flash goes to waste, for now
-    }
+    // if(self->in_ram){
+    //     #if defined(__unix__)
+    //         free(self->data);
+    //     #elif (__arm__)
+    //         free(self->data);
+    //     #else
+    //         #error "TextureResource: Unknown platform"
+    //     #endif
+    // }else{
+    //     // Nothing done if not in ram, that flash goes to waste, for now
+    // }
 
     return mp_const_none;
 }
@@ -114,7 +128,8 @@ MP_DEFINE_CONST_FUN_OBJ_1(texture_resource_class_del_obj, texture_resource_class
 
 
 uint16_t texture_resource_get_pixel(texture_resource_class_obj_t *texture, uint32_t offset){
-    return texture->data[offset];
+    uint16_t *texture_data = ((mp_obj_array_t*)texture->data)->items;
+    return texture_data[offset];
 }
 
 
@@ -122,10 +137,11 @@ uint16_t texture_resource_get_pixel(texture_resource_class_obj_t *texture, uint3
     NAME: TextureResource
     ID: TextureResource
     DESC: Object that holds information about bitmaps. The file needs to be a 16-bit RGB565 .bmp file
-    PARAM:  [type=string]  [name=filepath]  [value=string]
-    PARAM:  [type=boolean] [name=in_ram]    [value=True of False (False by default)]
-    ATTR:   [type=float]   [name=width]     [value=any (read-only)]
-    ATTR:   [type=float]   [name=height]    [value=any (read-only)]
+    PARAM:  [type=string]       [name=filepath]  [value=string]
+    PARAM:  [type=boolean]      [name=in_ram]    [value=True of False (False by default)]
+    ATTR:   [type=float]        [name=width]     [value=any (read-only)]
+    ATTR:   [type=float]        [name=height]    [value=any (read-only)]
+    ATTR:   [type=bytearray]    [name=data]      [value=RGB565 bytearray (note, if in_ram is False, then writing to this is not a valid operation)]
 */ 
 STATIC void texture_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing TextureResource attr");
@@ -144,11 +160,23 @@ STATIC void texture_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj
             case MP_QSTR_height:
                 destination[0] = mp_obj_new_int(self->height);
             break;
+            case MP_QSTR_data:
+                destination[0] = self->data;
+            break;
             default:
                 return; // Fail
         }
     }else if(destination[1] != MP_OBJ_NULL){    // Store
         switch(attribute){
+            case MP_QSTR_data:
+            {
+                mp_obj_array_t *new_bytearray = destination[1];
+                mp_obj_array_t *cur_bytearray = self->data;
+                if(cur_bytearray->len != new_bytearray->len){
+                    mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("TextureResource: ERROR: Can't set texture data to new bytearray, lengths do not match!"));
+                }
+            }
+            break;
             default:
                 return; // Fail
         }

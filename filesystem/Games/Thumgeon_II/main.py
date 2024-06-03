@@ -25,9 +25,9 @@ gc.threshold(1024*32)
 engine_physics.set_gravity(0.0, 0.0)
 engine.set_fps_limit(50)
 #engine.disable_fps_limit()
-machine.freq(200000000)
+# machine.freq(200000000)
 
-os.chdir("/Games/Thumgeon_II")
+# os.chdir("/Games/Thumgeon_II")
 roboto_font = FontResource("9pt-roboto-font.bmp", True)
 
 import Tiles

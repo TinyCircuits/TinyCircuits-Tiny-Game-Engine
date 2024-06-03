@@ -567,6 +567,8 @@ void engine_draw_filled_circle(uint16_t color, float center_x, float center_y, f
 
 
 void engine_draw_text(font_resource_class_obj_t *font, mp_obj_t text, float center_x, float center_y, float text_box_width, float text_box_height, float letter_spacing, float line_spacing, float x_scale, float y_scale, float rotation_radians, float alpha, engine_shader_t *shader){    
+    uint16_t *texture_data = ((mp_obj_array_t*)font->texture_resource->data)->items;
+    
     float sin_angle = sinf(rotation_radians);
     float cos_angle = cosf(rotation_radians);
 
@@ -629,7 +631,7 @@ void engine_draw_text(font_resource_class_obj_t *font, mp_obj_t text, float cent
         // Offset inside the ASCII font bitmap (not into where we're drawing)
         uint16_t char_bitmap_x_offset = font_resource_get_glyph_x_offset(font, current_char);
 
-        engine_draw_blit(font->texture_resource->data+engine_math_2d_to_1d_index(char_bitmap_x_offset, 0, font->texture_resource->width),
+        engine_draw_blit(texture_data+engine_math_2d_to_1d_index(char_bitmap_x_offset, 0, font->texture_resource->width),
                         floorf(final_char_x), floorf(final_char_y),
                         char_width, font->glyph_height,
                         font->texture_resource->width,

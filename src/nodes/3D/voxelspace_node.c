@@ -11,6 +11,7 @@
 #include "resources/engine_texture_resource.h"
 #include "draw/engine_display_draw.h"
 #include "draw/engine_shader.h"
+#include "py/objarray.h"
 
 #include <string.h>
 
@@ -31,6 +32,9 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
 
     texture_resource_class_obj_t *texture = voxelspace_node->texture_resource;
     texture_resource_class_obj_t *heightmap = voxelspace_node->heightmap_resource;
+
+    uint16_t *texture_data = ((mp_obj_array_t*)texture->data)->items;
+    uint16_t *heightmap_data = ((mp_obj_array_t*)heightmap->data)->items;
 
     // vector3_class_obj_t *voxelspace_rotation = mp_load_attr(voxelspace_node_base->attr_accessor, MP_QSTR_rotation);
     vector3_class_obj_t *voxelspace_position = voxelspace_node->position;
@@ -151,9 +155,9 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
             uint32_t index = (y-voxelspace_position->z.value) * heightmap->width + (x-voxelspace_position->x.value);
 
             // Get each RGB channel as a float
-            float r = (heightmap->data[index] >> 0) & 0b00011111;
-            float g = (heightmap->data[index] >> 5) & 0b00111111;
-            float b = (heightmap->data[index] >> 11) & 0b00011111;
+            float r = (heightmap_data[index] >> 0) & 0b00011111;
+            float g = (heightmap_data[index] >> 5) & 0b00111111;
+            float b = (heightmap_data[index] >> 11) & 0b00011111;
 
             // Change from RGB565 (already normalized to 0.0 ~ 1.0 for each channel) to grayscale 0.0 ~ 1.0: https://en.wikipedia.org/wiki/Grayscale#:~:text=Ylinear%2C-,which%20is%20given%20by,-%5B6%5D
             // Divided each channel coefficient by their respective bit resolution to avoid 3 divides
@@ -180,7 +184,7 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
                 float drawn_thickness = 0;
                 while(ipx >= height_buffer[i] && drawn_thickness < thickness){
                     if(engine_display_store_check_depth(i, ipx, depth)){
-                        engine_draw_pixel(texture->data[index], i, ipx, 1.0f, &empty_shader);
+                        engine_draw_pixel(texture_data[index], i, ipx, 1.0f, &empty_shader);
                     }
                     ipx--;
                     drawn_thickness += perspective;
@@ -194,7 +198,7 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
                 float drawn_thickness = 0;
                 while(ipx < height_buffer[i] && drawn_thickness < thickness){
                     if(engine_display_store_check_depth(i, ipx, depth)){
-                        engine_draw_pixel(texture->data[index], i, ipx, 1.0f, &empty_shader);
+                        engine_draw_pixel(texture_data[index], i, ipx, 1.0f, &empty_shader);
                     }
                     ipx++;
                     drawn_thickness += perspective;
@@ -246,9 +250,10 @@ STATIC mp_obj_t voxelspace_node_class_get_abs_height(mp_obj_t self, mp_obj_t x_o
         uint32_t index = ((int32_t)z-voxelspace_position->z.value) * heightmap->width + ((int32_t)x-voxelspace_position->x.value);
 
         // Get each RGB channel as a float
-        float r = (heightmap->data[index] >> 0) & 0b00011111;
-        float g = (heightmap->data[index] >> 5) & 0b00111111;
-        float b = (heightmap->data[index] >> 11) & 0b00011111;
+        uint16_t *heightmap_data = ((mp_obj_array_t*)heightmap->data)->items;
+        float r = (heightmap_data[index] >> 0) & 0b00011111;
+        float g = (heightmap_data[index] >> 5) & 0b00111111;
+        float b = (heightmap_data[index] >> 11) & 0b00011111;
 
         // Change from RGB565 (already normalized to 0.0 ~ 1.0 for each channel) to grayscale 0.0 ~ 1.0: https://en.wikipedia.org/wiki/Grayscale#:~:text=Ylinear%2C-,which%20is%20given%20by,-%5B6%5D
         // Divided each channel coefficient by their respective bit resolution to avoid 3 divides

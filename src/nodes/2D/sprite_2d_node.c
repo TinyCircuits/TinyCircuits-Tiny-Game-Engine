@@ -14,6 +14,7 @@
 #include "utility/engine_time.h"
 #include "draw/engine_color.h"
 #include "draw/engine_shader.h"
+#include "py/obj.h"
 
 
 void sprite_2d_node_class_draw(engine_node_base_t *sprite_node_base, mp_obj_t camera_node){
@@ -51,7 +52,7 @@ void sprite_2d_node_class_draw(engine_node_base_t *sprite_node_base, mp_obj_t ca
     uint32_t spritesheet_width = sprite_texture->width;
     uint32_t spritesheet_height = sprite_texture->height;
 
-    uint16_t *sprite_pixel_data = (uint16_t*)sprite_texture->data;
+    uint16_t *sprite_pixel_data = (uint16_t*)((mp_obj_array_t*)sprite_texture->data)->items;
 
     uint32_t sprite_frame_width = spritesheet_width/sprite_frame_count_x;
     uint32_t sprite_frame_height = spritesheet_height/sprite_frame_count_y;

@@ -9,7 +9,7 @@
 struct mp_stream_seek_t file_seek;
 int file_errcode = 0;
 
-mp_obj_t files[2];
+MP_REGISTER_ROOT_POINTER(mp_obj_t files[2]);
 mp_stream_p_t *file_streams[2];
 
 
@@ -19,9 +19,9 @@ void engine_file_open_read(uint8_t file_index, mp_obj_str_t *filename){
         MP_ROM_QSTR(MP_QSTR_rb) // See extmod/vfs_posix_file.c and extmod/vfs_lfsx_file.c
     };
 
-    // Could this get garbage collected in the time we use it? Maybe? TODO
-    files[file_index] = mp_vfs_open(2, &file_open_args[0], (mp_map_t*)&mp_const_empty_map);
-    file_streams[file_index] = mp_get_stream(files[file_index]);
+    // To avoid these non-exposed file pointers from being collected, set in register pointer space
+    MP_STATE_VM(files[file_index]) = mp_vfs_open(2, &file_open_args[0], (mp_map_t*)&mp_const_empty_map);
+    file_streams[file_index] = mp_get_stream(MP_STATE_VM(files[file_index]));
 }
 
 
@@ -31,31 +31,31 @@ void engine_file_open_create_write(uint8_t file_index, mp_obj_str_t *filename){
         MP_ROM_QSTR(MP_QSTR_wb) // See extmod/vfs_posix_file.c and extmod/vfs_lfsx_file.c
     };
 
-    // Could this get garbage collected in the time we use it? Maybe? TODO
-    files[file_index] = mp_vfs_open(2, &file_open_args[0], (mp_map_t*)&mp_const_empty_map);
-    file_streams[file_index] = mp_get_stream(files[file_index]);
+    // To avoid these non-exposed file pointers from being collected, set in register pointer space
+    MP_STATE_VM(files[file_index]) = mp_vfs_open(2, &file_open_args[0], (mp_map_t*)&mp_const_empty_map);
+    file_streams[file_index] = mp_get_stream(MP_STATE_VM(files[file_index]));
 }
 
 
 void engine_file_close(uint8_t file_index){
-    mp_stream_close(files[file_index]);
+    mp_stream_close(MP_STATE_VM(files[file_index]));
 }
 
 
 uint32_t engine_file_read(uint8_t file_index, void *buffer, uint32_t size){
-    return mp_stream_rw(files[file_index], buffer, size, &file_errcode, MP_STREAM_RW_READ);
+    return mp_stream_rw(MP_STATE_VM(files[file_index]), buffer, size, &file_errcode, MP_STREAM_RW_READ);
 }
 
 
 uint32_t engine_file_write(uint8_t file_index, void *buffer, uint32_t size){
-    return mp_stream_rw(files[file_index], buffer, size, &file_errcode, MP_STREAM_RW_WRITE);
+    return mp_stream_rw(MP_STATE_VM(files[file_index]), buffer, size, &file_errcode, MP_STREAM_RW_WRITE);
 }
 
 
 uint32_t engine_file_seek(uint8_t file_index, int32_t offset, uint8_t whence){
     file_seek.offset = offset;
     file_seek.whence = whence;
-    file_streams[file_index]->ioctl(files[file_index], MP_STREAM_SEEK, (mp_uint_t)(uintptr_t)&file_seek, &file_errcode);
+    file_streams[file_index]->ioctl(MP_STATE_VM(files[file_index]), MP_STREAM_SEEK, (mp_uint_t)(uintptr_t)&file_seek, &file_errcode);
     return file_seek.offset;
 }
 
@@ -126,7 +126,7 @@ uint32_t engine_file_position(uint8_t file_index){
 
     file_seek.offset = 0;
     file_seek.whence = MP_SEEK_CUR;
-    file_streams[file_index]->ioctl(files[file_index], MP_STREAM_SEEK, (mp_uint_t)(uintptr_t)&file_seek, &file_errcode);
+    file_streams[file_index]->ioctl(MP_STATE_VM(files[file_index]), MP_STREAM_SEEK, (mp_uint_t)(uintptr_t)&file_seek, &file_errcode);
     return file_seek.offset;
 }
 

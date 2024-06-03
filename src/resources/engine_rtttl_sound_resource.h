@@ -9,7 +9,7 @@ typedef struct{
     mp_obj_base_t base;
     audio_channel_class_obj_t *channel;
     mp_obj_t tone;
-    uint8_t *data;
+    mp_obj_t data;
     uint32_t data_size;
     uint32_t cursor;
 
