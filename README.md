@@ -102,20 +102,20 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [.] When the FOV of the camera is changed, the sprites should get wider: messed with this, could use some work
 [X] Change engine_input to engine_io so that it makes more sense for rumble to be in there
 [.] Somehow get better error when a game raises an exception in launcher: made it a little better, says <module> instead of file name though...
-
-
-[] Need to get everything on same heap without without gc_collect on top of gc_collect muxtex lock crash. Right now C_HEAP_SIZE is made very large
-   Found why this resulted in errors. Soft restarts end up causing errors since that memory gets erased/untracked during gc_sweep()
-
-[] Major bug!!! If you set a value to 0.0 in Python and then change that value directly in c, it changes the value of 0.0... See TweenTest/main.py
-[] Tween ints
-
-[] Game saving:
+[X] Game saving:
    1. When a node is given a name, it can be saved. When a node is instantiated, if the name is provided then it look at the saving module's save location for the nodes properties
    2. Take the entire heap and save it as a file (might be fun if possible)
    3. Add engine_save, engine_save.save(name, object), engine_save.load(name, object, default), engine_save.set_location(location)
+[X] Revisit opacity after fix, seems to be a lot slower: used doubles instead of float
+[.] Expose framebuf objects to write to screen buffers directly: should make it so that setting the buffers to other buffers is supported
+[.] Make asset loading faster: maybe increased wave loading speed but should still take a look
 
-[] Revisit opacity after fix, seems to be a lot slower
+[.] Need to get everything on same heap without without gc_collect on top of gc_collect muxtex lock crash. Right now C_HEAP_SIZE is made very large
+   Found why this resulted in errors. Soft restarts end up causing errors since that memory gets erased/untracked during gc_sweep()
+
+
+[] Major bug!!! If you set a value to 0.0 in Python and then change that value directly in c, it changes the value of 0.0... See TweenTest/main.py
+
 
 [] Issue of camera being moved by other things causing flicker. See UI game example. If the camera instantiation is moved before the creation
    of the buttons, then the tick callback for the camera is called and moved over the focused button, which is correct, otherwise get flicker

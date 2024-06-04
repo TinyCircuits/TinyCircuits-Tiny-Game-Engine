@@ -62,6 +62,8 @@ mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, si
     uint16_t bitmap_pixel_src_x = 0;
     uint16_t bitmap_pixel_src_y = bitmap_height-1;
 
+    engine_file_seek(0, bitmap_pixel_data_offset, MP_SEEK_SET);
+
     // https://en.wikipedia.org/wiki/BMP_file_format#:~:text=optional%20color%20list.-,Pixel%20storage,-%5Bedit%5D
     // Need to know how many pixels of padding there are in each
     // row so that the pixel data can be extracted correctly
