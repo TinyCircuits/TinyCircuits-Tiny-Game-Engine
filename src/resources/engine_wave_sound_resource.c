@@ -136,7 +136,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(wave_sound_resource_class_del_obj, wave_sound_resource
     ID: WaveSoundResource
     DESC: Holds audio data from a .wav file. `.wav` files can be 8 or 16-bit PCM and only 22050Hz or 11025Hz sample rate
     PARAM:  [type=string]       [name=filepath] [value=string]
-    ATTR:   [type=bytearray]    [name=data]     [value of bytearray containing the audio samples]                                                                                                                                                                
+    ATTR:   [type=bytearray]    [name=data]     [value=value of bytearray containing the audio samples]                                                                                                                                                                
 */ 
 STATIC void wave_sound_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing WaveSoundResource attr");

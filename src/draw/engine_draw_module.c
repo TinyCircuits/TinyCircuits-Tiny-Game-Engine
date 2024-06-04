@@ -2,6 +2,7 @@
 #include "py/runtime.h"
 #include "display/engine_display_common.h"
 #include "resources/engine_texture_resource.h"
+#include "resources/engine_resource_manager.h"
 #include "engine_color.h"
 #include "debug/debug_print.h"
 #include "engine_main.h"
@@ -80,6 +81,10 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_draw_module_init_obj, engine_draw_module_init);
     ATTR: [type=enum/int]   [name=silver]                           [value=0xC618]
     ATTR: [type=enum/int]   [name=skyblue]                          [value=0x867D]
     ATTR: [type=enum/int]   [name=violet]                           [value=0x915C]
+    ATTR: [type=bytearray]  [name=back_fb_data]                     [value=128*128*2 bytearray]
+    ATTR: [type=bytearray]  [name=front_fb_data]                    [value=128*128*2 bytearray]
+    ATTR: [type=framebuf]   [name=back_fb]                          [value=framebuf]
+    ATTR: [type=framebuf]   [name=front_fb]                         [value=framebuf]
 */
 STATIC const mp_rom_map_elem_t engine_draw_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_draw) },
@@ -181,11 +186,38 @@ STATIC void draw_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destinat
             case MP_QSTR_violet:
                 destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0x915C)});
             break;
+            case MP_QSTR_back_fb_data:
+                destination[0] = MP_STATE_VM(back_fb_data);
+            break;
+            case MP_QSTR_front_fb_data:
+                destination[0] = MP_STATE_VM(front_fb_data);
+            break;
+            case MP_QSTR_back_fb:
+                destination[0] = MP_STATE_VM(back_fb);
+            break;
+            case MP_QSTR_front_fb:
+                destination[0] = MP_STATE_VM(front_fb);
+            break;
             default:
                 return; // Fail
         }
     }else if(destination[1] != MP_OBJ_NULL){    // Store
-        return; // Fail
+        switch(attribute) {
+            case MP_QSTR_back_fb_data:
+                mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("ERROR: Setting the back buffer data is not supported yet!"));
+            break;
+            case MP_QSTR_front_fb_data:
+                mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("ERROR: Setting the back buffer is not supported yet!"));
+            break;
+            case MP_QSTR_back_fb:
+                mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("ERROR: Setting the front buffer data is not supported yet!"));
+            break;
+            case MP_QSTR_front_fb:
+                mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("ERROR: Setting the front buffer is not supported yet!"));
+            break;
+            default:
+                return; // Fail
+        }
     }
 }
 

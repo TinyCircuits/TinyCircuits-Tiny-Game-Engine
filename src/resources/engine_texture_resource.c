@@ -95,18 +95,6 @@ STATIC mp_obj_t texture_resource_class_del(mp_obj_t self_in){
 
     texture_resource_class_obj_t *self = self_in;
 
-    // if(self->in_ram){
-    //     #if defined(__unix__)
-    //         free(self->data);
-    //     #elif (__arm__)
-    //         free(self->data);
-    //     #else
-    //         #error "TextureResource: Unknown platform"
-    //     #endif
-    // }else{
-    //     // Nothing done if not in ram, that flash goes to waste, for now
-    // }
-
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(texture_resource_class_del_obj, texture_resource_class_del);

@@ -65,6 +65,9 @@ STATIC mp_obj_t engine_main_module_init(){
         engine_main_reset();
         engine_audio_setup_playback();
 
+        // On subsequent resets, anything allocated m_tracked_buffers
+        // will need to be restored since they are erased in soft resets
+
         return mp_const_none;
     }
     is_engine_initialized = true;

@@ -103,7 +103,9 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [X] Change engine_input to engine_io so that it makes more sense for rumble to be in there
 [.] Somehow get better error when a game raises an exception in launcher: made it a little better, says <module> instead of file name though...
 
+
 [] Need to get everything on same heap without without gc_collect on top of gc_collect muxtex lock crash. Right now C_HEAP_SIZE is made very large
+   Found why this resulted in errors. Soft restarts end up causing errors since that memory gets erased/untracked during gc_sweep()
 
 [] Major bug!!! If you set a value to 0.0 in Python and then change that value directly in c, it changes the value of 0.0... See TweenTest/main.py
 [] Tween ints

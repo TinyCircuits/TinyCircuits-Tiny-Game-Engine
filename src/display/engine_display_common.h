@@ -1,14 +1,21 @@
 #ifndef ENGINE_DISPLAY_COMMON
 #define ENGINE_DISPLAY_COMMON
 
+#include "py/obj.h"
 #include <stdint.h>
 #include <stdbool.h>
 
 // The current screen buffer that should be getting drawn to (the other
 // one is likely being sent to the screen while this is active)
+uint16_t *screen_buffers[2];
 uint16_t *active_screen_buffer;
-
 uint16_t *depth_buffer;
+
+MP_REGISTER_ROOT_POINTER(mp_obj_t back_fb_data);
+MP_REGISTER_ROOT_POINTER(mp_obj_t back_fb);
+
+MP_REGISTER_ROOT_POINTER(mp_obj_t front_fb_data);
+MP_REGISTER_ROOT_POINTER(mp_obj_t front_fb);
 
 
 #define SCREEN_WIDTH 128
