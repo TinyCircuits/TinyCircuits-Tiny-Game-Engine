@@ -26,22 +26,7 @@ void engine_display_set_fill_background(uint16_t *data){
 }
 
 
-void engine_init_screen_buffers(){
-    ENGINE_INFO_PRINTF("Creating dual screen buffers of size %d bytes each on C heap", SCREEN_BUFFER_SIZE_BYTES);
-
-    // screen_buffers[0] = m_tracked_calloc(1, SCREEN_BUFFER_SIZE_BYTES);
-    // screen_buffers[1] = m_tracked_calloc(1, SCREEN_BUFFER_SIZE_BYTES);
-
-    screen_buffers[0] = malloc(SCREEN_BUFFER_SIZE_BYTES);
-    screen_buffers[1] = malloc(SCREEN_BUFFER_SIZE_BYTES);
-
-    // Make sure both screen buffers are set to all zeros
-    ENGINE_INFO_PRINTF("Filling both screen buffers with 0x0");
-    engine_draw_fill_color(0x0, screen_buffers[0]);
-    engine_draw_fill_color(0x0, screen_buffers[1]);
-
-    active_screen_buffer = screen_buffers[0];
-
+void engine_display_init_framebuffers(){
     MP_STATE_VM(back_fb_data) = mp_obj_new_bytearray_by_ref(SCREEN_BUFFER_SIZE_BYTES, screen_buffers[1]);
     MP_STATE_VM(front_fb_data) = mp_obj_new_bytearray_by_ref(SCREEN_BUFFER_SIZE_BYTES, screen_buffers[0]);
 
@@ -65,6 +50,24 @@ void engine_init_screen_buffers(){
 
     MP_STATE_VM(back_fb) = mp_call_function_n_kw(framebuf_constructor, 4, 0, back_framebuf_params);
     MP_STATE_VM(front_fb) = mp_call_function_n_kw(framebuf_constructor, 4, 0, front_framebuf_params);
+}
+
+
+void engine_init_screen_buffers(){
+    ENGINE_INFO_PRINTF("Creating dual screen buffers of size %d bytes each on C heap", SCREEN_BUFFER_SIZE_BYTES);
+
+    // screen_buffers[0] = m_tracked_calloc(1, SCREEN_BUFFER_SIZE_BYTES);
+    // screen_buffers[1] = m_tracked_calloc(1, SCREEN_BUFFER_SIZE_BYTES);
+
+    screen_buffers[0] = malloc(SCREEN_BUFFER_SIZE_BYTES);
+    screen_buffers[1] = malloc(SCREEN_BUFFER_SIZE_BYTES);
+
+    // Make sure both screen buffers are set to all zeros
+    ENGINE_INFO_PRINTF("Filling both screen buffers with 0x0");
+    engine_draw_fill_color(0x0, screen_buffers[0]);
+    engine_draw_fill_color(0x0, screen_buffers[1]);
+
+    active_screen_buffer = screen_buffers[0];
 }
 
 

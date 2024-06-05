@@ -47,7 +47,6 @@ void engine_main_reset(){
     engine_display_free_depth_buffer();
 
     gc_collect();
-    // gc_sweep_all();
 
     // mp_obj_t machine_module = mp_import_name(MP_QSTR_machine, mp_const_none, MP_OBJ_NEW_SMALL_INT(0));
     // mp_call_function_0(mp_load_attr(machine_module, MP_QSTR_soft_reset));
@@ -65,6 +64,9 @@ STATIC mp_obj_t engine_main_module_init(){
         engine_main_reset();
         engine_audio_setup_playback();
 
+        // Always recreate the framebuffers after soft reset
+        engine_display_init_framebuffers();
+
         // On subsequent resets, anything allocated m_tracked_buffers
         // will need to be restored since they are erased in soft resets
 
@@ -74,13 +76,16 @@ STATIC mp_obj_t engine_main_module_init(){
 
     ENGINE_PRINTF("Engine init!\n");
 
+    // Init display first
+    engine_display_init();
+    engine_display_init_framebuffers();
+    engine_display_send();
+
     // Needs to be setup before hand since dynamicly inits array
     engine_audio_setup();
     engine_audio_setup_playback();
 
     engine_io_setup();
-    engine_display_init();
-    engine_display_send();
     engine_physics_init();
     engine_animation_init();
 

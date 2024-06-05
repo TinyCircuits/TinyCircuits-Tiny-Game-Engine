@@ -116,7 +116,21 @@ void engine_display_gc9107_init(){
     gpio_put(PIN_GP4__TO__RST, 1);
     sleep_ms(120);
     
+    // // New demo code from less wide connector screen version
+    // gc9107_write_cmd(0xFE, NULL, 0);                    // Inter register enable 1 
+    // gc9107_write_cmd(0xEF, NULL, 0);                    // Inter register enable 2
 
+    // gc9107_write_cmd(0xB0, (uint8_t[]){ 0xC0 }, 1);     // ?
+    // gc9107_write_cmd(0xB1, (uint8_t[]){ 0x80 }, 1);     // ?
+    // gc9107_write_cmd(0xB2, (uint8_t[]){ 0x2F }, 1);     // ?
+    // gc9107_write_cmd(0xB3, (uint8_t[]){ 0x03 }, 1);     // ?
+    // gc9107_write_cmd(0xB7, (uint8_t[]){ 0x01 }, 1);     // ?
+
+
+
+
+
+    // OLD demo code from wider connector screen version
     gc9107_write_cmd(0xB0, (uint8_t[]){ 0xC0 }, 1);
     gc9107_write_cmd(0xB2, (uint8_t[]){ 0x2F }, 1);
     gc9107_write_cmd(0xB3, (uint8_t[]){ 0x03 }, 1);

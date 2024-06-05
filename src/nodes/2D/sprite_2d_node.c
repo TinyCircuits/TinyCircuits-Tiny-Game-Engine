@@ -47,6 +47,7 @@ void sprite_2d_node_class_draw(engine_node_base_t *sprite_node_base, mp_obj_t ca
     uint16_t sprite_frame_current_x = mp_obj_get_int(sprite_2d_node->frame_current_x);
     uint16_t sprite_frame_current_y = mp_obj_get_int(sprite_2d_node->frame_current_y);
     bool sprite_playing = mp_obj_get_int(sprite_2d_node->playing);
+    bool sprite_looping = mp_obj_get_int(sprite_2d_node->loop);
 
     color_class_obj_t *transparent_color = sprite_2d_node->transparent_color;
     uint32_t spritesheet_width = sprite_texture->width;
@@ -130,11 +131,17 @@ void sprite_2d_node_class_draw(engine_node_base_t *sprite_node_base, mp_obj_t ca
             // If reach end of y-axis frames, restart at x=0 and y=0
             if(sprite_frame_current_y >= sprite_frame_count_y){
                 sprite_frame_current_y = 0;
+
+                if(sprite_looping == false){
+                    mp_store_attr(sprite_node_base->attr_accessor, MP_QSTR_playing, mp_obj_new_bool(false));
+                }else{
+                    // Update/store the current frame index only if looping
+                    // so that we stay on the last from when loop ends
+                    mp_store_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_current_x, mp_obj_new_int(sprite_frame_current_x));
+                    mp_store_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_current_y, mp_obj_new_int(sprite_frame_current_y));
+                }
             }
 
-            // Update/store the current frame index
-            mp_store_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_current_x, mp_obj_new_int(sprite_frame_current_x));
-            mp_store_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_current_y, mp_obj_new_int(sprite_frame_current_y));
             sprite_2d_node->time_at_last_animation_update_ms = millis();
         }
     }
@@ -246,6 +253,10 @@ bool sprite_2d_node_load_attr(engine_node_base_t *self_node_base, qstr attribute
             destination[0] = self->playing;
             return true;
         break;
+        case MP_QSTR_loop:
+            destination[0] = self->loop;
+            return true;
+        break;
         case MP_QSTR_frame_current_x:
             destination[0] = self->frame_current_x;
             return true;
@@ -308,6 +319,10 @@ bool sprite_2d_node_store_attr(engine_node_base_t *self_node_base, qstr attribut
         break;
         case MP_QSTR_playing:
             self->playing = destination[1];
+            return true;
+        break;
+        case MP_QSTR_loop:
+            self->loop = destination[1];
             return true;
         break;
         case MP_QSTR_frame_current_x:
@@ -391,6 +406,7 @@ STATIC mp_attr_fun_t sprite_2d_node_class_attr(mp_obj_t self_in, qstr attribute,
     ATTR:   [type={ref_link:Vector2}]         [name=scale]                                      [value={ref_link:Vector2}]
     ATTR:   [type=float]                      [name=opacity]                                    [value=0 ~ 1.0]
     ATTR:   [type=boolean]                    [name=playing]                                    [value=boolean]
+    ATTR:   [type=boolean]                    [name=loop]                                       [value=boolean]
     ATTR:   [type=int]                        [name=frame_current_x]                            [value=any positive integer]
     ATTR:   [type=int]                        [name=frame_current_y]                            [value=any positive integer]
     OVRR:   [type=function]                   [name={ref_link:tick}]                            [value=function]
@@ -410,9 +426,10 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
         { MP_QSTR_scale,                MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_opacity,              MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_playing,              MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_loop,                 MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
-    enum arg_ids {child_class, position, texture, transparent_color, fps, frame_count_x, frame_count_y, rotation, scale, opacity, playing};
+    enum arg_ids {child_class, position, texture, transparent_color, fps, frame_count_x, frame_count_y, rotation, scale, opacity, playing, loop};
     bool inherited = false;
 
     // If there is one positional argument and it isn't the first 
@@ -442,6 +459,7 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
     if(parsed_args[scale].u_obj == MP_OBJ_NULL) parsed_args[scale].u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)});
     if(parsed_args[opacity].u_obj == MP_OBJ_NULL) parsed_args[opacity].u_obj = mp_obj_new_float(1.0f);
     if(parsed_args[playing].u_obj == MP_OBJ_NULL) parsed_args[playing].u_obj = mp_obj_new_bool(true);
+    if(parsed_args[loop].u_obj == MP_OBJ_NULL) parsed_args[loop].u_obj = mp_obj_new_bool(true);
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);
@@ -462,6 +480,7 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
     sprite_2d_node->scale = parsed_args[scale].u_obj;
     sprite_2d_node->opacity = parsed_args[opacity].u_obj;
     sprite_2d_node->playing = parsed_args[playing].u_obj;
+    sprite_2d_node->loop = parsed_args[loop].u_obj;
     sprite_2d_node->frame_current_x = mp_obj_new_int(0);
     sprite_2d_node->frame_current_y = mp_obj_new_int(0);
 

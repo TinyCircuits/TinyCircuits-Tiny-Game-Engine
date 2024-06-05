@@ -36,6 +36,7 @@ void text_2d_node_class_draw(engine_node_base_t *text_2d_node_base, mp_obj_t cam
     }
 
     vector2_class_obj_t *text_scale =  text_2d_node->scale;
+    color_class_obj_t *text_color = text_2d_node->color;
     float text_box_width = mp_obj_get_float(text_2d_node->width);
     float text_box_height = mp_obj_get_float(text_2d_node->height);
 
@@ -85,12 +86,22 @@ void text_2d_node_class_draw(engine_node_base_t *text_2d_node_base, mp_obj_t cam
     float text_line_spacing = mp_obj_get_float(text_2d_node->line_spacing);
 
     // Decide which shader to use per-pixel
-    engine_shader_t *shader = &empty_shader;
-    if(text_opacity < 1.0f){
-        shader = &opacity_shader;
+    engine_shader_t *text_shader = NULL;
+
+    if(text_color == mp_const_none){
+        text_shader = &empty_shader;
+    }else{
+        text_shader = &blend_opacity_shader;
+
+        float t = 1.0f;
+
+        blend_opacity_shader.program[1] = (text_color->value.val >> 8) & 0b11111111;
+        blend_opacity_shader.program[2] = (text_color->value.val >> 0) & 0b11111111;
+
+        memcpy(blend_opacity_shader.program+3, &t, sizeof(float));
     }
 
-    engine_draw_text(text_2d_node->font_resource, text_2d_node->text, text_rotated_x, text_rotated_y, text_box_width, text_box_height, text_letter_spacing, text_line_spacing, text_scale->x.value*camera_zoom, text_scale->y.value*camera_zoom, text_rotation, text_opacity, shader);
+    engine_draw_text(text_2d_node->font_resource, text_2d_node->text, text_rotated_x, text_rotated_y, text_box_width, text_box_height, text_letter_spacing, text_line_spacing, text_scale->x.value*camera_zoom, text_scale->y.value*camera_zoom, text_rotation, text_opacity, text_shader);
 }
 
 
@@ -218,6 +229,10 @@ bool text_2d_node_load_attr(engine_node_base_t *self_node_base, qstr attribute, 
             destination[0] = self->height;
             return true;
         break;
+        case MP_QSTR_color:
+            destination[0] = self->color;
+            return true;
+        break;
         default:
             return false; // Fail
     }
@@ -274,6 +289,10 @@ bool text_2d_node_store_attr(engine_node_base_t *self_node_base, qstr attribute,
         break;
         case MP_QSTR_height:
             mp_raise_msg(&mp_type_AttributeError, MP_ERROR_TEXT("Text2DNode: ERROR: 'height' is read-only, it is not allowed to be set!"));
+            return true;
+        break;
+        case MP_QSTR_color:
+            self->color = destination[1];
             return true;
         break;
         default:
@@ -346,6 +365,7 @@ STATIC mp_attr_fun_t text_2d_node_class_attr(mp_obj_t self_in, qstr attribute, m
     ATTR:   [type=float]                      [name=opacity]                                    [value=0 ~ 1.0]
     ATTR:   [type=float]                      [name=letter_spacing]                             [value=any]
     ATTR:   [type=float]                      [name=line_spacing]                               [value=any]
+    ATTR:   [type={ref_link:Color}]           [name=color]                                      [value={ref_link:Color}]
     OVRR:   [type=function]                   [name={ref_link:tick}]                            [value=function]
 */
 mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
@@ -361,9 +381,10 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
         { MP_QSTR_opacity,              MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_letter_spacing,       MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_line_spacing,         MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_color,                MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
-    enum arg_ids {child_class, position, font, text, rotation, scale, opacity, letter_spacing, line_spacing};
+    enum arg_ids {child_class, position, font, text, rotation, scale, opacity, letter_spacing, line_spacing, color};
     bool inherited = false;
 
     // If there is one positional argument and it isn't the first 
@@ -391,6 +412,7 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
     if(parsed_args[opacity].u_obj == MP_OBJ_NULL) parsed_args[opacity].u_obj = mp_obj_new_float(1.0f);
     if(parsed_args[letter_spacing].u_obj == MP_OBJ_NULL) parsed_args[letter_spacing].u_obj = mp_obj_new_float(0.0f);
     if(parsed_args[line_spacing].u_obj == MP_OBJ_NULL) parsed_args[line_spacing].u_obj = mp_obj_new_float(0.0f);
+    if(parsed_args[color].u_obj == MP_OBJ_NULL) parsed_args[color].u_obj = mp_const_none;
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);
@@ -408,6 +430,7 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
     text_2d_node->opacity = parsed_args[opacity].u_obj;
     text_2d_node->letter_spacing = parsed_args[letter_spacing].u_obj;
     text_2d_node->line_spacing = parsed_args[line_spacing].u_obj;
+    text_2d_node->color = parsed_args[color].u_obj;
     text_2d_node->width = mp_obj_new_int(0);
     text_2d_node->height = mp_obj_new_int(0);
 

@@ -11,6 +11,7 @@ water2 = TextureResource("Water2_16bit.bmp")
 
 trapdoor_sheet = TextureResource("trapdoor_sheet_16bit.bmp")
 door_sheet = TextureResource("Door-Sheet_16bit.bmp")
+chest_sheet = TextureResource("Chest1-Sheet_16bit.bmp")
 spikes_sheet = TextureResource("Spikes-Sheet_16bit.bmp")
 ladder_sheet = TextureResource("StoneLadder_16bit.bmp")
 
@@ -47,6 +48,7 @@ deco_ids = {
     "door_sheet": 2,
     "trapdoor_sheet": 3,
     "ladder_sheet": 4,
+    "chest_sheet": 5,
 }
 
 deco_textures = {
@@ -55,6 +57,7 @@ deco_textures = {
     deco_ids["door_sheet"]: door_sheet,
     deco_ids["trapdoor_sheet"]: trapdoor_sheet,
     deco_ids["ladder_sheet"]: ladder_sheet,
+    deco_ids["chest_sheet"]: chest_sheet,
 }
 
 deco_frame_count = {
@@ -62,7 +65,8 @@ deco_frame_count = {
     deco_ids["grass_patch"]: 1,
     deco_ids["door_sheet"]: 3,
     deco_ids["trapdoor_sheet"]: 2,
-    deco_ids["ladder_sheet"]: 1
+    deco_ids["ladder_sheet"]: 1,
+    deco_ids["chest_sheet"]: 2,
 }
 
 class Tilemap:
@@ -73,42 +77,49 @@ class Tilemap:
         self.border_tile = 2
         self.entryway = Vector2(1,1)
         self.monster_list = []
+        self.spawn_list = [0]
+        self.loot_list = [0]
     
     def get_tile_id(self, x, y):
         if((x < 0) or (x > self.WIDTH-1) or (y < 0) or (y > self.HEIGHT - 1)):
             return self.border_tile
-        return self.tiles[(y*self.WIDTH+x)*3]
+        return self.tiles[int(y*self.WIDTH+x)*3]
     
     def get_tile_data0(self, x, y):
         if((x < 0) or (x > self.WIDTH-1) or (y < 0) or (y > self.HEIGHT - 1)):
             return 0
-        return self.tiles[(y*self.WIDTH+x)*3+1]
+        return self.tiles[int(y*self.WIDTH+x)*3+1]
     
     def get_tile_data1(self, x, y):
         if((x < 0) or (x > self.WIDTH-1) or (y < 0) or (y > self.HEIGHT - 1)):
             return 1
-        return self.tiles[(y*self.WIDTH+x)*3+2]
+        return self.tiles[int(y*self.WIDTH+x)*3+2]
     
     def set_tile_id(self, x, y, t):
         if((x < 0) or (x > self.WIDTH-1) or (y < 0) or (y > self.HEIGHT - 1)):
             return None
-        self.tiles[(y*self.WIDTH+x)*3] = t
+        self.tiles[int(y*self.WIDTH+x)*3] = t
         
     def set_tile_data0(self, x, y, d):
         if((x < 0) or (x > self.WIDTH-1) or (y < 0) or (y > self.HEIGHT - 1)):
             return None
-        self.tiles[(y*self.WIDTH+x)*3+1] = d
+        self.tiles[int(y*self.WIDTH+x)*3+1] = d
     
     def set_tile_data1(self, x, y, d):
         if((x < 0) or (x > self.WIDTH-1) or (y < 0) or (y > self.HEIGHT - 1)):
             return None
-        self.tiles[(y*self.WIDTH+x)*3+2] = d
+        self.tiles[int(y*self.WIDTH+x)*3+2] = d
         
     def set_tile_solid(self, x, y, solid):
         if(solid):
             self.set_tile_data1(x, y, self.get_tile_data1(x, y) | (1))
         else:
             self.set_tile_data1(x, y, self.get_tile_data1(x, y) & ~(1))
+            
+    def tile_solid(self, x, y):
+        if((self.get_tile_data1(x, y) & 1) != 0):
+            return True
+        return False
             
     def set_deco_under(self, x, y, under):
         if(under):

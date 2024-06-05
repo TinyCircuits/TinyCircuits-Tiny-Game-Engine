@@ -113,6 +113,7 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [.] Need to get everything on same heap without without gc_collect on top of gc_collect muxtex lock crash. Right now C_HEAP_SIZE is made very large
    Found why this resulted in errors. Soft restarts end up causing errors since that memory gets erased/untracked during gc_sweep()
 
+[] Figure out and fix screen doing halo...
 
 [] Major bug!!! If you set a value to 0.0 in Python and then change that value directly in c, it changes the value of 0.0... See TweenTest/main.py
 

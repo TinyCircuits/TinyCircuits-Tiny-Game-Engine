@@ -18,6 +18,7 @@ typedef struct{
     mp_obj_t scale;                 // Vector2
     mp_obj_t opacity;
     mp_obj_t playing;               // Bool: is the animation running or not
+    mp_obj_t loop;
     mp_obj_t tick_cb;
     uint32_t time_at_last_animation_update_ms;
 }engine_sprite_2d_node_class_obj_t;

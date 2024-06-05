@@ -2,6 +2,7 @@ from engine_resources import NoiseResource
 from engine_math import Vector2
 import urandom
 import utime
+import Monsters
 
 import Tiles
 import Player
@@ -73,6 +74,8 @@ def generate_bottom(tilemap, x, y):
 
 @micropython.native
 def generate_tiles(tilemap):
+    tilemap.loot_list = overworld_loot_list
+    tilemap.spawn_list = [Monsters.monster_ids["slime"], Monsters.monster_ids["scorpion"], Monsters.monster_ids["chupacabra"]]
     fs = [generate_left, generate_right, generate_top, generate_bottom]
     for y in range(0, tilemap.HEIGHT):
         for x in range(0, tilemap.WIDTH):
@@ -120,8 +123,8 @@ def generate_deco(tilemap):
         looking = True
         while(tilemap.get_tile_data0(dx, dy) != 0):
             looking = False
-            for y in range(dy-2, dy+2):
-                for x in range(dx-2, dx+2):
+            for y in range(dy-1, dy+2):
+                for x in range(dx-1, dx+2):
                     if(tilemap.get_tile_data0(dx, dy) != 0):
                         looking = True
             if(looking == True):
@@ -145,6 +148,7 @@ def generate_deco(tilemap):
 
 @micropython.native
 def generate_empty_dungeon(tilemap, door = True):
+    tilemap.spawn_list = [Monsters.monster_ids["skeleton"], Monsters.monster_ids["scorpion"], Monsters.monster_ids["ghost1"], Monsters.monster_ids["ghost2"], Monsters.monster_ids["slime"], Monsters.monster_ids["tempest"]]
     for y in range(1, tilemap.HEIGHT-1):
         for x in range(1, tilemap.WIDTH-1):
             tilemap.set_tile_id(x, y, Tiles.tile_ids["stonefloor1"])
@@ -179,8 +183,31 @@ def generate_empty_dungeon(tilemap, door = True):
             door_offset = urandom.randrange(1, tilemap.HEIGHT-1)
             tilemap.set_tile_data0(tilemap.WIDTH-1, door_offset, Tiles.deco_ids["door_sheet"])
             tilemap.entryway = Vector2(tilemap.WIDTH-2, door_offset)
-        
-def generate_dungeon_level(tilemap, ladder = True, trapdoor = True):
+            
+overworld_loot_list = [
+    Player.item_ids["apple"],
+    Player.item_ids["clover"],
+    Player.item_ids["dagger"],
+]
+
+dungeon_loot_list = [
+    Player.item_ids["apple"],
+    Player.item_ids["ham"],
+    Player.item_ids["bomb"],
+    Player.item_ids["cat_bomb"],
+    Player.item_ids["bow"],
+    Player.item_ids["red_book"],
+    Player.item_ids["blue_book"],
+    Player.item_ids["bow"],
+    Player.item_ids["dagger"],
+    Player.item_ids["sword"],
+    Player.item_ids["gold_coins"],
+    Player.item_ids["gold_bars"],
+    Player.item_ids["blue_pot"],
+    Player.item_ids["red_pot"],
+]
+
+def generate_dungeon_level(tilemap, ladder = True, trapdoor = True, rune = False):
     if(trapdoor == True):
         exit_x = urandom.randrange(1, tilemap.WIDTH-1)
         exit_y = urandom.randrange(1, tilemap.HEIGHT-1)
@@ -195,8 +222,22 @@ def generate_dungeon_level(tilemap, ladder = True, trapdoor = True):
         item_x = urandom.randrange(1, tilemap.WIDTH-1)
         item_y = urandom.randrange(1, tilemap.HEIGHT-1)
         if(tilemap.get_tile_data0(item_x, item_y) == 0):
-            item = urandom.randrange(len(Player.item_ids))
+            item = urandom.choice(tilemap.loot_list)
             tilemap.set_tile_data0(item_x, item_y, item)
             tilemap.set_tile_data1(item_x, item_y, 4)
         #tilemap.set_deco_under(exit_x, exit_y, True)
+    if(urandom.random() < 1.0):
+        # Generate chest
+        chest_x = urandom.randrange(1, tilemap.WIDTH-1)
+        chest_y = urandom.randrange(1, tilemap.HEIGHT-1)
+        looking = True
+        while(tilemap.get_tile_data0(chest_x, chest_y) != 0):
+            chest_x += 1
+            if(chest_x >= tilemap.WIDTH):
+                chest_x = 0
+                chest_y += 1
+            if(chest_y >= tilemap.HEIGHT):
+                chest_y = 0
+        tilemap.set_tile_data0(chest_x, chest_y, Tiles.deco_ids["chest_sheet"])
+        tilemap.set_deco_under(chest_x, chest_y, True)
     
