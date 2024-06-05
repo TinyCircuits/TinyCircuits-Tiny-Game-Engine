@@ -71,11 +71,6 @@ indicator_snap = 50 # Controls indicator tween speed
 
 camera_z = 0.0
 
-
-def draw_minimap():
-    # Very slow to generate
-    pass
-
 overworld_tiles = Tiles.Tilemap(48, 48)
 
 urandom.seed()
@@ -95,7 +90,7 @@ current_dungeon_level = 0
 for i in range(5):
     dungeon_levels.append(Tiles.Tilemap(urandom.randrange(5, 12), urandom.randrange(5, 12)))
     Generate.generate_empty_dungeon(dungeon_levels[i], True if i == 0 else False)
-    Generate.generate_dungeon_level(dungeon_levels[i], True if i > 0 else False, True if i < 4 else False)
+    Generate.generate_dungeon_level(dungeon_levels[i], True if i > 0 else False, True if i < 4 else False, False if i < 4 else True)
 
 dungeon_tiles = dungeon_levels[0]
 
@@ -114,33 +109,33 @@ monster_turn = False
 
 def reset_camera_right(self):
     Render.renderer_x -= 1
-    Render.load_renderer_tiles(current_tilemap, Render.renderer_x, Render.renderer_y)
-    Render.load_renderer_deco(current_tilemap, Render.renderer_x, Render.renderer_y)
+    Render.load_renderer_tiles(current_tilemap, player_x-2, player_y-2)
+    Render.load_renderer_deco(current_tilemap, player_x-2, player_y-2)
     Render.load_renderer_monsters(current_tilemap)
     
 def reset_camera_left(self):
     Render.renderer_x += 1
-    Render.load_renderer_tiles(current_tilemap, Render.renderer_x, Render.renderer_y)
-    Render.load_renderer_deco(current_tilemap, Render.renderer_x, Render.renderer_y)
+    Render.load_renderer_tiles(current_tilemap, player_x-2, player_y-2)
+    Render.load_renderer_deco(current_tilemap, player_x-2, player_y-2)
     Render.load_renderer_monsters(current_tilemap)
     
 def reset_camera_down(self):
     Render.renderer_y += 1
-    Render.load_renderer_tiles(current_tilemap, Render.renderer_x, Render.renderer_y)
-    Render.load_renderer_deco(current_tilemap, Render.renderer_x, Render.renderer_y)
+    Render.load_renderer_tiles(current_tilemap, player_x-2, player_y-2)
+    Render.load_renderer_deco(current_tilemap, player_x-2, player_y-2)
     Render.load_renderer_monsters(current_tilemap)
     
 def reset_camera_up(self):
     Render.renderer_y -= 1
-    Render.load_renderer_tiles(current_tilemap, Render.renderer_x, Render.renderer_y)
-    Render.load_renderer_deco(current_tilemap, Render.renderer_x, Render.renderer_y)
+    Render.load_renderer_tiles(current_tilemap, player_x-2, player_y-2)
+    Render.load_renderer_deco(current_tilemap, player_x-2, player_y-2)
     Render.load_renderer_monsters(current_tilemap)
 
 def move_tiles_right():
     global player_x
     player_x -= 1
-    Render.load_renderer_tiles(current_tilemap, Render.renderer_x-1, Render.renderer_y)
-    Render.load_renderer_deco(current_tilemap, Render.renderer_x-1, Render.renderer_y)
+    Render.load_renderer_tiles(current_tilemap, player_x-2, player_y-2)
+    Render.load_renderer_deco(current_tilemap, player_x-2, player_y-2)
     Render.load_renderer_monsters(current_tilemap, Vector2(1, 0))
     Render.camera_tween.start(Render.cam, "position", Vector3(32 + Render.camera_offset.x, Render.camera_offset.y, 0), Vector3(Render.camera_offset.x, Render.camera_offset.y, 0), tween_snap, 1.0, ONE_SHOT, EASE_QUAD_IN)
     Render.camera_tween.after = reset_camera_right
@@ -154,8 +149,8 @@ def move_tiles_left():
 def move_tiles_down():
     global player_y
     player_y -= 1
-    Render.load_renderer_tiles(current_tilemap, Render.renderer_x, Render.renderer_y-1)
-    Render.load_renderer_deco(current_tilemap, Render.renderer_x, Render.renderer_y-1)
+    Render.load_renderer_tiles(current_tilemap, player_x-2, player_y-2)
+    Render.load_renderer_deco(current_tilemap, player_x-2, player_y-2)
     Render.load_renderer_monsters(current_tilemap, Vector2(0, 1))
     Render.camera_tween.start(Render.cam, "position", Vector3(Render.camera_offset.x, 32 + Render.camera_offset.y, 0), Vector3(Render.camera_offset.x, Render.camera_offset.y, 0), tween_snap, 1.0, ONE_SHOT, EASE_QUAD_IN)
     Render.camera_tween.after = reset_camera_up
@@ -168,8 +163,8 @@ def move_tiles_up():
 
 print(gc.mem_free())
 
-Render.load_renderer_tiles(current_tilemap, Render.renderer_x, Render.renderer_y)
-Render.load_renderer_deco(current_tilemap, Render.renderer_x, Render.renderer_y)
+Render.load_renderer_tiles(current_tilemap, player_x-2, player_y-2)
+Render.load_renderer_deco(current_tilemap, player_x-2, player_y-2)
 Render.load_renderer_monsters(current_tilemap)
 
 selection_pos = Vector2(0,0)
@@ -199,6 +194,19 @@ class Ghost(Sprite2DNode):
     def set_frame_count(self, c):
         self.frame_count_x = c
         self.frame_current_x = 0
+        
+class MessageSprite(Text2DNode):
+    def __init__(self):
+        super().__init__(self)
+        self.text = ""
+        self.set_layer(7)
+        self.color = Color(0xFFFF)
+        self.position = Vector2(0, -20)
+        self.font = Resources.roboto_font
+        self.opacity = 1.0
+        Render.cam.add_child(self)
+        
+current_msg = MessageSprite()
 
 def update_monsters():
     print("Updating monsters")
@@ -212,17 +220,19 @@ def update_monsters():
             current_tilemap.monster_list.remove(m)
             del m
             continue
+        elif(m.stun > 0):
+            m.stun -= 1
         elif(abs(dx) > 1 or abs(dy) > 1):
             old_pos = Vector2(m.position.x, m.position.y)
             if(abs(dx) > abs(dy)):
-                if(dx < 0):
+                if(dx < 0 and not current_tilemap.tile_solid(m.position.x+1, m.position.y)):
                     m.position.x += 1
-                else:
+                elif(dx > 0 and not current_tilemap.tile_solid(m.position.x-1, m.position.y)):
                     m.position.x -= 1
             else:
-                if(dy < 0):
+                if(dy < 0 and not current_tilemap.tile_solid(m.position.x, m.position.y + 1)):
                     m.position.y += 1
-                else:
+                elif(dy > 0 and not current_tilemap.tile_solid(m.position.x, m.position.y-1)):
                     m.position.y -= 1
             for m2 in current_tilemap.monster_list:
                 if(m != m2):
@@ -263,15 +273,22 @@ def tile_action(x, y):
     global deco_redraw
     global inventory_item_sel
     global eqp_drop
+    global current_msg
     print(str(2 + selection_pos.x) + ", " + str(2 + selection_pos.y))
     if(eqp_drop == 1):
-        if(current_tilemap.get_tile_data0(x, y) == 0 and not current_tilemap.tile_solid(x, y)):
+        if(inventory_item_sel < len(player.inventory) and current_tilemap.get_tile_data0(x, y) == 0 and not current_tilemap.tile_solid(x, y)):
             item = player.inventory[inventory_item_sel]
             print("Dropping "+str(item.id))
+            current_msg.text = "Dropped."
             current_tilemap.set_tile_data0(x, y, item.id)
             current_tilemap.set_tile_data1(x, y, 4)
             player.inventory.remove(item)
             player.wt -= Player.item_weights[item.id]
+            
+            if(player.held_item == item):
+                        player.held_item = None
+                        player.remove_child(player.held_item_spr)
+                        player.held_item_spr = None
             deco_redraw = True
             monster_redraw = True
             return
@@ -281,14 +298,13 @@ def tile_action(x, y):
     Render.tile_animate_action(int(2 + selection_pos.x), int(2 + selection_pos.y), renderer_reload)
     #Render.tile_animate_action(int(2 + selection_pos.x), int(2 + selection_pos.y), None)
     if((current_tilemap.get_tile_data1(x, y) & (1 << 2)) == 0):
-        if(current_tilemap.get_tile_data0(x, y) == Tiles.deco_ids["door_sheet"]):
+        if(abs(selection_pos.x) <= 1 and abs(selection_pos.y) <= 1 and current_tilemap.get_tile_data0(x, y) == Tiles.deco_ids["door_sheet"]):
             print("Acted on door!")
             if(len(dungeon_egress) == 0):
                 print("Loading level "+str(current_dungeon_level))
+                current_msg.text = "Entered."
                 dungeon_egress.append(Vector2(player_x, player_y))
                 current_tilemap = dungeon_levels[current_dungeon_level]
-                Render.renderer_x = current_tilemap.entryway.x - 2
-                Render.renderer_y = current_tilemap.entryway.y - 2
                 player_x = current_tilemap.entryway.x
                 player_y = current_tilemap.entryway.y
                 current_dungeon_level += 1
@@ -297,31 +313,26 @@ def tile_action(x, y):
                     current_tilemap = overworld_tiles
                 player_x = dungeon_egress[len(dungeon_egress)-1].x
                 player_y = dungeon_egress[len(dungeon_egress)-1].y
-                Render.renderer_x = player_x - 2
-                Render.renderer_y = player_y - 2
                 dungeon_egress.remove(dungeon_egress[len(dungeon_egress)-1])
                 current_dungeon_level = 0
-        elif(current_tilemap.get_tile_data0(x, y) == Tiles.deco_ids["trapdoor_sheet"]):
+        elif(abs(selection_pos.x) <= 1 and abs(selection_pos.y) <= 1 and current_tilemap.get_tile_data0(x, y) == Tiles.deco_ids["trapdoor_sheet"]):
             print("Acted on trapdoor")
-            dungeon_egress.append(Vector2(Render.renderer_x, Render.renderer_y))
+            dungeon_egress.append(Vector2(player_x, player_y))
             print("Loading level "+str(current_dungeon_level))
+            current_msg.text = "Entered."
             current_tilemap = dungeon_levels[current_dungeon_level]
-            Render.renderer_x = current_tilemap.entryway.x - 2
-            Render.renderer_y = current_tilemap.entryway.y - 2
             player_x = current_tilemap.entryway.x
             player_y = current_tilemap.entryway.y
             current_dungeon_level += 1
-        elif(current_tilemap.get_tile_data0(x, y) == Tiles.deco_ids["ladder_sheet"]):
+        elif(abs(selection_pos.x) <= 1 and abs(selection_pos.y) <= 1 and current_tilemap.get_tile_data0(x, y) == Tiles.deco_ids["ladder_sheet"]):
             print("Acted on ladder")
             print("Loading level "+str(current_dungeon_level-2))
             current_tilemap = dungeon_levels[current_dungeon_level-2]
-            Render.renderer_x = dungeon_egress[len(dungeon_egress)-1].x
-            Render.renderer_y = dungeon_egress[len(dungeon_egress)-1].y
-            player_x = Render.renderer_x + 2
-            player_y = Render.renderer_y + 2
+            player_x = dungeon_egress[len(dungeon_egress)-1].x
+            player_y = dungeon_egress[len(dungeon_egress)-1].y
             dungeon_egress.remove(dungeon_egress[len(dungeon_egress)-1])
             current_dungeon_level -= 1
-        elif(current_tilemap.get_tile_data0(x, y) == Tiles.deco_ids["chest_sheet"]):
+        elif(abs(selection_pos.x) <= 1 and abs(selection_pos.y) <= 1 and current_tilemap.get_tile_data0(x, y) == Tiles.deco_ids["chest_sheet"]):
             # Spawn some random loot items
             left = urandom.randrange(2, 4)
             dx = -1
@@ -329,7 +340,7 @@ def tile_action(x, y):
             current_tilemap.set_tile_data0(x, y, 0)
             while(left > 0):
                 if(current_tilemap.get_tile_data0(x+dx, y+dy) == 0 and not current_tilemap.tile_solid(x+dx, y+dy)):
-                    item = urandom.randrange(len(Player.item_ids))
+                    item = urandom.choice(current_tilemap.spawn_list)
                     current_tilemap.set_tile_data0(x+dx, y+dy, item)
                     current_tilemap.set_tile_data1(x+dx, y+dy, 4)
                     left -= 1
@@ -341,9 +352,14 @@ def tile_action(x, y):
                     break
         else:
             for m in current_tilemap.monster_list:
-                if(m.position.x == x and m.position.y == y):
+                if(held_item is not None and m.position.x == x and m.position.y == y):
                     print("Attacking monster with hp " + str(m.hp))
-                    m.hp -= 2
+                    held_item = player.held_item.id
+                    dmg = Player.dmg_values[held_item]
+                    if(dmg is not None):
+                        dmg += urandom.randrange(3)
+                        m.hp -= dmg
+                        current_msg.text = "Hit "+str(dmg) + "pts"
                     if(m.hp <= 0):
                         current_tilemap.monster_list.remove(m)
                     deco_redraw = True
@@ -351,13 +367,20 @@ def tile_action(x, y):
             #tiles_redraw = True
             
             print("Other action")
-    else:
+    elif(abs(selection_pos.x) <= 1 and abs(selection_pos.y) <= 1):
         # Item tile
         print("Picking up item id " + str(current_tilemap.get_tile_data0(x, y)))
         print("Player wt is " + str(player.wt))
         item = current_tilemap.get_tile_data0(x, y)
         if(item == Player.item_ids["gold_coins"] or item == Player.item_ids["gold_bars"]):
             player.gp += urandom.randrange(5, 12)
+            current_tilemap.set_tile_data0(x, y, 0)
+            current_tilemap.set_deco_item(x, y, False)
+        elif(item >= Player.item_ids["rune1"] and item < Player.item_ids["rune8"]):
+            current_msg.text = "Found a rune fragment!"
+            player.runes += 1
+            if(player.runes == 1):
+                player.add_inv_item(Player.item_ids["rune_complete"])
             current_tilemap.set_tile_data0(x, y, 0)
             current_tilemap.set_deco_item(x, y, False)
         elif(player.add_inv_item(item)):
@@ -377,6 +400,8 @@ def action(direction):
     global player_y
     global selection_pos
     global monster_turn
+    global current_msg
+    current_msg.text = ""
     if(control_mode == mode_move):
         if (direction == 0):
             # Try to move rightward
@@ -399,36 +424,28 @@ def action(direction):
                 move_tiles_down()
                 monster_turn = True
     elif(control_mode == mode_action):
-        if (direction == 0 and cursor_pos.x < 32):
+        if(player.held_item is None):
+            range = 32
+        else:
+            range = 32*player.held_item.range
+        if (direction == 0 and cursor_pos.x < range):
             selection_pos.x += 1
             cursor_pos.x += 32
             cursor.tween.start(cursor, "position", cursor.position, cursor_pos, indicator_snap, 1.0, ONE_SHOT, EASE_QUAD_IN)
-        elif (direction == 1 and cursor_pos.x > -32):
+        elif (direction == 1 and cursor_pos.x > -range):
             selection_pos.x -= 1
             cursor_pos.x -= 32
             cursor.tween.start(cursor, "position", cursor.position, cursor_pos, indicator_snap, 1.0, ONE_SHOT, EASE_QUAD_IN)
-        elif (direction == 2 and cursor_pos.y < 32):
+        elif (direction == 2 and cursor_pos.y < range):
             selection_pos.y += 1
             
             cursor_pos.y += 32
             cursor.tween.start(cursor, "position", cursor.position, cursor_pos, indicator_snap, 1.0, ONE_SHOT, EASE_QUAD_IN)
-        elif (direction == 3 and cursor_pos.y > -32):
+        elif (direction == 3 and cursor_pos.y > -range):
             selection_pos.y -= 1
             cursor_pos.y -= 32
             cursor.tween.start(cursor, "position", cursor.position, cursor_pos, indicator_snap, 1.0, ONE_SHOT, EASE_QUAD_IN)
 
-'''
-class MessageSprite(Text2DNode):
-    def __init__(self):
-        super().__init__(self)
-        self.text = "test"
-        self.set_layer(7)
-        self.color = Color(0x0000)
-        self.position = Vector2(0, -48)
-        self.font = Resources.roboto_font
-        self.opacity = 1.0
-        Render.cam.add_child(self)
-'''
 def set_cursor():
     cursor.texture = Tiles.action_indicator
     for m in current_tilemap.monster_list:
@@ -436,8 +453,6 @@ def set_cursor():
             cursor.texture = Tiles.attack_indicator
     
 print(gc.mem_free())
-    
-#current_msg = MessageSprite()
 
 class InventoryRenderer(Sprite2DNode):
     def __init__(self):
@@ -487,8 +502,8 @@ while True:
         #print(str(len(current_tilemap.monster_list)) + " monsters alive")
         #print(gc.mem_free())
         #print(gc.mem_free())
-        print(str(player_x) + ", " + str(player_y))
-        print(str(Render.renderer_x) + ", " + str(Render.renderer_y))
+        #print(str(player_x) + ", " + str(player_y))
+        #print(str(Render.renderer_x) + ", " + str(Render.renderer_y))
         #print(str(Render.renderer_x + 2 + selection_pos.x) + ", " + str(Render.renderer_y + 2 + selection_pos.y))
         action_dir = -1
         b_press = -1
@@ -509,7 +524,7 @@ while True:
             
         if engine_io.check_just_pressed(engine_io.A):
             if(control_mode == mode_move):
-                if(player.held_item_spr.frame_count_x > 1):
+                if(player.held_item is not None and player.held_item_spr.frame_count_x > 1):
                     player.held_item_spr.frame_current_x = 1
                 control_mode = mode_action
                 cursor.position = Vector2(0,0)
@@ -517,7 +532,8 @@ while True:
                 selection_pos = Vector2(0,0)
                 cursor.opacity = 1.0
             elif(control_mode == mode_action):
-                player.held_item_spr.frame_current_x = 0
+                if(player.held_item is not None):
+                    player.held_item_spr.frame_current_x = 0
                 print("acting on "+str(selection_pos.x + player_y) + ", " + str(selection_pos.y + player_y))
                 tile_action(int(selection_pos.x + player_x), int(selection_pos.y + player_y))
                 control_mode = mode_move
@@ -528,14 +544,21 @@ while True:
             elif(control_mode == mode_inventory):
                 if(eqp_drop == 0):
                     #Equip item
-                    pass
+                    if(inventory_item_sel < len(player.inventory)):
+                        if(player.inventory[inventory_item_sel] != player.held_item):
+                            player.set_held_item(player.inventory[inventory_item_sel])
+                        else:
+                            player.held_item = None
+                            player.remove_child(player.held_item_spr)
+                            player.held_item_spr = None
                 else:
                     #Drop item
-                    control_mode = mode_action
-                    cursor.position = Vector2(0,0)
-                    cursor_pos = Vector2(0,0)
-                    selection_pos = Vector2(0,0)
-                    cursor.opacity = 1.0
+                    if(inventory_item_sel < len(player.inventory)):
+                        control_mode = mode_action
+                        cursor.position = Vector2(0,0)
+                        cursor_pos = Vector2(0,0)
+                        selection_pos = Vector2(0,0)
+                        cursor.opacity = 1.0
         
         if engine_io.check_just_pressed(engine_io.B):
             inventory_item_sel = 0
@@ -545,7 +568,8 @@ while True:
                 eqp_drop = 0
                 pass
             elif(control_mode == mode_action or control_mode == mode_inventory):
-                player.held_item_spr.frame_current_x = 0
+                if(player.held_item is not None):
+                    player.held_item_spr.frame_current_x = 0
                 control_mode = mode_move
                 cursor.opacity = 0.0
             
@@ -553,9 +577,9 @@ while True:
             action(action_dir)
             
         if(tiles_redraw):
-            Render.load_renderer_tiles(current_tilemap, Render.renderer_x, Render.renderer_y)
+            Render.load_renderer_tiles(current_tilemap, player_x-2, player_y-2)
         if(deco_redraw):
-            Render.load_renderer_deco(current_tilemap, Render.renderer_x, Render.renderer_y)
+            Render.load_renderer_deco(current_tilemap, player_x-2, player_y-2)
         if(monster_redraw):
             Render.load_renderer_monsters(current_tilemap)
         if(monster_turn):
@@ -586,29 +610,41 @@ while True:
                     inventory_item_sel = 0
             elif(action_dir == 2 or action_dir == 3):
                 eqp_drop = 1-eqp_drop
+                
             gp_text = Text2DNode()
             wt_text = Text2DNode()
+            runes_text = Text2DNode()
             
             eqp = Text2DNode()
             drop = Text2DNode()
-            
-            if(eqp_drop == 0):
-                eqp.text = ">equip"
-                drop.text = "drop"
+            if(player.inventory[inventory_item_sel] == player.held_item):
+                if(eqp_drop == 0):
+                    eqp.text = ">unequip"
+                    drop.text = "drop"
+                else:
+                    eqp.text = "unequip"
+                    drop.text = ">drop"
             else:
-                eqp.text = "equip"
-                drop.text = ">drop"
+                if(eqp_drop == 0):
+                    eqp.text = ">equip/use"
+                    drop.text = "drop"
+                else:
+                    eqp.text = "equip/use"
+                    drop.text = ">drop"
             
             gp_text.text = "GP: "+str(player.gp)
             wt_text.text = "WT: "+str(player.wt)+"/"+str(player.maxwt)
+            runes_text.text = "Runes: "+str(player.runes)
             
             gp_text.font = Resources.roboto_font
             wt_text.font = Resources.roboto_font
             eqp.font = Resources.roboto_font
             drop.font = Resources.roboto_font
+            runes_text.font = Resources.roboto_font
             
             gp_text.position =  Vector2(32, -4)
             wt_text.position =  Vector2(32, 4)
+            runes_text.position = Vector2(32, 12)
             
             eqp.position = Vector2(-32, -4)
             drop.position = Vector2(-32, 4)
@@ -617,11 +653,13 @@ while True:
             wt_text.set_layer(7)
             eqp.set_layer(7)
             drop.set_layer(7)
+            runes_text.set_layer(7)
             
             inventory_renderer.add_child(gp_text)
             inventory_renderer.add_child(wt_text)
             inventory_renderer.add_child(eqp)
             inventory_renderer.add_child(drop)
+            inventory_renderer.add_child(runes_text)
             
             item_spr_offset = Vector2(-inventory_item_sel*32, -32)
             for i in player.inventory:

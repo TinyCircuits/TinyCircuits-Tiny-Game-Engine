@@ -16,6 +16,7 @@ ghost2_texture = TextureResource("monsters/Ghost2_16bit.bmp")
 scorpion_texture = TextureResource("monsters/Scorpion-Sheet_16bit.bmp")
 slime_texture = TextureResource("monsters/Slime_16bit.bmp")
 tempest_texture = TextureResource("monsters/Tempest_16bit.bmp")
+snakedragon_texture = TextureResource("monsters/Snakeddragon_16bit.bmp")
 
 monster_ids = {
     "skeleton": 1,
@@ -26,6 +27,7 @@ monster_ids = {
     "scorpion": 6,
     "slime": 7,
     "tempest": 8,
+    "snakedragon": 9,
 }
 
 monster_hp_range = {
@@ -37,6 +39,7 @@ monster_hp_range = {
     monster_ids["scorpion"]: (3, 6),
     monster_ids["slime"]: (3, 7),
     monster_ids["tempest"]: (7, 10),
+    monster_ids["snakedragon"]: (32, 40),
 }
 
 monster_dmg_range = {
@@ -48,6 +51,7 @@ monster_dmg_range = {
     monster_ids["scorpion"]: (5, 7),
     monster_ids["slime"]: (2, 5),
     monster_ids["tempest"]: (4, 7),
+    monster_ids["snakedragon"]: (12, 16),
 }
 
 monster_textures = {
@@ -58,7 +62,8 @@ monster_textures = {
        monster_ids["ghost2"]: ghost2_texture,
        monster_ids["scorpion"]: scorpion_texture,
        monster_ids["slime"]: slime_texture,
-       monster_ids["tempest"]: tempest_texture
+       monster_ids["tempest"]: tempest_texture,
+       monster_ids["snakedragon"]: snakedragon_texture
 }
 
 monster_frame_count = {
@@ -70,14 +75,15 @@ monster_frame_count = {
        monster_ids["scorpion"]: 2,
        monster_ids["slime"]: 1,
        monster_ids["tempest"]: 1,
+       monster_ids["snakedragon"]: 1,
 }
 
 s_and_s_factor= 0.85
 
 class Monster(Sprite2DNode):
-    def __init__(self):
+    def __init__(self, id = monster_ids["mimic"]):
         super().__init__(self)
-        self.id = monster_ids["mimic"]
+        self.id = id
         self.texture = monster_textures[self.id]
         self.position = Vector2(3, 3)
         self.time = 0
@@ -89,6 +95,7 @@ class Monster(Sprite2DNode):
         self.set_layer(5)
         self.opacity = 0.0
         self.tween = Tween()
+        self.stun = 0
         
     def set_monster(self, id):
         print("Setting monster to id " + str(id))

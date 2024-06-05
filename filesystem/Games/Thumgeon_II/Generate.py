@@ -71,6 +71,28 @@ def generate_bottom(tilemap, x, y):
             sum += adjacency_likelihoods[id][adj]
         tilemap.tiles[((y+1)*tilemap.WIDTH+x)*3] = adj
 
+overworld_loot_list = [
+    Player.item_ids["apple"],
+    Player.item_ids["clover"],
+    Player.item_ids["dagger"],
+]
+
+dungeon_loot_list = [
+    Player.item_ids["apple"],
+    Player.item_ids["ham"],
+    Player.item_ids["bomb"],
+    Player.item_ids["cat_bomb"],
+    Player.item_ids["bow"],
+    Player.item_ids["red_book"],
+    Player.item_ids["blue_book"],
+    Player.item_ids["bow"],
+    Player.item_ids["dagger"],
+    Player.item_ids["sword"],
+    Player.item_ids["gold_coins"],
+    Player.item_ids["gold_bars"],
+    Player.item_ids["blue_pot"],
+    Player.item_ids["red_pot"],
+]
 
 @micropython.native
 def generate_tiles(tilemap):
@@ -86,7 +108,6 @@ def generate_tiles(tilemap):
             # Each tile only generates two neighbors
             for i in range(3):
                 fs[i](tilemap, x, y)
-
 
 perlin = NoiseResource()
 perlin.seed = utime.ticks_us()
@@ -149,6 +170,7 @@ def generate_deco(tilemap):
 @micropython.native
 def generate_empty_dungeon(tilemap, door = True):
     tilemap.spawn_list = [Monsters.monster_ids["skeleton"], Monsters.monster_ids["scorpion"], Monsters.monster_ids["ghost1"], Monsters.monster_ids["ghost2"], Monsters.monster_ids["slime"], Monsters.monster_ids["tempest"]]
+    tilemap.loot_list = dungeon_loot_list
     for y in range(1, tilemap.HEIGHT-1):
         for x in range(1, tilemap.WIDTH-1):
             tilemap.set_tile_id(x, y, Tiles.tile_ids["stonefloor1"])
@@ -183,29 +205,6 @@ def generate_empty_dungeon(tilemap, door = True):
             door_offset = urandom.randrange(1, tilemap.HEIGHT-1)
             tilemap.set_tile_data0(tilemap.WIDTH-1, door_offset, Tiles.deco_ids["door_sheet"])
             tilemap.entryway = Vector2(tilemap.WIDTH-2, door_offset)
-            
-overworld_loot_list = [
-    Player.item_ids["apple"],
-    Player.item_ids["clover"],
-    Player.item_ids["dagger"],
-]
-
-dungeon_loot_list = [
-    Player.item_ids["apple"],
-    Player.item_ids["ham"],
-    Player.item_ids["bomb"],
-    Player.item_ids["cat_bomb"],
-    Player.item_ids["bow"],
-    Player.item_ids["red_book"],
-    Player.item_ids["blue_book"],
-    Player.item_ids["bow"],
-    Player.item_ids["dagger"],
-    Player.item_ids["sword"],
-    Player.item_ids["gold_coins"],
-    Player.item_ids["gold_bars"],
-    Player.item_ids["blue_pot"],
-    Player.item_ids["red_pot"],
-]
 
 def generate_dungeon_level(tilemap, ladder = True, trapdoor = True, rune = False):
     if(trapdoor == True):
@@ -233,11 +232,27 @@ def generate_dungeon_level(tilemap, ladder = True, trapdoor = True, rune = False
         looking = True
         while(tilemap.get_tile_data0(chest_x, chest_y) != 0):
             chest_x += 1
-            if(chest_x >= tilemap.WIDTH):
+            if(chest_x >= tilemap.WIDTH-1):
                 chest_x = 0
                 chest_y += 1
-            if(chest_y >= tilemap.HEIGHT):
+            if(chest_y >= tilemap.HEIGHT-1):
                 chest_y = 0
         tilemap.set_tile_data0(chest_x, chest_y, Tiles.deco_ids["chest_sheet"])
         tilemap.set_deco_under(chest_x, chest_y, True)
+    if(rune == True):
+        # Spawn a rune somewhere
+        rune_x = urandom.randrange(1, tilemap.WIDTH-1)
+        rune_y = urandom.randrange(1, tilemap.HEIGHT-1)
+        rune = Player.item_ids["rune1"] + urandom.randrange(8)
+        looking = True
+        while(tilemap.get_tile_data0(rune_x, rune_y) != 0):
+            rune_x += 1
+            if(rune_x >= tilemap.WIDTH-1):
+                rune_x = 1
+                rune_y += 1
+            if(rune_y >= tilemap.HEIGHT-1):
+                rune_x = 1
+        print("Placing rune at "+str(rune_x) +", " + str(rune_y))
+        tilemap.set_tile_data0(rune_x, rune_y, rune)
+        tilemap.set_tile_data1(rune_x, rune_y, 4)
     

@@ -38,10 +38,14 @@
 #define PIN_GP7__TO__BL           7
 
 // Who add these numbers? Not sure, if you don't then the window address is wrong
-const uint16_t WINDOW_ADDR_X1 = 0 + 2;
-const uint16_t WINDOW_ADDR_X2 = SCREEN_WIDTH + 1;
-const uint16_t WINDOW_ADDR_Y1 = 0 + 1;
-const uint16_t WINDOW_ADDR_Y2 = SCREEN_HEIGHT;
+// const uint16_t WINDOW_ADDR_X1 = 0 + 2;
+// const uint16_t WINDOW_ADDR_X2 = SCREEN_WIDTH + 1;
+// const uint16_t WINDOW_ADDR_Y1 = 0 + 1;
+// const uint16_t WINDOW_ADDR_Y2 = SCREEN_HEIGHT;
+const uint16_t WINDOW_ADDR_X1 = 0;
+const uint16_t WINDOW_ADDR_X2 = SCREEN_WIDTH_MINUS_1;
+const uint16_t WINDOW_ADDR_Y1 = 0;
+const uint16_t WINDOW_ADDR_Y2 = SCREEN_HEIGHT_MINUS_1;
 
 int dma_tx;
 dma_channel_config dma_config;
@@ -76,7 +80,7 @@ static void gc9107_write_cmd(uint8_t cmd, const uint8_t* data, size_t length){
 
 
 void gc9107_reset_window(){
-    gc9107_write_cmd(0x36, (uint8_t[]){ 0xC8 }, 1);
+    gc9107_write_cmd(0x36, (uint8_t[]){ 0x00 }, 1);
     gc9107_write_cmd(0x2a, (uint8_t[]){ WINDOW_ADDR_X1>>8, WINDOW_ADDR_X1, WINDOW_ADDR_X2>>8, WINDOW_ADDR_X2 }, 4);
     gc9107_write_cmd(0x2b, (uint8_t[]){ WINDOW_ADDR_Y1>>8, WINDOW_ADDR_Y1, WINDOW_ADDR_Y2>>8, WINDOW_ADDR_Y2 }, 4);
     gc9107_write_cmd(0x2c, NULL, 0);
@@ -108,67 +112,103 @@ void engine_display_gc9107_init(){
 
     // Do the init sequence
     gpio_put(PIN_GP7__TO__BL, 0);  // Backlight off during init
-
+    
+    // New demo code from less wide connector screen version
+    // https://www.buydisplay.com/square-0-85-inch-128x128-ips-tft-lcd-display-4-wire-spi-gc9107
+    // https://www.buydisplay.com/8051/ER-TFT0.85-2_8051_Tutorial.zip
     gpio_put(PIN_GP17_SPI0_CSn__TO__CS, 1);
     sleep_ms(5);
     gpio_put(PIN_GP4__TO__RST, 0);
     sleep_ms(50);
     gpio_put(PIN_GP4__TO__RST, 1);
     sleep_ms(120);
-    
-    // // New demo code from less wide connector screen version
-    // gc9107_write_cmd(0xFE, NULL, 0);                    // Inter register enable 1 
-    // gc9107_write_cmd(0xEF, NULL, 0);                    // Inter register enable 2
 
-    // gc9107_write_cmd(0xB0, (uint8_t[]){ 0xC0 }, 1);     // ?
-    // gc9107_write_cmd(0xB1, (uint8_t[]){ 0x80 }, 1);     // ?
-    // gc9107_write_cmd(0xB2, (uint8_t[]){ 0x2F }, 1);     // ?
-    // gc9107_write_cmd(0xB3, (uint8_t[]){ 0x03 }, 1);     // ?
-    // gc9107_write_cmd(0xB7, (uint8_t[]){ 0x01 }, 1);     // ?
+    gc9107_write_cmd(0xFE, NULL, 0);                    // Inter register enable 1 
+    gc9107_write_cmd(0xEF, NULL, 0);                    // Inter register enable 2
 
+    gc9107_write_cmd(0xB0, (uint8_t[]){ 0xC0 }, 1);     // ?
+    gc9107_write_cmd(0xB1, (uint8_t[]){ 0x80 }, 1);     // ?
+    gc9107_write_cmd(0xB2, (uint8_t[]){ 0x2F }, 1);     // ?
+    gc9107_write_cmd(0xB3, (uint8_t[]){ 0x03 }, 1);     // ?
+    gc9107_write_cmd(0xB7, (uint8_t[]){ 0x01 }, 1);     // ?
+    gc9107_write_cmd(0xB6, (uint8_t[]){ 0x19 }, 1);     // ?
 
+    gc9107_write_cmd(0xAC, (uint8_t[]){ 0xC8 }, 1);     // Complement Principle of RGB 5, 6, 5
+    gc9107_write_cmd(0xAB, (uint8_t[]){ 0x0f }, 1);     // ?
 
+    gc9107_write_cmd(0x3A, (uint8_t[]){ 0x05 }, 1);     // COLMOD: Pixel Format Set
 
+    gc9107_write_cmd(0xB4, (uint8_t[]){ 0x04 }, 1);     // ?
 
-    // OLD demo code from wider connector screen version
-    gc9107_write_cmd(0xB0, (uint8_t[]){ 0xC0 }, 1);
-    gc9107_write_cmd(0xB2, (uint8_t[]){ 0x2F }, 1);
-    gc9107_write_cmd(0xB3, (uint8_t[]){ 0x03 }, 1);
-    gc9107_write_cmd(0xB6, (uint8_t[]){ 0x19 }, 1);
-    gc9107_write_cmd(0xB7, (uint8_t[]){ 0x01 }, 1);
+    gc9107_write_cmd(0xA8, (uint8_t[]){ 0x07 }, 1);     // Frame Rate Set
 
-    gc9107_write_cmd(0xAC, (uint8_t[]){ 0xCB }, 1);
-    gc9107_write_cmd(0xAB, (uint8_t[]){ 0x0e }, 1);
+    gc9107_write_cmd(0xB8, (uint8_t[]){ 0x08 }, 1);     // ?
 
-    gc9107_write_cmd(0xB4, (uint8_t[]){ 0x04 }, 1);
+    gc9107_write_cmd(0xE7, (uint8_t[]){ 0x5A }, 1);     // VREG_CTL
+    gc9107_write_cmd(0xE8, (uint8_t[]){ 0x23 }, 1);     // VGH_SET
+    gc9107_write_cmd(0xE9, (uint8_t[]){ 0x47 }, 1);     // VGL_SET
+    gc9107_write_cmd(0xEA, (uint8_t[]){ 0x99 }, 1);     // VGH_VGL_CLK
 
-    gc9107_write_cmd(0xA8, (uint8_t[]){ 0x19 }, 1);
+    gc9107_write_cmd(0xC6, (uint8_t[]){ 0x30 }, 1);     // ?
+    gc9107_write_cmd(0xC7, (uint8_t[]){ 0x1F }, 1);     // ?
 
-    gc9107_write_cmd(0x3A, (uint8_t[]){ 0x05 }, 1);
-
-    gc9107_write_cmd(0xb8, (uint8_t[]){ 0x08 }, 1);
-
-    gc9107_write_cmd(0xE8, (uint8_t[]){ 0x24 }, 1);
-
-    gc9107_write_cmd(0xE9, (uint8_t[]){ 0x48 }, 1);
-
-    gc9107_write_cmd(0xea, (uint8_t[]){ 0x22 }, 1);
-
-    gc9107_write_cmd(0xC6, (uint8_t[]){ 0x30 }, 1);
-    gc9107_write_cmd(0xC7, (uint8_t[]){ 0x18 }, 1);
-
-    // Gamma, leave not set, use defaults
-    // gc9107_write_cmd(0xF0, (uint8_t[]){ 0x1F, 0x28, 0x04, 0x3E, 0x2A, 0x2E, 0x20, 0x00, 0x0C, 0x06, 0x00, 0x1C, 0x1F, 0x0f }, 14);
-
-    // gc9107_write_cmd(0xF1, (uint8_t[]){ 0x00, 0x2D, 0x2F, 0x3C, 0x6F, 0x1C, 0x0B, 0x00, 0x00, 0x00, 0x07, 0x0D, 0x11, 0x0f }, 14);
-
-    gc9107_write_cmd(0x21, NULL, 0);
-
+    gc9107_write_cmd(0xF0, (uint8_t[]){ 0x05, 0x1D, 0x51, 0x2F, 0x85, 0x2A, 0x11, 0x62, 0x00, 0x07, 0x07, 0x0F, 0x08, 0x1F }, 14);  // SET_GAMMA1
+    gc9107_write_cmd(0xF1, (uint8_t[]){ 0x2E, 0x41, 0x62, 0x56, 0xA5, 0x3A, 0x3f, 0x60, 0x0F, 0x07, 0x0A, 0x18, 0x18, 0x1D }, 14);  // SET_GAMMA2
 
     gc9107_write_cmd(0x11, NULL, 0);
     sleep_ms(120);
     gc9107_write_cmd(0x29, NULL, 0);
     sleep_ms(10);
+
+    // // OLD demo code from wider connector screen version
+    // https://www.buydisplay.com/0-85-inch-128x128-ips-tft-lcd-display-4-wire-spi-gc9107-controller
+    // https://www.buydisplay.com/8051/ER-TFT0.85-1_8051_Tutorial.zip
+    // gpio_put(PIN_GP17_SPI0_CSn__TO__CS, 1);
+    // sleep_ms(5);
+    // gpio_put(PIN_GP4__TO__RST, 0);
+    // sleep_ms(50);
+    // gpio_put(PIN_GP4__TO__RST, 1);
+    // sleep_ms(120);
+
+    // gc9107_write_cmd(0xB0, (uint8_t[]){ 0xC0 }, 1);
+    // gc9107_write_cmd(0xB2, (uint8_t[]){ 0x2F }, 1);
+    // gc9107_write_cmd(0xB3, (uint8_t[]){ 0x03 }, 1);
+    // gc9107_write_cmd(0xB6, (uint8_t[]){ 0x19 }, 1);
+    // gc9107_write_cmd(0xB7, (uint8_t[]){ 0x01 }, 1);
+
+    // gc9107_write_cmd(0xAC, (uint8_t[]){ 0xCB }, 1);
+    // gc9107_write_cmd(0xAB, (uint8_t[]){ 0x0e }, 1);
+
+    // gc9107_write_cmd(0xB4, (uint8_t[]){ 0x04 }, 1);
+
+    // gc9107_write_cmd(0xA8, (uint8_t[]){ 0x19 }, 1);
+
+    // gc9107_write_cmd(0x3A, (uint8_t[]){ 0x05 }, 1);
+
+    // gc9107_write_cmd(0xb8, (uint8_t[]){ 0x08 }, 1);
+
+    // gc9107_write_cmd(0xE8, (uint8_t[]){ 0x24 }, 1);
+
+    // gc9107_write_cmd(0xE9, (uint8_t[]){ 0x48 }, 1);
+
+    // gc9107_write_cmd(0xea, (uint8_t[]){ 0x22 }, 1);
+
+    // gc9107_write_cmd(0xC6, (uint8_t[]){ 0x30 }, 1);
+    // gc9107_write_cmd(0xC7, (uint8_t[]){ 0x18 }, 1);
+
+    // // Gamma, leave not set, use defaults
+    // // gc9107_write_cmd(0xF0, (uint8_t[]){ 0x1F, 0x28, 0x04, 0x3E, 0x2A, 0x2E, 0x20, 0x00, 0x0C, 0x06, 0x00, 0x1C, 0x1F, 0x0f }, 14);
+
+    // // gc9107_write_cmd(0xF1, (uint8_t[]){ 0x00, 0x2D, 0x2F, 0x3C, 0x6F, 0x1C, 0x0B, 0x00, 0x00, 0x00, 0x07, 0x0D, 0x11, 0x0f }, 14);
+
+    // gc9107_write_cmd(0x21, NULL, 0);
+
+
+    // gc9107_write_cmd(0x11, NULL, 0);
+    // sleep_ms(120);
+    // gc9107_write_cmd(0x29, NULL, 0);
+    // sleep_ms(10);
+    // // OLD demo code from wider connector screen version
 
     // Grab unused dma channel for SPI TX
     ENGINE_INFO_PRINTF("Enabling DMA for 16-bit transfers");

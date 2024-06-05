@@ -128,18 +128,25 @@ void sprite_2d_node_class_draw(engine_node_base_t *sprite_node_base, mp_obj_t ca
                 sprite_frame_current_y++;
             }
 
+            bool increment_frame = true;
+
             // If reach end of y-axis frames, restart at x=0 and y=0
             if(sprite_frame_current_y >= sprite_frame_count_y){
                 sprite_frame_current_y = 0;
 
                 if(sprite_looping == false){
                     mp_store_attr(sprite_node_base->attr_accessor, MP_QSTR_playing, mp_obj_new_bool(false));
-                }else{
-                    // Update/store the current frame index only if looping
-                    // so that we stay on the last from when loop ends
-                    mp_store_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_current_x, mp_obj_new_int(sprite_frame_current_x));
-                    mp_store_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_current_y, mp_obj_new_int(sprite_frame_current_y));
+
+                    // Reached the end and looping is false, do not increment frame
+                    increment_frame = false;
                 }
+            }
+
+            // Update/store the current frame index only if looping
+            // so that we stay on the last from when loop ends
+            if(increment_frame){
+                mp_store_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_current_x, mp_obj_new_int(sprite_frame_current_x));
+                mp_store_attr(sprite_node_base->attr_accessor, MP_QSTR_frame_current_y, mp_obj_new_int(sprite_frame_current_y));
             }
 
             sprite_2d_node->time_at_last_animation_update_ms = millis();

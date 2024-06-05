@@ -32,6 +32,7 @@ rune6_texture = TextureResource("items/Rune6_16bit.bmp")
 rune7_texture = TextureResource("items/Rune7_16bit.bmp")
 rune8_texture = TextureResource("items/Rune8_16bit.bmp")
 sword_texture = TextureResource("items/Sword_16bit.bmp")
+rune_complete_texture = TextureResource("items/wholeRune-Sheet_16bit.bmp")
 
 frame_texture = TextureResource("items/ItemFrame_16bit.bmp")
 
@@ -66,6 +67,7 @@ item_ids = {
     "rune7": 21,
     "rune8": 22,
     "sword": 23,
+    "rune_complete": 24
 }
 
 item_qualities = {
@@ -123,6 +125,7 @@ item_textures = {
     item_ids["rune7"]: rune7_texture,
     item_ids["rune8"]: rune8_texture,
     item_ids["sword"]: sword_texture,
+    item_ids["rune_complete"]: rune_complete_texture
 }
 
 item_weights = {
@@ -150,6 +153,7 @@ item_weights = {
     item_ids["rune7"]: 0,
     item_ids["rune8"]: 0,
     item_ids["sword"]: 5,
+    item_ids["rune_complete"]: 0,
 }
 
 item_frame_count = {
@@ -177,6 +181,7 @@ item_frame_count = {
     item_ids["rune7"]: 1,
     item_ids["rune8"]: 1,
     item_ids["sword"]: 1,
+    item_ids["rune_complete"]: 3,
 }
 
 hp_values = {
@@ -204,6 +209,7 @@ hp_values = {
     item_ids["rune7"]: None,
     item_ids["rune8"]: None,
     item_ids["sword"]: None,
+    item_ids["rune_complete"]: None,
 }
 
 dmg_values = {
@@ -212,9 +218,9 @@ dmg_values = {
     item_ids["bomb"]: None,
     item_ids["red_book"]: None,
     item_ids["blue_book"]: None,
-    item_ids["bow"]: 8,
+    item_ids["bow"]: 6,
     item_ids["cat_bomb"]: None,
-    item_ids["dagger"]: 6,
+    item_ids["dagger"]: 4,
     item_ids["gold_coins"]: None,
     item_ids["gold_bars"]: None,
     item_ids["ham"]: None,
@@ -230,7 +236,36 @@ dmg_values = {
     item_ids["rune6"]: None,
     item_ids["rune7"]: None,
     item_ids["rune8"]: None,
-    item_ids["sword"]: 10,
+    item_ids["sword"]: 8,
+    item_ids["rune_complete"]: None,
+}
+
+item_range = {
+    item_ids["none"]: 0,
+    item_ids["apple"]: 0,
+    item_ids["bomb"]: 1,
+    item_ids["red_book"]: 2,
+    item_ids["blue_book"]: 2,
+    item_ids["bow"]: 2,
+    item_ids["cat_bomb"]: 1,
+    item_ids["dagger"]: 1,
+    item_ids["gold_coins"]: 0,
+    item_ids["gold_bars"]: 0,
+    item_ids["ham"]: 0,
+    item_ids["honey"]: 0,
+    item_ids["clover"]: 0,
+    item_ids["blue_pot"]: 0,
+    item_ids["red_pot"]: 0,
+    item_ids["rune1"]: 0,
+    item_ids["rune2"]: 0,
+    item_ids["rune3"]: 0,
+    item_ids["rune4"]: 0,
+    item_ids["rune5"]: 0,
+    item_ids["rune6"]: 0,
+    item_ids["rune7"]: 0,
+    item_ids["rune8"]: 0,
+    item_ids["sword"]: 1,
+    item_ids["rune_complete"]: 0,
 }
 
 class Item:
@@ -240,6 +275,7 @@ class Item:
         self.use_func = None
         self.texture = item_textures[i]
         self.frame_count = item_frame_count[i]
+        self.range = item_range[i]
         pass
 
 class Inventory:
@@ -260,6 +296,7 @@ class Player(Sprite2DNode):
         self.set_layer(6)
         self.opacity = 1.2
         self.transparent_color = Color(0x07e0)
+        self.runes = 0
         self.width = 32
         self.height = 32
         self.inventory = []
@@ -284,7 +321,21 @@ class Player(Sprite2DNode):
         self.held_item_spr.playing = False
         self.held_item_spr.transparent_color  = Color(0x07e0)
         self.held_item_spr.set_layer(6)
+        self.held_item_spr.scale = Vector2(0.7, 0.7)
         self.add_child(self.held_item_spr)
+        
+    def set_held_item(self, item):
+        self.held_item = item
+        if(self.held_item_spr is None):
+            self.held_item_spr = Sprite2DNode()
+            self.held_item_spr.frame_count_x = 2
+            self.held_item_spr.playing = False
+            self.held_item_spr.scale = Vector2(0.7, 0.7)
+            self.add_child(self.held_item_spr)
+        self.held_item_spr.frame_count_x = item_frame_count[item.id]
+        self.held_item_spr.playing = False
+        self.held_item_spr.transparent_color  = Color(0x07e0)
+        self.held_item_spr.set_layer(6)
     
     def add_inv_item(self, item):
         if(item_weights[item] + self.wt <= self.maxwt):
@@ -299,18 +350,14 @@ class Player(Sprite2DNode):
         
         
         self.scale.x = 1.0
-        self.held_item_spr.texture = self.held_item.texture
-        self.held_item_spr.position = Vector2(8, 0)
-        if(self.look_ang < -math.pi/2 or self.look_ang > math.pi/2):
-            self.scale.x = -1.0
-            self.held_item_spr.position = Vector2(-8, 0)
-        self.held_item_spr.rotation = self.look_ang
+        if(self.held_item is not None):
+            self.held_item_spr.texture = self.held_item.texture
+            self.held_item_spr.position = Vector2(8, 0)
+            if(self.look_ang < -math.pi/2 or self.look_ang > math.pi/2):
+                self.scale.x = -1.0
+                self.held_item_spr.position = Vector2(-8, 0)
+            self.held_item_spr.rotation = self.look_ang
         
         sint = math.sin(4*self.time)
         self.scale.x *= (s_and_s_factor + ((1-s_and_s_factor)/2)*(1-sint))
-        self.scale.y *= (s_and_s_factor + ((1-s_and_s_factor)/2)*sint)
-        
-    
-    
-    
-        
+        self.scale.y *= (s_and_s_factor + ((1-s_and_s_factor)/2)*sint)    
