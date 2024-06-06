@@ -25,9 +25,9 @@ gc.threshold(1024*32)
 engine_physics.set_gravity(0.0, 0.0)
 engine.set_fps_limit(60)
 #engine.disable_fps_limit()
-machine.freq(180000000)
+# machine.freq(180000000)
 
-os.chdir("/Games/Thumgeon_II")
+# os.chdir("/Games/Thumgeon_II")
 
 import Tiles
 import Generate
