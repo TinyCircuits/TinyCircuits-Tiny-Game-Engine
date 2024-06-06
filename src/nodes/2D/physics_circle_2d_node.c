@@ -300,6 +300,7 @@ STATIC mp_attr_fun_t physics_circle_2d_node_class_attr(mp_obj_t self_in, qstr at
     ATTR:  [type={ref_link:Vector2}]                     [name=gravity_scale]                               [value={ref_link:Vector2}]
     ATTR:  [type=boolean]                                [name=outline]                                     [value=True or False (default: False)]
     ATTR:  [type=function]                               [name={ref_link:collision}]                        [value=function]
+    OVRR:  [type=function]                               [name={ref_link:physics_tick}]                     [value=function]
     OVRR:  [type=function]                               [name={ref_link:tick}]                             [value=function]
     OVRR:  [type=function]                               [name={ref_link:collision}]                        [value=function]
 */
@@ -389,6 +390,7 @@ mp_obj_t physics_circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_ar
     // be looped over quickly in a linked list
     physics_node_base->physics_list_node = engine_collections_track_physics(node_base);
 
+    physics_node_base->physics_tick_cb = mp_const_none;
     physics_node_base->tick_cb = mp_const_none;
     physics_node_base->collision_cb = mp_const_none;
 
@@ -407,6 +409,13 @@ mp_obj_t physics_circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_ar
 
         // Look for function overrides otherwise use the defaults
         mp_obj_t dest[2];
+
+        mp_load_method_maybe(node_instance, MP_QSTR_physics_tick, dest);
+        if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
+            physics_node_base->physics_tick_cb = mp_const_none;
+        }else{                                                  // Likely found method (could be attribute)
+            physics_node_base->physics_tick_cb = dest[0];
+        }
 
         mp_load_method_maybe(node_instance, MP_QSTR_tick, dest);
         if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)

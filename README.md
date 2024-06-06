@@ -115,6 +115,7 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 
 Adam needs: faster asset loading, animation sequences
 
+[] Issue with some cloud programs adding .ini files to folder
 [] Figure out and fix screen doing halo...
 
 [] Major bug!!! If you set a value to 0.0 in Python and then change that value directly in c, it changes the value of 0.0... See TweenTest/main.py

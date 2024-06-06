@@ -21,10 +21,10 @@ void engine_io_sdl_update_pressed_mask(){
                 case SDLK_d:        // DPAD RIGHT
                     pressed_buttons |= BUTTON_DPAD_RIGHT;
                 break;
-                case SDLK_PERIOD:    // A
+                case SDLK_PERIOD:   // A
                     pressed_buttons |= BUTTON_A;
                 break;
-                case SDLK_COMMA:   // B
+                case SDLK_COMMA:    // B
                     pressed_buttons |= BUTTON_B;
                 break;
                 case SDLK_LSHIFT:   // BUMPER LEFT

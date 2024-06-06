@@ -25,6 +25,7 @@ void engine_physics_give_back_id(uint8_t id);
 // nodes already collided each frame
 void engine_physics_init();
 
+void engine_physics_physics_tick(float dt_s);
 void engine_physics_tick();
 
 #endif  // ENGINE_PHYSICS_H

@@ -353,6 +353,27 @@ void engine_physics_update(float dt){
 }
 
 
+void engine_physics_physics_tick(float dt_s){
+    mp_obj_t exec[3];
+
+    // Loop through all nodes and call their physics_tick callbacks
+    linked_list_node *physics_link_node = engine_physics_nodes_collection.start;
+    while(physics_link_node != NULL){
+        engine_node_base_t *node_base = physics_link_node->object;
+        engine_physics_node_base_t *physics_node_base = node_base->node;
+
+        if(physics_node_base->physics_tick_cb != mp_const_none){
+            exec[0] = physics_node_base->physics_tick_cb;
+            exec[1] = node_base->attr_accessor;
+            exec[2] = mp_obj_new_float(dt_s);
+            mp_call_method_n_kw(1, 0, exec);
+        }
+        
+        physics_link_node = physics_link_node->next;
+    }
+}
+
+
 void engine_physics_tick(){
     // https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-core-engine--gamedev-7493t#timestepping:~:text=Here%20is%20a%20full%20example%3A
     const float alpha = time_accumulator / engine_fps_limit_period_ms;

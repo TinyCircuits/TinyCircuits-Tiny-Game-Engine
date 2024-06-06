@@ -145,18 +145,18 @@ game_infos = []
 def check_if_game_folder_and_track(path, sub_paths):
     # For a game to be runnable we need at most:
     #   * game_name         (displays somewhere around the launcher tile)
-    #   * game_main_path    (path the the main file to run to start the game)
+    #   * game_main_path    (path for the main file to run to start the game)
     #   * game_icon_path    (path to the .bmp to display the icon for the game)
     # but games can show up with their folder name and no icon if the folder
     # just contains a main.py (makes it easy to quickly prototype games)
 
     # The minimum a game folder needs to be a game is
-    # either a main.py or a .ini file indicating
-    # what files are what
+    # either a main.py or a settings.ini file
+    # indicating what files are what
     contains_ini = False
     contains_main_py = False
     for sub_path in sub_paths:
-        if ".ini" in sub_path:
+        if "settings.ini" in sub_path:
             contains_ini = True
             break
     
@@ -192,7 +192,7 @@ def check_if_game_folder_and_track(path, sub_paths):
                 line = line.split("=")
 
                 if len(line) == 0:
-                    print("ERROR: .ini line does contain an equals sign", ini_file_path, "line: " + str(line_index))
+                    print("ERROR: .ini line doesn't contain an equals sign", ini_file_path, "line: " + str(line_index))
                 else:
                     # Remove any spaces on each side of the equals sign
                     key = line[0].replace(" ", "")
