@@ -142,9 +142,6 @@ bool engine_tick(){
     dt = millis() - engine_fps_time_at_last_tick_ms;
     float dt_s = dt * 0.001f; 
 
-    // Call the physics_tick callbacks on all physics nodes first
-    engine_physics_physics_tick(dt);
-
     // Now that all the node callbacks were called and potentially moved
     // physics nodes around, step the physics engine another tick.
     engine_physics_tick();

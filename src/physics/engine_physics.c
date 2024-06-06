@@ -394,6 +394,9 @@ void engine_physics_tick(){
     }
 
     while(time_accumulator > engine_fps_limit_period_ms){
+        // Call the physics_tick callbacks on all physics nodes first
+        engine_physics_physics_tick(engine_fps_limit_period_ms);
+
         engine_physics_update(engine_fps_limit_period_ms);
         time_accumulator -= engine_fps_limit_period_ms;
 

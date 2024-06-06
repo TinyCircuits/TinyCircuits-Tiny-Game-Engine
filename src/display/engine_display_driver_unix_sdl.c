@@ -25,10 +25,10 @@ void engine_display_sdl_init(){
     }
 
     window = SDL_CreateWindow("Engine Window",
-                                          700,
-                                          100,
+                                          SDL_WINDOWPOS_UNDEFINED,
+                                          SDL_WINDOWPOS_UNDEFINED,
                                           SCREEN_WIDTH, SCREEN_HEIGHT,
-                                          SDL_WINDOW_ALWAYS_ON_TOP);
+                                          SDL_WINDOW_SHOWN);
     
     if(!window){
         ENGINE_ERROR_PRINTF("Failed to create window");
