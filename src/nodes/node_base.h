@@ -9,19 +9,6 @@
 #define NODE_BASE_DISABLED_BIT_INDEX 1
 #define NODE_BASE_JUST_ADDED_BIT_INDEX 2
 
-// Because the attr function for classes defined in Python
-// is different than builtin types, we store a reference
-// to the default function and call it through an intercept
-// function. The function that is being stored here is
-// https://github.com/micropython/micropython/blob/0432f73206a0d0ff5cef5dc6146f18439079f6f3/py/objtype.c#L795-L803
-//
-// https://github.com/orgs/micropython/discussions/13109
-// https://forum.micropython.org/viewtopic.php?t=1044
-// https://github.com/micropython/micropython/wiki/Differences#implementation-differences
-// https://github.com/micropython/micropython/issues/401
-// https://forum.micropython.org/viewtopic.php?f=2&t=7028&start=10
-void (*default_instance_attr_func)(mp_obj_t self_in, qstr attribute, mp_obj_t *destination);
-
 typedef struct{
     mp_obj_base_t base;                 // All nodes get defined by what is placed in this
     linked_list_node *object_list_node; // Pointer to where this node is stored in the layers of linked lists the engine tracks (used for easy linked list deletion)
@@ -81,6 +68,15 @@ bool node_base_is_disabled(engine_node_base_t *node_base);
 void node_base_set_if_disabled(engine_node_base_t *node_base, bool is_disabled);
 bool node_base_is_just_added(engine_node_base_t *node_base);
 void node_base_set_if_just_added(engine_node_base_t *node_base, bool is_just_added);
+
+void node_base_set_attr_handler_default(mp_obj_t node_instance);
+
+// Store default Python class instance attr function
+// and override with custom intercept attr function
+// so that certain callbacks/code can run (see py/objtype.c:mp_obj_instance_attr(...))
+void node_base_set_attr_handler(mp_obj_t node_instance, void (*default_instance_attr_func)(mp_obj_t self_in, qstr attribute, mp_obj_t *destination));
+
+void node_base_use_default_attr_handler(mp_obj_t self_in, qstr attribute, mp_obj_t *destination);
 
 
 #endif  // NODE_BASE_H

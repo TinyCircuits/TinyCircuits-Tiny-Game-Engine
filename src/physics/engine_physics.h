@@ -5,13 +5,6 @@
 #include "nodes/node_base.h"
 #include "math/vector2.h"
 
-
-float engine_physics_fps_limit_period_ms;
-float engine_physics_fps_time_at_last_tick_ms;
-float engine_physics_gravity_x;
-float engine_physics_gravity_y;
-
-
 // This should be called when a new physics node is
 // created and the result assigned to the node
 uint8_t engine_physics_take_available_id();

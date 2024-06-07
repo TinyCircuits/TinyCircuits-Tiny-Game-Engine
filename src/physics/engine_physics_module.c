@@ -8,6 +8,18 @@
 #include "physics/collision_contact_2d.h"
 
 
+vector2_class_obj_t gravity = {
+    .base.type = &vector2_class_type,
+
+    .x = (mp_obj_float_t){.base.type = &mp_type_float,
+                          .value = 0.0f,
+    },
+    .y = (mp_obj_float_t){.base.type = &mp_type_float,
+                          .value = -0.00981f,
+    },
+};
+
+
 // Could add another method that takes a vector2 to set gravity, just this for now
 /* --- doc ---
    NAME: set_gravity
@@ -19,8 +31,8 @@
 */
 STATIC mp_obj_t engine_physics_set_gravity(mp_obj_t x, mp_obj_t y){
     ENGINE_INFO_PRINTF("EnginePhysics: Setting gravity");
-    engine_physics_gravity_x = mp_obj_get_float(x);
-    engine_physics_gravity_y = mp_obj_get_float(y);
+    gravity.x.value = mp_obj_get_float(x);
+    gravity.y.value = mp_obj_get_float(y);
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_2(engine_physics_set_gravity_obj, engine_physics_set_gravity);
@@ -32,9 +44,9 @@ MP_DEFINE_CONST_FUN_OBJ_2(engine_physics_set_gravity_obj, engine_physics_set_gra
    DESC: Gets the gravity that all objects are affected by
    RETURN: {ref_link:Vector2}
 */
-STATIC mp_obj_t engine_physics_get_gravity(){
+mp_obj_t engine_physics_get_gravity(){
     ENGINE_INFO_PRINTF("EnginePhysics: Getting gravity");
-    return vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(engine_physics_gravity_x), mp_obj_new_float(engine_physics_gravity_y)});
+    return &gravity;
 }
 MP_DEFINE_CONST_FUN_OBJ_0(engine_physics_get_gravity_obj, engine_physics_get_gravity);
 

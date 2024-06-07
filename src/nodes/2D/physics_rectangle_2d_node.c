@@ -98,10 +98,12 @@ void physics_rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_bas
     engine_math_rotate_point(&brx, &bry, rectangle_rotated_x, rectangle_rotated_y, rectangle_rotation);
     engine_math_rotate_point(&blx, &bly, rectangle_rotated_x, rectangle_rotated_y, rectangle_rotation);
 
-    engine_draw_line(0xffff, tlx, tly, trx, try, camera_node, 1.0f, &empty_shader);
-    engine_draw_line(0xffff, trx, try, brx, bry, camera_node, 1.0f, &empty_shader);
-    engine_draw_line(0xffff, brx, bry, blx, bly, camera_node, 1.0f, &empty_shader);
-    engine_draw_line(0xffff, blx, bly, tlx, tly, camera_node, 1.0f, &empty_shader);
+    engine_shader_t *shader = engine_get_builtin_shader(EMPTY_SHADER);
+
+    engine_draw_line(0xffff, tlx, tly, trx, try, camera_node, 1.0f, shader);
+    engine_draw_line(0xffff, trx, try, brx, bry, camera_node, 1.0f, shader);
+    engine_draw_line(0xffff, brx, bry, blx, bly, camera_node, 1.0f, shader);
+    engine_draw_line(0xffff, blx, bly, tlx, tly, camera_node, 1.0f, shader);
 }
 
 
@@ -351,7 +353,7 @@ STATIC mp_attr_fun_t physics_rectangle_2d_node_class_attr(mp_obj_t self_in, qstr
     // handled by the above, defer the attr to the instance attr
     // handler
     if(is_obj_instance && attr_handled == false){
-        default_instance_attr_func(self_in, attribute, destination);
+        node_base_use_default_attr_handler(self_in, attribute, destination);
     }
 
     return mp_const_none;
@@ -505,7 +507,7 @@ mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n
 
         // Because the instance doesn't have a `node_base` yet, restore the
         // instance type original attr function for now (otherwise get core abort)
-        if(default_instance_attr_func != NULL) MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr, default_instance_attr_func, 5);
+        node_base_set_attr_handler_default(node_instance);
 
         // Look for function overrides otherwise use the defaults
         mp_obj_t dest[2];
@@ -540,8 +542,7 @@ mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n
         // Store default Python class instance attr function
         // and override with custom intercept attr function
         // so that certain callbacks/code can run (see py/objtype.c:mp_obj_instance_attr(...))
-        default_instance_attr_func = MP_OBJ_TYPE_GET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr);
-        MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr, physics_rectangle_2d_node_class_attr, 5);
+        node_base_set_attr_handler(node_instance, physics_rectangle_2d_node_class_attr);
 
         // Need a way to access the object node instance instead of the native type for callbacks (tick, draw, collision)
         node_base->attr_accessor = node_instance;

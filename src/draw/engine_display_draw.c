@@ -15,6 +15,8 @@
 #include "py/objstr.h"
 #include "py/objtype.h"
 
+// Defined in engine_display_common.c
+extern uint16_t *active_screen_buffer;
 
 void ENGINE_FAST_FUNCTION(engine_draw_fill_color)(uint16_t color, uint16_t *screen_buffer){
     uint16_t *buf = screen_buffer;

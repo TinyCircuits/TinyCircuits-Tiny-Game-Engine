@@ -14,14 +14,12 @@
 #include "utility/engine_time.h"
 #include "engine.h"
 #include "engine_collections.h"
+#include "engine_physics_module.h"
 
 // Bit array/collection to track nodes that have collided. In the `init` function
 // this is sized so that the output indices from a simple paring function can fit
 // (https://math.stackexchange.com/a/531914)
 engine_bit_collection_t collided_physics_nodes;
-
-float engine_physics_gravity_x = 0.0f;
-float engine_physics_gravity_y = -0.00981f;
 
 const float slop = 0.1f;   // usually 0.01 to 0.1
 
@@ -40,7 +38,11 @@ void engine_physics_init(){
 
 
 void engine_physics_apply_impulses(float dt, float alpha){
-    linked_list_node *physics_link_node = engine_physics_nodes_collection.start;
+    vector2_class_obj_t *gravity = engine_physics_get_gravity();
+
+    linked_list *physics_list = engine_collections_get_physics_list();
+    linked_list_node *physics_link_node = physics_list->start;
+
     while(physics_link_node != NULL){
         engine_node_base_t *node_base = physics_link_node->object;
         engine_physics_node_base_t *physics_node_base = node_base->node;
@@ -61,8 +63,9 @@ void engine_physics_apply_impulses(float dt, float alpha){
 
             // Gravity: https://github.com/RandyGaul/ImpulseEngine/blob/8d5f4d9113876f91a53cfb967879406e975263d1/Scene.cpp#L35-L42
             //          https://github.com/victorfisac/Physac/blob/29d9fc06860b54571a02402fff6fa8572d19bd12/src/physac.h#L1644-L1648
-            physics_node_velocity->x.value -= engine_physics_gravity_x * physics_node_gravity_scale->x.value;
-            physics_node_velocity->y.value -= engine_physics_gravity_y * physics_node_gravity_scale->y.value;
+            
+            physics_node_velocity->x.value -= gravity->x.value * physics_node_gravity_scale->x.value;
+            physics_node_velocity->y.value -= gravity->y.value * physics_node_gravity_scale->y.value;
 
             // Velocity -> position: https://github.com/RandyGaul/ImpulseEngine/blob/8d5f4d9113876f91a53cfb967879406e975263d1/Scene.cpp#L44-L53
             physics_node_position->x.value += physics_node_velocity->x.value;
@@ -152,7 +155,7 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
 
         collided = engine_physics_check_rect_circle_collision(node_base_a, node_base_b, &contact);
     }else if(node_base_a->type == NODE_TYPE_PHYSICS_CIRCLE_2D && node_base_b->type == NODE_TYPE_PHYSICS_CIRCLE_2D){
-        collided = engine_physics_check_circle_circle_collision(physics_node_base_a, physics_node_base_b, &contact);
+        collided = engine_physics_check_circle_circle_collision(node_base_a, node_base_b, &contact);
     }else{
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EnginePhysics: ERROR: Unknown collider pair collision check!"));
     }
@@ -328,10 +331,11 @@ void engine_physics_update(float dt){
     // Loop through all nodes and test for collision against
     // all other nodes (not optimized checking of if nodes are
     // even possibly close to each other)
-    linked_list_node *physics_link_node_a = engine_physics_nodes_collection.start;
+    linked_list *physics_list = engine_collections_get_physics_list();
+    linked_list_node *physics_link_node_a = physics_list->start;
     while(physics_link_node_a != NULL){
         // Now check 'a' against all nodes 'b'
-        linked_list_node *physics_link_node_b = engine_physics_nodes_collection.start;
+        linked_list_node *physics_link_node_b = physics_list->start;
 
         while(physics_link_node_b != NULL){
             // Make sure we are not checking against ourselves
@@ -357,7 +361,8 @@ void engine_physics_physics_tick(float dt_s){
     mp_obj_t exec[3];
 
     // Loop through all nodes and call their physics_tick callbacks
-    linked_list_node *physics_link_node = engine_physics_nodes_collection.start;
+    linked_list *physics_list = engine_collections_get_physics_list();
+    linked_list_node *physics_link_node = physics_list->start;
     while(physics_link_node != NULL){
         engine_node_base_t *node_base = physics_link_node->object;
         engine_physics_node_base_t *physics_node_base = node_base->node;
@@ -376,6 +381,8 @@ void engine_physics_physics_tick(float dt_s){
 
 void engine_physics_tick(){
     // https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-core-engine--gamedev-7493t#timestepping:~:text=Here%20is%20a%20full%20example%3A
+    float engine_fps_limit_period_ms = engine_get_fps_limit_ms();
+
     const float alpha = time_accumulator / engine_fps_limit_period_ms;
 
     const float current_time_ms = millis();

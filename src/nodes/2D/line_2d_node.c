@@ -88,9 +88,11 @@ void line_2d_node_class_draw(engine_node_base_t *line_node_base, mp_obj_t camera
     line_rotated_y += camera_viewport->height/2;
 
     // Decide which shader to use per-pixel
-    engine_shader_t *shader = &empty_shader;
+    engine_shader_t *shader = NULL;
     if(line_opacity < 1.0f){
-        shader = &opacity_shader;
+        shader = engine_get_builtin_shader(OPACITY_SHADER);
+    }else{
+        shader = engine_get_builtin_shader(EMPTY_SHADER);
     }
 
     if(line_outlined == false){
@@ -335,7 +337,7 @@ STATIC mp_attr_fun_t line_2d_node_class_attr(mp_obj_t self_in, qstr attribute, m
     // handled by the above, defer the attr to the instance attr
     // handler
     if(is_obj_instance && attr_handled == false){
-        default_instance_attr_func(self_in, attribute, destination);
+        node_base_use_default_attr_handler(self_in, attribute, destination);
     }
 
     return mp_const_none;
@@ -436,7 +438,7 @@ mp_obj_t line_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
 
         // Because the instance doesn't have a `node_base` yet, restore the
         // instance type original attr function for now (otherwise get core abort)
-        if(default_instance_attr_func != NULL) MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr, default_instance_attr_func, 5);
+        node_base_set_attr_handler_default(node_instance);
 
         // Look for function overrides otherwise use the defaults
         mp_obj_t dest[2];
@@ -456,8 +458,7 @@ mp_obj_t line_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
         // Store default Python class instance attr function
         // and override with custom intercept attr function
         // so that certain callbacks/code can run (see py/objtype.c:mp_obj_instance_attr(...))
-        default_instance_attr_func = MP_OBJ_TYPE_GET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr);
-        MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr, line_2d_node_class_attr, 5);
+        node_base_set_attr_handler(node_instance, line_2d_node_class_attr);
 
         // Need a way to access the object node instance instead of the native type for callbacks (tick, draw, collision)
         node_base->attr_accessor = node_instance;

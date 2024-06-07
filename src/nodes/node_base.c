@@ -34,7 +34,7 @@ engine_node_base_t *node_base_get(mp_obj_t object, bool *is_obj_instance){
     if(is_instance){
         mp_obj_t dest[2];
         dest[0] = MP_OBJ_NULL; // Indicate we want to load a value
-        default_instance_attr_func(object, MP_QSTR_node_base, dest);
+        node_base_use_default_attr_handler(object, MP_QSTR_node_base, dest);
         to_return = dest[0];
     }else{
         to_return = object;
@@ -395,4 +395,20 @@ void node_base_set_if_just_added(engine_node_base_t *node_base, bool is_just_add
     }else{
         BIT_SET_FALSE(node_base->meta_data, NODE_BASE_JUST_ADDED_BIT_INDEX);
     }
+}
+
+
+void node_base_set_attr_handler_default(mp_obj_t node_instance){
+    if(default_instance_attr_func != NULL) MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr, default_instance_attr_func, 5);
+}
+
+
+void node_base_set_attr_handler(mp_obj_t node_instance, void (*attr_handler_func)(mp_obj_t self_in, qstr attribute, mp_obj_t *destination)){
+    default_instance_attr_func = MP_OBJ_TYPE_GET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr);
+    MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr, attr_handler_func, 5);
+}
+
+
+void node_base_use_default_attr_handler(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+    default_instance_attr_func(self_in, attribute, destination);
 }

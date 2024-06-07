@@ -5,12 +5,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-// The current screen buffer that should be getting drawn to (the other
-// one is likely being sent to the screen while this is active)
-uint16_t *screen_buffers[2];
-uint16_t *active_screen_buffer;
-uint16_t *depth_buffer;
-
 MP_REGISTER_ROOT_POINTER(mp_obj_t back_fb_data);
 MP_REGISTER_ROOT_POINTER(mp_obj_t back_fb);
 
@@ -33,12 +27,12 @@ MP_REGISTER_ROOT_POINTER(mp_obj_t front_fb);
 #define SCREEN_BUFFER_SIZE_PIXELS SCREEN_WIDTH*SCREEN_HEIGHT
 #define SCREEN_BUFFER_SIZE_BYTES SCREEN_BUFFER_SIZE_PIXELS*2 // Number of pixels times 2 (16-bit pixels) is the number of bytes in a screen buffer
 
-// The fill color that is used to clear the screen
-uint16_t engine_fill_color;
-uint16_t *engine_fill_background;
 
 void engine_display_set_fill_color(uint16_t color);
 void engine_display_set_fill_background(uint16_t *data);
+
+uint16_t *engine_display_get_background();
+uint16_t engine_display_get_color();
 
 void engine_display_init_framebuffers();
 

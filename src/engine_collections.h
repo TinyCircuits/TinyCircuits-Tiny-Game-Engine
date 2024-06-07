@@ -14,11 +14,6 @@
     this that duplicate references are kept in shorter lists
 */
 
-linked_list engine_camera_nodes_collection;
-linked_list engine_physics_nodes_collection;
-linked_list engine_gui_nodes_collection;
-
-
 linked_list_node *engine_collections_track_camera(engine_node_base_t *camera_node_base);
 void engine_collections_untrack_camera(linked_list_node *camera_list_node);
 
@@ -27,6 +22,10 @@ void engine_collections_untrack_physics(linked_list_node *physics_list_node);
 
 linked_list_node *engine_collections_track_gui(engine_node_base_t *gui_node_base);
 void engine_collections_untrack_gui(linked_list_node *gui_list_node);
+
+linked_list *engine_collections_get_camera_list();
+linked_list *engine_collections_get_physics_list();
+linked_list *engine_collections_get_gui_list();
 
 
 #endif

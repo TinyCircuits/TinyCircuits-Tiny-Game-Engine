@@ -467,9 +467,6 @@ bool engine_physics_check_circle_circle_collision(engine_node_base_t *node_base_
     engine_physics_circle_2d_node_class_obj_t *physics_circle_a = physics_node_base_a->unique_data;
     engine_physics_circle_2d_node_class_obj_t *physics_circle_b = physics_node_base_b->unique_data;
 
-    vector2_class_obj_t *physics_circle_a_position = physics_node_base_a->position;
-    vector2_class_obj_t *physics_circle_b_position = physics_node_base_b->position;
-
     // What if these are children of other nodes? Should this be in absolute? TODO
     float abs_shape_a_pos_x = 0.0f;
     float abs_shape_a_pos_y = 0.0f;

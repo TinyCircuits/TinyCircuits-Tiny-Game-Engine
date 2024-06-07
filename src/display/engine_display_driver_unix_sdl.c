@@ -8,6 +8,8 @@ SDL_Window *window;
 SDL_Renderer *window_renderer;      // https://dev.to/noah11012/using-sdl2-2d-accelerated-renderering-1kcb
 SDL_Texture* window_frame_buffer;   // https://gamedev.stackexchange.com/questions/157604/how-to-get-access-to-framebuffer-as-a-uint32-t-in-sdl2
 
+// Defined in engine_display_common.c
+extern uint16_t *active_screen_buffer;
 
 void engine_display_sdl_update_screen(uint16_t *screen_buffer_to_render){
     SDL_UpdateTexture(window_frame_buffer , NULL, screen_buffer_to_render, SCREEN_WIDTH*sizeof(uint16_t));

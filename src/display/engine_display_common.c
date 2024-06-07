@@ -8,6 +8,13 @@
 #include <stdlib.h>
 #include "py/objarray.h"
 
+// The current screen buffer that should be getting drawn to (the other
+// one is likely being sent to the screen while this is active)
+uint16_t *screen_buffers[2];
+uint16_t *active_screen_buffer;
+uint16_t *depth_buffer;
+
+// Used to clear the screen
 uint16_t engine_fill_color = 0x0000;
 uint16_t *engine_fill_background = NULL;
 
@@ -23,6 +30,16 @@ void engine_display_set_fill_color(uint16_t color){
 
 void engine_display_set_fill_background(uint16_t *data){
     engine_fill_background = data;
+}
+
+
+uint16_t *engine_display_get_background(){
+    return engine_fill_background;
+}
+
+
+uint16_t engine_display_get_color(){
+    return engine_fill_color;
 }
 
 

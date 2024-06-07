@@ -89,16 +89,16 @@ void text_2d_node_class_draw(engine_node_base_t *text_2d_node_base, mp_obj_t cam
     engine_shader_t *text_shader = NULL;
 
     if(text_color == mp_const_none){
-        text_shader = &empty_shader;
+        text_shader = engine_get_builtin_shader(EMPTY_SHADER);
     }else{
-        text_shader = &blend_opacity_shader;
+        text_shader = engine_get_builtin_shader(BLEND_OPACITY_SHADER);
 
         float t = 1.0f;
 
-        blend_opacity_shader.program[1] = (text_color->value.val >> 8) & 0b11111111;
-        blend_opacity_shader.program[2] = (text_color->value.val >> 0) & 0b11111111;
+        text_shader->program[1] = (text_color->value.val >> 8) & 0b11111111;
+        text_shader->program[2] = (text_color->value.val >> 0) & 0b11111111;
 
-        memcpy(blend_opacity_shader.program+3, &t, sizeof(float));
+        memcpy(text_shader->program+3, &t, sizeof(float));
     }
 
     engine_draw_text(text_2d_node->font_resource, text_2d_node->text, text_rotated_x, text_rotated_y, text_box_width, text_box_height, text_letter_spacing, text_line_spacing, text_scale->x.value*camera_zoom, text_scale->y.value*camera_zoom, text_rotation, text_opacity, text_shader);
@@ -325,7 +325,7 @@ STATIC mp_attr_fun_t text_2d_node_class_attr(mp_obj_t self_in, qstr attribute, m
     // handled by the above, defer the attr to the instance attr
     // handler
     if(is_obj_instance && attr_handled == false){
-        default_instance_attr_func(self_in, attribute, destination);
+        node_base_use_default_attr_handler(self_in, attribute, destination);
     }
 
     return mp_const_none;
@@ -442,7 +442,7 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
 
         // Because the instance doesn't have a `node_base` yet, restore the
         // instance type original attr function for now (otherwise get core abort)
-        if(default_instance_attr_func != NULL) MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr, default_instance_attr_func, 5);
+        node_base_set_attr_handler_default(node_instance);
 
         // Look for function overrides otherwise use the defaults
         mp_obj_t dest[2];
@@ -462,8 +462,7 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
         // Store default Python class instance attr function
         // and override with custom intercept attr function
         // so that certain callbacks/code can run (see py/objtype.c:mp_obj_instance_attr(...))
-        default_instance_attr_func = MP_OBJ_TYPE_GET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr);
-        MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr, text_2d_node_class_attr, 5);
+        node_base_set_attr_handler(node_instance, text_2d_node_class_attr);
 
         // Need a way to access the object node instance instead of the native type for callbacks (tick, draw, collision)
         node_base->attr_accessor = node_instance;

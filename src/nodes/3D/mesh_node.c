@@ -23,11 +23,17 @@
 #include "../lib/cglm/include/cglm/cam.h"
 
 
+// Defined in camera_node.h
+extern const vector3_class_obj_t world_north;
+
+
 void mesh_node_class_draw(engine_node_base_t *mesh_node_base, mp_obj_t camera_node){
     engine_mesh_node_class_obj_t *mesh_node = mesh_node_base->node;
 
     engine_node_base_t *camera_node_base = camera_node;
     engine_camera_node_class_obj_t *camera = camera_node_base->node;
+
+    engine_shader_t *shader = engine_get_builtin_shader(EMPTY_SHADER);
 
     vector3_class_obj_t *camera_position = camera->position;
     float camera_view_distance = mp_obj_get_float(camera->view_distance);
@@ -92,7 +98,7 @@ void mesh_node_class_draw(engine_node_base_t *mesh_node_base, mp_obj_t camera_no
             int32_t x2 = out_2[0];
             int32_t y2 = out_2[1];
 
-            engine_draw_filled_triangle(0b1111100000000000, x0, y0, x1, y1, x2, y2, 1.0f, &empty_shader);
+            engine_draw_filled_triangle(0b1111100000000000, x0, y0, x1, y1, x2, y2, 1.0f, shader);
 
             // // Wireframe
             // bool endpoint_0_on_screen = engine_math_int32_between(x0, 0, SCREEN_WIDTH_MINUS_1) && engine_math_int32_between(y0, 0, SCREEN_HEIGHT_MINUS_1);
@@ -246,7 +252,7 @@ STATIC mp_attr_fun_t mesh_node_class_attr(mp_obj_t self_in, qstr attribute, mp_o
     // handled by the above, defer the attr to the instance attr
     // handler
     if(is_obj_instance && attr_handled == false){
-        default_instance_attr_func(self_in, attribute, destination);
+        node_base_use_default_attr_handler(self_in, attribute, destination);
     }
 
     return mp_const_none;
@@ -327,6 +333,10 @@ mp_obj_t mesh_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_
         // Get the Python class instance
         mp_obj_t node_instance = parsed_args[child_class].u_obj;
 
+        // Because the instance doesn't have a `node_base` yet, restore the
+        // instance type original attr function for now (otherwise get core abort)
+        node_base_set_attr_handler_default(node_instance);
+
         // Look for function overrides otherwise use the defaults
         mp_obj_t dest[2];
         mp_load_method_maybe(node_instance, MP_QSTR_tick, dest);
@@ -345,8 +355,7 @@ mp_obj_t mesh_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_
         // Store default Python class instance attr function
         // and override with custom intercept attr function
         // so that certain callbacks/code can run (see py/objtype.c:mp_obj_instance_attr(...))
-        default_instance_attr_func = MP_OBJ_TYPE_GET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr);
-        MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr, mesh_node_class_attr, 5);
+        node_base_set_attr_handler(node_instance, mesh_node_class_attr);
 
         // Need a way to access the object node instance instead of the native type for callbacks (tick, draw, collision)
         node_base->attr_accessor = node_instance;

@@ -40,6 +40,11 @@ float engine_fps_time_at_before_last_tick_ms = 0.0f;
 float dt;
 
 
+float engine_get_fps_limit_ms(){
+    return engine_fps_limit_period_ms;
+}
+
+
 /* --- doc ---
    NAME: set_fps_limit
    ID: set_fps_limit

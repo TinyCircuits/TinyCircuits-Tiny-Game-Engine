@@ -56,8 +56,10 @@ void engine_gui_toggle_focus(){
 
     // If just focused, loop through all elements and focus
     // the first node if no other node is already focused
-    if(gui_focused && engine_gui_nodes_collection.start != NULL){
-        linked_list_node *current_gui_list_node = engine_gui_nodes_collection.start;
+    linked_list *gui_list = engine_collections_get_gui_list();
+
+    if(gui_focused && gui_list->start != NULL){
+        linked_list_node *current_gui_list_node = gui_list->start;
 
         while(current_gui_list_node != NULL){
             engine_node_base_t *gui_node_base = current_gui_list_node->object;
@@ -79,7 +81,7 @@ void engine_gui_toggle_focus(){
         }
 
         // Made it this far, must mean that no gui nodes are focused, focus the first one
-        engine_gui_focus_node(engine_gui_nodes_collection.start->object);
+        engine_gui_focus_node(gui_list->start->object);
     }
 }
 
@@ -146,7 +148,8 @@ void engine_gui_select_closest(bool (direction_check)(float)){
     }
 
     // Setup for looping through all GUI nodes and finding closest
-    linked_list_node *current_gui_list_node = engine_gui_nodes_collection.start;
+    linked_list *gui_list = engine_collections_get_gui_list();
+    linked_list_node *current_gui_list_node = gui_list->start;
     engine_node_base_t *closest_gui_node_base = NULL;
     float shortest_distance = FLT_MAX;
 

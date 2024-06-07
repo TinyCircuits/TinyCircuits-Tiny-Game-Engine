@@ -1,6 +1,7 @@
-While executing file `Games/physics_tick_test/main.py` an error occurred (<module> refers to the game file):
+While executing file `Games/Thumgeon_II/main.py` an error occurred (<module> refers to the game file):
 
 Traceback (most recent call last):
   File "launcher.py", line 307, in <module>
-  File "main.py", line 17, in <module>
-TypeError: physics_tick() takes 1 positional arguments but 2 were given
+  File "main.py", line 538, in <module>
+  File "main.py", line 355, in tile_action
+NameError: local variable referenced before assignment

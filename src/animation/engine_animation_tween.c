@@ -590,7 +590,7 @@ STATIC mp_attr_fun_t tween_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
     if(is_instance){
         mp_obj_t dest[2];
         dest[0] = MP_OBJ_NULL; // Indicate we want to load a value
-        default_instance_attr_func(self_in, MP_QSTR_base, dest);
+        node_base_use_default_attr_handler(self_in, MP_QSTR_base, dest);
         self = dest[0];
     }else{
         self = self_in;
@@ -612,7 +612,7 @@ STATIC mp_attr_fun_t tween_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
     // handled by the above, defer the attr to the instance attr
     // handler
     if(is_instance && attr_handled == false){
-        default_instance_attr_func(self_in, attribute, destination);
+        node_base_use_default_attr_handler(self_in, attribute, destination);
     }
 
     return mp_const_none;
@@ -675,7 +675,7 @@ mp_obj_t tween_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, 
 
         // Because the instance doesn't have a `node_base` yet, restore the
         // instance type original attr function for now (otherwise get core abort)
-        if(default_instance_attr_func != NULL) MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)child_class_obj)->type, attr, default_instance_attr_func, 5);
+        node_base_set_attr_handler_default(child_class_obj);
 
         // Look for function overrides otherwise use the defaults
         mp_obj_t dest[2];
@@ -709,8 +709,7 @@ mp_obj_t tween_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, 
         // Store default Python class instance attr function
         // and override with custom intercept attr function
         // so that certain callbacks/code can run (see py/objtype.c:mp_obj_instance_attr(...))
-        default_instance_attr_func = MP_OBJ_TYPE_GET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)child_class_obj)->type, attr);
-        MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)child_class_obj)->type, attr, tween_class_attr, 5);
+        node_base_set_attr_handler(child_class_obj, tween_class_attr);
 
         // Need a way to access the object node instance instead of the native type for callbacks (tick, draw, collision)
         self->self = child_class_obj;

@@ -74,3 +74,13 @@ engine_shader_t blend_opacity_shader = {
     .program_len = 8,
     .execute = engine_pixel_shader_custom,
 };
+
+engine_shader_t *builtin_shaders[3] = {
+    &empty_shader,
+    &opacity_shader,
+    &blend_opacity_shader
+};
+
+engine_shader_t *engine_get_builtin_shader(enum engine_builtin_shader_types type){
+    return builtin_shaders[type];
+}
