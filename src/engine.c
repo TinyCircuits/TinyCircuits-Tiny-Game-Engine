@@ -140,7 +140,7 @@ bool engine_tick(){
     MP_THREAD_GIL_EXIT();
 
     dt = millis() - engine_fps_time_at_last_tick_ms;
-    float dt_s = dt * 0.001f; 
+    float dt_s = dt * 0.001f;
 
     // Now that all the node callbacks were called and potentially moved
     // physics nodes around, step the physics engine another tick.

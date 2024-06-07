@@ -135,7 +135,7 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
     // check the correct pairing (rect vs. rect, rect vs. circle,
     // or circle vs. circle)
     if(node_base_a->type == NODE_TYPE_PHYSICS_RECTANGLE_2D && node_base_b->type == NODE_TYPE_PHYSICS_RECTANGLE_2D){
-        collided = engine_physics_check_rect_rect_collision(physics_node_base_a, physics_node_base_b, &contact);
+        collided = engine_physics_check_rect_rect_collision(node_base_a, node_base_b, &contact);
     }else if((node_base_a->type == NODE_TYPE_PHYSICS_RECTANGLE_2D && node_base_b->type == NODE_TYPE_PHYSICS_CIRCLE_2D) ||
              (node_base_a->type == NODE_TYPE_PHYSICS_CIRCLE_2D    && node_base_b->type == NODE_TYPE_PHYSICS_RECTANGLE_2D)){
 
@@ -150,7 +150,7 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
             physics_node_base_b = node_base_b->node;
         }
 
-        collided = engine_physics_check_rect_circle_collision(physics_node_base_a, physics_node_base_b, &contact);
+        collided = engine_physics_check_rect_circle_collision(node_base_a, node_base_b, &contact);
     }else if(node_base_a->type == NODE_TYPE_PHYSICS_CIRCLE_2D && node_base_b->type == NODE_TYPE_PHYSICS_CIRCLE_2D){
         collided = engine_physics_check_circle_circle_collision(physics_node_base_a, physics_node_base_b, &contact);
     }else{

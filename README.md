@@ -107,6 +107,7 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
    2. Take the entire heap and save it as a file (might be fun if possible)
    3. Add engine_save, engine_save.save(name, object), engine_save.load(name, object, default), engine_save.set_location(location)
 [X] Revisit opacity after fix, seems to be a lot slower: used doubles instead of float
+[X] Need to get absolute positions of physics nodes in physics engine for case that physics node is a child of another node
 [.] Expose framebuf objects to write to screen buffers directly: should make it so that setting the buffers to other buffers is supported
 [.] Make asset loading faster: maybe increased wave loading speed but should still take a look
 
@@ -115,7 +116,7 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 
 Adam needs: faster asset loading, animation sequences
 
-[] Need to get absolute positions of physics nodes in physics engine for case that physics node is a child of another node
+
 [] Issue with some cloud programs adding .ini files to folder
 [] Figure out and fix screen doing halo...
 

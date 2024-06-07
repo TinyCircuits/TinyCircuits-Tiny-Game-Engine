@@ -280,11 +280,11 @@ void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, bool *
     // Use z-axis rotation for 2D rotations from 3D vectors
     if(rotation_obj == MP_OBJ_NULL){
         // In the case that the rotation attribute does not exist on this node, set rotation to 0
-        *rotation = 0.0f;
+        if(rotation != NULL) *rotation = 0.0f;
     }else if(mp_obj_is_type(rotation_obj, &vector3_class_type)){
-        *rotation = ((vector3_class_obj_t*)rotation_obj)->z.value;
+        if(rotation != NULL) *rotation = ((vector3_class_obj_t*)rotation_obj)->z.value;
     }else{
-        *rotation = (float)mp_obj_get_float(rotation_obj);
+        if(rotation != NULL) *rotation = (float)mp_obj_get_float(rotation_obj);
     }
 
     // Before doing anything, check if this child even has a parent 
@@ -328,7 +328,7 @@ void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, bool *
                 if(is_child_of_camera == NULL || (is_child_of_camera != NULL && *is_child_of_camera == false)){
                     *x += parent_x;
                     *y += parent_y;
-                    *rotation += parent_rotation_radians;
+                    if(rotation != NULL) *rotation += parent_rotation_radians;
                     
                     // If the rotation sum is not close to zero, rotate the point (small optimization)
                     if(engine_math_compare_floats(*rotation, 0.0f) == false){
