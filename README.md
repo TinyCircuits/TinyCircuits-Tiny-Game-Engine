@@ -115,6 +115,7 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 
 Adam needs: faster asset loading, animation sequences
 
+[] Need to get absolute positions of physics nodes in physics engine for case that physics node is a child of another node
 [] Issue with some cloud programs adding .ini files to folder
 [] Figure out and fix screen doing halo...
 
