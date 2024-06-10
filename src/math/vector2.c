@@ -4,7 +4,7 @@
 #include "utility/engine_mp.h"
 
 
-STATIC void vector2_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
+static void vector2_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
     ENGINE_PRINTF("%.09f %.09f", (double)((mp_obj_float_t)((vector2_class_obj_t*)self_in)->x).value, (double)((mp_obj_float_t)((vector2_class_obj_t*)self_in)->y).value);
 }
 
@@ -46,7 +46,7 @@ mp_obj_t vector2_class_length(mp_obj_t self_in){
 
     return mp_obj_new_float(engine_math_vector_length(self->x.value, self->y.value));
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(vector2_class_length_obj, vector2_class_length);
+static MP_DEFINE_CONST_FUN_OBJ_1(vector2_class_length_obj, vector2_class_length);
 
 
 /*  --- doc ---
@@ -65,7 +65,7 @@ mp_obj_t vector2_class_normalized(mp_obj_t self_in){
 
     return vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(normalized_x), mp_obj_new_float(normalized_y)}); 
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(vector2_class_normalized_obj, vector2_class_normalized);
+static MP_DEFINE_CONST_FUN_OBJ_1(vector2_class_normalized_obj, vector2_class_normalized);
 
 
 /*  --- doc ---
@@ -79,7 +79,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(vector2_class_normalized_obj, vector2_class_nor
     ATTR:   [type=function]     [name={ref_link:vector2_length}]        [value=function]
     ATTR:   [type=function]     [name={ref_link:vector2_normalized}]    [value=function]                                                                     
 */ 
-STATIC void vector2_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+static void vector2_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Vector2 attr");
 
     vector2_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
@@ -133,10 +133,10 @@ STATIC void vector2_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *desti
 
 
 // Class attributes
-STATIC const mp_rom_map_elem_t vector2_class_locals_dict_table[] = {
+static const mp_rom_map_elem_t vector2_class_locals_dict_table[] = {
 
 };
-STATIC MP_DEFINE_CONST_DICT(vector2_class_locals_dict, vector2_class_locals_dict_table);
+static MP_DEFINE_CONST_DICT(vector2_class_locals_dict, vector2_class_locals_dict_table);
 
 
 MP_DEFINE_CONST_OBJ_TYPE(

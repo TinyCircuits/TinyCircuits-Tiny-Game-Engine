@@ -172,7 +172,7 @@ mp_obj_t physics_rectangle_2d_node_class_del(mp_obj_t self_in){
 
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(physics_rectangle_2d_node_class_del_obj, physics_rectangle_2d_node_class_del);
+static MP_DEFINE_CONST_FUN_OBJ_1(physics_rectangle_2d_node_class_del_obj, physics_rectangle_2d_node_class_del);
 
 
 void physics_rectangle_2d_calculate_inverse_mass(engine_node_base_t *node_base){
@@ -328,7 +328,7 @@ bool physics_rectangle_2d_store_attr(engine_node_base_t *self_node_base, qstr at
 }
 
 
-STATIC mp_attr_fun_t physics_rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+static mp_attr_fun_t physics_rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing PhysicsRectangle2DNode attr");
 
     // Get the node base from either class
@@ -459,7 +459,7 @@ mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n
     if(parsed_args[outline].u_obj == MP_OBJ_NULL) parsed_args[outline].u_obj = mp_obj_new_int(0);
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
-    engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);
+    engine_node_base_t *node_base = mp_obj_malloc_with_finaliser(engine_node_base_t, &engine_physics_rectangle_2d_node_class_type);
     node_base_init(node_base, &engine_physics_rectangle_2d_node_class_type, NODE_TYPE_PHYSICS_RECTANGLE_2D);
 
     // Another layer, all physics objects have some data in common,
@@ -556,10 +556,10 @@ mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n
 
 
 // Class attributes
-STATIC const mp_rom_map_elem_t physics_rectangle_2d_node_class_locals_dict_table[] = {
+static const mp_rom_map_elem_t physics_rectangle_2d_node_class_locals_dict_table[] = {
 
 };
-STATIC MP_DEFINE_CONST_DICT(physics_rectangle_2d_node_class_locals_dict, physics_rectangle_2d_node_class_locals_dict_table);
+static MP_DEFINE_CONST_DICT(physics_rectangle_2d_node_class_locals_dict, physics_rectangle_2d_node_class_locals_dict_table);
 
 
 MP_DEFINE_CONST_OBJ_TYPE(

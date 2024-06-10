@@ -121,7 +121,7 @@ void set_value_to_end(tween_class_obj_t *tween){
    PARAM: [type=object] [name=tween] [value=object (the tween object that just finished)]
    RETURN: None
 */
-STATIC mp_obj_t tween_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
+static mp_obj_t tween_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
     ENGINE_INFO_PRINTF("Tween: tick!");
 
     tween_class_obj_t *tween = self_in;
@@ -375,7 +375,7 @@ mp_obj_t tween_class_start(size_t n_args, const mp_obj_t *args){
 
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(tween_class_start_obj, 4, 9, tween_class_start);
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(tween_class_start_obj, 4, 9, tween_class_start);
 
 
 /* --- doc ---
@@ -396,7 +396,7 @@ mp_obj_t tween_class_stop(mp_obj_t self_in){
 
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(tween_class_stop_obj, tween_class_stop);
+static MP_DEFINE_CONST_FUN_OBJ_1(tween_class_stop_obj, tween_class_stop);
 
 
 
@@ -414,7 +414,7 @@ mp_obj_t tween_class_pause(mp_obj_t self_in){
 
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(tween_class_pause_obj, tween_class_pause);
+static MP_DEFINE_CONST_FUN_OBJ_1(tween_class_pause_obj, tween_class_pause);
 
 
 /* --- doc ---
@@ -431,7 +431,7 @@ mp_obj_t tween_class_unpause(mp_obj_t self_in){
 
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(tween_class_unpause_obj, tween_class_unpause);
+static MP_DEFINE_CONST_FUN_OBJ_1(tween_class_unpause_obj, tween_class_unpause);
 
 
 /* --- doc ---
@@ -448,7 +448,7 @@ mp_obj_t tween_class_restart(mp_obj_t self_in){
 
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(tween_class_restart_obj, tween_class_restart);
+static MP_DEFINE_CONST_FUN_OBJ_1(tween_class_restart_obj, tween_class_restart);
 
 
 mp_obj_t tween_class_del(mp_obj_t self_in){
@@ -459,7 +459,7 @@ mp_obj_t tween_class_del(mp_obj_t self_in){
 
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(tween_class_del_obj, tween_class_del);
+static MP_DEFINE_CONST_FUN_OBJ_1(tween_class_del_obj, tween_class_del);
 
 
 // Return `true` if handled loading the attr from internal structure, `false` otherwise
@@ -581,7 +581,7 @@ bool tween_store_attr(tween_class_obj_t *tween, qstr attribute, mp_obj_t *destin
 }
 
 
-STATIC mp_attr_fun_t tween_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+static mp_attr_fun_t tween_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing PhysicsCircle2DNode attr");
 
     bool is_instance = mp_obj_is_instance_type(((mp_obj_base_t*)self_in)->type);
@@ -649,7 +649,7 @@ mp_obj_t tween_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, 
         inherited = false;
     }
 
-    tween_class_obj_t *self = m_new_obj_with_finaliser(tween_class_obj_t);
+    tween_class_obj_t *self = mp_obj_malloc_with_finaliser(tween_class_obj_t, &tween_class_type);
     self->self = self;
     self->tick = MP_OBJ_FROM_PTR(&tween_class_tick_obj);
     self->list_node = engine_animation_track(self);
@@ -720,10 +720,10 @@ mp_obj_t tween_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, 
 
 
 // Class attributes
-STATIC const mp_rom_map_elem_t tween_class_locals_dict_table[] = {
+static const mp_rom_map_elem_t tween_class_locals_dict_table[] = {
 
 };
-STATIC MP_DEFINE_CONST_DICT(tween_class_locals_dict, tween_class_locals_dict_table);
+static MP_DEFINE_CONST_DICT(tween_class_locals_dict, tween_class_locals_dict_table);
 
 
 MP_DEFINE_CONST_OBJ_TYPE(

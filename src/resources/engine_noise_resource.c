@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 // Class required functions
-STATIC void noise_resource_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
+static void noise_resource_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
     ENGINE_INFO_PRINTF("print(): NoiseResource");
 }
 
@@ -14,7 +14,7 @@ mp_obj_t noise_resource_class_new(const mp_obj_type_t *type, size_t n_args, size
     ENGINE_INFO_PRINTF("New NoiseResource");
     mp_arg_check_num(n_args, n_kw, 0, 0, false);
 
-    noise_resource_class_obj_t *self = m_new_obj_with_finaliser(noise_resource_class_obj_t);
+    noise_resource_class_obj_t *self = mp_obj_malloc_with_finaliser(noise_resource_class_obj_t, &noise_resource_class_type);
     self->base.type = &noise_resource_class_type;
 
     self->fnl = fnlCreateState();
@@ -24,7 +24,7 @@ mp_obj_t noise_resource_class_new(const mp_obj_type_t *type, size_t n_args, size
 
 
 // Class methods
-STATIC mp_obj_t noise_resource_class_noise_3d(size_t n_args, const mp_obj_t *args){
+static mp_obj_t noise_resource_class_noise_3d(size_t n_args, const mp_obj_t *args){
     noise_resource_class_obj_t *self = args[0];
 
     float x = mp_obj_get_float(args[1]);
@@ -36,7 +36,7 @@ STATIC mp_obj_t noise_resource_class_noise_3d(size_t n_args, const mp_obj_t *arg
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(noise_resource_class_noise_3d_obj, 4, 4, noise_resource_class_noise_3d);
 
 
-STATIC mp_obj_t noise_resource_class_noise_2d(mp_obj_t self_in, mp_obj_t x_obj, mp_obj_t z_obj){
+static mp_obj_t noise_resource_class_noise_2d(mp_obj_t self_in, mp_obj_t x_obj, mp_obj_t z_obj){
     noise_resource_class_obj_t *self = self_in;
 
     float x = mp_obj_get_float(x_obj);
@@ -47,7 +47,7 @@ STATIC mp_obj_t noise_resource_class_noise_2d(mp_obj_t self_in, mp_obj_t x_obj, 
 MP_DEFINE_CONST_FUN_OBJ_3(noise_resource_class_noise_2d_obj, noise_resource_class_noise_2d);
 
 
-STATIC mp_obj_t noise_resource_class_del(mp_obj_t self_in){
+static mp_obj_t noise_resource_class_del(mp_obj_t self_in){
     ENGINE_INFO_PRINTF("NoiseResource: Deleted (freeing noise data)");
 
     return mp_const_none;
@@ -55,7 +55,7 @@ STATIC mp_obj_t noise_resource_class_del(mp_obj_t self_in){
 MP_DEFINE_CONST_FUN_OBJ_1(noise_resource_class_del_obj, noise_resource_class_del);
 
 
-STATIC void noise_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+static void noise_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing NoiseResource attr");
 
     noise_resource_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
@@ -180,7 +180,7 @@ STATIC void noise_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
 
 
 // Class attributes
-STATIC const mp_rom_map_elem_t noise_resource_class_locals_dict_table[] = {
+static const mp_rom_map_elem_t noise_resource_class_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_NOISE_OPENSIMPLEX2), MP_ROM_INT(FNL_NOISE_OPENSIMPLEX2) },
     { MP_ROM_QSTR(MP_QSTR_NOISE_OPENSIMPLEX2S), MP_ROM_INT(FNL_NOISE_OPENSIMPLEX2S) },
     { MP_ROM_QSTR(MP_QSTR_NOISE_CELLULAR), MP_ROM_INT(FNL_NOISE_CELLULAR) },
@@ -209,7 +209,7 @@ STATIC const mp_rom_map_elem_t noise_resource_class_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_DOMAIN_WARP_OPENSIMPLEX2_REDUCED), MP_ROM_INT(FNL_DOMAIN_WARP_OPENSIMPLEX2_REDUCED) },
     { MP_ROM_QSTR(MP_QSTR_DOMAIN_WARP_BASICGRID), MP_ROM_INT(FNL_DOMAIN_WARP_BASICGRID) },
 };
-STATIC MP_DEFINE_CONST_DICT(noise_resource_class_locals_dict, noise_resource_class_locals_dict_table);
+static MP_DEFINE_CONST_DICT(noise_resource_class_locals_dict, noise_resource_class_locals_dict_table);
 
 
 MP_DEFINE_CONST_OBJ_TYPE(

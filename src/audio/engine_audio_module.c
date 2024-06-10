@@ -377,7 +377,7 @@ void engine_audio_play_on_channel(mp_obj_t sound_resource_obj, audio_channel_cla
     PARAM: [type=int]       [name=channel_index]  [value=0 ~ 3]                                                                                                          
     RETURN: None
 */ 
-STATIC mp_obj_t engine_audio_stop(mp_obj_t channel_index_obj){
+static mp_obj_t engine_audio_stop(mp_obj_t channel_index_obj){
     uint8_t channel_index = mp_obj_get_int(channel_index_obj);
 
     if(channel_index > 3){
@@ -400,7 +400,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_audio_stop_obj, engine_audio_stop);
     PARAM: [type=boolean]   [name=loop]           [value=True or False]                                                  
     RETURN: {ref_link:AudioChannel}
 */ 
-STATIC mp_obj_t engine_audio_play(mp_obj_t sound_resource_obj, mp_obj_t channel_index_obj, mp_obj_t loop_obj){
+static mp_obj_t engine_audio_play(mp_obj_t sound_resource_obj, mp_obj_t channel_index_obj, mp_obj_t loop_obj){
     // Should probably make sure this doesn't
     // interfere with DMA or interrupt: TODO
     uint8_t channel_index = mp_obj_get_int(channel_index_obj);
@@ -420,7 +420,7 @@ MP_DEFINE_CONST_FUN_OBJ_3(engine_audio_play_obj, engine_audio_play);
     PARAM: [type=float] [name=set_volume] [value=0.0 ~ 1.0]
     RETURN: None
 */ 
-STATIC mp_obj_t engine_audio_set_volume(mp_obj_t new_volume){
+static mp_obj_t engine_audio_set_volume(mp_obj_t new_volume){
     master_volume = engine_math_clamp(mp_obj_get_float(new_volume), 0.0f, 1.0f);
     return mp_const_none;
 }
@@ -433,14 +433,14 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_audio_set_volume_obj, engine_audio_set_volume);
     DESC: Returns the currently set master volume between 0.0 and 1.0
     RETURN: None
 */ 
-STATIC mp_obj_t engine_audio_get_volume(){
+static mp_obj_t engine_audio_get_volume(){
     return mp_obj_new_float(master_volume);
 }
 MP_DEFINE_CONST_FUN_OBJ_0(engine_audio_get_volume_obj, engine_audio_get_volume);
 
 
 
-STATIC mp_obj_t engine_audio_module_init(){
+static mp_obj_t engine_audio_module_init(){
     engine_main_raise_if_not_initialized();
     return mp_const_none;
 }
@@ -457,7 +457,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_audio_module_init_obj, engine_audio_module_init
     ATTR: [type=function]   [name={ref_link:set_volume}]    [value=function]
     ATTR: [type=function]   [name={ref_link:get_volume}]    [value=function]
 */ 
-STATIC const mp_rom_map_elem_t engine_audio_globals_table[] = {
+static const mp_rom_map_elem_t engine_audio_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_audio) },
     { MP_OBJ_NEW_QSTR(MP_QSTR___init__), (mp_obj_t)&engine_audio_module_init_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_AudioChannel), (mp_obj_t)&audio_channel_class_type },
@@ -468,7 +468,7 @@ STATIC const mp_rom_map_elem_t engine_audio_globals_table[] = {
 };
 
 // Module init
-STATIC MP_DEFINE_CONST_DICT (mp_module_engine_audio_globals, engine_audio_globals_table);
+static MP_DEFINE_CONST_DICT (mp_module_engine_audio_globals, engine_audio_globals_table);
 
 const mp_obj_module_t engine_audio_user_cmodule = {
     .base = { &mp_type_module },

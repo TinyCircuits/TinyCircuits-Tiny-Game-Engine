@@ -26,7 +26,7 @@
    PARAM:   [type=str]  [name=filepath]   [value=str]
    RETURN: None
 */
-STATIC mp_obj_t engine_save_set_location(mp_obj_t location){
+static mp_obj_t engine_save_set_location(mp_obj_t location){
     ENGINE_INFO_PRINTF("EngineSave: Setting location");
 
     if(mp_obj_is_str(location) == false){
@@ -47,7 +47,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_save_set_location_obj, engine_save_set_location
    DESC: Deletes the set save file
    RETURN: None
 */
-STATIC mp_obj_t engine_save_delete_location(){
+static mp_obj_t engine_save_delete_location(){
     ENGINE_INFO_PRINTF("EngineSave: Deleting save location!");
     engine_saving_del_set_location();
     return mp_const_none;
@@ -63,7 +63,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_save_delete_location_obj, engine_save_delete_lo
    PARAM:   [type=str, bytearray, int, float, {ref_link:Vector2}, {ref_link:Vector3}, {ref_link:Color}]  [name=value]   [value=str, int, float, {ref_link:Vector2}, {ref_link:Vector3}, {ref_link:Color}]
    RETURN: None
 */
-STATIC mp_obj_t engine_save(mp_obj_t entry_name_obj, mp_obj_t obj){
+static mp_obj_t engine_save(mp_obj_t entry_name_obj, mp_obj_t obj){
     ENGINE_INFO_PRINTF("EngineSave: Saving");
 
     GET_STR_DATA_LEN(entry_name_obj, entry_name, entry_name_len);
@@ -87,7 +87,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(engine_save_obj, engine_save);
    PARAM:   [type=any]  [name=default]      [value=any (optional, if the `entry_name` isn't found then this default value will be returned instead)]
    RETURN: str, bytearray, int, float, {ref_link:Vector2}, {ref_link:Vector3}, {ref_link:Color}, or None
 */
-STATIC mp_obj_t engine_save_load(size_t n_args, const mp_obj_t *args){
+static mp_obj_t engine_save_load(size_t n_args, const mp_obj_t *args){
     mp_obj_t entry_name_obj = args[0];
     mp_obj_t default_value_obj = mp_const_none;
 
@@ -119,7 +119,7 @@ MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_save_load_obj, 1, 2, engine_save_load
    PARAM:   [type=str]  [name=entry_name]   [value=str]
    RETURN: None
 */
-STATIC mp_obj_t engine_save_delete(mp_obj_t entry_name_obj){
+static mp_obj_t engine_save_delete(mp_obj_t entry_name_obj){
     GET_STR_DATA_LEN(entry_name_obj, entry_name, entry_name_len);
 
     if(entry_name_len == 0){
@@ -133,7 +133,7 @@ STATIC mp_obj_t engine_save_delete(mp_obj_t entry_name_obj){
 MP_DEFINE_CONST_FUN_OBJ_1(engine_save_delete_obj, engine_save_delete);
 
 
-STATIC mp_obj_t engine_save_module_init(){
+static mp_obj_t engine_save_module_init(){
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_0(engine_save_module_init_obj, engine_save_module_init);    
@@ -149,7 +149,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_save_module_init_obj, engine_save_module_init);
    ATTR:   [type=function]    [name={ref_link:engine_save_load}]                [value=function]
    ATTR:   [type=function]    [name={ref_link:engine_save_delete}]              [value=function]
 */
-STATIC const mp_rom_map_elem_t engine_save_globals_table[] = {
+static const mp_rom_map_elem_t engine_save_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_save) },
     { MP_OBJ_NEW_QSTR(MP_QSTR___init__), (mp_obj_t)&engine_save_module_init_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_save), (mp_obj_t)&engine_save_obj },
@@ -160,7 +160,7 @@ STATIC const mp_rom_map_elem_t engine_save_globals_table[] = {
 };
 
 // Module init
-STATIC MP_DEFINE_CONST_DICT(mp_module_engine_save_globals, engine_save_globals_table);
+static MP_DEFINE_CONST_DICT(mp_module_engine_save_globals, engine_save_globals_table);
 
 const mp_obj_module_t engine_save_user_cmodule = {
     .base = { &mp_type_module },

@@ -18,7 +18,7 @@
    PARAM: [type=float]       [name=dt]          [value=time in milliseconds]
    RETURN: None
 */
-STATIC mp_obj_t delay_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
+static mp_obj_t delay_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
     ENGINE_INFO_PRINTF("Delay: tick!");
 
     delay_class_obj_t *delay = NULL;
@@ -88,7 +88,7 @@ mp_obj_t delay_class_start(size_t n_args, const mp_obj_t *args){
 
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(delay_class_start_obj, 2, 3, delay_class_start);
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(delay_class_start_obj, 2, 3, delay_class_start);
 
 
 mp_obj_t delay_class_del(mp_obj_t self_in){
@@ -99,7 +99,7 @@ mp_obj_t delay_class_del(mp_obj_t self_in){
 
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(delay_class_del_obj, delay_class_del);
+static MP_DEFINE_CONST_FUN_OBJ_1(delay_class_del_obj, delay_class_del);
 
 
 // Return `true` if handled loading the attr from internal structure, `false` otherwise
@@ -174,7 +174,7 @@ bool delay_store_attr(delay_class_obj_t *delay, qstr attribute, mp_obj_t *destin
    DESC: After `delay` amount of time this callback function is called
    RETURN: None
 */
-STATIC mp_attr_fun_t delay_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+static mp_attr_fun_t delay_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing PhysicsCircle2DNode attr");
 
     bool is_instance = mp_obj_is_instance_type(((mp_obj_base_t*)self_in)->type);
@@ -236,7 +236,7 @@ mp_obj_t delay_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, 
         inherited = false;
     }
 
-    delay_class_obj_t *self = m_new_obj_with_finaliser(delay_class_obj_t);
+    delay_class_obj_t *self = mp_obj_malloc_with_finaliser(delay_class_obj_t, &delay_class_type);
     self->self = self;
     self->tick = MP_OBJ_FROM_PTR(&delay_class_tick_obj);
     self->list_node = engine_animation_track((mp_obj_t)self);
@@ -291,10 +291,10 @@ mp_obj_t delay_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, 
 
 
 // Class attributes
-STATIC const mp_rom_map_elem_t delay_class_locals_dict_table[] = {
+static const mp_rom_map_elem_t delay_class_locals_dict_table[] = {
 
 };
-STATIC MP_DEFINE_CONST_DICT(delay_class_locals_dict, delay_class_locals_dict_table);
+static MP_DEFINE_CONST_DICT(delay_class_locals_dict, delay_class_locals_dict_table);
 
 
 MP_DEFINE_CONST_OBJ_TYPE(

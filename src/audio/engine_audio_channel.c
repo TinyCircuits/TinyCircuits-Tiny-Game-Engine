@@ -152,7 +152,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(audio_channel_stop_obj, audio_channel_stop);
     ATTR: [type=boolean]    [name=loop]                             [value=True or False (whether to loop audio or not)]
     ATTR: [type=boolean]    [name=done]                             [value=True or False (set True when audio finishes playing if not looping, read-only)]
 */ 
-STATIC void audio_channel_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+static void audio_channel_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing AudioChannel attr");
 
     audio_channel_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
@@ -213,10 +213,10 @@ STATIC void audio_channel_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t 
 
 
 // Class attributes
-STATIC const mp_rom_map_elem_t audio_channel_class_locals_dict_table[] = {
+static const mp_rom_map_elem_t audio_channel_class_locals_dict_table[] = {
 
 };
-STATIC MP_DEFINE_CONST_DICT(audio_channel_class_locals_dict, audio_channel_class_locals_dict_table);
+static MP_DEFINE_CONST_DICT(audio_channel_class_locals_dict, audio_channel_class_locals_dict_table);
 
 
 MP_DEFINE_CONST_OBJ_TYPE(

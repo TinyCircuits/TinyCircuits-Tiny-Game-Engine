@@ -6,7 +6,7 @@
 
 
 // Class required functions
-STATIC void font_resource_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
+static void font_resource_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
     ENGINE_INFO_PRINTF("print(): FontResource");
 }
 
@@ -20,7 +20,7 @@ mp_obj_t font_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_
     // is passed, use a default compiled in font?
     mp_arg_check_num(n_args, n_kw, 1, 2, false);
 
-    font_resource_class_obj_t *self = m_new_obj_with_finaliser(font_resource_class_obj_t);
+    font_resource_class_obj_t *self = mp_obj_malloc_with_finaliser(font_resource_class_obj_t, &font_resource_class_type);
     self->base.type = &font_resource_class_type;
     self->texture_resource = texture_resource_class_new(&texture_resource_class_type, n_args, 0, args);
 
@@ -120,7 +120,7 @@ void font_resource_get_box_dimensions(font_resource_class_obj_t *font, mp_obj_t 
 
 
 // Class methods
-STATIC mp_obj_t font_resource_class_del(mp_obj_t self_in){
+static mp_obj_t font_resource_class_del(mp_obj_t self_in){
     ENGINE_INFO_PRINTF("FontResource: Deleted");
 
     return mp_const_none;
@@ -138,7 +138,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(font_resource_class_del_obj, font_resource_class_del);
     ATTR:   [type=bytearray]                    [name=widths]   [value=bytearray (read-only)]
     ATTR:   [type=int]                          [name=height]   [value=any (read-only)]
 */ 
-STATIC void font_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+static void font_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing FontResource attr");
 
     font_resource_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
@@ -177,10 +177,10 @@ STATIC void font_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t 
 
 
 // Class attributes
-STATIC const mp_rom_map_elem_t font_resource_class_locals_dict_table[] = {
+static const mp_rom_map_elem_t font_resource_class_locals_dict_table[] = {
 
 };
-STATIC MP_DEFINE_CONST_DICT(font_resource_class_locals_dict, font_resource_class_locals_dict_table);
+static MP_DEFINE_CONST_DICT(font_resource_class_locals_dict, font_resource_class_locals_dict_table);
 
 
 MP_DEFINE_CONST_OBJ_TYPE(

@@ -31,7 +31,7 @@ mp_obj_t physics_node_base_apply_impulse(mp_obj_t self_in, mp_obj_t impulse, mp_
 
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_3(physics_node_base_apply_impulse_obj, physics_node_base_apply_impulse);
+static MP_DEFINE_CONST_FUN_OBJ_3(physics_node_base_apply_impulse_obj, physics_node_base_apply_impulse);
 
 
 // Return `true` if handled loading the attr from internal structure, `false` otherwise

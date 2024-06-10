@@ -92,7 +92,7 @@ bool empty_node_store_attr(engine_node_base_t *self_node_base, qstr attribute, m
 }
 
 
-STATIC mp_attr_fun_t empty_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+static mp_attr_fun_t empty_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing GUIButton2DNode attr");
 
     // Get the node base from either class
@@ -144,7 +144,7 @@ STATIC mp_attr_fun_t empty_node_class_attr(mp_obj_t self_in, qstr attribute, mp_
     ATTR:  [type={ref_link:Vector3}]     [name=rotation]                                    [value={ref_link:Vector3}]
     OVRR:  [type=function]               [name={ref_link:tick}]                             [value=function]
 */
-STATIC mp_obj_t empty_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
+static mp_obj_t empty_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New EmptyNode");
 
     static const mp_arg_t allowed_args[] = {
@@ -179,7 +179,7 @@ STATIC mp_obj_t empty_node_class_new(const mp_obj_type_t *type, size_t n_args, s
 
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
-    engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);
+    engine_node_base_t *node_base = mp_obj_malloc_with_finaliser(engine_node_base_t, &engine_empty_node_class_type);
     node_base_init(node_base, &engine_empty_node_class_type, NODE_TYPE_EMPTY);
     engine_empty_node_class_obj_t *empty_node = m_malloc(sizeof(engine_empty_node_class_obj_t));
     node_base->node = empty_node;
@@ -229,10 +229,10 @@ STATIC mp_obj_t empty_node_class_new(const mp_obj_type_t *type, size_t n_args, s
 
 
 // Class attributes
-STATIC const mp_rom_map_elem_t empty_node_class_locals_dict_table[] = {
+static const mp_rom_map_elem_t empty_node_class_locals_dict_table[] = {
 
 };
-STATIC MP_DEFINE_CONST_DICT(empty_node_class_locals_dict, empty_node_class_locals_dict_table);
+static MP_DEFINE_CONST_DICT(empty_node_class_locals_dict, empty_node_class_locals_dict_table);
 
 
 MP_DEFINE_CONST_OBJ_TYPE(

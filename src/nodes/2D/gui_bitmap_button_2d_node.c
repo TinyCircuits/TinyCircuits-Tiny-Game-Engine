@@ -170,7 +170,7 @@ mp_obj_t gui_bitmap_button_2d_node_class_del(mp_obj_t self_in){
 
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(gui_bitmap_button_2d_node_class_del_obj, gui_bitmap_button_2d_node_class_del);
+static MP_DEFINE_CONST_FUN_OBJ_1(gui_bitmap_button_2d_node_class_del_obj, gui_bitmap_button_2d_node_class_del);
 
 
 // Return `true` if handled loading the attr from internal structure, `false` otherwise
@@ -503,7 +503,7 @@ bool bitmap_button_2d_node_store_attr(engine_node_base_t *self_node_base, qstr a
 }
 
 
-STATIC mp_attr_fun_t gui_bitmap_button_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+static mp_attr_fun_t gui_bitmap_button_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing GUIBitmapButton2DNode attr");
 
     // Get the node base from either class
@@ -704,7 +704,7 @@ mp_obj_t gui_bitmap_button_2d_node_class_new(const mp_obj_type_t *type, size_t n
     if(parsed_args[line_spacing].u_obj == MP_OBJ_NULL) parsed_args[line_spacing].u_obj = mp_obj_new_float(0.0f);
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
-    engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);
+    engine_node_base_t *node_base = mp_obj_malloc_with_finaliser(engine_node_base_t, &engine_gui_bitmap_button_2d_node_class_type);
     node_base_init(node_base, &engine_gui_bitmap_button_2d_node_class_type, NODE_TYPE_GUI_BITMAP_BUTTON_2D);
     engine_gui_bitmap_button_2d_node_class_obj_t *gui_bitmap_button_2d_node = m_malloc(sizeof(engine_gui_bitmap_button_2d_node_class_obj_t));
     node_base->node = gui_bitmap_button_2d_node;
@@ -829,10 +829,10 @@ mp_obj_t gui_bitmap_button_2d_node_class_new(const mp_obj_type_t *type, size_t n
 
 
 // Class attributes
-STATIC const mp_rom_map_elem_t gui_bitmap_button_2d_node_class_locals_dict_table[] = {
+static const mp_rom_map_elem_t gui_bitmap_button_2d_node_class_locals_dict_table[] = {
 
 };
-STATIC MP_DEFINE_CONST_DICT(gui_bitmap_button_2d_node_class_locals_dict, gui_bitmap_button_2d_node_class_locals_dict_table);
+static MP_DEFINE_CONST_DICT(gui_bitmap_button_2d_node_class_locals_dict, gui_bitmap_button_2d_node_class_locals_dict_table);
 
 
 MP_DEFINE_CONST_OBJ_TYPE(

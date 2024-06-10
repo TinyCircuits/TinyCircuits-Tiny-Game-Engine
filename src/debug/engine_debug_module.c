@@ -9,7 +9,7 @@
     DESC: Disables all debug levels/outputs
     RETURN: None
 */ 
-STATIC mp_obj_t engine_debug_disable_all(){
+static mp_obj_t engine_debug_disable_all(){
     DEBUG_INFO_ENABLED = false;
     DEBUG_WARNINGS_ENABLED = false;
     DEBUG_ERRORS_ENABLED = false;
@@ -26,7 +26,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_debug_disable_all_obj, engine_debug_disable_all
     DESC: Enables all debug levels/outputs
     RETURN: None
 */ 
-STATIC mp_obj_t engine_debug_enable_all(){
+static mp_obj_t engine_debug_enable_all(){
     DEBUG_INFO_ENABLED = true;
     DEBUG_WARNINGS_ENABLED = true;
     DEBUG_ERRORS_ENABLED = true;
@@ -44,7 +44,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_debug_enable_all_obj, engine_debug_enable_all);
     PARAM: [type=enum/int]   [name=debug_setting]   [value=enum/int 0 ~ 3]
     RETURN: None
 */ 
-STATIC mp_obj_t engine_debug_enable_setting(mp_obj_t debug_setting){
+static mp_obj_t engine_debug_enable_setting(mp_obj_t debug_setting){
     // Translate the debug level and check if inbounds
     uint8_t engine_debug_setting = mp_obj_get_int(debug_setting);
 
@@ -84,7 +84,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_debug_enable_setting_obj, engine_debug_enable_s
     ATTR: [type=enum/int]   [name=errors]                       [value=2]
     ATTR: [type=enum/int]   [name=performance]                  [value=3]
 */ 
-STATIC const mp_rom_map_elem_t engine_debug_globals_table[] = {
+static const mp_rom_map_elem_t engine_debug_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_debug) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_enable_all), (mp_obj_t)&engine_debug_enable_all_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_disable_all), (mp_obj_t)&engine_debug_disable_all_obj },
@@ -96,7 +96,7 @@ STATIC const mp_rom_map_elem_t engine_debug_globals_table[] = {
 };
 
 // Module init
-STATIC MP_DEFINE_CONST_DICT (mp_module_engine_debug_globals, engine_debug_globals_table);
+static MP_DEFINE_CONST_DICT (mp_module_engine_debug_globals, engine_debug_globals_table);
 
 const mp_obj_module_t engine_debug_user_cmodule = {
     .base = { &mp_type_module },

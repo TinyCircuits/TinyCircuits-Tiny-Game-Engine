@@ -43,7 +43,7 @@ const vector3_class_obj_t world_north = {
 
 // // https://forums.unrealengine.com/t/how-does-get-look-at-rotation-work-from-a-mathematical-point-of-view/732711/3
 // // https://gamedev.stackexchange.com/a/112572
-// STATIC mp_obj_t camera_node_class_lookat(mp_obj_t self_in, mp_obj_t lookat_target_position_obj){
+// static mp_obj_t camera_node_class_lookat(mp_obj_t self_in, mp_obj_t lookat_target_position_obj){
 //     ENGINE_WARNING_PRINTF("CameraNode: Lookat");
 
 //     engine_node_base_t *camera_node_base = self_in;
@@ -109,7 +109,7 @@ mp_obj_t camera_node_class_del(mp_obj_t self_in){
 
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(camera_node_class_del_obj, camera_node_class_del);
+static MP_DEFINE_CONST_FUN_OBJ_1(camera_node_class_del_obj, camera_node_class_del);
 
 
 // Return `true` if handled loading the attr from internal structure, `false` otherwise
@@ -252,7 +252,7 @@ bool camera_node_store_attr(engine_node_base_t *self_node_base, qstr attribute, 
 }
 
 
-STATIC mp_attr_fun_t camera_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+static mp_attr_fun_t camera_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing CameraNode attr");
 
     // Get the node base from either class
@@ -353,7 +353,7 @@ mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t 
     if(parsed_args[view_distance].u_obj == MP_OBJ_NULL) parsed_args[view_distance].u_obj = mp_obj_new_float(256.0f);
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
-    engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);
+    engine_node_base_t *node_base = mp_obj_malloc_with_finaliser(engine_node_base_t, &engine_camera_node_class_type);
     node_base_init(node_base, &engine_camera_node_class_type, NODE_TYPE_CAMERA);
     engine_camera_node_class_obj_t *camera_node = m_malloc(sizeof(engine_camera_node_class_obj_t));
     node_base->node = camera_node;
@@ -448,10 +448,10 @@ void engine_camera_draw_for_each(void (*draw_cb)(mp_obj_t, mp_obj_t), engine_nod
 
 
 // Class attributes
-STATIC const mp_rom_map_elem_t camera_node_class_locals_dict_table[] = {
+static const mp_rom_map_elem_t camera_node_class_locals_dict_table[] = {
 
 };
-STATIC MP_DEFINE_CONST_DICT(camera_node_class_locals_dict, camera_node_class_locals_dict_table);
+static MP_DEFINE_CONST_DICT(camera_node_class_locals_dict, camera_node_class_locals_dict_table);
 
 
 MP_DEFINE_CONST_OBJ_TYPE(

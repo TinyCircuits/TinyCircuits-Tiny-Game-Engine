@@ -209,7 +209,7 @@ mp_obj_t rtttl_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args
     ENGINE_INFO_PRINTF("New RTTTLSoundResource");
     mp_arg_check_num(n_args, n_kw, 1, 1, false);
 
-    rtttl_sound_resource_class_obj_t *self = m_new_obj_with_finaliser(rtttl_sound_resource_class_obj_t);
+    rtttl_sound_resource_class_obj_t *self = mp_obj_malloc_with_finaliser(rtttl_sound_resource_class_obj_t, &rtttl_sound_resource_class_type);
     self->base.type = &rtttl_sound_resource_class_type;
     self->channel = NULL;
     self->tone = tone_sound_resource_class_new(&tone_sound_resource_class_type, 0, 0, NULL);
@@ -341,7 +341,7 @@ mp_obj_t rtttl_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args
 
 
 // Class methods
-STATIC mp_obj_t rtttl_sound_resource_class_del(mp_obj_t self_in){
+static mp_obj_t rtttl_sound_resource_class_del(mp_obj_t self_in){
     ENGINE_INFO_PRINTF("RTTTLSoundResource: Deleted (freeing sound data)");
 
     rtttl_sound_resource_class_obj_t *self = self_in;
@@ -367,7 +367,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(rtttl_sound_resource_class_del_obj, rtttl_sound_resour
     ATTR:   [type=int]            [name=tempo]    [value=any positive value]
     ATTR:   [type=bytearray]      [name=data]     [value=bytearray consisting of values between 0 and 13 corresponding to notes in lookup table]                                                                                                                                                               
 */ 
-STATIC void rtttl_sound_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+static void rtttl_sound_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing RTTTLSoundResource attr");
 
     rtttl_sound_resource_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
@@ -410,10 +410,10 @@ STATIC void rtttl_sound_resource_class_attr(mp_obj_t self_in, qstr attribute, mp
 
 
 // Class attributes
-STATIC const mp_rom_map_elem_t rtttl_sound_resource_class_locals_dict_table[] = {
+static const mp_rom_map_elem_t rtttl_sound_resource_class_locals_dict_table[] = {
 
 };
-STATIC MP_DEFINE_CONST_DICT(rtttl_sound_resource_class_locals_dict, rtttl_sound_resource_class_locals_dict_table);
+static MP_DEFINE_CONST_DICT(rtttl_sound_resource_class_locals_dict, rtttl_sound_resource_class_locals_dict_table);
 
 
 MP_DEFINE_CONST_OBJ_TYPE(

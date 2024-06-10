@@ -7,7 +7,7 @@
 #include "engine_main.h"
 
 
-STATIC mp_obj_t engine_math_module_init(){
+static mp_obj_t engine_math_module_init(){
     engine_main_raise_if_not_initialized();
     return mp_const_none;
 }
@@ -22,7 +22,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_math_module_init_obj, engine_math_module_init);
     ATTR: [type=object]   [name={ref_link:Vector3}]     [value=object]
     ATTR: [type=object]   [name={ref_link:Rectangle}]   [value=object]
 */
-STATIC const mp_rom_map_elem_t engine_math_globals_table[] = {
+static const mp_rom_map_elem_t engine_math_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_math) },
     { MP_OBJ_NEW_QSTR(MP_QSTR___init__), (mp_obj_t)&engine_math_module_init_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Vector2), (mp_obj_t)&vector2_class_type },
@@ -32,7 +32,7 @@ STATIC const mp_rom_map_elem_t engine_math_globals_table[] = {
 };
 
 // Module init
-STATIC MP_DEFINE_CONST_DICT (mp_module_engine_math_globals, engine_math_globals_table);
+static MP_DEFINE_CONST_DICT (mp_module_engine_math_globals, engine_math_globals_table);
 
 const mp_obj_module_t engine_math_user_cmodule = {
     .base = { &mp_type_module },

@@ -41,7 +41,7 @@ mp_obj_t tone_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
     ENGINE_INFO_PRINTF("New ToneSoundResource");
     mp_arg_check_num(n_args, n_kw, 0, 0, false);
 
-    tone_sound_resource_class_obj_t *self = m_new_obj_with_finaliser(tone_sound_resource_class_obj_t);
+    tone_sound_resource_class_obj_t *self = mp_obj_malloc_with_finaliser(tone_sound_resource_class_obj_t, &tone_sound_resource_class_type);
     self->base.type = &tone_sound_resource_class_type;
     self->channel = NULL;
 
@@ -73,7 +73,7 @@ void tone_sound_resource_set_frequency(tone_sound_resource_class_obj_t *self, fl
 
 
 // Class methods
-STATIC mp_obj_t tone_sound_resource_class_del(mp_obj_t self_in){
+static mp_obj_t tone_sound_resource_class_del(mp_obj_t self_in){
     ENGINE_INFO_PRINTF("ToneSoundResource: Deleted (freeing sound data)");
 
     tone_sound_resource_class_obj_t *self = self_in;
@@ -97,7 +97,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(tone_sound_resource_class_del_obj, tone_sound_resource
     DESC: Can be used to play a tone on an audio channel
     ATTR:   [type=float]    [name=frequency]    [value=any]                                                                                                                                                                  
 */ 
-STATIC void tone_sound_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+static void tone_sound_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing ToneSoundResource attr");
 
     tone_sound_resource_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
@@ -132,10 +132,10 @@ STATIC void tone_sound_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_
 
 
 // Class attributes
-STATIC const mp_rom_map_elem_t tone_sound_resource_class_locals_dict_table[] = {
+static const mp_rom_map_elem_t tone_sound_resource_class_locals_dict_table[] = {
 
 };
-STATIC MP_DEFINE_CONST_DICT(tone_sound_resource_class_locals_dict, tone_sound_resource_class_locals_dict_table);
+static MP_DEFINE_CONST_DICT(tone_sound_resource_class_locals_dict, tone_sound_resource_class_locals_dict_table);
 
 
 MP_DEFINE_CONST_OBJ_TYPE(

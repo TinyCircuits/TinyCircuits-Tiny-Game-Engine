@@ -108,7 +108,7 @@ void text_2d_node_class_draw(mp_obj_t text_2d_node_base_obj, mp_obj_t camera_nod
 
 // `native`     == instance of this built-in type (`Text2DNode`)
 // `not native` == instance of a Python class that inherits this built-in type (`Text2DNode`)
-STATIC void text_2d_node_class_calculate_dimensions(engine_text_2d_node_class_obj_t *text_2d_node){
+static void text_2d_node_class_calculate_dimensions(engine_text_2d_node_class_obj_t *text_2d_node){
     // Get the text and early out if none set
     if(text_2d_node->text == mp_const_none || text_2d_node->font_resource == mp_const_none){
         text_2d_node->width = mp_obj_new_int(0);
@@ -302,7 +302,7 @@ bool text_2d_node_store_attr(engine_node_base_t *self_node_base, qstr attribute,
 }
 
 
-STATIC mp_attr_fun_t text_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+static mp_attr_fun_t text_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Text2DNode attr");
 
     // Get the node base from either class
@@ -416,7 +416,7 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
     if(parsed_args[color].u_obj == MP_OBJ_NULL) parsed_args[color].u_obj = mp_const_none;
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
-    engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);
+    engine_node_base_t *node_base = mp_obj_malloc_with_finaliser(engine_node_base_t, &engine_text_2d_node_class_type);
     node_base_init(node_base, &engine_text_2d_node_class_type, NODE_TYPE_TEXT_2D);
     engine_text_2d_node_class_obj_t *text_2d_node = m_malloc(sizeof(engine_text_2d_node_class_obj_t));
     node_base->node = text_2d_node;
@@ -474,10 +474,10 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
 
 
 // Class attributes
-STATIC const mp_rom_map_elem_t text_2d_node_class_locals_dict_table[] = {
+static const mp_rom_map_elem_t text_2d_node_class_locals_dict_table[] = {
 
 };
-STATIC MP_DEFINE_CONST_DICT(text_2d_node_class_locals_dict, text_2d_node_class_locals_dict_table);
+static MP_DEFINE_CONST_DICT(text_2d_node_class_locals_dict, text_2d_node_class_locals_dict_table);
 
 
 MP_DEFINE_CONST_OBJ_TYPE(

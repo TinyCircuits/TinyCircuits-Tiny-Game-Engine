@@ -9,7 +9,7 @@ mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, si
     ENGINE_INFO_PRINTF("New TextureResource");
     mp_arg_check_num(n_args, n_kw, 1, 2, false);
 
-    texture_resource_class_obj_t *self = m_new_obj_with_finaliser(texture_resource_class_obj_t);
+    texture_resource_class_obj_t *self = mp_obj_malloc_with_finaliser(texture_resource_class_obj_t, &texture_resource_class_type);
     self->base.type = &texture_resource_class_type;
 
     // Set flag indicating if file data is to be stored in
@@ -92,7 +92,7 @@ mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, si
 
 
 // Class methods
-STATIC mp_obj_t texture_resource_class_del(mp_obj_t self_in){
+static mp_obj_t texture_resource_class_del(mp_obj_t self_in){
     ENGINE_INFO_PRINTF("TextureResource: Deleted (freeing texture data)");
 
     return mp_const_none;
@@ -116,7 +116,7 @@ uint16_t texture_resource_get_pixel(texture_resource_class_obj_t *texture, uint3
     ATTR:   [type=float]        [name=height]    [value=any (read-only)]
     ATTR:   [type=bytearray]    [name=data]      [value=RGB565 bytearray (note, if in_ram is False, then writing to this is not a valid operation)]
 */ 
-STATIC void texture_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+static void texture_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing TextureResource attr");
 
     texture_resource_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
@@ -162,10 +162,10 @@ STATIC void texture_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj
 
 
 // Class attributes
-STATIC const mp_rom_map_elem_t texture_resource_class_locals_dict_table[] = {
+static const mp_rom_map_elem_t texture_resource_class_locals_dict_table[] = {
 
 };
-STATIC MP_DEFINE_CONST_DICT(texture_resource_class_locals_dict, texture_resource_class_locals_dict_table);
+static MP_DEFINE_CONST_DICT(texture_resource_class_locals_dict, texture_resource_class_locals_dict_table);
 
 
 MP_DEFINE_CONST_OBJ_TYPE(

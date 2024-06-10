@@ -58,7 +58,7 @@ void engine_animation_tick(float dt){
 }
 
 
-STATIC mp_obj_t engine_animation_module_init(){
+static mp_obj_t engine_animation_module_init(){
     engine_main_raise_if_not_initialized();
     return mp_const_none;
 }
@@ -75,7 +75,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_animation_module_init_obj, engine_animation_mod
    ATTR: [type=enum/int]   [name=ONE_SHOT]              [value=2]
    ATTR: [type=enum/int]   [name=PING_PONG]             [value=3]
 */
-STATIC const mp_rom_map_elem_t engine_animation_globals_table[] = {
+static const mp_rom_map_elem_t engine_animation_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_animation) },
     { MP_OBJ_NEW_QSTR(MP_QSTR___init__), (mp_obj_t)&engine_animation_module_init_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Tween), (mp_obj_t)&tween_class_type},
@@ -128,7 +128,7 @@ STATIC const mp_rom_map_elem_t engine_animation_globals_table[] = {
 };
 
 // Module init
-STATIC MP_DEFINE_CONST_DICT (mp_module_engine_animation_globals, engine_animation_globals_table);
+static MP_DEFINE_CONST_DICT (mp_module_engine_animation_globals, engine_animation_globals_table);
 
 const mp_obj_module_t engine_animation_user_cmodule = {
     .base = { &mp_type_module },

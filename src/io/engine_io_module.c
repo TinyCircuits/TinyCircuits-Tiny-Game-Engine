@@ -94,7 +94,7 @@ void engine_io_reset_gui_toggle_button(){
     PARAM: [type=int]   [name=button_mask]  [value=single or OR'ed together enum/ints (e.g. 'engine_input.A | engine_input.B')]
     RETURN: True or False
 */ 
-STATIC mp_obj_t engine_io_check_pressed(mp_obj_t module, mp_obj_t button_mask_u16){
+static mp_obj_t engine_io_check_pressed(mp_obj_t module, mp_obj_t button_mask_u16){
     if(engine_gui_get_focus() == true){
         return mp_obj_new_bool(false);
     }else{
@@ -112,7 +112,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(engine_io_check_pressed_obj, engine_io_check_pressed);
     PARAM: [type=int]   [name=button_mask]  [value=single or OR'ed together enum/ints (e.g. 'engine_input.A | engine_input.B')]
     RETURN: True or False
 */ 
-STATIC mp_obj_t engine_io_check_just_changed(mp_obj_t module, mp_obj_t button_mask_u16){
+static mp_obj_t engine_io_check_just_changed(mp_obj_t module, mp_obj_t button_mask_u16){
     if(engine_gui_get_focus() == true){
         return mp_obj_new_bool(false);
     }else{
@@ -130,7 +130,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(engine_io_check_just_changed_obj, engine_io_check_just
     PARAM: [type=int]   [name=button_mask]  [value=single or OR'ed together enum/ints (e.g. 'engine_input.A | engine_input.B')]
     RETURN: True or False
 */ 
-STATIC mp_obj_t engine_io_check_just_pressed(mp_obj_t module, mp_obj_t button_mask_u16){
+static mp_obj_t engine_io_check_just_pressed(mp_obj_t module, mp_obj_t button_mask_u16){
     if(engine_gui_get_focus() == true){
         return mp_obj_new_bool(false);
     }else{
@@ -148,7 +148,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(engine_io_check_just_pressed_obj, engine_io_check_just
     PARAM: [type=int]   [name=button_mask]  [value=single or OR'ed together enum/ints (e.g. 'engine_input.A | engine_input.B')]
     RETURN: True or False
 */ 
-STATIC mp_obj_t engine_io_check_just_released(mp_obj_t module, mp_obj_t button_mask_u16){
+static mp_obj_t engine_io_check_just_released(mp_obj_t module, mp_obj_t button_mask_u16){
     if(engine_gui_get_focus() == true){
         return mp_obj_new_bool(false);
     }else{
@@ -166,7 +166,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(engine_io_check_just_released_obj, engine_io_check_jus
     PARAM: [type=float]   [name=intensity]  [value=0.0 ~ 1.0]
     RETURN: None
 */ 
-STATIC mp_obj_t engine_io_rumble(mp_obj_t module, mp_obj_t intensity_obj){
+static mp_obj_t engine_io_rumble(mp_obj_t module, mp_obj_t intensity_obj){
     #ifdef __unix__
         // Nothing to do
     #else
@@ -184,14 +184,14 @@ MP_DEFINE_CONST_FUN_OBJ_2(engine_io_rumble_obj, engine_io_rumble);
     DESC: Toggle between button inputs being consumed by the game or gui elements
     RETURN: None
 */
-STATIC mp_obj_t engine_toggle_gui_focus(mp_obj_t module){
+static mp_obj_t engine_toggle_gui_focus(mp_obj_t module){
     engine_gui_toggle_focus();
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(engine_toggle_gui_focus_obj, engine_toggle_gui_focus);
 
 
-STATIC mp_obj_t engine_io_battery_level(mp_obj_t module){
+static mp_obj_t engine_io_battery_level(mp_obj_t module){
     #if defined(__arm__)
         // Read the 12-bit sample with ADC max ref voltage of 3.3V
         uint16_t battery_voltage_12_bit = adc_read();
@@ -219,7 +219,7 @@ STATIC mp_obj_t engine_io_battery_level(mp_obj_t module){
 MP_DEFINE_CONST_FUN_OBJ_1(engine_io_battery_level_obj, engine_io_battery_level);
 
 
-STATIC mp_obj_t engine_io_module_init(){
+static mp_obj_t engine_io_module_init(){
     engine_main_raise_if_not_initialized();
     return mp_const_none;
 }
@@ -246,16 +246,16 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_io_module_init_obj, engine_io_module_init);
     ATTR: [type=enum/int]   [name=BUMPER_RIGHT]                         [value=0b0000000010000000]
     ATTR: [type=enum/int]   [name=MENU]                                 [value=0b0000000100000000]
 */ 
-STATIC const mp_rom_map_elem_t engine_io_globals_table[] = {
+static const mp_rom_map_elem_t engine_io_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_io) },
     { MP_OBJ_NEW_QSTR(MP_QSTR___init__), (mp_obj_t)&engine_io_module_init_obj },
 };
 
 // Module init
-STATIC MP_DEFINE_CONST_DICT (mp_module_engine_io_globals, engine_io_globals_table);
+static MP_DEFINE_CONST_DICT (mp_module_engine_io_globals, engine_io_globals_table);
 
 
-STATIC void io_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+static void io_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     if(destination[0] == MP_OBJ_NULL){          // Load
         switch(attribute){
             case MP_QSTR_gui_toggle_button:

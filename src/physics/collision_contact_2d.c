@@ -38,7 +38,7 @@ mp_obj_t collision_contact_2d_class_new(const mp_obj_type_t *type, size_t n_args
    ATTR: [type={ref_link:Vector2}] [name=normal]    [value={ref_link:Vector2}]
    ATTR: [type=object]             [name=node]      [value=object (the other node in the collision)]
 */ 
-STATIC void collision_contact_2d_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+static void collision_contact_2d_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing CollisionContact2D attr");
 
     collision_contact_2d_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
@@ -79,10 +79,10 @@ STATIC void collision_contact_2d_class_attr(mp_obj_t self_in, qstr attribute, mp
 
 
 // Class attributes
-STATIC const mp_rom_map_elem_t collision_contact_2d_class_locals_dict_table[] = {
+static const mp_rom_map_elem_t collision_contact_2d_class_locals_dict_table[] = {
 
 };
-STATIC MP_DEFINE_CONST_DICT(collision_contact_2d_class_locals_dict, collision_contact_2d_class_locals_dict_table);
+static MP_DEFINE_CONST_DICT(collision_contact_2d_class_locals_dict, collision_contact_2d_class_locals_dict_table);
 
 
 MP_DEFINE_CONST_OBJ_TYPE(

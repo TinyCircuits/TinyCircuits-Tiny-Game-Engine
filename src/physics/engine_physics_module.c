@@ -32,7 +32,7 @@ vector2_class_obj_t gravity = {
    PARAM: [type=float] [name=y] [value=any]
    RETURN: None
 */
-STATIC mp_obj_t engine_physics_set_gravity(mp_obj_t x, mp_obj_t y){
+static mp_obj_t engine_physics_set_gravity(mp_obj_t x, mp_obj_t y){
     ENGINE_INFO_PRINTF("EnginePhysics: Setting gravity");
     gravity.x.value = mp_obj_get_float(x);
     gravity.y.value = mp_obj_get_float(y);
@@ -54,7 +54,7 @@ mp_obj_t engine_physics_get_gravity(){
 MP_DEFINE_CONST_FUN_OBJ_0(engine_physics_get_gravity_obj, engine_physics_get_gravity);
 
 
-STATIC mp_obj_t engine_physics_module_init(){
+static mp_obj_t engine_physics_module_init(){
     engine_main_raise_if_not_initialized();
     return mp_const_none;
 }
@@ -68,7 +68,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_physics_module_init_obj, engine_physics_module_
    ATTR: [type=function] [name={ref_link:set_gravity}]                     [value=function]
    ATTR: [type=function] [name={ref_link:get_gravity}]                     [value=function]
 */
-STATIC const mp_rom_map_elem_t engine_physics_globals_table[] = {
+static const mp_rom_map_elem_t engine_physics_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_physics) },
     { MP_OBJ_NEW_QSTR(MP_QSTR___init__), (mp_obj_t)&engine_physics_module_init_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_CollisionContact2D), (mp_obj_t)&collision_contact_2d_class_type},
@@ -77,7 +77,7 @@ STATIC const mp_rom_map_elem_t engine_physics_globals_table[] = {
 };
 
 // Module init
-STATIC MP_DEFINE_CONST_DICT(mp_module_engine_physics_globals, engine_physics_globals_table);
+static MP_DEFINE_CONST_DICT(mp_module_engine_physics_globals, engine_physics_globals_table);
 
 const mp_obj_module_t engine_physics_user_cmodule = {
     .base = { &mp_type_module },

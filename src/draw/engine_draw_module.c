@@ -15,7 +15,7 @@
     PARAM: [type=enum/int]   [name=background_color]  [value=enum/int (16-bit RGB565)]
     RETURN: None
 */ 
-STATIC mp_obj_t engine_draw_set_background_color(mp_obj_t module, mp_obj_t background_color){
+static mp_obj_t engine_draw_set_background_color(mp_obj_t module, mp_obj_t background_color){
     color_class_obj_t *color = background_color;
     engine_display_set_fill_color(color->value.val);
     return mp_const_none;
@@ -30,7 +30,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(engine_draw_set_background_color_obj, engine_draw_set_
     PARAM: [type=object]   [name=background]  [value={ref_link:TextureResource}]
     RETURN: None
 */ 
-STATIC mp_obj_t engine_draw_set_background(mp_obj_t module, mp_obj_t background){
+static mp_obj_t engine_draw_set_background(mp_obj_t module, mp_obj_t background){
     texture_resource_class_obj_t *background_texture_resource = background;
 
     if(background_texture_resource->width != SCREEN_WIDTH || background_texture_resource->height != SCREEN_HEIGHT){
@@ -44,7 +44,7 @@ STATIC mp_obj_t engine_draw_set_background(mp_obj_t module, mp_obj_t background)
 MP_DEFINE_CONST_FUN_OBJ_2(engine_draw_set_background_obj, engine_draw_set_background);
 
 
-STATIC mp_obj_t engine_draw_module_init(){
+static mp_obj_t engine_draw_module_init(){
     engine_main_raise_if_not_initialized();
     return mp_const_none;
 }
@@ -86,21 +86,21 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_draw_module_init_obj, engine_draw_module_init);
     ATTR: [type=framebuf]   [name=back_fb]                          [value=framebuf]
     ATTR: [type=framebuf]   [name=front_fb]                         [value=framebuf]
 */
-STATIC const mp_rom_map_elem_t engine_draw_globals_table[] = {
+static const mp_rom_map_elem_t engine_draw_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_draw) },
     { MP_OBJ_NEW_QSTR(MP_QSTR___init__), (mp_obj_t)&engine_draw_module_init_obj }
 };
 
 // Module init
-STATIC MP_DEFINE_CONST_DICT (mp_module_engine_draw_globals, engine_draw_globals_table);
+static MP_DEFINE_CONST_DICT (mp_module_engine_draw_globals, engine_draw_globals_table);
 
 
-STATIC void draw_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
+static void draw_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
     ENGINE_FORCE_PRINTF("print(): Draw");
 }
 
 
-STATIC void draw_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+static void draw_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     if(destination[0] == MP_OBJ_NULL){          // Load
         switch(attribute) {
             case MP_QSTR_set_background_color:

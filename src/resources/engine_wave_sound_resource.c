@@ -21,7 +21,7 @@ mp_obj_t wave_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
     ENGINE_INFO_PRINTF("New WaveSoundResource");
     mp_arg_check_num(n_args, n_kw, 1, 1, false);
 
-    sound_resource_base_class_obj_t *self = m_new_obj_with_finaliser(sound_resource_base_class_obj_t);
+    sound_resource_base_class_obj_t *self = mp_obj_malloc_with_finaliser(sound_resource_base_class_obj_t, &wave_sound_resource_class_type);
     self->base.type = &wave_sound_resource_class_type;
     self->get_data = &wave_sound_resource_fill_destination;
     self->channel = NULL;
@@ -110,7 +110,7 @@ mp_obj_t wave_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
 
 
 // Class methods
-STATIC mp_obj_t wave_sound_resource_class_del(mp_obj_t self_in){
+static mp_obj_t wave_sound_resource_class_del(mp_obj_t self_in){
     ENGINE_INFO_PRINTF("WaveSoundResource: Deleted (freeing sound data)");
 
     sound_resource_base_class_obj_t *self = self_in;
@@ -138,7 +138,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(wave_sound_resource_class_del_obj, wave_sound_resource
     PARAM:  [type=string]       [name=filepath] [value=string]
     ATTR:   [type=bytearray]    [name=data]     [value=value of bytearray containing the audio samples]                                                                                                                                                                
 */ 
-STATIC void wave_sound_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+static void wave_sound_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing WaveSoundResource attr");
 
     sound_resource_base_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
@@ -171,10 +171,10 @@ STATIC void wave_sound_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_
 
 
 // Class attributes
-STATIC const mp_rom_map_elem_t wave_sound_resource_class_locals_dict_table[] = {
+static const mp_rom_map_elem_t wave_sound_resource_class_locals_dict_table[] = {
 
 };
-STATIC MP_DEFINE_CONST_DICT(wave_sound_resource_class_locals_dict, wave_sound_resource_class_locals_dict_table);
+static MP_DEFINE_CONST_DICT(wave_sound_resource_class_locals_dict, wave_sound_resource_class_locals_dict_table);
 
 
 MP_DEFINE_CONST_OBJ_TYPE(

@@ -3,7 +3,7 @@
 #include "math/engine_math.h"
 
 
-STATIC void vector3_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
+static void vector3_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
     ENGINE_PRINTF("%.15f %.15f %.15f", (double)((mp_obj_float_t)((vector3_class_obj_t*)self_in)->x).value, (double)((mp_obj_float_t)((vector3_class_obj_t*)self_in)->y).value, (double)((mp_obj_float_t)((vector3_class_obj_t*)self_in)->z).value);
 }
 
@@ -44,7 +44,7 @@ mp_obj_t vector3_class_length(mp_obj_t self_in){
 
     return mp_obj_new_float(engine_math_3d_vector_length(self->x.value, self->y.value, self->z.value));
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_length_obj, vector3_class_length);
+static MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_length_obj, vector3_class_length);
 
 
 /*  --- doc ---
@@ -64,7 +64,7 @@ mp_obj_t vector3_class_normalized(mp_obj_t self_in){
 
     return vector3_class_new(&vector3_class_type, 3, 0, (mp_obj_t[]){mp_obj_new_float(normalized_x), mp_obj_new_float(normalized_y), mp_obj_new_float(normalized_z)}); 
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_normalized_obj, vector3_class_normalized);
+static MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_normalized_obj, vector3_class_normalized);
 
 
 /*  --- doc ---
@@ -80,7 +80,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(vector3_class_normalized_obj, vector3_class_nor
     ATTR:  [type=function]   [name={ref_link:vector3_length}]       [value=function] 
     ATTR:  [type=function]   [name={ref_link:vector3_normalized}]   [value=function]                                                      
 */ 
-STATIC void vector3_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+static void vector3_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Vector3 attr");
 
     vector3_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
@@ -129,10 +129,10 @@ STATIC void vector3_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *desti
 
 
 // Class attributes
-STATIC const mp_rom_map_elem_t vector3_class_locals_dict_table[] = {
+static const mp_rom_map_elem_t vector3_class_locals_dict_table[] = {
 
 };
-STATIC MP_DEFINE_CONST_DICT(vector3_class_locals_dict, vector3_class_locals_dict_table);
+static MP_DEFINE_CONST_DICT(vector3_class_locals_dict, vector3_class_locals_dict_table);
 
 
 MP_DEFINE_CONST_OBJ_TYPE(

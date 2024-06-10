@@ -79,7 +79,7 @@ uint16_t ENGINE_FAST_FUNCTION(engine_color_alpha_blend)(uint16_t background, uin
 }
 
 
-STATIC void color_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
+static void color_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
     double r = (double)(((mp_obj_float_t)((color_class_obj_t*)self_in)->r).value);
     double g = (double)(((mp_obj_float_t)((color_class_obj_t*)self_in)->g).value);
     double b = (double)(((mp_obj_float_t)((color_class_obj_t*)self_in)->b).value);
@@ -129,7 +129,7 @@ mp_obj_t color_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, 
 }
 
 
-STATIC void color_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+static void color_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Color attr");
 
     color_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
@@ -173,10 +173,10 @@ STATIC void color_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destina
 
 
 // Class attributes
-STATIC const mp_rom_map_elem_t color_class_locals_dict_table[] = {
+static const mp_rom_map_elem_t color_class_locals_dict_table[] = {
 
 };
-STATIC MP_DEFINE_CONST_DICT(color_class_locals_dict, color_class_locals_dict_table);
+static MP_DEFINE_CONST_DICT(color_class_locals_dict, color_class_locals_dict_table);
 
 
 MP_DEFINE_CONST_OBJ_TYPE(

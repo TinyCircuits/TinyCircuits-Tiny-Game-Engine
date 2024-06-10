@@ -27,7 +27,7 @@ mp_obj_t rectangle_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_
 
 
 // Class methods
-STATIC mp_obj_t rectangle_class_area(mp_obj_t self_in){
+static mp_obj_t rectangle_class_area(mp_obj_t self_in){
     rectangle_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
     ENGINE_INFO_PRINTF("Rectangle getting area...");
     return mp_obj_new_float(self->width * self->height);
@@ -35,7 +35,7 @@ STATIC mp_obj_t rectangle_class_area(mp_obj_t self_in){
 MP_DEFINE_CONST_FUN_OBJ_1(rectangle_class_area_obj, rectangle_class_area);
 
 
-STATIC mp_obj_t rectangle_class_overlapping(mp_obj_t self_in, mp_obj_t b_in){
+static mp_obj_t rectangle_class_overlapping(mp_obj_t self_in, mp_obj_t b_in){
     rectangle_class_obj_t* self = MP_OBJ_TO_PTR(self_in);
     rectangle_class_obj_t* b = MP_OBJ_TO_PTR(b_in);
     if(b->x + b->width < self->x) return mp_const_false;
@@ -60,7 +60,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(rectangle_class_overlapping_obj, rectangle_class_overl
     ATTR:   [type=float]  [name=width]  [value=any]
     ATTR:   [type=float]  [name=height] [value=any]                                                             
 */ 
-STATIC void rectangle_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+static void rectangle_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     rectangle_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
 
     if(destination[0] == MP_OBJ_NULL){          // Load
@@ -113,10 +113,10 @@ STATIC void rectangle_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *des
 
 
 // Class attributes
-STATIC const mp_rom_map_elem_t rectangle_class_locals_dict_table[] = {
+static const mp_rom_map_elem_t rectangle_class_locals_dict_table[] = {
 
 };
-STATIC MP_DEFINE_CONST_DICT(rectangle_class_locals_dict, rectangle_class_locals_dict_table);
+static MP_DEFINE_CONST_DICT(rectangle_class_locals_dict, rectangle_class_locals_dict_table);
 
 
 MP_DEFINE_CONST_OBJ_TYPE(

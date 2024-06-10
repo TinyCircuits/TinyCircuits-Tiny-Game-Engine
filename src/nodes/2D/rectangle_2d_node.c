@@ -277,7 +277,7 @@ bool rectangle_2d_node_store_attr(engine_node_base_t *self_node_base, qstr attri
 }
 
 
-STATIC mp_attr_fun_t rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+static mp_attr_fun_t rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Rectangle2DNode attr");
 
     // Get the node base from either class
@@ -386,7 +386,7 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
     if(parsed_args[scale].u_obj == MP_OBJ_NULL) parsed_args[scale].u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)});
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
-    engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);
+    engine_node_base_t *node_base = mp_obj_malloc_with_finaliser(engine_node_base_t, &engine_rectangle_2d_node_class_type);
     node_base_init(node_base, &engine_rectangle_2d_node_class_type, NODE_TYPE_RECTANGLE_2D);
     engine_rectangle_2d_node_class_obj_t *rectangle_2d_node = m_malloc(sizeof(engine_rectangle_2d_node_class_obj_t));
     node_base->node = rectangle_2d_node;
@@ -439,10 +439,10 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
 
 
 // Class attributes
-STATIC const mp_rom_map_elem_t rectangle_2d_node_class_locals_dict_table[] = {
+static const mp_rom_map_elem_t rectangle_2d_node_class_locals_dict_table[] = {
 
 };
-STATIC MP_DEFINE_CONST_DICT(rectangle_2d_node_class_locals_dict, rectangle_2d_node_class_locals_dict_table);
+static MP_DEFINE_CONST_DICT(rectangle_2d_node_class_locals_dict, rectangle_2d_node_class_locals_dict_table);
 
 
 MP_DEFINE_CONST_OBJ_TYPE(

@@ -58,7 +58,7 @@ void engine_main_reset(){
 // Module functions
 
 
-STATIC mp_obj_t engine_main_module_init(){
+static mp_obj_t engine_main_module_init(){
     if(is_engine_initialized == true){
         // Always do a engine reset on import since there are
         // cases when we can't catch the end of the script
@@ -106,13 +106,13 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_main_module_init_obj, engine_main_module_init);
    ID: engine_main
    DESC: This module needs to imported in main files using the engine. This sets up the device and engine plus resets everything every time it is imported. IMport this module anytime you want all engine nodes to be removed or when the engine should be setup
 */
-STATIC const mp_rom_map_elem_t engine_main_globals_table[] = {
+static const mp_rom_map_elem_t engine_main_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine) },
     { MP_OBJ_NEW_QSTR(MP_QSTR___init__), (mp_obj_t)&engine_main_module_init_obj },
 };
 
 // Module init
-STATIC MP_DEFINE_CONST_DICT (mp_module_engine_main_globals, engine_main_globals_table);
+static MP_DEFINE_CONST_DICT (mp_module_engine_main_globals, engine_main_globals_table);
 
 const mp_obj_module_t engine_main_user_cmodule = {
     .base = { &mp_type_module },

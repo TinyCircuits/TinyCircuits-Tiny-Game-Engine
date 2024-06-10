@@ -233,7 +233,7 @@ void voxelspace_node_class_draw(mp_obj_t voxelspace_node_base_obj, mp_obj_t came
     PARAM:  [type=float]    [name=y]   [value=any]
     RETURN: float or None
 */
-STATIC mp_obj_t voxelspace_node_class_get_abs_height(mp_obj_t self, mp_obj_t x_obj, mp_obj_t z_obj){
+static mp_obj_t voxelspace_node_class_get_abs_height(mp_obj_t self, mp_obj_t x_obj, mp_obj_t z_obj){
     engine_node_base_t *node_base = self;
     engine_voxelspace_node_class_obj_t *voxelspace = node_base->node;
     vector3_class_obj_t *voxelspace_position = voxelspace->position;
@@ -452,7 +452,7 @@ bool voxelspace_node_store_attr(engine_node_base_t *self_node_base, qstr attribu
 }
 
 
-STATIC mp_attr_fun_t voxelspace_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+static mp_attr_fun_t voxelspace_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing VoxelspaceNode attr");
 
     // Get the node base from either class
@@ -568,7 +568,7 @@ mp_obj_t voxelspace_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
     if(parsed_args[thickness].u_obj == MP_OBJ_NULL) parsed_args[thickness].u_obj = mp_obj_new_float(128.0f);;
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
-    engine_node_base_t *node_base = m_new_obj_with_finaliser(engine_node_base_t);
+    engine_node_base_t *node_base = mp_obj_malloc_with_finaliser(engine_node_base_t, &engine_voxelspace_node_class_type);
     node_base_init(node_base, &engine_voxelspace_node_class_type, NODE_TYPE_VOXELSPACE);
     engine_voxelspace_node_class_obj_t *voxelspace_node = m_malloc(sizeof(engine_voxelspace_node_class_obj_t));
     node_base->node = voxelspace_node;
@@ -624,10 +624,10 @@ mp_obj_t voxelspace_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
 
 
 // Class attributes
-STATIC const mp_rom_map_elem_t voxelspace_node_class_locals_dict_table[] = {
+static const mp_rom_map_elem_t voxelspace_node_class_locals_dict_table[] = {
 
 };
-STATIC MP_DEFINE_CONST_DICT(voxelspace_node_class_locals_dict, voxelspace_node_class_locals_dict_table);
+static MP_DEFINE_CONST_DICT(voxelspace_node_class_locals_dict, voxelspace_node_class_locals_dict_table);
 
 
 MP_DEFINE_CONST_OBJ_TYPE(

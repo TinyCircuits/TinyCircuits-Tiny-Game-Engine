@@ -17,7 +17,7 @@
 #include "engine_main.h"
 
 
-STATIC mp_obj_t engine_nodes_module_init(){
+static mp_obj_t engine_nodes_module_init(){
     engine_main_raise_if_not_initialized();
     return mp_const_none;
 }
@@ -43,7 +43,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_nodes_module_init_obj, engine_nodes_module_init
     ATTR: [type=object]   [name={ref_link:GUIButton2DNode}]         [value=object]
     ATTR: [type=object]   [name={ref_link:GUIBitmapButton2DNode}]   [value=object]
 */
-STATIC const mp_rom_map_elem_t engine_nodes_globals_table[] = {
+static const mp_rom_map_elem_t engine_nodes_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_nodes) },
     { MP_OBJ_NEW_QSTR(MP_QSTR___init__), (mp_obj_t)&engine_nodes_module_init_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_EmptyNode), (mp_obj_t)&engine_empty_node_class_type },
@@ -63,7 +63,7 @@ STATIC const mp_rom_map_elem_t engine_nodes_globals_table[] = {
 };
 
 // Module init
-STATIC MP_DEFINE_CONST_DICT (mp_module_engine_nodes_globals, engine_nodes_globals_table);
+static MP_DEFINE_CONST_DICT (mp_module_engine_nodes_globals, engine_nodes_globals_table);
 
 const mp_obj_module_t engine_nodes_user_cmodule = {
     .base = { &mp_type_module },

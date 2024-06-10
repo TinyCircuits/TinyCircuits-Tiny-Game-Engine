@@ -17,7 +17,7 @@ mp_obj_t matrix4x4_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_
 }
 
 
-STATIC void matrix4x4_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+static void matrix4x4_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Matrix4x4 attr");
 
     if(destination[0] == MP_OBJ_NULL){          // Load
@@ -38,10 +38,10 @@ STATIC void matrix4x4_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *des
 
 
 // Class attributes
-STATIC const mp_rom_map_elem_t matrix4x4_class_locals_dict_table[] = {
+static const mp_rom_map_elem_t matrix4x4_class_locals_dict_table[] = {
 
 };
-STATIC MP_DEFINE_CONST_DICT(matrix4x4_class_locals_dict, matrix4x4_class_locals_dict_table);
+static MP_DEFINE_CONST_DICT(matrix4x4_class_locals_dict, matrix4x4_class_locals_dict_table);
 
 
 MP_DEFINE_CONST_OBJ_TYPE(
