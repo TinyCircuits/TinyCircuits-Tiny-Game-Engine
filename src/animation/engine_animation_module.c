@@ -7,7 +7,7 @@
 linked_list animation_list;
 
 
-linked_list_node* engine_animation_track(mp_obj_t *animation_element){
+linked_list_node* engine_animation_track(mp_obj_t animation_element){
     return linked_list_add_obj(&animation_list, animation_element);
 }
 

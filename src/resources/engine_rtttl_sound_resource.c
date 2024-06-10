@@ -74,7 +74,7 @@ float ENGINE_FAST_FUNCTION(rtttl_sound_resource_get_sample)(rtttl_sound_resource
             // * rest (should we actually do nothing this duration?)
             self->note_beat_duration = self->default_d;
             self->rest = false;
-            float note_octave = self->default_o;
+            uint8_t note_octave = self->default_o;
 
             // When/if a note is found, save it's index.
             // If a flat/# is found, add 1 to this index
@@ -154,7 +154,7 @@ float ENGINE_FAST_FUNCTION(rtttl_sound_resource_get_sample)(rtttl_sound_resource
                 // but needs to last 4 * 8 = 32 8th notes (that's the playback rate)
                 // A note divisor of 32 means this note gets 1/8th beat
                 // but needs to last 4/32 * 8 = 1 8th note
-                self->note_beat_duration = (4.0f / self->note_beat_duration) * 8.0f;
+                self->note_beat_duration = (uint8_t)((4.0f / self->note_beat_duration) * 8.0f);
 
                 // https://www.mobilefish.com/tutorials/rtttl/rtttl_quickguide_specification.html#:~:text=A%20dotted%20duration%20is%20one%20in%20which%20a%20note%20is%20given%20the%20duration%20of%20%22itself%20%2B%20half%20of%20itself.%22
                 if(dotted){

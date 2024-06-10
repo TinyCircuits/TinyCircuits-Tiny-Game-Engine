@@ -13,9 +13,11 @@
 #include "draw/engine_shader.h"
 
 
-void rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_base, mp_obj_t camera_node){
+void rectangle_2d_node_class_draw(mp_obj_t rectangle_node_base_obj, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("Rectangle2DNode: Drawing");
     
+    engine_node_base_t *rectangle_node_base = rectangle_node_base_obj;
+
     // Decode and store properties about the rectangle and camera nodes
     engine_node_base_t *camera_node_base = camera_node;
     engine_camera_node_class_obj_t *camera = camera_node_base->node;
@@ -29,12 +31,11 @@ void rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_base, mp_ob
     }
 
     vector2_class_obj_t *rectangle_scale =  rectangle_2d_node->scale;
-    uint16_t rectangle_width = mp_obj_get_float(rectangle_2d_node->width);
-    uint16_t rectangle_height = mp_obj_get_float(rectangle_2d_node->height);
+    float rectangle_width = mp_obj_get_float(rectangle_2d_node->width);
+    float rectangle_height = mp_obj_get_float(rectangle_2d_node->height);
     color_class_obj_t *rectangle_color = rectangle_2d_node->color;
     bool rectangle_outlined = mp_obj_get_int(rectangle_2d_node->outline);
 
-    vector3_class_obj_t *camera_rotation = camera->rotation;
     vector3_class_obj_t *camera_position = camera->position;
     rectangle_class_obj_t *camera_viewport = camera->viewport;
     float camera_zoom = mp_obj_get_float(camera->zoom);
@@ -88,7 +89,7 @@ void rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_base, mp_ob
     if(rectangle_outlined == false){
         engine_draw_rect(rectangle_color->value.val,
                          floorf(rectangle_rotated_x), floorf(rectangle_rotated_y),
-                         rectangle_width, rectangle_height,
+                         (int32_t)rectangle_width, (int32_t)rectangle_height,
                          rectangle_scale->x.value*camera_zoom, rectangle_scale->y.value*camera_zoom,
                          -rectangle_rotation,
                          rectangle_opacity,

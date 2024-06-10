@@ -141,12 +141,12 @@ mp_obj_t engine_saving_read_entry(uint8_t file_index, uint32_t entry_data_len, u
 
             // Search for interned/cached string without
             // See `mp_obj_new_str` in py/objstr.c
-            qstr q = qstr_find_strn(data, entry_data_len);
+            qstr q = qstr_find_strn((char*)data, entry_data_len);
 
             if(q != MP_QSTRnull){
                 // qstr with this data already exists, return reference
                 // unique str after deleting the string we just allocated
-                m_del(byte, data, entry_data_len);
+                m_del(byte, (void*)data, entry_data_len);
                 return MP_OBJ_NEW_QSTR(q);
             }else{
                 // no existing qstr, don't make one
@@ -226,7 +226,7 @@ mp_obj_t engine_saving_read_entry(uint8_t file_index, uint32_t entry_data_len, u
 }
 
 
-void engine_saving_write_entry(uint8_t file_index, mp_obj_t entry, const char* entry_name, uint16_t entry_name_len){
+void engine_saving_write_entry(uint8_t file_index, mp_obj_t entry, const byte* entry_name, size_t entry_name_len){
     uint32_t entry_data_len = engine_saving_get_entry_data_len(entry);
     uint8_t entry_data_type = SAVE_NONE;
 
@@ -300,7 +300,7 @@ void engine_saving_save_meta_table(uint8_t file_index, uint16_t save_version){
 }
 
 
-uint16_t engine_saving_seek_compare_string_in_file(uint8_t file_index, const char *str, uint32_t str_len, bool *entry_name_found){
+uint16_t engine_saving_seek_compare_string_in_file(uint8_t file_index, const byte *str, size_t str_len, bool *entry_name_found){
     // Go through the name from the file and the passed
     // name char by char. If at any point the name does
     // not match, break out of the parsing loop below
@@ -325,7 +325,7 @@ uint16_t engine_saving_seek_compare_string_in_file(uint8_t file_index, const cha
 }
 
 
-bool engine_saving_seek_copy_to_entry_in_file(uint8_t from_file_index, uint8_t to_file_index, const char *entry_name, uint32_t entry_name_len, uint32_t *out_data_len, uint8_t *out_data_type, bool copy){
+bool engine_saving_seek_copy_to_entry_in_file(uint8_t from_file_index, uint8_t to_file_index, const byte *entry_name, size_t entry_name_len, uint32_t *out_data_len, uint8_t *out_data_type, bool copy){
     bool entry_name_found = false;
 
     while(entry_name_found == false){
@@ -382,7 +382,7 @@ bool engine_saving_seek_copy_to_entry_in_file(uint8_t from_file_index, uint8_t t
 }
 
 
-void engine_saving_set_file_location(const char *location, uint32_t location_len){
+void engine_saving_set_file_location(const byte *location, size_t location_len){
     // Cannot be larger than this since `temp-` takes up 5 characters
     if(location_len > SAVE_LOCATION_LENGTH_MAX-5){
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineSave: ERROR: location path too long (max length: 250)"));
@@ -393,11 +393,11 @@ void engine_saving_set_file_location(const char *location, uint32_t location_len
     temporary_location.len = location_len;
 
     // Copy base files name to current and temporary file names
-    memcpy(current_location.data, location, current_location.len);
-    memcpy(temporary_location.data, location, current_location.len);
+    memcpy((byte*)current_location.data, location, current_location.len);
+    memcpy((byte*)temporary_location.data, location, current_location.len);
 
     // Append `-temp` to end of temporary filename and increase length to account for it
-    memcpy(temporary_location.data + temporary_location.len, "-temp", 5);
+    memcpy((byte*)temporary_location.data + temporary_location.len, "-temp", 5);
     temporary_location.len += 5;
 
     // If the file we are going to read from does not exist already,
@@ -428,7 +428,7 @@ void engine_saving_del_set_location(){
 }
 
 
-void engine_saving_save_entry(const char* entry_name, uint16_t entry_name_len, mp_obj_t entry){
+void engine_saving_save_entry(const byte* entry_name, size_t entry_name_len, mp_obj_t entry){
     // STEP #1: Open files and get table info and copy to new file
     // NOTE: read and write file cursors are at: 0 0
     engine_saving_start_read_write();
@@ -451,7 +451,7 @@ void engine_saving_save_entry(const char* entry_name, uint16_t entry_name_len, m
 }
 
 
-mp_obj_t engine_saving_load_entry(const char* entry_name, uint16_t entry_name_len){
+mp_obj_t engine_saving_load_entry(const byte* entry_name, size_t entry_name_len){
     mp_obj_t entry = mp_const_none;
 
     // STEP #1: Open file to read from and get file version
@@ -475,7 +475,7 @@ mp_obj_t engine_saving_load_entry(const char* entry_name, uint16_t entry_name_le
 }
 
 
-void engine_saving_delete_entry(const char* entry_name, uint16_t entry_name_len){
+void engine_saving_delete_entry(const byte *entry_name, size_t entry_name_len){
     // STEP #1: Open files and get table info and copy to new file
     // NOTE: read and write file cursors are at: 0 0
     engine_saving_start_read_write();

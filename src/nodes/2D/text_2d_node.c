@@ -18,14 +18,15 @@
 #include "draw/engine_shader.h"
 
 
-void text_2d_node_class_draw(engine_node_base_t *text_2d_node_base, mp_obj_t camera_node){
+void text_2d_node_class_draw(mp_obj_t text_2d_node_base_obj, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("Text2DNode: Drawing");
 
+    engine_node_base_t *text_2d_node_base = text_2d_node_base_obj;
     engine_text_2d_node_class_obj_t *text_2d_node = text_2d_node_base->node;
 
     // Very first thing is to early out if the text is not set
     if(text_2d_node->text == mp_const_none || text_2d_node->font_resource == mp_const_none){
-        return mp_const_none;
+        return;
     }
 
     float text_opacity = mp_obj_get_float(text_2d_node->opacity);

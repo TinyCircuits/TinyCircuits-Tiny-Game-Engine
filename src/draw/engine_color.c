@@ -20,9 +20,9 @@ void engine_color_sync_u16_to_rgb(color_class_obj_t *color){
 
 
 void engine_color_sync_rgb_to_u16(color_class_obj_t *color){
-    const uint16_t r = color->r.value * (float)bitmask_5_bit;
-    const uint16_t g = color->g.value * (float)bitmask_6_bit;
-    const uint16_t b = color->b.value * (float)bitmask_5_bit;
+    const uint16_t r = (uint16_t)(color->r.value * (float)bitmask_5_bit);
+    const uint16_t g = (uint16_t)(color->g.value * (float)bitmask_6_bit);
+    const uint16_t b = (uint16_t)(color->b.value * (float)bitmask_5_bit);
 
     color->value.val = 0;
     color->value.val |= (r << 11);
@@ -41,9 +41,9 @@ uint16_t ENGINE_FAST_FUNCTION(engine_color_blend)(uint16_t from, uint16_t to, fl
     const uint16_t to_g = (to >> 5)  & bitmask_6_bit;
     const uint16_t to_b = (to >> 0)  & bitmask_5_bit;
 
-    const uint16_t out_r = sqrtf((1.0f - amount) * (from_r*from_r) + amount * (to_r*to_r));
-    const uint16_t out_g = sqrtf((1.0f - amount) * (from_g*from_g) + amount * (to_g*to_g));
-    const uint16_t out_b = sqrtf((1.0f - amount) * (from_b*from_b) + amount * (to_b*to_b));
+    const uint16_t out_r = (uint16_t)sqrtf((1.0f - amount) * (from_r*from_r) + amount * (to_r*to_r));
+    const uint16_t out_g = (uint16_t)sqrtf((1.0f - amount) * (from_g*from_g) + amount * (to_g*to_g));
+    const uint16_t out_b = (uint16_t)sqrtf((1.0f - amount) * (from_b*from_b) + amount * (to_b*to_b));
 
     uint16_t result = 0;
     result |= (out_r << 11);
@@ -64,9 +64,9 @@ uint16_t ENGINE_FAST_FUNCTION(engine_color_alpha_blend)(uint16_t background, uin
     const uint16_t fg_g = (foreground >> 5)  & bitmask_6_bit;
     const uint16_t fg_b = (foreground >> 0)  & bitmask_5_bit;
 
-    const uint16_t out_r = (fg_r * alpha + bg_r * (1.0f-alpha));
-    const uint16_t out_g = (fg_g * alpha + bg_g * (1.0f-alpha));
-    const uint16_t out_b = (fg_b * alpha + bg_b * (1.0f-alpha));
+    const uint16_t out_r = (uint16_t)(fg_r * alpha + bg_r * (1.0f-alpha));
+    const uint16_t out_g = (uint16_t)(fg_g * alpha + bg_g * (1.0f-alpha));
+    const uint16_t out_b = (uint16_t)(fg_b * alpha + bg_b * (1.0f-alpha));
 
     uint16_t result = 0;
 
@@ -80,7 +80,10 @@ uint16_t ENGINE_FAST_FUNCTION(engine_color_alpha_blend)(uint16_t background, uin
 
 
 STATIC void color_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
-    ENGINE_PRINTF("%.15f %.15f %.15f", ((mp_obj_float_t)((color_class_obj_t*)self_in)->r).value, ((mp_obj_float_t)((color_class_obj_t*)self_in)->g).value, ((mp_obj_float_t)((color_class_obj_t*)self_in)->b).value);
+    double r = (double)(((mp_obj_float_t)((color_class_obj_t*)self_in)->r).value);
+    double g = (double)(((mp_obj_float_t)((color_class_obj_t*)self_in)->g).value);
+    double b = (double)(((mp_obj_float_t)((color_class_obj_t*)self_in)->b).value);
+    ENGINE_PRINTF("%.09f %.09f %.09f", r, g, b);
 }
 
 

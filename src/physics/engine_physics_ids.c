@@ -1,5 +1,6 @@
 #include "engine_physics_ids.h"
 #include "py/obj.h"
+#include "py/runtime.h"
 
 // Buffer of available physics IDs. Filled with values
 // 1 -> `PHYSICS_ID_MAX` on physics `init`. 

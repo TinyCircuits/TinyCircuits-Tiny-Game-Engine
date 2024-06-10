@@ -18,8 +18,8 @@
 #include "physics/engine_physics_ids.h"
 #include "engine_collections.h"
 
-
-void physics_circle_2d_node_class_draw(engine_node_base_t *circle_node_base, mp_obj_t camera_node){
+void physics_circle_2d_node_class_draw(mp_obj_t circle_node_base_obj, mp_obj_t camera_node){
+    engine_node_base_t *circle_node_base = circle_node_base_obj;
     engine_physics_node_base_t *physics_node_base = circle_node_base->node;
     engine_physics_circle_2d_node_class_obj_t *physics_circle_2d_node = physics_node_base->unique_data;
     bool circle_outlined = mp_obj_get_int(physics_node_base->outline);
@@ -89,7 +89,6 @@ mp_obj_t physics_circle_2d_node_class_del(mp_obj_t self_in){
 
     engine_node_base_t *node_base = self_in;
     engine_physics_node_base_t *physics_node_base = node_base->node;
-    engine_physics_circle_2d_node_class_obj_t *node = physics_node_base->unique_data;
     engine_collections_untrack_physics(physics_node_base->physics_list_node);
     engine_physics_ids_give_back(physics_node_base->physics_id);
 

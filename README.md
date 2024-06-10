@@ -114,8 +114,9 @@ To run the unix port on Windows 10 through WSL, follow this: https://ripon-banik
 [.] Need to get everything on same heap without without gc_collect on top of gc_collect muxtex lock crash. Right now C_HEAP_SIZE is made very large
    Found why this resulted in errors. Soft restarts end up causing errors since that memory gets erased/untracked during gc_sweep()
 
-Adam needs: faster asset loading, animation sequences
+[.] Figure out what broke with circle vs. circle collision after abs change (nothing wrong?)
 
+Adam needs: faster asset loading, animation sequences
 
 [] Issue with some cloud programs adding .ini files to folder
 [] Figure out and fix screen doing halo...

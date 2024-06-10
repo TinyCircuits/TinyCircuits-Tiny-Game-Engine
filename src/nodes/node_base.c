@@ -97,6 +97,8 @@ mp_obj_t node_base_destroy(mp_obj_t self_in){
     mp_obj_t final = mp_load_attr(node_base, MP_QSTR___del__);
     mp_call_function_0(final);
     m_del_obj(mp_obj_get_type(node_base), node_base);
+
+    return mp_const_none;
 }
 
 
@@ -121,6 +123,8 @@ mp_obj_t node_base_destroy_children(mp_obj_t self_in){
         node_base_destroy(child_node_base);
         current_child_link_node = node_base->children_node_bases.start;
     }
+
+    return mp_const_none;
 }
 
 
@@ -134,6 +138,8 @@ mp_obj_t node_base_destroy_all(mp_obj_t self_in){
     engine_node_base_t *node_base = self_in;
     node_base_destroy_children(self_in);
     node_base_destroy(node_base);
+
+    return mp_const_none;
 }
 
 
@@ -403,7 +409,7 @@ void node_base_set_attr_handler_default(mp_obj_t node_instance){
 }
 
 
-void node_base_set_attr_handler(mp_obj_t node_instance, void (*attr_handler_func)(mp_obj_t self_in, qstr attribute, mp_obj_t *destination)){
+void node_base_set_attr_handler(mp_obj_t node_instance, mp_attr_fun_t (*attr_handler_func)(mp_obj_t self_in, qstr attribute, mp_obj_t *destination)){
     default_instance_attr_func = MP_OBJ_TYPE_GET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr);
     MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr, attr_handler_func, 5);
 }

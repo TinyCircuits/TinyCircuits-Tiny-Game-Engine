@@ -17,9 +17,10 @@
 #include "py/obj.h"
 
 
-void sprite_2d_node_class_draw(engine_node_base_t *sprite_node_base, mp_obj_t camera_node){
+void sprite_2d_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("Sprite2DNode: Drawing");
 
+    engine_node_base_t *sprite_node_base = sprite_node_base_obj;
     engine_node_base_t *camera_node_base = camera_node;
     engine_camera_node_class_obj_t *camera = camera_node_base->node;
 

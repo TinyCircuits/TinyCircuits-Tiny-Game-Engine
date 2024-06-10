@@ -239,7 +239,7 @@ mp_obj_t delay_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, 
     delay_class_obj_t *self = m_new_obj_with_finaliser(delay_class_obj_t);
     self->self = self;
     self->tick = MP_OBJ_FROM_PTR(&delay_class_tick_obj);
-    self->list_node = engine_animation_track(self);
+    self->list_node = engine_animation_track((mp_obj_t)self);
     self->base.type = &delay_class_type;
 
     self->delay = 1000.0f;

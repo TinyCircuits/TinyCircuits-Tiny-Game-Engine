@@ -27,7 +27,8 @@
 extern const vector3_class_obj_t world_north;
 
 
-void mesh_node_class_draw(engine_node_base_t *mesh_node_base, mp_obj_t camera_node){
+void mesh_node_class_draw(mp_obj_t mesh_node_base_obj, mp_obj_t camera_node){
+    engine_node_base_t *mesh_node_base = mesh_node_base_obj;
     engine_mesh_node_class_obj_t *mesh_node = mesh_node_base->node;
 
     engine_node_base_t *camera_node_base = camera_node;
@@ -50,7 +51,7 @@ void mesh_node_class_draw(engine_node_base_t *mesh_node_base, mp_obj_t camera_no
     glm_lookat(cam_position, cam_target, cam_up, m_view);
 
     mat4 m_projection = GLM_MAT4_ZERO_INIT;
-    glm_perspective(1.571, SCREEN_WIDTH/SCREEN_HEIGHT, 0.5f, camera_view_distance, m_projection);
+    glm_perspective(1.571f, SCREEN_WIDTH/SCREEN_HEIGHT, 0.5f, camera_view_distance, m_projection);
 
     // mat4 m_model = GLM_MAT4_IDENTITY_INIT;
 
@@ -89,14 +90,14 @@ void mesh_node_class_draw(engine_node_base_t *mesh_node_base, mp_obj_t camera_no
            ((z2 > 0.0f && z2 < 1.0f))){
 
             // Cast to int and see if any endpoints will be on screen
-            int32_t x0 = out_0[0];
-            int32_t y0 = out_0[1];
+            int32_t x0 = (int32_t)out_0[0];
+            int32_t y0 = (int32_t)out_0[1];
 
-            int32_t x1 = out_1[0];
-            int32_t y1 = out_1[1];
+            int32_t x1 = (int32_t)out_1[0];
+            int32_t y1 = (int32_t)out_1[1];
 
-            int32_t x2 = out_2[0];
-            int32_t y2 = out_2[1];
+            int32_t x2 = (int32_t)out_2[0];
+            int32_t y2 = (int32_t)out_2[1];
 
             engine_draw_filled_triangle(0b1111100000000000, x0, y0, x1, y1, x2, y2, 1.0f, shader);
 

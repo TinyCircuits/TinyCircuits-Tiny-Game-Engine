@@ -49,7 +49,7 @@ void engine_math_normalize(float *vx, float *vy){
         length = 0.0001f;
     }
 
-    const float factor = 1.0 / length;
+    const float factor = 1.0f / length;
     *vx = (*vx) * factor;
     *vy = (*vy) * factor;
 }
@@ -64,7 +64,7 @@ void engine_math_3d_normalize(float *vx, float *vy, float *vz){
         length = 0.0001f;
     }
 
-    const float factor = 1.0 / length;
+    const float factor = 1.0f / length;
     *vx = (*vx) * factor;
     *vy = (*vy) * factor;
     *vz = (*vz) * factor;

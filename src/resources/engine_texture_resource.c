@@ -95,8 +95,6 @@ mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, si
 STATIC mp_obj_t texture_resource_class_del(mp_obj_t self_in){
     ENGINE_INFO_PRINTF("TextureResource: Deleted (freeing texture data)");
 
-    texture_resource_class_obj_t *self = self_in;
-
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(texture_resource_class_del_obj, texture_resource_class_del);

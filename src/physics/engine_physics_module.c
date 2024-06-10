@@ -17,6 +17,9 @@ vector2_class_obj_t gravity = {
     .y = (mp_obj_float_t){.base.type = &mp_type_float,
                           .value = -0.00981f,
     },
+    .on_change_user_ptr = NULL,
+    .on_changed = NULL,
+    .on_changing = NULL
 };
 
 

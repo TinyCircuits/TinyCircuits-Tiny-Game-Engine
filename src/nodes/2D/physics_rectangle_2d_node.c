@@ -17,7 +17,8 @@
 #include "engine_collections.h"
 
 
-void physics_rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_base, mp_obj_t camera_node){
+void physics_rectangle_2d_node_class_draw(mp_obj_t rectangle_node_base_obj, mp_obj_t camera_node){
+    engine_node_base_t *rectangle_node_base = rectangle_node_base_obj;
     engine_physics_node_base_t *physics_node_base = rectangle_node_base->node;
     engine_physics_rectangle_2d_node_class_obj_t *physics_rectangle_2d_node = physics_node_base->unique_data;
     bool rectangle_outlined = mp_obj_get_int(physics_node_base->outline);
@@ -30,8 +31,8 @@ void physics_rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_bas
     engine_node_base_t *camera_node_base = camera_node;
     engine_camera_node_class_obj_t *camera = camera_node_base->node;
 
-    uint16_t rectangle_width = mp_obj_get_float(physics_rectangle_2d_node->width);
-    uint16_t rectangle_height = mp_obj_get_float(physics_rectangle_2d_node->height);
+    float rectangle_width = mp_obj_get_float(physics_rectangle_2d_node->width);
+    float rectangle_height = mp_obj_get_float(physics_rectangle_2d_node->height);
 
     vector3_class_obj_t *camera_position = camera->position;
     rectangle_class_obj_t *camera_viewport = camera->viewport;
@@ -69,8 +70,8 @@ void physics_rectangle_2d_node_class_draw(engine_node_base_t *rectangle_node_bas
         camera_zoom = 1.0f;
     }
 
-    rectangle_width = rectangle_width*camera_zoom;
-    rectangle_height = rectangle_height*camera_zoom;
+    rectangle_width = (uint16_t)(rectangle_width*camera_zoom);
+    rectangle_height = (uint16_t)(rectangle_height*camera_zoom);
 
     rectangle_rotated_x += camera_viewport->width/2;
     rectangle_rotated_y += camera_viewport->height/2;
@@ -148,7 +149,7 @@ void engine_physics_rectangle_2d_node_update(engine_physics_node_base_t *physics
         float face_normal_length_squared = (temp_face_normal_x*temp_face_normal_x) + (temp_face_normal_y*temp_face_normal_y);
 
         // Flip sign of y-axis of normal since actually reversed on the screen
-        float face_normal_length = sqrt(face_normal_length_squared);
+        float face_normal_length = sqrtf(face_normal_length_squared);
         float face_normal_y = -temp_face_normal_x / face_normal_length;
         float face_normal_x =  temp_face_normal_y / face_normal_length;
 

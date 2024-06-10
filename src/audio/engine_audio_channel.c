@@ -86,7 +86,7 @@ mp_obj_t audio_channel_play(mp_obj_t self_in, mp_obj_t sound_resource_obj, mp_ob
     engine_audio_play_on_channel(sound_resource_obj, self_in, loop_obj);
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_1(audio_channel_play_obj, audio_channel_play);
+MP_DEFINE_CONST_FUN_OBJ_3(audio_channel_play_obj, audio_channel_play);
 
 
 /*  --- doc ---

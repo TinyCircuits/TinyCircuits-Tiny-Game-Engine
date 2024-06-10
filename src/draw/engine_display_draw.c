@@ -84,7 +84,7 @@ void engine_draw_line(uint16_t color, float x_start, float y_start, float x_end,
 
 
 
-void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t window_width, uint32_t window_height, uint32_t pixels_stride, float x_scale, float y_scale, float rotation_radians, uint16_t transparent_color, float alpha, engine_shader_t *shader){
+void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, int32_t window_width, int32_t window_height, uint32_t pixels_stride, float x_scale, float y_scale, float rotation_radians, uint16_t transparent_color, float alpha, engine_shader_t *shader){
     /*  https://cohost.org/tomforsyth/post/891823-rotation-with-three#:~:text=But%20the%20TL%3BDR%20is%20you%20do%20three%20shears%3A
         https://stackoverflow.com/questions/65909025/rotating-a-bitmap-with-3-shears    Lots of inspiration from here
         https://computergraphics.stackexchange.com/questions/10599/rotate-a-bitmap-with-shearing
@@ -127,12 +127,12 @@ void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t
 
     // When rotated at 45 degrees, make sure corners don't get cut
     // off: https://math.stackexchange.com/questions/2915935/radius-of-a-circle-touching-a-rectangle-both-of-which-are-inside-a-square
-    uint32_t dim = (uint32_t)sqrtf((scaled_window_width*scaled_window_width) + (scaled_window_height*scaled_window_height));
+    int32_t dim = (int32_t)sqrtf((scaled_window_width*scaled_window_width) + (scaled_window_height*scaled_window_height));
     float dim_half = (dim / 2.0f);
 
     // The top-left of the bitmap destination
-    int32_t top_left_x = center_x - dim_half;
-    int32_t top_left_y = center_y - dim_half;
+    int32_t top_left_x = (int32_t)(center_x - dim_half);
+    int32_t top_left_y = (int32_t)(center_y - dim_half);
 
     // If the top-left is above the viewport but
     // the bitmap may eventually showup, clip the
@@ -192,8 +192,8 @@ void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t
 
                 // Floor these otherwise get artifacts (don't exactly know why).
                 // Floor + int seems to be faster than comparing floats
-                int32_t rotX = floorf(x);
-                int32_t rotY = floorf(y);
+                int32_t rotX = (int32_t)floorf(x);
+                int32_t rotY = (int32_t)floorf(y);
 
                 // If statements are expensive! Don't need to check if withing screen
                 // bounds since those dimensions are clipped (destination rect)
@@ -230,7 +230,7 @@ void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, uint32_t
 }
 
 
-void engine_draw_blit_depth(uint16_t *pixels, float center_x, float center_y, uint32_t window_width, uint32_t window_height, uint32_t pixels_stride, float x_scale, float y_scale, float rotation_radians, uint16_t transparent_color, float alpha, uint16_t depth, engine_shader_t *shader){
+void engine_draw_blit_depth(uint16_t *pixels, float center_x, float center_y, int32_t window_width, int32_t window_height, uint32_t pixels_stride, float x_scale, float y_scale, float rotation_radians, uint16_t transparent_color, float alpha, uint16_t depth, engine_shader_t *shader){
     /*  https://cohost.org/tomforsyth/post/891823-rotation-with-three#:~:text=But%20the%20TL%3BDR%20is%20you%20do%20three%20shears%3A
         https://stackoverflow.com/questions/65909025/rotating-a-bitmap-with-3-shears    Lots of inspiration from here
         https://computergraphics.stackexchange.com/questions/10599/rotate-a-bitmap-with-shearing
@@ -273,12 +273,12 @@ void engine_draw_blit_depth(uint16_t *pixels, float center_x, float center_y, ui
 
     // When rotated at 45 degrees, make sure corners don't get cut
     // off: https://math.stackexchange.com/questions/2915935/radius-of-a-circle-touching-a-rectangle-both-of-which-are-inside-a-square
-    uint32_t dim = (uint32_t)sqrtf((scaled_window_width*scaled_window_width) + (scaled_window_height*scaled_window_height));
+    int32_t dim = (int32_t)sqrtf((scaled_window_width*scaled_window_width) + (scaled_window_height*scaled_window_height));
     float dim_half = (dim / 2.0f);
 
     // The top-left of the bitmap destination
-    int32_t top_left_x = center_x - dim_half;
-    int32_t top_left_y = center_y - dim_half;
+    int32_t top_left_x = (int32_t)(center_x - dim_half);
+    int32_t top_left_y = (int32_t)(center_y - dim_half);
 
     // If the top-left is above the viewport but
     // the bitmap may eventually showup, clip the
@@ -338,8 +338,8 @@ void engine_draw_blit_depth(uint16_t *pixels, float center_x, float center_y, ui
 
                 // Floor these otherwise get artifacts (don't exactly know why).
                 // Floor + int seems to be faster than comparing floats
-                int32_t rotX = floorf(x);
-                int32_t rotY = floorf(y);
+                int32_t rotX = (int32_t)floorf(x);
+                int32_t rotY = (int32_t)floorf(y);
 
                 // If statements are expensive! Don't need to check if withing screen
                 // bounds since those dimensions are clipped (destination rect)
@@ -378,7 +378,7 @@ void engine_draw_blit_depth(uint16_t *pixels, float center_x, float center_y, ui
 }
 
 
-void engine_draw_rect(uint16_t color, float center_x, float center_y, uint32_t width, uint32_t height, float x_scale, float y_scale, float rotation_radians, float alpha, engine_shader_t *shader){
+void engine_draw_rect(uint16_t color, float center_x, float center_y, int32_t width, int32_t height, float x_scale, float y_scale, float rotation_radians, float alpha, engine_shader_t *shader){
     /*  https://cohost.org/tomforsyth/post/891823-rotation-with-three#:~:text=But%20the%20TL%3BDR%20is%20you%20do%20three%20shears%3A
         https://stackoverflow.com/questions/65909025/rotating-a-bitmap-with-3-shears    Lots of inspiration from here
         https://computergraphics.stackexchange.com/questions/10599/rotate-a-bitmap-with-shearing
@@ -421,12 +421,12 @@ void engine_draw_rect(uint16_t color, float center_x, float center_y, uint32_t w
 
     // When rotated at 45 degrees, make sure corners don't get cut
     // off: https://math.stackexchange.com/questions/2915935/radius-of-a-circle-touching-a-rectangle-both-of-which-are-inside-a-square
-    uint32_t dim = (uint32_t)sqrtf((scaled_width*scaled_width) + (scaled_height*scaled_height));
+    int32_t dim = (int32_t)sqrtf((scaled_width*scaled_width) + (scaled_height*scaled_height));
     float dim_half = (dim / 2.0f);
 
     // The top-left of the bitmap destination
-    int32_t top_left_x = center_x - dim_half;
-    int32_t top_left_y = center_y - dim_half;
+    int32_t top_left_x = (int32_t)(center_x - dim_half);
+    int32_t top_left_y = (int32_t)(center_y - dim_half);
 
     // If the top-left is above the viewport but
     // the bitmap may eventually showup, clip the
@@ -486,8 +486,8 @@ void engine_draw_rect(uint16_t color, float center_x, float center_y, uint32_t w
 
                 // Floor these otherwise get artifacts (don't exactly know why).
                 // Floor + int seems to be faster than comparing floats
-                int32_t rotX = floorf(x);
-                int32_t rotY = floorf(y);
+                int32_t rotX = (int32_t)floorf(x);
+                int32_t rotY = (int32_t)floorf(y);
 
                 // If statements are expensive! Don't need to check if withing screen
                 // bounds since those dimensions are clipped (destination rect)
@@ -529,20 +529,20 @@ void engine_draw_outline_circle(uint16_t color, float center_x, float center_y, 
         float cy = distance * sinf(angle);
         
         // Bottom right quadrant of the circle
-        int brx = center_x+cx;
-        int bry = center_y+cy;
+        int brx = (int)(center_x+cx);
+        int bry = (int)(center_y+cy);
 
         // Bottom left quadrant of the circle
-        int blx = center_x-cx;
-        int bly = center_y+cy;
+        int blx = (int)(center_x-cx);
+        int bly = (int)(center_y+cy);
 
         // Top right quadrant of the circle
-        int trx = center_x+cx;
-        int try = center_y-cy;
+        int trx = (int)(center_x+cx);
+        int try = (int)(center_y-cy);
 
         // Top left quadrant of the circle
-        int tlx = center_x-cx;
-        int tly = center_y-cy;
+        int tlx = (int)(center_x-cx);
+        int tly = (int)(center_y-cy);
 
         engine_draw_pixel(color, brx, bry, alpha, shader);
         engine_draw_pixel(color, blx, bly, alpha, shader);
@@ -554,9 +554,11 @@ void engine_draw_outline_circle(uint16_t color, float center_x, float center_y, 
 
 void engine_draw_filled_circle(uint16_t color, float center_x, float center_y, float radius, float alpha, engine_shader_t *shader){
     float radius_sqr = radius * radius;
+    int x_min = (int)(-radius);
+    int x_max = (int)radius;
 
     // https://stackoverflow.com/a/59211338
-    for(int x=-radius; x<(int)radius; x++){
+    for(int x=x_min; x<x_max; x++){
         int hh = (int)sqrt(radius_sqr - x * x);
         int rx = (int)center_x + x;
         int ph = (int)center_y + hh;
@@ -663,15 +665,15 @@ float orient2d(float x0, float y0, float x1, float y1, float x2, float y2){
 // https://fgiesen.wordpress.com/2013/02/10/optimizing-the-basic-rasterizer/#:~:text=In%20our%20basic%20triangle%20rasterization%20loop
 void engine_draw_filled_triangle(uint16_t color, float x0, float y0, float x1, float y1, float x2, float y2, float alpha, engine_shader_t *shader){
     // Triangle setup
-    int16_t A01 = y0 - y1, B01 = x1 - x0;
-    int16_t A12 = y1 - y2, B12 = x2 - x1;
-    int16_t A20 = y2 - y0, B20 = x0 - x2;
+    int16_t A01 = (int16_t)(y0 - y1), B01 = (int16_t)(x1 - x0);
+    int16_t A12 = (int16_t)(y1 - y2), B12 = (int16_t)(x2 - x1);
+    int16_t A20 = (int16_t)(y2 - y0), B20 = (int16_t)(x0 - x2);
 
     // Compute triangle bounding box
-    int16_t minX = min3(x0, x1, x2);
-    int16_t minY = min3(y0, y1, y2);
-    int16_t maxX = max3(x0, x1, x2);
-    int16_t maxY = max3(y0, y1, y2);
+    int16_t minX = (int16_t)min3(x0, x1, x2);
+    int16_t minY = (int16_t)min3(y0, y1, y2);
+    int16_t maxX = (int16_t)max3(x0, x1, x2);
+    int16_t maxY = (int16_t)max3(y0, y1, y2);
 
     // Clip against screen bounds
     minX = max(minX, 0);
@@ -682,9 +684,9 @@ void engine_draw_filled_triangle(uint16_t color, float x0, float y0, float x1, f
     int16_t px = minX;
     int16_t py = minY;
 
-    int16_t w0_row = orient2d(x1, y1, x2, y2, px, py);
-    int16_t w1_row = orient2d(x2, y2, x0, y0, px, py);
-    int16_t w2_row = orient2d(x0, y0, x1, y1, px, py);
+    int16_t w0_row = (int16_t)orient2d(x1, y1, x2, y2, px, py);
+    int16_t w1_row = (int16_t)orient2d(x2, y2, x0, y0, px, py);
+    int16_t w2_row = (int16_t)orient2d(x0, y0, x1, y1, px, py);
 
     // Rasterize
     for(py = minY; py <= maxY; py++){

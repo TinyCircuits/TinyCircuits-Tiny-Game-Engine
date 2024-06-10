@@ -18,7 +18,7 @@ enum engine_animation_ease_types {engine_animation_ease_linear,
                                   engine_animation_ease_elast_in,  engine_animation_ease_elast_out,  engine_animation_ease_elast_in_out,
                                   engine_animation_ease_bounce_in, engine_animation_ease_bounce_out, engine_animation_ease_bounce_in_out};
 
-linked_list_node* engine_animation_track(mp_obj_t *animation_element);
+linked_list_node* engine_animation_track(mp_obj_t animation_element);
 void engine_animation_untrack(linked_list_node *list_node);
 void engine_animation_init();
 void engine_animation_tick(float dt);

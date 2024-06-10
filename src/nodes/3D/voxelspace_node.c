@@ -22,8 +22,10 @@ int16_t height_buffer[SCREEN_WIDTH];
 const float perspective_factor = 1.0f / SCREEN_HEIGHT_HALF;
 
 
-void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj_t camera_node){
+void voxelspace_node_class_draw(mp_obj_t voxelspace_node_base_obj, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("VoxelSpaceNode: Drawing");
+
+    engine_node_base_t *voxelspace_node_base = voxelspace_node_base_obj;
 
     engine_node_base_t *camera_node_base = camera_node;
     engine_camera_node_class_obj_t *camera = camera_node_base->node;
@@ -130,7 +132,7 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
 
         // Normalize the view along the hypot (that's what z is crawling)
         // and then scale to the max allowed in the depth buffer
-        float depth = (z / hypot) * UINT16_MAX;
+        uint16_t depth = (uint16_t)((z / hypot) * UINT16_MAX);
 
         for(uint8_t i=0; i<SCREEN_WIDTH; i++){
             int32_t x = 0;
@@ -138,8 +140,8 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
 
             // Check if the terrain should render forever (repeat) or only in bounds
             if(repeat == false){
-                x = pleft_x;
-                y = pleft_y;
+                x = (int32_t)pleft_x;
+                y = (int32_t)pleft_y;
 
                 // Only need to check bounds if repeat is not
                 // true, continue for-loop if out of bounds
@@ -149,12 +151,12 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
                     continue;
                 }
             }else{
-                x = fmodf(fabsf(pleft_x), heightmap->width);
-                y = fmodf(fabsf(pleft_y), heightmap->height);
+                x = (int32_t)fmodf(fabsf(pleft_x), heightmap->width);
+                y = (int32_t)fmodf(fabsf(pleft_y), heightmap->height);
             }
 
             // Now that we know we have a position to sample, sample it
-            uint32_t index = (y-voxelspace_position->z.value) * heightmap->width + (x-voxelspace_position->x.value);
+            uint32_t index = (uint32_t)((y-voxelspace_position->z.value) * heightmap->width + (x-voxelspace_position->x.value));
 
             // Get each RGB channel as a float
             float r = (heightmap_data[index] >> 0) & 0b00011111;
@@ -170,7 +172,7 @@ void voxelspace_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj
             altitude += camera_position->y.value;                       // Apply camera view translation
 
             // Use camera_rotation for on x-axis for pitch (head going in up/down in 'yes' motion)
-            int16_t height_on_screen = ((SCREEN_HEIGHT_HALF + (altitude / perspective)) + view_angle) + curvature + skew_roll_offset;
+            int16_t height_on_screen = (int16_t)(((SCREEN_HEIGHT_HALF + (altitude / perspective)) + view_angle) + curvature + skew_roll_offset);
             skew_roll_offset += skew_roll_line_dy;
 
             int16_t ipx = height_on_screen;
@@ -249,7 +251,7 @@ STATIC mp_obj_t voxelspace_node_class_get_abs_height(mp_obj_t self, mp_obj_t x_o
 
     // Only need to check bounds if repeat is not true
     if(repeat == true || ((x >= voxelspace_position->x.value && x < voxelspace_position->x.value + heightmap->width) && (z >= voxelspace_position->z.value && z < voxelspace_position->z.value+heightmap->height))){
-        uint32_t index = ((int32_t)z-voxelspace_position->z.value) * heightmap->width + ((int32_t)x-voxelspace_position->x.value);
+        uint32_t index = (uint32_t)(((int32_t)z-voxelspace_position->z.value) * heightmap->width + ((int32_t)x-voxelspace_position->x.value));
 
         // Get each RGB channel as a float
         uint16_t *heightmap_data = ((mp_obj_array_t*)heightmap->data)->items;

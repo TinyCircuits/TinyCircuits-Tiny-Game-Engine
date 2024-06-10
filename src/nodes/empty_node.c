@@ -9,9 +9,6 @@
 
 // Return `true` if handled loading the attr from internal structure, `false` otherwise
 bool empty_node_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_t *destination){
-    // Get the underlying structure
-    engine_empty_node_class_obj_t *self = self_node_base->node;
-
     switch(attribute){
         case MP_QSTR___del__:
             destination[0] = MP_OBJ_FROM_PTR(&node_base_del_obj);
@@ -158,7 +155,7 @@ STATIC mp_obj_t empty_node_class_new(const mp_obj_type_t *type, size_t n_args, s
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
     enum arg_ids {child_class, position, rotation};
 
-    bool inherited = false;
+    // bool inherited = false;
 
     // If there is one positional argument and it isn't the first 
     // expected argument (as is expected when using positional
@@ -167,14 +164,14 @@ STATIC mp_obj_t empty_node_class_new(const mp_obj_type_t *type, size_t n_args, s
         // Using positional arguments but the type of the first one isn't
         // as expected. Must be the child class
         mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args), allowed_args, parsed_args);
-        inherited = true;
+        // inherited = true;
     }else{
         // Whether we're using positional arguments or not, prase them this
         // way. It's a requirement that the child class be passed using position.
         // Adjust what and where the arguments are parsed, since not inherited based
         // on the first argument
         mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args)-1, allowed_args+1, parsed_args+1);
-        inherited = false;
+        // inherited = false;
     }
 
     if(parsed_args[position].u_obj == MP_OBJ_NULL) parsed_args[position].u_obj = vector3_class_new(&vector3_class_type, 3, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(0.0f), mp_obj_new_float(0.0f)});

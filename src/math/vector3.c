@@ -4,7 +4,7 @@
 
 
 STATIC void vector3_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
-    ENGINE_PRINTF("%.15f %.15f %.15f", ((mp_obj_float_t)((vector3_class_obj_t*)self_in)->x).value, ((mp_obj_float_t)((vector3_class_obj_t*)self_in)->y).value, ((mp_obj_float_t)((vector3_class_obj_t*)self_in)->z).value);
+    ENGINE_PRINTF("%.15f %.15f %.15f", (double)((mp_obj_float_t)((vector3_class_obj_t*)self_in)->x).value, (double)((mp_obj_float_t)((vector3_class_obj_t*)self_in)->y).value, (double)((mp_obj_float_t)((vector3_class_obj_t*)self_in)->z).value);
 }
 
 

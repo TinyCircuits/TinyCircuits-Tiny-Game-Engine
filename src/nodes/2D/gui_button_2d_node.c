@@ -21,9 +21,10 @@
 #include <string.h>
 
 
-void gui_button_2d_node_class_draw(engine_node_base_t *button_node_base, mp_obj_t camera_node){
+void gui_button_2d_node_class_draw(mp_obj_t button_node_base_obj, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("GUIButton2DNode: Drawing");
     
+    engine_node_base_t *button_node_base = button_node_base_obj;
     engine_gui_button_2d_node_class_obj_t *button = button_node_base->node;
 
     // Avoid drawing or doing anything if opacity is zero
@@ -110,7 +111,7 @@ void gui_button_2d_node_class_draw(engine_node_base_t *button_node_base, mp_obj_
 
         engine_draw_rect(outline_color->value.val,
                          floorf(button_rotated_x), floorf(button_rotated_y),
-                         button->width_outline, button->height_outline,
+                         (int32_t)button->width_outline, (int32_t)button->height_outline,
                          x_scale, y_scale,
                         -button_rotation,
                          button_opacity,
@@ -118,7 +119,7 @@ void gui_button_2d_node_class_draw(engine_node_base_t *button_node_base, mp_obj_
 
         engine_draw_rect(background_color->value.val,
                          floorf(button_rotated_x), floorf(button_rotated_y),
-                         button->width_padded, button->height_padded,
+                         (int32_t)button->width_padded, (int32_t)button->height_padded,
                          x_scale, y_scale,
                         -button_rotation,
                          button_opacity,

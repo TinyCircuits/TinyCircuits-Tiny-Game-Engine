@@ -89,7 +89,7 @@ void set_value_to_end(tween_class_obj_t *tween){
     // Get tweening value and make sure valid
     mp_obj_t tweening_value = get_tweening_value(tween);
     if(tweening_value == mp_const_none){
-        return mp_const_none;
+        return;
     }
 
     if(tween->tween_type == tween_type_float){
@@ -303,9 +303,9 @@ mp_obj_t tween_class_start(size_t n_args, const mp_obj_t *args){
     // Get the qstr for the attribute that should be tweened
     tween->attr = mp_obj_str_get_qstr(args[2]);
 
-    mp_obj_type_t *value_type = mp_obj_get_type(mp_load_attr(tween->object, tween->attr));
-    mp_obj_type_t *start_type = mp_obj_get_type(args[3]);
-    mp_obj_type_t *end_type = mp_obj_get_type(args[4]);
+    const mp_obj_type_t *value_type = mp_obj_get_type(mp_load_attr(tween->object, tween->attr));
+    const mp_obj_type_t *start_type = mp_obj_get_type(args[3]);
+    const mp_obj_type_t *end_type = mp_obj_get_type(args[4]);
 
     if(value_type == &mp_type_float && start_type == &mp_type_float && end_type == &mp_type_float){
         tween->initial_0  = mp_obj_get_float(args[3]);
@@ -664,7 +664,7 @@ mp_obj_t tween_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, 
     self->paused = true;
     self->object = mp_const_none;
     self->after_called = false;
-    self->attr = mp_const_none;
+    self->attr = 0;
     self->after = mp_const_none;
     self->during = mp_const_none;
 

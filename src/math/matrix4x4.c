@@ -20,8 +20,6 @@ mp_obj_t matrix4x4_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_
 STATIC void matrix4x4_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Matrix4x4 attr");
 
-    matrix4x4_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
-
     if(destination[0] == MP_OBJ_NULL){          // Load
         switch(attribute) {
             default:

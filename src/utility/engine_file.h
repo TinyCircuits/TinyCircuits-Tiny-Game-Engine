@@ -17,7 +17,7 @@ void engine_file_open_create_write(uint8_t file_index, mp_obj_str_t *filename);
 void engine_file_close(uint8_t file_index);
 
 uint32_t engine_file_read(uint8_t file_index, void *buffer, uint32_t size);
-uint32_t engine_file_write(uint8_t file_index, void *buffer, uint32_t size);
+uint32_t engine_file_write(uint8_t file_index, const void *buffer, uint32_t size);
 
 uint32_t engine_file_seek(uint8_t file_index, int32_t offset, uint8_t whence);
 uint32_t engine_file_seek_until(uint8_t file_index, const char *str, uint32_t str_len);

@@ -112,7 +112,7 @@ STATIC void draw_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destinat
                 destination[1] = self_in;
             break;
             case MP_QSTR_Color:
-                destination[0] = &color_class_type;
+                destination[0] = (mp_obj_type_t*)&color_class_type;
             break;
             case MP_QSTR_black:
                 destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0x0000)});

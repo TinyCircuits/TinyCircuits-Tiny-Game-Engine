@@ -50,8 +50,6 @@ MP_DEFINE_CONST_FUN_OBJ_3(noise_resource_class_noise_2d_obj, noise_resource_clas
 STATIC mp_obj_t noise_resource_class_del(mp_obj_t self_in){
     ENGINE_INFO_PRINTF("NoiseResource: Deleted (freeing noise data)");
 
-    noise_resource_class_obj_t *self = self_in;
-
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(noise_resource_class_del_obj, noise_resource_class_del);

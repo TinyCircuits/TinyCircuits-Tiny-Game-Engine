@@ -24,6 +24,6 @@ typedef struct{
 }engine_voxelspace_sprite_node_class_obj_t;
 
 extern const mp_obj_type_t engine_voxelspace_sprite_node_class_type;
-void voxelspace_sprite_node_class_draw(engine_node_base_t *voxelspace_node_base, mp_obj_t camera_node);
+void voxelspace_sprite_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t camera_node);
 
 #endif  // VOXELSPACE_SPRITE_NODE_H

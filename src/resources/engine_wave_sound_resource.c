@@ -7,11 +7,11 @@
 #include <math.h>
 
 
-uint8_t *wave_sound_resource_fill_destination(void *channel_in, uint16_t max_buffer_size, uint16_t *leftover_size){
+uint8_t *wave_sound_resource_fill_destination(void *channel_in, uint32_t max_buffer_size, uint16_t *leftover_size){
     audio_channel_class_obj_t *channel = channel_in;
-    sound_resource_base_class_obj_t *source = channel->source;
+    sound_resource_base_class_obj_t *source = (sound_resource_base_class_obj_t*)channel->source;
 
-    *leftover_size = fminf(source->total_data_size - channel->source_byte_offset, max_buffer_size);
+    *leftover_size = (uint16_t)fminf(source->total_data_size - channel->source_byte_offset, max_buffer_size);
     uint8_t *data = ENGINE_BYTEARRAY_OBJ_TO_DATA(source->extra_data);
     return data + channel->source_byte_offset;
 }
@@ -31,7 +31,7 @@ mp_obj_t wave_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
     // Wave parsing: https://truelogic.org/wordpress/2015/09/04/parsing-a-wav-file-in-c/
     //               https://www.aelius.com/njh/wavemetatools/doc/riffmci.pdf
     //               https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/WAVE.html
-    unsigned char temporary_string[] = {' ', ' ', ' ', ' ', '\0'};
+    char temporary_string[] = {' ', ' ', ' ', ' ', '\0'};
     uint32_t file_size = 0;
     uint16_t format_type = 0;
     uint16_t channel_count = 0;

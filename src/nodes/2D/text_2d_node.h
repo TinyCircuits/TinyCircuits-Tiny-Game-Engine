@@ -21,7 +21,7 @@ typedef struct{
 }engine_text_2d_node_class_obj_t;
 
 extern const mp_obj_type_t engine_text_2d_node_class_type;
-void text_2d_node_class_draw(engine_node_base_t *text_node_base, mp_obj_t camera_node);
+void text_2d_node_class_draw(mp_obj_t text_2d_node_base_obj, mp_obj_t camera_node);
 mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args);
 
 #endif  // TEXT_2D_NODE_H

@@ -21,8 +21,10 @@
 extern const float perspective_factor;
 
 
-void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_obj_t camera_node){
+void voxelspace_sprite_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("VoxelSpaceSpriteNode: Drawing");
+
+    engine_node_base_t *sprite_node_base = sprite_node_base_obj;
 
     engine_node_base_t *camera_node_base = camera_node;
     engine_camera_node_class_obj_t *camera = camera_node_base->node;
@@ -48,8 +50,6 @@ void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_
 
     vector3_class_obj_t *camera_position = camera->position;
     vector3_class_obj_t *camera_rotation = camera->rotation;
-    rectangle_class_obj_t *camera_viewport = camera->viewport;
-    float camera_zoom = mp_obj_get_float(camera->zoom);
     float camera_fov_half = mp_obj_get_float(camera->fov) * 0.5f;
     float view_distance = mp_obj_get_float(camera->view_distance);
 
@@ -65,8 +65,8 @@ void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_
 
     uint16_t *sprite_pixel_data = ((mp_obj_array_t*)sprite_texture->data)->items;
 
-    uint32_t sprite_frame_width = spritesheet_width/sprite_frame_count_x;
-    uint32_t sprite_frame_height = spritesheet_height/sprite_frame_count_y;
+    int32_t sprite_frame_width = spritesheet_width/sprite_frame_count_x;
+    int32_t sprite_frame_height = spritesheet_height/sprite_frame_count_y;
     uint32_t sprite_frame_abs_x = sprite_frame_width*sprite_frame_current_x;
     uint32_t sprite_frame_abs_y = sprite_frame_height*sprite_frame_current_y;
     uint32_t sprite_frame_fb_start_index = sprite_frame_abs_y * spritesheet_width + sprite_frame_abs_x;
@@ -131,13 +131,13 @@ void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_
 
     float a = engine_math_angle_between(camera_position->x.value, camera_position->z.value, sprite_position->x.value, sprite_position->z.value) - angle;
     float proj_adjacent = D * cosf(a);
-    float z = proj_adjacent / cos(camera_fov_half);
+    float z = proj_adjacent / cosf(camera_fov_half);
 
     // The z we calculate here can vary from 0 to view_distance / cosf(A),
     // Normalize the view along the full_length (that's what z is crawling)
     // and then scale to the max allowed in the depth buffer
     float full_length = view_distance / cosf(camera_fov_half);
-    float depth = (z / full_length) * UINT16_MAX;
+    uint16_t depth = (uint16_t)((z / full_length) * UINT16_MAX);
 
     // Check if out of view along view direct or if the angle
     // to the sprite is out of the FOV
@@ -217,7 +217,7 @@ void voxelspace_sprite_node_class_draw(engine_node_base_t *sprite_node_base, mp_
 
     // Figure out the y on screen
     float altitude = -sprite_position->y.value + camera_position->y.value;
-    int16_t height_on_screen = (SCREEN_HEIGHT_HALF + (altitude * inverse_perspective)) + view_angle;
+    int16_t height_on_screen = (int16_t)((SCREEN_HEIGHT_HALF + (altitude * inverse_perspective)) + view_angle);
 
     // Apply x and y
     sprite_rotated_x += (sprite_texture_offset->x.value * scale_x);

@@ -97,6 +97,8 @@ bool physics_node_base_load_attr(engine_node_base_t *self_node_base, qstr attrib
         default:
             return false; // Fail
     }
+
+    return false;
 }
 
 
@@ -167,4 +169,6 @@ bool physics_node_base_store_attr(engine_node_base_t *self_node_base, qstr attri
         default:
             return false; // Fail
     }
+
+    return false;
 }

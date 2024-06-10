@@ -21,9 +21,10 @@
 #include <string.h>
 
 
-void gui_bitmap_button_2d_node_class_draw(engine_node_base_t *button_node_base, mp_obj_t camera_node){
+void gui_bitmap_button_2d_node_class_draw(mp_obj_t button_node_base_obj, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("GUIBitmapButton2DNode: Drawing");
     
+    engine_node_base_t *button_node_base = button_node_base_obj;
     engine_gui_bitmap_button_2d_node_class_obj_t *button = button_node_base->node;
 
     // Avoid drawing or doing anything if opacity is zero

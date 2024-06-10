@@ -10,7 +10,7 @@ struct mp_stream_seek_t file_seek;
 int file_errcode = 0;
 
 MP_REGISTER_ROOT_POINTER(mp_obj_t files[2]);
-mp_stream_p_t *file_streams[2];
+const mp_stream_p_t *file_streams[2];
 
 
 void engine_file_open_read(uint8_t file_index, mp_obj_str_t *filename){
@@ -47,8 +47,8 @@ uint32_t engine_file_read(uint8_t file_index, void *buffer, uint32_t size){
 }
 
 
-uint32_t engine_file_write(uint8_t file_index, void *buffer, uint32_t size){
-    return mp_stream_rw(MP_STATE_VM(files[file_index]), buffer, size, &file_errcode, MP_STREAM_RW_WRITE);
+uint32_t engine_file_write(uint8_t file_index, const void *buffer, uint32_t size){
+    return mp_stream_rw(MP_STATE_VM(files[file_index]), (void*)buffer, size, &file_errcode, MP_STREAM_RW_WRITE);
 }
 
 

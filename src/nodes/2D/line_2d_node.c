@@ -14,9 +14,10 @@
 #include "draw/engine_shader.h"
 
 
-void line_2d_node_class_draw(engine_node_base_t *line_node_base, mp_obj_t camera_node){
+void line_2d_node_class_draw(mp_obj_t line_node_base_obj, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("Line2DNode: Drawing");
     
+    engine_node_base_t *line_node_base = line_node_base_obj;
     engine_line_2d_node_class_obj_t *line_2d = line_node_base->node;
 
     // Avoid drawing or doing anything if opacity is zero
@@ -98,7 +99,7 @@ void line_2d_node_class_draw(engine_node_base_t *line_node_base, mp_obj_t camera
     if(line_outlined == false){
         engine_draw_rect(line_color->value.val,
                          floorf(line_rotated_x), floorf(line_rotated_y),
-                         line_thickness, line_length,
+                         (int32_t)line_thickness, (int32_t)line_length,
                          1.0f, 1.0f,
                         -line_rotation,
                          line_opacity,
@@ -135,7 +136,9 @@ void line_2d_node_class_draw(engine_node_base_t *line_node_base, mp_obj_t camera
 }
 
 
-void line_2d_recalculate_midpoint(engine_line_2d_node_class_obj_t *line){
+void line_2d_recalculate_midpoint(void *line_obj){
+    engine_line_2d_node_class_obj_t *line = (engine_line_2d_node_class_obj_t*)line_obj;
+
     vector2_class_obj_t *start = line->start;
     vector2_class_obj_t *position = line->position;
     vector2_class_obj_t *end = line->end;
@@ -150,7 +153,9 @@ void line_2d_recalculate_midpoint(engine_line_2d_node_class_obj_t *line){
 }
 
 
-void line_2d_translate_endpoints(engine_line_2d_node_class_obj_t *line, float nx, float ny){
+void line_2d_translate_endpoints(void *line_obj, float nx, float ny){
+    engine_line_2d_node_class_obj_t *line = (engine_line_2d_node_class_obj_t*)line_obj;
+
     vector2_class_obj_t *start = line->start;
     vector2_class_obj_t *position = line->position;
     vector2_class_obj_t *end = line->end;

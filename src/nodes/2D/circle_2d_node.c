@@ -13,9 +13,10 @@
 #include "draw/engine_shader.h"
 
 
-void circle_2d_node_class_draw(engine_node_base_t *circle_node_base, mp_obj_t camera_node){
+void circle_2d_node_class_draw(mp_obj_t circle_node_base_obj, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("Circle2DNode: Drawing");
     
+    engine_node_base_t *circle_node_base = circle_node_base_obj;
     engine_circle_2d_node_class_obj_t *circle_2d_node = circle_node_base->node;
 
     // Avoid drawing or doing anything if opacity is zero
@@ -347,7 +348,7 @@ mp_obj_t circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
     node_base->node = circle_2d_node;
     node_base->attr_accessor = node_base;
 
-    circle_2d_node->tick_cb = mp_const_none;
+    circle_2d_node->tick_cb  = mp_const_none;
     circle_2d_node->position = parsed_args[position].u_obj;
     circle_2d_node->radius = parsed_args[radius].u_obj;
     circle_2d_node->rotation = parsed_args[rotation].u_obj;
@@ -391,7 +392,6 @@ mp_obj_t circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
 
     return MP_OBJ_FROM_PTR(node_base);
 }
-MP_DEFINE_CONST_FUN_OBJ_KW(circle_2d_node_class_new_obj, 0, circle_2d_node_class_new);
 
 
 // Class attributes

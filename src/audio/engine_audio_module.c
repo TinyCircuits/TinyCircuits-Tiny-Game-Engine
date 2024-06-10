@@ -317,7 +317,7 @@ void engine_audio_setup(){
 
 
 void engine_audio_stop_all(){
-    ENGINE_INFO_PRINTF('EngineAudio: Stopping all channels...');
+    ENGINE_INFO_PRINTF("EngineAudio: Stopping all channels...");
 
     for(uint8_t icx=0; icx<CHANNEL_COUNT; icx++){
         // Check that each channel is not NULL since reset
