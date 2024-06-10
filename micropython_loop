@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Loop the micropython while it exits with the code 93, corresponding to machine.reset() or machine.soft_reset().
+#
+# Usage:
+#   cd filesystem
+#   ../micropython_loop path/to/micropython main.py
+
+while true; do
+  "$@"
+  if [[ $? -ne 93 ]]; then
+    break
+  fi
+done
