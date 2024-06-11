@@ -6,6 +6,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - run: echo "Starting build process"
+      - run: ls
       - name: Clone TinyCircuits MicroPython and engine code
         run: | 
           git clone https://github.com/TinyCircuits/micropython.git mp-thumby
