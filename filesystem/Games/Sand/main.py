@@ -8,6 +8,8 @@ from engine_resources import TextureResource
 
 import framebuf
 import random
+import gc
+import math
 
 W = const(130)
 H = const(130)
@@ -21,7 +23,7 @@ H = const(130)
 
 P_C = const(0b00000011)     # Color bit mask
 P_D = const(0b00001100)     # Density bit mask
-P_I = const(0b11100000)     # ID bit mask
+P_ID = const(0b11100000)     # ID bit mask
 
 # Density values
 P_D_GAS = const(0 << 2)
@@ -72,6 +74,7 @@ for py in range(H):
 for py in range(1, H-1):
     for px in range(1, W-1):
         particles[py*W+px] = P_AIR
+
 
 @micropython.viper
 def physics():
@@ -154,29 +157,32 @@ def physics():
     for i in range(W*H):
         sa[i] &= S_M_INV_MOVED
 
+
 palettes_raw = [
-    0xef9f,0xef9f,0xef9f,0xef9f,# AIR
-    0xe736,0xd6d5,0xdef6,0xf7b8,# SAND
-    0x63d7,0x63d7,0x7c9a,0x63d6,# WATER
-    0xad75,0xa4f2,0xb574,0xd6ba,# WALL
-    0,0,0,0,# 5
-    0,0,0,0,# 6
-    0,0,0,0,# 7
-    0,0,0,0,# 8
+    0xef9f, 0xef9f, 0xef9f, 0xef9f,  # AIR
+    0xe736, 0xd6d5, 0xdef6, 0xf7b8,  # SAND
+    0x63d7, 0x63d7, 0x63d7, 0x63d7,  # WATER
+    0xa513, 0xa4f2, 0x94b1, 0x9490,  # WALL
+    0, 0, 0, 0,  # 5
+    0, 0, 0, 0,  # 6
+    0, 0, 0, 0,  # 7
+    0, 0, 0, 0,  # 8
 ]
-palettes = bytearray([((v>>(8*i))&0xFF) for v in palettes_raw for i in range(2)])
-print(palettes)
+palettes = bytearray([((v >> (8*i)) & 0xFF)
+                     for v in palettes_raw for i in range(2)])
+
 
 @micropython.native
 def randomColor(pick):
-    c = random.randrange(0,4)
+    c = random.randrange(0, 4)
     return (pick & 0b11111100) | c
 
-# Render particles directly into display buffer
+
 @micropython.viper
 def render():
+
     # Viper pointers for quick access to the buffers
-    buf = ptr16(engine_draw.front_fb_data)
+    buf = ptr16(engine_draw.back_fb_data)
     pa = ptr8(particles)
     pal = ptr16(palettes)
 
@@ -190,31 +196,249 @@ def render():
             buf[o] = c
             o += 1
 
-# texture = TextureResource("blank.bmp", True)
-# fb = framebuf.FrameBuffer(texture.data, texture.width, texture.height, framebuf.RGB565)
 
-# pixel_buf = texture.data
+shapes = {
+    "square": {
+        "mass": 1,
+        "k": 0.25,
+        "friction": 0.25,
+        "vertices": {
+            "p1": (10, 15),
+            "p2": (20, 10),
+            "p3": (25, 20),
+            "p4": (15, 25)
+        },
+        "springs": [
+            ("p1", "p2", True),
+            ("p2", "p3", True),
+            ("p3", "p4", True),
+            ("p4", "p1", True),
+            ("p1", "p3", False),
+            ("p2", "p4", False),
+        ]
+    },
+}
 
-# spr = Sprite2DNode(texture=texture)
-# cam = CameraNode()
+vertices = []
+springs = []
+friction = 1
 
-cx = W//2     # Cursor X
-cy = H//3     # Cursor Y
+
+def loadShape(key):
+    global vertices, springs, friction
+
+    vertices = []
+    springs = []
+
+    gc.collect()
+
+    shapeData = shapes[key]
+
+    m = shapeData["mass"]
+    k = shapeData["k"]
+    friction = shapeData["friction"]
+
+    vertexLookup = {}
+    vertexData = shapeData["vertices"]
+    for vk in vertexData:
+        x, y = vertexData[vk]
+        vertex = Vertex(x, y, 0, 0, m)
+        vertexLookup[vk] = vertex
+        vertices.append(vertex)
+
+    for vk1, vk2, visible in shapeData["springs"]:
+        v1 = vertexLookup[vk1]
+        v2 = vertexLookup[vk2]
+        d = dist(v1, v2)
+        springs.append(Spring(v1, v2, d, k, visible))
+
+    vertexLookup = None
+    gc.collect()
+
+
+GRAV = const(0.1)
+BOUNCE = const(0.25)
+DAMP = const(0.1)
+MAX_SPEED = const(2)
+
+# Default gravity
+DEFAULT_GRAV_X = 0
+DEFAULT_GRAV_Y = GRAV
+
+gravX = DEFAULT_GRAV_X
+gravY = DEFAULT_GRAV_Y
+
+
+class Vertex:
+    def __init__(self, x, y, dx, dy, mass):
+        self.x = x
+        self.y = y
+        self.dx = dx
+        self.dy = dy
+        self.mass = mass
+
+
+class Spring:
+    def __init__(self, v1, v2, d, k, visible):
+        self.v1 = v1
+        self.v2 = v2
+        self.d = d
+        self.k = k
+        self.visible = visible
+
+
+def dist(v1, v2):
+    dx = v2.x-v1.x
+    dy = v2.y-v1.y
+    return math.sqrt(dx*dx + dy*dy)
+
+
+def shapePhysics():
+
+    for v in vertices:
+        px = int(v.x)+1
+        py = int(v.y)+1
+        p = particles[py*W+px]
+
+        bounce_top = 0
+        bounce_bottom = 127
+        bounce_left = 0
+        bounce_right = 127
+
+        # float up through sand/wall (solids)
+        if (p & P_D) == P_D_SOLID:
+            bounce_bottom = v.y - 1
+
+        # TODO buoyancy in water?
+
+        cx, cy = int(v.x), int(v.y)
+
+        v.x += v.dx
+        v.y += v.dy
+
+        cx2, cy2 = int(v.x), int(v.y)
+
+        # bounce off solids - need to check pixel by pixel
+        if cx != cx2 or cy != cy2:
+            csx = 1 if cx2 >= cx else -1
+            csy = 1 if cy2 >= cy else -1
+            while cx != cx2 or cy != cy2:
+                if cx != cx2:
+                    cx += csx
+                if cy != cy2:
+                    cy += csy
+                if cx < 0 or cx > 127 or cy < 0 or cy > 127:
+                    break
+                i = (cy+1)*W+(cx+1)
+                p2 = particles[i]
+                # If we hit solid, check adjacent for bounces
+                if (p2 & P_D) == P_D_SOLID:
+                    # Horizontal
+                    sh = ((particles[i-csx] & P_D) == P_D_SOLID)
+                    # Vertical
+                    sv = ((particles[i-csy*W] & P_D) == P_D_SOLID)
+                    # Diagonal
+                    sd = ((particles[i-csy*W-csx] & P_D) == P_D_SOLID)
+
+                    # Bounce Up/Down
+                    if sh and (not sv or not sd):
+                        if csy > 0:
+                            bounce_bottom = cy
+                        else:
+                            bounce_top = cy
+                    # Bounce Left/Right
+                    if sv and (not sh or not sd):
+                        if csx > 0:
+                            bounce_right = cx
+                        else:
+                            bounce_left = cx
+
+
+
+        v.dx += gravX
+        v.dy += gravY
+
+        v.dx = max(-MAX_SPEED, min(MAX_SPEED, v.dx))
+        v.dy = max(-MAX_SPEED, min(MAX_SPEED, v.dy))
+
+        if v.x < bounce_left:
+            v.x = bounce_left
+            v.dx = abs(v.dx) * BOUNCE
+            v.dy *= friction
+        elif v.x > bounce_right:
+            v.x = bounce_right
+            v.dx = -abs(v.dx) * BOUNCE
+            v.dy *= friction
+        if v.y < bounce_top:
+            v.y = bounce_top
+            v.dy = abs(v.dy) * BOUNCE
+            v.dx *= friction
+        elif v.y > bounce_bottom:
+            v.y = bounce_bottom
+            v.dy = -abs(v.dy) * BOUNCE
+            v.dx *= friction
+
+    for s in springs:
+        dx = s.v2.x - s.v1.x
+        dy = s.v2.y - s.v1.y
+        mag = math.sqrt(dx * dx + dy * dy)
+
+        f = (mag - s.d) * s.k
+
+        if mag == 0:
+            continue
+
+        dx /= mag  # Normalize
+        dy /= mag  # Normalize
+
+        fx = f * dx - s.v1.dx * DAMP
+        fy = f * dy - s.v1.dy * DAMP
+
+        s.v1.dx += fx / s.v1.mass
+        s.v1.dy += fy / s.v1.mass
+        s.v2.dx -= fx / s.v2.mass
+        s.v2.dy -= fy / s.v2.mass
+
+
+cpx = W//2     # Cursor X
+cpy = H//3     # Cursor Y
+cdx = 0        # Cursor X Speed
+cdy = 0        # Cursor Y Speed
 cpick = 0   # Cursor particle selection
+
+CURSOR_ACCEL = const(0.2)
+CURSOR_MAX_SPEED = const(2)
+CURSOR_DRAG = const(0.8)
+
+loadShape("square")
 
 engine.set_fps_limit(60)
 
 while True:
     if engine.tick():
-        # Move cursor
-        if engine_io.check_pressed(engine_io.DPAD_UP) and cy > 2:
-            cy -= 1
-        if engine_io.check_pressed(engine_io.DPAD_DOWN) and cy < (H-2):
-            cy += 1
-        if engine_io.check_pressed(engine_io.DPAD_LEFT) and cx > 2:
-            cx -= 1
-        if engine_io.check_pressed(engine_io.DPAD_RIGHT) and cx < (W-2):
-            cx += 1
+
+        # Cursor Inputs
+        cax, cay = 0, 0
+        if engine_io.check_pressed(engine_io.DPAD_UP):
+            cay -= CURSOR_ACCEL
+        if engine_io.check_pressed(engine_io.DPAD_DOWN):
+            cay += CURSOR_ACCEL
+        if engine_io.check_pressed(engine_io.DPAD_LEFT):
+            cax -= CURSOR_ACCEL
+        if engine_io.check_pressed(engine_io.DPAD_RIGHT):
+            cax += CURSOR_ACCEL
+
+        # Cursor Motion
+        if cax != 0:
+            cdx = max(-CURSOR_MAX_SPEED, min(CURSOR_MAX_SPEED, cdx + cax))
+        else:
+            cdx *= CURSOR_DRAG
+        if cay != 0:
+            cdy = max(-CURSOR_MAX_SPEED, min(CURSOR_MAX_SPEED, cdy + cay))
+        else:
+            cdy *= CURSOR_DRAG
+        cpx = max(1, min(W-3, cpx + cdx))
+        cpy = max(1, min(H-3, cpy + cdy))
 
         # Cycle particle selection
         if engine_io.check_just_pressed(engine_io.BUMPER_RIGHT):
@@ -222,26 +446,41 @@ while True:
         if engine_io.check_just_pressed(engine_io.BUMPER_LEFT):
             cpick = (cpick + len(Picks) - 1) % len(Picks)
 
+        # Rounded to nearest pixel
+        cx = int(cpx)
+        cy = int(cpy)
+
         # Draw particles near cursor
         if engine_io.check_pressed(engine_io.A):
-            particles[cy * W + cx] = randomColor(Picks[cpick])
-            particles[cy * W + cx - 1] = randomColor(Picks[cpick])
-            particles[cy * W + cx - W] = randomColor(Picks[cpick])
-            particles[cy * W + cx - (W+1)] = randomColor(Picks[cpick])
+            p = Picks[cpick]
+            for y in range(3):
+                for x in range(3):
+                    particles[(cy+y)*W+cx+x] = randomColor(p)
 
         # Remove particles near cursor
         if engine_io.check_pressed(engine_io.B):
-            particles[cy * W + cx] = P_AIR
-            particles[cy * W + cx - 1] = P_AIR
-            particles[cy * W + cx - W] = P_AIR
-            particles[cy * W + cx - (W+1)] = P_AIR
+            for y in range(3):
+                for x in range(3):
+                    particles[(cy+y)*W+cx+x] = P_AIR
 
         # Once each frame, update physics and render particles to display
         physics()
         render()
 
-        # Overlay cursor
+        # Shape Physics
+        shapePhysics()
+
         fb = engine_draw.front_fb
-        fb.line(cx, cy, cx+2, cy+2, 0xFFFF)
-        fb.rect(cx+2, cy+2, 4, 4, palettes_raw[4*(Picks[cpick]>>5)], True)
-        fb.rect(cx+2, cy+2, 4, 4, 0xFFFF, False)
+
+        # Overlay shape
+        for spring in springs:
+            if not spring.visible:
+                continue
+            v1 = spring.v1
+            v2 = spring.v2
+            fb.line(int(v1.x), int(v1.y), int(v2.x), int(v2.y), 0xb082)
+
+        # Overlay cursor
+        fb.line(cx+1, cy+1, cx+3, cy+3, 0x0000)
+        fb.rect(cx+3, cy+3, 5, 5, palettes_raw[4*(Picks[cpick] >> 5)], True)
+        fb.rect(cx+3, cy+3, 5, 5, 0x0000, False)
