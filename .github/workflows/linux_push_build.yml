@@ -7,12 +7,14 @@ jobs:
     steps:
       - run: echo "Starting build process"
       - name: Clone TinyCircuits MicroPython and engine code
-        run: git clone https://github.com/TinyCircuits/micropython.git mp-thumby
-        run: cd mp-thumby
-        run: git checkout engine-1.23.0
-        run: git clone --recurse-submodules https://github.com/TinyCircuits/TinyCircuits-Tiny-Game-Engine.git
+        run: | 
+          git clone https://github.com/TinyCircuits/micropython.git mp-thumby
+          cd mp-thumby
+          git checkout engine-1.23.0
+          git clone --recurse-submodules https://github.com/TinyCircuits/TinyCircuits-Tiny-Game-Engine.git
       - name: Setup UNIX port
-        run: cd ports/unix
-        run: make submodules
+        run: |
+          cd ports/unix
+          make submodules
       - name: Build engine with debug symbols
         run: make -j8 USER_C_MODULES=../../TinyCircuits-Tiny-Game-Engine DEBUG=1
