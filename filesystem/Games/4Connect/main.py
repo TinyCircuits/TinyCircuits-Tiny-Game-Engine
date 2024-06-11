@@ -412,14 +412,6 @@ class Game(Rectangle2DNode):
                         break
             return minEval
 
-# Menu colors
-TEXT_COLOR = engine_draw.white
-SELECTED_TEXT_COLOR = engine_draw.yellow
-
-
-
-
-
 def start_game(selected_difficulty):
     global game, menu, camera
     camera = CameraNode()

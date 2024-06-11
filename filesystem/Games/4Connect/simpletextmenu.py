@@ -61,4 +61,4 @@ class SimpleTextMenu(Rectangle2DNode):
             self.update_selection()
         elif engine_io.check_just_pressed(engine_io.A):
             self.callback(self.selected_option)
-            self.destroy()
+            #self.destroy()
