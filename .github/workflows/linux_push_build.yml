@@ -6,16 +6,40 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - run: echo "Starting build process"
-      - run: ls
-      - name: Clone TinyCircuits MicroPython and engine code
-        run: | 
-          git clone https://github.com/TinyCircuits/micropython.git mp-thumby
-          cd mp-thumby
-          git checkout engine-1.23.0
-          git clone --recurse-submodules https://github.com/TinyCircuits/TinyCircuits-Tiny-Game-Engine.git
-      - name: Setup UNIX port
+
+      - name: Check out TinyCircuits MicroPython
+        uses: actions/checkout@v4
+        with:
+          repository: TinyCircuits/micropython.git
+          path: micropython
+          fetch-depth: 0
+          ref: engine-1.23.0
+
+      - name: Check out this engine repository's code
+        uses: actions/checkout@v4
+        with:
+          path: engine
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: List files in the repository
         run: |
-          cd ports/unix
+          ls ${{ github.workspace }}
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt install -y libsdl2-2.0-0
+          sudo apt install -y libsdl2-dev
+          sudo apt install -y libffi7
+
+      - name: Setup UNIX port and build
+        run: |
+          cd micropython/ports/unix
           make submodules
-      - name: Build engine with debug symbols
-        run: make -j8 USER_C_MODULES=../../TinyCircuits-Tiny-Game-Engine DEBUG=1
+          make -j8 USER_C_MODULES=../../../engine DEBUG=1
+      
+      - name: Create Linux executable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-executable
+          path: micropython/ports/unix/build-standard/micropython
