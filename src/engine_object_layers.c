@@ -41,6 +41,7 @@ void engine_objects_clear_all(){
 
 void engine_objects_clear_deletable(){
     linked_list *deletable = engine_collections_get_deletable_list();
+    uint32_t c = 0;
 
     while(deletable->start != NULL){
         linked_list_node *node = deletable->start;
@@ -50,6 +51,8 @@ void engine_objects_clear_deletable(){
         mp_obj_t final = mp_load_attr(node_base, MP_QSTR___del__);
         mp_call_function_0(final);
         m_del_obj(mp_obj_get_type(node_base), node_base);
+
+        engine_collections_untrack_deletable(node);
     }
 }
 

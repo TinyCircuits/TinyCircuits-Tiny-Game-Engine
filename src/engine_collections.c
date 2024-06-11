@@ -37,6 +37,10 @@ linked_list_node *engine_collections_track_deletable(engine_node_base_t *node_ba
     return linked_list_add_obj(&engine_deletable_nodes_collection, node_base);
 }
 
+void engine_collections_untrack_deletable(linked_list_node *node_base_node){
+    linked_list_del_list_node(&engine_deletable_nodes_collection, node_base_node);
+}
+
 
 linked_list *engine_collections_get_camera_list(){
     return &engine_camera_nodes_collection;
