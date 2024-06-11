@@ -1,0 +1,45 @@
+name: Linux Push Build
+run-name: Linux Push Build
+on: [push]
+jobs:
+  linux_push_build:
+    runs-on: ubuntu-20.04
+    steps:
+      - run: echo "Starting build process"
+
+      - name: Check out TinyCircuits MicroPython
+        uses: actions/checkout@v4
+        with:
+          repository: TinyCircuits/micropython.git
+          path: micropython
+          fetch-depth: 0
+          ref: engine-1.23.0
+
+      - name: Check out this engine repository's code
+        uses: actions/checkout@v4
+        with:
+          path: engine
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: List files in the repository
+        run: |
+          ls ${{ github.workspace }}
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt install -y libsdl2-2.0-0
+          sudo apt install -y libsdl2-dev
+          sudo apt install -y libffi7
+
+      - name: Setup UNIX port and build
+        run: |
+          cd micropython/ports/unix
+          make submodules
+          make -j8 USER_C_MODULES=../../../engine DEBUG=1
+      
+      - name: Create Linux executable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-executable
+          path: micropython/ports/unix/build-standard/micropython
