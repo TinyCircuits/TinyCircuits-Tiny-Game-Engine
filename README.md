@@ -3,14 +3,16 @@ This is a game engine for embedded devices that can run MicroPython.
 
 # Building on Linux
 These instructions assume that you are cloning MicroPython from the TinyCircuits Fork that has been pre-modified
-1. Clone TinyCircuits MicroPython: `git clone https://github.com/TinyCircuits/micropython.git mp-thumby`
-2. `cd` into MicroPython: `cd mp-thumby`
-3. Checkout engine branch: `git checkout engine-1.23.0`
-3. Clone latest engine module code with `lib` submodules: `git clone --recurse-submodules https://github.com/TinyCircuits/TinyCircuits-Tiny-Game-Engine.git`
-4. Setup UNIX port:
+1. Install SDL2: `sudo apt install libsdl2-dev`
+2. Install build tools: `sudo apt install build-essential`
+3. Clone TinyCircuits MicroPython: `git clone https://github.com/TinyCircuits/micropython.git mp-thumby`
+4. `cd` into MicroPython: `cd mp-thumby`
+5. Checkout engine branch: `git checkout engine-1.23.0`
+6. Clone latest engine module code with `lib` submodules: `git clone --recurse-submodules https://github.com/TinyCircuits/TinyCircuits-Tiny-Game-Engine.git`
+7. Setup UNIX port:
    1. `cd ports/unix`
    2. `make submodules`
-5. `cd` to engine file system to build and run MicroPython and the engine
+8. `cd` to engine file system to build and run MicroPython and the engine
    1. `cd`: `cd ../../TinyCircuits-Tiny-Game-Engine/filesystem`
    2. build: `(cd ../../ports/unix && make -j8 USER_C_MODULES=../../TinyCircuits-Tiny-Game-Engine DEBUG=1)`
    3. run: `../../ports/unix/build-standard/micropython launcher.py`
@@ -20,22 +22,24 @@ Use `(cd ../../ports/unix && make clean)` to make clean if needed
 # Building on Linux, from Scratch
 These instructions assume that you are cloning MicroPython from the official MicroPython repository and not the TinyCircuits Fork
 
-1. Clone MicroPython: `git clone https://github.com/micropython/micropython.git`
-2. `cd` into MicroPython: `cd micropython`
-3. Reset to MicroPython version 1.23.0: `git reset --hard a61c446`
-4. Clone latest engine module code with `lib` submodules: `git clone --recurse-submodules https://github.com/TinyCircuits/TinyCircuits-Tiny-Game-Engine.git`
-5. Setup UNIX port:
+1. Install SDL2: `sudo apt install libsdl2-dev`
+2. Install build tools: `sudo apt install build-essential`
+3. Clone MicroPython: `git clone https://github.com/micropython/micropython.git`
+4. `cd` into MicroPython: `cd micropython`
+5. Reset to MicroPython version 1.23.0: `git reset --hard a61c446`
+6. Clone latest engine module code with `lib` submodules: `git clone --recurse-submodules https://github.com/TinyCircuits/TinyCircuits-Tiny-Game-Engine.git`
+7. Setup UNIX port:
    1. `cd ports/unix`
    2. `make submodules`
-6. Inside `micropython/ports/unix/variants/mpconfigvariant_common.h` do:
+8. Inside `micropython/ports/unix/variants/mpconfigvariant_common.h` do:
    1. Change `#define MICROPY_FLOAT_IMPL (MICROPY_FLOAT_IMPL_DOUBLE)` -> `#define MICROPY_FLOAT_IMPL (MICROPY_FLOAT_IMPL_FLOAT)`
    2. Change `#define MICROPY_LONGINT_IMPL (MICROPY_LONGINT_IMPL_MPZ)` -> `#define MICROPY_LONGINT_IMPL (MICROPY_LONGINT_IMPL_LONGLONG)`
    3. Add `#define MICROPY_TRACKED_ALLOC (1)` anywhere
-7. UGLY: inside `micropython/tools/mpy-tool.py`
+9. UGLY: inside `micropython/tools/mpy-tool.py`
    1. Change line 1784 to `default="longlong"` (don't know where this tool is used and how to pass it a different value, will just set it for now)
-8. `cd` to filesystem root: `cd micropython/TinyCircuits-Tiny-Game-Engine/filesystem`
-9. Build MicroPython UNIX port: `(cd ../../ports/unix && make -j8 USER_C_MODULES=../../TinyCircuits-Tiny-Game-Engine DEBUG=1)`
-10. Run MicroPython port: `../../ports/unix/build-standard/micropython launcher.py`
+10. `cd` to filesystem root: `cd micropython/TinyCircuits-Tiny-Game-Engine/filesystem`
+11. Build MicroPython UNIX port: `(cd ../../ports/unix && make -j8 USER_C_MODULES=../../TinyCircuits-Tiny-Game-Engine DEBUG=1)`
+12. Run MicroPython port: `../../ports/unix/build-standard/micropython launcher.py`
 
 Use `(cd ../../ports/unix && make clean)` to make clean if needed
 
