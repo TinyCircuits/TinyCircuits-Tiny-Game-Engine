@@ -37,41 +37,40 @@ mp_obj_t font_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_
 
     // Start tracking the initial width color, what 
     // character we're on, and set the first offset to 0
-    uint16_t last_width_signifier_color = texture_resource_get_pixel(self->texture_resource, engine_math_2d_to_1d_index(alternating_pixel_x, alternating_pixel_y, bitmap_width));
     uint16_t current_glyph_index = 0;
+    uint16_t last_width_signifier_color = texture_resource_get_pixel(self->texture_resource, engine_math_2d_to_1d_index(alternating_pixel_x, alternating_pixel_y, bitmap_width));
 
-    // Loop until end of bitmap width is reached
+    // Find character information up to limit, but
+    // count to end of bitmap for useful error reporting
     while(true){
         // Increase to get the next pixel
         alternating_pixel_x++;
 
-        // If at the end of the bitmap, error if did not collect
-        // enough chars, otherwise, end loop
+        // If at the end of the bitmap, stop
         if(alternating_pixel_x >= bitmap_width){
-            if(current_glyph_index != ENGINE_FONT_MAX_CHAR_COUNT){
-                mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineFont: Did not collect enough character entries in font BMP!"));
-            }else{
-                break;
-            }
+            break;
         }
 
         // Get the next pixel, and since we got another pixel,
         // increase the width of the current character
         uint16_t next_width_signifier_color = texture_resource_get_pixel(self->texture_resource, engine_math_2d_to_1d_index(alternating_pixel_x, self->glyph_height, bitmap_width));
-        self->glyph_widths[current_glyph_index]++;
+        if(current_glyph_index < ENGINE_FONT_MAX_CHAR_COUNT) self->glyph_widths[current_glyph_index]++;
 
         // If the pixel to the left of this one is not the same, 
         // we're moving on to a new character
         if(last_width_signifier_color != next_width_signifier_color){
             current_glyph_index++;
             last_width_signifier_color = next_width_signifier_color;
-            self->glyph_x_offsets[current_glyph_index] = alternating_pixel_x;
+            if(current_glyph_index < ENGINE_FONT_MAX_CHAR_COUNT) self->glyph_x_offsets[current_glyph_index] = alternating_pixel_x;
         }
+    }
+
+    if(current_glyph_index != ENGINE_FONT_MAX_CHAR_COUNT){
+        mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineFont: ERROR: Expected exactly %d characters, got %d"), ENGINE_FONT_MAX_CHAR_COUNT, current_glyph_index);
     }
 
     // First offset always at 0
     self->glyph_x_offsets[0] = 0;
-
     self->glyph_widths_bytearray_ref = mp_obj_new_bytearray_by_ref(ENGINE_FONT_MAX_CHAR_COUNT, self->glyph_widths);
 
     return MP_OBJ_FROM_PTR(self);
