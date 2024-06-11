@@ -1,0 +1,18 @@
+name: Linux Push Build
+run-name: Linux Push Build
+on: [push]
+jobs:
+  linux_push_build:
+    runs-on: ubuntu-22.04
+    steps:
+      - run: echo "Starting build process"
+      - name: Clone TinyCircuits MicroPython and engine code
+        run: git clone https://github.com/TinyCircuits/micropython.git mp-thumby
+        run: cd mp-thumby
+        run: git checkout engine-1.23.0
+        run: git clone --recurse-submodules https://github.com/TinyCircuits/TinyCircuits-Tiny-Game-Engine.git
+      - name: Setup UNIX port
+        run: cd ports/unix
+        run: make submodules
+      - name: Build engine with debug symbols
+        run: make -j8 USER_C_MODULES=../../TinyCircuits-Tiny-Game-Engine DEBUG=1
