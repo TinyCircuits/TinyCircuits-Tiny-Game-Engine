@@ -39,6 +39,21 @@ void engine_objects_clear_all(){
 }
 
 
+void engine_objects_clear_deletable(){
+    linked_list *deletable = engine_collections_get_deletable_list();
+
+    while(deletable->start != NULL){
+        linked_list_node *node = deletable->start;
+        engine_node_base_t *node_base = node->object;
+
+        // m_del_obj does not call finalizer, call it ourselves then delete the mp object
+        mp_obj_t final = mp_load_attr(node_base, MP_QSTR___del__);
+        mp_call_function_0(final);
+        m_del_obj(mp_obj_get_type(node_base), node_base);
+    }
+}
+
+
 uint16_t engine_get_total_object_count(){
     uint16_t count = 0;
     for(uint8_t ilx=0; ilx<engine_object_layer_count; ilx++){

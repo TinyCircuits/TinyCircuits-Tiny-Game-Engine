@@ -8,6 +8,7 @@
 #define NODE_BASE_VISIBLE_BIT_INDEX 0
 #define NODE_BASE_DISABLED_BIT_INDEX 1
 #define NODE_BASE_JUST_ADDED_BIT_INDEX 2
+#define NODE_BASE_DELETABLE_BIT_INDEX 3
 
 typedef struct{
     mp_obj_base_t base;                 // All nodes get defined by what is placed in this
@@ -22,6 +23,17 @@ typedef struct{
     void *parent_node_base;                         // If this is a child, pointer to parent node_base (can only have one parent)
     linked_list_node *location_in_parents_children; // The location of this node in the parents linked list of children (used for easy deletion upon garbage collection of this node)
 }engine_node_base_t;
+
+
+void node_base_init(engine_node_base_t *node_base, const mp_obj_type_t *mp_type, uint8_t node_type);
+bool node_base_is_visible(engine_node_base_t *node_base);
+void node_base_set_if_visible(engine_node_base_t *node_base, bool is_visible);
+bool node_base_is_disabled(engine_node_base_t *node_base);
+void node_base_set_if_disabled(engine_node_base_t *node_base, bool is_disabled);
+bool node_base_is_just_added(engine_node_base_t *node_base);
+void node_base_set_if_just_added(engine_node_base_t *node_base, bool is_just_added);
+bool node_base_is_deletable(engine_node_base_t *node_base);
+void node_base_set_if_deletable(engine_node_base_t *node_base, bool is_deletable);
 
 
 // Given an object that may be a Python class instance or the node_base itself,
@@ -60,14 +72,6 @@ static MP_DEFINE_CONST_FUN_OBJ_1(node_base_get_layer_obj, node_base_get_layer);
 
 
 void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, bool *is_child_of_camera, mp_obj_t child_node_base);
-
-void node_base_init(engine_node_base_t *node_base, const mp_obj_type_t *mp_type, uint8_t node_type);
-bool node_base_is_visible(engine_node_base_t *node_base);
-void node_base_set_if_visible(engine_node_base_t *node_base, bool is_visible);
-bool node_base_is_disabled(engine_node_base_t *node_base);
-void node_base_set_if_disabled(engine_node_base_t *node_base, bool is_disabled);
-bool node_base_is_just_added(engine_node_base_t *node_base);
-void node_base_set_if_just_added(engine_node_base_t *node_base, bool is_just_added);
 
 void node_base_set_attr_handler_default(mp_obj_t node_instance);
 
