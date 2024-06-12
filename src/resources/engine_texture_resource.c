@@ -29,14 +29,26 @@ mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, si
     engine_file_open_read(0, args[0]);
 
     uint16_t bitmap_id = engine_file_seek_get_u16(0, 0);
+    uint32_t bitmap_file_size = engine_file_seek_get_u32(0, 2);
     uint32_t bitmap_pixel_data_offset = engine_file_seek_get_u32(0, 10);
     uint32_t bitmap_width = engine_file_seek_get_u32(0, 18);
     uint32_t bitmap_height = engine_file_seek_get_u32(0, 22);
     uint32_t bitmap_bits_per_pixel = engine_file_seek_get_u16(0, 28);
-    uint32_t bitmap_data_size = engine_file_seek_get_u32(0, 34);
+    // uint32_t bitmap_data_size = engine_file_seek_get_u32(0, 34); not all exporters actually export this, need to infer a different way
+
+    if(bitmap_bits_per_pixel != 16){
+        mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("TextureResource: ERROR: Expected 16-bit pixel data, got %d-bit"), bitmap_bits_per_pixel);
+    }
+
+    // Because some exporters do not use the pixel data size field
+    // correctly, calculate it based on the full file size and the
+    // offset into the file to the pixel array. Need to do it this
+    // way since pixel data rows are padded
+    uint32_t bitmap_data_size = bitmap_file_size - bitmap_pixel_data_offset;
 
     ENGINE_INFO_PRINTF("TextureResource: BMP parameters parsed from '%s':", mp_obj_str_get_str(args[0]));
     ENGINE_INFO_PRINTF("\tbitmap_id:\t\t\t%d", bitmap_id);
+    ENGINE_INFO_PRINTF("\bitmap_file_size:\t\t\t%d", bitmap_file_size);
     ENGINE_INFO_PRINTF("\tbitmap_pixel_data_offset:\t%lu", bitmap_pixel_data_offset);
     ENGINE_INFO_PRINTF("\tbitmap_width:\t\t\t%lu", bitmap_width);
     ENGINE_INFO_PRINTF("\tbitmap_height:\t\t\t%lu", bitmap_height);
