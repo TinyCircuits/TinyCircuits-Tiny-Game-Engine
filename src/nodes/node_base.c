@@ -33,6 +33,7 @@ void node_base_init(engine_node_base_t *node_base, const mp_obj_type_t *mp_type,
     node_base->layer = 0;
     node_base->type = node_type;
     node_base->object_list_node = engine_add_object_to_layer(node_base, node_base->layer);
+    node_base->deletable_list_node = NULL;
     node_base->parent_node_base = NULL;
     node_base_set_if_visible(node_base, true);
     node_base_set_if_disabled(node_base, false);
@@ -145,24 +146,25 @@ mp_obj_t node_base_del(mp_obj_t self_in){
     }
 
     engine_remove_object_from_layer(node_base->object_list_node, node_base->layer);
+    engine_collections_untrack_deletable(node_base->deletable_list_node);
 
     return mp_const_none;
 }
 
 
 /*  --- doc ---
-    NAME: destroy
-    ID: node_base_destroy
+    NAME: mark_destroy
+    ID: node_base_mark_destroy
     DESC: Destroys node. Calls finalizer and frees memory for MicroPython to use later                                                                         
     RETURN: None
 */ 
-mp_obj_t node_base_destroy(mp_obj_t self_in){
+mp_obj_t node_base_mark_destroy(mp_obj_t self_in){
     engine_node_base_t *node_base = self_in;
 
     // Don't want to track a node for deletion twice
     if(node_base_is_deletable(node_base) == false){
         node_base_set_if_deletable(node_base, true);
-        engine_collections_track_deletable(node_base);
+        node_base->deletable_list_node = engine_collections_track_deletable(node_base);
     }
 
     return mp_const_none;
@@ -170,12 +172,12 @@ mp_obj_t node_base_destroy(mp_obj_t self_in){
 
 
 /*  --- doc ---
-    NAME: destroy_children
-    ID: node_base_destroy_children
+    NAME: mark_destroy_children
+    ID: node_base_mark_destroy_children
     DESC: Destroys only the children of this node as well as the childrens' children. Calls finalizer and frees memory for MicroPython to use later                                                                         
     RETURN: None
 */ 
-mp_obj_t node_base_destroy_children(mp_obj_t self_in){
+mp_obj_t node_base_mark_destroy_children(mp_obj_t self_in){
     engine_node_base_t *node_base = self_in;
 
     // If no children, don't do anything more
@@ -187,9 +189,9 @@ mp_obj_t node_base_destroy_children(mp_obj_t self_in){
     linked_list_node *current_child_link_node = node_base->children_node_bases.start;
     while(current_child_link_node != NULL){
         engine_node_base_t *child_node_base = current_child_link_node->object;
-        node_base_destroy_children(child_node_base);
-        node_base_destroy(child_node_base);
-        current_child_link_node = node_base->children_node_bases.start;
+        node_base_mark_destroy_children(child_node_base);
+        node_base_mark_destroy(child_node_base);
+        current_child_link_node = current_child_link_node->next;
     }
 
     return mp_const_none;
@@ -197,15 +199,15 @@ mp_obj_t node_base_destroy_children(mp_obj_t self_in){
 
 
 /*  --- doc ---
-    NAME: destroy_all
-    ID: node_base_destroy_all
+    NAME: mark_destroy_all
+    ID: node_base_mark_destroy_all
     DESC: Destroys node, its children, and the childrens' children. Calls finalizer and frees memory for MicroPython to use later for each node                                                                                              
     RETURN: None
 */ 
-mp_obj_t node_base_destroy_all(mp_obj_t self_in){
+mp_obj_t node_base_mark_destroy_all(mp_obj_t self_in){
     engine_node_base_t *node_base = self_in;
-    node_base_destroy_children(self_in);
-    node_base_destroy(node_base);
+    node_base_mark_destroy_children(self_in);
+    node_base_mark_destroy(node_base);
 
     return mp_const_none;
 }

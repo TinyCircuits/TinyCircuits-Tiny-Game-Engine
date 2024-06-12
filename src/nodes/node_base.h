@@ -11,13 +11,14 @@
 #define NODE_BASE_DELETABLE_BIT_INDEX 3
 
 typedef struct{
-    mp_obj_base_t base;                 // All nodes get defined by what is placed in this
-    linked_list_node *object_list_node; // Pointer to where this node is stored in the layers of linked lists the engine tracks (used for easy linked list deletion)
-    uint16_t layer;                     // The layer index of the linked list the 'object_list_node' lives in (used for easy deletion)
-    uint8_t meta_data;                  // Holds bits related to if this node is visible (not shown or shown but callbacks still called), disabled (callbacks not called but still shown), or just added
-    uint8_t type;                       // The type of this node (see 'node_types.h')
-    void *attr_accessor;                // Used in conjunction with mp_get_attr
-    void *node;                         // Points to subclass if 'inherited' true otherwise to engine node struct
+    mp_obj_base_t base;                     // All nodes get defined by what is placed in this
+    linked_list_node *object_list_node;     // Pointer to where this node is stored in the layers of linked lists the engine tracks (used for easy linked list deletion)
+    linked_list_node *deletable_list_node;  // Pointer to delete linked list node so that node can remove itself from the list if gc'ed before node clear step
+    uint16_t layer;                         // The layer index of the linked list the 'object_list_node' lives in (used for easy deletion)
+    uint8_t meta_data;                      // Holds bits related to if this node is visible (not shown or shown but callbacks still called), disabled (callbacks not called but still shown), or just added
+    uint8_t type;                           // The type of this node (see 'node_types.h')
+    void *attr_accessor;                    // Used in conjunction with mp_get_attr
+    void *node;                             // Points to subclass if 'inherited' true otherwise to engine node struct
     
     linked_list children_node_bases;                // Linked list of child node_bases
     void *parent_node_base;                         // If this is a child, pointer to parent node_base (can only have one parent)
@@ -43,14 +44,14 @@ engine_node_base_t *node_base_get(mp_obj_t object, bool *is_obj_instance);
 mp_obj_t node_base_del(mp_obj_t self_in);
 static MP_DEFINE_CONST_FUN_OBJ_1(node_base_del_obj, node_base_del);
 
-mp_obj_t node_base_destroy(mp_obj_t self_in);
-static MP_DEFINE_CONST_FUN_OBJ_1(node_base_destroy_obj, node_base_destroy);
+mp_obj_t node_base_mark_destroy(mp_obj_t self_in);
+static MP_DEFINE_CONST_FUN_OBJ_1(node_base_mark_destroy_obj, node_base_mark_destroy);
 
-mp_obj_t node_base_destroy_children(mp_obj_t self_in);
-static MP_DEFINE_CONST_FUN_OBJ_1(node_base_destroy_children_obj, node_base_destroy_children);
+mp_obj_t node_base_mark_destroy_children(mp_obj_t self_in);
+static MP_DEFINE_CONST_FUN_OBJ_1(node_base_mark_destroy_children_obj, node_base_mark_destroy_children);
 
-mp_obj_t node_base_destroy_all(mp_obj_t self_in);
-static MP_DEFINE_CONST_FUN_OBJ_1(node_base_destroy_all_obj, node_base_destroy_all);
+mp_obj_t node_base_mark_destroy_all(mp_obj_t self_in);
+static MP_DEFINE_CONST_FUN_OBJ_1(node_base_mark_destroy_all_obj, node_base_mark_destroy_all);
 
 mp_obj_t node_base_add_child(mp_obj_t self_parent_in, mp_obj_t child_in);
 static MP_DEFINE_CONST_FUN_OBJ_2(node_base_add_child_obj, node_base_add_child);
