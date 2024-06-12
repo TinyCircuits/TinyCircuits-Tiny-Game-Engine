@@ -30,7 +30,7 @@ void sprite_2d_node_clamp_current_y(engine_sprite_2d_node_class_obj_t *sprite){
     uint16_t count_y = mp_obj_get_int(sprite->frame_count_y);
     uint16_t current_y = mp_obj_get_int(sprite->frame_current_y);
     if(current_y >= count_y){
-        sprite->frame_current_x = mp_obj_new_int(count_y-1);
+        sprite->frame_current_y = mp_obj_new_int(count_y-1);
     }
 }
 
