@@ -17,6 +17,24 @@
 #include "py/obj.h"
 
 
+void sprite_2d_node_clamp_current_x(engine_sprite_2d_node_class_obj_t *sprite){
+    uint16_t count_x = mp_obj_get_int(sprite->frame_count_x);
+    uint16_t current_x = mp_obj_get_int(sprite->frame_current_x);
+    if(current_x >= count_x){
+        sprite->frame_current_x = mp_obj_new_int(count_x-1);
+    }
+}
+
+
+void sprite_2d_node_clamp_current_y(engine_sprite_2d_node_class_obj_t *sprite){
+    uint16_t count_y = mp_obj_get_int(sprite->frame_count_y);
+    uint16_t current_y = mp_obj_get_int(sprite->frame_current_y);
+    if(current_y >= count_y){
+        sprite->frame_current_x = mp_obj_new_int(count_y-1);
+    }
+}
+
+
 void sprite_2d_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("Sprite2DNode: Drawing");
 
@@ -308,12 +326,18 @@ bool sprite_2d_node_store_attr(engine_node_base_t *self_node_base, qstr attribut
             return true;
         break;
         case MP_QSTR_frame_count_x:
+        {
             self->frame_count_x = destination[1];
+            sprite_2d_node_clamp_current_x(self);
             return true;
+        }
         break;
         case MP_QSTR_frame_count_y:
+        {
             self->frame_count_y = destination[1];
+            sprite_2d_node_clamp_current_y(self);
             return true;
+        }
         break;
         case MP_QSTR_rotation:
             self->rotation = destination[1];
@@ -336,12 +360,18 @@ bool sprite_2d_node_store_attr(engine_node_base_t *self_node_base, qstr attribut
             return true;
         break;
         case MP_QSTR_frame_current_x:
+        {
             self->frame_current_x = destination[1];
+            sprite_2d_node_clamp_current_x(self);
             return true;
+        }
         break;
         case MP_QSTR_frame_current_y:
+        {
             self->frame_current_y = destination[1];
+            sprite_2d_node_clamp_current_y(self);
             return true;
+        }
         break;
         default:
             return false; // Fail
