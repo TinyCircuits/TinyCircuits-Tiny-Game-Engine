@@ -2,6 +2,7 @@
 #include "engine_io_common.h"
 #include "engine_gui.h"
 #include "engine_main.h"
+#include "math/engine_math.h"
 #include "utility/engine_defines.h"
 
 

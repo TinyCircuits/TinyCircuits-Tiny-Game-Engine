@@ -17,6 +17,8 @@
 #include "utility/engine_time.h"
 #include "draw/engine_shader.h"
 
+#include <string.h>
+
 
 void text_2d_node_class_draw(mp_obj_t text_2d_node_base_obj, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("Text2DNode: Drawing");
