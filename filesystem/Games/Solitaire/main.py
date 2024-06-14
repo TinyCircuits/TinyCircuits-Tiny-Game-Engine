@@ -313,12 +313,16 @@ class SolitaireGame(Rectangle2DNode):
             self.selected_card_index = 0
 
     def switch_row(self):
+        index_mapping_bottom_to_top = [0, 1, 1, 2, 3, 4, 5]
+        index_mapping_top_to_bottom = [0, 1, 3, 4, 5, 6]
+
         if self.current_row == 'top':
             self.current_row = 'bottom'
-            self.current_position_index = self.current_position_index % len(self.positions_bottom)
+            self.current_position_index = index_mapping_top_to_bottom[self.current_position_index]
         else:
             self.current_row = 'top'
-            self.current_position_index = self.current_position_index % len(self.positions_top)
+            self.current_position_index = index_mapping_bottom_to_top[self.current_position_index]
+        
         self.update_selected_column_index()
 
     def update_hand_indicator_position(self):
