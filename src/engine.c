@@ -140,6 +140,8 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_end_obj, engine_end);
 
 
 bool engine_tick(){
+    bool ticked = false;
+
     // Not sure why this is needed exactly for handling ctrl-c 
     // correctly, just replicating what happens in modutime.c
     MP_THREAD_GIL_EXIT();
@@ -177,8 +179,10 @@ bool engine_tick(){
         // Clear the depth buffer, if needed
         engine_display_clear_depth_buffer();
 
-        return true;
+        ticked = true;
     }
+
+    engine_objects_clear_deletable();
 
     // Not sure why this is needed exactly for handling ctrl-c 
     // correctly, just replicating what happens in modutime.c
@@ -194,7 +198,7 @@ bool engine_tick(){
         engine_end();
     }
 
-    return false;
+    return ticked;
 }
 
 
