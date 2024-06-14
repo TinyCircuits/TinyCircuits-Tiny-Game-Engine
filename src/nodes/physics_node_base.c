@@ -110,6 +110,14 @@ bool physics_node_base_load_attr(engine_node_base_t *self_node_base, qstr attrib
     PARAM: [type={ref_link:CollisionContact2D}]     [name=contact]      [value={ref_link:CollisionContact2D}]
     RETURN: None
 */
+/*  --- doc ---
+    NAME: physics_tick
+    ID: physics_tick
+    DESC: Overridable physics tick callback that happens before collision and node tick() callbacks
+    PARAM: [type=object] [name=self] [value=object]
+    PARAM: [type=float]  [name=dt]   [value=positive float in seconds]                                                                                                  
+    RETURN: None
+*/ 
 
 
 // Return `true` if handled storing the attr from internal structure, `false` otherwise

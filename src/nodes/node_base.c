@@ -14,7 +14,8 @@
     NAME: tick
     ID: tick
     DESC: Overridable tick callback
-    PARAM: [type=float] [name=dt] [value=positive float in seconds]                                                                                                  
+    PARAM: [type=object] [name=self] [value=object]
+    PARAM: [type=float]  [name=dt] [value=positive float in seconds]                                                                                                  
     RETURN: None
 */ 
 /*  --- doc ---
