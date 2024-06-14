@@ -14,6 +14,15 @@ engine_node_base_t *focused_gui_node_base = NULL;
 bool gui_focused = false;
 
 
+vector2_class_obj_t *resolve_gui_node_position(engine_node_base_t *gui_node_base){
+    if(mp_obj_is_type(focused_gui_node_base, &engine_gui_bitmap_button_2d_node_class_type)){
+        return ((engine_gui_bitmap_button_2d_node_class_obj_t*)gui_node_base->node)->position;
+    }else{
+        return ((engine_gui_button_2d_node_class_obj_t*)gui_node_base->node)->position;
+    }
+}
+
+
 void engine_gui_reset(){
     focused_gui_node_base = NULL;
     gui_focused = false;
@@ -140,12 +149,7 @@ void engine_gui_select_closest(bool (direction_check)(float)){
     }
 
     // Get the position of the currently focused GUI node
-    vector2_class_obj_t *focused_gui_position = NULL;
-    if(mp_obj_is_type(focused_gui_node_base, &engine_gui_bitmap_button_2d_node_class_type)){
-        focused_gui_position = ((engine_gui_bitmap_button_2d_node_class_obj_t*)focused_gui_node_base->node)->position;
-    }else{
-        focused_gui_position = ((engine_gui_button_2d_node_class_obj_t*)focused_gui_node_base->node)->position;
-    }
+    vector2_class_obj_t *focused_gui_position = resolve_gui_node_position(focused_gui_node_base);
 
     // Setup for looping through all GUI nodes and finding closest
     linked_list *gui_list = engine_collections_get_gui_list();
@@ -162,18 +166,11 @@ void engine_gui_select_closest(bool (direction_check)(float)){
             continue;
         }
 
-        // Get the node base of the currently looping
-        // through node
+        // Get the node base of the currently looping through node
         engine_node_base_t *searching_gui_node_base = current_gui_list_node->object;
 
-        // Get the position of the currently focused
-        // GUI node
-        vector2_class_obj_t *searching_gui_position = NULL;
-        if(mp_obj_is_type(searching_gui_node_base, &engine_gui_bitmap_button_2d_node_class_type)){
-            searching_gui_position = ((engine_gui_bitmap_button_2d_node_class_obj_t*)searching_gui_node_base->node)->position;
-        }else{
-            searching_gui_position = ((engine_gui_button_2d_node_class_obj_t*)searching_gui_node_base->node)->position;
-        }
+        // Get the position of the current GUI node
+        vector2_class_obj_t *searching_gui_position = resolve_gui_node_position(searching_gui_node_base);
 
         // Get the angle between the focused node and
         // the node we looped to now
@@ -205,6 +202,48 @@ void engine_gui_select_closest(bool (direction_check)(float)){
     // previously focused node
     if(closest_gui_node_base != NULL){
         engine_gui_focus_node(closest_gui_node_base);
+    }
+}
+
+
+void engine_gui_clear_focused(){
+    // If the GUI layer is focused, find a new node when
+    // the current focused node is to be cleared (likely gc'ed)
+    if(gui_focused){
+        linked_list *gui_list = engine_collections_get_gui_list();
+        linked_list_node *current_gui_list_node = gui_list->start;
+
+        // Get the position of the currently focused GUI node
+        vector2_class_obj_t *focused_gui_position = resolve_gui_node_position(focused_gui_node_base);
+
+        engine_node_base_t *closest_gui_node_base = NULL;
+        float shortest_distance = FLT_MAX;
+
+        while(current_gui_list_node != NULL){
+            engine_node_base_t *searching_gui_node_base = current_gui_list_node->object;
+            vector2_class_obj_t *searching_gui_position = resolve_gui_node_position(searching_gui_node_base);
+
+            float distance = engine_math_distance_between(focused_gui_position->x.value, focused_gui_position->y.value, searching_gui_position->x.value, searching_gui_position->y.value);
+
+            // If the distance is closer than the last one
+            // we compared to, set it as the closest. Make
+            // sure not comparing focused vs. focused
+            if(distance < shortest_distance && focused_gui_node_base != searching_gui_node_base){
+                shortest_distance = distance;
+                closest_gui_node_base = searching_gui_node_base;
+            }
+
+            current_gui_list_node = current_gui_list_node->next;
+        }
+
+        // Check if we found an alternative, node, focus it if we did
+        if(closest_gui_node_base != NULL){
+            engine_gui_focus_node(closest_gui_node_base);
+        }else{
+            focused_gui_node_base = NULL;
+        }
+    }else{
+        focused_gui_node_base = NULL;
     }
 }
 

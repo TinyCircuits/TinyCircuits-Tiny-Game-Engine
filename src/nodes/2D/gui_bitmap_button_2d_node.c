@@ -164,6 +164,10 @@ mp_obj_t gui_bitmap_button_2d_node_class_del(mp_obj_t self_in){
 
     engine_node_base_t *node_base = self_in;
     engine_gui_bitmap_button_2d_node_class_obj_t *gui_button = node_base->node;
+
+    // If this node is focused but being deleted, tell the GUI engine
+    if(gui_button->focused) engine_gui_clear_focused();
+
     engine_collections_untrack_gui(gui_button->gui_list_node);
 
     node_base_del(self_in);
