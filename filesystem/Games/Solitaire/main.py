@@ -6,10 +6,18 @@ from engine_nodes import Sprite2DNode, CameraNode, Rectangle2DNode
 from engine_resources import TextureResource
 from engine_math import Vector2, Vector3
 from engine_draw import Color
+from engine_animation import Tween, ONE_SHOT, EASE_SINE_IN
 import random
 
 # Load card sprite texture
 cards_texture = TextureResource("BiggerCards2.bmp")
+
+tweens = []
+
+def tween_card(card, target):
+    tw = Tween()
+    tw.start(card,'position',card.position, target, 200, 5, ONE_SHOT, EASE_SINE_IN)
+    tweens.append(tw)
 
 # Define a class for the card sprite
 class CardSprite(Sprite2DNode):
@@ -95,7 +103,7 @@ class DiscardPile:
         self.placeholder.flip(face_up=True)
 
     def add_card(self, card):
-        card.position = self.position
+        tween_card(card, self.position)
         card.flip(face_up=True)
         self.cards.append(card)
 
@@ -122,15 +130,14 @@ class Column:
         # Set all existing cards to layer 0
         for c in self.cards:
             c.set_layer(0)
-        
-        card.position = Vector2(self.position.x, self.position.y + len(self.cards) * 5)
+        tween_card(card, Vector2(self.position.x, self.position.y + len(self.cards) * 5))
         card.set_layer(1)  # Set the new card to layer 1
         self.cards.append(card)
         self.show_placeholder()
 
     def add_cards(self, cards):
         for card in cards:
-            card.position = Vector2(self.position.x, self.position.y + len(self.cards) * 5)
+            tween_card(card, Vector2(self.position.x, self.position.y + len(self.cards) * 5))
             card.set_layer(1)
             self.cards.append(card)
         self.show_placeholder()
@@ -171,7 +178,7 @@ class FoundationPile:
         for c in self.cards:
             c.set_layer(0)
         card.set_layer(1)
-        card.position = self.position
+        tween_card(card, self.position)
         self.cards.append(card)
 
     def can_add_card(self, card):
@@ -204,6 +211,11 @@ class SolitaireGame(Rectangle2DNode):
             Vector2(26, 12)   # Discard
         ] + [pile.position for pile in self.foundation_piles]  # Foundation piles 1-4
         self.positions_bottom = [col.position for col in self.columns]  # Columns 1-7
+        self.previous_highlighted_card = None
+        # New attributes for end-game animation
+        self.end_game_timer = 0
+        self.end_game_active = False
+        self.end_game_card_queue = []
 
     def setup_board(self):
         # Set up initial card layout
@@ -232,6 +244,30 @@ class SolitaireGame(Rectangle2DNode):
             self.add_child(pile.placeholder)
 
     def tick(self, dt):
+        # Handle tweens
+        for tween in tweens[:]:
+            tween.tick(dt)
+            if tween.finished:
+                tweens.remove(tween)
+                
+        # Handle end-game card movements every 100ms
+        if self.end_game_active and self.end_game_card_queue:
+            self.end_game_timer += dt
+            if self.end_game_timer >= 0.2:
+                self.end_game_timer = 0
+                card, pile = self.end_game_card_queue.pop(0)
+                pile.add_card(card)
+                if not self.end_game_card_queue:
+                    self.end_game_active = False
+        
+        # Check and trigger end-game condition
+        if not self.end_game_active:
+            self.move_cards_to_foundation_automatically()
+        
+        # Ignore key inputs if tweens are active
+        if tweens or self.end_game_active:
+            return
+
         # Handle user input and game logic here
         if engine_io.check_just_pressed(engine_io.DPAD_UP):
             self.move_up()
@@ -249,6 +285,7 @@ class SolitaireGame(Rectangle2DNode):
         self.update_hand_indicator_position()
 
     def move_up(self):
+        self.clear_highlight()
         if self.current_row == 'bottom':
             column_index = self.current_position_index
             column = self.columns[column_index]
@@ -256,6 +293,7 @@ class SolitaireGame(Rectangle2DNode):
                 if self.selected_card_index > 0:
                     if column.cards[self.selected_card_index - 1].revealed:
                         self.selected_card_index -= 1
+                        self.highlight_card()
                     else:
                         self.switch_row()
                 else:
@@ -266,6 +304,7 @@ class SolitaireGame(Rectangle2DNode):
             self.switch_row()
 
     def move_down(self):
+        self.clear_highlight()
         if self.current_row == 'bottom':
             column_index = self.current_position_index
             column = self.columns[column_index]
@@ -273,6 +312,8 @@ class SolitaireGame(Rectangle2DNode):
                 if self.selected_card_index < len(column.cards) - 1:
                     if column.cards[self.selected_card_index + 1].revealed:
                         self.selected_card_index += 1
+                        if(self.selected_card_index < len(column.cards) - 1):
+                            self.highlight_card()
                     else:
                         self.switch_row()
                 else:
@@ -284,6 +325,7 @@ class SolitaireGame(Rectangle2DNode):
 
 
     def move_left(self):
+        self.clear_highlight()
         if self.current_row == 'top':
             self.current_position_index = (self.current_position_index - 1) % len(self.positions_top)
         else:
@@ -291,11 +333,21 @@ class SolitaireGame(Rectangle2DNode):
         self.update_selected_column_index()
 
     def move_right(self):
+        self.clear_highlight()
         if self.current_row == 'top':
             self.current_position_index = (self.current_position_index + 1) % len(self.positions_top)
         else:
             self.current_position_index = (self.current_position_index + 1) % len(self.positions_bottom)
         self.update_selected_column_index()
+
+    def highlight_card(self):
+        self.previous_highlighted_card = self.columns[self.current_position_index].cards[self.selected_card_index]
+        self.previous_highlighted_card.position.y -= 5
+
+    def clear_highlight(self):
+        if(self.previous_highlighted_card):
+            self.previous_highlighted_card.position.y += 5
+            self.previous_highlighted_card = None
 
     def update_selected_column_index(self):
         if self.current_row == 'bottom':
@@ -322,7 +374,7 @@ class SolitaireGame(Rectangle2DNode):
         else:
             self.current_row = 'top'
             self.current_position_index = index_mapping_bottom_to_top[self.current_position_index]
-        
+
         self.update_selected_column_index()
 
     def update_hand_indicator_position(self):
@@ -343,19 +395,32 @@ class SolitaireGame(Rectangle2DNode):
                             break
                     new_position = Vector2(new_position.x, new_position.y + face_up_index * 5)
 
-        new_position = Vector2(new_position.x, new_position.y + 26)
-        self.hand_indicator.position = new_position
+        new_indicator_position = Vector2(new_position.x, new_position.y + 26)
+        if(self.hand_indicator.position.x != new_indicator_position.x or self.hand_indicator.position.y != new_indicator_position.y):
+            tween_card(self.hand_indicator, new_indicator_position)
 
         # Update the selected card's position to match the hand indicator's position
         if self.selected_cards:
             for i, card in enumerate(self.selected_cards):
-                card.position = Vector2(new_position.x, new_position.y + i * 5)
+                new_card_position = Vector2(new_indicator_position.x, new_indicator_position.y + i * 5)
+                if(card.position.x != new_card_position.x or card.position.y != new_card_position.y):
+                    tween_card(card, new_card_position)
             self.hand_indicator.opacity = 0  # Hide the hand indicator
         else:
             self.hand_indicator.opacity = 1  # Show the hand indicator
 
 
     def handle_selection(self):
+        self.clear_highlight()
+        # New code to automatically move selected card to foundation if 'A' is pressed again
+        if self.selected_cards and len(self.selected_cards) == 1:
+            for pile in self.foundation_piles:
+                if pile.can_add_card(self.selected_cards[0]):
+                    self.move_card_to_foundation(pile)
+                    self.selected_cards = []
+                    self.hand_indicator.opacity = 1  # Show the hand indicator
+                    self.update_selected_column_index()
+                    return
         if self.selected_cards:
             if self.current_row == 'bottom':
                 if self.move_cards_to_column(self.columns[self.current_position_index]):
@@ -391,6 +456,8 @@ class SolitaireGame(Rectangle2DNode):
             card = self.discard_pile.remove_top_card()
             self.selected_cards = [card]
             self.selected_card_origin = self.discard_pile
+            for c in self.selected_cards:
+                c.set_layer(3)
             self.add_child(card)
 
     def select_from_column(self, column):
@@ -408,6 +475,8 @@ class SolitaireGame(Rectangle2DNode):
             if self.selected_column_index == column.index:
                 # Picking up cards from a selected column
                 self.selected_cards = column.remove_top_cards(self.selected_card_index)
+                for c in self.selected_cards:
+                    c.set_layer(3)
                 self.selected_card_origin = column
                 self.selected_column_index = -1  # Reset column selection after picking up cards
             else:
@@ -460,6 +529,7 @@ class SolitaireGame(Rectangle2DNode):
         return False
 
     def undo_selection(self):
+        self.clear_highlight()
         if self.selected_cards:
             if isinstance(self.selected_card_origin, Column):
                 self.selected_card_origin.add_cards(self.selected_cards)
@@ -475,7 +545,57 @@ class SolitaireGame(Rectangle2DNode):
             self.selected_card_origin = None
             self.update_hand_indicator_position()
             self.hand_indicator.opacity = 1  # Show the hand indicator
+        else:
+            self.current_row = 'top'
+            self.current_position_index = 0
 
+    def check_end_game_condition(self):
+
+        # Check if the deck and discard pile are empty
+        if not self.deck.cards and not self.discard_pile.cards and not self.selected_cards:
+            # Check if all cards in all columns are face up
+            for column in self.columns:
+                for card in column.cards:
+                    if not card.revealed:
+                        return False
+            return True
+        return False
+
+    def move_cards_to_foundation_automatically(self):
+        if self.check_end_game_condition():
+            self.end_game_active = True
+            scheduled_cards = set()
+
+            def can_schedule_card(card):
+                for pile in self.foundation_piles:
+                    if pile.can_add_card(card):
+                        return True
+                return False
+
+            def schedule_card(card):
+                for pile in self.foundation_piles:
+                    if pile.can_add_card(card):
+                        self.end_game_card_queue.append((card, pile))
+                        scheduled_cards.add(card)
+                        return
+
+            cards_to_check = []
+
+            # Add all cards from columns to the list to check
+            for column in self.columns:
+                cards_to_check.extend(column.cards)
+
+            while cards_to_check:
+                any_card_scheduled = False
+                for card in cards_to_check[:]:
+                    if card not in scheduled_cards and can_schedule_card(card):
+                        schedule_card(card)
+                        cards_to_check.remove(card)
+                        any_card_scheduled = True
+                
+                if not any_card_scheduled:
+                    # If no cards were scheduled in this pass, break to avoid infinite loop
+                    break
 
 
 # Make an instance of our game
