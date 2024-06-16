@@ -424,7 +424,7 @@ def start_game(selected_difficulty):
 camera = CameraNode()
 camera.position = Vector3(DISP_WIDTH / 2, DISP_WIDTH / 2, 1)
 difficulty_levels = ["Very Easy", "Easy", "Medium", "Hard", "Ultra"]
-menu = SimpleTextMenu("Select\nDifficulty", difficulty_levels, start_game, font, DISP_WIDTH, DISP_HEIGHT, engine_draw.white, engine_draw.yellow )
+menu = SimpleTextMenu("Select\nDifficulty", difficulty_levels, start_game, font, DISP_WIDTH-20, DISP_HEIGHT-20, engine_draw.white, engine_draw.yellow )
 game = None
 
 engine.start()
