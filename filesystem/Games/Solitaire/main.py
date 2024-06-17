@@ -10,7 +10,7 @@ from engine_animation import Tween, ONE_SHOT, EASE_SINE_IN
 import random
 
 # Load card sprite texture
-cards_texture = TextureResource("BiggerCards2.bmp")
+cards_texture = TextureResource("BiggerCards3BW.bmp")
 
 tweens = []
 
@@ -180,6 +180,7 @@ class FoundationPile:
         card.set_layer(1)
         tween_card(card, self.position)
         self.cards.append(card)
+        self.show_placeholder()
 
     def can_add_card(self, card):
         if not self.cards and card.original_frame_x == 0:  # Must be an Ace to start
@@ -188,6 +189,12 @@ class FoundationPile:
         if self.cards and card.original_frame_y == self.suit and card.original_frame_x == self.cards[-1].original_frame_x + 1:
             return True
         return False
+    
+    def show_placeholder(self):
+        if not self.cards:
+            self.placeholder.opacity = 1
+        else:
+            self.placeholder.opacity = 0
 
 # Define a class for the game logic
 class SolitaireGame(Rectangle2DNode):
@@ -258,6 +265,8 @@ class SolitaireGame(Rectangle2DNode):
                 self.end_game_timer = 0
                 card, pile = self.end_game_card_queue.pop(0)
                 pile.add_card(card)
+                for column in self.columns:
+                    column.show_placeholder()
                 if not self.end_game_card_queue:
                     self.end_game_active = False
         
