@@ -59,6 +59,12 @@ class CardSprite(Sprite2DNode):
         self.in_hand = False
         self.discarded = True
 
+    def __str__(self):
+        return (f"Card(rank={self.rank_value}, suit={self.original_frame_y},position=({self.position.x}, {self.position.y}))")
+    
+    def __repr__(self):
+        return self.__str__()
+
 class Deck:
     def __init__(self, collection):
         self.collection = collection
@@ -91,18 +97,18 @@ class PokerGame(Rectangle2DNode):
         self.selected_cards = []
         self.played_cards = []
         self.current_card_index = 0
-        self.draw_hand()
         self.hand_indicator = self.create_hand_indicator()
+        self.draw_hand()
         self.discard_limit = 4
         self.hands_played = 0
         self.current_game = 1
-        self.total_games_played = 0  
         self.highest_individual_hand_score = 0
         self.setup_board()
         self.score = 0
-        self.target_score = 1000
+        self.target_score = 100
         self.booster_cards = []
         self.is_booster_selection = False
+        self.is_booster_wait = False
         self.hand_display_time = None
         self.game_over = False
 
@@ -110,6 +116,7 @@ class PokerGame(Rectangle2DNode):
         self.base_score_text = Text2DNode(Vector2(74, 20), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
         self.round_score_text = Text2DNode(Vector2(74, 30), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
         self.total_score_text = Text2DNode(Vector2(54, 40), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
+        self.best_hand_text = Text2DNode(Vector2(64, 50), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
         self.remaining_hands_text = Text2DNode(Vector2(80, 5), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
 
         self.total_score_text.text = f"Total: {self.score}/{self.target_score}"
@@ -136,6 +143,7 @@ class PokerGame(Rectangle2DNode):
     def draw_hand(self):
         self.hand = self.deck.draw_cards(8)
         self.update_hand_positions()
+        self.update_hand_indicator_position()
 
     def update_hand_positions(self):
         start_x = 7
@@ -162,9 +170,9 @@ class PokerGame(Rectangle2DNode):
 
     def tick(self, dt):
         for tween in tweens[:]:
-            tween.tick(dt)
             if tween.finished:
                 tweens.remove(tween)
+                self.update_hand_indicator_position()
 
         if self.game_over:
             return  # Disable inputs when the game is over
@@ -177,7 +185,10 @@ class PokerGame(Rectangle2DNode):
             self.played_cards.clear()  # Clear played cards after tweening
             self.hand_display_time = None  # Reset the display time after tweening
 
-        if self.is_booster_selection:
+        if self.is_booster_wait:
+            if not self.hand_display_time and not tweens:  # Only proceed if all tweens are finished
+                self.open_booster_packs()
+        elif self.is_booster_selection:
             self.handle_booster_selection()
             self.update_booster_indicator_position()
         else:
@@ -203,9 +214,10 @@ class PokerGame(Rectangle2DNode):
         self.update_hand_indicator_position()
 
     def update_hand_indicator_position(self):
-        if self.hand:
+        if self.hand and 0 <= self.current_card_index < len(self.hand):
             card_position = self.hand[self.current_card_index].position
             self.hand_indicator.position = Vector2(card_position.x, card_position.y + 20)
+            self.hand_indicator.set_layer(3)
 
     def select_card(self):
         card = self.hand[self.current_card_index]
@@ -227,21 +239,23 @@ class PokerGame(Rectangle2DNode):
             for card in self.selected_cards:
                 card.mark_played()
                 self.hand.remove(card)
-                self.played_cards.append(card)  # Add this line to store played cards
-            new_cards = self.deck.draw_cards(len(self.selected_cards))
-            self.hand.extend(new_cards)
-            self.update_hand_positions()
-            self.selected_cards = []
-
-        if self.hands_played >= 4:
-            for card in self.hand:
-                self.hand.remove(card)
-                card.mark_discarded()
-            if self.score >= self.target_score:
-                self.open_booster_packs()
+                self.played_cards.append(card) 
+            if self.hands_played >= 4:
+                hand_copy = self.hand[:]  # Create a copy of the hand
+                for card in hand_copy:
+                    self.hand.remove(card)
+                    card.mark_discarded()
+                    tween_card(card, Vector2(-100, card.position.y))
+                if self.score >= self.target_score:
+                    self.selected_cards = []
+                    self.is_booster_wait = True
+                else:
+                    self.end_game()
             else:
-                self.end_game()
-
+                new_cards = self.deck.draw_cards(len(self.selected_cards))
+                self.hand.extend(new_cards)
+                self.update_hand_positions()
+                self.selected_cards = []
         self.update_game_info()
 
     def discard_and_draw(self):
@@ -278,12 +292,15 @@ class PokerGame(Rectangle2DNode):
             else:
                 suit_count[suit] = 1
 
-        is_flush = len(suit_count) == 1
+        is_flush = len(suit_count) == 1 and len(self.selected_cards) == 5
         is_straight = self.is_straight(hand_ranks)
         base_score = 0
         multiplier = 1
 
-        if is_flush and is_straight and (12 in hand_ranks or 14 in hand_ranks):
+        if 5 in rank_count.values():
+            base_score = 110  # Five of a Kind
+            multiplier = 11
+        elif is_flush and is_straight and (12 in hand_ranks or 14 in hand_ranks):
             base_score = 100  # Royal Flush
             multiplier = 10
         elif is_flush and is_straight:
@@ -363,23 +380,26 @@ class PokerGame(Rectangle2DNode):
         self.game_over = True
         for card in self.hand:
             card.opacity = 0
+        for card in self.played_cards:
+            card.opacity = 0
         self.hand_indicator.opacity = 0
         self.base_score_text.text = f"Game Over!"
-        self.round_score_text.text = f"Games Played: {self.total_games_played}"
-        self.total_score_text.text = f"Total Score: {self.score}"
-        self.remaining_hands_text.text = f"Best Hand: {self.highest_individual_hand_score}"
+        self.round_score_text.text = f"Level: {self.current_game}"
+        self.total_score_text.text = f"Score: {self.score}"
+        self.best_hand_text.text = f"Best Hand: {self.highest_individual_hand_score}"
 
 
     def open_booster_packs(self):
         self.is_booster_selection = True
+        self.is_booster_wait = False
         self.booster_cards = self.draw_booster_pack()
         self.show_booster_pack()
 
     def draw_booster_pack(self):
         new_cards = []
         for _ in range(5):
-            if random.random() < 0.2:
-                card = CardSprite(Vector2(150, 80), 0, random.randint(0, 1), base_score_bonus=random.randint(10, 100), multiplier_bonus=random.randint(2, 10))
+            if random.random() < 0.1:
+                card = CardSprite(Vector2(150, 80), random.randint(0, 1), 4,  base_score_bonus=random.randint(10, 100), multiplier_bonus=random.randint(2, 10))
             else:
                 frame_x = random.randint(0, 12)
                 frame_y = random.randint(0, 3)
@@ -398,7 +418,6 @@ class PokerGame(Rectangle2DNode):
             self.add_child(joker)
 
     def show_booster_pack(self):
-        print("Show Booster Pack")
         start_x = 7
         y_position = 95
         for i, card in enumerate(self.booster_cards):
@@ -455,7 +474,12 @@ class PokerGame(Rectangle2DNode):
         for card in self.selected_cards:
             card.select(False)
             if card.original_frame_y == 4:
-                self.jokers.append(card)
+                if len(self.jokers) < 2:
+                    self.jokers.append(card)
+                else:
+                    # Remove the oldest joker and add the new one
+                    self.jokers.pop(0)
+                    self.jokers.append(card)
             else:
                 self.player_collection.append(card)
         self.selected_cards = []
@@ -467,6 +491,8 @@ class PokerGame(Rectangle2DNode):
         self.deck = Deck(self.player_collection)
         self.deck.shuffle()
         self.start_new_game()
+        self.update_hand_indicator_position()
+        self.update_joker_display()
 
     def start_new_game(self):
         self.score = 0
@@ -474,7 +500,7 @@ class PokerGame(Rectangle2DNode):
         self.total_score_text.text = f"Total: {self.score}/{self.target_score}"
         self.hands_played = 0
         self.discard_limit = 4  # Reset discard limit
-        self.current_card_index += 1
+        self.current_game += 1
         self.draw_hand()
         self.hand_indicator.opacity = 1
         self.update_game_info()
