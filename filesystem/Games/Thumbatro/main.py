@@ -8,6 +8,7 @@ from engine_math import Vector2, Vector3
 from engine_draw import Color
 from engine_animation import Tween, ONE_SHOT, EASE_SINE_IN
 import random
+import time
 
 # Load card sprite texture
 cards_texture = TextureResource("BiggerCards2.bmp")
@@ -88,30 +89,38 @@ class PokerGame(Rectangle2DNode):
         self.deck = Deck(self.player_collection)
         self.hand = []
         self.selected_cards = []
-        self.played_hands = []
+        self.played_cards = []
         self.current_card_index = 0
         self.draw_hand()
         self.hand_indicator = self.create_hand_indicator()
         self.discard_limit = 4
         self.hands_played = 0
+        self.current_game = 1
         self.setup_board()
         self.score = 0
         self.target_score = 1000
         self.booster_cards = []
         self.is_booster_selection = False
+        self.hand_display_time = None
 
         # Text nodes for displaying scores
-        self.base_score_text = Text2DNode(Vector2(64, 10), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
-        self.multiplier_text = Text2DNode(Vector2(64, 20), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
+        self.base_score_text = Text2DNode(Vector2(64, 20), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
         self.round_score_text = Text2DNode(Vector2(64, 30), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
         self.total_score_text = Text2DNode(Vector2(64, 40), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
+        self.remaining_hands_text = Text2DNode(Vector2(85, 5), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
+
+        self.total_score_text.text = f"Total: {self.score}/{self.target_score}"
 
         self.add_child(self.base_score_text)
-        self.add_child(self.multiplier_text)
         self.add_child(self.round_score_text)
         self.add_child(self.total_score_text)
+        self.add_child(self.remaining_hands_text)
 
         self.update_joker_display()
+        self.update_game_info()
+
+    def update_game_info(self):  # Add this method
+        self.remaining_hands_text.text = f"L{self.current_game}: H:{4 - self.hands_played} D:{self.discard_limit}"
 
     def create_initial_collection(self):
         collection = []
@@ -153,6 +162,14 @@ class PokerGame(Rectangle2DNode):
             tween.tick(dt)
             if tween.finished:
                 tweens.remove(tween)
+
+        if self.hand_display_time and time.time() - self.hand_display_time >= 2:
+            # Tween played cards off to the left
+            for card in self.played_cards:
+                target_position = Vector2(card.position.x - 100, card.position.y)
+                tween_card(card, target_position)
+            self.played_cards.clear()  # Clear played cards after tweening
+            self.hand_display_time = None  # Reset the display time after tweening
 
         if self.is_booster_selection:
             self.handle_booster_selection()
@@ -205,14 +222,20 @@ class PokerGame(Rectangle2DNode):
             for card in self.selected_cards:
                 card.mark_played()
                 self.hand.remove(card)
+                self.played_cards.append(card)  # Add this line to store played cards
             new_cards = self.deck.draw_cards(len(self.selected_cards))
             self.hand.extend(new_cards)
             self.update_hand_positions()
             self.selected_cards = []
 
         if self.hands_played >= 4:
-            self.end_game()
+            if self.score >= self.target_score:
+                self.start_new_game()
+            else:
+                self.end_game()
             self.open_booster_packs()
+
+        self.update_game_info()
 
     def discard_and_draw(self):
         if self.discard_limit > 0:
@@ -225,6 +248,8 @@ class PokerGame(Rectangle2DNode):
             self.update_hand_positions()
             self.selected_cards = []
             self.discard_limit -= 1
+
+        self.update_game_info()
 
     def evaluate_hand(self):
         hand_ranks = [card.rank_value for card in self.selected_cards]
@@ -319,6 +344,7 @@ class PokerGame(Rectangle2DNode):
             tween_card(card, Vector2(start_x + i * 18 + (1 if i != 0 else 0), y_position))
             card.mark_played()
             self.add_child(card)
+        self.hand_display_time = time.time()
 
     def reset_hand(self):
         if self.hands_played < 4:
@@ -333,6 +359,7 @@ class PokerGame(Rectangle2DNode):
             card.visible = False
             card.opacity = 0
         self.hand_indicator.opacity = 0
+        self.base_score_text.text = f"Game Over!"
 
     def open_booster_packs(self):
         print("Opening booster packs...")
@@ -375,6 +402,7 @@ class PokerGame(Rectangle2DNode):
         self.current_card_index = 0
         self.hand_indicator.position = Vector2(start_x, y_position + 20)
         self.add_child(self.hand_indicator)
+        self.update_booster_indicator_position()
 
         # Add booster pack label
         booster_label = Text2DNode(Vector2(64, 60), font, "Opening Boosters", 0, Vector2(1, 1), 1.0, 0, 0)
@@ -438,6 +466,7 @@ class PokerGame(Rectangle2DNode):
         self.discard_limit = 4  # Reset discard limit
         self.draw_hand()
         self.hand_indicator.opacity = 1
+        self.update_game_info()
 
 # Make an instance of our game
 game = PokerGame(Vector2(0, 0), 256, 256)
