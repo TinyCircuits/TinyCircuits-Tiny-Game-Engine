@@ -61,17 +61,17 @@ class MainDelay(Delay):
 
 
     def after(self):
-        self.T_tween.start(self.T_sprite, "position", self.T_sprite.position, Vector2(-53, 0), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
-        self.h_tween.start(self.h_sprite, "position", self.h_sprite.position, Vector2(-44, 0), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
-        self.u_tween.start(self.u_sprite, "position", self.u_sprite.position, Vector2(-34, 2), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
-        self.m_tween.start(self.m_sprite, "position", self.m_sprite.position, Vector2(-24, 2), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
-        self.b_tween.start(self.b_sprite, "position", self.b_sprite.position, Vector2(-13, 0), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
-        self.y_tween.start(self.y_sprite, "position", self.y_sprite.position, Vector2(-4, 4), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
-        self.C_tween.start(self.C_sprite, "position", self.C_sprite.position, Vector2(10, 0), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
-        self.GO_tween.start(self.GO_sprite, "position", self.GO_sprite.position, Vector2(21, 0), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
-        self.L_tween.start(self.L_sprite, "position", self.L_sprite.position, Vector2(31, 0), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
-        self.RO_tween.start(self.RO_sprite, "position", self.RO_sprite.position, Vector2(41, 0), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
-        self.R_tween.start(self.R_sprite, "position", self.R_sprite.position, Vector2(52, -1), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
+        self.T_tween.start(self.T_sprite, "position", None, Vector2(-53, 0), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
+        self.h_tween.start(self.h_sprite, "position", None, Vector2(-44, 0), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
+        self.u_tween.start(self.u_sprite, "position", None, Vector2(-34, 2), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
+        self.m_tween.start(self.m_sprite, "position", None, Vector2(-24, 2), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
+        self.b_tween.start(self.b_sprite, "position", None, Vector2(-13, 0), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
+        self.y_tween.start(self.y_sprite, "position", None, Vector2(-4, 4), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
+        self.C_tween.start(self.C_sprite, "position", None, Vector2(10, 0), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
+        self.GO_tween.start(self.GO_sprite, "position", None, Vector2(21, 0), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
+        self.L_tween.start(self.L_sprite, "position", None, Vector2(31, 0), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
+        self.RO_tween.start(self.RO_sprite, "position", None, Vector2(41, 0), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
+        self.R_tween.start(self.R_sprite, "position", None, Vector2(52, -1), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
 
 # Need to give the screen time to setup, wait 650ms before starting animation
 delay = MainDelay()
