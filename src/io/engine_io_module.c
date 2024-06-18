@@ -94,12 +94,12 @@ void engine_io_reset_gui_toggle_button(){
     DESC: For checking button presses. OR'ing together values means this returns true when all OR'ed buttons are pressed
     PARAM: [type=int]   [name=button_mask]  [value=single or OR'ed together enum/ints (e.g. 'engine_input.A | engine_input.B')]
     RETURN: True or False
-*/ 
+*/
 static mp_obj_t engine_io_check_pressed(mp_obj_t module, mp_obj_t button_mask_u16){
     if(engine_gui_get_focus() == true){
         return mp_obj_new_bool(false);
     }else{
-        uint16_t button_mask = mp_obj_get_int(button_mask_u16);    
+        uint16_t button_mask = mp_obj_get_int(button_mask_u16);
         return mp_obj_new_bool(check_pressed(button_mask));
     }
 }
@@ -112,7 +112,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(engine_io_check_pressed_obj, engine_io_check_pressed);
     DESC: For checking buttons that were either just released or pressed. OR'ing together values means this returns true when all OR'ed buttons were just changed
     PARAM: [type=int]   [name=button_mask]  [value=single or OR'ed together enum/ints (e.g. 'engine_input.A | engine_input.B')]
     RETURN: True or False
-*/ 
+*/
 static mp_obj_t engine_io_check_just_changed(mp_obj_t module, mp_obj_t button_mask_u16){
     if(engine_gui_get_focus() == true){
         return mp_obj_new_bool(false);
@@ -130,7 +130,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(engine_io_check_just_changed_obj, engine_io_check_just
     DESC: For checking buttons that were just pressed. OR'ing together values means this returns true when all OR'ed buttons were just pressed
     PARAM: [type=int]   [name=button_mask]  [value=single or OR'ed together enum/ints (e.g. 'engine_input.A | engine_input.B')]
     RETURN: True or False
-*/ 
+*/
 static mp_obj_t engine_io_check_just_pressed(mp_obj_t module, mp_obj_t button_mask_u16){
     if(engine_gui_get_focus() == true){
         return mp_obj_new_bool(false);
@@ -148,7 +148,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(engine_io_check_just_pressed_obj, engine_io_check_just
     DESC: For checking buttons that were just released. OR'ing together values means this returns true when all OR'ed buttons were just released
     PARAM: [type=int]   [name=button_mask]  [value=single or OR'ed together enum/ints (e.g. 'engine_input.A | engine_input.B')]
     RETURN: True or False
-*/ 
+*/
 static mp_obj_t engine_io_check_just_released(mp_obj_t module, mp_obj_t button_mask_u16){
     if(engine_gui_get_focus() == true){
         return mp_obj_new_bool(false);
@@ -166,7 +166,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(engine_io_check_just_released_obj, engine_io_check_jus
     DESC: Run the internal vibration motor at some intensity
     PARAM: [type=float]   [name=intensity]  [value=0.0 ~ 1.0]
     RETURN: None
-*/ 
+*/
 static mp_obj_t engine_io_rumble(mp_obj_t module, mp_obj_t intensity_obj){
     #ifdef __unix__
         // Nothing to do
@@ -206,11 +206,9 @@ static mp_obj_t engine_io_battery_level(mp_obj_t module){
         // 3.3/2 = 1.65V    <- MIN
         float battery_half_voltage = battery_voltage_12_bit * ADC_CONV_FACTOR;
 
+        // Map to the range we want to return.
         // Clamp since we only care showing between 0.0 and 1.0 for this function
-        battery_half_voltage = engine_math_clamp(battery_half_voltage, 1.65f, 2.1f);
-
-        // Map to the range we want to return
-        float battery_percentage = engine_math_map(battery_half_voltage, 1.65f, 2.1f, 0.0f, 1.0f);
+        float battery_percentage = engine_math_map_clamp(battery_half_voltage, 1.65f, 2.1f, 0.0f, 1.0f);
 
         return mp_obj_new_float(battery_percentage);
     #endif
@@ -246,7 +244,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_io_module_init_obj, engine_io_module_init);
     ATTR: [type=enum/int]   [name=BUMPER_LEFT]                          [value=0b0000000001000000]
     ATTR: [type=enum/int]   [name=BUMPER_RIGHT]                         [value=0b0000000010000000]
     ATTR: [type=enum/int]   [name=MENU]                                 [value=0b0000000100000000]
-*/ 
+*/
 static const mp_rom_map_elem_t engine_io_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_io) },
     { MP_OBJ_NEW_QSTR(MP_QSTR___init__), (mp_obj_t)&engine_io_module_init_obj },
