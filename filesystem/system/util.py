@@ -34,6 +34,28 @@ def is_dir(path):
         raise
 
 
+def read_and_delete(path, default=None):
+    """Reads the specified file and deletes it. Returns the default value if it didn't exist."""
+    try:
+        with open(path) as f:
+            data = f.read()
+        os.remove(path)
+        return data
+    except OSError as ex:
+        if ex.errno == errno.ENOENT:
+            return default
+        raise
+
+
+def delete_file(path):
+    """Deletes the file, if it exists."""
+    try:
+        os.remove(path)
+    except OSError as ex:
+        if ex.errno != errno.ENOENT:
+            raise
+
+
 def basename(path):
     return path[path.rfind("/") + 1 :]
 

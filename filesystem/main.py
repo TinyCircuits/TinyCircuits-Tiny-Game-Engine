@@ -2,12 +2,14 @@ import engine_main
 
 import os
 import sys
+from system.launcher_state import has_launcher_state, hold_launcher_state
 from system.root_dir import ROOT_DIR
 from system.run_on_boot import get_run_on_boot
 from system.util import file_exists, dirname, thumby_reset
 
 try:
 
+    execfile("system/hw_init.py")
     run_on_boot = get_run_on_boot()
     # Allow running an app by command line.
     if not run_on_boot and len(sys.argv) >= 2:
@@ -18,11 +20,13 @@ try:
         sys.path.append(f"{ROOT_DIR}/{dir}")
         os.chdir(dir)
         try:
-            execfile(f"{ROOT_DIR}/{run_on_boot}")
+            with hold_launcher_state():
+                execfile(f"{ROOT_DIR}/{run_on_boot}")
         finally:
             os.chdir(ROOT_DIR)
     else:
-        execfile("system/splash.py")
+        if not has_launcher_state():
+            execfile("system/splash.py")
         execfile("system/launcher.py")
     # Perform hard reset after the app finishes.
     thumby_reset(True)
