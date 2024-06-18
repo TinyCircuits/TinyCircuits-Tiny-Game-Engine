@@ -142,7 +142,7 @@ void engine_math_2d_midpoint(float x0, float y0, float x1, float y1, float *mx, 
 
 // https://stackoverflow.com/a/1968345
 // https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection#:~:text=Given%20two%20points%20on%20each%20line%20segment
-bool engine_math_2d_do_segments_intersect(float line_0_start_x, float line_0_start_y, float line_0_end_x, float line_0_end_y, 
+bool engine_math_2d_do_segments_intersect(float line_0_start_x, float line_0_start_y, float line_0_end_x, float line_0_end_y,
                                           float line_1_start_x, float line_1_start_y, float line_1_end_x, float line_1_end_y,
                                           float *intersect_x, float *intersect_y){
 
@@ -195,8 +195,8 @@ void engine_math_rotate_point(float *px, float *py, float cx, float cy, float an
 // https://math.stackexchange.com/a/234631
 // https://stackoverflow.com/a/49135089
 void engine_math_scale_point(float *px, float *py, float cx, float cy, float scale){
-    *px = scale * (((*px)-cx)+cx);
-    *py = scale * (((*py)-cy)+cy);
+    *px = scale * (*px-cx) + cx;
+    *py = scale * (*py-cy) + cy;
 }
 
 
