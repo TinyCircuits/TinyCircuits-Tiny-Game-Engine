@@ -16,9 +16,14 @@ font = FontResource("../../assets/outrunner_outline.bmp")
 
 tweens = []
 
-def tween_card(card, target):
+def tween_card(card, target, duration=500, speed=2):
     tw = Tween()
-    tw.start(card, 'position', card.position, target, 500, 2, ONE_SHOT, EASE_SINE_IN)
+    tw.start(card, 'position', card.position, target, duration, speed, ONE_SHOT, EASE_SINE_IN)
+    tweens.append(tw)
+
+def tween_opacity(node, start_opacity, end_opacity, duration=1000):
+    tw = Tween()
+    tw.start(node, 'opacity', start_opacity, end_opacity, duration, 1, ONE_SHOT, EASE_SINE_IN)
     tweens.append(tw)
 
 class CardSprite(Sprite2DNode):
@@ -39,6 +44,46 @@ class CardSprite(Sprite2DNode):
         self.discarded = False
         self.base_score_bonus = base_score_bonus
         self.multiplier_bonus = multiplier_bonus
+
+        # Text overlays for bonuses
+        self.base_score_text = None
+        self.multiplier_text = None
+        if self.base_score_bonus > 0:
+            self.base_score_text = Text2DNode(Vector2(0, -10), font, f"{self.base_score_bonus}", 0, Vector2(1, 1), 1.0, 0, 0)
+            self.base_score_text.color = Color(0x001F)  # Blue for base score bonus
+            self.base_score_text.set_layer(3)
+            self.add_child(self.base_score_text)
+        if self.multiplier_bonus > 0:
+            self.multiplier_text = Text2DNode(Vector2(0, 10), font, f"x{self.multiplier_bonus}", 0, Vector2(1, 1), 1.0, 0, 0)
+            self.multiplier_text.color = Color(0xF800)  # Red for multiplier bonus
+            self.multiplier_text.set_layer(3)
+            self.add_child(self.multiplier_text)
+
+        # Overlay sprite for base score bonus
+        if self.base_score_bonus > 0:
+            self.base_score_overlay = Sprite2DNode(Vector2(0,0))
+            self.base_score_overlay.frame_count_x = 13
+            self.base_score_overlay.frame_count_y = 5
+            self.base_score_overlay.frame_current_x  = 2
+            self.base_score_overlay.frame_current_y = 4
+            self.base_score_overlay.texture = cards_texture
+            self.base_score_overlay.opacity = 0.4
+            self.base_score_overlay.playing = False
+            self.base_score_overlay.set_layer(4)
+            self.add_child(self.base_score_overlay)
+
+        # Overlay sprite for multiplier bonus
+        if self.multiplier_bonus > 0:
+            self.multiplier_overlay = Sprite2DNode(Vector2(0,0))
+            self.multiplier_overlay.frame_count_x = 13
+            self.multiplier_overlay.frame_count_y = 5
+            self.multiplier_overlay.frame_current_x  = 3
+            self.multiplier_overlay.frame_current_y = 4
+            self.multiplier_overlay.texture = cards_texture
+            self.multiplier_overlay.opacity = 0.4
+            self.multiplier_overlay.playing = False
+            self.multiplier_overlay.set_layer(4)
+            self.add_child(self.multiplier_overlay)
 
     @property
     def rank_value(self):
@@ -334,15 +379,39 @@ class PokerGame(Rectangle2DNode):
         # Add the rank of each card to the base score
         base_score += sum(hand_ranks)
 
-        # Add card-specific bonuses
-        base_score += sum(card.base_score_bonus for card in self.selected_cards)
-        multiplier += sum(card.multiplier_bonus for card in self.selected_cards)
+        # Add card-specific bonuses and show score animations
+        for card in self.selected_cards:
+            if card.base_score_bonus > 0:
+                base_score += card.base_score_bonus
+                base_score_text = f"+{card.base_score_bonus}"
+                # Display base score animation in blue
+                base_start_position = Vector2(card.position.x, card.position.y + 10)  # Shift up by 20 pixels
+                self.display_score_animation(base_score_text, base_start_position, self.base_score_text.position, Color(0x001F))
+            
+            if card.multiplier_bonus > 0:
+                multiplier += card.multiplier_bonus
+                multiplier_text = f"x{card.multiplier_bonus}"
+                # Display multiplier animation in red
+                multiplier_start_position = Vector2(card.position.x, card.position.y - 10)  # Shift down by 20 pixels
+                self.display_score_animation(multiplier_text, multiplier_start_position, self.base_score_text.position, Color(0xF800))
 
-        # Add joker bonuses
-        if self.jokers:
-            joker_bonus = sum(joker.base_score_bonus for joker in self.jokers)
-            base_score += joker_bonus
-            multiplier += sum(joker.multiplier_bonus for joker in self.jokers)
+        # Add joker bonuses and show score animations
+        for joker in self.jokers:
+            if joker.base_score_bonus > 0:
+                base_score += joker.base_score_bonus
+                base_score_text = f"+{joker.base_score_bonus}"
+                # Display base score animation in blue
+                base_start_position = Vector2(joker.position.x, card.position.y + 10)  # Shift up by 20 pixels
+                self.display_score_animation(base_score_text, base_start_position, self.base_score_text.position, Color(0x001F))
+            
+            if joker.multiplier_bonus > 0:
+                multiplier += joker.multiplier_bonus
+                multiplier_text = f"x{joker.multiplier_bonus}"
+                # Display multiplier animation in red
+                multiplier_start_position = Vector2(joker.position.x, card.position.y - 10)  # Shift down by 20 pixels
+                self.display_score_animation(multiplier_text, multiplier_start_position, self.base_score_text.position, Color(0xF800))
+
+
 
         # Calculate the final score
         final_score = base_score * multiplier
@@ -366,6 +435,13 @@ class PokerGame(Rectangle2DNode):
         if set(ranks) == {2, 3, 4, 5, 14}:
             return True
         return False
+    
+    def display_score_animation(self, score_text, start_position, end_position, color=Color(0x0400)):
+        score_node = Text2DNode(start_position, font, score_text, 0, Vector2(1, 1), 1.0, 0, 0)
+        score_node.color = color
+        self.add_child(score_node)
+        tween_card(score_node, end_position, duration=1000, speed=2)
+        tween_opacity(score_node, 1.0, 0.0, duration=1000)
 
     def display_played_hand(self):
         start_x = 10
@@ -395,20 +471,52 @@ class PokerGame(Rectangle2DNode):
         self.booster_cards = self.draw_booster_pack()
         self.show_booster_pack()
 
+    def weighted_choice(self, choices, weights):
+        total = sum(weights)
+        r = random.uniform(0, total)
+        upto = 0
+        for choice, weight in zip(choices, weights):
+            if upto + weight >= r:
+                return choice
+            upto += weight
+        return choices[-1]
+
     def draw_booster_pack(self):
         new_cards = []
         for _ in range(5):
-            if random.random() < 0.1:
-                card = CardSprite(Vector2(150, 80), random.randint(0, 1), 4,  base_score_bonus=random.randint(10, 100), multiplier_bonus=random.randint(2, 10))
-            else:
+            rand_val = random.random()
+            
+            # Generate Jokers
+            if rand_val < 0.2:  # 10% chance for a Joker
+                joker_type = self.weighted_choice(['common', 'uncommon', 'rare'], [0.6, 0.3, 0.1])
+                if joker_type == 'common':
+                    card = CardSprite(Vector2(150, 80), random.randint(0, 1), 4, base_score_bonus=random.randint(10, 100), multiplier_bonus=0)
+                elif joker_type == 'uncommon':
+                    card = CardSprite(Vector2(150, 80), random.randint(0, 1), 4, base_score_bonus=0, multiplier_bonus=random.randint(2, 10))
+                else:  # rare
+                    card = CardSprite(Vector2(150, 80), random.randint(0, 1), 4, base_score_bonus=random.randint(10, 100), multiplier_bonus=random.randint(2, 10))
+
+            # Generate Cards
+            else:  # 90% chance for a regular card
+                card_type = self.weighted_choice(['common', 'uncommon', 'rare'], [0.7, 0.2, 0.1])
                 frame_x = random.randint(0, 12)
                 frame_y = random.randint(0, 3)
-                base_score_bonus = random.randint(1, 10)
-                multiplier_bonus = random.randint(1, 3)
+                if card_type == 'common':
+                    base_score_bonus = random.randint(1, 10)
+                    multiplier_bonus = 0
+                elif card_type == 'uncommon':
+                    base_score_bonus = 0
+                    multiplier_bonus = random.randint(1, 3)
+                else:  # rare
+                    base_score_bonus = random.randint(5, 20)
+                    multiplier_bonus = random.randint(1, 5)
+
                 card = CardSprite(Vector2(150, 80), frame_x, frame_y, base_score_bonus, multiplier_bonus)
+
             new_cards.append(card)
 
         return new_cards
+
 
     def update_joker_display(self):
         start_x = 7
