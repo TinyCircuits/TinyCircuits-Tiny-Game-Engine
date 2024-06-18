@@ -140,7 +140,7 @@ void sprite_2d_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t camera_no
         uint16_t sprite_period = (uint16_t)((1.0f/sprite_fps) * 1000.0f);
 
         uint32_t current_ms_time = millis();
-        if(current_ms_time - sprite_2d_node->time_at_last_animation_update_ms >= sprite_period){
+        if(millis_diff(current_ms_time, sprite_2d_node->time_at_last_animation_update_ms) >= sprite_period){
             sprite_frame_current_x++;
 
             // If reach end of x-axis frames, go to the next line and restart x
@@ -423,9 +423,9 @@ static mp_attr_fun_t sprite_2d_node_class_attr(mp_obj_t self_in, qstr attribute,
     PARAM:  [type=int]                        [name=frame_count_y]                              [value=any positive integer]
     PARAM:  [type=float]                      [name=rotation]                                   [value=any (radians)]
     PARAM:  [type={ref_link:Vector2}]         [name=scale]                                      [value={ref_link:Vector2}]
-    PARAM:  [type=float]                      [name=opacity]                                    [value=0 ~ 1.0] 
+    PARAM:  [type=float]                      [name=opacity]                                    [value=0 ~ 1.0]
     PARAM:  [type=boolean]                    [name=playing]                                    [value=boolean]
-    ATTR:   [type=function]                   [name={ref_link:add_child}]                       [value=function] 
+    ATTR:   [type=function]                   [name={ref_link:add_child}]                       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_child}]                       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_child_count}]                 [value=function]
     ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy}]               [value=function]
@@ -472,7 +472,7 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
     enum arg_ids {child_class, position, texture, transparent_color, fps, frame_count_x, frame_count_y, rotation, scale, opacity, playing, loop};
     bool inherited = false;
 
-    // If there is one positional argument and it isn't the first 
+    // If there is one positional argument and it isn't the first
     // expected argument (as is expected when using positional
     // arguments) then define which way to parse the arguments
     if(n_args >= 1 && mp_obj_get_type(args[0]) != &vector2_class_type){

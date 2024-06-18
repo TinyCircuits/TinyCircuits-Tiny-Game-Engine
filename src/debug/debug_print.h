@@ -75,7 +75,7 @@ extern uint32_t engine_performance_timers[5];
 // Prints the time (in ms) since 'ENGINE_PERFORMANCE_START()' was called
 #define ENGINE_PERFORMANCE_STOP(timer, label)                                                                                                   \
     if(DEBUG_PERFORMANCE_ENABLED){                                                                                                              \
-        mp_printf(MP_PYTHON_PRINTER, "\x1b[36mPERFORMANCE[timer %d, end]: %s: %lu ms\x1b[0m\n", timer+1, label, millis()-engine_performance_timers[timer]);  \
+        mp_printf(MP_PYTHON_PRINTER, "\x1b[36mPERFORMANCE[timer %d, end]: %s: %lu ms\x1b[0m\n", timer+1, label, millis_diff(millis(), engine_performance_timers[timer]));  \
     }
 
 

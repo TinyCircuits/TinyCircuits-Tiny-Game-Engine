@@ -1,4 +1,5 @@
 #include "engine_time.h"
+#include "debug/debug_print.h"
 #include <stddef.h>
 
 #if defined(__EMSCRIPTEN__)
@@ -29,26 +30,25 @@
     #define KIN1_InitCycleCounter() \
     KIN1_DEMCR |= KIN1_TRCENA_BIT
     /*!< TRCENA: Enable trace and debug block DEMCR (Debug Exception and Monitor Control Register */
-    
+
     #define KIN1_ResetCycleCounter() \
     KIN1_DWT_CYCCNT = 0
     /*!< Reset cycle counter */
-    
+
     #define KIN1_EnableCycleCounter() \
     KIN1_DWT_CONTROL |= KIN1_DWT_CYCCNTENA_BIT
     /*!< Enable cycle counter */
-    
+
     #define KIN1_DisableCycleCounter() \
     KIN1_DWT_CONTROL &= ~KIN1_DWT_CYCCNTENA_BIT
     /*!< Disable cycle counter */
-    
+
     #define KIN1_GetCycleCounter() \
     KIN1_DWT_CYCCNT
     /*!< Read cycle counter register */
 #endif
 
-
-uint32_t millis(){
+uint32_t millis_internal(){
     #if defined(__EMSCRIPTEN__)
         gettimeofday(&tv, NULL);
         return tv.tv_sec * 1000LL + tv.tv_usec / 1000;
@@ -63,6 +63,50 @@ uint32_t millis(){
         // https://www.raspberrypi.com/documentation/pico-sdk/high_level.html#gab12467c48bde27171b552ac4dc8c7d59
         return to_ms_since_boot(get_absolute_time());
     #endif
+}
+
+
+// Returns an increasing millisecond counter with an arbitrary reference point, that wraps around
+// after some value.
+//
+// The wrap-around value is not explicitly exposed, but we will refer to it as TICKS_MAX to
+// simplify discussion. Period of the values is TICKS_PERIOD = TICKS_MAX + 1. TICKS_PERIOD is
+// guaranteed to be a power of two, but otherwise no assumptions about it should be made.
+// Thus, this function will return a value in range [0 .. TICKS_MAX], inclusive, total TICKS_PERIOD
+// values. Note that only non-negative values are used. For the most part, you should treat values
+// returned by these functions as opaque. The only operations available for them are
+//  millis_diff() and ticks_add() functions described below.
+//
+// Note: Performing standard mathematical operations (+, -) or relational operators (<, <=, >, >=)
+// directly on this value will lead to invalid result. Performing mathematical operations and then
+// passing their results as arguments to millis_diff() or millis_add() will also lead to invalid
+// results from the latter functions.
+//
+// This is based on the contract and implementation of MicroPython's time.ticks_ms() function:
+// https://docs.micropython.org/en/latest/library/time.html#time.ticks_ms
+uint32_t millis() {
+    return millis_internal() & (MILLIS_PERIOD - 1);
+}
+
+
+// Returns the difference between two values returned by millis() function.
+//
+// The contract and implementation is based on MicroPython's time.ticks_diff() function:
+// https://docs.micropython.org/en/latest/library/time.html#time.ticks_diff
+int32_t millis_diff(uint32_t end, uint32_t start) {
+    return ((end - start + MILLIS_PERIOD / 2) & (MILLIS_PERIOD - 1)) - MILLIS_PERIOD / 2;
+}
+
+
+// Returns the sum of a value returned by millis() function and an integer delta.
+//
+// The contract and implementation is based on MicroPython's time.ticks_add() function:
+// https://docs.micropython.org/en/latest/library/time.html#time.ticks_add
+uint32_t millis_add(uint32_t millis, int32_t delta) {
+    if (delta + MILLIS_PERIOD / 2 - 1 >= MILLIS_PERIOD - 1) {
+        ENGINE_ERROR_PRINTF("Millis delta is %d, out of range", delta);
+    }
+    return ((millis + delta) & (MILLIS_PERIOD - 1));
 }
 
 

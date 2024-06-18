@@ -81,7 +81,7 @@ void voxelspace_sprite_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t c
     // an angle camera_fov_half from the view direction line
     // that has a length of `camera_view_distance`:
     /*
-            
+
                    opposite
             \---------------------|                     /  ---
              \         P          |                    /    |
@@ -92,7 +92,7 @@ void voxelspace_sprite_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t c
           \      u\      |       j|a              /         | e
            \      l\      \      -|d             /          | w
             \      l\      |     a|j            /           |
-             \      _\     |     d|a           /            | d 
+             \      _\     |     d|a           /            | d
               \      l\   D \    j|c          /             | i
               z\      e\     |   a|e         /              | s
                 \      n\    |   c|n        /               | t
@@ -114,7 +114,7 @@ void voxelspace_sprite_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t c
         * adjacent = view_distance (is given/provided)
         * full_length = view_distance / cosf(A) [soh-cah-toa -> cah -> cosO = addj/hypt -> full_length = view_distance / cosA]
         * opposite = soh-cah-toa -> sinO = opp/hypt -> opposite = full_length * sinf(camera_fov_half)
-         
+
         To do the correct projection we need to find a distance along 'full_length' that we can
         use to find L and R based on the voxelspace calculations below. We need to choose this
         distance based on the point P relative to C. Once we have L and R we can see how far along
@@ -230,7 +230,7 @@ void voxelspace_sprite_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t c
     }else{
         shader = engine_get_builtin_shader(EMPTY_SHADER);
     }
-    
+
     engine_draw_blit_depth(sprite_pixel_data+sprite_frame_fb_start_index,
                      floorf(sprite_rotated_x), floorf(sprite_rotated_y),
                      sprite_frame_width, sprite_frame_height,
@@ -242,7 +242,7 @@ void voxelspace_sprite_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t c
                      sprite_opacity,
                      depth,
                      shader);
-    
+
     // engine_draw_pixel(0b1111100000000000, floorf(((value/max) * SCREEN_WIDTH)), floorf(sprite_rotated_y), 1.0f, shader);
 
     // After drawing, go to the next frame if it is time to and the animation is playing
@@ -251,7 +251,7 @@ void voxelspace_sprite_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t c
         uint16_t sprite_period = (uint16_t)((1.0f/sprite_fps) * 1000.0f);
 
         uint32_t current_ms_time = millis();
-        if(current_ms_time - voxelspace_sprite_node->time_at_last_animation_update_ms >= sprite_period){
+        if(millis_diff(current_ms_time, voxelspace_sprite_node->time_at_last_animation_update_ms) >= sprite_period){
             sprite_frame_current_x++;
 
             // If reach end of x-axis frames, go to the next line and restart x
@@ -517,11 +517,11 @@ static mp_attr_fun_t voxelspace_sprite_node_class_attr(mp_obj_t self_in, qstr at
     PARAM:  [type=int]                        [name=frame_count_y]                              [value=any positive integer]
     PARAM:  [type=float]                      [name=rotation]                                   [value=any (radians)]
     PARAM:  [type={ref_link:Vector2}]         [name=scale]                                      [value={ref_link:Vector2}]
-    PARAM:  [type=float]                      [name=opacity]                                    [value=0 ~ 1.0] 
+    PARAM:  [type=float]                      [name=opacity]                                    [value=0 ~ 1.0]
     PARAM:  [type=boolean]                    [name=playing]                                    [value=boolean]
     PARAM:  [type=boolean]                    [name=fov_distort]                                [value=boolean (True means the sprite will be scaled by the FOV (TODO: review implementation, not perfect) and False means it will not be distorted, default: True)]
     PARAM:  [type={ref_link:Vector2}]         [name=texture_offset]                             [value={ref_link:Vector2} (local offset of the texture at the rendered origin. Sprites render at center/origin by default, use this to shift them)]
-    ATTR:   [type=function]                   [name={ref_link:add_child}]                       [value=function] 
+    ATTR:   [type=function]                   [name={ref_link:add_child}]                       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_child}]                       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_child_count}]                 [value=function]
     ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy}]               [value=function]
@@ -573,7 +573,7 @@ mp_obj_t voxelspace_sprite_node_class_new(const mp_obj_type_t *type, size_t n_ar
     enum arg_ids {child_class, position, texture, transparent_color, fps, frame_count_x, frame_count_y, rotation, scale, opacity, playing, fov_distort, texture_offset};
     bool inherited = false;
 
-    // If there is one positional argument and it isn't the first 
+    // If there is one positional argument and it isn't the first
     // expected argument (as is expected when using positional
     // arguments) then define which way to parse the arguments
     if(n_args >= 1 && mp_obj_get_type(args[0]) != &vector2_class_type){
