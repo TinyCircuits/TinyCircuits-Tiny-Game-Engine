@@ -155,7 +155,7 @@ class LauncherTile(GUIBitmapButton2DNode):
         self.title_text_node.opacity = 1.0
 
         camera_tween.stop()
-        camera_tween.start(camera, "position", camera.position, Vector3(self.position.x, self.position.y, camera.position.z), 250.0, 1.0, ONE_SHOT, EASE_BACK_OUT)
+        camera_tween.start(camera, "position", None, Vector3(self.position.x, self.position.y, camera.position.z), 250.0, 1.0, ONE_SHOT, EASE_BACK_OUT)
 
     def on_just_unfocused(self):
         self.set_opacity(0.65)
