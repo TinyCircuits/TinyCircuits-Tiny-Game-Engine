@@ -11,7 +11,7 @@ import random
 import time
 
 # Load card sprite texture
-cards_texture = TextureResource("BiggerCards2.bmp")
+cards_texture = TextureResource("BiggerCards2ext.bmp")
 font = FontResource("../../assets/outrunner_outline.bmp")
 
 tweens = []
@@ -42,47 +42,58 @@ class CardSprite(Sprite2DNode):
         self.in_hand = True
         self.played = False
         self.discarded = False
+        self.set_layer(3)
         self.base_score_bonus = base_score_bonus
         self.multiplier_bonus = multiplier_bonus
 
-        # Text overlays for bonuses
-        self.base_score_text = None
-        self.multiplier_text = None
-        if self.base_score_bonus > 0:
-            self.base_score_text = Text2DNode(Vector2(0, -10), font, f"{self.base_score_bonus}", 0, Vector2(1, 1), 1.0, 0, 0)
-            self.base_score_text.color = Color(0x001F)  # Blue for base score bonus
-            self.base_score_text.set_layer(3)
-            self.add_child(self.base_score_text)
-        if self.multiplier_bonus > 0:
-            self.multiplier_text = Text2DNode(Vector2(0, 10), font, f"x{self.multiplier_bonus}", 0, Vector2(1, 1), 1.0, 0, 0)
-            self.multiplier_text.color = Color(0xF800)  # Red for multiplier bonus
-            self.multiplier_text.set_layer(3)
-            self.add_child(self.multiplier_text)
+        # Base layer - card background
+        self.background = Sprite2DNode(Vector2(0, 0))
+        self.background.frame_count_x = 13
+        self.background.frame_count_y = 5
+        self.background.frame_current_x = 6
+        self.background.frame_current_y = 4
+        self.background.texture = cards_texture
+        self.background.playing = False
+        self.background.set_layer(1)
+        self.background.transparent_color = Color(0x0400)
+        self.add_child(self.background)
 
-        # Overlay sprite for base score bonus
-        if self.base_score_bonus > 0:
-            self.base_score_overlay = Sprite2DNode(Vector2(0,0))
+        if self.base_score_bonus > 0 and self.multiplier_bonus > 0:
+            self.base_score_overlay = Sprite2DNode(Vector2(0, 0))
             self.base_score_overlay.frame_count_x = 13
             self.base_score_overlay.frame_count_y = 5
-            self.base_score_overlay.frame_current_x  = 2
+            self.base_score_overlay.frame_current_x = 9
             self.base_score_overlay.frame_current_y = 4
             self.base_score_overlay.texture = cards_texture
-            self.base_score_overlay.opacity = 0.4
             self.base_score_overlay.playing = False
-            self.base_score_overlay.set_layer(4)
+            self.base_score_overlay.set_layer(2)
+            self.base_score_overlay.opacity = 0.4
+            self.base_score_overlay.transparent_color = Color(0x0400)
+            self.add_child(self.base_score_overlay)
+        # Overlay sprite for base score bonus
+        elif self.base_score_bonus > 0:
+            self.base_score_overlay = Sprite2DNode(Vector2(0, 0))
+            self.base_score_overlay.frame_count_x = 13
+            self.base_score_overlay.frame_count_y = 5
+            self.base_score_overlay.frame_current_x = 7
+            self.base_score_overlay.frame_current_y = 4
+            self.base_score_overlay.texture = cards_texture
+            self.base_score_overlay.playing = False
+            self.base_score_overlay.set_layer(2)
+            self.base_score_overlay.transparent_color = Color(0x0400)
             self.add_child(self.base_score_overlay)
 
         # Overlay sprite for multiplier bonus
-        if self.multiplier_bonus > 0:
-            self.multiplier_overlay = Sprite2DNode(Vector2(0,0))
+        elif self.multiplier_bonus > 0:
+            self.multiplier_overlay = Sprite2DNode(Vector2(0, 0))
             self.multiplier_overlay.frame_count_x = 13
             self.multiplier_overlay.frame_count_y = 5
-            self.multiplier_overlay.frame_current_x  = 3
+            self.multiplier_overlay.frame_current_x = 10
             self.multiplier_overlay.frame_current_y = 4
             self.multiplier_overlay.texture = cards_texture
-            self.multiplier_overlay.opacity = 0.4
             self.multiplier_overlay.playing = False
-            self.multiplier_overlay.set_layer(4)
+            self.multiplier_overlay.set_layer(2)
+            self.multiplier_overlay.transparent_color = Color(0x0400)
             self.add_child(self.multiplier_overlay)
 
     @property
@@ -101,14 +112,20 @@ class CardSprite(Sprite2DNode):
         self.played = True
 
     def mark_discarded(self):
+        self.hide()
         self.in_hand = False
         self.discarded = True
 
+    def hide(self):
+        self.opacity = 0
+        self.background.opacity = 0
+
     def __str__(self):
         return (f"Card(rank={self.rank_value}, suit={self.original_frame_y},position=({self.position.x}, {self.position.y}))")
-    
+
     def __repr__(self):
         return self.__str__()
+
 
 class Deck:
     def __init__(self, collection):
@@ -262,7 +279,7 @@ class PokerGame(Rectangle2DNode):
         if self.hand and 0 <= self.current_card_index < len(self.hand):
             card_position = self.hand[self.current_card_index].position
             self.hand_indicator.position = Vector2(card_position.x, card_position.y + 20)
-            self.hand_indicator.set_layer(3)
+            self.hand_indicator.set_layer(7)
 
     def select_card(self):
         card = self.hand[self.current_card_index]
@@ -401,14 +418,14 @@ class PokerGame(Rectangle2DNode):
                 base_score += joker.base_score_bonus
                 base_score_text = f"+{joker.base_score_bonus}"
                 # Display base score animation in blue
-                base_start_position = Vector2(joker.position.x, card.position.y + 10)  # Shift up by 20 pixels
+                base_start_position = Vector2(joker.position.x, joker.position.y + 10)  # Shift up by 20 pixels
                 self.display_score_animation(base_score_text, base_start_position, self.base_score_text.position, Color(0x001F))
             
             if joker.multiplier_bonus > 0:
                 multiplier += joker.multiplier_bonus
                 multiplier_text = f"x{joker.multiplier_bonus}"
                 # Display multiplier animation in red
-                multiplier_start_position = Vector2(joker.position.x, card.position.y - 10)  # Shift down by 20 pixels
+                multiplier_start_position = Vector2(joker.position.x, joker.position.y - 10)  # Shift down by 20 pixels
                 self.display_score_animation(multiplier_text, multiplier_start_position, self.base_score_text.position, Color(0xF800))
 
 
@@ -439,6 +456,7 @@ class PokerGame(Rectangle2DNode):
     def display_score_animation(self, score_text, start_position, end_position, color=Color(0x0400)):
         score_node = Text2DNode(start_position, font, score_text, 0, Vector2(1, 1), 1.0, 0, 0)
         score_node.color = color
+        score_node.set_layer(6)
         self.add_child(score_node)
         tween_card(score_node, end_position, duration=1000, speed=2)
         tween_opacity(score_node, 1.0, 0.0, duration=1000)
@@ -455,9 +473,9 @@ class PokerGame(Rectangle2DNode):
     def end_game(self):
         self.game_over = True
         for card in self.hand:
-            card.opacity = 0
+            card.hide()
         for card in self.played_cards:
-            card.opacity = 0
+            card.hide()
         self.hand_indicator.opacity = 0
         self.base_score_text.text = f"Game Over!"
         self.round_score_text.text = f"Level: {self.current_game}"
@@ -506,10 +524,10 @@ class PokerGame(Rectangle2DNode):
                     multiplier_bonus = 0
                 elif card_type == 'uncommon':
                     base_score_bonus = 0
-                    multiplier_bonus = random.randint(1, 3)
+                    multiplier_bonus = random.randint(2, 4)
                 else:  # rare
                     base_score_bonus = random.randint(5, 20)
-                    multiplier_bonus = random.randint(1, 5)
+                    multiplier_bonus = random.randint(2, 5)
 
                 card = CardSprite(Vector2(150, 80), frame_x, frame_y, base_score_bonus, multiplier_bonus)
 
