@@ -78,8 +78,13 @@ float engine_math_vector_length_sqr(float x, float y){
 
 // https://stackoverflow.com/a/16659263
 float engine_math_clamp(float value, float min, float max){
-    const float t = value < min ? min : value;
-    return t > max ? max : t;
+    if(value <= min){
+        return min;
+    }
+    if(value >= max){
+        return max;
+    }
+    return value;
 }
 
 
@@ -93,11 +98,13 @@ float engine_math_map(float value, float in_min, float in_max, float out_min, fl
 
 
 float engine_math_map_clamp(float value, float in_min, float in_max, float out_min, float out_max){
-    return value <= in_min
-        ? out_min
-        : value >= in_max
-        ? out_max
-        : engine_math_map(value, in_min, in_max, out_min, out_max);
+    if(value <= in_min){
+        return out_min;
+    }
+    if(value >= in_max){
+        return out_max;
+    }
+    return engine_math_map(value, in_min, in_max, out_min, out_max);
 }
 
 
