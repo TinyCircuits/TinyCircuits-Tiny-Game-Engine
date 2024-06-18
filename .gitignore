@@ -1,3 +1,5 @@
 filesystem/last_crash.txt
+filesystem/_launcher_state
+filesystem/_launcher_state__
 doc/build
 .vscode
