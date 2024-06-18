@@ -80,8 +80,7 @@ void voxelspace_node_class_draw(mp_obj_t voxelspace_node_base_obj, mp_obj_t came
     // in the future the camera could be made to look backwards
     // and upside down when the angles go out of range
     float view_angle = camera_rotation->x.value;
-    view_angle = engine_math_clamp(view_angle, -PI/2.0f, PI/2.0f);
-    view_angle = engine_math_map(view_angle, -PI/2.0f, PI/2.0f, -SCREEN_HEIGHT*2.0f, SCREEN_HEIGHT*2.0f);
+    view_angle = engine_math_map_clamp(view_angle, -PI/2.0f, PI/2.0f, -SCREEN_HEIGHT*2.0f, SCREEN_HEIGHT*2.0f);
 
     // Scales for making the terrain smaller or larger
     float inverse_x_scale = 1.0f / voxelspace_scale->x.value;
@@ -228,7 +227,7 @@ void voxelspace_node_class_draw(mp_obj_t voxelspace_node_base_obj, mp_obj_t came
 /*  --- doc ---
     NAME: get_abs_height
     ID: get_abs_height
-    DESC: Gets the absolute height at a position in the voxelspace node (takes position into account). If the position isn't inside the node at its current position and dimensions, returns None. 
+    DESC: Gets the absolute height at a position in the voxelspace node (takes position into account). If the position isn't inside the node at its current position and dimensions, returns None.
     PARAM:  [type=float]    [name=x]   [value=any]
     PARAM:  [type=float]    [name=y]   [value=any]
     RETURN: float or None
@@ -538,8 +537,8 @@ mp_obj_t voxelspace_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
     enum arg_ids {child_class, position, texture, heightmap, rotation, scale, repeat, flip, lod, curvature, thickness};
     bool inherited = false;
-    
-    // If there is one positional argument and it isn't the first 
+
+    // If there is one positional argument and it isn't the first
     // expected argument (as is expected when using positional
     // arguments) then define which way to parse the arguments
     if(n_args >= 1 && mp_obj_get_type(args[0]) != &vector3_class_type){

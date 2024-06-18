@@ -44,14 +44,14 @@ float engine_math_3d_vector_length(float vx, float vy, float vz){
 void engine_math_normalize(float *vx, float *vy){
     float length = engine_math_vector_length(*vx, *vy);
 
-    // https://stackoverflow.com/a/66446497
-    if(engine_math_compare_floats(length, 0.0)){
-        length = 0.0001f;
+    if(length == 0.0f){
+        // The length is zero so all components are zero, no use scaling them by anything.
+        return;
     }
 
     const float factor = 1.0f / length;
-    *vx = (*vx) * factor;
-    *vy = (*vy) * factor;
+    *vx *= factor;
+    *vy *= factor;
 }
 
 
@@ -59,15 +59,15 @@ void engine_math_normalize(float *vx, float *vy){
 void engine_math_3d_normalize(float *vx, float *vy, float *vz){
     float length = engine_math_3d_vector_length(*vx, *vy, *vz);
 
-    // https://stackoverflow.com/a/66446497
-    if(engine_math_compare_floats(length, 0.0)){
-        length = 0.0001f;
+    if(length == 0.0f){
+        // The length is zero so all components are zero, no use scaling them by anything.
+        return;
     }
 
     const float factor = 1.0f / length;
-    *vx = (*vx) * factor;
-    *vy = (*vy) * factor;
-    *vz = (*vz) * factor;
+    *vx *= factor;
+    *vy *= factor;
+    *vz *= factor;
 }
 
 
@@ -88,9 +88,12 @@ float engine_math_map(float value, float in_min, float in_max, float out_min, fl
 }
 
 
-float engine_math_map_clamp_out(float value, float in_min, float in_max, float out_min, float out_max){
-    value = engine_math_map(value, in_min, in_max, out_min, out_max);
-    return engine_math_clamp(value, out_min, out_max);
+float engine_math_map_clamp(float value, float in_min, float in_max, float out_min, float out_max){
+    return value <= in_min
+        ? out_min
+        : value >= in_max
+        ? out_max
+        : engine_math_map(value, in_min, in_max, out_min, out_max);
 }
 
 

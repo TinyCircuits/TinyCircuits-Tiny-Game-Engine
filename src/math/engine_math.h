@@ -22,7 +22,7 @@
 
 // https://stackoverflow.com/a/5441379
 #define min3(a,b,c)         min(min(a, b), c)
-#define max3(a,b,c)         max(max(a, b), c) 
+#define max3(a,b,c)         max(max(a, b), c)
 
 float engine_math_dot_product(float x0, float y0, float x1, float y1);
 
@@ -43,7 +43,7 @@ float engine_math_vector_length_sqr(float x, float y);
 
 float engine_math_clamp(float value, float min, float max);
 float engine_math_map(float value, float in_min, float in_max, float out_min, float out_max);
-float engine_math_map_clamp_out(float value, float in_min, float in_max, float out_min, float out_max);
+float engine_math_map_clamp(float value, float in_min, float in_max, float out_min, float out_max);
 
 void engine_math_swap(float *val0, float *val1);
 
@@ -58,7 +58,7 @@ uint32_t engine_math_2d_to_1d_index(uint32_t x, uint32_t y, uint32_t width);
 
 void engine_math_2d_midpoint(float x0, float y0, float x1, float y1, float *mx, float *my);
 
-bool engine_math_2d_do_segments_intersect(float line_0_start_x, float line_0_start_y, float line_0_end_x, float line_0_end_y, 
+bool engine_math_2d_do_segments_intersect(float line_0_start_x, float line_0_start_y, float line_0_end_x, float line_0_end_y,
                                           float line_1_start_x, float line_1_start_y, float line_1_end_x, float line_1_end_y,
                                           float *intersect_x, float *intersect_y);
 
