@@ -165,7 +165,7 @@ class LauncherTile(GUIBitmapButton2DNode):
             camera.position.y = self.position.y
         else:
             camera_tween.start(camera, "position",
-                camera.position, Vector3(self.position.x, self.position.y, camera.position.z),
+                None, Vector3(self.position.x, self.position.y, camera.position.z),
                 250.0, 1.0, ONE_SHOT, EASE_BACK_OUT)
 
     def on_just_unfocused(self):
