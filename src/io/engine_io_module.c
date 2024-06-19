@@ -260,61 +260,6 @@ static void io_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destinatio
             case MP_QSTR_gui_toggle_button:
                 destination[0] = mp_obj_new_int(gui_toggle_button);
             break;
-            case MP_QSTR_check_pressed:
-                destination[0] = MP_OBJ_FROM_PTR(&engine_io_check_pressed_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_check_just_changed:
-                destination[0] = MP_OBJ_FROM_PTR(&engine_io_check_just_changed_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_check_just_pressed:
-                destination[0] = MP_OBJ_FROM_PTR(&engine_io_check_just_pressed_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_check_just_released:
-                destination[0] = MP_OBJ_FROM_PTR(&engine_io_check_just_released_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_rumble:
-                destination[0] = MP_OBJ_FROM_PTR(&engine_io_rumble_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_toggle_gui_focus:
-                destination[0] = MP_OBJ_FROM_PTR(&engine_toggle_gui_focus_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_battery_level:
-                destination[0] = MP_OBJ_FROM_PTR(&engine_io_battery_level_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_A:
-                destination[0] = MP_ROM_INT(BUTTON_A);
-            break;
-            case MP_QSTR_B:
-                destination[0] = MP_ROM_INT(BUTTON_B);
-            break;
-            case MP_QSTR_DPAD_UP:
-                destination[0] = MP_ROM_INT(BUTTON_DPAD_UP);
-            break;
-            case MP_QSTR_DPAD_DOWN:
-                destination[0] = MP_ROM_INT(BUTTON_DPAD_DOWN);
-            break;
-            case MP_QSTR_DPAD_LEFT:
-                destination[0] = MP_ROM_INT(BUTTON_DPAD_LEFT);
-            break;
-            case MP_QSTR_DPAD_RIGHT:
-                destination[0] = MP_ROM_INT(BUTTON_DPAD_RIGHT);
-            break;
-            case MP_QSTR_BUMPER_LEFT:
-                destination[0] = MP_ROM_INT(BUTTON_BUMPER_LEFT);
-            break;
-            case MP_QSTR_BUMPER_RIGHT:
-                destination[0] = MP_ROM_INT(BUTTON_BUMPER_RIGHT);
-            break;
-            case MP_QSTR_MENU:
-                destination[0] = MP_ROM_INT(BUTTON_MENU);
-            break;
             case MP_QSTR_focused:
             {
                 engine_node_base_t *focused = engine_gui_get_focused();
@@ -326,6 +271,8 @@ static void io_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destinatio
             }
             break;
             default:
+                // Continue in the locals_dict.
+                destination[1] = MP_OBJ_SENTINEL;
                 return; // Fail
         }
     }else if(destination[1] != MP_OBJ_NULL){    // Store
@@ -350,11 +297,34 @@ static void io_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destinatio
 }
 
 
+// Class attributes
+static const mp_rom_map_elem_t io_class_locals_dict_table[] = {
+    { MP_OBJ_NEW_QSTR(MP_QSTR_check_pressed), MP_ROM_PTR(&engine_io_check_pressed_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_check_just_changed), MP_ROM_PTR(&engine_io_check_just_changed_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_check_just_pressed), MP_ROM_PTR(&engine_io_check_just_pressed_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_check_just_released), MP_ROM_PTR(&engine_io_check_just_released_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_rumble), MP_ROM_PTR(&engine_io_rumble_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_toggle_gui_focus), MP_ROM_PTR(&engine_toggle_gui_focus_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_battery_level), MP_ROM_PTR(&engine_io_battery_level_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_A), MP_ROM_INT(BUTTON_A) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_B), MP_ROM_INT(BUTTON_B) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_DPAD_UP), MP_ROM_INT(BUTTON_DPAD_UP) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_DPAD_DOWN), MP_ROM_INT(BUTTON_DPAD_DOWN) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_DPAD_LEFT), MP_ROM_INT(BUTTON_DPAD_LEFT) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_DPAD_RIGHT), MP_ROM_INT(BUTTON_DPAD_RIGHT) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_BUMPER_LEFT), MP_ROM_INT(BUTTON_BUMPER_LEFT) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_BUMPER_RIGHT), MP_ROM_INT(BUTTON_BUMPER_RIGHT) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_MENU), MP_ROM_INT(BUTTON_MENU) },
+};
+static MP_DEFINE_CONST_DICT(io_class_locals_dict, io_class_locals_dict_table);
+
+
 MP_DEFINE_CONST_OBJ_TYPE(
     mp_type_io_module,
     MP_QSTR_module,
     MP_TYPE_FLAG_NONE,
-    attr, io_class_attr
+    attr, io_class_attr,
+    locals_dict, &io_class_locals_dict
 );
 
 
