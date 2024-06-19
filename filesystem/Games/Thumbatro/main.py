@@ -27,7 +27,7 @@ def tween_opacity(node, start_opacity, end_opacity, duration=1000):
     tweens.append(tw)
 
 class CardSprite(Sprite2DNode):
-    def __init__(self, position, frame_x, frame_y, base_score_bonus=0, multiplier_bonus=0):
+    def __init__(self, position, frame_x, frame_y, base_score_bonus=0, multiplier_bonus=0, is_wildcard_suit=False):
         super().__init__(self, position)
         self.texture = cards_texture
         self.frame_count_x = 13
@@ -45,6 +45,7 @@ class CardSprite(Sprite2DNode):
         self.set_layer(3)
         self.base_score_bonus = base_score_bonus
         self.multiplier_bonus = multiplier_bonus
+        self.is_wildcard_suit = is_wildcard_suit
 
         # Base layer - card background
         self.background = Sprite2DNode(Vector2(0, 0))
@@ -58,43 +59,56 @@ class CardSprite(Sprite2DNode):
         self.background.transparent_color = Color(0x0400)
         self.add_child(self.background)
 
+        self.bonus_overlay = None
         if self.base_score_bonus > 0 and self.multiplier_bonus > 0:
-            self.base_score_overlay = Sprite2DNode(Vector2(0, 0))
-            self.base_score_overlay.frame_count_x = 13
-            self.base_score_overlay.frame_count_y = 5
-            self.base_score_overlay.frame_current_x = 9
-            self.base_score_overlay.frame_current_y = 4
-            self.base_score_overlay.texture = cards_texture
-            self.base_score_overlay.playing = False
-            self.base_score_overlay.set_layer(2)
-            self.base_score_overlay.opacity = 0.4
-            self.base_score_overlay.transparent_color = Color(0x0400)
-            self.add_child(self.base_score_overlay)
+            self.bonus_overlay = Sprite2DNode(Vector2(0, 0))
+            self.bonus_overlay.frame_count_x = 13
+            self.bonus_overlay.frame_count_y = 5
+            self.bonus_overlay.frame_current_x = 9
+            self.bonus_overlay.frame_current_y = 4
+            self.bonus_overlay.texture = cards_texture
+            self.bonus_overlay.playing = False
+            self.bonus_overlay.set_layer(2)
+            self.bonus_overlay.opacity = 0.4
+            self.bonus_overlay.transparent_color = Color(0x0400)
+            self.add_child(self.bonus_overlay)
         # Overlay sprite for base score bonus
         elif self.base_score_bonus > 0:
-            self.base_score_overlay = Sprite2DNode(Vector2(0, 0))
-            self.base_score_overlay.frame_count_x = 13
-            self.base_score_overlay.frame_count_y = 5
-            self.base_score_overlay.frame_current_x = 7
-            self.base_score_overlay.frame_current_y = 4
-            self.base_score_overlay.texture = cards_texture
-            self.base_score_overlay.playing = False
-            self.base_score_overlay.set_layer(2)
-            self.base_score_overlay.transparent_color = Color(0x0400)
-            self.add_child(self.base_score_overlay)
+            self.bonus_overlay = Sprite2DNode(Vector2(0, 0))
+            self.bonus_overlay.frame_count_x = 13
+            self.bonus_overlay.frame_count_y = 5
+            self.bonus_overlay.frame_current_x = 7
+            self.bonus_overlay.frame_current_y = 4
+            self.bonus_overlay.texture = cards_texture
+            self.bonus_overlay.playing = False
+            self.bonus_overlay.set_layer(2)
+            self.bonus_overlay.transparent_color = Color(0x0400)
+            self.add_child(self.bonus_overlay)
+        
+        elif self.is_wildcard_suit == True:
+            self.bonus_overlay = Sprite2DNode(Vector2(0, 0))
+            self.bonus_overlay.frame_count_x = 13
+            self.bonus_overlay.frame_count_y = 5
+            self.bonus_overlay.frame_current_x = 10
+            self.bonus_overlay.frame_current_y = 4
+            self.bonus_overlay.texture = cards_texture
+            self.bonus_overlay.playing = False
+            self.bonus_overlay.set_layer(2)
+            self.bonus_overlay.transparent_color = Color(0x0400)
+            self.add_child(self.bonus_overlay)
 
         # Overlay sprite for multiplier bonus
         elif self.multiplier_bonus > 0:
-            self.multiplier_overlay = Sprite2DNode(Vector2(0, 0))
-            self.multiplier_overlay.frame_count_x = 13
-            self.multiplier_overlay.frame_count_y = 5
-            self.multiplier_overlay.frame_current_x = 10
-            self.multiplier_overlay.frame_current_y = 4
-            self.multiplier_overlay.texture = cards_texture
-            self.multiplier_overlay.playing = False
-            self.multiplier_overlay.set_layer(2)
-            self.multiplier_overlay.transparent_color = Color(0x0400)
-            self.add_child(self.multiplier_overlay)
+            self.bonus_overlay = Sprite2DNode(Vector2(0, 0))
+            self.bonus_overlay.frame_count_x = 13
+            self.bonus_overlay.frame_count_y = 5
+            self.bonus_overlay.frame_current_x = 8
+            self.bonus_overlay.frame_current_y = 4
+            self.bonus_overlay.texture = cards_texture
+            self.bonus_overlay.playing = False
+            self.bonus_overlay.set_layer(2)
+            self.bonus_overlay.transparent_color = Color(0x0400)
+            self.add_child(self.bonus_overlay)
 
     @property
     def rank_value(self):
@@ -119,9 +133,11 @@ class CardSprite(Sprite2DNode):
     def hide(self):
         self.opacity = 0
         self.background.opacity = 0
+        if(self.bonus_overlay):
+            self.bonus_overlay.opacity = 0
 
     def __str__(self):
-        return (f"Card(rank={self.rank_value}, suit={self.original_frame_y},position=({self.position.x}, {self.position.y}))")
+        return (f"Card(rank={self.rank_value}, suit={self.original_frame_y},position=({self.position.x}, {self.position.y})),is_wildcard_suit={self.is_wildcard_suit}")
 
     def __repr__(self):
         return self.__str__()
@@ -134,7 +150,7 @@ class Deck:
         self.shuffle()
 
     def create_deck(self):
-        return [CardSprite(Vector2(150, 80), card.original_frame_x, card.original_frame_y, card.base_score_bonus, card.multiplier_bonus) for card in self.collection]
+        return [CardSprite(Vector2(150, 80), card.original_frame_x, card.original_frame_y, card.base_score_bonus, card.multiplier_bonus, card.is_wildcard_suit) for card in self.collection]
 
     def draw_cards(self, num):
         drawn_cards = []
@@ -354,7 +370,7 @@ class PokerGame(Rectangle2DNode):
             else:
                 suit_count[suit] = 1
 
-        is_flush = len(suit_count) == 1 and len(self.selected_cards) == 5
+        is_flush = self.check_flush()
         is_straight = self.is_straight(hand_ranks)
         base_score = 0
         multiplier = 1
@@ -453,6 +469,25 @@ class PokerGame(Rectangle2DNode):
             return True
         return False
     
+    def check_flush(self):
+        # Count the number of wildcard cards
+        wildcard_count = sum(1 for card in self.selected_cards if card.is_wildcard_suit)
+        
+        # Get the suits of the non-wildcard cards
+        non_wildcard_suits = [card.original_frame_y for card in self.selected_cards if not card.is_wildcard_suit]
+        
+        # If there are no non-wildcard cards, we need at least one wildcard card to form a flush
+        if not non_wildcard_suits and wildcard_count > 0:
+            return len(self.selected_cards) == 5
+        
+        # Check if all non-wildcard cards have the same suit
+        is_non_wildcard_flush = len(set(non_wildcard_suits)) == 1
+        
+        # The flush is valid if the number of non-wildcard cards plus wildcards is 5
+        is_flush = is_non_wildcard_flush and (len(non_wildcard_suits) + wildcard_count == 5)
+        
+        return is_flush
+    
     def display_score_animation(self, score_text, start_position, end_position, color=Color(0x0400)):
         score_node = Text2DNode(start_position, font, score_text, 0, Vector2(1, 1), 1.0, 0, 0)
         score_node.color = color
@@ -505,7 +540,7 @@ class PokerGame(Rectangle2DNode):
             rand_val = random.random()
             
             # Generate Jokers
-            if rand_val < 0.2:  # 10% chance for a Joker
+            if rand_val < 0.1:  # 10% chance for a Joker
                 joker_type = self.weighted_choice(['common', 'uncommon', 'rare'], [0.6, 0.3, 0.1])
                 if joker_type == 'common':
                     card = CardSprite(Vector2(150, 80), random.randint(0, 1), 4, base_score_bonus=random.randint(10, 100), multiplier_bonus=0)
@@ -514,8 +549,12 @@ class PokerGame(Rectangle2DNode):
                 else:  # rare
                     card = CardSprite(Vector2(150, 80), random.randint(0, 1), 4, base_score_bonus=random.randint(10, 100), multiplier_bonus=random.randint(2, 10))
 
+            # Generate Wildcard Suit Cards
+            elif rand_val < 0.5:  # 10% chance for a Wildcard Suit Card
+                card = CardSprite(Vector2(150, 80), random.randint(0, 12), random.randint(0, 3), is_wildcard_suit=True)
+            
             # Generate Cards
-            else:  # 90% chance for a regular card
+            elif rand_val < 0.8:  # 30% chance for a bonus card
                 card_type = self.weighted_choice(['common', 'uncommon', 'rare'], [0.7, 0.2, 0.1])
                 frame_x = random.randint(0, 12)
                 frame_y = random.randint(0, 3)
@@ -530,6 +569,11 @@ class PokerGame(Rectangle2DNode):
                     multiplier_bonus = random.randint(2, 5)
 
                 card = CardSprite(Vector2(150, 80), frame_x, frame_y, base_score_bonus, multiplier_bonus)
+            
+            else: #standard card
+                frame_x = random.randint(0, 12)
+                frame_y = random.randint(0, 3)
+                card = CardSprite(Vector2(150, 80), frame_x, frame_y)
 
             new_cards.append(card)
 
