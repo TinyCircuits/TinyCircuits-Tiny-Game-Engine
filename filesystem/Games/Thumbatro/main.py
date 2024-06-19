@@ -183,7 +183,7 @@ class PokerGame(Rectangle2DNode):
         self.highest_individual_hand_score = 0
         self.setup_board()
         self.score = 0
-        self.target_score = 100
+        self.target_score = 300
         self.booster_cards = []
         self.is_booster_selection = False
         self.is_booster_wait = False
@@ -375,39 +375,50 @@ class PokerGame(Rectangle2DNode):
         base_score = 0
         multiplier = 1
 
-        if 5 in rank_count.values():
-            base_score = 110  # Five of a Kind
-            multiplier = 11
+        if is_flush and 5 in rank_count.values():
+            base_score = 160  # Flush five
+            multiplier = 16
+        elif is_flush and 3 in rank_count.values() and 2 in rank_count.values():
+            base_score = 140  # Flush house
+            multiplier = 14
+        elif 5 in rank_count.values():
+            base_score = 120  # Five of a Kind
+            multiplier = 12
         elif is_flush and is_straight and (12 in hand_ranks or 14 in hand_ranks):
             base_score = 100  # Royal Flush
             multiplier = 10
         elif is_flush and is_straight:
-            base_score = 90  # Straight Flush
-            multiplier = 9
-        elif 4 in rank_count.values():
-            base_score = 80  # Four of a Kind
+            base_score = 100  # Straight Flush
             multiplier = 8
-        elif 3 in rank_count.values() and 2 in rank_count.values():
-            base_score = 70  # Full House
+        elif 4 in rank_count.values():
+            base_score = 60  # Four of a Kind
             multiplier = 7
-        elif is_flush:
-            base_score = 60  # Flush
-            multiplier = 6
-        elif is_straight:
-            base_score = 50  # Straight
-            multiplier = 5
-        elif 3 in rank_count.values():
-            base_score = 40  # Three of a Kind
+        elif 3 in rank_count.values() and 2 in rank_count.values():
+            base_score = 40  # Full House
             multiplier = 4
-        elif list(rank_count.values()).count(2) == 2:
-            base_score = 30  # Two Pair
+        elif is_flush:
+            base_score = 35  # Flush
+            multiplier = 4
+        elif is_straight:
+            base_score = 30  # Straight
+            multiplier = 4
+        elif 3 in rank_count.values():
+            base_score = 30  # Three of a Kind
             multiplier = 3
+        elif list(rank_count.values()).count(2) == 2:
+            base_score = 20  # Two Pair
+            multiplier = 2
         elif 2 in rank_count.values():
-            base_score = 20  # One Pair
+            base_score = 10  # One Pair
             multiplier = 2
         else:
-            base_score = 10  # High Card
+            base_score = 5  # High Card
             multiplier = 1
+
+        base_score_text = f"+{base_score}"
+        multiplier_text = f"x{multiplier}"
+        self.display_score_animation(base_score_text, Vector2(54,0), Vector2(self.base_score_text.position.x-20,self.base_score_text.position.y), Color(0x001F))
+        self.display_score_animation(multiplier_text, Vector2(74,0), Vector2(self.base_score_text.position.x+20,self.base_score_text.position.y), Color(0xF800))
 
         # Add the rank of each card to the base score
         base_score += sum(hand_ranks)
@@ -416,17 +427,22 @@ class PokerGame(Rectangle2DNode):
         for card in self.selected_cards:
             if card.base_score_bonus > 0:
                 base_score += card.base_score_bonus
-                base_score_text = f"+{card.base_score_bonus}"
+                base_score_text = f"+{card.base_score_bonus + card.rank_value}"
                 # Display base score animation in blue
-                base_start_position = Vector2(card.position.x, card.position.y + 10)  # Shift up by 20 pixels
-                self.display_score_animation(base_score_text, base_start_position, self.base_score_text.position, Color(0x001F))
+                base_start_position = Vector2(card.position.x, card.position.y - 10)  # Shift up by 20 pixels
+                self.display_score_animation(base_score_text, base_start_position, Vector2(self.base_score_text.position.x-20,self.base_score_text.position.y), Color(0x001F))
+            else:
+                base_score_text = f"+{card.rank_value}"
+                # Display base score animation in blue
+                base_start_position = Vector2(card.position.x, card.position.y - 10)  # Shift up by 20 pixels
+                self.display_score_animation(base_score_text, base_start_position, Vector2(self.base_score_text.position.x-20,self.base_score_text.position.y), Color(0x001F))
             
             if card.multiplier_bonus > 0:
                 multiplier += card.multiplier_bonus
                 multiplier_text = f"x{card.multiplier_bonus}"
                 # Display multiplier animation in red
-                multiplier_start_position = Vector2(card.position.x, card.position.y - 10)  # Shift down by 20 pixels
-                self.display_score_animation(multiplier_text, multiplier_start_position, self.base_score_text.position, Color(0xF800))
+                multiplier_start_position = Vector2(card.position.x, card.position.y + 10)  # Shift down by 20 pixels
+                self.display_score_animation(multiplier_text, multiplier_start_position, Vector2(self.base_score_text.position.x+20,self.base_score_text.position.y), Color(0xF800))
 
         # Add joker bonuses and show score animations
         for joker in self.jokers:
@@ -434,15 +450,15 @@ class PokerGame(Rectangle2DNode):
                 base_score += joker.base_score_bonus
                 base_score_text = f"+{joker.base_score_bonus}"
                 # Display base score animation in blue
-                base_start_position = Vector2(joker.position.x, joker.position.y + 10)  # Shift up by 20 pixels
-                self.display_score_animation(base_score_text, base_start_position, self.base_score_text.position, Color(0x001F))
+                base_start_position = Vector2(joker.position.x, joker.position.y - 10)  # Shift up by 20 pixels
+                self.display_score_animation(base_score_text, base_start_position, Vector2(self.base_score_text.position.x-20,self.base_score_text.position.y), Color(0x001F))
             
             if joker.multiplier_bonus > 0:
                 multiplier += joker.multiplier_bonus
                 multiplier_text = f"x{joker.multiplier_bonus}"
                 # Display multiplier animation in red
-                multiplier_start_position = Vector2(joker.position.x, joker.position.y - 10)  # Shift down by 20 pixels
-                self.display_score_animation(multiplier_text, multiplier_start_position, self.base_score_text.position, Color(0xF800))
+                multiplier_start_position = Vector2(joker.position.x, joker.position.y + 10)  # Shift down by 20 pixels
+                self.display_score_animation(multiplier_text, multiplier_start_position, Vector2(self.base_score_text.position.x+20,self.base_score_text.position.y), Color(0xF800))
 
 
 
@@ -493,8 +509,8 @@ class PokerGame(Rectangle2DNode):
         score_node.color = color
         score_node.set_layer(6)
         self.add_child(score_node)
-        tween_card(score_node, end_position, duration=1000, speed=2)
-        tween_opacity(score_node, 1.0, 0.0, duration=1000)
+        tween_card(score_node, end_position, duration=1200, speed=1)
+        tween_opacity(score_node, 1.0, 0.0, duration=1200)
 
     def display_played_hand(self):
         start_x = 10
@@ -550,7 +566,7 @@ class PokerGame(Rectangle2DNode):
                     card = CardSprite(Vector2(150, 80), random.randint(0, 1), 4, base_score_bonus=random.randint(10, 100), multiplier_bonus=random.randint(2, 10))
 
             # Generate Wildcard Suit Cards
-            elif rand_val < 0.5:  # 10% chance for a Wildcard Suit Card
+            elif rand_val < 0.3:  # 10% chance for a Wildcard Suit Card
                 card = CardSprite(Vector2(150, 80), random.randint(0, 12), random.randint(0, 3), is_wildcard_suit=True)
             
             # Generate Cards
