@@ -99,6 +99,12 @@ void voxelspace_node_class_draw(mp_obj_t voxelspace_node_base_obj, mp_obj_t came
     float view_right_x = cosf(camera_rotation->y.value+camera_fov_half) * inverse_x_scale;
     float view_right_y = sinf(camera_rotation->y.value+camera_fov_half) * inverse_z_scale;
 
+    // float view_left_x = cosf(camera_rotation->y.value-camera_fov_half);
+    // float view_left_y = sinf(camera_rotation->y.value-camera_fov_half);
+
+    // float view_right_x = cosf(camera_rotation->y.value+camera_fov_half);
+    // float view_right_y = sinf(camera_rotation->y.value+camera_fov_half);
+
     // Trying to render objects in front of the camera at `camera_view_distance` units away:
     //  \-----|-----/
     //   \    |v   /
@@ -120,8 +126,8 @@ void voxelspace_node_class_draw(mp_obj_t voxelspace_node_base_obj, mp_obj_t came
         float dx = (pright_x - pleft_x) * SCREEN_WIDTH_INVERSE;
         float dy = (pright_y - pleft_y) * SCREEN_WIDTH_INVERSE;
 
-        pleft_x += camera_position->x.value;
-        pleft_y += camera_position->z.value;
+        pleft_x += camera_position->x.value * inverse_x_scale;
+        pleft_y += camera_position->z.value * inverse_z_scale;
 
         // Cumulative offset for roll skew as the screen width is traversed
         float skew_roll_offset = skew_roll_start_offset;
@@ -239,9 +245,13 @@ static mp_obj_t voxelspace_node_class_get_abs_height(mp_obj_t self, mp_obj_t x_o
     vector3_class_obj_t *voxelspace_scale = voxelspace->scale;
     texture_resource_class_obj_t *heightmap = voxelspace->heightmap_resource;
 
+    // Scales for making the terrain smaller or larger
+    float inverse_x_scale = 1.0f / voxelspace_scale->x.value;
+    float inverse_z_scale = 1.0f / voxelspace_scale->z.value;
+
     bool repeat = mp_obj_get_int(voxelspace->repeat);
-    float x = mp_obj_get_float(x_obj);
-    float z = mp_obj_get_float(z_obj);
+    float x = mp_obj_get_float(x_obj) * inverse_x_scale;
+    float z = mp_obj_get_float(z_obj) * inverse_z_scale;
 
     if(repeat == true){
         x = fmodf(fabsf(x), heightmap->width);

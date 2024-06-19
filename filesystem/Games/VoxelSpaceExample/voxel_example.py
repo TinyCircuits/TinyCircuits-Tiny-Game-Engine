@@ -13,6 +13,8 @@ import math
 import os
 import time
 
+os.chdir("Games/VoxelSpaceExample")
+
 # import machine
 
 # machine.freq(250 * 1000 * 1000)
@@ -32,8 +34,8 @@ vox0 = VoxelSpaceNode(texture=C18W, heightmap=D18)
 vox0.position.x = 0
 vox0.position.y = 30
 vox0.scale.y = 35
-vox0.scale.x = 1
-vox0.scale.z = 1
+vox0.scale.x = 2
+vox0.scale.z = 2
 vox0.flip = True
 vox0.repeat = True
 
@@ -44,10 +46,11 @@ vox1.position.x = 0
 vox1.position.y = 0
 vox1.position.z = 0
 vox1.scale.y = 32
-vox1.scale.x = 1
-vox1.scale.z = 1
+vox1.scale.x = 0.75
+vox1.scale.z = 0.75
 vox1.flip = False
 vox1.thickness = 100
+# vox1.repeat = True
 # vox1.set_layer(1)
 
 tree = VoxelSpaceSpriteNode(texture=tree_bmp, position=Vector3(0, 0, 0), scale=Vector3(1.0, 1.0, 1.0))
@@ -113,6 +116,7 @@ class MyCam(CameraNode):
 
     def tick(self, dt):
         gc.collect()
+        print(self.position)
         # print(engine.get_running_fps())
         self.t += 0.01
         # vox0.position.y = 20 + math.sin(self.t)
