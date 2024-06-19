@@ -99,12 +99,6 @@ void voxelspace_node_class_draw(mp_obj_t voxelspace_node_base_obj, mp_obj_t came
     float view_right_x = cosf(camera_rotation->y.value+camera_fov_half) * inverse_x_scale;
     float view_right_y = sinf(camera_rotation->y.value+camera_fov_half) * inverse_z_scale;
 
-    // float view_left_x = cosf(camera_rotation->y.value-camera_fov_half);
-    // float view_left_y = sinf(camera_rotation->y.value-camera_fov_half);
-
-    // float view_right_x = cosf(camera_rotation->y.value+camera_fov_half);
-    // float view_right_y = sinf(camera_rotation->y.value+camera_fov_half);
-
     // Trying to render objects in front of the camera at `camera_view_distance` units away:
     //  \-----|-----/
     //   \    |v   /
