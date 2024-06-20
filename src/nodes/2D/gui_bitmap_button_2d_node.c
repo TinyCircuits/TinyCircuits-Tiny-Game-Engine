@@ -23,7 +23,7 @@
 
 void gui_bitmap_button_2d_node_class_draw(mp_obj_t button_node_base_obj, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("GUIBitmapButton2DNode: Drawing");
-    
+
     engine_node_base_t *button_node_base = button_node_base_obj;
     engine_gui_bitmap_button_2d_node_class_obj_t *button = button_node_base->node;
 
@@ -120,7 +120,7 @@ void gui_bitmap_button_2d_node_class_draw(mp_obj_t button_node_base_obj, mp_obj_
                      btn_x_scale,
                      btn_y_scale,
                     -button_rotation,
-                     transparent_color->value.val,
+                     transparent_color->value,
                      button_opacity,
                      shader);
 
@@ -133,8 +133,8 @@ void gui_bitmap_button_2d_node_class_draw(mp_obj_t button_node_base_obj, mp_obj_
 
             float t = 1.0f;
 
-            text_shader->program[1] = (text_color->value.val >> 8) & 0b11111111;
-            text_shader->program[2] = (text_color->value.val >> 0) & 0b11111111;
+            text_shader->program[1] = (text_color->value >> 8) & 0b11111111;
+            text_shader->program[2] = (text_color->value >> 0) & 0b11111111;
 
             memcpy(text_shader->program+3, &t, sizeof(float));
         }
@@ -280,7 +280,7 @@ bool bitmap_button_2d_node_load_attr(engine_node_base_t *self_node_base, qstr at
             destination[0] = self->transparent_color;
             return true;
         break;
-        
+
         case MP_QSTR_rotation:
             destination[0] = self->rotation;
             return true;
@@ -466,7 +466,7 @@ bool bitmap_button_2d_node_store_attr(engine_node_base_t *self_node_base, qstr a
             self->on_just_unfocused_cb = destination[1];
             return true;
         break;
-        
+
         case MP_QSTR_on_pressed:
             self->on_pressed_cb = destination[1];
             return true;
@@ -565,7 +565,7 @@ static mp_attr_fun_t gui_bitmap_button_2d_node_class_attr(mp_obj_t self_in, qstr
     PARAM:  [type=float]                      [name=line_spacing]                               [value=any]
 
 
-    ATTR:   [type=function]                   [name={ref_link:add_child}]                       [value=function] 
+    ATTR:   [type=function]                   [name={ref_link:add_child}]                       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_child}]                       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_child_count}]                 [value=function]
     ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy}]               [value=function]
@@ -654,7 +654,7 @@ mp_obj_t gui_bitmap_button_2d_node_class_new(const mp_obj_type_t *type, size_t n
                   text_color,
                   focused_text_color,
                   pressed_text_color,
-                  
+
                   bitmap,
                   focused_bitmap,
                   pressed_bitmap,
@@ -662,13 +662,13 @@ mp_obj_t gui_bitmap_button_2d_node_class_new(const mp_obj_type_t *type, size_t n
                   transparent_color,
 
                   rotation, scale, text_scale, opacity,
-                  
+
                   letter_spacing,
                   line_spacing};
 
     bool inherited = false;
 
-    // If there is one positional argument and it isn't the first 
+    // If there is one positional argument and it isn't the first
     // expected argument (as is expected when using positional
     // arguments) then define which way to parse the arguments
     if(n_args >= 1 && mp_obj_get_type(args[0]) != &vector2_class_type){

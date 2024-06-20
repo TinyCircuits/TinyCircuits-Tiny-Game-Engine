@@ -98,8 +98,8 @@ void text_2d_node_class_draw(mp_obj_t text_2d_node_base_obj, mp_obj_t camera_nod
 
         float t = 1.0f;
 
-        text_shader->program[1] = (text_color->value.val >> 8) & 0b11111111;
-        text_shader->program[2] = (text_color->value.val >> 0) & 0b11111111;
+        text_shader->program[1] = (text_color->value >> 8) & 0b11111111;
+        text_shader->program[2] = (text_color->value >> 0) & 0b11111111;
 
         memcpy(text_shader->program+3, &t, sizeof(float));
     }
@@ -349,7 +349,7 @@ static mp_attr_fun_t text_2d_node_class_attr(mp_obj_t self_in, qstr attribute, m
     PARAM:  [type=float]                      [name=opacity]                                    [value=0 ~ 1.0]
     PARAM:  [type=float]                      [name=letter_spacing]                             [value=any]
     PARAM:  [type=float]                      [name=line_spacing]                               [value=any]
-    ATTR:   [type=function]                   [name={ref_link:add_child}]                       [value=function] 
+    ATTR:   [type=function]                   [name={ref_link:add_child}]                       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_child}]                       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_child_count}]                 [value=function]
     ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy}]               [value=function]
@@ -390,7 +390,7 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
     enum arg_ids {child_class, position, font, text, rotation, scale, opacity, letter_spacing, line_spacing, color};
     bool inherited = false;
 
-    // If there is one positional argument and it isn't the first 
+    // If there is one positional argument and it isn't the first
     // expected argument (as is expected when using positional
     // arguments) then define which way to parse the arguments
     if(n_args >= 1 && mp_obj_get_type(args[0]) != &vector2_class_type){

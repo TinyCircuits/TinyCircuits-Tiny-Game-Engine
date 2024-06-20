@@ -15,7 +15,7 @@
 
 void rectangle_2d_node_class_draw(mp_obj_t rectangle_node_base_obj, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("Rectangle2DNode: Drawing");
-    
+
     engine_node_base_t *rectangle_node_base = rectangle_node_base_obj;
 
     // Decode and store properties about the rectangle and camera nodes
@@ -87,7 +87,7 @@ void rectangle_2d_node_class_draw(mp_obj_t rectangle_node_base_obj, mp_obj_t cam
     }
 
     if(rectangle_outlined == false){
-        engine_draw_rect(rectangle_color->value.val,
+        engine_draw_rect(rectangle_color->value,
                          floorf(rectangle_rotated_x), floorf(rectangle_rotated_y),
                          (int32_t)rectangle_width, (int32_t)rectangle_height,
                          rectangle_scale->x.value*camera_zoom, rectangle_scale->y.value*camera_zoom,
@@ -118,10 +118,10 @@ void rectangle_2d_node_class_draw(mp_obj_t rectangle_node_base_obj, mp_obj_t cam
         engine_math_rotate_point(&brx, &bry, rectangle_rotated_x, rectangle_rotated_y, rectangle_rotation);
         engine_math_rotate_point(&blx, &bly, rectangle_rotated_x, rectangle_rotated_y, rectangle_rotation);
 
-        engine_draw_line(rectangle_color->value.val, tlx, tly, trx, try, camera_node, rectangle_opacity, shader);
-        engine_draw_line(rectangle_color->value.val, trx, try, brx, bry, camera_node, rectangle_opacity, shader);
-        engine_draw_line(rectangle_color->value.val, brx, bry, blx, bly, camera_node, rectangle_opacity, shader);
-        engine_draw_line(rectangle_color->value.val, blx, bly, tlx, tly, camera_node, rectangle_opacity, shader);
+        engine_draw_line(rectangle_color->value, tlx, tly, trx, try, camera_node, rectangle_opacity, shader);
+        engine_draw_line(rectangle_color->value, trx, try, brx, bry, camera_node, rectangle_opacity, shader);
+        engine_draw_line(rectangle_color->value, brx, bry, blx, bly, camera_node, rectangle_opacity, shader);
+        engine_draw_line(rectangle_color->value, blx, bly, tlx, tly, camera_node, rectangle_opacity, shader);
     }
 }
 
@@ -316,7 +316,7 @@ static mp_attr_fun_t rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribu
     PARAM:  [type=float]                      [name=width]                                      [value=any]
     PARAM:  [type=float]                      [name=height]                                     [value=any]
     PARAM:  [type=int]                        [name=color]                                      [value=any 16-bit RGB565 integer]
-    PARAM:  [type=float]                      [name=opacity]                                    [value=0 ~ 1.0] 
+    PARAM:  [type=float]                      [name=opacity]                                    [value=0 ~ 1.0]
     PARAM:  [type=bool]                       [name=outline]                                    [value=True or False]
     PARAM:  [type=float]                      [name=rotation]                                   [value=any (radians)]
     PARAM:  [type={ref_link:Vector2}]         [name=scale]                                      [value={ref_link:Vector2}]
@@ -335,7 +335,7 @@ static mp_attr_fun_t rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribu
     ATTR:   [type=float]                      [name=width]                                      [value=any]
     ATTR:   [type=float]                      [name=height]                                     [value=any]
     ATTR:   [type=int]                        [name=color]                                      [value=any 16-bit RGB565 integer]
-    ATTR:   [type=float]                      [name=opacity]                                    [value=0 ~ 1.0] 
+    ATTR:   [type=float]                      [name=opacity]                                    [value=0 ~ 1.0]
     ATTR:   [type=bool]                       [name=outline]                                    [value=True or False]
     ATTR:   [type=float]                      [name=rotation]                                   [value=any (radians)]
     ATTR:   [type={ref_link:Vector2}]         [name=scale]                                      [value={ref_link:Vector2}]
@@ -359,7 +359,7 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
     enum arg_ids {child_class, position, width, height, color, opacity, outline, rotation, scale};
     bool inherited = false;
 
-    // If there is one positional argument and it isn't the first 
+    // If there is one positional argument and it isn't the first
     // expected argument (as is expected when using positional
     // arguments) then define which way to parse the arguments
     if(n_args >= 1 && mp_obj_get_type(args[0]) != &vector2_class_type){
