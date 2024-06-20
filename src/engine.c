@@ -35,8 +35,8 @@
 bool is_engine_looping = false;
 bool fps_limit_disabled = true;
 float engine_fps_limit_period_ms = 16.6667f;
-float engine_fps_time_at_last_tick_ms = 0.0f;
-float engine_fps_time_at_before_last_tick_ms = 0.0f;
+uint32_t engine_fps_time_at_last_tick_ms = 0;
+uint32_t engine_fps_time_at_before_last_tick_ms = 0;
 float dt;
 
 
@@ -55,11 +55,11 @@ float engine_get_fps_limit_ms(){
 static mp_obj_t engine_set_fps_limit(mp_obj_t fps_obj){
     ENGINE_INFO_PRINTF("Engine: Setting FPS");
     float fps = mp_obj_get_float(fps_obj);
-    
+
     if(fps <= 0){
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Engine: ERROR: Tried to set fps limit to 0 (would divide by zero) or negative value"));
     }
-    
+
     fps_limit_disabled = false;
     engine_fps_limit_period_ms = (1.0f / fps) * 1000.0f;
     return mp_const_none;
@@ -89,7 +89,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_disable_fps_limit_obj, engine_disable_fps_limit
 */
 static mp_obj_t engine_get_running_fps(){
     ENGINE_INFO_PRINTF("Engine: Getting FPS");
-    float period = (engine_fps_time_at_last_tick_ms - engine_fps_time_at_before_last_tick_ms) / 1000.0f;    // Seconds
+    float period = millis_diff(engine_fps_time_at_last_tick_ms, engine_fps_time_at_before_last_tick_ms) / 1000.0f;    // Seconds
     float fps = 1.0f / period;
 
     if(engine_math_compare_floats(fps, 0.0f) == true){
@@ -142,11 +142,11 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_end_obj, engine_end);
 bool engine_tick(){
     bool ticked = false;
 
-    // Not sure why this is needed exactly for handling ctrl-c 
+    // Not sure why this is needed exactly for handling ctrl-c
     // correctly, just replicating what happens in modutime.c
     MP_THREAD_GIL_EXIT();
 
-    dt = millis() - engine_fps_time_at_last_tick_ms;
+    dt = millis_diff(millis(), engine_fps_time_at_last_tick_ms);
     float dt_s = dt * 0.001f;
 
     // Now that all the node callbacks were called and potentially moved
@@ -184,7 +184,7 @@ bool engine_tick(){
 
     engine_objects_clear_deletable();
 
-    // Not sure why this is needed exactly for handling ctrl-c 
+    // Not sure why this is needed exactly for handling ctrl-c
     // correctly, just replicating what happens in modutime.c
     MP_THREAD_GIL_ENTER();
 
@@ -225,7 +225,7 @@ static mp_obj_t engine_start(){
 
     is_engine_looping = true;
     while(is_engine_looping){
-        
+
         engine_tick();
         // // See ports/rp2/mphalport.h, ports/rp2/mphalport.c, py/mphal.h, shared/runtime/sys_stdio_mphal.c
         // // Can get chars from REPL and do stuff with them!

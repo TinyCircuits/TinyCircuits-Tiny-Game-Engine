@@ -243,8 +243,6 @@ volatile float master_volume = 1.0f;
             // NOTE: Set PWM wrap to 512 levels so it will use values from 0 to 511
             total_sample = engine_math_map_clamp(total_sample, -1.0f, 1.0f, 0.0f, 511.0f);
 
-            // total_sample = engine_math_map(sinf(millis() * 8.0f), -1.0f, 1.0f, 0.0f, 511.0f);
-
             // Actually set the wrap value to play this sample
             pwm_set_gpio_level(AUDIO_PWM_PIN, (uint32_t)(total_sample));
         }
