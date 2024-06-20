@@ -405,11 +405,14 @@ void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, bool *
                 if(is_child_of_camera == NULL || (is_child_of_camera != NULL && *is_child_of_camera == false)){
                     *x += parent_x;
                     *y += parent_y;
-                    if(rotation != NULL) *rotation += parent_rotation_radians;
                     
-                    // If the rotation sum is not close to zero, rotate the point (small optimization)
-                    if(engine_math_compare_floats(*rotation, 0.0f) == false){
-                        engine_math_rotate_point(x, y, parent_x, parent_y, parent_rotation_radians);
+                    if(rotation != NULL){
+                        *rotation += parent_rotation_radians;
+
+                        // If the rotation sum is not close to zero, rotate the point (small optimization)
+                        if(engine_math_compare_floats(*rotation, 0.0f) == false){
+                            engine_math_rotate_point(x, y, parent_x, parent_y, parent_rotation_radians);
+                        }
                     }
                 }
             }else{

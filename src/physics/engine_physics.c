@@ -79,6 +79,11 @@ void engine_physics_apply_impulses(float dt, float alpha){
             }
         }
 
+        // If the node was colliding last tick but isn't now, call the on_separate_cb callback
+        if(physics_node_base->on_separate_cb != mp_const_none && physics_node_base->was_colliding == true && physics_node_base->colliding == false){
+            mp_call_method_n_kw(0, 0, (mp_obj_t[]){physics_node_base->on_separate_cb, node_base->attr_accessor});
+        }
+
         physics_link_node = physics_link_node->next;
     }
 }
@@ -106,6 +111,11 @@ bool engine_physics_collision_checked_before(engine_physics_node_base_t *physics
 void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_base_t *node_base_b){
     engine_physics_node_base_t *physics_node_base_a = node_base_a->node;
     engine_physics_node_base_t *physics_node_base_b = node_base_b->node;
+
+    // Do not try to collide nodes that are not on the same collision 'layer'
+    if((physics_node_base_a->collision_layer & physics_node_base_b->collision_layer) == 0){
+        return;
+    }
 
     // Before we got here it was confirmed that we're not
     // checking for collision between the same object, now
@@ -161,8 +171,16 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
     }
 
     if(collided){
+        // This pair is colliding, mark each as so (this
+        // flag just means "colliding with something")
+        physics_node_base_a->colliding = true;
+        physics_node_base_b->colliding = true;
+
         bool physics_node_a_dynamic = mp_obj_get_int(physics_node_base_a->dynamic);
         bool physics_node_b_dynamic = mp_obj_get_int(physics_node_base_b->dynamic);
+
+        bool physics_node_a_solid = mp_obj_get_int(physics_node_base_a->solid);
+        bool physics_node_b_solid = mp_obj_get_int(physics_node_base_b->solid);
 
         // Calculate restitution/bounciness
         float physics_node_a_bounciness = mp_obj_get_float(physics_node_base_a->bounciness);
@@ -216,14 +234,16 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
         }
 
         // Apply impulses to linear/positional velocity
-        if(physics_node_a_dynamic){
-            physics_node_a_velocity->x.value -= (physics_node_base_a->inverse_mass * collision_impulse_x) + (separate_impulse_x);
-            physics_node_a_velocity->y.value -= (physics_node_base_a->inverse_mass * collision_impulse_y) + (separate_impulse_y);
-        }
+        if(physics_node_a_solid && physics_node_b_solid){
+            if(physics_node_a_dynamic){
+                physics_node_a_velocity->x.value -= (physics_node_base_a->inverse_mass * collision_impulse_x) + (separate_impulse_x);
+                physics_node_a_velocity->y.value -= (physics_node_base_a->inverse_mass * collision_impulse_y) + (separate_impulse_y);
+            }
 
-        if(physics_node_b_dynamic){
-            physics_node_b_velocity->x.value += (physics_node_base_b->inverse_mass * collision_impulse_x) + (separate_impulse_x);
-            physics_node_b_velocity->y.value += (physics_node_base_b->inverse_mass * collision_impulse_y) + (separate_impulse_y);
+            if(physics_node_b_dynamic){
+                physics_node_b_velocity->x.value += (physics_node_base_b->inverse_mass * collision_impulse_x) + (separate_impulse_x);
+                physics_node_b_velocity->y.value += (physics_node_base_b->inverse_mass * collision_impulse_y) + (separate_impulse_y);
+            }
         }
 
         // if(contact.collision_normal_penetration > slop){
@@ -287,14 +307,16 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
             // physics_node_base_apply_impulse_base(physics_node_base_a, -friction_impulse_x, -friction_impulse_y, contact.moment_arm_a_x, contact.moment_arm_a_y);
             // physics_node_base_apply_impulse_base(physics_node_base_b,  friction_impulse_x,  friction_impulse_y, contact.moment_arm_b_x, contact.moment_arm_b_y);
 
-            if(physics_node_a_dynamic){
-                physics_node_a_velocity->x.value -= physics_node_base_a->inverse_mass * friction_impulse_x;
-                physics_node_a_velocity->y.value -= physics_node_base_a->inverse_mass * friction_impulse_y;
-            }
+            if(physics_node_a_solid && physics_node_b_solid){
+                if(physics_node_a_dynamic){
+                    physics_node_a_velocity->x.value -= physics_node_base_a->inverse_mass * friction_impulse_x;
+                    physics_node_a_velocity->y.value -= physics_node_base_a->inverse_mass * friction_impulse_y;
+                }
 
-            if(physics_node_a_dynamic){
-                physics_node_b_velocity->x.value += physics_node_base_b->inverse_mass * friction_impulse_x;
-                physics_node_b_velocity->y.value += physics_node_base_b->inverse_mass * friction_impulse_y;
+                if(physics_node_b_dynamic){
+                    physics_node_b_velocity->x.value += physics_node_base_b->inverse_mass * friction_impulse_x;
+                    physics_node_b_velocity->y.value += physics_node_base_b->inverse_mass * friction_impulse_y;
+                }
             }
         }
 
@@ -307,18 +329,18 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
         mp_obj_t exec[3];
 
         // Call A callback
-        if(physics_node_base_a->collision_cb != mp_const_none){
+        if(physics_node_base_a->on_collide_cb != mp_const_none){
             collision_contact_data[4] = node_base_b;
-            exec[0] = physics_node_base_a->collision_cb;
+            exec[0] = physics_node_base_a->on_collide_cb;
             exec[1] = node_base_a->attr_accessor;
             exec[2] = collision_contact_2d_class_new(&collision_contact_2d_class_type, 5, 0, collision_contact_data);
             mp_call_method_n_kw(1, 0, exec);
         }
 
         // Call B callback
-        if(physics_node_base_b->collision_cb != mp_const_none){
+        if(physics_node_base_b->on_collide_cb != mp_const_none){
             collision_contact_data[4] = node_base_a;
-            exec[0] = physics_node_base_b->collision_cb;
+            exec[0] = physics_node_base_b->on_collide_cb;
             exec[1] = node_base_b->attr_accessor;
             exec[2] = collision_contact_2d_class_new(&collision_contact_2d_class_type, 5, 0, collision_contact_data);
             mp_call_method_n_kw(1, 0, exec);
@@ -373,6 +395,13 @@ void engine_physics_physics_tick(float dt_s){
             exec[2] = mp_obj_new_float(dt_s);
             mp_call_method_n_kw(1, 0, exec);
         }
+
+        // Before setting to back to false, track the colliding state
+        physics_node_base->was_colliding = physics_node_base->colliding;
+
+        // Set this to false so that it can be
+        // set back to true only if colliding, next
+        physics_node_base->colliding = false;
 
         physics_link_node = physics_link_node->next;
     }

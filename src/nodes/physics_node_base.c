@@ -49,8 +49,13 @@ bool physics_node_base_load_attr(engine_node_base_t *self_node_base, qstr attrib
             destination[1] = self_node_base;
             return true;
         break;
-        case MP_QSTR_collision:
-            destination[0] = MP_OBJ_FROM_PTR(&self->collision_cb);
+        case MP_QSTR_on_collide:
+            destination[0] = MP_OBJ_FROM_PTR(&self->on_collide_cb);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_on_separate:
+            destination[0] = MP_OBJ_FROM_PTR(&self->on_separate_cb);
             destination[1] = self_node_base;
             return true;
         break;
@@ -94,6 +99,14 @@ bool physics_node_base_load_attr(engine_node_base_t *self_node_base, qstr attrib
             destination[0] = self->outline;
             return true;
         break;
+        case MP_QSTR_outline_color:
+            destination[0] = self->outline_color;
+            return true;
+        break;
+        case MP_QSTR_collision_layer:
+            destination[0] = mp_obj_new_int(self->collision_layer);
+            return true;
+        break;
         default:
             return false; // Fail
     }
@@ -103,11 +116,18 @@ bool physics_node_base_load_attr(engine_node_base_t *self_node_base, qstr attrib
 
 
 /*  --- doc ---
-    NAME: collision
-    ID: collision
+    NAME: collided
+    ID: collided
     DESC: Callback that is invoked when physics nodes collide
     PARAM: [type=object]                            [name=self]         [value=object]
     PARAM: [type={ref_link:CollisionContact2D}]     [name=contact]      [value={ref_link:CollisionContact2D}]
+    RETURN: None
+*/
+/*  --- doc ---
+    NAME: separated
+    ID: separated
+    DESC: Callback that is invoked when a physics node stops colliding
+    PARAM: [type=object]                            [name=self]         [value=object]
     RETURN: None
 */
 /*  --- doc ---
@@ -130,8 +150,12 @@ bool physics_node_base_store_attr(engine_node_base_t *self_node_base, qstr attri
             self->tick_cb = destination[1];
             return true;
         break;
-        case MP_QSTR_collision:
-            self->collision_cb = destination[1];
+        case MP_QSTR_on_collide:
+            self->on_collide_cb = destination[1];
+            return true;
+        break;
+        case MP_QSTR_on_separate:
+            self->on_separate_cb = destination[1];
             return true;
         break;
         case MP_QSTR_position:
@@ -172,6 +196,14 @@ bool physics_node_base_store_attr(engine_node_base_t *self_node_base, qstr attri
         break;
         case MP_QSTR_outline:
             self->outline = destination[1];
+            return true;
+        break;
+        case MP_QSTR_outline_color:
+            self->outline_color = destination[1];
+            return true;
+        break;
+        case MP_QSTR_collision_layer:
+            self->collision_layer = mp_obj_get_int(destination[1]);
             return true;
         break;
         default:
