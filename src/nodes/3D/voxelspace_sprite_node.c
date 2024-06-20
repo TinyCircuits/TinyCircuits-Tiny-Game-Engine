@@ -250,7 +250,7 @@ void voxelspace_sprite_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t c
         uint16_t sprite_period = (uint16_t)((1.0f/sprite_fps) * 1000.0f);
 
         uint32_t current_ms_time = millis();
-        if(current_ms_time - voxelspace_sprite_node->time_at_last_animation_update_ms >= sprite_period){
+        if(millis_diff(current_ms_time, voxelspace_sprite_node->time_at_last_animation_update_ms) >= sprite_period){
             sprite_frame_current_x++;
 
             // If reach end of x-axis frames, go to the next line and restart x

@@ -26,7 +26,7 @@ const float slop = 0.1f;   // usually 0.01 to 0.1
 
 // https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-core-engine--gamedev-7493t#timestepping:~:text=Here%20is%20a%20full%20example%3A
 float time_accumulator = 0.0f;
-float frame_start_ms = 0.0f;
+uint32_t frame_start_ms = 0;
 
 
 void engine_physics_init(){
@@ -63,7 +63,7 @@ void engine_physics_apply_impulses(float dt, float alpha){
 
             // Gravity: https://github.com/RandyGaul/ImpulseEngine/blob/8d5f4d9113876f91a53cfb967879406e975263d1/Scene.cpp#L35-L42
             //          https://github.com/victorfisac/Physac/blob/29d9fc06860b54571a02402fff6fa8572d19bd12/src/physac.h#L1644-L1648
-            
+
             physics_node_velocity->x.value -= gravity->x.value * physics_node_gravity_scale->x.value;
             physics_node_velocity->y.value -= gravity->y.value * physics_node_gravity_scale->y.value;
 
@@ -174,7 +174,7 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
         //     bounciness = 0.0f;
         // }
 
-        // float bounciness = fminf(physics_node_a_bounciness, physics_node_b_bounciness); 
+        // float bounciness = fminf(physics_node_a_bounciness, physics_node_b_bounciness);
 
         // // https://github.com/RandyGaul/ImpulseEngine/blob/master/Manifold.cpp#L65-L92
         // // https://github.com/victorfisac/Physac/blob/29d9fc06860b54571a02402fff6fa8572d19bd12/src/physac.h#L1726
@@ -236,7 +236,7 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
         //     //
         //     // Depending on which objects are dynamic, move the dynamic bodies by
         //     // the penetration amount. Don't want static nodes to be moved by the
-        //     // penetration amount. 
+        //     // penetration amount.
         //     if(physics_node_a_dynamic == true && physics_node_b_dynamic == false){
         //         physics_node_base_a->total_position_correction_x += correction_x;
         //         physics_node_base_a->total_position_correction_y += correction_y;
@@ -265,7 +265,7 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
         float a_friction = mp_obj_get_float(physics_node_base_a->friction);
         float b_friction = mp_obj_get_float(physics_node_base_b->friction);
         float mu = sqrtf(a_friction + b_friction);
-        
+
         contact.relative_velocity_x = physics_node_b_velocity->x.value - physics_node_a_velocity->x.value;
         contact.relative_velocity_y = physics_node_b_velocity->y.value - physics_node_a_velocity->y.value;
 
@@ -373,7 +373,7 @@ void engine_physics_physics_tick(float dt_s){
             exec[2] = mp_obj_new_float(dt_s);
             mp_call_method_n_kw(1, 0, exec);
         }
-        
+
         physics_link_node = physics_link_node->next;
     }
 }
@@ -385,17 +385,17 @@ void engine_physics_tick(){
 
     const float alpha = time_accumulator / engine_fps_limit_period_ms;
 
-    const float current_time_ms = millis();
+    const uint32_t current_time_ms = millis();
 
     // Store the time elapsed since the last frame began
-    time_accumulator += current_time_ms - frame_start_ms;
+    time_accumulator += millis_diff(current_time_ms, frame_start_ms);
 
-    // Record the starting of this frame 
+    // Record the starting of this frame
     frame_start_ms = current_time_ms;
 
-    // Avoid spiral of death and clamp dt, thus clamping 
-    // how many times the update physics can be called in 
-    // a single game loop. 
+    // Avoid spiral of death and clamp dt, thus clamping
+    // how many times the update physics can be called in
+    // a single game loop.
     if(time_accumulator > 30.0f){
         time_accumulator = 30.0f;
     }
