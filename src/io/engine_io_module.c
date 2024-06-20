@@ -95,15 +95,15 @@ void engine_io_reset_gui_toggle_button(){
     PARAM: [type=int]   [name=button_mask]  [value=single or OR'ed together enum/ints (e.g. 'engine_input.A | engine_input.B')]
     RETURN: True or False
 */
-static mp_obj_t engine_io_check_pressed(mp_obj_t module, mp_obj_t button_mask_u16){
-    if(engine_gui_get_focus() == true){
+static mp_obj_t engine_io_check_pressed(mp_obj_t button_mask_u16){
+    if(engine_gui_is_gui_focused() == true){
         return mp_obj_new_bool(false);
     }else{
         uint16_t button_mask = mp_obj_get_int(button_mask_u16);
         return mp_obj_new_bool(check_pressed(button_mask));
     }
 }
-MP_DEFINE_CONST_FUN_OBJ_2(engine_io_check_pressed_obj, engine_io_check_pressed);
+MP_DEFINE_CONST_FUN_OBJ_1(engine_io_check_pressed_obj, engine_io_check_pressed);
 
 
 /*  --- doc ---
@@ -113,15 +113,15 @@ MP_DEFINE_CONST_FUN_OBJ_2(engine_io_check_pressed_obj, engine_io_check_pressed);
     PARAM: [type=int]   [name=button_mask]  [value=single or OR'ed together enum/ints (e.g. 'engine_input.A | engine_input.B')]
     RETURN: True or False
 */
-static mp_obj_t engine_io_check_just_changed(mp_obj_t module, mp_obj_t button_mask_u16){
-    if(engine_gui_get_focus() == true){
+static mp_obj_t engine_io_check_just_changed(mp_obj_t button_mask_u16){
+    if(engine_gui_is_gui_focused() == true){
         return mp_obj_new_bool(false);
     }else{
         uint16_t button_mask = mp_obj_get_int(button_mask_u16);
         return mp_obj_new_bool(check_just_changed(button_mask));
     }
 }
-MP_DEFINE_CONST_FUN_OBJ_2(engine_io_check_just_changed_obj, engine_io_check_just_changed);
+MP_DEFINE_CONST_FUN_OBJ_1(engine_io_check_just_changed_obj, engine_io_check_just_changed);
 
 
 /*  --- doc ---
@@ -131,15 +131,15 @@ MP_DEFINE_CONST_FUN_OBJ_2(engine_io_check_just_changed_obj, engine_io_check_just
     PARAM: [type=int]   [name=button_mask]  [value=single or OR'ed together enum/ints (e.g. 'engine_input.A | engine_input.B')]
     RETURN: True or False
 */
-static mp_obj_t engine_io_check_just_pressed(mp_obj_t module, mp_obj_t button_mask_u16){
-    if(engine_gui_get_focus() == true){
+static mp_obj_t engine_io_check_just_pressed(mp_obj_t button_mask_u16){
+    if(engine_gui_is_gui_focused() == true){
         return mp_obj_new_bool(false);
     }else{
         uint16_t button_mask = mp_obj_get_int(button_mask_u16);
         return mp_obj_new_bool(check_just_pressed(button_mask));
     }
 }
-MP_DEFINE_CONST_FUN_OBJ_2(engine_io_check_just_pressed_obj, engine_io_check_just_pressed);
+MP_DEFINE_CONST_FUN_OBJ_1(engine_io_check_just_pressed_obj, engine_io_check_just_pressed);
 
 
 /*  --- doc ---
@@ -149,15 +149,15 @@ MP_DEFINE_CONST_FUN_OBJ_2(engine_io_check_just_pressed_obj, engine_io_check_just
     PARAM: [type=int]   [name=button_mask]  [value=single or OR'ed together enum/ints (e.g. 'engine_input.A | engine_input.B')]
     RETURN: True or False
 */
-static mp_obj_t engine_io_check_just_released(mp_obj_t module, mp_obj_t button_mask_u16){
-    if(engine_gui_get_focus() == true){
+static mp_obj_t engine_io_check_just_released(mp_obj_t button_mask_u16){
+    if(engine_gui_is_gui_focused() == true){
         return mp_obj_new_bool(false);
     }else{
         uint16_t button_mask = mp_obj_get_int(button_mask_u16);
         return mp_obj_new_bool(check_just_released(button_mask));
     }
 }
-MP_DEFINE_CONST_FUN_OBJ_2(engine_io_check_just_released_obj, engine_io_check_just_released);
+MP_DEFINE_CONST_FUN_OBJ_1(engine_io_check_just_released_obj, engine_io_check_just_released);
 
 
 /*  --- doc ---
@@ -167,7 +167,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(engine_io_check_just_released_obj, engine_io_check_jus
     PARAM: [type=float]   [name=intensity]  [value=0.0 ~ 1.0]
     RETURN: None
 */
-static mp_obj_t engine_io_rumble(mp_obj_t module, mp_obj_t intensity_obj){
+static mp_obj_t engine_io_rumble(mp_obj_t intensity_obj){
     #ifdef __unix__
         // Nothing to do
     #else
@@ -176,23 +176,71 @@ static mp_obj_t engine_io_rumble(mp_obj_t module, mp_obj_t intensity_obj){
     #endif
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_2(engine_io_rumble_obj, engine_io_rumble);
+MP_DEFINE_CONST_FUN_OBJ_1(engine_io_rumble_obj, engine_io_rumble);
 
 
 /*  --- doc ---
-    NAME: toggle_gui_focus
-    ID: toggle_gui_focus
-    DESC: Toggle between button inputs being consumed by the game or gui elements
-    RETURN: None
+    NAME: gui_focused_toggle
+    ID: gui_focused_toggle
+    DESC: Toggle between button inputs being consumed by the game or gui elements.
+    RETURN: bool
 */
-static mp_obj_t engine_toggle_gui_focus(mp_obj_t module){
-    engine_gui_toggle_focus();
-    return mp_const_none;
+static mp_obj_t engine_io_gui_focused_toggle(){
+    return mp_obj_new_bool(engine_gui_toggle_focus());
 }
-MP_DEFINE_CONST_FUN_OBJ_1(engine_toggle_gui_focus_obj, engine_toggle_gui_focus);
+MP_DEFINE_CONST_FUN_OBJ_0(engine_io_gui_focused_toggle_obj, engine_io_gui_focused_toggle);
 
 
-static mp_obj_t engine_io_battery_level(mp_obj_t module){
+/*  --- doc ---
+    NAME: gui_focused
+    ID: gui_focused
+    DESC: Get or set whether the GUI is focused.
+    PARAM: [type=bool (optional)]   [name=gui_focused]  [value=True/False]
+    RETURN: bool
+*/
+static mp_obj_t engine_io_gui_focused(size_t n_args, const mp_obj_t *args){
+    if (n_args == 1) {
+        engine_gui_set_focused(mp_obj_get_int(args[0]));
+    }
+    return mp_obj_new_bool(engine_gui_is_gui_focused());
+}
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_io_gui_focused_obj, 0, 1, engine_io_gui_focused);
+
+
+/*  --- doc ---
+    NAME: focused_node
+    ID: focused_node
+    DESC: Get the currently focused node.
+    RETURN: Node or None
+*/
+static mp_obj_t engine_io_focused_node(){
+    engine_node_base_t *focused = engine_gui_get_focused();
+    if(focused == NULL){
+        return mp_const_none;
+    }else{
+        return focused;
+    }
+}
+MP_DEFINE_CONST_FUN_OBJ_0(engine_io_focused_node_obj, engine_io_focused_node);
+
+
+/*  --- doc ---
+    NAME: gui_toggle_button
+    ID: gui_toggle_button
+    DESC: Get or set the button that toggles GUI focus mode. None to disable.
+    PARAM: [type=int|None (optional)]   [name=button]  [value=enum/int (e.g. 'engine_io.A')]
+    RETURN: int
+*/
+static mp_obj_t engine_io_gui_toggle_button(size_t n_args, const mp_obj_t *args){
+    if (n_args == 1) {
+        gui_toggle_button = args[0] == mp_const_none ? 0 : mp_obj_get_int(args[0]);
+    }
+    return mp_obj_new_int(gui_toggle_button);
+}
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_io_gui_toggle_button_obj, 0, 1, engine_io_gui_toggle_button);
+
+
+static mp_obj_t engine_io_battery_level(){
     #if defined(__arm__)
         // Read the 12-bit sample with ADC max ref voltage of 3.3V
         uint16_t battery_voltage_12_bit = adc_read();
@@ -215,7 +263,7 @@ static mp_obj_t engine_io_battery_level(mp_obj_t module){
 
     return mp_obj_new_float(1.0f);
 }
-MP_DEFINE_CONST_FUN_OBJ_1(engine_io_battery_level_obj, engine_io_battery_level);
+MP_DEFINE_CONST_FUN_OBJ_0(engine_io_battery_level_obj, engine_io_battery_level);
 
 
 static mp_obj_t engine_io_module_init(){
@@ -234,7 +282,10 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_io_module_init_obj, engine_io_module_init);
     ATTR: [type=function]   [name={ref_link:check_just_pressed}]        [value=function]
     ATTR: [type=function]   [name={ref_link:check_just_released}]       [value=function]
     ATTR: [type=function]   [name={ref_link:rumble}]                    [value=function]
-    ATTR: [type=function]   [name={ref_link:toggle_gui_focus}]          [value=function]
+    ATTR: [type=function]   [name={ref_link:gui_focused_toggle}]        [value=function]
+    ATTR: [type=function]   [name={ref_link:gui_focused}]               [value=function]
+    ATTR: [type=function]   [name={ref_link:focused_node}]              [value=function]
+    ATTR: [type=function]   [name={ref_link:gui_toggle_button}]         [value=function]
     ATTR: [type=enum/int]   [name=A]                                    [value=0b0000000000000001]
     ATTR: [type=enum/int]   [name=B]                                    [value=0b0000000000000010]
     ATTR: [type=enum/int]   [name=DPAD_UP]                              [value=0b0000000000000100]
@@ -248,118 +299,31 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_io_module_init_obj, engine_io_module_init);
 static const mp_rom_map_elem_t engine_io_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_io) },
     { MP_OBJ_NEW_QSTR(MP_QSTR___init__), (mp_obj_t)&engine_io_module_init_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_check_pressed), MP_ROM_PTR(&engine_io_check_pressed_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_check_just_changed), MP_ROM_PTR(&engine_io_check_just_changed_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_check_just_pressed), MP_ROM_PTR(&engine_io_check_just_pressed_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_check_just_released), MP_ROM_PTR(&engine_io_check_just_released_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_rumble), MP_ROM_PTR(&engine_io_rumble_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_gui_focused), MP_ROM_PTR(&engine_io_gui_focused_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_gui_focused_toggle), MP_ROM_PTR(&engine_io_gui_focused_toggle_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_battery_level), MP_ROM_PTR(&engine_io_battery_level_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_focused_node), MP_ROM_PTR(&engine_io_focused_node_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_gui_toggle_button), MP_ROM_PTR(&engine_io_gui_toggle_button_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_A), MP_ROM_INT(BUTTON_A) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_B), MP_ROM_INT(BUTTON_B) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_DPAD_UP), MP_ROM_INT(BUTTON_DPAD_UP) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_DPAD_DOWN), MP_ROM_INT(BUTTON_DPAD_DOWN) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_DPAD_LEFT), MP_ROM_INT(BUTTON_DPAD_LEFT) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_DPAD_RIGHT), MP_ROM_INT(BUTTON_DPAD_RIGHT) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_BUMPER_LEFT), MP_ROM_INT(BUTTON_BUMPER_LEFT) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_BUMPER_RIGHT), MP_ROM_INT(BUTTON_BUMPER_RIGHT) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_MENU), MP_ROM_INT(BUTTON_MENU) },
 };
-
-// Module init
 static MP_DEFINE_CONST_DICT (mp_module_engine_io_globals, engine_io_globals_table);
 
 
-static void io_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
-    if(destination[0] == MP_OBJ_NULL){          // Load
-        switch(attribute){
-            case MP_QSTR_gui_toggle_button:
-                destination[0] = mp_obj_new_int(gui_toggle_button);
-            break;
-            case MP_QSTR_check_pressed:
-                destination[0] = MP_OBJ_FROM_PTR(&engine_io_check_pressed_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_check_just_changed:
-                destination[0] = MP_OBJ_FROM_PTR(&engine_io_check_just_changed_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_check_just_pressed:
-                destination[0] = MP_OBJ_FROM_PTR(&engine_io_check_just_pressed_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_check_just_released:
-                destination[0] = MP_OBJ_FROM_PTR(&engine_io_check_just_released_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_rumble:
-                destination[0] = MP_OBJ_FROM_PTR(&engine_io_rumble_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_toggle_gui_focus:
-                destination[0] = MP_OBJ_FROM_PTR(&engine_toggle_gui_focus_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_battery_level:
-                destination[0] = MP_OBJ_FROM_PTR(&engine_io_battery_level_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_A:
-                destination[0] = MP_ROM_INT(BUTTON_A);
-            break;
-            case MP_QSTR_B:
-                destination[0] = MP_ROM_INT(BUTTON_B);
-            break;
-            case MP_QSTR_DPAD_UP:
-                destination[0] = MP_ROM_INT(BUTTON_DPAD_UP);
-            break;
-            case MP_QSTR_DPAD_DOWN:
-                destination[0] = MP_ROM_INT(BUTTON_DPAD_DOWN);
-            break;
-            case MP_QSTR_DPAD_LEFT:
-                destination[0] = MP_ROM_INT(BUTTON_DPAD_LEFT);
-            break;
-            case MP_QSTR_DPAD_RIGHT:
-                destination[0] = MP_ROM_INT(BUTTON_DPAD_RIGHT);
-            break;
-            case MP_QSTR_BUMPER_LEFT:
-                destination[0] = MP_ROM_INT(BUTTON_BUMPER_LEFT);
-            break;
-            case MP_QSTR_BUMPER_RIGHT:
-                destination[0] = MP_ROM_INT(BUTTON_BUMPER_RIGHT);
-            break;
-            case MP_QSTR_MENU:
-                destination[0] = MP_ROM_INT(BUTTON_MENU);
-            break;
-            case MP_QSTR_focused:
-            {
-                engine_node_base_t *focused = engine_gui_get_focused();
-                if(focused == NULL){
-                    destination[0] = mp_const_none;
-                }else{
-                    destination[0] = focused;
-                }
-            }
-            break;
-            default:
-                return; // Fail
-        }
-    }else if(destination[1] != MP_OBJ_NULL){    // Store
-        switch(attribute){
-            case MP_QSTR_gui_toggle_button:
-            {
-                if(destination[1] == mp_const_none){
-                    // Set to zero if passed None so that no button is set to switch to GUI focus mode
-                    gui_toggle_button = 0;
-                }else{
-                    gui_toggle_button = mp_obj_get_int(destination[1]);
-                }
-            }
-            break;
-            default:
-                return; // Fail
-        }
-
-        // Success
-        destination[0] = MP_OBJ_NULL;
-    }
-}
-
-
-MP_DEFINE_CONST_OBJ_TYPE(
-    mp_type_io_module,
-    MP_QSTR_module,
-    MP_TYPE_FLAG_NONE,
-    attr, io_class_attr
-);
-
-
 const mp_obj_module_t engine_io_user_cmodule = {
-    .base = { &mp_type_io_module },
+    .base = { &mp_type_module },
     .globals = (mp_obj_dict_t*)&mp_module_engine_io_globals,
 };
 

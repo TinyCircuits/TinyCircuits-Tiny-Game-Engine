@@ -19,9 +19,9 @@ class MyCam(CameraNode):
 
     
     def tick(self, dt):
-        if(engine_io.focused != None):
-            self.position.x = engine_io.focused.position.x
-            self.position.y = engine_io.focused.position.y
+        if(engine_io.focused_node() != None):
+            self.position.x = engine_io.focused_node().position.x
+            self.position.y = engine_io.focused_node().position.y
 
 
         if engine_io.check_pressed(engine_io.B):
@@ -47,7 +47,7 @@ class MyCam(CameraNode):
 
 camera = MyCam()
 
-# engine_io.gui_toggle_button = None
+# engine_io.gui_toggle_button(None)
 
 # button0 = GUIButton2DNode(position=Vector2(-32,   0), font=font, text="Button 0", rotation=0, scale=Vector2(1, 1), padding=2, outline=2, opacity=1.0)
 # button1 = GUIButton2DNode(position=Vector2(  0, -32), font=font, text="Button 1", rotation=0, scale=Vector2(1, 1), padding=2, outline=2, opacity=1.0)

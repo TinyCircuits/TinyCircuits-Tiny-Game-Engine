@@ -8,8 +8,9 @@
 void engine_gui_reset();
 
 void engine_gui_focus_node(engine_node_base_t *gui_node);
-bool engine_gui_get_focus();
-void engine_gui_toggle_focus();
+bool engine_gui_is_gui_focused();
+bool engine_gui_toggle_focus();
+bool engine_gui_set_focused(bool focused);
 engine_node_base_t *engine_gui_get_focused();
 void engine_gui_clear_focused();
 void engine_gui_tick();

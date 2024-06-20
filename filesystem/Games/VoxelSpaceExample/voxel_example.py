@@ -17,7 +17,7 @@ import time
 
 # machine.freq(250 * 1000 * 1000)
 
-engine_io.gui_toggle_button = None
+engine_io.gui_toggle_button(None)
 
 engine.set_fps_limit(60)
 engine_draw.set_background_color(engine_draw.skyblue)
