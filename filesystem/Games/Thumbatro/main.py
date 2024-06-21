@@ -252,7 +252,7 @@ class PokerGame(Rectangle2DNode):
 
     def update_hand_positions(self):
         start_x = 7
-        y_position = 98
+        y_position = 103
         for i, card in enumerate(self.hand):
             tween_card(card, Vector2(start_x + i * 16, y_position))
             card.select(False)
@@ -605,9 +605,9 @@ class PokerGame(Rectangle2DNode):
                 if joker_type == 'common':
                     card = CardSprite(Vector2(150, 80), random.randint(0, 1), 4, base_score_bonus=random.randint(10, 100), multiplier_bonus=0)
                 elif joker_type == 'uncommon':
-                    card = CardSprite(Vector2(150, 80), random.randint(0, 1), 4, base_score_bonus=0, multiplier_bonus=random.randint(2, 10))
+                    card = CardSprite(Vector2(150, 80), random.randint(0, 1), 4, base_score_bonus=0, multiplier_bonus=random.randint(2, 5))
                 else:  # rare
-                    card = CardSprite(Vector2(150, 80), random.randint(0, 1), 4, base_score_bonus=random.randint(10, 100), multiplier_bonus=random.randint(2, 10))
+                    card = CardSprite(Vector2(150, 80), random.randint(0, 1), 4, base_score_bonus=random.randint(10, 50), multiplier_bonus=random.randint(2, 5))
 
             # Generate Wildcard Suit Cards
             elif rand_val < 0.3:  # 10% chance for a Wildcard Suit Card
@@ -642,14 +642,14 @@ class PokerGame(Rectangle2DNode):
 
     def update_joker_display(self):
         start_x = 7
-        y_position = 16
+        y_position = 23
         for i, joker in enumerate(self.jokers):
-            tween_card(joker, Vector2(start_x + i * 18, y_position))
+            tween_card(joker, Vector2(start_x + i * 19, y_position))
             self.add_child(joker)
 
     def show_booster_pack(self):
         start_x = 7
-        y_position = 95
+        y_position = 103
         for i, card in enumerate(self.booster_cards):
             card.position = Vector2(start_x + i * 16, y_position)
             self.add_child(card)
