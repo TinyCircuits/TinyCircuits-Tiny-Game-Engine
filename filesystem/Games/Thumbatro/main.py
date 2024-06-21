@@ -143,6 +143,52 @@ class CardSprite(Sprite2DNode):
 
     def __repr__(self):
         return self.__str__()
+    
+    def print_rules(self):
+        suits = ["Hearts", "Spades", "Diamonds", "Clubs"]
+        short_suits = ["Hrt", "Spd", "Dia", "Clb"]
+        rank_names = ["Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"]
+        short_rank_names = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
+        
+        if self.original_frame_y == 4:
+            if self.base_score_bonus > 0 and self.multiplier_bonus > 0:
+                rule = f"Joker +{self.base_score_bonus} x{self.multiplier_bonus}"
+            elif self.base_score_bonus > 0:
+                rule = f"Joker +{self.base_score_bonus}"
+            elif self.multiplier_bonus > 0:
+                rule = f"Joker x{self.multiplier_bonus}"
+            else:
+                rule = "Joker"
+        else:
+            suit = suits[self.original_frame_y]
+            short_suit = short_suits[self.original_frame_y]
+            rank = rank_names[self.original_frame_x]
+            short_rank = short_rank_names[self.original_frame_x]
+            if self.is_wildcard_suit:
+                rule = f"{rank} Wildcard"
+            elif self.base_score_bonus > 0 and self.multiplier_bonus > 0:
+                rule = f"{rank} of {suit} +{self.base_score_bonus} x{self.multiplier_bonus}"
+            elif self.base_score_bonus > 0:
+                rule = f"{rank} of {suit} +{self.base_score_bonus}"
+            elif self.multiplier_bonus > 0:
+                rule = f"{rank} of {suit} x{self.multiplier_bonus}"
+            else:
+                rule = f"{rank} of {suit}"
+        
+            if len(rule) > 20:
+                if self.is_wildcard_suit:
+                    rule = f"{short_rank} Wildcard"
+                elif self.base_score_bonus > 0 and self.multiplier_bonus > 0:
+                    rule = f"{short_rank} of {short_suit} +{self.base_score_bonus} x{self.multiplier_bonus}"
+                elif self.base_score_bonus > 0:
+                    rule = f"{short_rank} of {short_suit} +{self.base_score_bonus}"
+                elif self.multiplier_bonus > 0:
+                    rule = f"{short_rank} of {short_suit} x{self.multiplier_bonus}"
+                else:
+                    rule = f"{short_rank} of {short_suit}"
+        
+        return rule
+
 
 
 class Deck:
@@ -206,9 +252,9 @@ class PokerGame(Rectangle2DNode):
         self.mult_score_text.set_layer(1)
         self.round_text = Text2DNode(Vector2(110, 75), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
         self.round_text.set_layer(1)
-        self.hand_type_text = Text2DNode(Vector2(80, 37), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
+        self.hand_type_text = Text2DNode(Vector2(82, 37), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
         self.hand_type_text.set_layer(1)
-        self.total_score_text = Text2DNode(Vector2(68, 10), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
+        self.total_score_text = Text2DNode(Vector2(69, 10), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
         self.total_score_text.set_layer(1)
         self.best_hand_text = Text2DNode(Vector2(44, 57), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
         self.best_hand_text.set_layer(1)
@@ -244,6 +290,14 @@ class PokerGame(Rectangle2DNode):
                 card = CardSprite(Vector2(150, 80), rank, suit)
                 collection.append(card)
         return collection
+        
+    def sort_cards(self, cards):
+        def card_key(card):
+            # Handle Ace as the highest rank
+            rank_priority = 14 if card.original_frame_x == 0 else card.original_frame_x + 1
+            return (rank_priority, card.original_frame_y)
+        
+        return sorted(cards, key=card_key)
 
     def draw_hand(self):
         self.hand = self.deck.draw_cards(8)
@@ -313,16 +367,21 @@ class PokerGame(Rectangle2DNode):
     def move_left(self):
         self.current_card_index = (self.current_card_index - 1) % len(self.hand)
         self.update_hand_indicator_position()
+        self.update_selected_card_rules()
 
     def move_right(self):
         self.current_card_index = (self.current_card_index + 1) % len(self.hand)
         self.update_hand_indicator_position()
+        self.update_selected_card_rules()
 
     def update_hand_indicator_position(self):
         if self.hand and 0 <= self.current_card_index < len(self.hand):
             card_position = self.hand[self.current_card_index].position
             self.hand_indicator.position = Vector2(card_position.x, card_position.y + 20)
             self.hand_indicator.set_layer(7)
+
+    def update_selected_card_rules(self):
+        self.hand_type_text.text = self.hand[self.current_card_index].print_rules()
 
     def select_card(self):
         card = self.hand[self.current_card_index]
@@ -338,6 +397,7 @@ class PokerGame(Rectangle2DNode):
 
     def play_hand(self):
         if self.selected_cards:
+            self.selected_cards = self.sort_cards(self.selected_cards)
             self.evaluate_hand()
             self.hands_played += 1
             self.display_played_hand()
@@ -345,7 +405,7 @@ class PokerGame(Rectangle2DNode):
                 card.mark_played()
                 self.hand.remove(card)
                 self.played_cards.append(card) 
-            if self.hands_played >= 4:
+            if self.hands_played >= 4 or self.score >= self.target_score:
                 hand_copy = self.hand[:]  # Create a copy of the hand
                 for card in hand_copy:
                     self.hand.remove(card)
@@ -573,8 +633,6 @@ class PokerGame(Rectangle2DNode):
             card.hide()
         self.hand_indicator.opacity = 0
         self.hand_type_text.text = f"Game Over!"
-        self.round_text.text = f"{self.current_game}"
-        self.total_score_text.text = f"Score: {self.score}"
         self.best_hand_text.text = f"Best Hand: {self.highest_individual_hand_score}"
 
 
@@ -596,7 +654,12 @@ class PokerGame(Rectangle2DNode):
 
     def draw_booster_pack(self):
         new_cards = []
-        for _ in range(5):
+        size = 5
+        if (self.hands_played < 4):
+            size += 1
+        if (self.discard_limit > 0):
+            size += 1
+        for _ in range(size):
             rand_val = random.random()
             
             # Generate Jokers
@@ -619,14 +682,14 @@ class PokerGame(Rectangle2DNode):
                 frame_x = random.randint(0, 12)
                 frame_y = random.randint(0, 3)
                 if card_type == 'common':
-                    base_score_bonus = random.randint(1, 10)
+                    base_score_bonus = random.randint(5, 20)
                     multiplier_bonus = 0
                 elif card_type == 'uncommon':
                     base_score_bonus = 0
                     multiplier_bonus = random.randint(2, 4)
                 else:  # rare
-                    base_score_bonus = random.randint(5, 20)
-                    multiplier_bonus = random.randint(2, 5)
+                    base_score_bonus = random.randint(10, 30)
+                    multiplier_bonus = random.randint(2, 6)
 
                 card = CardSprite(Vector2(150, 80), frame_x, frame_y, base_score_bonus, multiplier_bonus)
             
@@ -687,6 +750,7 @@ class PokerGame(Rectangle2DNode):
             card_position = self.booster_cards[self.current_card_index].position
             self.hand_indicator.position = Vector2(card_position.x, card_position.y + 20)
             self.hand_indicator.opacity = 1
+            self.hand_type_text.text = self.booster_cards[self.current_card_index].print_rules()
 
     def select_booster_card(self):
         card = self.booster_cards[self.current_card_index]
@@ -701,6 +765,7 @@ class PokerGame(Rectangle2DNode):
             self.selected_cards.remove(card)
 
     def confirm_booster_selection(self):
+        self.hand_type_text.text = f"Round {self.current_game}"
         for card in self.selected_cards:
             card.select(False)
             if card.original_frame_y == 4:
