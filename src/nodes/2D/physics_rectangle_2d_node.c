@@ -38,7 +38,7 @@ void physics_rectangle_2d_node_class_draw(mp_obj_t rectangle_node_base_obj, mp_o
 
     if(physics_node_base->outline_color != mp_const_none){
         color_class_obj_t *outline_color = physics_node_base->outline_color;
-        color = outline_color->value.val;
+        color = outline_color->value;
     }
 
     vector3_class_obj_t *camera_position = camera->position;

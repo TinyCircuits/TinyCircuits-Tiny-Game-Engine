@@ -41,7 +41,7 @@ void physics_circle_2d_node_class_draw(mp_obj_t circle_node_base_obj, mp_obj_t c
 
     if(physics_node_base->outline_color != mp_const_none){
         color_class_obj_t *outline_color = physics_node_base->outline_color;
-        color = outline_color->value.val;
+        color = outline_color->value;
     }
     
     float circle_resolved_hierarchy_x = 0.0f;
