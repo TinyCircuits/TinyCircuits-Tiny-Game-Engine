@@ -72,11 +72,6 @@ void engine_physics_apply_impulses(float dt, float alpha){
             physics_node_position->y.value += physics_node_velocity->y.value;
 
             physics_node_base->rotation += physics_node_base->angular_velocity;
-
-            // When the rotation changes the collider box vertices need to be updated
-            if(node_base->type == NODE_TYPE_PHYSICS_RECTANGLE_2D){
-                engine_physics_rectangle_2d_node_update(physics_node_base);
-            }
         }
 
         // If the node was colliding last tick but isn't now, call the on_separate_cb callback

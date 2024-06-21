@@ -115,12 +115,12 @@ void physics_rectangle_2d_node_class_draw(mp_obj_t rectangle_node_base_obj, mp_o
 }
 
 
-void engine_physics_rectangle_2d_node_update(engine_physics_node_base_t *physics_node_base){
+void engine_physics_rectangle_2d_node_calculate(engine_physics_node_base_t *physics_node_base, float *vertices_x, float *vertices_y, float *normals_x, float *normals_y, float extra_rotation){
     engine_physics_rectangle_2d_node_class_obj_t *self = physics_node_base->unique_data;
 
     float half_width = mp_obj_get_float(self->width) * 0.5f;
     float half_height = mp_obj_get_float(self->height) * 0.5f;
-    float rotation = physics_node_base->rotation;
+    float rotation = extra_rotation;
 
     float x_traversal_cos = cosf(rotation) * half_width;
     float x_traversal_sin = sinf(rotation) * half_width;
@@ -129,20 +129,20 @@ void engine_physics_rectangle_2d_node_update(engine_physics_node_base_t *physics
     float y_traversal_sin = sinf(rotation + HALF_PI) * half_height;
 
     // top-left
-    self->vertices_x[0] = -x_traversal_cos + y_traversal_cos;
-    self->vertices_y[0] =  x_traversal_sin - y_traversal_sin;
+    vertices_x[0] = -x_traversal_cos + y_traversal_cos;
+    vertices_y[0] =  x_traversal_sin - y_traversal_sin;
 
     // top-right
-    self->vertices_x[1] =  x_traversal_cos + y_traversal_cos;
-    self->vertices_y[1] = -x_traversal_sin - y_traversal_sin;
+    vertices_x[1] =  x_traversal_cos + y_traversal_cos;
+    vertices_y[1] = -x_traversal_sin - y_traversal_sin;
 
     // bottom-right
-    self->vertices_x[2] =  x_traversal_cos - y_traversal_cos;
-    self->vertices_y[2] = -x_traversal_sin + y_traversal_sin;
+    vertices_x[2] =  x_traversal_cos - y_traversal_cos;
+    vertices_y[2] = -x_traversal_sin + y_traversal_sin;
 
     // bottom-left
-    self->vertices_x[3] = -x_traversal_cos - y_traversal_cos;
-    self->vertices_y[3] =  x_traversal_sin + y_traversal_sin;
+    vertices_x[3] = -x_traversal_cos - y_traversal_cos;
+    vertices_y[3] =  x_traversal_sin + y_traversal_sin;
 
     // Calculate a new list of normals (should be able to
     // know the size of the final normal list size, just use
@@ -150,8 +150,8 @@ void engine_physics_rectangle_2d_node_update(engine_physics_node_base_t *physics
     // for checking collisions between rectangles
     for(uint32_t ivx=0; ivx<2; ivx++){        
         // 2D Cross product (perpendicular vector to the direction of the edge): FLIP: https://stackoverflow.com/a/1243676
-        float temp_face_normal_x = self->vertices_x[ivx + 1] - self->vertices_x[ivx];
-        float temp_face_normal_y = self->vertices_y[ivx + 1] - self->vertices_y[ivx];
+        float temp_face_normal_x = vertices_x[ivx + 1] - vertices_x[ivx];
+        float temp_face_normal_y = vertices_y[ivx + 1] - vertices_y[ivx];
 
         float face_normal_length_squared = (temp_face_normal_x*temp_face_normal_x) + (temp_face_normal_y*temp_face_normal_y);
 
@@ -160,8 +160,8 @@ void engine_physics_rectangle_2d_node_update(engine_physics_node_base_t *physics
         float face_normal_y = -temp_face_normal_x / face_normal_length;
         float face_normal_x =  temp_face_normal_y / face_normal_length;
 
-        self->normals_x[ivx] = face_normal_x;
-        self->normals_y[ivx] = face_normal_y;
+        normals_x[ivx] = face_normal_x;
+        normals_y[ivx] = face_normal_y;
     }
 }
 
@@ -202,7 +202,6 @@ mp_obj_t physics_rectangle_2d_node_class_adjust_from_to(mp_obj_t self_in, mp_obj
     physics_node_base->rotation = rotation;
     position->x.value = mid_x;
     position->y.value = mid_y;
-    engine_physics_rectangle_2d_node_update(physics_node_base);
 
     return mp_const_none;
 }
@@ -334,7 +333,6 @@ bool physics_rectangle_2d_store_attr(engine_node_base_t *self_node_base, qstr at
     switch(attribute){
         case MP_QSTR_width:
             self->width = destination[1];
-            engine_physics_rectangle_2d_node_update(physics_node_base);
 
             // As the dimensions change so does the mass due to density
             physics_rectangle_2d_calculate_inverse_mass(self_node_base);
@@ -343,7 +341,6 @@ bool physics_rectangle_2d_store_attr(engine_node_base_t *self_node_base, qstr at
         break;
         case MP_QSTR_height:
             self->height = destination[1];
-            engine_physics_rectangle_2d_node_update(physics_node_base);
 
             // As the dimensions change so does the mass due to density
             physics_rectangle_2d_calculate_inverse_mass(self_node_base);
@@ -352,7 +349,6 @@ bool physics_rectangle_2d_store_attr(engine_node_base_t *self_node_base, qstr at
         break;
         case MP_QSTR_rotation:  // Special case, want to handle rotation here instead of base
             physics_node_base->rotation = mp_obj_get_float(destination[1]);
-            engine_physics_rectangle_2d_node_update(physics_node_base);
             return true;
         break;
         case MP_QSTR_density:
@@ -609,8 +605,6 @@ mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n
         // Need a way to access the object node instance instead of the native type for callbacks (tick, draw, collision)
         node_base->attr_accessor = node_instance;
     }
-
-    engine_physics_rectangle_2d_node_update(physics_node_base);
 
     return MP_OBJ_FROM_PTR(node_base);
 }

@@ -188,9 +188,6 @@ void engine_physics_rect_rect_get_contacting(float px, float py, float collision
 
 
 void engine_physics_rect_rect_get_contact(contact_t *contact, float abs_a_position_x, float abs_a_position_y, float abs_b_position_x, float abs_b_position_y, engine_physics_node_base_t *physics_node_base_a, engine_physics_node_base_t *physics_node_base_b){
-    engine_physics_rectangle_2d_node_class_obj_t *physics_rectangle_a = physics_node_base_a->unique_data;
-    engine_physics_rectangle_2d_node_class_obj_t *physics_rectangle_b = physics_node_base_b->unique_data;
-
     float a_max_proj_vertex_x = 0.0f;
     float a_max_proj_vertex_y = 0.0f;
 
@@ -207,8 +204,23 @@ void engine_physics_rect_rect_get_contact(contact_t *contact, float abs_a_positi
     float b_edge_v1_x = 0.0f;
     float b_edge_v1_y = 0.0f;
     
-    engine_physics_rect_rect_get_contacting(abs_a_position_x, abs_a_position_y, -contact->collision_normal_x, -contact->collision_normal_y, &a_max_proj_vertex_x, &a_max_proj_vertex_y, &a_edge_v0_x, &a_edge_v0_y, &a_edge_v1_x, &a_edge_v1_y, physics_rectangle_a->vertices_x, physics_rectangle_a->vertices_y);
-    engine_physics_rect_rect_get_contacting(abs_b_position_x, abs_b_position_y,  contact->collision_normal_x,  contact->collision_normal_y, &b_max_proj_vertex_x, &b_max_proj_vertex_y, &b_edge_v0_x, &b_edge_v0_y, &b_edge_v1_x, &b_edge_v1_y, physics_rectangle_b->vertices_x, physics_rectangle_b->vertices_y);
+    float node_a_vertices_x[4];
+    float node_a_vertices_y[4];
+
+    float node_a_normals_x[2];
+    float node_a_normals_y[2];
+
+    float node_b_vertices_x[4];
+    float node_b_vertices_y[4];
+
+    float node_b_normals_x[2];
+    float node_b_normals_y[2];
+
+    engine_physics_rectangle_2d_node_calculate(physics_node_base_a, node_a_vertices_x, node_a_vertices_y, node_a_normals_x, node_a_normals_y, 0.0f);
+    engine_physics_rectangle_2d_node_calculate(physics_node_base_b, node_b_vertices_x, node_b_vertices_y, node_b_normals_x, node_b_normals_y, 0.0f);
+
+    engine_physics_rect_rect_get_contacting(abs_a_position_x, abs_a_position_y, -contact->collision_normal_x, -contact->collision_normal_y, &a_max_proj_vertex_x, &a_max_proj_vertex_y, &a_edge_v0_x, &a_edge_v0_y, &a_edge_v1_x, &a_edge_v1_y, node_a_vertices_x, node_a_vertices_y);
+    engine_physics_rect_rect_get_contacting(abs_b_position_x, abs_b_position_y,  contact->collision_normal_x,  contact->collision_normal_y, &b_max_proj_vertex_x, &b_max_proj_vertex_y, &b_edge_v0_x, &b_edge_v0_y, &b_edge_v1_x, &b_edge_v1_y, node_b_vertices_x, node_b_vertices_y);
 
     // Already know that the intersection will happen, just need to handle case
     // where the two edges can be exactly parallel. Project edges onto this parallel
@@ -242,7 +254,6 @@ void engine_physics_rect_rect_get_contact(contact_t *contact, float abs_a_positi
 
 
 void engine_physics_rect_circle_get_contact(contact_t *contact, float circle_to_vert_axis_x, float circle_to_vert_axis_y, float abs_rectangle_pos_x, float abs_rectangle_pos_y, float abs_circle_pos_x, float abs_circle_pos_y, engine_physics_node_base_t *physics_node_base_rectangle, engine_physics_node_base_t *physics_node_base_circle){
-    engine_physics_rectangle_2d_node_class_obj_t *physics_rectangle = physics_node_base_rectangle->unique_data;
     engine_physics_circle_2d_node_class_obj_t *physics_circle = physics_node_base_circle->unique_data;
 
     float a_max_proj_vertex_x = 0.0f;
@@ -253,7 +264,15 @@ void engine_physics_rect_circle_get_contact(contact_t *contact, float circle_to_
     float a_edge_v1_x = 0.0f;
     float a_edge_v1_y = 0.0f;
 
-    engine_physics_rect_rect_get_contacting(abs_rectangle_pos_x, abs_rectangle_pos_y, -contact->collision_normal_x, -contact->collision_normal_y, &a_max_proj_vertex_x, &a_max_proj_vertex_y, &a_edge_v0_x, &a_edge_v0_y, &a_edge_v1_x, &a_edge_v1_y, physics_rectangle->vertices_x, physics_rectangle->vertices_y);
+    float node_rect_vertices_x[4];
+    float node_rect_vertices_y[4];
+
+    float node_rect_normals_x[2];
+    float node_rect_normals_y[2];
+
+    engine_physics_rectangle_2d_node_calculate(physics_node_base_rectangle, node_rect_vertices_x, node_rect_vertices_y, node_rect_normals_x, node_rect_normals_y, 0.0f);
+
+    engine_physics_rect_rect_get_contacting(abs_rectangle_pos_x, abs_rectangle_pos_y, -contact->collision_normal_x, -contact->collision_normal_y, &a_max_proj_vertex_x, &a_max_proj_vertex_y, &a_edge_v0_x, &a_edge_v0_y, &a_edge_v1_x, &a_edge_v1_y, node_rect_vertices_x, node_rect_vertices_y);
     
     float circle_radius = mp_obj_get_float(physics_circle->radius);
 
@@ -275,17 +294,16 @@ bool engine_physics_check_rect_rect_collision(engine_node_base_t *node_base_a, e
     engine_physics_node_base_t *physics_node_base_a = node_base_a->node;
     engine_physics_node_base_t *physics_node_base_b = node_base_b->node;
 
-    engine_physics_rectangle_2d_node_class_obj_t *physics_rectangle_a = physics_node_base_a->unique_data;
-    engine_physics_rectangle_2d_node_class_obj_t *physics_rectangle_b = physics_node_base_b->unique_data;
-
-    // What if these are children of other nodes? Should this be in absolute? TODO
     float abs_a_position_x;
     float abs_a_position_y;
     float abs_b_position_x;
     float abs_b_position_y;
 
-    node_base_get_child_absolute_xy(&abs_a_position_x, &abs_a_position_y, NULL, NULL, node_base_a);
-    node_base_get_child_absolute_xy(&abs_b_position_x, &abs_b_position_y, NULL, NULL, node_base_b);
+    float node_base_a_rotation = 0.0f;
+    float node_base_b_rotation = 0.0f;
+
+    node_base_get_child_absolute_xy(&abs_a_position_x, &abs_a_position_y, &node_base_a_rotation, NULL, node_base_a);
+    node_base_get_child_absolute_xy(&abs_b_position_x, &abs_b_position_y, &node_base_b_rotation, NULL, node_base_b);
 
     float axis_x = 0.0f;
     float axis_y = 0.0f;
@@ -295,13 +313,28 @@ bool engine_physics_check_rect_rect_collision(engine_node_base_t *node_base_a, e
     float b_max = 0.0f;
     contact->collision_normal_penetration = FLT_MAX;
 
+    float node_a_vertices_x[4];
+    float node_a_vertices_y[4];
+
+    float node_a_normals_x[2];
+    float node_a_normals_y[2];
+
+    float node_b_vertices_x[4];
+    float node_b_vertices_y[4];
+
+    float node_b_normals_x[2];
+    float node_b_normals_y[2];
+
+    engine_physics_rectangle_2d_node_calculate(physics_node_base_a, node_a_vertices_x, node_a_vertices_y, node_a_normals_x, node_a_normals_y, node_base_a_rotation);
+    engine_physics_rectangle_2d_node_calculate(physics_node_base_b, node_b_vertices_x, node_b_vertices_y, node_b_normals_x, node_b_normals_y, node_base_b_rotation);
+
     // https://textbooks.cs.ksu.edu/cis580/04-collisions/04-separating-axis-theorem/index.html#:~:text=it%20would%20look%20like%20something%20like%20this%3A
     // Only need to test two axes since rectangles have parallel directions: https://www.gamedev.net/tutorials/programming/general-and-gameplay-programming/2D-rotated-rectangle-collision-r2604/#:~:text=This%20gives%20us-,four%20axes,-%2C%20each%20of%20which
     for(uint8_t inx=0; inx<2; inx++){
-        axis_x = physics_rectangle_a->normals_x[inx];
-        axis_y = physics_rectangle_a->normals_y[inx];
-        engine_physics_rect_find_min_max_projection(abs_a_position_x, abs_a_position_y, physics_rectangle_a->vertices_x, physics_rectangle_a->vertices_y, axis_x, axis_y, &a_min, &a_max);
-        engine_physics_rect_find_min_max_projection(abs_b_position_x, abs_b_position_y, physics_rectangle_b->vertices_x, physics_rectangle_b->vertices_y, axis_x, axis_y, &b_min, &b_max);
+        axis_x = node_a_normals_x[inx];
+        axis_y = node_a_normals_y[inx];
+        engine_physics_rect_find_min_max_projection(abs_a_position_x, abs_a_position_y, node_a_vertices_x, node_a_vertices_y, axis_x, axis_y, &a_min, &a_max);
+        engine_physics_rect_find_min_max_projection(abs_b_position_x, abs_b_position_y, node_b_vertices_x, node_b_vertices_y, axis_x, axis_y, &b_min, &b_max);
 
         if(a_max < b_min || b_max < a_min){
             // No collision
@@ -317,10 +350,10 @@ bool engine_physics_check_rect_rect_collision(engine_node_base_t *node_base_a, e
         }
     }
     for(uint8_t inx=0; inx<2; inx++){
-        axis_x = physics_rectangle_b->normals_x[inx];
-        axis_y = physics_rectangle_b->normals_y[inx];
-        engine_physics_rect_find_min_max_projection(abs_a_position_x, abs_a_position_y, physics_rectangle_a->vertices_x, physics_rectangle_a->vertices_y, axis_x, axis_y, &a_min, &a_max);
-        engine_physics_rect_find_min_max_projection(abs_b_position_x, abs_b_position_y, physics_rectangle_b->vertices_x, physics_rectangle_b->vertices_y, axis_x, axis_y, &b_min, &b_max);
+        axis_x = node_b_normals_x[inx];
+        axis_y = node_b_normals_y[inx];
+        engine_physics_rect_find_min_max_projection(abs_a_position_x, abs_a_position_y, node_a_vertices_x, node_a_vertices_y, axis_x, axis_y, &a_min, &a_max);
+        engine_physics_rect_find_min_max_projection(abs_b_position_x, abs_b_position_y, node_b_vertices_x, node_b_vertices_y, axis_x, axis_y, &b_min, &b_max);
 
         if(a_max < b_min || b_max < a_min){
             // No collision
@@ -345,7 +378,10 @@ bool engine_physics_check_rect_rect_collision(engine_node_base_t *node_base_a, e
     // Do not resolve if velocities are separating (this does mean
     // objects inside each other will not collide until a non separating
     // velocity is set)
-    if(engine_physics_check_velocities_separating(contact)){
+    bool physics_node_a_dynamic = mp_obj_get_int(physics_node_base_a->dynamic);
+    bool physics_node_b_dynamic = mp_obj_get_int(physics_node_base_b->dynamic);
+
+    if((physics_node_a_dynamic || physics_node_b_dynamic) && engine_physics_check_velocities_separating(contact)){
         return false;
     }
 
@@ -359,7 +395,6 @@ bool engine_physics_check_rect_circle_collision(engine_node_base_t *rect_node_ba
     engine_physics_node_base_t *physics_rect_node_base = rect_node_base->node;
     engine_physics_node_base_t *physics_circle_node_base = circle_node_base->node;
 
-    engine_physics_rectangle_2d_node_class_obj_t *physics_rectangle = physics_rect_node_base->unique_data;
     engine_physics_circle_2d_node_class_obj_t *physics_circle = physics_circle_node_base->unique_data;
 
     float abs_rectangle_pos_x = 0.0f;
@@ -367,8 +402,19 @@ bool engine_physics_check_rect_circle_collision(engine_node_base_t *rect_node_ba
     float abs_circle_pos_x = 0.0f;
     float abs_circle_pos_y = 0.0f;
 
-    node_base_get_child_absolute_xy(&abs_rectangle_pos_x, &abs_rectangle_pos_y, NULL, NULL, rect_node_base);
-    node_base_get_child_absolute_xy(&abs_circle_pos_x, &abs_circle_pos_y, NULL, NULL, circle_node_base);
+    float rect_node_rotation = 0.0f;
+    float circle_node_rotation = 0.0f;
+
+    node_base_get_child_absolute_xy(&abs_rectangle_pos_x, &abs_rectangle_pos_y, &rect_node_rotation, NULL, rect_node_base);
+    node_base_get_child_absolute_xy(&abs_circle_pos_x, &abs_circle_pos_y, &circle_node_rotation, NULL, circle_node_base);
+
+    float node_rect_vertices_x[4];
+    float node_rect_vertices_y[4];
+
+    float node_rect_normals_x[2];
+    float node_rect_normals_y[2];
+
+    engine_physics_rectangle_2d_node_calculate(physics_rect_node_base, node_rect_vertices_x, node_rect_vertices_y, node_rect_normals_x, node_rect_normals_y, rect_node_rotation);
     
     float circle_radius = mp_obj_get_float(physics_circle->radius);
 
@@ -378,8 +424,8 @@ bool engine_physics_check_rect_circle_collision(engine_node_base_t *rect_node_ba
     float closest_delta_y = 0;
 
     for(uint8_t ivx=0; ivx<4; ivx++){
-        float vert_x = abs_rectangle_pos_x + physics_rectangle->vertices_x[ivx];
-        float vert_y = abs_rectangle_pos_y + physics_rectangle->vertices_y[ivx];
+        float vert_x = abs_rectangle_pos_x + node_rect_vertices_x[ivx];
+        float vert_y = abs_rectangle_pos_y + node_rect_vertices_y[ivx];
         
         // Get the position difference between rect vertex and circle
         // (rect vertices are rotated when the rect's rotation changes)
@@ -424,9 +470,9 @@ bool engine_physics_check_rect_circle_collision(engine_node_base_t *rect_node_ba
     // https://textbooks.cs.ksu.edu/cis580/04-collisions/04-separating-axis-theorem/index.html#:~:text=it%20would%20look%20like%20something%20like%20this%3A
     // Only need to test two axes since rectangles have parallel directions: https://www.gamedev.net/tutorials/programming/general-and-gameplay-programming/2D-rotated-rectangle-collision-r2604/#:~:text=This%20gives%20us-,four%20axes,-%2C%20each%20of%20which
     for(uint8_t inx=0; inx<2; inx++){
-        axis_x = physics_rectangle->normals_x[inx];
-        axis_y = physics_rectangle->normals_y[inx];
-        engine_physics_rect_find_min_max_projection(abs_rectangle_pos_x, abs_rectangle_pos_y, physics_rectangle->vertices_x, physics_rectangle->vertices_y, axis_x, axis_y, &a_min, &a_max);
+        axis_x = node_rect_normals_x[inx];
+        axis_y = node_rect_normals_y[inx];
+        engine_physics_rect_find_min_max_projection(abs_rectangle_pos_x, abs_rectangle_pos_y, node_rect_vertices_x, node_rect_vertices_y, axis_x, axis_y, &a_min, &a_max);
         engine_physics_circle_find_min_max_projection(abs_circle_pos_x, abs_circle_pos_y, circle_radius, axis_x, axis_y, &b_min, &b_max);
 
         if(a_max < b_min || b_max < a_min){
@@ -452,7 +498,10 @@ bool engine_physics_check_rect_circle_collision(engine_node_base_t *rect_node_ba
     // Do not resolve if velocities are separating (this does mean
     // objects inside each other will not collide until a non separating
     // velocity is set)
-    if(engine_physics_check_velocities_separating(contact)){
+    bool physics_node_rect_dynamic = mp_obj_get_int(physics_rect_node_base->dynamic);
+    bool physics_node_circle_dynamic = mp_obj_get_int(physics_circle_node_base->dynamic);
+
+    if((physics_node_rect_dynamic || physics_node_circle_dynamic) && engine_physics_check_velocities_separating(contact)){
         return false;
     }
 
@@ -473,8 +522,11 @@ bool engine_physics_check_circle_circle_collision(engine_node_base_t *node_base_
     float abs_shape_b_pos_x = 0.0f;
     float abs_shape_b_pos_y = 0.0f;
 
-    node_base_get_child_absolute_xy(&abs_shape_a_pos_x, &abs_shape_a_pos_y, NULL, NULL, node_base_a);
-    node_base_get_child_absolute_xy(&abs_shape_b_pos_x, &abs_shape_b_pos_y, NULL, NULL, node_base_b);
+    float node_a_rotation = 0.0f;
+    float node_b_rotation = 0.0f;
+
+    node_base_get_child_absolute_xy(&abs_shape_a_pos_x, &abs_shape_a_pos_y, &node_a_rotation, NULL, node_base_a);
+    node_base_get_child_absolute_xy(&abs_shape_b_pos_x, &abs_shape_b_pos_y, &node_b_rotation, NULL, node_base_b);
 
     float a_radius = mp_obj_get_float(physics_circle_a->radius);
     float b_radius = mp_obj_get_float(physics_circle_b->radius);
@@ -515,7 +567,10 @@ bool engine_physics_check_circle_circle_collision(engine_node_base_t *node_base_
     // Do not resolve if velocities are separating (this does mean
     // objects inside each other will not collide until a non separating
     // velocity is set)
-    if(engine_physics_check_velocities_separating(contact)){
+    bool physics_node_a_dynamic = mp_obj_get_int(physics_node_base_a->dynamic);
+    bool physics_node_b_dynamic = mp_obj_get_int(physics_node_base_b->dynamic);
+
+    if((physics_node_a_dynamic || physics_node_b_dynamic) && engine_physics_check_velocities_separating(contact)){
         return false;
     }
 
