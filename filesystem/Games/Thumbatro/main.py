@@ -11,8 +11,10 @@ import random
 import time
 
 # Load card sprite texture
+
+font = FontResource("munro-narrow_10.bmp")
 cards_texture = TextureResource("BiggerCards2ext.bmp")
-font = FontResource("../../assets/outrunner_outline.bmp")
+background = TextureResource("thumbatrobackground.bmp")
 
 tweens = []
 
@@ -42,7 +44,7 @@ class CardSprite(Sprite2DNode):
         self.in_hand = True
         self.played = False
         self.discarded = False
-        self.set_layer(3)
+        self.set_layer(4)
         self.base_score_bonus = base_score_bonus
         self.multiplier_bonus = multiplier_bonus
         self.is_wildcard_suit = is_wildcard_suit
@@ -55,7 +57,7 @@ class CardSprite(Sprite2DNode):
         self.background.frame_current_y = 4
         self.background.texture = cards_texture
         self.background.playing = False
-        self.background.set_layer(1)
+        self.background.set_layer(2)
         self.background.transparent_color = Color(0x0400)
         self.add_child(self.background)
 
@@ -68,7 +70,7 @@ class CardSprite(Sprite2DNode):
             self.bonus_overlay.frame_current_y = 4
             self.bonus_overlay.texture = cards_texture
             self.bonus_overlay.playing = False
-            self.bonus_overlay.set_layer(2)
+            self.bonus_overlay.set_layer(3)
             self.bonus_overlay.opacity = 0.4
             self.bonus_overlay.transparent_color = Color(0x0400)
             self.add_child(self.bonus_overlay)
@@ -81,7 +83,7 @@ class CardSprite(Sprite2DNode):
             self.bonus_overlay.frame_current_y = 4
             self.bonus_overlay.texture = cards_texture
             self.bonus_overlay.playing = False
-            self.bonus_overlay.set_layer(2)
+            self.bonus_overlay.set_layer(3)
             self.bonus_overlay.transparent_color = Color(0x0400)
             self.add_child(self.bonus_overlay)
         
@@ -93,7 +95,7 @@ class CardSprite(Sprite2DNode):
             self.bonus_overlay.frame_current_y = 4
             self.bonus_overlay.texture = cards_texture
             self.bonus_overlay.playing = False
-            self.bonus_overlay.set_layer(2)
+            self.bonus_overlay.set_layer(3)
             self.bonus_overlay.transparent_color = Color(0x0400)
             self.add_child(self.bonus_overlay)
 
@@ -106,7 +108,7 @@ class CardSprite(Sprite2DNode):
             self.bonus_overlay.frame_current_y = 4
             self.bonus_overlay.texture = cards_texture
             self.bonus_overlay.playing = False
-            self.bonus_overlay.set_layer(2)
+            self.bonus_overlay.set_layer(3)
             self.bonus_overlay.transparent_color = Color(0x0400)
             self.add_child(self.bonus_overlay)
 
@@ -189,26 +191,51 @@ class PokerGame(Rectangle2DNode):
         self.is_booster_wait = False
         self.hand_display_time = None
         self.game_over = False
+        self.background = Sprite2DNode(Vector2(63, 63))
+        self.background.frame_count_x = 1
+        self.background.frame_count_y = 1
+        self.background.texture = background
+        self.background.playing = False
+        self.background.set_layer(0)
+        self.add_child(self.background)
 
         # Text nodes for displaying scores
-        self.base_score_text = Text2DNode(Vector2(74, 20), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
-        self.round_score_text = Text2DNode(Vector2(74, 30), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
-        self.total_score_text = Text2DNode(Vector2(54, 40), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
-        self.best_hand_text = Text2DNode(Vector2(64, 50), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
-        self.remaining_hands_text = Text2DNode(Vector2(80, 5), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
+        self.base_score_text = Text2DNode(Vector2(51, 24), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
+        self.base_score_text.set_layer(1)
+        self.mult_score_text = Text2DNode(Vector2(85, 24), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
+        self.mult_score_text.set_layer(1)
+        self.round_text = Text2DNode(Vector2(110, 75), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
+        self.round_text.set_layer(1)
+        self.hand_type_text = Text2DNode(Vector2(80, 37), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
+        self.hand_type_text.set_layer(1)
+        self.total_score_text = Text2DNode(Vector2(68, 10), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
+        self.total_score_text.set_layer(1)
+        self.best_hand_text = Text2DNode(Vector2(44, 57), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
+        self.best_hand_text.set_layer(1)
+        self.remaining_hands_text = Text2DNode(Vector2(104, 59), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
+        self.remaining_hands_text.set_layer(1)
+        self.remaining_discard_text = Text2DNode(Vector2(118, 59), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
+        self.remaining_discard_text.set_layer(1)
 
-        self.total_score_text.text = f"Total: {self.score}/{self.target_score}"
+        self.total_score_text.text = f"{self.score}/{self.target_score}"
+        self.hand_type_text.text = f"Play/Discard 5 cards"
 
         self.add_child(self.base_score_text)
-        self.add_child(self.round_score_text)
+        self.add_child(self.round_text)
         self.add_child(self.total_score_text)
         self.add_child(self.remaining_hands_text)
+        self.add_child(self.remaining_discard_text)
+        self.add_child(self.mult_score_text)
+        self.add_child(self.hand_type_text)
+        self.add_child(self.best_hand_text)
 
         self.update_joker_display()
         self.update_game_info()
 
     def update_game_info(self):  # Add this method
-        self.remaining_hands_text.text = f"L{self.current_game}: H:{4 - self.hands_played} D:{self.discard_limit}"
+        self.remaining_hands_text.text = f"{4 - self.hands_played}"
+        self.remaining_discard_text.text = f"{self.discard_limit}"
+        self.round_text.text = f"{self.current_game}"
 
     def create_initial_collection(self):
         collection = []
@@ -342,7 +369,7 @@ class PokerGame(Rectangle2DNode):
         if self.discard_limit > 0:
             for card in self.selected_cards:
                 self.hand.remove(card)
-                card.destroy()
+                card.mark_destroy()
                 card.mark_discarded()
             new_cards = self.deck.draw_cards(len(self.selected_cards))
             self.hand.extend(new_cards)
@@ -374,51 +401,67 @@ class PokerGame(Rectangle2DNode):
         is_straight = self.is_straight(hand_ranks)
         base_score = 0
         multiplier = 1
+        hand_name = None
 
         if is_flush and 5 in rank_count.values():
             base_score = 160  # Flush five
             multiplier = 16
+            hand_name="Flush five"
         elif is_flush and 3 in rank_count.values() and 2 in rank_count.values():
             base_score = 140  # Flush house
             multiplier = 14
+            hand_name="Flush house"
         elif 5 in rank_count.values():
             base_score = 120  # Five of a Kind
             multiplier = 12
+            hand_name="5 of a Kind"
         elif is_flush and is_straight and (12 in hand_ranks or 14 in hand_ranks):
             base_score = 100  # Royal Flush
             multiplier = 10
+            hand_name="Royal Flush"
         elif is_flush and is_straight:
             base_score = 100  # Straight Flush
             multiplier = 8
+            hand_name="Straight Flush"
         elif 4 in rank_count.values():
             base_score = 60  # Four of a Kind
             multiplier = 7
+            hand_name="4 of a Kind"
         elif 3 in rank_count.values() and 2 in rank_count.values():
             base_score = 40  # Full House
             multiplier = 4
+            hand_name="Full House"
         elif is_flush:
             base_score = 35  # Flush
             multiplier = 4
+            hand_name="Flush"
         elif is_straight:
             base_score = 30  # Straight
             multiplier = 4
+            hand_name="Straight"
         elif 3 in rank_count.values():
             base_score = 30  # Three of a Kind
             multiplier = 3
+            hand_name="3 of a Kind"
         elif list(rank_count.values()).count(2) == 2:
             base_score = 20  # Two Pair
             multiplier = 2
+            hand_name="Two Pair"
         elif 2 in rank_count.values():
             base_score = 10  # One Pair
             multiplier = 2
+            hand_name="One Pair"
         else:
             base_score = 5  # High Card
             multiplier = 1
+            hand_name="High Card"
 
         base_score_text = f"+{base_score}"
         multiplier_text = f"x{multiplier}"
-        self.display_score_animation(base_score_text, Vector2(54,0), Vector2(self.base_score_text.position.x-20,self.base_score_text.position.y), Color(0x001F))
-        self.display_score_animation(multiplier_text, Vector2(74,0), Vector2(self.base_score_text.position.x+20,self.base_score_text.position.y), Color(0xF800))
+        
+
+        self.display_score_animation(base_score_text, Vector2(54,0), self.base_score_text.position, Color(0x001F))
+        self.display_score_animation(multiplier_text, Vector2(74,0), self.mult_score_text.position, Color(0xF800))
 
         # Add the rank of each card to the base score
         base_score += sum(hand_ranks)
@@ -430,19 +473,19 @@ class PokerGame(Rectangle2DNode):
                 base_score_text = f"+{card.base_score_bonus + card.rank_value}"
                 # Display base score animation in blue
                 base_start_position = Vector2(card.position.x, card.position.y - 10)  # Shift up by 20 pixels
-                self.display_score_animation(base_score_text, base_start_position, Vector2(self.base_score_text.position.x-20,self.base_score_text.position.y), Color(0x001F))
+                self.display_score_animation(base_score_text, base_start_position, self.base_score_text.position, Color(0x001F))
             else:
                 base_score_text = f"+{card.rank_value}"
                 # Display base score animation in blue
                 base_start_position = Vector2(card.position.x, card.position.y - 10)  # Shift up by 20 pixels
-                self.display_score_animation(base_score_text, base_start_position, Vector2(self.base_score_text.position.x-20,self.base_score_text.position.y), Color(0x001F))
+                self.display_score_animation(base_score_text, base_start_position, self.base_score_text.position, Color(0x001F))
             
             if card.multiplier_bonus > 0:
                 multiplier += card.multiplier_bonus
                 multiplier_text = f"x{card.multiplier_bonus}"
                 # Display multiplier animation in red
                 multiplier_start_position = Vector2(card.position.x, card.position.y + 10)  # Shift down by 20 pixels
-                self.display_score_animation(multiplier_text, multiplier_start_position, Vector2(self.base_score_text.position.x+20,self.base_score_text.position.y), Color(0xF800))
+                self.display_score_animation(multiplier_text, multiplier_start_position, self.mult_score_text.position, Color(0xF800))
 
         # Add joker bonuses and show score animations
         for joker in self.jokers:
@@ -451,14 +494,14 @@ class PokerGame(Rectangle2DNode):
                 base_score_text = f"+{joker.base_score_bonus}"
                 # Display base score animation in blue
                 base_start_position = Vector2(joker.position.x, joker.position.y - 10)  # Shift up by 20 pixels
-                self.display_score_animation(base_score_text, base_start_position, Vector2(self.base_score_text.position.x-20,self.base_score_text.position.y), Color(0x001F))
+                self.display_score_animation(base_score_text, base_start_position, self.base_score_text.position, Color(0x001F))
             
             if joker.multiplier_bonus > 0:
                 multiplier += joker.multiplier_bonus
                 multiplier_text = f"x{joker.multiplier_bonus}"
                 # Display multiplier animation in red
                 multiplier_start_position = Vector2(joker.position.x, joker.position.y + 10)  # Shift down by 20 pixels
-                self.display_score_animation(multiplier_text, multiplier_start_position, Vector2(self.base_score_text.position.x+20,self.base_score_text.position.y), Color(0xF800))
+                self.display_score_animation(multiplier_text, multiplier_start_position,self.mult_score_text.position, Color(0xF800))
 
 
 
@@ -470,10 +513,11 @@ class PokerGame(Rectangle2DNode):
             self.highest_individual_hand_score = final_score
 
         # Update text nodes
-        self.base_score_text.text = f"{base_score} X {multiplier}"
-        self.round_score_text.text = f"Score: {final_score}"
+        self.base_score_text.text = f"{base_score}"
+        self.mult_score_text.text = f"{multiplier}"
+        self.hand_type_text.text = f"{hand_name}"
         self.score += final_score
-        self.total_score_text.text = f"Total: {self.score}/{self.target_score}"
+        self.total_score_text.text = f"{self.score}/{self.target_score}"
 
     def is_straight(self, ranks):
         ranks = sorted(set(ranks))
@@ -528,8 +572,8 @@ class PokerGame(Rectangle2DNode):
         for card in self.played_cards:
             card.hide()
         self.hand_indicator.opacity = 0
-        self.base_score_text.text = f"Game Over!"
-        self.round_score_text.text = f"Level: {self.current_game}"
+        self.hand_type_text.text = f"Game Over!"
+        self.round_text.text = f"{self.current_game}"
         self.total_score_text.text = f"Score: {self.score}"
         self.best_hand_text.text = f"Best Hand: {self.highest_individual_hand_score}"
 
@@ -683,7 +727,7 @@ class PokerGame(Rectangle2DNode):
     def start_new_game(self):
         self.score = 0
         self.target_score += 500  # Increase target score for next game
-        self.total_score_text.text = f"Total: {self.score}/{self.target_score}"
+        self.total_score_text.text = f"{self.score}/{self.target_score}"
         self.hands_played = 0
         self.discard_limit = 4  # Reset discard limit
         self.current_game += 1
