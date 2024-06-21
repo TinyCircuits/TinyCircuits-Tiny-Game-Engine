@@ -115,12 +115,11 @@ void physics_rectangle_2d_node_class_draw(mp_obj_t rectangle_node_base_obj, mp_o
 }
 
 
-void engine_physics_rectangle_2d_node_calculate(engine_physics_node_base_t *physics_node_base, float *vertices_x, float *vertices_y, float *normals_x, float *normals_y, float extra_rotation){
+void engine_physics_rectangle_2d_node_calculate(engine_physics_node_base_t *physics_node_base, float *vertices_x, float *vertices_y, float *normals_x, float *normals_y, float rotation){
     engine_physics_rectangle_2d_node_class_obj_t *self = physics_node_base->unique_data;
 
     float half_width = mp_obj_get_float(self->width) * 0.5f;
     float half_height = mp_obj_get_float(self->height) * 0.5f;
-    float rotation = extra_rotation;
 
     float x_traversal_cos = cosf(rotation) * half_width;
     float x_traversal_sin = sinf(rotation) * half_width;
@@ -413,7 +412,7 @@ static mp_attr_fun_t physics_rectangle_2d_node_class_attr(mp_obj_t self_in, qstr
     PARAM: [type={ref_link:Vector2}]                     [name=gravity_scale]                               [value={ref_link:Vector2}]
     PARAM: [type=boolean]                                [name=outline]                                     [value=True or False (default: False)]
     PARAM: [type={ref_link:Color}]                       [name=outline_color]                               [value={ref_link:Color}]
-    PARAM: [type=int]                                    [name=collision_layer]                             [value=-32768 ~ 32767]
+    PARAM: [type=int]                                    [name=collision_mask]                             [value=-32768 ~ 32767]
     ATTR:  [type=function]                               [name={ref_link:add_child}]                        [value=function]
     ATTR:  [type=function]                               [name={ref_link:get_child}]                        [value=function]
     ATTR:  [type=function]                               [name={ref_link:get_child_count}]                  [value=function]
@@ -437,7 +436,7 @@ static mp_attr_fun_t physics_rectangle_2d_node_class_attr(mp_obj_t self_in, qstr
     ATTR:  [type={ref_link:Vector2}]                     [name=gravity_scale]                               [value={ref_link:Vector2}]
     ATTR:  [type=boolean]                                [name=outline]                                     [value=True or False (default: False)]
     ATTR:  [type={ref_link:Color}]                       [name=outline_color]                               [value={ref_link:Color}]
-    ATTR:  [type=int]                                    [name=collision_layer]                             [value=-32768 ~ 32767]
+    ATTR:  [type=int]                                    [name=collision_mask]                             [value=-32768 ~ 32767]
     ATTR:  [type=function]                               [name={ref_link:on_collide}]                       [value=function]
     ATTR:  [type=function]                               [name={ref_link:on_separate}]                      [value=function]
     OVRR:  [type=function]                               [name={ref_link:physics_tick}]                     [value=function]
@@ -464,10 +463,10 @@ mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n
         { MP_QSTR_gravity_scale,    MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_outline,          MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_outline_color,    MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_collision_layer,  MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_collision_mask,   MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
-    enum arg_ids {child_class, position, width, height, velocity, angular_velocity, rotation, density, friction, bounciness, dynamic, solid, gravity_scale, outline, outline_color, collision_layer};
+    enum arg_ids {child_class, position, width, height, velocity, angular_velocity, rotation, density, friction, bounciness, dynamic, solid, gravity_scale, outline, outline_color, collision_mask};
     bool inherited = false;
 
     // If there is one positional argument and it isn't the first 
@@ -501,7 +500,7 @@ mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n
     if(parsed_args[gravity_scale].u_obj == MP_OBJ_NULL) parsed_args[gravity_scale].u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)});
     if(parsed_args[outline].u_obj == MP_OBJ_NULL) parsed_args[outline].u_obj = mp_obj_new_int(0);
     if(parsed_args[outline_color].u_obj == MP_OBJ_NULL) parsed_args[outline_color].u_obj = mp_const_none;
-    if(parsed_args[collision_layer].u_obj == MP_OBJ_NULL) parsed_args[collision_layer].u_obj = mp_obj_new_int(0);
+    if(parsed_args[collision_mask].u_obj == MP_OBJ_NULL) parsed_args[collision_mask].u_obj = mp_obj_new_int(0);
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = mp_obj_malloc_with_finaliser(engine_node_base_t, &engine_physics_rectangle_2d_node_class_type);
@@ -528,7 +527,7 @@ mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n
     physics_node_base->gravity_scale = parsed_args[gravity_scale].u_obj;
     physics_node_base->outline = parsed_args[outline].u_obj;
     physics_node_base->outline_color = parsed_args[outline_color].u_obj;
-    physics_node_base->collision_layer = mp_obj_get_int(parsed_args[collision_layer].u_obj);
+    physics_node_base->collision_mask = mp_obj_get_int(parsed_args[collision_mask].u_obj);
 
     physics_node_base->physics_id = engine_physics_ids_take_available();
     physics_node_base->mass = 0.0f;

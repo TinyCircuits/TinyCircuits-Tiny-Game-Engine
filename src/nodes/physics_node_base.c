@@ -34,9 +34,35 @@ mp_obj_t physics_node_base_apply_impulse(mp_obj_t self_in, mp_obj_t impulse, mp_
 static MP_DEFINE_CONST_FUN_OBJ_3(physics_node_base_apply_impulse_obj, physics_node_base_apply_impulse);
 
 
+void set_collision_mask(uint32_t *collision_mask, mp_int_t layer, bool state){    
+    if(layer < 0 || layer > 31){
+        mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("EnginePhysics: ERROR: Layer index out of bounds, should be between 0 ~ 31 (inclusive), got %d"), layer);
+    }
+
+    BIT_SET(*collision_mask, layer, state);
+}
+
+
+mp_obj_t physics_node_base_enable_layer(mp_obj_t self_in, mp_obj_t layer_in){
+    engine_node_base_t *node_base = self_in;
+    engine_physics_node_base_t *physics_node_base = node_base->node;
+    set_collision_mask(&physics_node_base->collision_mask, mp_obj_get_int(layer_in), 1);
+    return mp_const_none;
+}
+static MP_DEFINE_CONST_FUN_OBJ_2(physics_node_base_enable_layer_obj, physics_node_base_enable_layer);
+
+
+mp_obj_t physics_node_base_disable_layer(mp_obj_t self_in, mp_obj_t layer_in){
+    engine_node_base_t *node_base = self_in;
+    engine_physics_node_base_t *physics_node_base = node_base->node;
+    set_collision_mask(&physics_node_base->collision_mask, mp_obj_get_int(layer_in), 0);
+    return mp_const_none;
+}
+static MP_DEFINE_CONST_FUN_OBJ_2(physics_node_base_disable_layer_obj, physics_node_base_disable_layer);
+
+
 // Return `true` if handled loading the attr from internal structure, `false` otherwise
 bool physics_node_base_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_t *destination){
-    // Get the underlying structure
     engine_physics_node_base_t *self = self_node_base->node;
 
     switch(attribute){
@@ -46,6 +72,16 @@ bool physics_node_base_load_attr(engine_node_base_t *self_node_base, qstr attrib
         break;
         case MP_QSTR_apply_impulse:
             destination[0] = MP_OBJ_FROM_PTR(&physics_node_base_apply_impulse_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_enable_collision_layer:
+            destination[0] = MP_OBJ_FROM_PTR(&physics_node_base_enable_layer_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_disable_collision_layer:
+            destination[0] = MP_OBJ_FROM_PTR(&physics_node_base_disable_layer_obj);
             destination[1] = self_node_base;
             return true;
         break;
@@ -103,8 +139,8 @@ bool physics_node_base_load_attr(engine_node_base_t *self_node_base, qstr attrib
             destination[0] = self->outline_color;
             return true;
         break;
-        case MP_QSTR_collision_layer:
-            destination[0] = mp_obj_new_int(self->collision_layer);
+        case MP_QSTR_collision_mask:
+            destination[0] = mp_obj_new_int(self->collision_mask);
             return true;
         break;
         default:
@@ -136,6 +172,20 @@ bool physics_node_base_load_attr(engine_node_base_t *self_node_base, qstr attrib
     DESC: Overridable physics tick callback that happens before collision and node tick() callbacks
     PARAM: [type=object] [name=self] [value=object]
     PARAM: [type=float]  [name=dt]   [value=positive float in seconds]                                                                                                  
+    RETURN: None
+*/
+/*  --- doc ---
+    NAME: enable_collision_layer
+    ID: enable_collision_layer
+    DESC: Allow this physics node to collide with other nodes on this layer
+    PARAM: [type=int]  [name=layer]   [value=0 ~ 31]                                                                                                  
+    RETURN: None
+*/ 
+/*  --- doc ---
+    NAME: disable_collision_layer
+    ID: disable_collision_layer
+    DESC: Disallow this physics node from colliding with other nodes on this layer
+    PARAM: [type=int]  [name=layer]   [value=0 ~ 31]                                                                                                  
     RETURN: None
 */ 
 
@@ -202,8 +252,8 @@ bool physics_node_base_store_attr(engine_node_base_t *self_node_base, qstr attri
             self->outline_color = destination[1];
             return true;
         break;
-        case MP_QSTR_collision_layer:
-            self->collision_layer = mp_obj_get_int(destination[1]);
+        case MP_QSTR_collision_mask:
+            self->collision_mask = mp_obj_get_int(destination[1]);
             return true;
         break;
         default:

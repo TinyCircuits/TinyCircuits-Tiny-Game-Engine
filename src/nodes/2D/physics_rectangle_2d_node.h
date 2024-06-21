@@ -18,7 +18,7 @@ extern const mp_obj_type_t engine_physics_rectangle_2d_node_class_type;
 
 // Call this after changing the rotation of the physics
 // node so that the shape (if needed) can be updated
-void engine_physics_rectangle_2d_node_calculate(engine_physics_node_base_t *physics_node_base, float *vertices_x, float *vertices_y, float *normals_x, float *normals_y, float extra_rotation);
+void engine_physics_rectangle_2d_node_calculate(engine_physics_node_base_t *physics_node_base, float *vertices_x, float *vertices_y, float *normals_x, float *normals_y, float rotation);
 
 void physics_rectangle_2d_node_class_draw(mp_obj_t rectangle_node_base_obj, mp_obj_t camera_node);
 

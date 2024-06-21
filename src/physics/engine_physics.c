@@ -108,7 +108,7 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
     engine_physics_node_base_t *physics_node_base_b = node_base_b->node;
 
     // Do not try to collide nodes that are not on the same collision 'layer'
-    if((physics_node_base_a->collision_layer & physics_node_base_b->collision_layer) == 0){
+    if((physics_node_base_a->collision_mask & physics_node_base_b->collision_mask) == 0){
         return;
     }
 
@@ -120,20 +120,8 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
         return;
     }
 
-    contact_t contact = {
-        .collision_normal_x = 0.0f,
-        .collision_normal_y = 0.0f,
-        .collision_contact_x = 0.0f,
-        .collision_contact_y = 0.0f,
-        .collision_normal_penetration = 0.0f,
-        .moment_arm_a_x = 0.0f,
-        .moment_arm_a_y = 0.0f,
-        .moment_arm_b_x = 0.0f,
-        .moment_arm_b_y = 0.0f,
-        .contact_velocity_magnitude = 0.0f,
-        .relative_velocity_x = 0.0f,
-        .relative_velocity_y = 0.0f
-    };
+    physics_contact_t contact;
+    engine_physics_setup_contact(&contact);
 
     bool collided = false;
 
@@ -143,7 +131,12 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
     // check the correct pairing (rect vs. rect, rect vs. circle,
     // or circle vs. circle)
     if(node_base_a->type == NODE_TYPE_PHYSICS_RECTANGLE_2D && node_base_b->type == NODE_TYPE_PHYSICS_RECTANGLE_2D){
-        collided = engine_physics_check_rect_rect_collision(node_base_a, node_base_b, &contact);
+        physics_abs_rectangle_t abs_rect_a;
+        physics_abs_rectangle_t abs_rect_b;
+        engine_physics_setup_abs_rectangle(node_base_a, &abs_rect_a);
+        engine_physics_setup_abs_rectangle(node_base_b, &abs_rect_b);
+
+        collided = engine_physics_check_rect_rect_collision(&abs_rect_a, &abs_rect_b, &contact);
     }else if((node_base_a->type == NODE_TYPE_PHYSICS_RECTANGLE_2D && node_base_b->type == NODE_TYPE_PHYSICS_CIRCLE_2D) ||
              (node_base_a->type == NODE_TYPE_PHYSICS_CIRCLE_2D    && node_base_b->type == NODE_TYPE_PHYSICS_RECTANGLE_2D)){
 
@@ -158,9 +151,19 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
             physics_node_base_b = node_base_b->node;
         }
 
-        collided = engine_physics_check_rect_circle_collision(node_base_a, node_base_b, &contact);
+        physics_abs_rectangle_t abs_rect;
+        physics_abs_circle_t abs_circle;
+        engine_physics_setup_abs_rectangle(node_base_a, &abs_rect);
+        engine_physics_setup_abs_circle(node_base_b, &abs_circle);
+
+        collided = engine_physics_check_rect_circle_collision(&abs_rect, &abs_circle, &contact);
     }else if(node_base_a->type == NODE_TYPE_PHYSICS_CIRCLE_2D && node_base_b->type == NODE_TYPE_PHYSICS_CIRCLE_2D){
-        collided = engine_physics_check_circle_circle_collision(node_base_a, node_base_b, &contact);
+        physics_abs_circle_t abs_circle_a;
+        physics_abs_circle_t abs_circle_b;
+        engine_physics_setup_abs_circle(node_base_a, &abs_circle_a);
+        engine_physics_setup_abs_circle(node_base_b, &abs_circle_b);
+
+        collided = engine_physics_check_circle_circle_collision(&abs_circle_a, &abs_circle_b, &contact);
     }else{
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EnginePhysics: ERROR: Unknown collider pair collision check!"));
     }

@@ -26,7 +26,7 @@ typedef struct{
     mp_obj_t outline;
     mp_obj_t outline_color;
 
-    int16_t collision_layer;
+    uint32_t collision_mask;
     bool was_colliding; // Used for calling `on_separate_cb` internally
     bool colliding;     // Used internally and exposed to users
 
