@@ -17,6 +17,7 @@
 #include "physics/engine_physics.h"
 #include "physics/engine_physics_ids.h"
 #include "engine_collections.h"
+#include "draw/engine_color.h"
 
 void physics_circle_2d_node_class_draw(mp_obj_t circle_node_base_obj, mp_obj_t camera_node){
     engine_node_base_t *circle_node_base = circle_node_base_obj;
@@ -36,6 +37,12 @@ void physics_circle_2d_node_class_draw(mp_obj_t circle_node_base_obj, mp_obj_t c
     float camera_zoom = mp_obj_get_float(camera->zoom);
 
     float circle_radius =  mp_obj_get_float(physics_circle_2d_node->radius);
+    uint16_t color = 0xffff;
+
+    if(physics_node_base->outline_color != mp_const_none){
+        color_class_obj_t *outline_color = physics_node_base->outline_color;
+        color = outline_color->value;
+    }
     
     float circle_resolved_hierarchy_x = 0.0f;
     float circle_resolved_hierarchy_y = 0.0f;
@@ -80,7 +87,7 @@ void physics_circle_2d_node_class_draw(mp_obj_t circle_node_base_obj, mp_obj_t c
 
     engine_shader_t *shader = engine_get_builtin_shader(EMPTY_SHADER);
 
-    engine_draw_outline_circle(0xffff, floorf(circle_rotated_x), floorf(circle_rotated_y), circle_radius, 1.0f, shader);
+    engine_draw_outline_circle(color, floorf(circle_rotated_x), floorf(circle_rotated_y), circle_radius, 1.0f, shader);
 }
 
 
@@ -279,17 +286,21 @@ static mp_attr_fun_t physics_circle_2d_node_class_attr(mp_obj_t self_in, qstr at
     PARAM: [type=boolean]                                [name=solid]                                       [value=True or False]
     PARAM: [type={ref_link:Vector2}]                     [name=gravity_scale]                               [value={ref_link:Vector2}]
     PARAM: [type=boolean]                                [name=outline]                                     [value=True or False (default: False)]
+    PARAM: [type={ref_link:Color}]                       [name=outline_color]                               [value={ref_link:Color}]
+    PARAM: [type=int]                                    [name=collision_mask]                              [value=32-bit bitmask (nodes with the same true bits will collide, set to 1 by default)]
     ATTR:  [type=function]                               [name={ref_link:add_child}]                        [value=function]
     ATTR:  [type=function]                               [name={ref_link:get_child}]                        [value=function]
     ATTR:  [type=function]                               [name={ref_link:get_child_count}]                  [value=function]
-    ATTR:  [type=function]                               [name={ref_link:node_base_mark_destroy}]                [value=function]
-    ATTR:  [type=function]                               [name={ref_link:node_base_mark_destroy_all}]            [value=function]
-    ATTR:  [type=function]                               [name={ref_link:node_base_mark_destroy_children}]       [value=function]
+    ATTR:  [type=function]                               [name={ref_link:node_base_mark_destroy}]           [value=function]
+    ATTR:  [type=function]                               [name={ref_link:node_base_mark_destroy_all}]       [value=function]
+    ATTR:  [type=function]                               [name={ref_link:node_base_mark_destroy_children}]  [value=function]
     ATTR:  [type=function]                               [name={ref_link:remove_child}]                     [value=function]
     ATTR:  [type=function]                               [name={ref_link:set_layer}]                        [value=function]
     ATTR:  [type=function]                               [name={ref_link:get_layer}]                        [value=function]
     ATTR:  [type=function]                               [name={ref_link:remove_child}]                     [value=function]
     ATTR:  [type=function]                               [name={ref_link:tick}]                             [value=function]
+    ATTR:  [type=function]                               [name={ref_link:enable_collision_layer}]           [value=function]
+    ATTR:  [type=function]                               [name={ref_link:disable_collision_layer}]          [value=function]
     ATTR:  [type={ref_link:Vector2}]                     [name=position]                                    [value={ref_link:Vector2}]
     ATTR:  [type=float]                                  [name=radius]                                      [value=any]
     ATTR:  [type={ref_link:Vector2}]                     [name=velocity]                                    [value={ref_link:Vector2}]
@@ -300,10 +311,14 @@ static mp_attr_fun_t physics_circle_2d_node_class_attr(mp_obj_t self_in, qstr at
     ATTR:  [type=boolean]                                [name=solid]                                       [value=True or False]
     ATTR:  [type={ref_link:Vector2}]                     [name=gravity_scale]                               [value={ref_link:Vector2}]
     ATTR:  [type=boolean]                                [name=outline]                                     [value=True or False (default: False)]
-    ATTR:  [type=function]                               [name={ref_link:collision}]                        [value=function]
+    ATTR:  [type={ref_link:Color}]                       [name=outline_color]                               [value={ref_link:Color}]
+    ATTR:  [type=int]                                    [name=collision_mask]                              [value=32-bit bitmask (nodes with the same true bits will collide, set to 1 by default)]
+    ATTR:  [type=function]                               [name={ref_link:on_collide}]                       [value=function]
+    ATTR:  [type=function]                               [name={ref_link:on_separate}]                      [value=function]
     OVRR:  [type=function]                               [name={ref_link:physics_tick}]                     [value=function]
     OVRR:  [type=function]                               [name={ref_link:tick}]                             [value=function]
-    OVRR:  [type=function]                               [name={ref_link:collision}]                        [value=function]
+    OVRR:  [type=function]                               [name={ref_link:on_collide}]                       [value=function]
+    OVRR:  [type=function]                               [name={ref_link:on_separate}]                      [value=function]
 */
 mp_obj_t physics_circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New PhysicsCircle2DNode");
@@ -322,9 +337,11 @@ mp_obj_t physics_circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_ar
         { MP_QSTR_solid,            MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_gravity_scale,    MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_outline,          MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_outline_color,    MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_collision_mask,   MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
-    enum arg_ids {child_class, position, radius, velocity, angular_velocity, rotation, density, friction, bounciness, dynamic, solid, gravity_scale, outline};
+    enum arg_ids {child_class, position, radius, velocity, angular_velocity, rotation, density, friction, bounciness, dynamic, solid, gravity_scale, outline, outline_color, collision_mask};
     bool inherited = false;
 
     // If there is one positional argument and it isn't the first 
@@ -356,6 +373,8 @@ mp_obj_t physics_circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_ar
     if(parsed_args[solid].u_obj == MP_OBJ_NULL) parsed_args[solid].u_obj = mp_obj_new_int(1);
     if(parsed_args[gravity_scale].u_obj == MP_OBJ_NULL) parsed_args[gravity_scale].u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)});
     if(parsed_args[outline].u_obj == MP_OBJ_NULL) parsed_args[outline].u_obj = mp_obj_new_int(0);
+    if(parsed_args[outline_color].u_obj == MP_OBJ_NULL) parsed_args[outline_color].u_obj = mp_const_none;
+    if(parsed_args[collision_mask].u_obj == MP_OBJ_NULL) parsed_args[collision_mask].u_obj = mp_obj_new_int(1);
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = mp_obj_malloc_with_finaliser(engine_node_base_t, &engine_physics_circle_2d_node_class_type);
@@ -381,6 +400,8 @@ mp_obj_t physics_circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_ar
     physics_node_base->solid = parsed_args[solid].u_obj;
     physics_node_base->gravity_scale = parsed_args[gravity_scale].u_obj;
     physics_node_base->outline = parsed_args[outline].u_obj;
+    physics_node_base->outline_color = parsed_args[outline_color].u_obj;
+    physics_node_base->collision_mask = mp_obj_get_int(parsed_args[collision_mask].u_obj);
 
     physics_node_base->physics_id = engine_physics_ids_take_available();
     physics_node_base->mass = 0.0f;
@@ -393,7 +414,10 @@ mp_obj_t physics_circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_ar
 
     physics_node_base->physics_tick_cb = mp_const_none;
     physics_node_base->tick_cb = mp_const_none;
-    physics_node_base->collision_cb = mp_const_none;
+    physics_node_base->on_collide_cb = mp_const_none;
+    physics_node_base->on_separate_cb = mp_const_none;
+    physics_node_base->was_colliding = false;
+    physics_node_base->colliding = false;
 
     physics_circle_2d_node->radius = parsed_args[radius].u_obj;
 
@@ -425,11 +449,18 @@ mp_obj_t physics_circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_ar
             physics_node_base->tick_cb = dest[0];
         }
 
-        mp_load_method_maybe(node_instance, MP_QSTR_collision, dest);
+        mp_load_method_maybe(node_instance, MP_QSTR_on_collide, dest);
         if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
-            physics_node_base->collision_cb = mp_const_none;
+            physics_node_base->on_collide_cb = mp_const_none;
         }else{                                                  // Likely found method (could be attribute)
-            physics_node_base->collision_cb = dest[0];
+            physics_node_base->on_collide_cb = dest[0];
+        }
+
+        mp_load_method_maybe(node_instance, MP_QSTR_on_separate, dest);
+        if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
+            physics_node_base->on_separate_cb = mp_const_none;
+        }else{                                                  // Likely found method (could be attribute)
+            physics_node_base->on_separate_cb = dest[0];
         }
 
         // Store one pointer on the instance. Need to be able to get the

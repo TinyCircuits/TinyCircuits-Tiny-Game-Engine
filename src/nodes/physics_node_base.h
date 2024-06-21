@@ -24,6 +24,11 @@ typedef struct{
     mp_obj_t gravity_scale;                 // Vector2 allowing scaling affects of gravity. Set to 0,0 for no gravity
 
     mp_obj_t outline;
+    mp_obj_t outline_color;
+
+    uint32_t collision_mask;
+    bool was_colliding; // Used for calling `on_separate_cb` internally
+    bool colliding;     // Used internally and exposed to users
 
     uint8_t physics_id;
 
@@ -40,7 +45,8 @@ typedef struct{
 
     mp_obj_t physics_tick_cb;
     mp_obj_t tick_cb;
-    mp_obj_t collision_cb;
+    mp_obj_t on_collide_cb;
+    mp_obj_t on_separate_cb;
     linked_list_node *physics_list_node;    // All physics 2d nodes get added to a list that is easy to traverse
 }engine_physics_node_base_t;
 

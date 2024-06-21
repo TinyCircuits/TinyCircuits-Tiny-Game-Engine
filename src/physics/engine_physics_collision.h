@@ -23,10 +23,35 @@ typedef struct{
 
     float relative_velocity_x;
     float relative_velocity_y;
-}contact_t;
+}physics_contact_t;
 
 
-void engine_physics_get_relative_velocity(engine_physics_node_base_t *physics_node_base_a, engine_physics_node_base_t *physics_node_base_b, contact_t *contact);
+typedef struct{
+    engine_node_base_t *node_base;
+    float abs_x;
+    float abs_y;
+    float rotation;
+    float vertices_x[4];
+    float vertices_y[4];
+    float normals_x[2];
+    float normals_y[2];
+    bool dynamic;
+}physics_abs_rectangle_t;
+
+typedef struct{
+    engine_node_base_t *node_base;
+    float abs_x;
+    float abs_y;
+    float rotation;
+    float radius;
+    bool dynamic;
+}physics_abs_circle_t;
+
+void engine_physics_setup_contact(physics_contact_t *contact);
+void engine_physics_setup_abs_rectangle(engine_node_base_t *node_base, physics_abs_rectangle_t *abs_rect);
+void engine_physics_setup_abs_circle(engine_node_base_t *node_base, physics_abs_circle_t *abs_circle);
+
+void engine_physics_get_relative_velocity(engine_physics_node_base_t *physics_node_base_a, engine_physics_node_base_t *physics_node_base_b, physics_contact_t *contact);
 
 
 // https://textbooks.cs.ksu.edu/cis580/04-collisions/04-separating-axis-theorem/index.html#:~:text=A%20helper%20method%20to%20do%20this%20might%20be%3A
@@ -59,7 +84,7 @@ void engine_physics_rect_rect_get_contacting(float px, float py,
 // Finds the contact point between rectangle vs. rectangle. ONce the contacting edges are found, 
 // a ling segment to line segment intersection is found. If the line segments are parallel,
 // the midpoint of the overlapping line segments is taken as the collision contact point
-void engine_physics_rect_rect_get_contact(contact_t *contact,
+void engine_physics_rect_rect_get_contact(physics_contact_t *contact,
                                           float abs_a_position_x, float abs_a_position_y, float abs_b_position_x, float abs_b_position_y,
                                           engine_physics_node_base_t *physics_rectangle_a,
                                           engine_physics_node_base_t *physics_rectangle_b);
@@ -67,7 +92,7 @@ void engine_physics_rect_rect_get_contact(contact_t *contact,
 // Get the contact point from the OBB to circle collision: https://dyn4j.org/2011/11/contact-points-using-clipping/
 // Finds the closest vertex in the rectangle to the circle, creates an edge between the circle and that
 // vertex, runs SAT, finds a direction to place contact point from circle's perspective
-void engine_physics_rect_circle_get_contact(contact_t *contact,
+void engine_physics_rect_circle_get_contact(physics_contact_t *contact,
                                             float circle_to_vert_axis_x, float circle_to_vert_axis_y,
                                             float abs_rectangle_pos_x, float abs_rectangle_pos_y, float abs_circle_pos_x, float abs_circle_pos_y,
                                             engine_physics_node_base_t *physics_node_base_rectangle,
@@ -75,23 +100,23 @@ void engine_physics_rect_circle_get_contact(contact_t *contact,
 
 // rectangle vs. rectangle: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-oriented-rigid-bodies--gamedev-8032t
 // Runs SAT to figure out if rectangles are colliding
-bool engine_physics_check_rect_rect_collision(engine_node_base_t *node_base_a,
-                                              engine_node_base_t *node_base_b,
-                                              contact_t *contact);
+bool engine_physics_check_rect_rect_collision(physics_abs_rectangle_t *abs_rect_a,
+                                              physics_abs_rectangle_t *abs_rect_b,
+                                              physics_contact_t *contact);
 
 // rectangle vs. circle: https://www.sevenson.com.au/programming/sat/#:~:text=to%20separate%20them.-,What%20about%20circles,-%3F
 // At the end of the day, uses SAT to figure out if circle and rectangle are colliding. Does need
 // to treat the circle special so that the SAT routine can be performed
-bool engine_physics_check_rect_circle_collision(engine_node_base_t *rect_node_base,
-                                                engine_node_base_t *circle_node_base,
-                                                contact_t *contact);
+bool engine_physics_check_rect_circle_collision(physics_abs_rectangle_t *abs_rect,
+                                                physics_abs_circle_t *abs_circle,
+                                                physics_contact_t *contact);
 
 // https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-the-basics-and-impulse-resolution--gamedev-6331t#:~:text=must%20be%20extended.-,Circle%20vs%20Circle,-Lets%20start%20with
 // https://github.com/RandyGaul/ImpulseEngine/blob/8d5f4d9113876f91a53cfb967879406e975263d1/Collision.cpp#L32-L66
 // Simple way of testing if two circles are colliding
-bool engine_physics_check_circle_circle_collision(engine_node_base_t *node_base_a,
-                                                  engine_node_base_t *node_base_b,
-                                                  contact_t *contact);
+bool engine_physics_check_circle_circle_collision(physics_abs_circle_t *abs_circle_a,
+                                                  physics_abs_circle_t *abs_circle_b,
+                                                  physics_contact_t *contact);
 
 
 #endif  // ENGINE_PHYSICS_COLLISION_H

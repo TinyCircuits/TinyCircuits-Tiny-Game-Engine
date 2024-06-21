@@ -72,11 +72,11 @@ void engine_physics_apply_impulses(float dt, float alpha){
             physics_node_position->y.value += physics_node_velocity->y.value;
 
             physics_node_base->rotation += physics_node_base->angular_velocity;
+        }
 
-            // When the rotation changes the collider box vertices need to be updated
-            if(node_base->type == NODE_TYPE_PHYSICS_RECTANGLE_2D){
-                engine_physics_rectangle_2d_node_update(physics_node_base);
-            }
+        // If the node was colliding last tick but isn't now, call the on_separate_cb callback
+        if(physics_node_base->on_separate_cb != mp_const_none && physics_node_base->was_colliding == true && physics_node_base->colliding == false){
+            mp_call_method_n_kw(0, 0, (mp_obj_t[]){physics_node_base->on_separate_cb, node_base->attr_accessor});
         }
 
         physics_link_node = physics_link_node->next;
@@ -107,6 +107,11 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
     engine_physics_node_base_t *physics_node_base_a = node_base_a->node;
     engine_physics_node_base_t *physics_node_base_b = node_base_b->node;
 
+    // Do not try to collide nodes that are not on the same collision 'layer'
+    if((physics_node_base_a->collision_mask & physics_node_base_b->collision_mask) == 0){
+        return;
+    }
+
     // Before we got here it was confirmed that we're not
     // checking for collision between the same object, now
     // confirm these individual objects have not been checked
@@ -115,20 +120,8 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
         return;
     }
 
-    contact_t contact = {
-        .collision_normal_x = 0.0f,
-        .collision_normal_y = 0.0f,
-        .collision_contact_x = 0.0f,
-        .collision_contact_y = 0.0f,
-        .collision_normal_penetration = 0.0f,
-        .moment_arm_a_x = 0.0f,
-        .moment_arm_a_y = 0.0f,
-        .moment_arm_b_x = 0.0f,
-        .moment_arm_b_y = 0.0f,
-        .contact_velocity_magnitude = 0.0f,
-        .relative_velocity_x = 0.0f,
-        .relative_velocity_y = 0.0f
-    };
+    physics_contact_t contact;
+    engine_physics_setup_contact(&contact);
 
     bool collided = false;
 
@@ -138,7 +131,12 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
     // check the correct pairing (rect vs. rect, rect vs. circle,
     // or circle vs. circle)
     if(node_base_a->type == NODE_TYPE_PHYSICS_RECTANGLE_2D && node_base_b->type == NODE_TYPE_PHYSICS_RECTANGLE_2D){
-        collided = engine_physics_check_rect_rect_collision(node_base_a, node_base_b, &contact);
+        physics_abs_rectangle_t abs_rect_a;
+        physics_abs_rectangle_t abs_rect_b;
+        engine_physics_setup_abs_rectangle(node_base_a, &abs_rect_a);
+        engine_physics_setup_abs_rectangle(node_base_b, &abs_rect_b);
+
+        collided = engine_physics_check_rect_rect_collision(&abs_rect_a, &abs_rect_b, &contact);
     }else if((node_base_a->type == NODE_TYPE_PHYSICS_RECTANGLE_2D && node_base_b->type == NODE_TYPE_PHYSICS_CIRCLE_2D) ||
              (node_base_a->type == NODE_TYPE_PHYSICS_CIRCLE_2D    && node_base_b->type == NODE_TYPE_PHYSICS_RECTANGLE_2D)){
 
@@ -153,16 +151,34 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
             physics_node_base_b = node_base_b->node;
         }
 
-        collided = engine_physics_check_rect_circle_collision(node_base_a, node_base_b, &contact);
+        physics_abs_rectangle_t abs_rect;
+        physics_abs_circle_t abs_circle;
+        engine_physics_setup_abs_rectangle(node_base_a, &abs_rect);
+        engine_physics_setup_abs_circle(node_base_b, &abs_circle);
+
+        collided = engine_physics_check_rect_circle_collision(&abs_rect, &abs_circle, &contact);
     }else if(node_base_a->type == NODE_TYPE_PHYSICS_CIRCLE_2D && node_base_b->type == NODE_TYPE_PHYSICS_CIRCLE_2D){
-        collided = engine_physics_check_circle_circle_collision(node_base_a, node_base_b, &contact);
+        physics_abs_circle_t abs_circle_a;
+        physics_abs_circle_t abs_circle_b;
+        engine_physics_setup_abs_circle(node_base_a, &abs_circle_a);
+        engine_physics_setup_abs_circle(node_base_b, &abs_circle_b);
+
+        collided = engine_physics_check_circle_circle_collision(&abs_circle_a, &abs_circle_b, &contact);
     }else{
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EnginePhysics: ERROR: Unknown collider pair collision check!"));
     }
 
     if(collided){
+        // This pair is colliding, mark each as so (this
+        // flag just means "colliding with something")
+        physics_node_base_a->colliding = true;
+        physics_node_base_b->colliding = true;
+
         bool physics_node_a_dynamic = mp_obj_get_int(physics_node_base_a->dynamic);
         bool physics_node_b_dynamic = mp_obj_get_int(physics_node_base_b->dynamic);
+
+        bool physics_node_a_solid = mp_obj_get_int(physics_node_base_a->solid);
+        bool physics_node_b_solid = mp_obj_get_int(physics_node_base_b->solid);
 
         // Calculate restitution/bounciness
         float physics_node_a_bounciness = mp_obj_get_float(physics_node_base_a->bounciness);
@@ -216,14 +232,16 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
         }
 
         // Apply impulses to linear/positional velocity
-        if(physics_node_a_dynamic){
-            physics_node_a_velocity->x.value -= (physics_node_base_a->inverse_mass * collision_impulse_x) + (separate_impulse_x);
-            physics_node_a_velocity->y.value -= (physics_node_base_a->inverse_mass * collision_impulse_y) + (separate_impulse_y);
-        }
+        if(physics_node_a_solid && physics_node_b_solid){
+            if(physics_node_a_dynamic){
+                physics_node_a_velocity->x.value -= (physics_node_base_a->inverse_mass * collision_impulse_x) + (separate_impulse_x);
+                physics_node_a_velocity->y.value -= (physics_node_base_a->inverse_mass * collision_impulse_y) + (separate_impulse_y);
+            }
 
-        if(physics_node_b_dynamic){
-            physics_node_b_velocity->x.value += (physics_node_base_b->inverse_mass * collision_impulse_x) + (separate_impulse_x);
-            physics_node_b_velocity->y.value += (physics_node_base_b->inverse_mass * collision_impulse_y) + (separate_impulse_y);
+            if(physics_node_b_dynamic){
+                physics_node_b_velocity->x.value += (physics_node_base_b->inverse_mass * collision_impulse_x) + (separate_impulse_x);
+                physics_node_b_velocity->y.value += (physics_node_base_b->inverse_mass * collision_impulse_y) + (separate_impulse_y);
+            }
         }
 
         // if(contact.collision_normal_penetration > slop){
@@ -287,14 +305,16 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
             // physics_node_base_apply_impulse_base(physics_node_base_a, -friction_impulse_x, -friction_impulse_y, contact.moment_arm_a_x, contact.moment_arm_a_y);
             // physics_node_base_apply_impulse_base(physics_node_base_b,  friction_impulse_x,  friction_impulse_y, contact.moment_arm_b_x, contact.moment_arm_b_y);
 
-            if(physics_node_a_dynamic){
-                physics_node_a_velocity->x.value -= physics_node_base_a->inverse_mass * friction_impulse_x;
-                physics_node_a_velocity->y.value -= physics_node_base_a->inverse_mass * friction_impulse_y;
-            }
+            if(physics_node_a_solid && physics_node_b_solid){
+                if(physics_node_a_dynamic){
+                    physics_node_a_velocity->x.value -= physics_node_base_a->inverse_mass * friction_impulse_x;
+                    physics_node_a_velocity->y.value -= physics_node_base_a->inverse_mass * friction_impulse_y;
+                }
 
-            if(physics_node_a_dynamic){
-                physics_node_b_velocity->x.value += physics_node_base_b->inverse_mass * friction_impulse_x;
-                physics_node_b_velocity->y.value += physics_node_base_b->inverse_mass * friction_impulse_y;
+                if(physics_node_b_dynamic){
+                    physics_node_b_velocity->x.value += physics_node_base_b->inverse_mass * friction_impulse_x;
+                    physics_node_b_velocity->y.value += physics_node_base_b->inverse_mass * friction_impulse_y;
+                }
             }
         }
 
@@ -307,18 +327,18 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
         mp_obj_t exec[3];
 
         // Call A callback
-        if(physics_node_base_a->collision_cb != mp_const_none){
+        if(physics_node_base_a->on_collide_cb != mp_const_none){
             collision_contact_data[4] = node_base_b;
-            exec[0] = physics_node_base_a->collision_cb;
+            exec[0] = physics_node_base_a->on_collide_cb;
             exec[1] = node_base_a->attr_accessor;
             exec[2] = collision_contact_2d_class_new(&collision_contact_2d_class_type, 5, 0, collision_contact_data);
             mp_call_method_n_kw(1, 0, exec);
         }
 
         // Call B callback
-        if(physics_node_base_b->collision_cb != mp_const_none){
+        if(physics_node_base_b->on_collide_cb != mp_const_none){
             collision_contact_data[4] = node_base_a;
-            exec[0] = physics_node_base_b->collision_cb;
+            exec[0] = physics_node_base_b->on_collide_cb;
             exec[1] = node_base_b->attr_accessor;
             exec[2] = collision_contact_2d_class_new(&collision_contact_2d_class_type, 5, 0, collision_contact_data);
             mp_call_method_n_kw(1, 0, exec);
@@ -373,6 +393,13 @@ void engine_physics_physics_tick(float dt_s){
             exec[2] = mp_obj_new_float(dt_s);
             mp_call_method_n_kw(1, 0, exec);
         }
+
+        // Before setting to back to false, track the colliding state
+        physics_node_base->was_colliding = physics_node_base->colliding;
+
+        // Set this to false so that it can be
+        // set back to true only if colliding, next
+        physics_node_base->colliding = false;
 
         physics_link_node = physics_link_node->next;
     }

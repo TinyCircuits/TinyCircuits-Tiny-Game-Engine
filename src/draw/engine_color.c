@@ -6,15 +6,15 @@
 const uint16_t bitmask_5_bit = 0b0000000000011111;
 const uint16_t bitmask_6_bit = 0b0000000000111111;
 
-inline float clamp_0_to_1(float value) {
+static inline float clamp_0_to_1(float value) {
     return engine_math_clamp(value, 0.0f, 1.0f);
 }
 
-inline uint16_t round_float(float value){
+static inline uint16_t round_float(float value){
     return (uint16_t)(value + 0.5f);
 }
 
-inline void engine_color_split_u16(uint16_t color, uint16_t *r, uint16_t *g, uint16_t *b){
+static inline void engine_color_split_u16(uint16_t color, uint16_t *r, uint16_t *g, uint16_t *b){
     *r = (color >> 11) & bitmask_5_bit;
     *g = (color >> 5)  & bitmask_6_bit;
     *b = (color >> 0)  & bitmask_5_bit;
