@@ -17,7 +17,7 @@
 */
 static mp_obj_t engine_draw_set_background_color(mp_obj_t module, mp_obj_t background_color){
     color_class_obj_t *color = background_color;
-    engine_display_set_fill_color(color->value.val);
+    engine_display_set_fill_color(color->value);
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_2(engine_draw_set_background_color_obj, engine_draw_set_background_color);

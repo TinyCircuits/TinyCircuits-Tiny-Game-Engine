@@ -105,10 +105,7 @@ void set_value_to_end(tween_class_obj_t *tween){
         value->z.value = tween->end_2;
     }else if(tween->tween_type == tween_type_color){
         color_class_obj_t *value = tweening_value;
-        value->r.value = tween->end_0;
-        value->g.value = tween->end_1;
-        value->b.value = tween->end_2;
-        engine_color_sync_rgb_to_u16(value);
+        value->value = engine_color_from_rgb_float(tween->end_0, tween->end_1, tween->end_2);
     }
 }
 
@@ -251,11 +248,7 @@ static mp_obj_t tween_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
 
         // https://www.alanzucconi.com/2016/01/06/colour-interpolation/#:~:text=can%20be%20done-,as%20such,-%3A
         // Lame way of interpolating RGB: TODO
-        value->r.value = r0 + (r1 - r0) * t;
-        value->g.value = g0 + (g1 - g0) * t;
-        value->b.value = b0 + (b1 - b0) * t;
-
-        engine_color_sync_rgb_to_u16(value);
+        value->value = engine_color_from_rgb_float(r0 + (r1 - r0) * t, g0 + (g1 - g0) * t, b0 + (b1 - b0) * t);
     }
 
     return mp_const_none;
@@ -342,13 +335,13 @@ mp_obj_t tween_class_start(size_t n_args, const mp_obj_t *args){
         color_class_obj_t *start = tween_start_value;
         color_class_obj_t *end = tween_end_value;
 
-        tween->initial_0 = start->r.value;
-        tween->initial_1 = start->g.value;
-        tween->initial_2 = start->b.value;
+        tween->initial_0 = engine_color_get_r_float(start->value);
+        tween->initial_1 = engine_color_get_g_float(start->value);
+        tween->initial_2 = engine_color_get_b_float(start->value);
 
-        tween->end_0 = end->r.value;
-        tween->end_1 = end->g.value;
-        tween->end_2 = end->b.value;
+        tween->end_0 = engine_color_get_r_float(end->value);
+        tween->end_1 = engine_color_get_g_float(end->value);
+        tween->end_2 = engine_color_get_b_float(end->value);
 
         tween->tween_type = tween_type_color;
     }else{

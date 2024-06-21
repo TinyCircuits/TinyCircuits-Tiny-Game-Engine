@@ -130,7 +130,7 @@ void sprite_2d_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t camera_no
                      sprite_scale->x.value*camera_zoom,
                      sprite_scale->y.value*camera_zoom,
                     -sprite_rotation,
-                     transparent_color->value.val,
+                     transparent_color->value,
                      sprite_opacity,
                      shader);
 

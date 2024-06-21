@@ -13,8 +13,6 @@ import math
 import os
 import time
 
-os.chdir("Games/VoxelSpaceExample")
-
 # import machine
 
 # machine.freq(250 * 1000 * 1000)
