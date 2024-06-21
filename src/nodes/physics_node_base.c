@@ -1,6 +1,7 @@
 #include "physics_node_base.h"
 #include "math/vector2.h"
 #include "math/engine_math.h"
+#include "draw/engine_color.h"
 
 
 // https://github.com/RandyGaul/ImpulseEngine/blob/8d5f4d9113876f91a53cfb967879406e975263d1/Body.h#L35-L39
@@ -34,7 +35,7 @@ mp_obj_t physics_node_base_apply_impulse(mp_obj_t self_in, mp_obj_t impulse, mp_
 static MP_DEFINE_CONST_FUN_OBJ_3(physics_node_base_apply_impulse_obj, physics_node_base_apply_impulse);
 
 
-void set_collision_mask(uint32_t *collision_mask, mp_int_t layer, bool state){    
+void set_collision_mask(uint32_t *collision_mask, mp_int_t layer, bool state){
     if(layer < 0 || layer > 31){
         mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("EnginePhysics: ERROR: Layer index out of bounds, should be between 0 ~ 31 (inclusive), got %d"), layer);
     }
@@ -152,16 +153,16 @@ bool physics_node_base_load_attr(engine_node_base_t *self_node_base, qstr attrib
 
 
 /*  --- doc ---
-    NAME: collided
-    ID: collided
+    NAME: on_collide
+    ID: on_collide
     DESC: Callback that is invoked when physics nodes collide
     PARAM: [type=object]                            [name=self]         [value=object]
     PARAM: [type={ref_link:CollisionContact2D}]     [name=contact]      [value={ref_link:CollisionContact2D}]
     RETURN: None
 */
 /*  --- doc ---
-    NAME: separated
-    ID: separated
+    NAME: on_separate
+    ID: on_separate
     DESC: Callback that is invoked when a physics node stops colliding
     PARAM: [type=object]                            [name=self]         [value=object]
     RETURN: None
@@ -171,23 +172,23 @@ bool physics_node_base_load_attr(engine_node_base_t *self_node_base, qstr attrib
     ID: physics_tick
     DESC: Overridable physics tick callback that happens before collision and node tick() callbacks
     PARAM: [type=object] [name=self] [value=object]
-    PARAM: [type=float]  [name=dt]   [value=positive float in seconds]                                                                                                  
+    PARAM: [type=float]  [name=dt]   [value=positive float in seconds]
     RETURN: None
 */
 /*  --- doc ---
     NAME: enable_collision_layer
     ID: enable_collision_layer
     DESC: Allow this physics node to collide with other nodes on this layer
-    PARAM: [type=int]  [name=layer]   [value=0 ~ 31]                                                                                                  
+    PARAM: [type=int]  [name=layer]   [value=0 ~ 31]
     RETURN: None
-*/ 
+*/
 /*  --- doc ---
     NAME: disable_collision_layer
     ID: disable_collision_layer
     DESC: Disallow this physics node from colliding with other nodes on this layer
-    PARAM: [type=int]  [name=layer]   [value=0 ~ 31]                                                                                                  
+    PARAM: [type=int]  [name=layer]   [value=0 ~ 31]
     RETURN: None
-*/ 
+*/
 
 
 // Return `true` if handled storing the attr from internal structure, `false` otherwise
@@ -249,7 +250,7 @@ bool physics_node_base_store_attr(engine_node_base_t *self_node_base, qstr attri
             return true;
         break;
         case MP_QSTR_outline_color:
-            self->outline_color = destination[1];
+            self->outline_color = engine_color_wrap(destination[1]);
             return true;
         break;
         case MP_QSTR_collision_mask:
