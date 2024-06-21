@@ -654,7 +654,7 @@ class PokerGame(Rectangle2DNode):
 
     def draw_booster_pack(self):
         new_cards = []
-        size = 5
+        size = 4
         if (self.hands_played < 4):
             size += 1
         if (self.discard_limit > 0):
@@ -723,6 +723,8 @@ class PokerGame(Rectangle2DNode):
 
         # Add booster pack label
         booster_label = Text2DNode(Vector2(64, 60), font, "Opening Boosters", 0, Vector2(1, 1), 1.0, 0, 0)
+        self.remaining_discard_text.text = f"-"
+        self.remaining_hands_text.text = f"-"
         self.add_child(booster_label)
 
     def handle_booster_selection(self):
@@ -765,7 +767,6 @@ class PokerGame(Rectangle2DNode):
             self.selected_cards.remove(card)
 
     def confirm_booster_selection(self):
-        self.hand_type_text.text = f"Round {self.current_game}"
         for card in self.selected_cards:
             card.select(False)
             if card.original_frame_y == 4:
@@ -786,6 +787,7 @@ class PokerGame(Rectangle2DNode):
         self.deck = Deck(self.player_collection)
         self.deck.shuffle()
         self.start_new_game()
+        self.hand_type_text.text = f"Round {self.current_game}"
         self.update_hand_indicator_position()
         self.update_joker_display()
 
