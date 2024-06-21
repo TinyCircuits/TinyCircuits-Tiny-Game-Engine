@@ -181,6 +181,14 @@ mp_obj_t physics_rectangle_2d_node_class_del(mp_obj_t self_in){
 static MP_DEFINE_CONST_FUN_OBJ_1(physics_rectangle_2d_node_class_del_obj, physics_rectangle_2d_node_class_del);
 
 
+/*  --- doc ---
+    NAME: adjust_from_to
+    ID: adjust_from_to
+    DESC: Adjust position, rotation, and height such that the rectangle touches the `from` and `to` positions (`width` is not modifed)
+    PARAM: [type={ref_link:Vector2}] [name=from] [value={ref_link:Vector2}]       
+    PARAM: [type={ref_link:Vector2}] [name=to] [value={ref_link:Vector2}]                                                                                           
+    RETURN: None
+*/ 
 mp_obj_t physics_rectangle_2d_node_class_adjust_from_to(mp_obj_t self_in, mp_obj_t from_in, mp_obj_t to_in){
     engine_node_base_t *node_base = self_in;
     engine_physics_node_base_t *physics_node_base = node_base->node;
@@ -426,6 +434,7 @@ static mp_attr_fun_t physics_rectangle_2d_node_class_attr(mp_obj_t self_in, qstr
     ATTR:  [type=function]                               [name={ref_link:tick}]                             [value=function]
     ATTR:  [type=function]                               [name={ref_link:enable_collision_layer}]           [value=function]
     ATTR:  [type=function]                               [name={ref_link:disable_collision_layer}]          [value=function]
+    ATTR:  [type=function]                               [name={ref_link:adjust_from_to}]                   [value=function]
     ATTR:  [type={ref_link:Vector2}]                     [name=position]                                    [value={ref_link:Vector2}]
     ATTR:  [type=float]                                  [name=width]                                       [value=any]
     ATTR:  [type=float]                                  [name=height]                                      [value=any]
