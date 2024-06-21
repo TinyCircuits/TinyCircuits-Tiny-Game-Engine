@@ -31,6 +31,14 @@ def tween_opacity(node, start_opacity, end_opacity, duration=1000):
 class CardSprite(Sprite2DNode):
     def __init__(self, position, frame_x, frame_y, base_score_bonus=0, multiplier_bonus=0, is_wildcard_suit=False):
         super().__init__(self, position)
+        self.initialize_attributes(frame_x, frame_y, base_score_bonus, multiplier_bonus, is_wildcard_suit)
+        self.background = self.create_background()
+        self.bonus_overlay = self.create_bonus_overlay()
+        self.add_child(self.background)
+        if self.bonus_overlay:
+            self.add_child(self.bonus_overlay)
+
+    def initialize_attributes(self, frame_x, frame_y, base_score_bonus, multiplier_bonus, is_wildcard_suit):
         self.texture = cards_texture
         self.frame_count_x = 13
         self.frame_count_y = 5
@@ -49,68 +57,37 @@ class CardSprite(Sprite2DNode):
         self.multiplier_bonus = multiplier_bonus
         self.is_wildcard_suit = is_wildcard_suit
 
-        # Base layer - card background
-        self.background = Sprite2DNode(Vector2(0, 0))
-        self.background.frame_count_x = 13
-        self.background.frame_count_y = 5
-        self.background.frame_current_x = 6
-        self.background.frame_current_y = 4
-        self.background.texture = cards_texture
-        self.background.playing = False
-        self.background.set_layer(2)
-        self.background.transparent_color = Color(0x0400)
-        self.add_child(self.background)
+    def create_background(self):
+        background = Sprite2DNode(Vector2(0, 0))
+        self.set_sprite_attributes(background, 6, 4, 2)
+        return background
 
-        self.bonus_overlay = None
+    def create_bonus_overlay(self):
         if self.base_score_bonus > 0 and self.multiplier_bonus > 0:
-            self.bonus_overlay = Sprite2DNode(Vector2(0, 0))
-            self.bonus_overlay.frame_count_x = 13
-            self.bonus_overlay.frame_count_y = 5
-            self.bonus_overlay.frame_current_x = 9
-            self.bonus_overlay.frame_current_y = 4
-            self.bonus_overlay.texture = cards_texture
-            self.bonus_overlay.playing = False
-            self.bonus_overlay.set_layer(3)
-            self.bonus_overlay.opacity = 0.4
-            self.bonus_overlay.transparent_color = Color(0x0400)
-            self.add_child(self.bonus_overlay)
-        # Overlay sprite for base score bonus
-        elif self.base_score_bonus > 0:
-            self.bonus_overlay = Sprite2DNode(Vector2(0, 0))
-            self.bonus_overlay.frame_count_x = 13
-            self.bonus_overlay.frame_count_y = 5
-            self.bonus_overlay.frame_current_x = 7
-            self.bonus_overlay.frame_current_y = 4
-            self.bonus_overlay.texture = cards_texture
-            self.bonus_overlay.playing = False
-            self.bonus_overlay.set_layer(3)
-            self.bonus_overlay.transparent_color = Color(0x0400)
-            self.add_child(self.bonus_overlay)
-        
-        elif self.is_wildcard_suit == True:
-            self.bonus_overlay = Sprite2DNode(Vector2(0, 0))
-            self.bonus_overlay.frame_count_x = 13
-            self.bonus_overlay.frame_count_y = 5
-            self.bonus_overlay.frame_current_x = 10
-            self.bonus_overlay.frame_current_y = 4
-            self.bonus_overlay.texture = cards_texture
-            self.bonus_overlay.playing = False
-            self.bonus_overlay.set_layer(3)
-            self.bonus_overlay.transparent_color = Color(0x0400)
-            self.add_child(self.bonus_overlay)
+            return self.create_overlay(9, 4, 0.4)
+        if self.base_score_bonus > 0:
+            return self.create_overlay(7, 4)
+        if self.is_wildcard_suit:
+            return self.create_overlay(10, 4)
+        if self.multiplier_bonus > 0:
+            return self.create_overlay(8, 4)
+        return None
 
-        # Overlay sprite for multiplier bonus
-        elif self.multiplier_bonus > 0:
-            self.bonus_overlay = Sprite2DNode(Vector2(0, 0))
-            self.bonus_overlay.frame_count_x = 13
-            self.bonus_overlay.frame_count_y = 5
-            self.bonus_overlay.frame_current_x = 8
-            self.bonus_overlay.frame_current_y = 4
-            self.bonus_overlay.texture = cards_texture
-            self.bonus_overlay.playing = False
-            self.bonus_overlay.set_layer(3)
-            self.bonus_overlay.transparent_color = Color(0x0400)
-            self.add_child(self.bonus_overlay)
+    def create_overlay(self, frame_x, frame_y, opacity=1.0):
+        overlay = Sprite2DNode(Vector2(0, 0))
+        self.set_sprite_attributes(overlay, frame_x, frame_y, 3, opacity)
+        return overlay
+
+    def set_sprite_attributes(self, sprite, frame_x, frame_y, layer, opacity=1.0):
+        sprite.frame_count_x = 13
+        sprite.frame_count_y = 5
+        sprite.frame_current_x = frame_x
+        sprite.frame_current_y = frame_y
+        sprite.texture = cards_texture
+        sprite.playing = False
+        sprite.set_layer(layer)
+        sprite.transparent_color = Color(0x0400)
+        sprite.opacity = opacity
 
     @property
     def rank_value(self):
@@ -118,10 +95,7 @@ class CardSprite(Sprite2DNode):
 
     def select(self, is_selected):
         self.selected = is_selected
-        if self.selected:
-            self.position.y -= 5
-        else:
-            self.position.y += 5
+        self.position.y += -5 if is_selected else 5
 
     def mark_played(self):
         self.in_hand = False
@@ -135,21 +109,34 @@ class CardSprite(Sprite2DNode):
     def hide(self):
         self.opacity = 0
         self.background.opacity = 0
-        if(self.bonus_overlay):
+        if self.bonus_overlay:
             self.bonus_overlay.opacity = 0
 
     def __str__(self):
-        return (f"Card(rank={self.rank_value}, suit={self.original_frame_y},position=({self.position.x}, {self.position.y})),is_wildcard_suit={self.is_wildcard_suit}")
+        return (f"Card(rank={self.rank_value}, suit={self.original_frame_y}, position=({self.position.x}, {self.position.y}), is_wildcard_suit={self.is_wildcard_suit})")
 
     def __repr__(self):
         return self.__str__()
-    
+
     def print_rules(self):
         suits = ["Hearts", "Spades", "Diamonds", "Clubs"]
         short_suits = ["Hrt", "Spd", "Dia", "Clb"]
         rank_names = ["Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"]
         short_rank_names = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
-        
+
+        def get_rule(rank, suit):
+            if self.is_wildcard_suit:
+                return f"{rank} Wildcard"
+            if self.base_score_bonus > 0 and self.multiplier_bonus > 0:
+                return f"{rank} of {suit} +{self.base_score_bonus} x{self.multiplier_bonus}"
+            if self.base_score_bonus > 0:
+                return f"{rank} of {suit} +{self.base_score_bonus}"
+            if self.multiplier_bonus > 0:
+                return f"{rank} of {suit} x{self.multiplier_bonus}"
+            return f"{rank} of {suit}"
+
+        rank = rank_names[self.original_frame_x]
+        short_rank = short_rank_names[self.original_frame_x]
         if self.original_frame_y == 4:
             if self.base_score_bonus > 0 and self.multiplier_bonus > 0:
                 rule = f"Joker +{self.base_score_bonus} x{self.multiplier_bonus}"
@@ -162,34 +149,11 @@ class CardSprite(Sprite2DNode):
         else:
             suit = suits[self.original_frame_y]
             short_suit = short_suits[self.original_frame_y]
-            rank = rank_names[self.original_frame_x]
-            short_rank = short_rank_names[self.original_frame_x]
-            if self.is_wildcard_suit:
-                rule = f"{rank} Wildcard"
-            elif self.base_score_bonus > 0 and self.multiplier_bonus > 0:
-                rule = f"{rank} of {suit} +{self.base_score_bonus} x{self.multiplier_bonus}"
-            elif self.base_score_bonus > 0:
-                rule = f"{rank} of {suit} +{self.base_score_bonus}"
-            elif self.multiplier_bonus > 0:
-                rule = f"{rank} of {suit} x{self.multiplier_bonus}"
-            else:
-                rule = f"{rank} of {suit}"
-        
+            rule = get_rule(rank, suit)
             if len(rule) > 20:
-                if self.is_wildcard_suit:
-                    rule = f"{short_rank} Wildcard"
-                elif self.base_score_bonus > 0 and self.multiplier_bonus > 0:
-                    rule = f"{short_rank} of {short_suit} +{self.base_score_bonus} x{self.multiplier_bonus}"
-                elif self.base_score_bonus > 0:
-                    rule = f"{short_rank} of {short_suit} +{self.base_score_bonus}"
-                elif self.multiplier_bonus > 0:
-                    rule = f"{short_rank} of {short_suit} x{self.multiplier_bonus}"
-                else:
-                    rule = f"{short_rank} of {short_suit}"
+                rule = get_rule(short_rank, short_suit)
         
         return rule
-
-
 
 class Deck:
     def __init__(self, collection):
