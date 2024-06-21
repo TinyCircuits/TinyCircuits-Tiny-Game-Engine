@@ -217,9 +217,8 @@ def add_games(game_or_list):
 
 add_games(games)
 
-# Toggle the gui elements and do not let the user
-# toggle back out of it
-engine_io.toggle_gui_focus()
-engine_io.gui_toggle_button = None
+# Toggle the gui elements and do not let the user toggle back out of it.
+engine_io.gui_focused(True)
+engine_io.gui_toggle_button(None)
 
 engine.start()

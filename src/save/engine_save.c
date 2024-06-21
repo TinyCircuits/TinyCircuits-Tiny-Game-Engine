@@ -193,13 +193,9 @@ mp_obj_t engine_saving_read_entry(uint8_t file_index, uint32_t entry_data_len, u
         break;
         case SAVE_COLOR:
         {
-            float rf = 0.0f;
-            float gf = 0.0f;
-            float bf = 0.0f;
-            engine_file_read(file_index, &rf, 4);
-            engine_file_read(file_index, &gf, 4);
-            engine_file_read(file_index, &bf, 4);
-            return color_class_new(&color_class_type, 3, 0, (mp_obj_t[]){mp_obj_new_float(rf), mp_obj_new_float(gf), mp_obj_new_float(bf)});
+            uint16_t value = 0;
+            engine_file_read(file_index, &value, 2);
+            return color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(value)});
         }
         break;
         case SAVE_BYTEARRAY:
@@ -267,9 +263,7 @@ void engine_saving_write_entry(uint8_t file_index, mp_obj_t entry, const byte* e
     }else if(mp_obj_is_type(entry, &color_class_type)){
         entry_data_type = SAVE_COLOR;
         engine_file_write(file_index, &entry_data_type, 1);
-        engine_file_write(file_index, &((color_class_obj_t*)entry)->r.value, 4);
-        engine_file_write(file_index, &((color_class_obj_t*)entry)->g.value, 4);
-        engine_file_write(file_index, &((color_class_obj_t*)entry)->b.value, 4);
+        engine_file_write(file_index, &((color_class_obj_t*)entry)->value, 2);
     }else if(mp_obj_is_type(entry, &mp_type_bytearray)){
         entry_data_type = SAVE_BYTEARRAY;
         engine_file_write(file_index, &entry_data_type, 1);
@@ -424,7 +418,7 @@ void engine_saving_set_file_location(const byte *location, size_t location_len){
 void engine_saving_del_set_location(){
     if(engine_file_exists(&current_location)){
         engine_file_remove(&current_location);
-    } 
+    }
 }
 
 

@@ -16,7 +16,7 @@
 
 void line_2d_node_class_draw(mp_obj_t line_node_base_obj, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("Line2DNode: Drawing");
-    
+
     engine_node_base_t *line_node_base = line_node_base_obj;
     engine_line_2d_node_class_obj_t *line_2d = line_node_base->node;
 
@@ -37,7 +37,7 @@ void line_2d_node_class_draw(mp_obj_t line_node_base_obj, mp_obj_t camera_node){
 
     // The line is drawn as a rectangle since we have a nice algorithm for doing that:
     float line_length = engine_math_distance_between(line_start->x.value, line_start->y.value, line_end->x.value, line_end->y.value);
-    
+
     // Grab camera
     vector3_class_obj_t *camera_position = camera->position;
     rectangle_class_obj_t *camera_viewport = camera->viewport;
@@ -97,7 +97,7 @@ void line_2d_node_class_draw(mp_obj_t line_node_base_obj, mp_obj_t camera_node){
     }
 
     if(line_outlined == false){
-        engine_draw_rect(line_color->value.val,
+        engine_draw_rect(line_color->value,
                          floorf(line_rotated_x), floorf(line_rotated_y),
                          (int32_t)line_thickness, (int32_t)line_length,
                          1.0f, 1.0f,
@@ -128,10 +128,10 @@ void line_2d_node_class_draw(mp_obj_t line_node_base_obj, mp_obj_t camera_node){
         engine_math_rotate_point(&brx, &bry, line_rotated_x, line_rotated_y, line_rotation);
         engine_math_rotate_point(&blx, &bly, line_rotated_x, line_rotated_y, line_rotation);
 
-        engine_draw_line(line_color->value.val, tlx, tly, trx, try, camera_node, line_opacity, shader);
-        engine_draw_line(line_color->value.val, trx, try, brx, bry, camera_node, line_opacity, shader);
-        engine_draw_line(line_color->value.val, brx, bry, blx, bly, camera_node, line_opacity, shader);
-        engine_draw_line(line_color->value.val, blx, bly, tlx, tly, camera_node, line_opacity, shader);
+        engine_draw_line(line_color->value, tlx, tly, trx, try, camera_node, line_opacity, shader);
+        engine_draw_line(line_color->value, trx, try, brx, bry, camera_node, line_opacity, shader);
+        engine_draw_line(line_color->value, brx, bry, blx, bly, camera_node, line_opacity, shader);
+        engine_draw_line(line_color->value, blx, bly, tlx, tly, camera_node, line_opacity, shader);
     }
 }
 
@@ -357,7 +357,7 @@ static mp_attr_fun_t line_2d_node_class_attr(mp_obj_t self_in, qstr attribute, m
     PARAM:  [type={ref_link:Vector2}]         [name=end]                                        [value={ref_link:Vector2}]
     PARAM:  [type=float]                      [name=thickness]                                  [value=any]
     PARAM:  [type=int]                        [name=color]                                      [value=0 ~ 65535 (16-bit RGB565 0bRRRRRGGGGGGBBBBB)]
-    PARAM:  [type=float]                      [name=opacity]                                    [value=0 ~ 1.0]  
+    PARAM:  [type=float]                      [name=opacity]                                    [value=0 ~ 1.0]
     PARAM:  [type=bool]                       [name=outline]                                    [value=True or False]
     ATTR:   [type=function]                   [name={ref_link:add_child}]                       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_child}]                       [value=function]
@@ -375,7 +375,7 @@ static mp_attr_fun_t line_2d_node_class_attr(mp_obj_t self_in, qstr attribute, m
     ATTR:   [type={ref_link:Vector2}]         [name=position]                                   [value={ref_link:Vector2}]
     ATTR:   [type=float]                      [name=thickness]                                  [value=any]
     ATTR:   [type=int]                        [name=color]                                      [value=0 ~ 65535 (16-bit RGB565 0bRRRRRGGGGGGBBBBB)]
-    ATTR:   [type=float]                      [name=opacity]                                    [value=0 ~ 1.0] 
+    ATTR:   [type=float]                      [name=opacity]                                    [value=0 ~ 1.0]
     ATTR:   [type=bool]                       [name=outline]                                    [value=True or False]
     OVRR:   [type=function]                   [name={ref_link:tick}]                            [value=function]
 */
@@ -395,7 +395,7 @@ mp_obj_t line_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
     enum arg_ids {child_class, start, end, thickness, color, opacity, outline};
     bool inherited = false;
 
-    // If there is one positional argument and it isn't the first 
+    // If there is one positional argument and it isn't the first
     // expected argument (as is expected when using positional
     // arguments) then define which way to parse the arguments
     if(n_args >= 1 && mp_obj_get_type(args[0]) != &vector2_class_type){
@@ -469,7 +469,7 @@ mp_obj_t line_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
         node_base->attr_accessor = node_instance;
     }
 
-    // Calculate midpoint/position based on endpoints 
+    // Calculate midpoint/position based on endpoints
     // (only positions that can be set in the constructor)
     line_2d_recalculate_midpoint(line_2d_node);
 

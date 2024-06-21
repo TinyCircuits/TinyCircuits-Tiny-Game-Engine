@@ -9,18 +9,22 @@
 
 typedef struct{
     mp_obj_base_t base;
-    mp_obj_float_t r;
-    mp_obj_float_t g;
-    mp_obj_float_t b;
-    mp_obj_int_t value;
+    uint16_t value;
 }color_class_obj_t;
 
 extern const mp_obj_type_t color_class_type;
 
-mp_obj_t color_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args);
+float engine_color_get_r_float(uint16_t color);
+float engine_color_get_g_float(uint16_t color);
+float engine_color_get_b_float(uint16_t color);
 
-void engine_color_sync_u16_to_rgb(color_class_obj_t *color);
-void engine_color_sync_rgb_to_u16(color_class_obj_t *color);
+uint16_t engine_color_set_r_float(uint16_t color, float r);
+uint16_t engine_color_set_g_float(uint16_t color, float g);
+uint16_t engine_color_set_b_float(uint16_t color, float b);
+
+uint16_t engine_color_from_rgb_float(float r, float g, float b);
+
+mp_obj_t color_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args);
 
 uint16_t ENGINE_FAST_FUNCTION(engine_color_blend)(uint16_t from, uint16_t to, float amount);
 uint16_t ENGINE_FAST_FUNCTION(engine_color_alpha_blend)(uint16_t background, uint16_t foreground, float alpha);

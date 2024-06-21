@@ -23,7 +23,7 @@
 
 void gui_button_2d_node_class_draw(mp_obj_t button_node_base_obj, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("GUIButton2DNode: Drawing");
-    
+
     engine_node_base_t *button_node_base = button_node_base_obj;
     engine_gui_button_2d_node_class_obj_t *button = button_node_base->node;
 
@@ -36,7 +36,7 @@ void gui_button_2d_node_class_draw(mp_obj_t button_node_base_obj, mp_obj_t camer
     if(button->text != mp_const_none && button->font_resource != mp_const_none){
         engine_node_base_t *camera_node_base = camera_node;
         engine_camera_node_class_obj_t *camera = camera_node_base->node;
-        
+
 
         vector3_class_obj_t *camera_position = camera->position;
         rectangle_class_obj_t *camera_viewport = camera->viewport;
@@ -109,7 +109,7 @@ void gui_button_2d_node_class_draw(mp_obj_t button_node_base_obj, mp_obj_t camer
             if(button->focused_background_color != mp_const_none) background_color = button->focused_background_color;
         }
 
-        engine_draw_rect(outline_color->value.val,
+        engine_draw_rect(outline_color->value,
                          floorf(button_rotated_x), floorf(button_rotated_y),
                          (int32_t)button->width_outline, (int32_t)button->height_outline,
                          x_scale, y_scale,
@@ -117,7 +117,7 @@ void gui_button_2d_node_class_draw(mp_obj_t button_node_base_obj, mp_obj_t camer
                          button_opacity,
                          shader);
 
-        engine_draw_rect(background_color->value.val,
+        engine_draw_rect(background_color->value,
                          floorf(button_rotated_x), floorf(button_rotated_y),
                          (int32_t)button->width_padded, (int32_t)button->height_padded,
                          x_scale, y_scale,
@@ -135,8 +135,8 @@ void gui_button_2d_node_class_draw(mp_obj_t button_node_base_obj, mp_obj_t camer
 
             float t = 1.0f;
 
-            text_shader->program[1] = (text_color->value.val >> 8) & 0b11111111;
-            text_shader->program[2] = (text_color->value.val >> 0) & 0b11111111;
+            text_shader->program[1] = (text_color->value >> 8) & 0b11111111;
+            text_shader->program[2] = (text_color->value >> 0) & 0b11111111;
 
             memcpy(text_shader->program+3, &t, sizeof(float));
         }
@@ -304,7 +304,7 @@ bool button_2d_node_load_attr(engine_node_base_t *self_node_base, qstr attribute
             destination[0] = self->pressed_outline_color;
             return true;
         break;
-        
+
         case MP_QSTR_rotation:
             destination[0] = self->rotation;
             return true;
@@ -500,7 +500,7 @@ bool button_2d_node_store_attr(engine_node_base_t *self_node_base, qstr attribut
             self->on_just_unfocused_cb = destination[1];
             return true;
         break;
-        
+
         case MP_QSTR_on_pressed:
             self->on_pressed_cb = destination[1];
             return true;
@@ -644,7 +644,7 @@ static mp_attr_fun_t gui_button_2d_node_class_attr(mp_obj_t self_in, qstr attrib
     PARAM:  [type=float]                      [name=line_spacing]                               [value=any]
 
 
-    ATTR:   [type=function]                   [name={ref_link:add_child}]                       [value=function] 
+    ATTR:   [type=function]                   [name={ref_link:add_child}]                       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_child}]                       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_child_count}]                 [value=function]
     ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy}]               [value=function]
@@ -747,13 +747,13 @@ mp_obj_t gui_button_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, 
                   pressed_outline_color,
 
                   rotation, scale, opacity,
-                  
+
                   letter_spacing,
                   line_spacing};
 
     bool inherited = false;
 
-    // If there is one positional argument and it isn't the first 
+    // If there is one positional argument and it isn't the first
     // expected argument (as is expected when using positional
     // arguments) then define which way to parse the arguments
     if(n_args >= 1 && mp_obj_get_type(args[0]) != &vector2_class_type){

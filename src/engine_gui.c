@@ -30,7 +30,7 @@ void engine_gui_reset(){
 }
 
 
-bool engine_gui_get_focus(){
+bool engine_gui_is_gui_focused(){
     return gui_focused;
 }
 
@@ -60,38 +60,45 @@ void engine_gui_focus_node(engine_node_base_t *gui_node_base){
 }
 
 
-void engine_gui_toggle_focus(){
-    gui_focused = !gui_focused;
+bool engine_gui_toggle_focus(){
+    return engine_gui_set_focused(!gui_focused);
+}
 
-    // If just focused, loop through all elements and focus
-    // the first node if no other node is already focused
-    linked_list *gui_list = engine_collections_get_gui_list();
+bool engine_gui_set_focused(bool focus_gui){
+    if(focus_gui != gui_focused){
+        gui_focused = focus_gui;
 
-    if(gui_focused && gui_list->start != NULL){
-        linked_list_node *current_gui_list_node = gui_list->start;
+        // If just focused, loop through all elements and focus
+        // the first node if no other node is already focused
+        linked_list *gui_list = engine_collections_get_gui_list();
 
-        while(current_gui_list_node != NULL){
-            engine_node_base_t *gui_node_base = current_gui_list_node->object;
+        if(gui_focused && gui_list->start != NULL){
+            linked_list_node *current_gui_list_node = gui_list->start;
 
-            bool focused = false;
+            while(current_gui_list_node != NULL){
+                engine_node_base_t *gui_node_base = current_gui_list_node->object;
 
-            if(mp_obj_is_type(gui_node_base, &engine_gui_bitmap_button_2d_node_class_type)){
-                focused = ((engine_gui_bitmap_button_2d_node_class_obj_t*)gui_node_base->node)->focused;
-            }else{
-                focused = ((engine_gui_button_2d_node_class_obj_t*)gui_node_base->node)->focused;
+                bool focused = false;
+
+                if(mp_obj_is_type(gui_node_base, &engine_gui_bitmap_button_2d_node_class_type)){
+                    focused = ((engine_gui_bitmap_button_2d_node_class_obj_t*)gui_node_base->node)->focused;
+                }else{
+                    focused = ((engine_gui_button_2d_node_class_obj_t*)gui_node_base->node)->focused;
+                }
+
+                // Don't need to focus any nodes, this one already is focused, end function
+                if(focused){
+                    return gui_focused;
+                }
+
+                current_gui_list_node = current_gui_list_node->next;
             }
-            
-            // Don't need to focus any nodes, this one already is focused, end function
-            if(focused){
-                return;
-            }
 
-            current_gui_list_node = current_gui_list_node->next;
+            // Made it this far, must mean that no gui nodes are focused, focus the first one
+            engine_gui_focus_node(gui_list->start->object);
         }
-
-        // Made it this far, must mean that no gui nodes are focused, focus the first one
-        engine_gui_focus_node(gui_list->start->object);
     }
+    return gui_focused;
 }
 
 
@@ -297,7 +304,7 @@ void engine_gui_tick(){
             engine_gui_button_2d_node_class_obj_t *focused_node = focused_gui_node_base->node;
             button = focused_node->button;
         }
-        
+
         // Check if the button is pressed, if it is, indicate with flag that it is pressed
         if(check_pressed(button)){
             if(mp_obj_is_type(focused_gui_node_base, &engine_gui_bitmap_button_2d_node_class_type)){
@@ -308,5 +315,5 @@ void engine_gui_tick(){
                 focused_node->pressed = true;
             }
         }
-    }   
+    }
 }
