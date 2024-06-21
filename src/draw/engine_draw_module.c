@@ -14,10 +14,10 @@
     DESC: Sets the background (the data that clears the framebuffer) to a color
     PARAM: [type=enum/int]   [name=background_color]  [value=enum/int (16-bit RGB565)]
     RETURN: None
-*/ 
+*/
 static mp_obj_t engine_draw_set_background_color(mp_obj_t module, mp_obj_t background_color){
     color_class_obj_t *color = background_color;
-    engine_display_set_fill_color(color->value.val);
+    engine_display_set_fill_color(color->value);
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_2(engine_draw_set_background_color_obj, engine_draw_set_background_color);
@@ -29,7 +29,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(engine_draw_set_background_color_obj, engine_draw_set_
     DESC: Sets the background (the data that clears the framebuffer) to a {ref_link:TextureResource}
     PARAM: [type=object]   [name=background]  [value={ref_link:TextureResource}]
     RETURN: None
-*/ 
+*/
 static mp_obj_t engine_draw_set_background(mp_obj_t module, mp_obj_t background){
     texture_resource_class_obj_t *background_texture_resource = background;
 
@@ -55,7 +55,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_draw_module_init_obj, engine_draw_module_init);
     NAME: engine_draw
     ID: engine_draw
     DESC: Module for drawing to the framebuffer
-    ATTR: [type=function]   [name={ref_link:set_background_color}]  [value=function] 
+    ATTR: [type=function]   [name={ref_link:set_background_color}]  [value=function]
     ATTR: [type=function]   [name={ref_link:set_background}]        [value=function]
     ATTR: [type=enum/int]   [name=black]                            [value=0x0000]
     ATTR: [type=enum/int]   [name=navy]                             [value=0x000F]
