@@ -287,18 +287,20 @@ static mp_attr_fun_t physics_circle_2d_node_class_attr(mp_obj_t self_in, qstr at
     PARAM: [type={ref_link:Vector2}]                     [name=gravity_scale]                               [value={ref_link:Vector2}]
     PARAM: [type=boolean]                                [name=outline]                                     [value=True or False (default: False)]
     PARAM: [type={ref_link:Color}]                       [name=outline_color]                               [value={ref_link:Color}]
-    PARAM: [type=int]                                    [name=collision_mask]                             [value=-32768 ~ 32767]
+    PARAM: [type=int]                                    [name=collision_mask]                              [value=32-bit bitmask (nodes with the same true bits will collide, set to 1 by default)]
     ATTR:  [type=function]                               [name={ref_link:add_child}]                        [value=function]
     ATTR:  [type=function]                               [name={ref_link:get_child}]                        [value=function]
     ATTR:  [type=function]                               [name={ref_link:get_child_count}]                  [value=function]
-    ATTR:  [type=function]                               [name={ref_link:node_base_mark_destroy}]                [value=function]
-    ATTR:  [type=function]                               [name={ref_link:node_base_mark_destroy_all}]            [value=function]
-    ATTR:  [type=function]                               [name={ref_link:node_base_mark_destroy_children}]       [value=function]
+    ATTR:  [type=function]                               [name={ref_link:node_base_mark_destroy}]           [value=function]
+    ATTR:  [type=function]                               [name={ref_link:node_base_mark_destroy_all}]       [value=function]
+    ATTR:  [type=function]                               [name={ref_link:node_base_mark_destroy_children}]  [value=function]
     ATTR:  [type=function]                               [name={ref_link:remove_child}]                     [value=function]
     ATTR:  [type=function]                               [name={ref_link:set_layer}]                        [value=function]
     ATTR:  [type=function]                               [name={ref_link:get_layer}]                        [value=function]
     ATTR:  [type=function]                               [name={ref_link:remove_child}]                     [value=function]
     ATTR:  [type=function]                               [name={ref_link:tick}]                             [value=function]
+    ATTR:  [type=function]                               [name={ref_link:enable_collision_layer}]           [value=function]
+    ATTR:  [type=function]                               [name={ref_link:disable_collision_layer}]          [value=function]
     ATTR:  [type={ref_link:Vector2}]                     [name=position]                                    [value={ref_link:Vector2}]
     ATTR:  [type=float]                                  [name=radius]                                      [value=any]
     ATTR:  [type={ref_link:Vector2}]                     [name=velocity]                                    [value={ref_link:Vector2}]
@@ -310,7 +312,7 @@ static mp_attr_fun_t physics_circle_2d_node_class_attr(mp_obj_t self_in, qstr at
     ATTR:  [type={ref_link:Vector2}]                     [name=gravity_scale]                               [value={ref_link:Vector2}]
     ATTR:  [type=boolean]                                [name=outline]                                     [value=True or False (default: False)]
     ATTR:  [type={ref_link:Color}]                       [name=outline_color]                               [value={ref_link:Color}]
-    ATTR:  [type=int]                                    [name=collision_mask]                             [value=-32768 ~ 32767]
+    ATTR:  [type=int]                                    [name=collision_mask]                              [value=32-bit bitmask (nodes with the same true bits will collide, set to 1 by default)]
     ATTR:  [type=function]                               [name={ref_link:on_collide}]                       [value=function]
     ATTR:  [type=function]                               [name={ref_link:on_separate}]                      [value=function]
     OVRR:  [type=function]                               [name={ref_link:physics_tick}]                     [value=function]
@@ -372,7 +374,7 @@ mp_obj_t physics_circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_ar
     if(parsed_args[gravity_scale].u_obj == MP_OBJ_NULL) parsed_args[gravity_scale].u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)});
     if(parsed_args[outline].u_obj == MP_OBJ_NULL) parsed_args[outline].u_obj = mp_obj_new_int(0);
     if(parsed_args[outline_color].u_obj == MP_OBJ_NULL) parsed_args[outline_color].u_obj = mp_const_none;
-    if(parsed_args[collision_mask].u_obj == MP_OBJ_NULL) parsed_args[collision_mask].u_obj = mp_obj_new_int(0);
+    if(parsed_args[collision_mask].u_obj == MP_OBJ_NULL) parsed_args[collision_mask].u_obj = mp_obj_new_int(1);
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = mp_obj_malloc_with_finaliser(engine_node_base_t, &engine_physics_circle_2d_node_class_type);
