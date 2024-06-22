@@ -68,7 +68,7 @@ class TilingRenderer(Rectangle2DNode):
         self.opacity = 0.0
 
     def render_tiles(self):
-        self.destroy_children()
+        #self.destroy_children()
         self.sprites = []
         for y in range(self.map_height):
             for x in range(self.map_width):

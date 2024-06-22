@@ -199,9 +199,9 @@ green_tile = TTileType('green', green_texture, frame_count_x=3, frame_count_y=6)
 trees_tile = TTileType('dirt', trees_texture, frame_count_x=3, frame_count_y=6)
 
 # Define map dimensions and parameters
-global_width = 20
-global_height = 40
-seed = time.ticks_ms()
+global_width = 10
+global_height = 50
+seed = time.time()
 
 # Generate a random golf hole
 rough_map, fairway_map, green_map, water_map, bunker_map = generate_golf_hole(global_width, global_height, seed)
@@ -224,7 +224,7 @@ renderer_bunker.set_layer(5)
 
 class MovingCamera(CameraNode):
     def __init__(self):
-        super().__init__(self)
+        super().__init__()
         self.zoom_levels = [0.125, 0.25, 0.5, 1, 2, 3, 4, 5]
         self.zoom_index = 3  # Start with zoom level 1 (index 3)
         self.zoom = self.zoom_levels[self.zoom_index]

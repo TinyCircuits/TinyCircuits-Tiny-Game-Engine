@@ -10,7 +10,7 @@ from engine_animation import Tween, ONE_SHOT, EASE_SINE_IN
 import random
 
 # Load card sprite texture
-cards_texture = TextureResource("BiggerCards3BW.bmp")
+cards_texture = TextureResource("BiggerCards2.bmp")
 
 tweens = []
 

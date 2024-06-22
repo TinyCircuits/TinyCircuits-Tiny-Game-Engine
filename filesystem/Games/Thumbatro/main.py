@@ -28,17 +28,66 @@ def tween_opacity(node, start_opacity, end_opacity, duration=1000):
     tw.start(node, 'opacity', start_opacity, end_opacity, duration, 1, ONE_SHOT, EASE_SINE_IN)
     tweens.append(tw)
 
+class Modifier:
+    def apply_bonus(self, card, selected_cards, hand):
+        return 0, 0
+
+class BaseScoreBonusModifier(Modifier):
+    def __init__(self, base_score_bonus):
+        self.base_score_bonus = base_score_bonus
+
+    def apply_bonus(self, card, selected_cards, hand):
+        if (card in selected_cards):
+            return self.base_score_bonus, 0
+        return 0,0
+
+class MultiplierBonusModifier(Modifier):
+    def __init__(self, multiplier_bonus):
+        self.multiplier_bonus = multiplier_bonus
+
+    def apply_bonus(self, card, selected_cards, hand):
+        if (card in selected_cards):
+            return 0, self.multiplier_bonus
+        return 0, 0
+
+class WildcardModifier(Modifier):
+    def apply_bonus(self, card, selected_cards, hand):
+        return 0, 0  # Wildcard itself does not modify base score or multiplier
+
+class SteelCardModifier(Modifier):
+    def __init__(self, base_score_bonus):
+            self.base_score_bonus = base_score_bonus
+
+    def apply_bonus(self, card, selected_cards, hand):
+        if (card in hand):
+            return self.base_score_bonus, 0
+        return 0, 0
+
+class CoinCardModifier(Modifier):
+    def apply_bonus(self, card, selected_cards, hand):
+        return 0, 0
+    
+class RareBonusModifier(Modifier):
+    def __init__(self, base_score_bonus, multiplier_bonus):
+        self.base_score_bonus = base_score_bonus
+        self.multiplier_bonus = multiplier_bonus
+
+    def apply_bonus(self, card, selected_cards, hand):
+        if (card in selected_cards):
+            return self.base_score_bonus, self.multiplier_bonus
+        return 0,0
+
 class CardSprite(Sprite2DNode):
-    def __init__(self, position, frame_x, frame_y, base_score_bonus=0, multiplier_bonus=0, is_wildcard_suit=False):
+    def __init__(self, position, frame_x, frame_y, modifiers=None):
         super().__init__(self, position)
-        self.initialize_attributes(frame_x, frame_y, base_score_bonus, multiplier_bonus, is_wildcard_suit)
+        self.initialize_attributes(frame_x, frame_y, modifiers)
         self.background = self.create_background()
         self.bonus_overlay = self.create_bonus_overlay()
         self.add_child(self.background)
         if self.bonus_overlay:
             self.add_child(self.bonus_overlay)
 
-    def initialize_attributes(self, frame_x, frame_y, base_score_bonus, multiplier_bonus, is_wildcard_suit):
+    def initialize_attributes(self, frame_x, frame_y, modifiers):
         self.texture = cards_texture
         self.frame_count_x = 13
         self.frame_count_y = 5
@@ -53,32 +102,35 @@ class CardSprite(Sprite2DNode):
         self.played = False
         self.discarded = False
         self.set_layer(4)
-        self.base_score_bonus = base_score_bonus
-        self.multiplier_bonus = multiplier_bonus
-        self.is_wildcard_suit = is_wildcard_suit
+        self.modifiers = modifiers if modifiers else []
 
     def create_background(self):
         background = Sprite2DNode(Vector2(0, 0))
-        self.set_sprite_attributes(background, 6, 4, 2)
+        self.set_sprite_attributes(background, 6, 4, 2, 1)
         return background
-
+    
     def create_bonus_overlay(self):
-        if self.base_score_bonus > 0 and self.multiplier_bonus > 0:
-            return self.create_overlay(9, 4, 0.4)
-        if self.base_score_bonus > 0:
-            return self.create_overlay(7, 4)
-        if self.is_wildcard_suit:
-            return self.create_overlay(10, 4)
-        if self.multiplier_bonus > 0:
-            return self.create_overlay(8, 4)
+        for modifier in self.modifiers:
+            if isinstance(modifier, RareBonusModifier):
+                return self.create_overlay(9, 4, opacity=0.4)
+            if isinstance(modifier, BaseScoreBonusModifier):
+                return self.create_overlay(7, 4)
+            if isinstance(modifier, MultiplierBonusModifier):
+                return self.create_overlay(8, 4)
+            if isinstance(modifier, WildcardModifier):
+                return self.create_overlay(10, 4)
+            if isinstance(modifier, SteelCardModifier):
+                return self.create_overlay(12, 4)
+            if isinstance(modifier, CoinCardModifier):
+                return self.create_overlay(11, 4, layer=5)
         return None
 
-    def create_overlay(self, frame_x, frame_y, opacity=1.0):
+    def create_overlay(self, frame_x, frame_y, layer=3, opacity=1.0):
         overlay = Sprite2DNode(Vector2(0, 0))
-        self.set_sprite_attributes(overlay, frame_x, frame_y, 3, opacity)
+        self.set_sprite_attributes(overlay, frame_x, frame_y, layer, opacity)
         return overlay
 
-    def set_sprite_attributes(self, sprite, frame_x, frame_y, layer, opacity=1.0):
+    def set_sprite_attributes(self, sprite, frame_x, frame_y, layer, opacity):
         sprite.frame_count_x = 13
         sprite.frame_count_y = 5
         sprite.frame_current_x = frame_x
@@ -113,10 +165,19 @@ class CardSprite(Sprite2DNode):
             self.bonus_overlay.opacity = 0
 
     def __str__(self):
-        return (f"Card(rank={self.rank_value}, suit={self.original_frame_y}, position=({self.position.x}, {self.position.y}), is_wildcard_suit={self.is_wildcard_suit})")
+        return (f"Card(rank={self.rank_value}, suit={self.original_frame_y}, position=({self.position.x}, {self.position.y}))")
 
     def __repr__(self):
         return self.__str__()
+
+    def apply_modifiers(self, selected_cards, hand):
+        total_base_score_bonus = 0
+        total_multiplier_bonus = 0
+        for modifier in self.modifiers:
+            base_score_bonus, multiplier_bonus = modifier.apply_bonus(self, selected_cards, hand)
+            total_base_score_bonus += base_score_bonus
+            total_multiplier_bonus += multiplier_bonus
+        return total_base_score_bonus, total_multiplier_bonus
 
     def print_rules(self):
         suits = ["Hearts", "Spades", "Diamonds", "Clubs"]
@@ -125,35 +186,61 @@ class CardSprite(Sprite2DNode):
         short_rank_names = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
 
         def get_rule(rank, suit):
-            if self.is_wildcard_suit:
-                return f"{rank} Wildcard"
-            if self.base_score_bonus > 0 and self.multiplier_bonus > 0:
-                return f"{rank} of {suit} +{self.base_score_bonus} x{self.multiplier_bonus}"
-            if self.base_score_bonus > 0:
-                return f"{rank} of {suit} +{self.base_score_bonus}"
-            if self.multiplier_bonus > 0:
-                return f"{rank} of {suit} x{self.multiplier_bonus}"
-            return f"{rank} of {suit}"
+            rule = f"{rank} of {suit}"
+            for modifier in self.modifiers:
+                if isinstance(modifier, BaseScoreBonusModifier):
+                    rule += f" +{modifier.base_score_bonus}"
+                if isinstance(modifier, MultiplierBonusModifier):
+                    rule += f" x{modifier.multiplier_bonus}"
+                if isinstance(modifier, WildcardModifier):
+                    rule = f"{rank} Wildcard"
+                if isinstance(modifier, SteelCardModifier):
+                    rule += f" Steel +{modifier.base_score_bonus}"
+                if isinstance(modifier, CoinCardModifier):
+                    rule += " Coin +1"
+                if isinstance(modifier, RareBonusModifier):
+                    rule += f" +{modifier.base_score_bonus} x{modifier.multiplier_bonus}"
+            return rule
 
         rank = rank_names[self.original_frame_x]
         short_rank = short_rank_names[self.original_frame_x]
-        if self.original_frame_y == 4:
-            if self.base_score_bonus > 0 and self.multiplier_bonus > 0:
-                rule = f"Joker +{self.base_score_bonus} x{self.multiplier_bonus}"
-            elif self.base_score_bonus > 0:
-                rule = f"Joker +{self.base_score_bonus}"
-            elif self.multiplier_bonus > 0:
-                rule = f"Joker x{self.multiplier_bonus}"
-            else:
-                rule = "Joker"
-        else:
-            suit = suits[self.original_frame_y]
-            short_suit = short_suits[self.original_frame_y]
-            rule = get_rule(rank, suit)
-            if len(rule) > 20:
-                rule = get_rule(short_rank, short_suit)
-        
+        suit = suits[self.original_frame_y]
+        short_suit = short_suits[self.original_frame_y]
+        rule = get_rule(rank, suit)
+        if len(rule) > 20:
+            rule = get_rule(short_rank, short_suit)
+
         return rule
+    
+class JokerCard(CardSprite):
+    def __init__(self, position, frame_x, frame_y, modifiers=None):
+        super().__init__(position, frame_x, frame_y, modifiers)
+
+    def print_rules(self):
+        rule = ""
+        for modifier in self.modifiers:
+            if isinstance(modifier, BaseScoreBonusModifier):
+                rule += f" +{modifier.base_score_bonus}"
+            if isinstance(modifier, MultiplierBonusModifier):
+                rule += f" x{modifier.multiplier_bonus}"
+            if isinstance(modifier, RareBonusModifier):
+                rule += f" +{modifier.base_score_bonus} x{modifier.multiplier_bonus}"
+        return f"Joker {rule}"
+    
+class HandTypeUpgradeCard(CardSprite):
+    def __init__(self, position, frame_x, frame_y, hand_type, level_bonus):
+        super().__init__(position, frame_x, frame_y)
+        self.hand_type = hand_type
+        self.level_bonus = level_bonus
+
+    def apply_upgrade(self, game):
+        if self.hand_type in game.hand_type_levels:
+            game.hand_type_levels[self.hand_type] += self.level_bonus
+        else:
+            game.hand_type_levels[self.hand_type] = self.level_bonus
+
+    def print_rules(self):
+        return f"{self.hand_type} +{self.level_bonus}"
 
 class Deck:
     def __init__(self, collection):
@@ -162,7 +249,7 @@ class Deck:
         self.shuffle()
 
     def create_deck(self):
-        return [CardSprite(Vector2(150, 80), card.original_frame_x, card.original_frame_y, card.base_score_bonus, card.multiplier_bonus, card.is_wildcard_suit) for card in self.collection]
+        return [CardSprite(Vector2(150, 80), card.original_frame_x, card.original_frame_y, card.modifiers) for card in self.collection]
 
     def draw_cards(self, num):
         drawn_cards = []
@@ -197,8 +284,10 @@ class PokerGame(Rectangle2DNode):
         self.score = 0
         self.target_score = 300
         self.booster_cards = []
+        self.hand_type_levels = {}
         self.is_booster_selection = False
         self.is_booster_wait = False
+        self.extra_booster_count = 0
         self.hand_display_time = None
         self.game_over = False
         self.background = Sprite2DNode(Vector2(63, 63))
@@ -480,6 +569,14 @@ class PokerGame(Rectangle2DNode):
             multiplier = 1
             hand_name="High Card"
 
+
+        # Apply hand type upgrades
+        if hand_name in self.hand_type_levels:
+            level = self.hand_type_levels[hand_name]
+            base_score += level * 10
+            multiplier += level
+            hand_name += f" +{level}"
+
         base_score_text = f"+{base_score}"
         multiplier_text = f"x{multiplier}"
         
@@ -487,45 +584,51 @@ class PokerGame(Rectangle2DNode):
         self.display_score_animation(base_score_text, Vector2(54,0), self.base_score_text.position, Color(0x001F))
         self.display_score_animation(multiplier_text, Vector2(74,0), self.mult_score_text.position, Color(0xF800))
 
-        # Add the rank of each card to the base score
-        base_score += sum(hand_ranks)
+        for card in self.selected_cards:
+            # Check for CoinCardModifier and increase extra booster count
+            if any(isinstance(modifier, CoinCardModifier) for modifier in card.modifiers):
+                self.extra_booster_count += 1
+
 
         # Add card-specific bonuses and show score animations
-        for card in self.selected_cards:
-            if card.base_score_bonus > 0:
-                base_score += card.base_score_bonus
-                base_score_text = f"+{card.base_score_bonus + card.rank_value}"
-                # Display base score animation in blue
-                base_start_position = Vector2(card.position.x, card.position.y - 10)  # Shift up by 20 pixels
-                self.display_score_animation(base_score_text, base_start_position, self.base_score_text.position, Color(0x001F))
-            else:
-                base_score_text = f"+{card.rank_value}"
-                # Display base score animation in blue
-                base_start_position = Vector2(card.position.x, card.position.y - 10)  # Shift up by 20 pixels
-                self.display_score_animation(base_score_text, base_start_position, self.base_score_text.position, Color(0x001F))
+        for card in self.selected_cards + self.hand:
+            base_bonus, mult_bonus = card.apply_modifiers(self.selected_cards, self.hand)
+
+            if card in self.selected_cards:
+                base_bonus += card.rank_value
             
-            if card.multiplier_bonus > 0:
-                multiplier += card.multiplier_bonus
-                multiplier_text = f"x{card.multiplier_bonus}"
+            if base_bonus > 0:
+                base_score += base_bonus
+                base_score_text = f"+{base_bonus}"
+                # Display base score animation in blue
+                base_start_position = Vector2(card.position.x, card.position.y - 10)  # Shift up by 20 pixels
+                self.display_score_animation(base_score_text, base_start_position, self.base_score_text.position, Color(0x001F))
+
+            if mult_bonus > 0:
+                multiplier += mult_bonus
+                multiplier_text = f"x{mult_bonus}"
                 # Display multiplier animation in red
                 multiplier_start_position = Vector2(card.position.x, card.position.y + 10)  # Shift down by 20 pixels
                 self.display_score_animation(multiplier_text, multiplier_start_position, self.mult_score_text.position, Color(0xF800))
 
+
         # Add joker bonuses and show score animations
         for joker in self.jokers:
-            if joker.base_score_bonus > 0:
-                base_score += joker.base_score_bonus
-                base_score_text = f"+{joker.base_score_bonus}"
+            base_bonus, mult_bonus = joker.apply_modifiers(self.jokers, self.hand)
+            if base_bonus > 0:
+                base_score += base_bonus
+                base_score_text = f"+{base_bonus}"
                 # Display base score animation in blue
                 base_start_position = Vector2(joker.position.x, joker.position.y - 10)  # Shift up by 20 pixels
                 self.display_score_animation(base_score_text, base_start_position, self.base_score_text.position, Color(0x001F))
-            
-            if joker.multiplier_bonus > 0:
-                multiplier += joker.multiplier_bonus
-                multiplier_text = f"x{joker.multiplier_bonus}"
+
+            if mult_bonus > 0:
+                multiplier += mult_bonus
+                multiplier_text = f"x{mult_bonus}"
                 # Display multiplier animation in red
                 multiplier_start_position = Vector2(joker.position.x, joker.position.y + 10)  # Shift down by 20 pixels
-                self.display_score_animation(multiplier_text, multiplier_start_position,self.mult_score_text.position, Color(0xF800))
+                self.display_score_animation(multiplier_text, multiplier_start_position, self.mult_score_text.position, Color(0xF800))
+
 
 
 
@@ -555,10 +658,10 @@ class PokerGame(Rectangle2DNode):
     
     def check_flush(self):
         # Count the number of wildcard cards
-        wildcard_count = sum(1 for card in self.selected_cards if card.is_wildcard_suit)
+        wildcard_count = sum(1 for card in self.selected_cards if any(isinstance(modifier, WildcardModifier) for modifier in card.modifiers))
         
         # Get the suits of the non-wildcard cards
-        non_wildcard_suits = [card.original_frame_y for card in self.selected_cards if not card.is_wildcard_suit]
+        non_wildcard_suits = [card.original_frame_y for card in self.selected_cards if not any(isinstance(modifier, WildcardModifier) for modifier in card.modifiers)]
         
         # If there are no non-wildcard cards, we need at least one wildcard card to form a flush
         if not non_wildcard_suits and wildcard_count > 0:
@@ -571,6 +674,7 @@ class PokerGame(Rectangle2DNode):
         is_flush = is_non_wildcard_flush and (len(non_wildcard_suits) + wildcard_count == 5)
         
         return is_flush
+
     
     def display_score_animation(self, score_text, start_position, end_position, color=Color(0x0400)):
         score_node = Text2DNode(start_position, font, score_text, 0, Vector2(1, 1), 1.0, 0, 0)
@@ -619,45 +723,61 @@ class PokerGame(Rectangle2DNode):
     def draw_booster_pack(self):
         new_cards = []
         size = 4
-        if (self.hands_played < 4):
+        if self.hands_played < 4:
             size += 1
-        if (self.discard_limit > 0):
+        if self.discard_limit > 0:
             size += 1
+        size += self.extra_booster_count
+        size = min(size, 7)
         for _ in range(size):
             rand_val = random.random()
-            
+
             # Generate Jokers
             if rand_val < 0.1:  # 10% chance for a Joker
                 joker_type = self.weighted_choice(['common', 'uncommon', 'rare'], [0.6, 0.3, 0.1])
                 if joker_type == 'common':
-                    card = CardSprite(Vector2(150, 80), random.randint(0, 1), 4, base_score_bonus=random.randint(10, 100), multiplier_bonus=0)
+                    card = JokerCard(Vector2(150, 80), random.randint(0, 1), 4, modifiers=[BaseScoreBonusModifier(random.randint(10, 100))])
                 elif joker_type == 'uncommon':
-                    card = CardSprite(Vector2(150, 80), random.randint(0, 1), 4, base_score_bonus=0, multiplier_bonus=random.randint(2, 5))
+                    card = JokerCard(Vector2(150, 80), random.randint(0, 1), 4, modifiers=[MultiplierBonusModifier(random.randint(2, 5))])
                 else:  # rare
-                    card = CardSprite(Vector2(150, 80), random.randint(0, 1), 4, base_score_bonus=random.randint(10, 50), multiplier_bonus=random.randint(2, 5))
+                    card = JokerCard(Vector2(150, 80), random.randint(0, 1), 4, modifiers=[RareBonusModifier(random.randint(10, 50), random.randint(2, 5))])
+
 
             # Generate Wildcard Suit Cards
-            elif rand_val < 0.3:  # 10% chance for a Wildcard Suit Card
-                card = CardSprite(Vector2(150, 80), random.randint(0, 12), random.randint(0, 3), is_wildcard_suit=True)
-            
-            # Generate Cards
-            elif rand_val < 0.8:  # 30% chance for a bonus card
+            elif rand_val < 0.3:  # 20% chance for a Wildcard Suit Card
+                card = CardSprite(Vector2(150, 80), random.randint(0, 12), random.randint(0, 3), modifiers=[WildcardModifier()])
+
+            # Generate bonus cards (common/uncommon/rare)
+            elif rand_val < 0.6:  # 50% chance for a bonus card
                 card_type = self.weighted_choice(['common', 'uncommon', 'rare'], [0.7, 0.2, 0.1])
                 frame_x = random.randint(0, 12)
                 frame_y = random.randint(0, 3)
                 if card_type == 'common':
-                    base_score_bonus = random.randint(5, 20)
-                    multiplier_bonus = 0
+                    modifiers = [BaseScoreBonusModifier(random.randint(5, 20))]
                 elif card_type == 'uncommon':
-                    base_score_bonus = 0
-                    multiplier_bonus = random.randint(2, 4)
+                    modifiers = [MultiplierBonusModifier(random.randint(2, 4))]
                 else:  # rare
-                    base_score_bonus = random.randint(10, 30)
-                    multiplier_bonus = random.randint(2, 6)
+                    modifiers = [RareBonusModifier(random.randint(10, 30), random.randint(2, 6))]
 
-                card = CardSprite(Vector2(150, 80), frame_x, frame_y, base_score_bonus, multiplier_bonus)
-            
-            else: #standard card
+                card = CardSprite(Vector2(150, 80), frame_x, frame_y, modifiers=modifiers)
+            # Generate hand upgrades
+            elif rand_val < 0.7:
+                frame_x = 3
+                frame_y = 4
+                hand_types = ["Flush five", "Flush house", "5 of a Kind", "Royal Flush", "Straight Flush", "4 of a Kind", "Full House", "Flush", "Straight", "3 of a Kind", "Two Pair", "One Pair", "High Card"]
+                hand_type = random.choice(hand_types)
+                level_bonus = 1
+                card = HandTypeUpgradeCard(Vector2(150, 80), frame_x, frame_y, hand_type, level_bonus)
+            # Generate Steel and Coin Cards
+            elif rand_val < 0.8:  # 10% chance for a Steel card
+                frame_x = random.randint(0, 12)
+                frame_y = random.randint(0, 3)
+                card = CardSprite(Vector2(150, 80), frame_x, frame_y, modifiers=[SteelCardModifier(random.randint(10, 100))])
+            elif rand_val < 0.9:  # 10% chance for a Coin card
+                frame_x = random.randint(0, 12)
+                frame_y = random.randint(0, 3)
+                card = CardSprite(Vector2(150, 80), frame_x, frame_y, modifiers=[CoinCardModifier()])
+            else:
                 frame_x = random.randint(0, 12)
                 frame_y = random.randint(0, 3)
                 card = CardSprite(Vector2(150, 80), frame_x, frame_y)
@@ -733,7 +853,9 @@ class PokerGame(Rectangle2DNode):
     def confirm_booster_selection(self):
         for card in self.selected_cards:
             card.select(False)
-            if card.original_frame_y == 4:
+            if isinstance(card, HandTypeUpgradeCard):
+                card.apply_upgrade(self)
+            elif card.original_frame_y == 4:
                 if len(self.jokers) < 2:
                     self.jokers.append(card)
                 else:
@@ -747,6 +869,7 @@ class PokerGame(Rectangle2DNode):
             card.position=Vector2(150,70)
         self.current_card_index = 0
         self.booster_cards = []
+        self.extra_booster_count = 0
         self.is_booster_selection = False
         self.deck = Deck(self.player_collection)
         self.deck.shuffle()
