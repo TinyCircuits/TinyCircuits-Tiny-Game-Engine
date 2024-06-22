@@ -234,8 +234,6 @@ class CardSprite(Sprite2DNode):
         total_base_score_bonus = 0
         total_multiplier_bonus = 0
         for modifier in self.modifiers:
-            print("Applying Modifier")
-            print(modifier)
             base_score_bonus, multiplier_bonus = modifier.apply_bonus(self, selected_cards, hand)
             total_base_score_bonus += base_score_bonus
             total_multiplier_bonus += multiplier_bonus
@@ -899,7 +897,7 @@ class PokerGame(Rectangle2DNode):
             rand_val = random.random()
 
             # Generate Jokers
-            if rand_val < 0.9:  # 10% chance for a Joker
+            if rand_val < 0.1:  # 10% chance for a Joker
                 joker_type = self.weighted_choice(['common', 'uncommon', 'rare'], [0.6, 0.3, 0.1])
                 if joker_type == 'common':
                     joker_sub_type = self.weighted_choice([EvenCardModifier(random.randint(10, 20),0),
