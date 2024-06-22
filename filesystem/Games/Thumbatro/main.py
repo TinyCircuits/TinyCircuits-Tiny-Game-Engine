@@ -257,7 +257,7 @@ class CardSprite(Sprite2DNode):
                 if isinstance(modifier, SteelCardModifier):
                     rule += f" Steel +{modifier.base_score_bonus}"
                 if isinstance(modifier, CoinCardModifier):
-                    rule += " Coin +1"
+                    rule += " Coin"
                 if isinstance(modifier, RareBonusModifier):
                     rule += f" +{modifier.base_score_bonus} x{modifier.multiplier_bonus}"
             return rule
@@ -532,38 +532,33 @@ class PokerGame(Rectangle2DNode):
             self.handle_booster_selection()
             self.update_booster_indicator_position()
         else:
-            if engine_io.check_just_pressed(engine_io.BUMPER_LEFT) and self.jokers:
-                self.joker_selection = True
-                self.current_card_index = 0
-                self.update_joker_indicator_position()
-                self.update_selected_joker_rules()
-            elif engine_io.check_just_pressed(engine_io.BUMPER_RIGHT) and self.jokers:
-                self.joker_selection = True
-                self.current_card_index = len(self.jokers) - 1
-                self.update_joker_indicator_position()
-                self.update_selected_joker_rules()
-
             if self.joker_selection:
-                if engine_io.check_just_pressed(engine_io.DPAD_LEFT):
+                if engine_io.check_just_pressed(engine_io.BUMPER_LEFT) or engine_io.check_just_pressed(engine_io.BUMPER_RIGHT):
+                    self.joker_selection = False
+                    self.update_hand_indicator_position()
+                elif engine_io.check_just_pressed(engine_io.DPAD_LEFT):
                     self.move_left_joker()
                 elif engine_io.check_just_pressed(engine_io.DPAD_RIGHT):
                     self.move_right_joker()
-                if engine_io.check_just_pressed(engine_io.B):
-                    self.joker_selection = False
-                    self.update_hand_indicator_position()
             else:
-                if engine_io.check_just_pressed(engine_io.DPAD_LEFT):
+                if (engine_io.check_just_pressed(engine_io.BUMPER_LEFT) or engine_io.check_just_pressed(engine_io.BUMPER_RIGHT)) and self.jokers:
+                    self.joker_selection = True
+                    self.current_card_index = 0 if engine_io.check_just_pressed(engine_io.BUMPER_LEFT) else len(self.jokers) - 1
+                    self.update_joker_indicator_position()
+                    self.update_selected_joker_rules()
+                elif engine_io.check_just_pressed(engine_io.DPAD_LEFT):
                     self.move_left()
                 elif engine_io.check_just_pressed(engine_io.DPAD_RIGHT):
                     self.move_right()
-                if engine_io.check_just_pressed(engine_io.DPAD_UP):
+                elif engine_io.check_just_pressed(engine_io.DPAD_UP):
                     self.select_card()
                 elif engine_io.check_just_pressed(engine_io.DPAD_DOWN):
                     self.deselect_card()
-                if engine_io.check_just_pressed(engine_io.A):
+                elif engine_io.check_just_pressed(engine_io.A):
                     self.play_hand()
-                if engine_io.check_just_pressed(engine_io.B):
+                elif engine_io.check_just_pressed(engine_io.B):
                     self.discard_and_draw()
+
 
     def move_left_joker(self):
         self.current_card_index = (self.current_card_index - 1) % len(self.jokers)
