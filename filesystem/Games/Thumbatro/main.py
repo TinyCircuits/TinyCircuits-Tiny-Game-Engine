@@ -16,6 +16,17 @@ font = FontResource("munro-narrow_10.bmp")
 cards_texture = TextureResource("BiggerCards2ext.bmp")
 background = TextureResource("thumbatrobackground.bmp")
 
+# Constants
+SUITS = ["Hearts", "Spades", "Diamonds", "Clubs"]
+SHORT_SUITS = ["Hrt", "Spd", "Dia", "Clb"]
+RANK_NAMES = ["Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"]
+SHORT_RANK_NAMES = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
+HAND_TYPES = [
+    "Flush five", "Flush house", "5 of a Kind", "Royal Flush", "Straight Flush",
+    "4 of a Kind", "Full House", "Flush", "Straight", "3 of a Kind", "Two Pair", 
+    "One Pair", "High Card"
+]
+
 tweens = []
 
 def tween_card(card, target, duration=500, speed=2):
@@ -31,111 +42,114 @@ def tween_opacity(node, start_opacity, end_opacity, duration=1000):
 class Modifier:
     def apply_bonus(self, card, selected_cards, hand):
         return 0, 0
+    
+    def get_rule_prefix(self):
+        return ""
 
-class BaseScoreBonusModifier(Modifier):
-    def __init__(self, base_score_bonus):
+class ScoreBonusModifier(Modifier):
+    def __init__(self, base_score_bonus=0, multiplier_bonus=0):
         self.base_score_bonus = base_score_bonus
-
-    def apply_bonus(self, card, selected_cards, hand):
-        if (card in selected_cards):
-            return self.base_score_bonus, 0
-        return 0,0
-
-class MultiplierBonusModifier(Modifier):
-    def __init__(self, multiplier_bonus):
         self.multiplier_bonus = multiplier_bonus
 
+    def check_condition(self, card):
+        return False
+
     def apply_bonus(self, card, selected_cards, hand):
-        if (card in selected_cards):
-            return 0, self.multiplier_bonus
-        return 0, 0
+        total_base_bonus = 0
+        total_mult_bonus = 0
+        for selected_card in selected_cards:
+            if self.check_condition(selected_card):
+                total_base_bonus += self.base_score_bonus
+                total_mult_bonus += self.multiplier_bonus
+        return total_base_bonus, total_mult_bonus
+
+    def get_rule_prefix(self):
+        parts = []
+        if self.base_score_bonus > 0:
+            parts.append(f"+{self.base_score_bonus}")
+        if self.multiplier_bonus > 0:
+            parts.append(f"x{self.multiplier_bonus}")
+        return " ".join(parts)
+    
+class BaseScoreBonusModifier(ScoreBonusModifier):
+    def __init__(self, base_score_bonus):
+        super().__init__(base_score_bonus, 0)
+
+    def check_condition(self, card):
+        return True
+
+class MultiplierBonusModifier(ScoreBonusModifier):
+    def __init__(self, bonus):
+        super().__init__(0, bonus)
+
+    def check_condition(self, card):
+        return True
+
+class RareBonusModifier(ScoreBonusModifier):
+    def __init__(self, base_score_bonus, multiplier_bonus):
+        super().__init__(base_score_bonus, multiplier_bonus)
+
+    def check_condition(self, card):
+        return True
 
 class WildcardModifier(Modifier):
-    def apply_bonus(self, card, selected_cards, hand):
-        return 0, 0  # Wildcard itself does not modify base score or multiplier
+    def get_rule_prefix(self):
+        return "Wild"
 
-class SteelCardModifier(Modifier):
-    def __init__(self, base_score_bonus):
-            self.base_score_bonus = base_score_bonus
-
+class SteelCardModifier(ScoreBonusModifier):
     def apply_bonus(self, card, selected_cards, hand):
-        if (card in hand):
-            return self.base_score_bonus, 0
+        if card in hand:
+            return self.base_score_bonus, self.multiplier_bonus
         return 0, 0
+
+    def get_rule_prefix(self):
+        return f"Steel +{self.base_score_bonus}"
 
 class CoinCardModifier(Modifier):
-    def apply_bonus(self, card, selected_cards, hand):
-        return 0, 0
-    
-class RareBonusModifier(Modifier):
-    def __init__(self, base_score_bonus, multiplier_bonus):
-        self.base_score_bonus = base_score_bonus
-        self.multiplier_bonus = multiplier_bonus
+    def get_rule_prefix(self):
+        return "Coin"
 
-    def apply_bonus(self, card, selected_cards, hand):
-        if (card in selected_cards or isinstance(card, JokerCard)):
-            return self.base_score_bonus, self.multiplier_bonus
-        return 0,0
-    
-class FaceCardModifier(Modifier):
-    def __init__(self, base_score_bonus, multiplier_bonus):
-        self.base_score_bonus = base_score_bonus
-        self.multiplier_bonus = multiplier_bonus
+class FaceCardModifier(ScoreBonusModifier):
+    def check_condition(self, card):
+        return 10 < card.rank_value < 14
 
-    def apply_bonus(self, card, selected_cards, hand):
-        total_base_bonus = 0
-        total_mult_bonus = 0
-        for selected_card in selected_cards:
-            if selected_card.rank_value > 10:
-                total_base_bonus += self.base_score_bonus
-                total_mult_bonus += self.multiplier_bonus
-        return total_base_bonus, total_mult_bonus
+    def get_rule_prefix(self):
+        return "Faces " + super().get_rule_prefix()
 
+class AceModifier(ScoreBonusModifier):
+    def check_condition(self, card):
+        return card.rank_value == 14
 
-class NonFaceCardModifier(Modifier):
-    def __init__(self, base_score_bonus, multiplier_bonus):
-        self.base_score_bonus = base_score_bonus
-        self.multiplier_bonus = multiplier_bonus
+    def get_rule_prefix(self):
+        return "Aces " + super().get_rule_prefix()
 
-    def apply_bonus(self, card, selected_cards, hand):
-        total_base_bonus = 0
-        total_mult_bonus = 0
-        for selected_card in selected_cards:
-            if selected_card.rank_value <= 10:
-                total_base_bonus += self.base_score_bonus
-                total_mult_bonus += self.multiplier_bonus
-        return total_base_bonus, total_mult_bonus
+class FibonacciModifier(ScoreBonusModifier):
+    def check_condition(self, card):
+        return card.rank_value in {2, 3, 5, 8, 13}
 
+    def get_rule_prefix(self):
+        return "Fibonacci " + super().get_rule_prefix()
 
-class EvenCardModifier(Modifier):
-    def __init__(self, base_score_bonus, multiplier_bonus):
-        self.base_score_bonus = base_score_bonus
-        self.multiplier_bonus = multiplier_bonus
+class NonFaceCardModifier(ScoreBonusModifier):
+    def check_condition(self, card):
+        return card.rank_value <= 10
 
-    def apply_bonus(self, card, selected_cards, hand):
-        total_base_bonus = 0
-        total_mult_bonus = 0
-        for selected_card in selected_cards:
-            if selected_card.rank_value % 2 == 0:
-                total_base_bonus += self.base_score_bonus
-                total_mult_bonus += self.multiplier_bonus
-        return total_base_bonus, total_mult_bonus
+    def get_rule_prefix(self):
+        return "Numbers " + super().get_rule_prefix()
 
+class EvenCardModifier(ScoreBonusModifier):
+    def check_condition(self, card):
+        return card.rank_value % 2 == 0
 
-class OddCardModifier(Modifier):
-    def __init__(self, base_score_bonus, multiplier_bonus):
-        self.base_score_bonus = base_score_bonus
-        self.multiplier_bonus = multiplier_bonus
+    def get_rule_prefix(self):
+        return "Even " + super().get_rule_prefix()
 
-    def apply_bonus(self, card, selected_cards, hand):
-        total_base_bonus = 0
-        total_mult_bonus = 0
-        for selected_card in selected_cards:
-            if selected_card.rank_value % 2 != 0:
-                total_base_bonus += self.base_score_bonus
-                total_mult_bonus += self.multiplier_bonus
-        return total_base_bonus, total_mult_bonus
+class OddCardModifier(ScoreBonusModifier):
+    def check_condition(self, card):
+        return card.rank_value % 2 != 0
 
+    def get_rule_prefix(self):
+        return "Odd " + super().get_rule_prefix()
 
 class CardSprite(Sprite2DNode):
     def __init__(self, position, frame_x, frame_y, modifiers=None):
@@ -240,32 +254,18 @@ class CardSprite(Sprite2DNode):
         return total_base_score_bonus, total_multiplier_bonus
 
     def print_rules(self):
-        suits = ["Hearts", "Spades", "Diamonds", "Clubs"]
-        short_suits = ["Hrt", "Spd", "Dia", "Clb"]
-        rank_names = ["Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"]
-        short_rank_names = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
-
         def get_rule(rank, suit):
             rule = f"{rank} of {suit}"
             for modifier in self.modifiers:
-                if isinstance(modifier, BaseScoreBonusModifier):
-                    rule += f" +{modifier.base_score_bonus}"
-                if isinstance(modifier, MultiplierBonusModifier):
-                    rule += f" x{modifier.multiplier_bonus}"
-                if isinstance(modifier, WildcardModifier):
-                    rule = f"{rank} Wildcard"
-                if isinstance(modifier, SteelCardModifier):
-                    rule += f" Steel +{modifier.base_score_bonus}"
-                if isinstance(modifier, CoinCardModifier):
-                    rule += " Coin"
-                if isinstance(modifier, RareBonusModifier):
-                    rule += f" +{modifier.base_score_bonus} x{modifier.multiplier_bonus}"
+                prefix = modifier.get_rule_prefix()
+                if prefix:
+                    rule += f" {prefix}"
             return rule
 
-        rank = rank_names[self.original_frame_x]
-        short_rank = short_rank_names[self.original_frame_x]
-        suit = suits[self.original_frame_y]
-        short_suit = short_suits[self.original_frame_y]
+        rank = RANK_NAMES[self.original_frame_x]
+        short_rank = SHORT_RANK_NAMES[self.original_frame_x]
+        suit = SUITS[self.original_frame_y]
+        short_suit = SHORT_SUITS[self.original_frame_y]
         rule = get_rule(rank, suit)
         if len(rule) > 20:
             rule = get_rule(short_rank, short_suit)
@@ -277,8 +277,8 @@ class JokerCard(CardSprite):
         super().__init__(position, frame_x, frame_y, modifiers)
 
     def create_bonus_overlay(self):
-        has_base_score_bonus = any(isinstance(modifier, (BaseScoreBonusModifier, RareBonusModifier, FaceCardModifier, NonFaceCardModifier, EvenCardModifier, OddCardModifier)) and modifier.base_score_bonus > 0 for modifier in self.modifiers)
-        has_multiplier_bonus = any(isinstance(modifier, (MultiplierBonusModifier, RareBonusModifier, FaceCardModifier, NonFaceCardModifier, EvenCardModifier, OddCardModifier)) and modifier.multiplier_bonus > 0 for modifier in self.modifiers)
+        has_base_score_bonus = any(isinstance(modifier, ScoreBonusModifier) and modifier.base_score_bonus > 0 for modifier in self.modifiers)
+        has_multiplier_bonus = any(isinstance(modifier, ScoreBonusModifier) and modifier.multiplier_bonus > 0 for modifier in self.modifiers)
 
         if has_base_score_bonus and has_multiplier_bonus:
             return self.create_overlay(9, 4, opacity=0.4)  # Rare equivalent
@@ -291,43 +291,9 @@ class JokerCard(CardSprite):
     def print_rules(self):
         rule = "Joker"
         for modifier in self.modifiers:
-            if isinstance(modifier, BaseScoreBonusModifier) and modifier.base_score_bonus > 0:
-                rule += f" +{modifier.base_score_bonus}"
-            if isinstance(modifier, MultiplierBonusModifier) and modifier.multiplier_bonus > 0:
-                rule += f" x{modifier.multiplier_bonus}"
-            if isinstance(modifier, RareBonusModifier):
-                if modifier.base_score_bonus > 0:
-                    rule += f" +{modifier.base_score_bonus}"
-                if modifier.multiplier_bonus > 0:
-                    rule += f" x{modifier.multiplier_bonus}"
-            if isinstance(modifier, FaceCardModifier):
-                if modifier.base_score_bonus > 0 or modifier.multiplier_bonus > 0:
-                    rule += " Faces"
-                    if modifier.base_score_bonus > 0:
-                        rule += f" +{modifier.base_score_bonus}"
-                    if modifier.multiplier_bonus > 0:
-                        rule += f" x{modifier.multiplier_bonus}"
-            if isinstance(modifier, NonFaceCardModifier):
-                if modifier.base_score_bonus > 0 or modifier.multiplier_bonus > 0:
-                    rule += " Numbers"
-                    if modifier.base_score_bonus > 0:
-                        rule += f" +{modifier.base_score_bonus}"
-                    if modifier.multiplier_bonus > 0:
-                        rule += f" x{modifier.multiplier_bonus}"
-            if isinstance(modifier, EvenCardModifier):
-                if modifier.base_score_bonus > 0 or modifier.multiplier_bonus > 0:
-                    rule += " Even"
-                    if modifier.base_score_bonus > 0:
-                        rule += f" +{modifier.base_score_bonus}"
-                    if modifier.multiplier_bonus > 0:
-                        rule += f" x{modifier.multiplier_bonus}"
-            if isinstance(modifier, OddCardModifier):
-                if modifier.base_score_bonus > 0 or modifier.multiplier_bonus > 0:
-                    rule += " Odd"
-                    if modifier.base_score_bonus > 0:
-                        rule += f" +{modifier.base_score_bonus}"
-                    if modifier.multiplier_bonus > 0:
-                        rule += f" x{modifier.multiplier_bonus}"
+            prefix = modifier.get_rule_prefix()
+            if prefix:
+                rule += f" {prefix}"
         return rule
     
 class HandTypeUpgradeCard(CardSprite):
@@ -360,13 +326,11 @@ class TarotCard(CardSprite):
             game.player_collection = [card for card in game.player_collection if card.original_frame_y != self.rank_or_suit]
 
     def print_rules(self):
-        rank_names = ["Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"]
-        suits = ["Hearts", "Spades", "Diamonds", "Clubs"]
         if self.is_rank:
-            rank_name = rank_names[self.rank_or_suit]
+            rank_name = RANK_NAMES[self.rank_or_suit]
             return f"Remove all {rank_name}s"
         else:
-            suit_name = suits[self.rank_or_suit]
+            suit_name = SUITS[self.rank_or_suit]
             return f"Remove all {suit_name}"
 
 class Deck:
@@ -679,59 +643,31 @@ class PokerGame(Rectangle2DNode):
         multiplier = 1
         hand_name = None
 
-        if is_flush and 5 in rank_count.values():
-            base_score = 160  # Flush five
-            multiplier = 16
-            hand_name="Flush five"
-        elif is_flush and 3 in rank_count.values() and 2 in rank_count.values():
-            base_score = 140  # Flush house
-            multiplier = 14
-            hand_name="Flush house"
-        elif 5 in rank_count.values():
-            base_score = 120  # Five of a Kind
-            multiplier = 12
-            hand_name="5 of a Kind"
-        elif is_flush and is_straight and (12 in hand_ranks or 14 in hand_ranks):
-            base_score = 100  # Royal Flush
-            multiplier = 10
-            hand_name="Royal Flush"
-        elif is_flush and is_straight:
-            base_score = 100  # Straight Flush
-            multiplier = 8
-            hand_name="Straight Flush"
-        elif 4 in rank_count.values():
-            base_score = 60  # Four of a Kind
-            multiplier = 7
-            hand_name="4 of a Kind"
-        elif 3 in rank_count.values() and 2 in rank_count.values():
-            base_score = 40  # Full House
-            multiplier = 4
-            hand_name="Full House"
-        elif is_flush:
-            base_score = 35  # Flush
-            multiplier = 4
-            hand_name="Flush"
-        elif is_straight:
-            base_score = 30  # Straight
-            multiplier = 4
-            hand_name="Straight"
-        elif 3 in rank_count.values():
-            base_score = 30  # Three of a Kind
-            multiplier = 3
-            hand_name="3 of a Kind"
-        elif list(rank_count.values()).count(2) == 2:
-            base_score = 20  # Two Pair
-            multiplier = 2
-            hand_name="Two Pair"
-        elif 2 in rank_count.values():
-            base_score = 10  # One Pair
-            multiplier = 2
-            hand_name="One Pair"
-        else:
-            base_score = 5  # High Card
-            multiplier = 1
-            hand_name="High Card"
+        hand_conditions = [
+            (HAND_TYPES[0], 160, 16, lambda: is_flush and 5 in rank_count.values()),  # "Flush five"
+            (HAND_TYPES[1], 140, 14, lambda: is_flush and 3 in rank_count.values() and 2 in rank_count.values()),  # "Flush house"
+            (HAND_TYPES[2], 120, 12, lambda: 5 in rank_count.values()),  # "5 of a Kind"
+            (HAND_TYPES[3], 100, 10, lambda: is_flush and is_straight and (12 in hand_ranks or 14 in hand_ranks)),  # "Royal Flush"
+            (HAND_TYPES[4], 100, 8, lambda: is_flush and is_straight),  # "Straight Flush"
+            (HAND_TYPES[5], 60, 7, lambda: 4 in rank_count.values()),  # "4 of a Kind"
+            (HAND_TYPES[6], 40, 4, lambda: 3 in rank_count.values() and 2 in rank_count.values()),  # "Full House"
+            (HAND_TYPES[7], 35, 4, lambda: is_flush),  # "Flush"
+            (HAND_TYPES[8], 30, 4, lambda: is_straight),  # "Straight"
+            (HAND_TYPES[9], 30, 3, lambda: 3 in rank_count.values()),  # "3 of a Kind"
+            (HAND_TYPES[10], 20, 2, lambda: list(rank_count.values()).count(2) == 2),  # "Two Pair"
+            (HAND_TYPES[11], 10, 2, lambda: 2 in rank_count.values())  # "One Pair"
+        ]
 
+        base_score = 5  # Default score for High Card
+        multiplier = 1  # Default multiplier for High Card
+        hand_name = "High Card"  # Default hand name
+
+        for name, score, mult, condition in hand_conditions:
+            if condition():
+                hand_name = name
+                base_score = score
+                multiplier = mult
+                break
 
         # Apply hand type upgrades
         if hand_name in self.hand_type_levels:
@@ -897,18 +833,23 @@ class PokerGame(Rectangle2DNode):
                 if joker_type == 'common':
                     joker_sub_type = self.weighted_choice([EvenCardModifier(random.randint(10, 20),0),
                                                            OddCardModifier(random.randint(10, 20),0),
+                                                           FibonacciModifier(random.randint(10, 20),0),
+                                                           AceModifier(random.randint(10, 20),0),
                                                            NonFaceCardModifier(random.randint(10, 20),0),
                                                            FaceCardModifier(random.randint(10, 20),0)],
-                                                           [0.4, 0.4, 0.2, 0.2])
+                                                           [0.3, 0.3, 0.3, 0.2, 0.2, 0.2])
                     card = JokerCard(Vector2(150, 80), 0, 4, modifiers=[joker_sub_type])
                 elif joker_type == 'uncommon':
                     joker_sub_type = self.weighted_choice([EvenCardModifier(0,random.randint(1, 3)),
                                                            OddCardModifier(0,random.randint(1, 3)),
+                                                           FibonacciModifier(0,random.randint(1, 3)),
+                                                           AceModifier(0,random.randint(1, 3)),
                                                            NonFaceCardModifier(0,random.randint(1, 3)),
                                                            FaceCardModifier(0,random.randint(1, 3)),
+                                                           BaseScoreBonusModifier(random.randint(10, 50)),
                                                            MultiplierBonusModifier(random.randint(2, 5)),
                                                            RareBonusModifier(random.randint(10, 50), random.randint(2, 5))],
-                                                           [0.15, 0.15, 0.15, 0.15, 0.25, 0.15])
+                                                           [0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.25, 0.15])
                     card = JokerCard(Vector2(150, 80), 1, 4, modifiers=[joker_sub_type])
                 else:  # rare
                     card = JokerCard(Vector2(150, 80), 2, 4, modifiers=[RareBonusModifier(random.randint(20, 70), random.randint(4, 7))])
@@ -943,8 +884,8 @@ class PokerGame(Rectangle2DNode):
             elif rand_val < 0.7: # 10% chance for an upgrade card
                 frame_x = 3
                 frame_y = 4
-                hand_types = ["Flush five", "Flush house", "5 of a Kind", "Royal Flush", "Straight Flush", "4 of a Kind", "Full House", "Flush", "Straight", "3 of a Kind", "Two Pair", "One Pair", "High Card"]
-                hand_type = random.choice(hand_types)
+                weights = [1, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 5, 4]  # Adjust weights as necessary based on rarity
+                hand_type = self.weighted_choice(HAND_TYPES, weights)
                 level_bonus = 1
                 card = HandTypeUpgradeCard(Vector2(150, 80), frame_x, frame_y, hand_type, level_bonus)
             # Generate Steel and Coin Cards
