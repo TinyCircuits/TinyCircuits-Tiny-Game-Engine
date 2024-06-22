@@ -58,7 +58,6 @@ static void color_class_print(const mp_print_t *print, mp_obj_t self_in, mp_prin
 }
 
 
-// Returns an RGB565 color value from the specified Color or int (RGB565).
 uint16_t engine_color_class_color_value(mp_obj_t color) {
     if (MP_OBJ_IS_TYPE(color, &color_class_type) || MP_OBJ_IS_TYPE(color, &const_color_class_type)) {
         return ((color_class_obj_t*)MP_OBJ_TO_PTR(color))->value;
@@ -69,7 +68,7 @@ uint16_t engine_color_class_color_value(mp_obj_t color) {
     }
 }
 
-// If the argument is a Color or ConstColor, returns itself. If the argument is an int, creates a Color from it.
+
 mp_obj_t engine_color_wrap(mp_obj_t color) {
     if (MP_OBJ_IS_TYPE(color, &color_class_type) || MP_OBJ_IS_TYPE(color, &const_color_class_type)) {
         return color;
@@ -83,7 +82,6 @@ mp_obj_t engine_color_wrap(mp_obj_t color) {
 }
 
 
-// If the argument is a Color or ConstColor, returns itself. If the argument is an int, creates a Color from it.
 mp_obj_t engine_color_wrap_opt(mp_obj_t color_or_none) {
     if (color_or_none == mp_const_none) {
         return mp_const_none;
