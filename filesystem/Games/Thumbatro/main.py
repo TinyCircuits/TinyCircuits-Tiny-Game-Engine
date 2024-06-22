@@ -73,9 +73,69 @@ class RareBonusModifier(Modifier):
         self.multiplier_bonus = multiplier_bonus
 
     def apply_bonus(self, card, selected_cards, hand):
-        if (card in selected_cards):
+        if (card in selected_cards or isinstance(card, JokerCard)):
             return self.base_score_bonus, self.multiplier_bonus
         return 0,0
+    
+class FaceCardModifier(Modifier):
+    def __init__(self, base_score_bonus, multiplier_bonus):
+        self.base_score_bonus = base_score_bonus
+        self.multiplier_bonus = multiplier_bonus
+
+    def apply_bonus(self, card, selected_cards, hand):
+        total_base_bonus = 0
+        total_mult_bonus = 0
+        for selected_card in selected_cards:
+            if selected_card.rank_value > 10:
+                total_base_bonus += self.base_score_bonus
+                total_mult_bonus += self.multiplier_bonus
+        return total_base_bonus, total_mult_bonus
+
+
+class NonFaceCardModifier(Modifier):
+    def __init__(self, base_score_bonus, multiplier_bonus):
+        self.base_score_bonus = base_score_bonus
+        self.multiplier_bonus = multiplier_bonus
+
+    def apply_bonus(self, card, selected_cards, hand):
+        total_base_bonus = 0
+        total_mult_bonus = 0
+        for selected_card in selected_cards:
+            if selected_card.rank_value <= 10:
+                total_base_bonus += self.base_score_bonus
+                total_mult_bonus += self.multiplier_bonus
+        return total_base_bonus, total_mult_bonus
+
+
+class EvenCardModifier(Modifier):
+    def __init__(self, base_score_bonus, multiplier_bonus):
+        self.base_score_bonus = base_score_bonus
+        self.multiplier_bonus = multiplier_bonus
+
+    def apply_bonus(self, card, selected_cards, hand):
+        total_base_bonus = 0
+        total_mult_bonus = 0
+        for selected_card in selected_cards:
+            if selected_card.rank_value % 2 == 0:
+                total_base_bonus += self.base_score_bonus
+                total_mult_bonus += self.multiplier_bonus
+        return total_base_bonus, total_mult_bonus
+
+
+class OddCardModifier(Modifier):
+    def __init__(self, base_score_bonus, multiplier_bonus):
+        self.base_score_bonus = base_score_bonus
+        self.multiplier_bonus = multiplier_bonus
+
+    def apply_bonus(self, card, selected_cards, hand):
+        total_base_bonus = 0
+        total_mult_bonus = 0
+        for selected_card in selected_cards:
+            if selected_card.rank_value % 2 != 0:
+                total_base_bonus += self.base_score_bonus
+                total_mult_bonus += self.multiplier_bonus
+        return total_base_bonus, total_mult_bonus
+
 
 class CardSprite(Sprite2DNode):
     def __init__(self, position, frame_x, frame_y, modifiers=None):
@@ -174,6 +234,8 @@ class CardSprite(Sprite2DNode):
         total_base_score_bonus = 0
         total_multiplier_bonus = 0
         for modifier in self.modifiers:
+            print("Applying Modifier")
+            print(modifier)
             base_score_bonus, multiplier_bonus = modifier.apply_bonus(self, selected_cards, hand)
             total_base_score_bonus += base_score_bonus
             total_multiplier_bonus += multiplier_bonus
@@ -216,16 +278,59 @@ class JokerCard(CardSprite):
     def __init__(self, position, frame_x, frame_y, modifiers=None):
         super().__init__(position, frame_x, frame_y, modifiers)
 
+    def create_bonus_overlay(self):
+        has_base_score_bonus = any(isinstance(modifier, (BaseScoreBonusModifier, RareBonusModifier, FaceCardModifier, NonFaceCardModifier, EvenCardModifier, OddCardModifier)) and modifier.base_score_bonus > 0 for modifier in self.modifiers)
+        has_multiplier_bonus = any(isinstance(modifier, (MultiplierBonusModifier, RareBonusModifier, FaceCardModifier, NonFaceCardModifier, EvenCardModifier, OddCardModifier)) and modifier.multiplier_bonus > 0 for modifier in self.modifiers)
+
+        if has_base_score_bonus and has_multiplier_bonus:
+            return self.create_overlay(9, 4, opacity=0.4)  # Rare equivalent
+        elif has_base_score_bonus:
+            return self.create_overlay(7, 4)
+        elif has_multiplier_bonus:
+            return self.create_overlay(8, 4)
+        return None
+
     def print_rules(self):
-        rule = ""
+        rule = "Joker"
         for modifier in self.modifiers:
-            if isinstance(modifier, BaseScoreBonusModifier):
+            if isinstance(modifier, BaseScoreBonusModifier) and modifier.base_score_bonus > 0:
                 rule += f" +{modifier.base_score_bonus}"
-            if isinstance(modifier, MultiplierBonusModifier):
+            if isinstance(modifier, MultiplierBonusModifier) and modifier.multiplier_bonus > 0:
                 rule += f" x{modifier.multiplier_bonus}"
             if isinstance(modifier, RareBonusModifier):
-                rule += f" +{modifier.base_score_bonus} x{modifier.multiplier_bonus}"
-        return f"Joker {rule}"
+                if modifier.base_score_bonus > 0:
+                    rule += f" +{modifier.base_score_bonus}"
+                if modifier.multiplier_bonus > 0:
+                    rule += f" x{modifier.multiplier_bonus}"
+            if isinstance(modifier, FaceCardModifier):
+                if modifier.base_score_bonus > 0 or modifier.multiplier_bonus > 0:
+                    rule += " Faces"
+                    if modifier.base_score_bonus > 0:
+                        rule += f" +{modifier.base_score_bonus}"
+                    if modifier.multiplier_bonus > 0:
+                        rule += f" x{modifier.multiplier_bonus}"
+            if isinstance(modifier, NonFaceCardModifier):
+                if modifier.base_score_bonus > 0 or modifier.multiplier_bonus > 0:
+                    rule += " Numbers"
+                    if modifier.base_score_bonus > 0:
+                        rule += f" +{modifier.base_score_bonus}"
+                    if modifier.multiplier_bonus > 0:
+                        rule += f" x{modifier.multiplier_bonus}"
+            if isinstance(modifier, EvenCardModifier):
+                if modifier.base_score_bonus > 0 or modifier.multiplier_bonus > 0:
+                    rule += " Even"
+                    if modifier.base_score_bonus > 0:
+                        rule += f" +{modifier.base_score_bonus}"
+                    if modifier.multiplier_bonus > 0:
+                        rule += f" x{modifier.multiplier_bonus}"
+            if isinstance(modifier, OddCardModifier):
+                if modifier.base_score_bonus > 0 or modifier.multiplier_bonus > 0:
+                    rule += " Odd"
+                    if modifier.base_score_bonus > 0:
+                        rule += f" +{modifier.base_score_bonus}"
+                    if modifier.multiplier_bonus > 0:
+                        rule += f" x{modifier.multiplier_bonus}"
+        return rule
     
 class HandTypeUpgradeCard(CardSprite):
     def __init__(self, position, frame_x, frame_y, hand_type, level_bonus):
@@ -241,6 +346,30 @@ class HandTypeUpgradeCard(CardSprite):
 
     def print_rules(self):
         return f"{self.hand_type} +{self.level_bonus}"
+    
+class TarotCard(CardSprite):
+    def __init__(self, position, frame_x, frame_y, rank_or_suit, is_rank):
+        super().__init__(position, frame_x, frame_y)
+        self.rank_or_suit = rank_or_suit
+        self.is_rank = is_rank
+
+    def apply_upgrade(self, game):
+        if self.is_rank:
+            # Remove all cards of the specified rank from the collection
+            game.player_collection = [card for card in game.player_collection if card.original_frame_x != self.rank_or_suit]
+        else:
+            # Remove all cards of the specified suit from the collection
+            game.player_collection = [card for card in game.player_collection if card.original_frame_y != self.rank_or_suit]
+
+    def print_rules(self):
+        rank_names = ["Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"]
+        suits = ["Hearts", "Spades", "Diamonds", "Clubs"]
+        if self.is_rank:
+            rank_name = rank_names[self.rank_or_suit]
+            return f"Remove all {rank_name}s"
+        else:
+            suit_name = suits[self.rank_or_suit]
+            return f"Remove all {suit_name}"
 
 class Deck:
     def __init__(self, collection):
@@ -267,6 +396,7 @@ class Deck:
 class PokerGame(Rectangle2DNode):
     def __init__(self, position, width, height):
         super().__init__(self, position, width, height)
+        self.joker_selection = False
         self.player_collection = self.create_initial_collection()
         self.jokers = []
         self.deck = Deck(self.player_collection)
@@ -404,18 +534,57 @@ class PokerGame(Rectangle2DNode):
             self.handle_booster_selection()
             self.update_booster_indicator_position()
         else:
-            if engine_io.check_just_pressed(engine_io.DPAD_LEFT):
-                self.move_left()
-            elif engine_io.check_just_pressed(engine_io.DPAD_RIGHT):
-                self.move_right()
-            if engine_io.check_just_pressed(engine_io.DPAD_UP):
-                self.select_card()
-            elif engine_io.check_just_pressed(engine_io.DPAD_DOWN):
-                self.deselect_card()
-            if engine_io.check_just_pressed(engine_io.A):
-                self.play_hand()
-            if engine_io.check_just_pressed(engine_io.B):
-                self.discard_and_draw()
+            if engine_io.check_just_pressed(engine_io.BUMPER_LEFT) and self.jokers:
+                self.joker_selection = True
+                self.current_card_index = 0
+                self.update_joker_indicator_position()
+                self.update_selected_joker_rules()
+            elif engine_io.check_just_pressed(engine_io.BUMPER_RIGHT) and self.jokers:
+                self.joker_selection = True
+                self.current_card_index = len(self.jokers) - 1
+                self.update_joker_indicator_position()
+                self.update_selected_joker_rules()
+
+            if self.joker_selection:
+                if engine_io.check_just_pressed(engine_io.DPAD_LEFT):
+                    self.move_left_joker()
+                elif engine_io.check_just_pressed(engine_io.DPAD_RIGHT):
+                    self.move_right_joker()
+                if engine_io.check_just_pressed(engine_io.B):
+                    self.joker_selection = False
+                    self.update_hand_indicator_position()
+            else:
+                if engine_io.check_just_pressed(engine_io.DPAD_LEFT):
+                    self.move_left()
+                elif engine_io.check_just_pressed(engine_io.DPAD_RIGHT):
+                    self.move_right()
+                if engine_io.check_just_pressed(engine_io.DPAD_UP):
+                    self.select_card()
+                elif engine_io.check_just_pressed(engine_io.DPAD_DOWN):
+                    self.deselect_card()
+                if engine_io.check_just_pressed(engine_io.A):
+                    self.play_hand()
+                if engine_io.check_just_pressed(engine_io.B):
+                    self.discard_and_draw()
+
+    def move_left_joker(self):
+        self.current_card_index = (self.current_card_index - 1) % len(self.jokers)
+        self.update_joker_indicator_position()
+        self.update_selected_joker_rules()
+
+    def move_right_joker(self):
+        self.current_card_index = (self.current_card_index + 1) % len(self.jokers)
+        self.update_joker_indicator_position()
+        self.update_selected_joker_rules()
+
+    def update_joker_indicator_position(self):
+        if self.jokers and 0 <= self.current_card_index < len(self.jokers):
+            joker_position = self.jokers[self.current_card_index].position
+            self.hand_indicator.position = Vector2(joker_position.x, joker_position.y + 20)
+            self.hand_indicator.set_layer(7)
+
+    def update_selected_joker_rules(self):
+        self.hand_type_text.text = self.jokers[self.current_card_index].print_rules()
 
     def move_left(self):
         self.current_card_index = (self.current_card_index - 1) % len(self.hand)
@@ -428,13 +597,14 @@ class PokerGame(Rectangle2DNode):
         self.update_selected_card_rules()
 
     def update_hand_indicator_position(self):
-        if self.hand and 0 <= self.current_card_index < len(self.hand):
+        if not self.joker_selection and self.hand and 0 <= self.current_card_index < len(self.hand):
             card_position = self.hand[self.current_card_index].position
             self.hand_indicator.position = Vector2(card_position.x, card_position.y + 20)
             self.hand_indicator.set_layer(7)
 
     def update_selected_card_rules(self):
-        self.hand_type_text.text = self.hand[self.current_card_index].print_rules()
+        if not self.joker_selection:
+            self.hand_type_text.text = self.hand[self.current_card_index].print_rules()
 
     def select_card(self):
         card = self.hand[self.current_card_index]
@@ -611,10 +781,9 @@ class PokerGame(Rectangle2DNode):
                 multiplier_start_position = Vector2(card.position.x, card.position.y + 10)  # Shift down by 20 pixels
                 self.display_score_animation(multiplier_text, multiplier_start_position, self.mult_score_text.position, Color(0xF800))
 
-
         # Add joker bonuses and show score animations
         for joker in self.jokers:
-            base_bonus, mult_bonus = joker.apply_modifiers(self.jokers, self.hand)
+            base_bonus, mult_bonus = joker.apply_modifiers(self.selected_cards, self.hand)
             if base_bonus > 0:
                 base_score += base_bonus
                 base_score_text = f"+{base_bonus}"
@@ -628,9 +797,6 @@ class PokerGame(Rectangle2DNode):
                 # Display multiplier animation in red
                 multiplier_start_position = Vector2(joker.position.x, joker.position.y + 10)  # Shift down by 20 pixels
                 self.display_score_animation(multiplier_text, multiplier_start_position, self.mult_score_text.position, Color(0xF800))
-
-
-
 
         # Calculate the final score
         final_score = base_score * multiplier
@@ -733,22 +899,42 @@ class PokerGame(Rectangle2DNode):
             rand_val = random.random()
 
             # Generate Jokers
-            if rand_val < 0.1:  # 10% chance for a Joker
+            if rand_val < 0.9:  # 10% chance for a Joker
                 joker_type = self.weighted_choice(['common', 'uncommon', 'rare'], [0.6, 0.3, 0.1])
                 if joker_type == 'common':
-                    card = JokerCard(Vector2(150, 80), random.randint(0, 1), 4, modifiers=[BaseScoreBonusModifier(random.randint(10, 100))])
+                    joker_sub_type = self.weighted_choice([EvenCardModifier(random.randint(10, 20),0),
+                                                           OddCardModifier(random.randint(10, 20),0),
+                                                           NonFaceCardModifier(random.randint(10, 20),0),
+                                                           FaceCardModifier(random.randint(10, 20),0)],
+                                                           [0.4, 0.4, 0.2, 0.2])
+                    card = JokerCard(Vector2(150, 80), 0, 4, modifiers=[joker_sub_type])
                 elif joker_type == 'uncommon':
-                    card = JokerCard(Vector2(150, 80), random.randint(0, 1), 4, modifiers=[MultiplierBonusModifier(random.randint(2, 5))])
+                    joker_sub_type = self.weighted_choice([EvenCardModifier(0,random.randint(1, 3)),
+                                                           OddCardModifier(0,random.randint(1, 3)),
+                                                           NonFaceCardModifier(0,random.randint(1, 3)),
+                                                           FaceCardModifier(0,random.randint(1, 3)),
+                                                           MultiplierBonusModifier(random.randint(2, 5)),
+                                                           RareBonusModifier(random.randint(10, 50), random.randint(2, 5))],
+                                                           [0.15, 0.15, 0.15, 0.15, 0.25, 0.15])
+                    card = JokerCard(Vector2(150, 80), 1, 4, modifiers=[joker_sub_type])
                 else:  # rare
-                    card = JokerCard(Vector2(150, 80), random.randint(0, 1), 4, modifiers=[RareBonusModifier(random.randint(10, 50), random.randint(2, 5))])
+                    card = JokerCard(Vector2(150, 80), 2, 4, modifiers=[RareBonusModifier(random.randint(20, 70), random.randint(4, 7))])
 
 
             # Generate Wildcard Suit Cards
-            elif rand_val < 0.3:  # 20% chance for a Wildcard Suit Card
+            elif rand_val < 0.25:  # 15% chance for a Wildcard Suit Card
                 card = CardSprite(Vector2(150, 80), random.randint(0, 12), random.randint(0, 3), modifiers=[WildcardModifier()])
 
+            # Generate Tarot Cards
+            elif rand_val < 0.3:  # 5% chance for a Tarot Card
+                rank_or_suit = random.randint(0, 3)
+                is_rank = self.weighted_choice(['rank', 'suite'], [0.7, 0.3]) == 'rank'
+                if is_rank:
+                    rank_or_suit = random.randint(0, 12) 
+                card = TarotCard(Vector2(150, 80), 4, 4, rank_or_suit, is_rank)
+
             # Generate bonus cards (common/uncommon/rare)
-            elif rand_val < 0.6:  # 50% chance for a bonus card
+            elif rand_val < 0.6:  # 30% chance for a bonus card
                 card_type = self.weighted_choice(['common', 'uncommon', 'rare'], [0.7, 0.2, 0.1])
                 frame_x = random.randint(0, 12)
                 frame_y = random.randint(0, 3)
@@ -761,7 +947,7 @@ class PokerGame(Rectangle2DNode):
 
                 card = CardSprite(Vector2(150, 80), frame_x, frame_y, modifiers=modifiers)
             # Generate hand upgrades
-            elif rand_val < 0.7:
+            elif rand_val < 0.7: # 10% chance for an upgrade card
                 frame_x = 3
                 frame_y = 4
                 hand_types = ["Flush five", "Flush house", "5 of a Kind", "Royal Flush", "Straight Flush", "4 of a Kind", "Full House", "Flush", "Straight", "3 of a Kind", "Two Pair", "One Pair", "High Card"]
@@ -855,7 +1041,9 @@ class PokerGame(Rectangle2DNode):
             card.select(False)
             if isinstance(card, HandTypeUpgradeCard):
                 card.apply_upgrade(self)
-            elif card.original_frame_y == 4:
+            elif isinstance(card, TarotCard):
+                card.apply_upgrade(self)
+            elif isinstance(card, JokerCard):
                 if len(self.jokers) < 2:
                     self.jokers.append(card)
                 else:
