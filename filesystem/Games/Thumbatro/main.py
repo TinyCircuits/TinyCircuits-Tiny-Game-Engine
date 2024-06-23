@@ -498,37 +498,41 @@ class PokerGame(Rectangle2DNode):
         if self.is_booster_wait:
             if not self.hand_display_time and not tweens:  # Only proceed if all tweens are finished
                 self.open_booster_packs()
+        elif self.joker_selection:
+            if engine_io.check_just_pressed(engine_io.BUMPER_LEFT) or engine_io.check_just_pressed(engine_io.BUMPER_RIGHT):
+                self.joker_selection = False
+                self.update_hand_indicator_position()
+            elif engine_io.check_just_pressed(engine_io.DPAD_LEFT):
+                self.move_left_joker()
+            elif engine_io.check_just_pressed(engine_io.DPAD_RIGHT):
+                self.move_right_joker()
         elif self.is_booster_selection:
-            self.handle_booster_selection()
-            self.update_booster_indicator_position()
-        else:
-            if self.joker_selection:
-                if engine_io.check_just_pressed(engine_io.BUMPER_LEFT) or engine_io.check_just_pressed(engine_io.BUMPER_RIGHT):
-                    self.joker_selection = False
-                    self.update_hand_indicator_position()
-                elif engine_io.check_just_pressed(engine_io.DPAD_LEFT):
-                    self.move_left_joker()
-                elif engine_io.check_just_pressed(engine_io.DPAD_RIGHT):
-                    self.move_right_joker()
+            if engine_io.check_just_pressed(engine_io.BUMPER_LEFT) or engine_io.check_just_pressed(engine_io.BUMPER_RIGHT):
+                self.joker_selection = True
+                self.current_card_index = 0 if engine_io.check_just_pressed(engine_io.BUMPER_LEFT) else len(self.jokers) - 1
+                self.update_joker_indicator_position()
+                self.update_selected_joker_rules()
             else:
-                if (engine_io.check_just_pressed(engine_io.BUMPER_LEFT) or engine_io.check_just_pressed(engine_io.BUMPER_RIGHT)) and self.jokers:
-                    self.joker_selection = True
-                    self.current_card_index = 0 if engine_io.check_just_pressed(engine_io.BUMPER_LEFT) else len(self.jokers) - 1
-                    self.update_joker_indicator_position()
-                    self.update_selected_joker_rules()
-                elif engine_io.check_just_pressed(engine_io.DPAD_LEFT):
-                    self.move_left()
-                elif engine_io.check_just_pressed(engine_io.DPAD_RIGHT):
-                    self.move_right()
-                elif engine_io.check_just_pressed(engine_io.DPAD_UP):
-                    self.select_card()
-                elif engine_io.check_just_pressed(engine_io.DPAD_DOWN):
-                    self.deselect_card()
-                elif engine_io.check_just_pressed(engine_io.A):
-                    self.play_hand()
-                elif engine_io.check_just_pressed(engine_io.B):
-                    self.discard_and_draw()
-
+                self.handle_booster_selection()
+                self.update_booster_indicator_position()
+        else:
+            if (engine_io.check_just_pressed(engine_io.BUMPER_LEFT) or engine_io.check_just_pressed(engine_io.BUMPER_RIGHT)) and self.jokers:
+                self.joker_selection = True
+                self.current_card_index = 0 if engine_io.check_just_pressed(engine_io.BUMPER_LEFT) else len(self.jokers) - 1
+                self.update_joker_indicator_position()
+                self.update_selected_joker_rules()
+            elif engine_io.check_just_pressed(engine_io.DPAD_LEFT):
+                self.move_left()
+            elif engine_io.check_just_pressed(engine_io.DPAD_RIGHT):
+                self.move_right()
+            elif engine_io.check_just_pressed(engine_io.DPAD_UP):
+                self.select_card()
+            elif engine_io.check_just_pressed(engine_io.DPAD_DOWN):
+                self.deselect_card()
+            elif engine_io.check_just_pressed(engine_io.A):
+                self.play_hand()
+            elif engine_io.check_just_pressed(engine_io.B):
+                self.discard_and_draw()
 
     def move_left_joker(self):
         self.current_card_index = (self.current_card_index - 1) % len(self.jokers)
@@ -574,12 +578,25 @@ class PokerGame(Rectangle2DNode):
         if card not in self.selected_cards and len(self.selected_cards) < 5:
             card.select(True)
             self.selected_cards.append(card)
+            self.update_hand_score_display()
 
     def deselect_card(self):
         card = self.hand[self.current_card_index]
         if card in self.selected_cards:
             card.select(False)
             self.selected_cards.remove(card)
+            self.update_hand_score_display()
+
+    def update_hand_score_display(self):
+        if not self.selected_cards:
+            self.hand_type_text.text = "Play/Discard 5 cards"
+            return
+
+        hand_name, base_score, multiplier = self.calculate_hand_score(self.selected_cards)
+
+        self.hand_type_text.text = f"{hand_name}"
+        self.base_score_text.text = f"{base_score}"
+        self.mult_score_text.text = f"{multiplier}"
 
     def play_hand(self):
         if self.selected_cards:
@@ -626,8 +643,74 @@ class PokerGame(Rectangle2DNode):
         self.update_game_info()
 
     def evaluate_hand(self):
-        hand_ranks = [card.rank_value for card in self.selected_cards]
+        if not self.selected_cards:
+            return
+        
+        hand_name, base_score, multiplier = self.calculate_hand_score(self.selected_cards)
 
+        base_score_text = f"+{base_score}"
+        multiplier_text = f"x{multiplier}"
+
+        self.display_score_animation(base_score_text, Vector2(54, 0), self.base_score_text.position, Color(0x001F))
+        self.display_score_animation(multiplier_text, Vector2(74, 0), self.mult_score_text.position, Color(0xF800))
+
+        for card in self.selected_cards:
+            if any(isinstance(modifier, CoinCardModifier) for modifier in card.modifiers):
+                self.extra_booster_count += 1
+
+        def apply_card_bonuses(card_list):
+            nonlocal base_score, multiplier
+            for card in card_list:
+                base_bonus, mult_bonus = card.apply_modifiers(self.selected_cards, self.hand)
+
+                if card in self.selected_cards:
+                    base_bonus += card.rank_value
+
+                if base_bonus > 0:
+                    base_score += base_bonus
+                    base_score_text = f"+{base_bonus}"
+                    base_start_position = Vector2(card.position.x, card.position.y - 10)
+                    self.display_score_animation(base_score_text, base_start_position, self.base_score_text.position, Color(0x001F))
+
+                if mult_bonus > 0:
+                    multiplier += mult_bonus
+                    multiplier_text = f"x{mult_bonus}"
+                    multiplier_start_position = Vector2(card.position.x, card.position.y + 10)
+                    self.display_score_animation(multiplier_text, multiplier_start_position, self.mult_score_text.position, Color(0xF800))
+
+        apply_card_bonuses(self.selected_cards)
+        apply_card_bonuses([card for card in self.hand if card not in self.selected_cards])
+
+        for joker in self.jokers:
+            base_bonus, mult_bonus = joker.apply_modifiers(self.selected_cards, self.hand)
+
+            if base_bonus > 0:
+                base_score += base_bonus
+                base_score_text = f"+{base_bonus}"
+                base_start_position = Vector2(joker.position.x, joker.position.y - 10)
+                self.display_score_animation(base_score_text, base_start_position, self.base_score_text.position, Color(0x001F))
+
+            if mult_bonus > 0:
+                multiplier += mult_bonus
+                multiplier_text = f"x{mult_bonus}"
+                multiplier_start_position = Vector2(joker.position.x, joker.position.y + 10)
+                self.display_score_animation(multiplier_text, multiplier_start_position, self.mult_score_text.position, Color(0xF800))
+
+        final_score = base_score * multiplier
+
+        if final_score > self.highest_individual_hand_score:
+            self.highest_individual_hand_score = final_score
+
+        self.base_score_text.text = f"{base_score}"
+        self.mult_score_text.text = f"{multiplier}"
+        self.hand_type_text.text = f"{hand_name}"
+        self.score += final_score
+        self.total_score_text.text = f"{self.score}/{self.target_score}"
+
+
+
+    def calculate_hand_score(self, selected_cards):
+        hand_ranks = [card.rank_value for card in selected_cards]
         rank_count = {}
         for rank in hand_ranks:
             if rank in rank_count:
@@ -635,7 +718,6 @@ class PokerGame(Rectangle2DNode):
             else:
                 rank_count[rank] = 1
 
-        # Determine hand type for baseline score
         is_flush = self.check_flush()
         is_straight = self.is_straight(hand_ranks)
         base_score = 0
@@ -675,70 +757,8 @@ class PokerGame(Rectangle2DNode):
             multiplier += level
             hand_name += f" +{level}"
 
-        base_score_text = f"+{base_score}"
-        multiplier_text = f"x{multiplier}"
-        
+        return hand_name, base_score, multiplier
 
-        self.display_score_animation(base_score_text, Vector2(54,0), self.base_score_text.position, Color(0x001F))
-        self.display_score_animation(multiplier_text, Vector2(74,0), self.mult_score_text.position, Color(0xF800))
-
-        for card in self.selected_cards:
-            # Check for CoinCardModifier and increase extra booster count
-            if any(isinstance(modifier, CoinCardModifier) for modifier in card.modifiers):
-                self.extra_booster_count += 1
-
-
-        # Add card-specific bonuses and show score animations
-        for card in self.selected_cards + self.hand:
-            base_bonus, mult_bonus = card.apply_modifiers(self.selected_cards, self.hand)
-
-            if card in self.selected_cards:
-                base_bonus += card.rank_value
-            
-            if base_bonus > 0:
-                base_score += base_bonus
-                base_score_text = f"+{base_bonus}"
-                # Display base score animation in blue
-                base_start_position = Vector2(card.position.x, card.position.y - 10)  # Shift up by 20 pixels
-                self.display_score_animation(base_score_text, base_start_position, self.base_score_text.position, Color(0x001F))
-
-            if mult_bonus > 0:
-                multiplier += mult_bonus
-                multiplier_text = f"x{mult_bonus}"
-                # Display multiplier animation in red
-                multiplier_start_position = Vector2(card.position.x, card.position.y + 10)  # Shift down by 20 pixels
-                self.display_score_animation(multiplier_text, multiplier_start_position, self.mult_score_text.position, Color(0xF800))
-
-        # Add joker bonuses and show score animations
-        for joker in self.jokers:
-            base_bonus, mult_bonus = joker.apply_modifiers(self.selected_cards, self.hand)
-            if base_bonus > 0:
-                base_score += base_bonus
-                base_score_text = f"+{base_bonus}"
-                # Display base score animation in blue
-                base_start_position = Vector2(joker.position.x, joker.position.y - 10)  # Shift up by 20 pixels
-                self.display_score_animation(base_score_text, base_start_position, self.base_score_text.position, Color(0x001F))
-
-            if mult_bonus > 0:
-                multiplier += mult_bonus
-                multiplier_text = f"x{mult_bonus}"
-                # Display multiplier animation in red
-                multiplier_start_position = Vector2(joker.position.x, joker.position.y + 10)  # Shift down by 20 pixels
-                self.display_score_animation(multiplier_text, multiplier_start_position, self.mult_score_text.position, Color(0xF800))
-
-        # Calculate the final score
-        final_score = base_score * multiplier
-
-        # Update highest individual hand score
-        if final_score > self.highest_individual_hand_score:
-            self.highest_individual_hand_score = final_score
-
-        # Update text nodes
-        self.base_score_text.text = f"{base_score}"
-        self.mult_score_text.text = f"{multiplier}"
-        self.hand_type_text.text = f"{hand_name}"
-        self.score += final_score
-        self.total_score_text.text = f"{self.score}/{self.target_score}"
 
     def is_straight(self, ranks):
         ranks = sorted(set(ranks))
@@ -924,29 +944,16 @@ class PokerGame(Rectangle2DNode):
         self.add_child(booster_label)
 
     def handle_booster_selection(self):
-        if self.joker_selection:
-            if engine_io.check_just_pressed(engine_io.BUMPER_LEFT) or engine_io.check_just_pressed(engine_io.BUMPER_RIGHT):
-                self.joker_selection = False
-                self.update_booster_indicator_position()
-            elif engine_io.check_just_pressed(engine_io.DPAD_LEFT):
-                self.move_left_joker()
-            elif engine_io.check_just_pressed(engine_io.DPAD_RIGHT):
-                self.move_right_joker()
         if engine_io.check_just_pressed(engine_io.DPAD_LEFT):
             self.move_left_booster()
         elif engine_io.check_just_pressed(engine_io.DPAD_RIGHT):
             self.move_right_booster()
-        elif engine_io.check_just_pressed(engine_io.DPAD_UP):
+        if engine_io.check_just_pressed(engine_io.DPAD_UP):
             self.select_booster_card()
         elif engine_io.check_just_pressed(engine_io.DPAD_DOWN):
             self.deselect_booster_card()
-        elif engine_io.check_just_pressed(engine_io.A):
+        if engine_io.check_just_pressed(engine_io.A):
             self.confirm_booster_selection()
-        elif (engine_io.check_just_pressed(engine_io.BUMPER_LEFT) or engine_io.check_just_pressed(engine_io.BUMPER_RIGHT)) and self.jokers:
-            self.joker_selection = True
-            self.current_card_index = 0 if engine_io.check_just_pressed(engine_io.BUMPER_LEFT) else len(self.jokers) - 1
-            self.update_joker_indicator_position()
-            self.update_selected_joker_rules()
 
     def move_left_booster(self):
         self.current_card_index = (self.current_card_index - 1) % len(self.booster_cards)
