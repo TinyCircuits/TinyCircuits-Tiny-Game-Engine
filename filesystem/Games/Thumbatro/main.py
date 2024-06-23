@@ -56,6 +56,8 @@ class ScoreBonusModifier(Modifier):
         return False
 
     def apply_bonus(self, card, selected_cards, hand):
+        if not isinstance(card, JokerCard) and card not in selected_cards:
+            return 0, 0
         if self.apply_only_once: #Jokers might only trigger a single boost
             return self.base_score_bonus, self.multiplier_bonus
         total_base_bonus = 0
@@ -506,8 +508,10 @@ class PokerGame(Rectangle2DNode):
                 self.move_left_joker()
             elif engine_io.check_just_pressed(engine_io.DPAD_RIGHT):
                 self.move_right_joker()
+            elif engine_io.check_just_pressed(engine_io.B) and self.is_booster_selection:
+                self.discard_joker()
         elif self.is_booster_selection:
-            if engine_io.check_just_pressed(engine_io.BUMPER_LEFT) or engine_io.check_just_pressed(engine_io.BUMPER_RIGHT):
+            if (engine_io.check_just_pressed(engine_io.BUMPER_LEFT) or engine_io.check_just_pressed(engine_io.BUMPER_RIGHT)) and self.jokers:
                 self.joker_selection = True
                 self.current_card_index = 0 if engine_io.check_just_pressed(engine_io.BUMPER_LEFT) else len(self.jokers) - 1
                 self.update_joker_indicator_position()
@@ -822,6 +826,7 @@ class PokerGame(Rectangle2DNode):
         self.is_booster_selection = True
         self.is_booster_wait = False
         self.booster_cards = self.draw_booster_pack()
+        self.hand_type_text.text = "Select 1 or 2"
         self.show_booster_pack()
 
     def weighted_choice(self, choices, weights):
@@ -891,7 +896,7 @@ class PokerGame(Rectangle2DNode):
                 elif card_type == 'uncommon':
                     modifiers = [MultiplierBonusModifier(random.randint(2, 4))]
                 else:  # rare
-                    modifiers = [RareBonusModifier(random.randint(10, 30), random.randint(2, 6))]
+                    modifiers = [RareBonusModifier(random.randint(10, 20), random.randint(2, 5))]
                 return CardSprite(Vector2(150, 80), frame_x, frame_y, modifiers=modifiers)
             elif card_type == 'upgrade':
                 frame_x, frame_y = 3, 4
@@ -972,6 +977,8 @@ class PokerGame(Rectangle2DNode):
 
     def select_booster_card(self):
         card = self.booster_cards[self.current_card_index]
+        if isinstance(card, JokerCard) and len(self.jokers) >= 2:
+            return  # Prevent selecting more jokers if the joker set is full
         if card not in self.selected_cards and len(self.selected_cards) < 2:
             card.select(True)
             self.selected_cards.append(card)
@@ -983,6 +990,8 @@ class PokerGame(Rectangle2DNode):
             self.selected_cards.remove(card)
 
     def confirm_booster_selection(self):
+        if not self.selected_cards:
+            return
         for card in self.selected_cards:
             card.select(False)
             if isinstance(card, HandTypeUpgradeCard):
@@ -1011,6 +1020,18 @@ class PokerGame(Rectangle2DNode):
         self.hand_type_text.text = f"Round {self.current_game}"
         self.update_hand_indicator_position()
         self.update_joker_display()
+
+    def discard_joker(self):
+        if self.jokers:
+            joker_to_discard = self.jokers.pop(self.current_card_index)
+            joker_to_discard.mark_discarded()
+            self.update_joker_display()
+            if self.jokers:
+                self.current_card_index = min(self.current_card_index, len(self.jokers) - 1)
+                self.update_joker_indicator_position()
+            else:
+                self.joker_selection = False
+                self.update_hand_indicator_position()
 
     def start_new_game(self):
         self.score = 0
