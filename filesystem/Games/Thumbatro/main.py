@@ -56,10 +56,13 @@ class ScoreBonusModifier(Modifier):
         return False
 
     def apply_bonus(self, card, selected_cards, hand):
+        #normal cards left in hand do not trigger
         if not isinstance(card, JokerCard) and card not in selected_cards:
             return 0, 0
-        if self.apply_only_once: #Jokers might only trigger a single boost
+        #Jokers might only trigger a single global boost and normal cards just trigger themselves
+        if self.apply_only_once or not isinstance(card, JokerCard): 
             return self.base_score_bonus, self.multiplier_bonus
+        #Jokers may check each card selected to apply bonuses
         total_base_bonus = 0
         total_mult_bonus = 0
         for selected_card in selected_cards:
@@ -102,6 +105,7 @@ class WildcardModifier(Modifier):
         return "Wild"
 
 class SteelCardModifier(ScoreBonusModifier):
+    #override as triggers only if card remains in hand
     def apply_bonus(self, card, selected_cards, hand):
         if card in hand:
             return self.base_score_bonus, self.multiplier_bonus
@@ -287,6 +291,12 @@ class JokerCard(CardSprite):
     def create_bonus_overlay(self):
         has_base_score_bonus = any(isinstance(modifier, ScoreBonusModifier) and modifier.base_score_bonus > 0 for modifier in self.modifiers)
         has_multiplier_bonus = any(isinstance(modifier, ScoreBonusModifier) and modifier.multiplier_bonus > 0 for modifier in self.modifiers)
+        has_full_base_score_bonus = any(isinstance(modifier, BaseScoreBonusModifier) for modifier in self.modifiers)
+        has_full_multiplier_bonus = any(isinstance(modifier, MultiplierBonusModifier) for modifier in self.modifiers)
+        has_rare_bonus = any(isinstance(modifier, RareBonusModifier) for modifier in self.modifiers)
+
+        if has_full_base_score_bonus or has_full_multiplier_bonus or has_rare_bonus:
+            self.background = self.create_overlay(12, 4)
 
         if has_base_score_bonus and has_multiplier_bonus:
             return self.create_overlay(9, 4, opacity=0.4)  # Rare equivalent
@@ -401,8 +411,10 @@ class PokerGame(Rectangle2DNode):
         # Text nodes for displaying scores
         self.base_score_text = Text2DNode(Vector2(51, 24), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
         self.base_score_text.set_layer(1)
+        self.base_score_text.color = Color(0x04FF)
         self.mult_score_text = Text2DNode(Vector2(85, 24), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
         self.mult_score_text.set_layer(1)
+        self.mult_score_text.color = Color(0xFAEA)
         self.round_text = Text2DNode(Vector2(110, 75), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
         self.round_text.set_layer(1)
         self.hand_type_text = Text2DNode(Vector2(82, 37), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
@@ -655,8 +667,8 @@ class PokerGame(Rectangle2DNode):
         base_score_text = f"+{base_score}"
         multiplier_text = f"x{multiplier}"
 
-        self.display_score_animation(base_score_text, Vector2(54, 0), self.base_score_text.position, Color(0x001F))
-        self.display_score_animation(multiplier_text, Vector2(74, 0), self.mult_score_text.position, Color(0xF800))
+        self.display_score_animation(base_score_text, Vector2(54, 0), self.base_score_text.position, Color(0x04FF))
+        self.display_score_animation(multiplier_text, Vector2(74, 0), self.mult_score_text.position, Color(0xFAEA))
 
         for card in self.selected_cards:
             if any(isinstance(modifier, CoinCardModifier) for modifier in card.modifiers):
@@ -674,13 +686,13 @@ class PokerGame(Rectangle2DNode):
                     base_score += base_bonus
                     base_score_text = f"+{base_bonus}"
                     base_start_position = Vector2(card.position.x, card.position.y - 10)
-                    self.display_score_animation(base_score_text, base_start_position, self.base_score_text.position, Color(0x001F))
+                    self.display_score_animation(base_score_text, base_start_position, self.base_score_text.position, Color(0x04FF))
 
                 if mult_bonus > 0:
                     multiplier += mult_bonus
                     multiplier_text = f"x{mult_bonus}"
                     multiplier_start_position = Vector2(card.position.x, card.position.y + 10)
-                    self.display_score_animation(multiplier_text, multiplier_start_position, self.mult_score_text.position, Color(0xF800))
+                    self.display_score_animation(multiplier_text, multiplier_start_position, self.mult_score_text.position, Color(0xFAEA))
 
         apply_card_bonuses(self.selected_cards)
         apply_card_bonuses([card for card in self.hand if card not in self.selected_cards])
@@ -692,13 +704,13 @@ class PokerGame(Rectangle2DNode):
                 base_score += base_bonus
                 base_score_text = f"+{base_bonus}"
                 base_start_position = Vector2(joker.position.x, joker.position.y - 10)
-                self.display_score_animation(base_score_text, base_start_position, self.base_score_text.position, Color(0x001F))
+                self.display_score_animation(base_score_text, base_start_position, self.base_score_text.position, Color(0x04FF))
 
             if mult_bonus > 0:
                 multiplier += mult_bonus
                 multiplier_text = f"x{mult_bonus}"
                 multiplier_start_position = Vector2(joker.position.x, joker.position.y + 10)
-                self.display_score_animation(multiplier_text, multiplier_start_position, self.mult_score_text.position, Color(0xF800))
+                self.display_score_animation(multiplier_text, multiplier_start_position, self.mult_score_text.position, Color(0xFAEA))
 
         final_score = base_score * multiplier
 
@@ -865,16 +877,26 @@ class PokerGame(Rectangle2DNode):
                             AceModifier(0, random.randint(1, 3)),
                             NonFaceCardModifier(0, random.randint(1, 3)),
                             FaceCardModifier(0, random.randint(1, 3)),
-                            BaseScoreBonusModifier(random.randint(10, 50), apply_only_once=True),
-                            MultiplierBonusModifier(random.randint(2, 5), apply_only_once=True),
-                            RareBonusModifier(random.randint(10, 50), random.randint(2, 5), apply_only_once=True)
+                            BaseScoreBonusModifier(random.randint(10, 20), apply_only_once=True),
+                            MultiplierBonusModifier(random.randint(1, 4), apply_only_once=True),
+                            RareBonusModifier(random.randint(10, 20), random.randint(1, 3), apply_only_once=True)
                         ], [0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.25, 0.15]
                     )
                 ]
                 return JokerCard(Vector2(150, 80), 1, 4, modifiers=modifiers)
             else:  # rare
                 modifiers = [
-                    RareBonusModifier(random.randint(20, 70), random.randint(4, 7), apply_only_once=True)
+                    self.weighted_choice(
+                        [
+                            EvenCardModifier(random.randint(5, 10), random.randint(1, 3)),
+                            OddCardModifier(random.randint(5, 10), random.randint(1, 3)),
+                            FibonacciModifier(random.randint(5, 10), random.randint(1, 3)),
+                            AceModifier(random.randint(5, 10), random.randint(1, 3)),
+                            NonFaceCardModifier(random.randint(5, 10), random.randint(1, 3)),
+                            FaceCardModifier(random.randint(5, 10), random.randint(1, 3)),
+                            RareBonusModifier(random.randint(20, 50), random.randint(3, 5), apply_only_once=True)
+                        ], [0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15]
+                    )
                 ]
                 return JokerCard(Vector2(150, 80), 2, 4, modifiers=modifiers)
 
@@ -917,7 +939,7 @@ class PokerGame(Rectangle2DNode):
         size = min(size, 7)
 
         card_types = ['joker', 'wildcard', 'tarot', 'bonus', 'upgrade', 'steel', 'coin', 'normal']
-        weights = [0.1, 0.15, 0.05, 0.3, 0.1, 0.1, 0.1, 0.1]  # Weights summing to 1
+        weights = [0.15, 0.15, 0.05, 0.25, 0.1, 0.1, 0.1, 0.1]  # Weights summing to 1
 
         new_cards = [generate_card(self.weighted_choice(card_types, weights)) for _ in range(size)]
 
@@ -1006,6 +1028,7 @@ class PokerGame(Rectangle2DNode):
                     self.jokers.pop(0)
                     self.jokers.append(card)
             else:
+                #tween_card(card, Vector2(150, 80))
                 self.player_collection.append(card)
         self.selected_cards = []
         for card in self.booster_cards:
