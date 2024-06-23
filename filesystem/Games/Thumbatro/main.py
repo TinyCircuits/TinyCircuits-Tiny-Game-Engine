@@ -47,14 +47,17 @@ class Modifier:
         return ""
 
 class ScoreBonusModifier(Modifier):
-    def __init__(self, base_score_bonus=0, multiplier_bonus=0):
+    def __init__(self, base_score_bonus=0, multiplier_bonus=0, apply_only_once=False):
         self.base_score_bonus = base_score_bonus
         self.multiplier_bonus = multiplier_bonus
+        self.apply_only_once = apply_only_once
 
     def check_condition(self, card):
         return False
 
     def apply_bonus(self, card, selected_cards, hand):
+        if self.apply_only_once: #Jokers might only trigger a single boost
+            return self.base_score_bonus, self.multiplier_bonus
         total_base_bonus = 0
         total_mult_bonus = 0
         for selected_card in selected_cards:
@@ -72,22 +75,22 @@ class ScoreBonusModifier(Modifier):
         return " ".join(parts)
     
 class BaseScoreBonusModifier(ScoreBonusModifier):
-    def __init__(self, base_score_bonus):
-        super().__init__(base_score_bonus, 0)
+    def __init__(self, base_score_bonus, apply_only_once=False):
+        super().__init__(base_score_bonus, 0, apply_only_once=apply_only_once)
 
     def check_condition(self, card):
         return True
 
 class MultiplierBonusModifier(ScoreBonusModifier):
-    def __init__(self, bonus):
-        super().__init__(0, bonus)
+    def __init__(self, bonus, apply_only_once=False):
+        super().__init__(0, bonus, apply_only_once=apply_only_once)
 
     def check_condition(self, card):
         return True
 
 class RareBonusModifier(ScoreBonusModifier):
-    def __init__(self, base_score_bonus, multiplier_bonus):
-        super().__init__(base_score_bonus, multiplier_bonus)
+    def __init__(self, base_score_bonus, multiplier_bonus, apply_only_once=False):
+        super().__init__(base_score_bonus, multiplier_bonus, apply_only_once=apply_only_once)
 
     def check_condition(self, card):
         return True
@@ -184,6 +187,9 @@ class CardSprite(Sprite2DNode):
         return background
     
     def create_bonus_overlay(self):
+        if isinstance(self, TarotCard) or isinstance(self, HandTypeUpgradeCard):
+            return self.create_overlay(9, 4, opacity=0.2, layer=5)
+
         for modifier in self.modifiers:
             if isinstance(modifier, RareBonusModifier):
                 return self.create_overlay(9, 4, opacity=0.4)
@@ -621,7 +627,6 @@ class PokerGame(Rectangle2DNode):
 
     def evaluate_hand(self):
         hand_ranks = [card.rank_value for card in self.selected_cards]
-        hand_suits = [card.original_frame_y for card in self.selected_cards]
 
         rank_count = {}
         for rank in hand_ranks:
@@ -630,13 +635,7 @@ class PokerGame(Rectangle2DNode):
             else:
                 rank_count[rank] = 1
 
-        suit_count = {}
-        for suit in hand_suits:
-            if suit in suit_count:
-                suit_count[suit] += 1
-            else:
-                suit_count[suit] = 1
-
+        # Determine hand type for baseline score
         is_flush = self.check_flush()
         is_straight = self.is_straight(hand_ranks)
         base_score = 0
@@ -816,93 +815,86 @@ class PokerGame(Rectangle2DNode):
         return choices[-1]
 
     def draw_booster_pack(self):
-        new_cards = []
-        size = 4
-        if self.hands_played < 4:
-            size += 1
-        if self.discard_limit > 0:
-            size += 1
-        size += self.extra_booster_count
-        size = min(size, 7)
-        for _ in range(size):
-            rand_val = random.random()
+        def generate_joker_card(joker_type):
+            if joker_type == 'common':
+                modifiers = [
+                    self.weighted_choice(
+                        [
+                            EvenCardModifier(random.randint(10, 20), 0),
+                            OddCardModifier(random.randint(10, 20), 0),
+                            FibonacciModifier(random.randint(10, 20), 0),
+                            AceModifier(random.randint(10, 20), 0),
+                            NonFaceCardModifier(random.randint(10, 20), 0),
+                            FaceCardModifier(random.randint(10, 20), 0)
+                        ], [0.3, 0.3, 0.3, 0.2, 0.2, 0.2]
+                    )
+                ]
+                return JokerCard(Vector2(150, 80), 0, 4, modifiers=modifiers)
+            elif joker_type == 'uncommon':
+                modifiers = [
+                    self.weighted_choice(
+                        [
+                            EvenCardModifier(0, random.randint(1, 3)),
+                            OddCardModifier(0, random.randint(1, 3)),
+                            FibonacciModifier(0, random.randint(1, 3)),
+                            AceModifier(0, random.randint(1, 3)),
+                            NonFaceCardModifier(0, random.randint(1, 3)),
+                            FaceCardModifier(0, random.randint(1, 3)),
+                            BaseScoreBonusModifier(random.randint(10, 50), apply_only_once=True),
+                            MultiplierBonusModifier(random.randint(2, 5), apply_only_once=True),
+                            RareBonusModifier(random.randint(10, 50), random.randint(2, 5), apply_only_once=True)
+                        ], [0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.25, 0.15]
+                    )
+                ]
+                return JokerCard(Vector2(150, 80), 1, 4, modifiers=modifiers)
+            else:  # rare
+                modifiers = [
+                    RareBonusModifier(random.randint(20, 70), random.randint(4, 7), apply_only_once=True)
+                ]
+                return JokerCard(Vector2(150, 80), 2, 4, modifiers=modifiers)
 
-            # Generate Jokers
-            if rand_val < 0.1:  # 10% chance for a Joker
+        def generate_card(card_type):
+            if card_type == 'joker':
                 joker_type = self.weighted_choice(['common', 'uncommon', 'rare'], [0.6, 0.3, 0.1])
-                if joker_type == 'common':
-                    joker_sub_type = self.weighted_choice([EvenCardModifier(random.randint(10, 20),0),
-                                                           OddCardModifier(random.randint(10, 20),0),
-                                                           FibonacciModifier(random.randint(10, 20),0),
-                                                           AceModifier(random.randint(10, 20),0),
-                                                           NonFaceCardModifier(random.randint(10, 20),0),
-                                                           FaceCardModifier(random.randint(10, 20),0)],
-                                                           [0.3, 0.3, 0.3, 0.2, 0.2, 0.2])
-                    card = JokerCard(Vector2(150, 80), 0, 4, modifiers=[joker_sub_type])
-                elif joker_type == 'uncommon':
-                    joker_sub_type = self.weighted_choice([EvenCardModifier(0,random.randint(1, 3)),
-                                                           OddCardModifier(0,random.randint(1, 3)),
-                                                           FibonacciModifier(0,random.randint(1, 3)),
-                                                           AceModifier(0,random.randint(1, 3)),
-                                                           NonFaceCardModifier(0,random.randint(1, 3)),
-                                                           FaceCardModifier(0,random.randint(1, 3)),
-                                                           BaseScoreBonusModifier(random.randint(10, 50)),
-                                                           MultiplierBonusModifier(random.randint(2, 5)),
-                                                           RareBonusModifier(random.randint(10, 50), random.randint(2, 5))],
-                                                           [0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.25, 0.15])
-                    card = JokerCard(Vector2(150, 80), 1, 4, modifiers=[joker_sub_type])
-                else:  # rare
-                    card = JokerCard(Vector2(150, 80), 2, 4, modifiers=[RareBonusModifier(random.randint(20, 70), random.randint(4, 7))])
-
-
-            # Generate Wildcard Suit Cards
-            elif rand_val < 0.25:  # 15% chance for a Wildcard Suit Card
-                card = CardSprite(Vector2(150, 80), random.randint(0, 12), random.randint(0, 3), modifiers=[WildcardModifier()])
-
-            # Generate Tarot Cards
-            elif rand_val < 0.3:  # 5% chance for a Tarot Card
-                rank_or_suit = random.randint(0, 3)
+                return generate_joker_card(joker_type)
+            elif card_type == 'wildcard':
+                return CardSprite(Vector2(150, 80), random.randint(0, 12), random.randint(0, 3), modifiers=[WildcardModifier()])
+            elif card_type == 'tarot':
                 is_rank = self.weighted_choice(['rank', 'suite'], [0.7, 0.3]) == 'rank'
-                if is_rank:
-                    rank_or_suit = random.randint(0, 12) 
-                card = TarotCard(Vector2(150, 80), 4, 4, rank_or_suit, is_rank)
-
-            # Generate bonus cards (common/uncommon/rare)
-            elif rand_val < 0.6:  # 30% chance for a bonus card
+                rank_or_suit = random.randint(0, 12) if is_rank else random.randint(0, 3)
+                return TarotCard(Vector2(150, 80), 4, 4, rank_or_suit, is_rank)
+            elif card_type == 'bonus':
                 card_type = self.weighted_choice(['common', 'uncommon', 'rare'], [0.7, 0.2, 0.1])
-                frame_x = random.randint(0, 12)
-                frame_y = random.randint(0, 3)
+                frame_x, frame_y = random.randint(0, 12), random.randint(0, 3)
                 if card_type == 'common':
                     modifiers = [BaseScoreBonusModifier(random.randint(5, 20))]
                 elif card_type == 'uncommon':
                     modifiers = [MultiplierBonusModifier(random.randint(2, 4))]
                 else:  # rare
                     modifiers = [RareBonusModifier(random.randint(10, 30), random.randint(2, 6))]
-
-                card = CardSprite(Vector2(150, 80), frame_x, frame_y, modifiers=modifiers)
-            # Generate hand upgrades
-            elif rand_val < 0.7: # 10% chance for an upgrade card
-                frame_x = 3
-                frame_y = 4
-                weights = [1, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 5, 4]  # Adjust weights as necessary based on rarity
+                return CardSprite(Vector2(150, 80), frame_x, frame_y, modifiers=modifiers)
+            elif card_type == 'upgrade':
+                frame_x, frame_y = 3, 4
+                weights = [1, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 5, 4]
                 hand_type = self.weighted_choice(HAND_TYPES, weights)
-                level_bonus = 1
-                card = HandTypeUpgradeCard(Vector2(150, 80), frame_x, frame_y, hand_type, level_bonus)
-            # Generate Steel and Coin Cards
-            elif rand_val < 0.8:  # 10% chance for a Steel card
-                frame_x = random.randint(0, 12)
-                frame_y = random.randint(0, 3)
-                card = CardSprite(Vector2(150, 80), frame_x, frame_y, modifiers=[SteelCardModifier(random.randint(10, 100))])
-            elif rand_val < 0.9:  # 10% chance for a Coin card
-                frame_x = random.randint(0, 12)
-                frame_y = random.randint(0, 3)
-                card = CardSprite(Vector2(150, 80), frame_x, frame_y, modifiers=[CoinCardModifier()])
+                return HandTypeUpgradeCard(Vector2(150, 80), frame_x, frame_y, hand_type, level_bonus=1)
+            elif card_type == 'steel':
+                frame_x, frame_y = random.randint(0, 12), random.randint(0, 3)
+                return CardSprite(Vector2(150, 80), frame_x, frame_y, modifiers=[SteelCardModifier(random.randint(10, 100))])
+            elif card_type == 'coin':
+                frame_x, frame_y = random.randint(0, 12), random.randint(0, 3)
+                return CardSprite(Vector2(150, 80), frame_x, frame_y, modifiers=[CoinCardModifier()])
             else:
-                frame_x = random.randint(0, 12)
-                frame_y = random.randint(0, 3)
-                card = CardSprite(Vector2(150, 80), frame_x, frame_y)
+                frame_x, frame_y = random.randint(0, 12), random.randint(0, 3)
+                return CardSprite(Vector2(150, 80), frame_x, frame_y)
 
-            new_cards.append(card)
+        size = 4 + (1 if self.hands_played < 4 else 0) + (1 if self.discard_limit > 0 else 0) + self.extra_booster_count
+        size = min(size, 7)
+
+        card_types = ['joker', 'wildcard', 'tarot', 'bonus', 'upgrade', 'steel', 'coin', 'normal']
+        weights = [0.1, 0.15, 0.05, 0.3, 0.1, 0.1, 0.1, 0.1]  # Weights summing to 1
+
+        new_cards = [generate_card(self.weighted_choice(card_types, weights)) for _ in range(size)]
 
         return new_cards
 
@@ -932,16 +924,29 @@ class PokerGame(Rectangle2DNode):
         self.add_child(booster_label)
 
     def handle_booster_selection(self):
+        if self.joker_selection:
+            if engine_io.check_just_pressed(engine_io.BUMPER_LEFT) or engine_io.check_just_pressed(engine_io.BUMPER_RIGHT):
+                self.joker_selection = False
+                self.update_booster_indicator_position()
+            elif engine_io.check_just_pressed(engine_io.DPAD_LEFT):
+                self.move_left_joker()
+            elif engine_io.check_just_pressed(engine_io.DPAD_RIGHT):
+                self.move_right_joker()
         if engine_io.check_just_pressed(engine_io.DPAD_LEFT):
             self.move_left_booster()
         elif engine_io.check_just_pressed(engine_io.DPAD_RIGHT):
             self.move_right_booster()
-        if engine_io.check_just_pressed(engine_io.DPAD_UP):
+        elif engine_io.check_just_pressed(engine_io.DPAD_UP):
             self.select_booster_card()
         elif engine_io.check_just_pressed(engine_io.DPAD_DOWN):
             self.deselect_booster_card()
-        if engine_io.check_just_pressed(engine_io.A):
+        elif engine_io.check_just_pressed(engine_io.A):
             self.confirm_booster_selection()
+        elif (engine_io.check_just_pressed(engine_io.BUMPER_LEFT) or engine_io.check_just_pressed(engine_io.BUMPER_RIGHT)) and self.jokers:
+            self.joker_selection = True
+            self.current_card_index = 0 if engine_io.check_just_pressed(engine_io.BUMPER_LEFT) else len(self.jokers) - 1
+            self.update_joker_indicator_position()
+            self.update_selected_joker_rules()
 
     def move_left_booster(self):
         self.current_card_index = (self.current_card_index - 1) % len(self.booster_cards)
