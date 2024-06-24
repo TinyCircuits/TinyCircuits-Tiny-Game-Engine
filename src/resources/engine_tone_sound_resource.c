@@ -13,25 +13,8 @@
 
 
 float ENGINE_FAST_FUNCTION(tone_sound_resource_get_sample)(tone_sound_resource_class_obj_t *self){
-    float omega = 0.0f;
-
-    if(self->next_frequency_ready){
-
-        omega = glm_lerp(self->omega, self->next_omega, self->interpolation);
-
-        self->interpolation += 0.001f;
-
-        if(self->interpolation >= 1.0f){
-            self->interpolation = 0.0f;
-            self->next_frequency_ready = false;
-            self->frequency = self->next_frequency;
-            self->omega = self->next_omega;
-        }
-    }else{
-        omega = self->omega;
-    }
-
-    float sample = engine_math_fast_sin(omega * self->time);
+    // float sample = engine_math_fast_sin(self->omega * self->time);
+    float sample = sinf(self->omega * self->time);
     self->time += ENGINE_AUDIO_SAMPLE_DT;
     return sample;
 }
@@ -50,25 +33,13 @@ mp_obj_t tone_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
     self->omega = 2.0f * PI * self->frequency;
     self->time = 0.0f;
 
-    self->next_frequency = 0.0f;
-    self->next_omega = 0.0f;
-    self->next_frequency_ready = false;
-    self->interpolation = 0.0f;
-
     return MP_OBJ_FROM_PTR(self);
 }
 
 
 void tone_sound_resource_set_frequency(tone_sound_resource_class_obj_t *self, float frequency){
-    if(self->channel == NULL){
-        self->frequency = frequency;
-        self->omega = 2.0f * PI * self->frequency;
-        self->next_frequency_ready = false;
-    }else{
-        self->next_frequency = frequency;
-        self->next_omega = 2.0f * PI * self->next_frequency;
-        self->next_frequency_ready = true;
-    }
+    self->frequency = frequency;
+    self->omega = 2.0f * PI * self->frequency;
 }
 
 

@@ -10,18 +10,24 @@ typedef struct{
     audio_channel_class_obj_t *channel;
     mp_obj_t tone;
     mp_obj_t data;
-    uint32_t data_size;
-    uint32_t cursor;
 
-    uint8_t default_d;
-    uint8_t default_o;
-    uint16_t b;
-    float seconds_per_8th_beat;
-    float seconds_since_8th_beat;
+    uint8_t default_note_duration;
+    uint8_t default_note_octave;
+    uint16_t default_beats_per_minute;
 
-    uint8_t note_beat_duration;     // Duration, in beats, of the current note
-    uint8_t note_beat_count;        // Count of number of beats this note has been held
-    bool rest;                      // When a rest is found, need to hold the rest for a duration (do nothing)
+    uint16_t note_count;
+
+    // uint32_t cursor;
+
+    // uint8_t default_d;
+    // uint8_t default_o;
+    // uint16_t b;
+    // float seconds_per_8th_beat;
+    // float seconds_since_8th_beat;
+
+    // uint8_t note_beat_duration;     // Duration, in beats, of the current note
+    // uint8_t note_beat_count;        // Count of number of beats this note has been held
+    // bool rest;                      // When a rest is found, need to hold the rest for a duration (do nothing)
 }rtttl_sound_resource_class_obj_t;
 
 extern const mp_obj_type_t rtttl_sound_resource_class_type;
