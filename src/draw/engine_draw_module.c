@@ -151,6 +151,7 @@ color_class_obj_t violet        = {{&const_color_class_type}, .value = 0x915C};
     ATTR: [type=function]           [name={ref_link:front_fb_data}]         [value=function]
     ATTR: [type=function]           [name={ref_link:back_fb}]               [value=function]
     ATTR: [type=function]           [name={ref_link:front_fb}]              [value=function]
+    ATTR: [type=type]               [name={ref_link:Color}]                 [value=type]
     ATTR: [type={ref_link:Color}]   [name=black]                            [value=0x0000]
     ATTR: [type={ref_link:Color}]   [name=navy]                             [value=0x000F]
     ATTR: [type={ref_link:Color}]   [name=darkgreen]                        [value=0x03E0]

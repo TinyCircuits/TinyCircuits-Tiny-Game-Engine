@@ -91,18 +91,6 @@ mp_obj_t engine_color_wrap_opt(mp_obj_t color_or_none) {
 }
 
 
-/*  --- doc ---
-    NAME: Color
-    ID: Color
-    DESC: Simple object that holds an RGB color. Normal of constructing this is by passing 3 channels, but you can also pass it nothing to default to black or a single int in RGB565, or Color.
-    PARAM:  [type=float]    [name=r]       [value=0.0 ~ 1.0]
-    PARAM:  [type=float]    [name=g]       [value=0.0 ~ 1.0]
-    PARAM:  [type=float]    [name=b]       [value=0.0 ~ 1.0]
-    ATTR:   [type=float]    [name=r]       [value=0.0 ~ 1.0]
-    ATTR:   [type=float]    [name=g]       [value=0.0 ~ 1.0]
-    ATTR:   [type=float]    [name=b]       [value=0.0 ~ 1.0]
-    ATTR:   [type=int]      [name=value]   [value=int RGB565]
-*/
 mp_obj_t color_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Color");
     color_class_obj_t *self = mp_obj_malloc(color_class_obj_t, &color_class_type);
@@ -146,6 +134,15 @@ uint16_t engine_color_from_rgb_float(float r, float g, float b){
 }
 
 
+/*  --- doc ---
+    NAME: set
+    ID: set
+    DESC: Set the color to the specified RGB values.
+    PARAM:  [type=float]            [name=r]                        [value=0.0 ~ 1.0]
+    PARAM:  [type=float]            [name=g]                        [value=0.0 ~ 1.0]
+    PARAM:  [type=float]            [name=b]                        [value=0.0 ~ 1.0]
+    RETURN: None
+*/
 static mp_obj_t engine_color_set(size_t n_args, const mp_obj_t *args) {
     color_class_obj_t *self = MP_OBJ_TO_PTR(args[0]);
     self->value = engine_color_from_rgb_float(mp_obj_get_float(args[1]), mp_obj_get_float(args[2]), mp_obj_get_float(args[3]));
@@ -211,6 +208,19 @@ const mp_rom_map_elem_t color_class_locals_dict_table[] = {
 MP_DEFINE_CONST_DICT(color_class_locals_dict, color_class_locals_dict_table);
 
 
+/*  --- doc ---
+    NAME: Color
+    ID: Color
+    DESC: Simple object that holds an RGB color. Normal of constructing this is by passing 3 channels, but you can also pass it nothing to default to black or a single int in RGB565, or Color.
+    PARAM:  [type=float|Color]      [name=r]                        [value=0.0 ~ 1.0]
+    PARAM:  [type=float]            [name=g]                        [value=0.0 ~ 1.0]
+    PARAM:  [type=float]            [name=b]                        [value=0.0 ~ 1.0]
+    ATTR:   [type=float]            [name=r]                        [value=0.0 ~ 1.0]
+    ATTR:   [type=float]            [name=g]                        [value=0.0 ~ 1.0]
+    ATTR:   [type=float]            [name=b]                        [value=0.0 ~ 1.0]
+    ATTR:   [type=int]              [name=value]                    [value=int RGB565]
+    ATTR:   [type=function]         [name={ref_link:set}]           [value=function]
+*/
 MP_DEFINE_CONST_OBJ_TYPE(
     color_class_type,
     MP_QSTR_Color,
