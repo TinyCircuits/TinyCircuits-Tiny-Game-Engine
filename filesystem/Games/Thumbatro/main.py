@@ -9,11 +9,12 @@ from engine_draw import Color
 from engine_animation import Tween, ONE_SHOT, EASE_SINE_IN
 import random
 import time
+import math
 
 # Load card sprite texture
 
 font = FontResource("munro-narrow_10.bmp")
-cards_texture = TextureResource("BiggerCards2ext.bmp")
+cards_texture = TextureResource("BiggerCards2read.bmp")
 background = TextureResource("thumbatrobackground.bmp")
 
 # Constants
@@ -37,6 +38,11 @@ def tween_card(card, target, duration=500, speed=2):
 def tween_opacity(node, start_opacity, end_opacity, duration=1000):
     tw = Tween()
     tw.start(node, 'opacity', start_opacity, end_opacity, duration, 1, ONE_SHOT, EASE_SINE_IN)
+    tweens.append(tw)
+
+def tween_scale(node, start_scale, end_scale, duration=1200):
+    tw = Tween()
+    tw.start(node, 'scale', start_scale, end_scale, duration, 1, ONE_SHOT, EASE_SINE_IN)
     tweens.append(tw)
 
 class Modifier:
@@ -193,9 +199,6 @@ class CardSprite(Sprite2DNode):
         return background
     
     def create_bonus_overlay(self):
-        if isinstance(self, TarotCard) or isinstance(self, HandTypeUpgradeCard):
-            return self.create_overlay(9, 4, opacity=0.2, layer=5)
-
         for modifier in self.modifiers:
             if isinstance(modifier, RareBonusModifier):
                 return self.create_overlay(9, 4, opacity=0.4)
@@ -250,11 +253,11 @@ class CardSprite(Sprite2DNode):
         if self.bonus_overlay:
             self.bonus_overlay.opacity = 0
 
-    def __str__(self):
-        return (f"Card(rank={self.rank_value}, suit={self.original_frame_y}, position=({self.position.x}, {self.position.y}))")
+    #def __str__(self):
+    #    return (f"Card(rank={self.rank_value}, suit={self.original_frame_y}, position=({self.position.x}, {self.position.y}))")
 
-    def __repr__(self):
-        return self.__str__()
+    #def __repr__(self):
+    #    return self.__str__()
 
     def apply_modifiers(self, selected_cards, hand):
         total_base_score_bonus = 0
@@ -319,6 +322,7 @@ class HandTypeUpgradeCard(CardSprite):
         super().__init__(position, frame_x, frame_y)
         self.hand_type = hand_type
         self.level_bonus = level_bonus
+        self.create_new_bonus_overlay()
 
     def apply_upgrade(self, game):
         if self.hand_type in game.hand_type_levels:
@@ -328,28 +332,75 @@ class HandTypeUpgradeCard(CardSprite):
 
     def print_rules(self):
         return f"{self.hand_type} +{self.level_bonus}"
+
+    def create_new_bonus_overlay(self):
+        if self.level_bonus > 1:  # This indicates it is a rare card
+            self.bonus_overlay = self.create_overlay(9, 4, opacity=0.3, layer=5)
+            self.add_child(self.bonus_overlay)
     
 class TarotCard(CardSprite):
-    def __init__(self, position, frame_x, frame_y, rank_or_suit, is_rank):
+    def __init__(self, position, frame_x, frame_y, level_bonus=2):
         super().__init__(position, frame_x, frame_y)
-        self.rank_or_suit = rank_or_suit
-        self.is_rank = is_rank
+        self.level_bonus = level_bonus
+        self.create_tarot_bonus_overlay()
+
+    def create_tarot_bonus_overlay(self):
+        if self.level_bonus > 2:  # This indicates it is a rare card
+            self.bonus_overlay = self.create_overlay(9, 4, opacity=0.3, layer=5)
+            self.add_child(self.bonus_overlay)
+
+class RemoveRankTarotCard(TarotCard):
+    def __init__(self, position, frame_x, frame_y, rank_to_remove, level_bonus=2):
+        super().__init__(position, frame_x, frame_y, level_bonus)
+        self.rank_to_remove = rank_to_remove
 
     def apply_upgrade(self, game):
-        if self.is_rank:
-            # Remove all cards of the specified rank from the collection
-            game.player_collection = [card for card in game.player_collection if card.original_frame_x != self.rank_or_suit]
-        else:
-            # Remove all cards of the specified suit from the collection
-            game.player_collection = [card for card in game.player_collection if card.original_frame_y != self.rank_or_suit]
+        num_cards_to_remove = 4 if self.level_bonus > 2 else 2
+        cards_to_remove = [card for card in game.player_collection if card.original_frame_x == self.rank_to_remove][:num_cards_to_remove]
+        game.player_collection = [card for card in game.player_collection if card not in cards_to_remove]
 
     def print_rules(self):
-        if self.is_rank:
-            rank_name = RANK_NAMES[self.rank_or_suit]
-            return f"Remove all {rank_name}s"
-        else:
-            suit_name = SUITS[self.rank_or_suit]
-            return f"Remove all {suit_name}"
+        rank_name = RANK_NAMES[self.rank_to_remove]
+        return f"Remove {4 if self.level_bonus > 2 else 2} {rank_name}s"
+
+class RemoveSuitTarotCard(TarotCard):
+    def __init__(self, position, frame_x, frame_y, suit_to_remove, level_bonus=2):
+        super().__init__(position, frame_x, frame_y, level_bonus)
+        self.suit_to_remove = suit_to_remove
+
+    def apply_upgrade(self, game):
+        num_cards_to_remove = 4 if self.level_bonus > 2 else 2
+        suit_cards = [card for card in game.player_collection if card.original_frame_y == self.suit_to_remove]
+        cards_to_remove = random_sample(suit_cards, num_cards_to_remove)
+        game.player_collection = [card for card in game.player_collection if card not in cards_to_remove]
+
+    def print_rules(self):
+        suit_name = SUITS[self.suit_to_remove]
+        return f"Remove {4 if self.level_bonus > 2 else 2} {suit_name}"
+
+class UpgradeRankTarotCard(TarotCard):
+    def __init__(self, position, frame_x, frame_y, rank_to_upgrade, level_bonus=2):
+        super().__init__(position, frame_x, frame_y, level_bonus)
+        self.rank_to_upgrade = rank_to_upgrade
+
+    def apply_upgrade(self, game):
+        eligible_cards = [card for card in game.player_collection if card.original_frame_x == self.rank_to_upgrade]
+        cards_to_upgrade = random_sample(eligible_cards, self.level_bonus)
+        for card in cards_to_upgrade:
+            card.original_frame_x += 1
+
+    def print_rules(self):
+        rank_name = RANK_NAMES[self.rank_to_upgrade]
+        return f"Up rank {self.level_bonus} {rank_name}s"
+    
+def random_sample(lst, n):
+    result = []
+    indices = list(range(len(lst)))
+    for _ in range(min(n, len(lst))):
+        index = random.choice(indices)
+        result.append(lst[index])
+        indices.remove(index)
+    return result
 
 class Deck:
     def __init__(self, collection):
@@ -717,6 +768,8 @@ class PokerGame(Rectangle2DNode):
         if final_score > self.highest_individual_hand_score:
             self.highest_individual_hand_score = final_score
 
+        self.display_main_score_animation(f"{final_score}", Vector2(64,82), round(math.log10(final_score)), engine_draw.white )
+
         self.base_score_text.text = f"{base_score}"
         self.mult_score_text.text = f"{multiplier}"
         self.hand_type_text.text = f"{hand_name}"
@@ -814,6 +867,14 @@ class PokerGame(Rectangle2DNode):
         tween_card(score_node, end_position, duration=1200, speed=1)
         tween_opacity(score_node, 1.0, 0.0, duration=1200)
 
+    def display_main_score_animation(self, score_text, start_position, end_scale, color):
+        score_node = Text2DNode(start_position, font, score_text, 0, Vector2(1, 1), 1.0, 0, 0)
+        score_node.color = color
+        score_node.set_layer(6)
+        self.add_child(score_node)
+        tween_scale(score_node, Vector2(1, 1), Vector2(end_scale, end_scale))
+        tween_opacity(score_node, 1.0, 0.0, duration=1200)
+
     def display_played_hand(self):
         start_x = 10
         y_position = 65
@@ -907,9 +968,17 @@ class PokerGame(Rectangle2DNode):
             elif card_type == 'wildcard':
                 return CardSprite(Vector2(150, 80), random.randint(0, 12), random.randint(0, 3), modifiers=[WildcardModifier()])
             elif card_type == 'tarot':
-                is_rank = self.weighted_choice(['rank', 'suite'], [0.7, 0.3]) == 'rank'
-                rank_or_suit = random.randint(0, 12) if is_rank else random.randint(0, 3)
-                return TarotCard(Vector2(150, 80), 4, 4, rank_or_suit, is_rank)
+                tarot_type = self.weighted_choice(['rank', 'suite', 'upgrade'], [0.5, 0.3, 0.2])
+                level_bonus = 4 if self.weighted_choice(['common', 'rare'], [0.7, 0.3]) == 'rare' else 2
+                if tarot_type == 'rank':
+                    rank_to_remove = random.randint(0, 12)
+                    return RemoveRankTarotCard(Vector2(150, 80), 4, 4, rank_to_remove, level_bonus)
+                elif tarot_type == 'suite':
+                    suit_to_remove = random.randint(0, 3)
+                    return RemoveSuitTarotCard(Vector2(150, 80), 4, 4, suit_to_remove, level_bonus)
+                else:
+                    rank_to_upgrade = random.randint(1, 12)  # Exclude Ace (index 0)
+                    return UpgradeRankTarotCard(Vector2(150, 80), 4, 4, rank_to_upgrade, level_bonus)
             elif card_type == 'bonus':
                 card_type = self.weighted_choice(['common', 'uncommon', 'rare'], [0.7, 0.2, 0.1])
                 frame_x, frame_y = random.randint(0, 12), random.randint(0, 3)
@@ -924,7 +993,8 @@ class PokerGame(Rectangle2DNode):
                 frame_x, frame_y = 3, 4
                 weights = [1, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 5, 4]
                 hand_type = self.weighted_choice(HAND_TYPES, weights)
-                return HandTypeUpgradeCard(Vector2(150, 80), frame_x, frame_y, hand_type, level_bonus=1)
+                level_bonus = 2 if self.weighted_choice(['common', 'rare'], [0.7, 0.3]) == 'rare' else 1
+                return HandTypeUpgradeCard(Vector2(150, 80), frame_x, frame_y, hand_type, level_bonus)
             elif card_type == 'steel':
                 frame_x, frame_y = random.randint(0, 12), random.randint(0, 3)
                 return CardSprite(Vector2(150, 80), frame_x, frame_y, modifiers=[SteelCardModifier(random.randint(10, 100))])
@@ -939,7 +1009,7 @@ class PokerGame(Rectangle2DNode):
         size = min(size, 7)
 
         card_types = ['joker', 'wildcard', 'tarot', 'bonus', 'upgrade', 'steel', 'coin', 'normal']
-        weights = [0.15, 0.15, 0.05, 0.25, 0.1, 0.1, 0.1, 0.1]  # Weights summing to 1
+        weights = [0.15, 0.1, 0.1, 0.25, 0.1, 0.1, 0.1, 0.1]  # Weights summing to 1
 
         new_cards = [generate_card(self.weighted_choice(card_types, weights)) for _ in range(size)]
 
