@@ -298,7 +298,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_io_module_init_obj, engine_io_module_init);
 */
 static const mp_rom_map_elem_t engine_io_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_io) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR___init__), (mp_obj_t)&engine_io_module_init_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR___init__), MP_ROM_PTR(&engine_io_module_init_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_check_pressed), MP_ROM_PTR(&engine_io_check_pressed_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_check_just_changed), MP_ROM_PTR(&engine_io_check_just_changed_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_check_just_pressed), MP_ROM_PTR(&engine_io_check_just_pressed_obj) },

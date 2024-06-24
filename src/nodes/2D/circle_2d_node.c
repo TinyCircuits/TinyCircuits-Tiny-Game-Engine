@@ -217,7 +217,7 @@ bool circle_2d_node_store_attr(engine_node_base_t *self_node_base, qstr attribut
             return true;
         break;
         case MP_QSTR_color:
-            self->color = destination[1];
+            self->color = engine_color_wrap(destination[1]);
             return true;
         break;
         case MP_QSTR_opacity:
@@ -275,7 +275,7 @@ static mp_attr_fun_t circle_2d_node_class_attr(mp_obj_t self_in, qstr attribute,
    DESC: Simple node that draws a colored circle given a radius
    PARAM:   [type={ref_link:Vector2}]  [name=position]                                  [value={ref_link:Vector2}]
    PARAM:   [type=float]               [name=radius]                                    [value=any]
-   PARAM:   [type=int]                 [name=color]                                     [value={ref_link:Color}]
+   PARAM:   [type={ref_link:Color}|int (RGB565)]  [name=color]                          [value=color]
    PARAM:   [type=float]               [name=opacity]                                   [value=0 ~ 1.0]
    PARAM:   [type=bool]                [name=outline]                                   [value=True or False]
    PARAM:   [type=float]               [name=rotation]                                  [value=any]
@@ -293,7 +293,7 @@ static mp_attr_fun_t circle_2d_node_class_attr(mp_obj_t self_in, qstr attribute,
    ATTR:    [type={ref_link:Vector2}]  [name=position]                                  [value={ref_link:Vector2}]
    ATTR:    [type=float]               [name=radius]                                    [value=any]
    ATTR:    [type=float]               [name=rotation]                                  [value=any]
-   ATTR:    [type=int]                 [name=color]                                     [value=0 ~ 65535 (16-bit RGB565 0bRRRRRGGGGGGBBBBB)]
+   ATTR:    [type={ref_link:Color}|int (RGB565)]  [name=color]                          [value=color]
    ATTR:    [type=float]               [name=opacity]                                   [value=0 ~ 1.0]
    ATTR:    [type=float]               [name=scale]                                     [value=any]
    ATTR:    [type=bool]                [name=outline]                                   [value=True or False]
@@ -335,7 +335,7 @@ mp_obj_t circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
 
     if(parsed_args[position].u_obj == MP_OBJ_NULL) parsed_args[position].u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL);
     if(parsed_args[radius].u_obj == MP_OBJ_NULL) parsed_args[radius].u_obj = mp_obj_new_float(5.0f);
-    if(parsed_args[color].u_obj == MP_OBJ_NULL) parsed_args[color].u_obj = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0xffff)});
+    if(parsed_args[color].u_obj == MP_OBJ_NULL) parsed_args[color].u_obj = MP_OBJ_NEW_SMALL_INT(0xffff);
     if(parsed_args[opacity].u_obj == MP_OBJ_NULL) parsed_args[opacity].u_obj = mp_obj_new_float(1.0f);
     if(parsed_args[outline].u_obj == MP_OBJ_NULL) parsed_args[outline].u_obj = mp_obj_new_bool(false);
     if(parsed_args[rotation].u_obj == MP_OBJ_NULL) parsed_args[rotation].u_obj = mp_obj_new_float(0.0f);
@@ -352,7 +352,7 @@ mp_obj_t circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
     circle_2d_node->position = parsed_args[position].u_obj;
     circle_2d_node->radius = parsed_args[radius].u_obj;
     circle_2d_node->rotation = parsed_args[rotation].u_obj;
-    circle_2d_node->color = parsed_args[color].u_obj;
+    circle_2d_node->color = engine_color_wrap(parsed_args[color].u_obj);
     circle_2d_node->opacity = parsed_args[opacity].u_obj;
     circle_2d_node->scale = parsed_args[scale].u_obj;
     circle_2d_node->outline = parsed_args[outline].u_obj;
