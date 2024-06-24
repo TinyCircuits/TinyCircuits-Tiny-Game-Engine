@@ -145,6 +145,15 @@ uint16_t engine_color_from_rgb_float(float r, float g, float b){
         (round_float(clamp_0_to_1(b) * bitmask_5_bit) << 0);
 }
 
+
+static mp_obj_t engine_color_set(size_t n_args, const mp_obj_t *args) {
+    color_class_obj_t *self = MP_OBJ_TO_PTR(args[0]);
+    self->value = engine_color_from_rgb_float(mp_obj_get_float(args[1]), mp_obj_get_float(args[2]), mp_obj_get_float(args[3]));
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_color_set_obj, 4, 4, engine_color_set);
+
+
 static void color_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Color attr");
 
@@ -163,8 +172,11 @@ static void color_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destina
             break;
             case MP_QSTR_value:
                 destination[0] = MP_OBJ_NEW_SMALL_INT(self->value);
+            break;
             default:
-                return; // Fail
+                // Continue in locals_dict.
+                destination[1] = MP_OBJ_SENTINEL;
+                return;
         }
     }else if(destination[1] != MP_OBJ_NULL){    // Store
         if(self->base.type == &const_color_class_type){
@@ -193,6 +205,12 @@ static void color_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destina
 }
 
 
+const mp_rom_map_elem_t color_class_locals_dict_table[] = {
+    { MP_ROM_QSTR(MP_QSTR_set), MP_ROM_PTR(&engine_color_set_obj) },
+};
+MP_DEFINE_CONST_DICT(color_class_locals_dict, color_class_locals_dict_table);
+
+
 MP_DEFINE_CONST_OBJ_TYPE(
     color_class_type,
     MP_QSTR_Color,
@@ -200,6 +218,7 @@ MP_DEFINE_CONST_OBJ_TYPE(
 
     make_new, color_class_new,
     attr, color_class_attr,
+    locals_dict, (mp_obj_dict_t*)&color_class_locals_dict,
     print, color_class_print
 );
 
