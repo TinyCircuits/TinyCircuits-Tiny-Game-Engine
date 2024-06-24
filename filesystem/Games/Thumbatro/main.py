@@ -1027,7 +1027,7 @@ class PokerGame(Rectangle2DNode):
         start_x = 7
         y_position = 103
         for i, card in enumerate(self.booster_cards):
-            card.position = Vector2(start_x + i * 16, y_position)
+            card.position = Vector2(start_x + i * 18 + (1 if i != 0 else 0), y_position)
             self.add_child(card)
         self.current_card_index = 0
         self.hand_indicator.position = Vector2(start_x, y_position + 20)
@@ -1069,7 +1069,8 @@ class PokerGame(Rectangle2DNode):
 
     def select_booster_card(self):
         card = self.booster_cards[self.current_card_index]
-        if isinstance(card, JokerCard) and len(self.jokers) >= 2:
+        current_selected_jokers = len([c for c in self.selected_cards if isinstance(c, JokerCard)])
+        if isinstance(card, JokerCard) and (len(self.jokers) + current_selected_jokers) >= 2:
             return  # Prevent selecting more jokers if the joker set is full
         if card not in self.selected_cards and len(self.selected_cards) < 2:
             card.select(True)
