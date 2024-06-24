@@ -50,6 +50,26 @@ def tween_color(node, start, end, duration=1200):
     tw.start(node, 'color', start, end, duration, 1, ONE_SHOT, EASE_SINE_IN)
     tweens.append(tw)
 
+class AnimatedText2DNode(Text2DNode):
+    def __init__(self, position, font, initial_value, target_value, duration=2000):
+        super().__init__(self, position, font, str(initial_value))
+        self.initial_value = initial_value
+        self.target_value = target_value
+        self.duration = duration
+        self.start_time = time.ticks_ms()
+        self.finished = False
+
+    def tick(self, dt):
+        if self.finished:
+            return
+        elapsed_time = time.ticks_ms() - self.start_time
+        if elapsed_time >= self.duration:
+            self.text = str(self.target_value)
+            self.finished = True
+        else:
+            current_value = self.initial_value + (self.target_value - self.initial_value) * (elapsed_time / self.duration)
+            self.text = str(int(current_value))  # assuming we want to display whole numbers
+
 class Modifier:
     def apply_bonus(self, card, selected_cards, hand):
         return 0, 0
@@ -773,7 +793,7 @@ class PokerGame(Rectangle2DNode):
         if final_score > self.highest_individual_hand_score:
             self.highest_individual_hand_score = final_score
 
-        self.display_main_score_animation(f"{final_score}", Vector2(64,82), round(math.log10(final_score)), engine_draw.white )
+        self.display_main_score_animation(final_score, Vector2(64,82), round(math.log10(final_score)), engine_draw.white )
 
         self.base_score_text.text = f"{base_score}"
         self.mult_score_text.text = f"{multiplier}"
@@ -872,12 +892,12 @@ class PokerGame(Rectangle2DNode):
         tween_card(score_node, end_position, duration=1200, speed=1)
         tween_opacity(score_node, 1.0, 0.0, duration=1200)
 
-    def display_main_score_animation(self, score_text, start_position, end_scale, color):
-        score_node = Text2DNode(start_position, font, score_text, 0, Vector2(1, 1), 1.0, 0, 0)
+    def display_main_score_animation(self, score, start_position, end_scale, color):
+        score_node = AnimatedText2DNode(start_position, font, 0, score, 1500)
         score_node.color = color
         score_node.set_layer(6)
         self.add_child(score_node)
-        duration= end_scale * 500
+        duration= 1000 + end_scale * 500
         tween_scale(score_node, Vector2(1, 1), Vector2(end_scale, end_scale), duration)
         tween_opacity(score_node, 1.0, 0.0, duration)
 
