@@ -295,21 +295,37 @@ uint16_t rtttl_sound_resource_count_notes(){
 }
 
 
-bool rtttl_sound_resource_get_next(uint32_t *duration_count, float *full_frequency){
+bool rtttl_sound_resource_get_next(uint32_t *duration_count, float *full_frequency, const char *start){
     // Longest note: 32a#7.
     char note_buffer[7] = {'\0', '\0', '\0', '\0', '\0', '\0', '\0'};
 
-    // Try to find note starting with commas or `:`
-    bool note_found = rtttl_sound_resource_get_substr(note_buffer, 6, ":", 1, ",", 1);
-    if(note_found == false){
-        note_found = rtttl_sound_resource_get_substr(note_buffer, 6, ",", 1, ",", 1);
+    // Try to find note
+    if(rtttl_sound_resource_get_substr(note_buffer, 6, start, 1, ",", 1) == false){
+        return false;
     }
-
-    if(note_found == false) return false;
 
     ENGINE_PRINTF("%s\n", note_buffer);
 
+    
+
     return true;
+}
+
+
+void rtttl_sound_resource_store_note(uint32_t note_interrupt_duration_count, float note_full_frequency){
+    uint8_t data[4];
+
+    memcpy(data, &note_interrupt_duration_count, 4);
+    engine_resource_store_u8(data[0]);
+    engine_resource_store_u8(data[1]);
+    engine_resource_store_u8(data[2]);
+    engine_resource_store_u8(data[3]);
+
+    memcpy(data, &note_full_frequency, 4);
+    engine_resource_store_u8(data[0]);
+    engine_resource_store_u8(data[1]);
+    engine_resource_store_u8(data[2]);
+    engine_resource_store_u8(data[3]);
 }
 
 
@@ -340,28 +356,19 @@ mp_obj_t rtttl_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args
     self->data = engine_resource_get_space_bytearray(self->note_count * (4+4), true);
     engine_resource_start_storing(self->data, true);
 
-    // Always look from start and then move to note data
-    // minus one so that note starting with `:` is found
+    // Get to first `:` to skip it
     engine_file_seek(0, 0, MP_SEEK_SET);
     engine_file_seek_until(0, ":", 1);
 
     uint32_t note_interrupt_duration_count = 0;
     float note_full_frequency = 0.0f;
 
-    while(rtttl_sound_resource_get_next(&note_interrupt_duration_count, &note_full_frequency)){
-        uint8_t data[4];
+    // Get the first note starting with `:`
+    rtttl_sound_resource_get_next(&note_interrupt_duration_count, &note_full_frequency, ":");
+    rtttl_sound_resource_store_note(note_interrupt_duration_count, note_full_frequency);
 
-        memcpy(data, &note_interrupt_duration_count, 4);
-        engine_resource_store_u8(data[0]);
-        engine_resource_store_u8(data[1]);
-        engine_resource_store_u8(data[2]);
-        engine_resource_store_u8(data[3]);
-
-        memcpy(data, &note_full_frequency, 4);
-        engine_resource_store_u8(data[0]);
-        engine_resource_store_u8(data[1]);
-        engine_resource_store_u8(data[2]);
-        engine_resource_store_u8(data[3]);
+    while(rtttl_sound_resource_get_next(&note_interrupt_duration_count, &note_full_frequency, ",")){
+        rtttl_sound_resource_store_note(note_interrupt_duration_count, note_full_frequency);
     }
 
     // Stop storing and close one-time file
