@@ -423,41 +423,41 @@ bool button_2d_node_store_attr(engine_node_base_t *self_node_base, qstr attribut
         break;
 
         case MP_QSTR_text_color:
-            self->text_color = destination[1];
+            self->text_color = engine_color_wrap(destination[1]);
             return true;
         break;
         case MP_QSTR_focused_text_color:
-            self->focused_text_color = destination[1];
+            self->focused_text_color = engine_color_wrap(destination[1]);
             return true;
         break;
         case MP_QSTR_pressed_text_color:
-            self->pressed_text_color = destination[1];
+            self->pressed_text_color = engine_color_wrap(destination[1]);
             return true;
         break;
 
         case MP_QSTR_background_color:
-            self->background_color = destination[1];
+            self->background_color = engine_color_wrap(destination[1]);
             return true;
         break;
         case MP_QSTR_focused_background_color:
-            self->focused_background_color = destination[1];
+            self->focused_background_color = engine_color_wrap(destination[1]);
             return true;
         break;
         case MP_QSTR_pressed_background_color:
-            self->pressed_background_color = destination[1];
+            self->pressed_background_color = engine_color_wrap(destination[1]);
             return true;
         break;
 
         case MP_QSTR_outline_color:
-            self->outline_color = destination[1];
+            self->outline_color = engine_color_wrap(destination[1]);
             return true;
         break;
         case MP_QSTR_focused_outline_color:
-            self->focused_outline_color = destination[1];
+            self->focused_outline_color = engine_color_wrap(destination[1]);
             return true;
         break;
         case MP_QSTR_pressed_outline_color:
-            self->pressed_outline_color = destination[1];
+            self->pressed_outline_color = engine_color_wrap(destination[1]);
             return true;
         break;
 
@@ -624,17 +624,17 @@ static mp_attr_fun_t gui_button_2d_node_class_attr(mp_obj_t self_in, qstr attrib
     PARAM:  [type=float]                      [name=outline]                                    [value=any (how thick the outline should be, in px)]
     PARAM:  [type=float]                      [name=padding]                                    [value=any (amount of empty space between the text and outline, in px)]
 
-    PARAM:  [type={ref_link:Color}]           [name=text_color]                                 [value=any {ref_link:Color} that the base text color should blend to (works best with white text)]
-    PARAM:  [type={ref_link:Color}]           [name=focused_text_color]                         [value=any {ref_link:Color}]
-    PARAM:  [type={ref_link:Color}]           [name=pressed_text_color]                         [value=any {ref_link:Color}]
+    PARAM:  [type={ref_link:Color}|int (RGB565)]   [name=text_color]                            [value=any color that the base text color should blend to (works best with white text)]
+    PARAM:  [type={ref_link:Color}|int (RGB565)]   [name=focused_text_color]                    [value=any color]
+    PARAM:  [type={ref_link:Color}|int (RGB565)]   [name=pressed_text_color]                    [value=any color]
 
-    PARAM:  [type={ref_link:Color}]           [name=background_color]                           [value=any {ref_link:Color}]
-    PARAM:  [type={ref_link:Color}]           [name=focused_background_color]                   [value=any {ref_link:Color}]
-    PARAM:  [type={ref_link:Color}]           [name=pressed_background_color]                   [value=any {ref_link:Color}]
+    PARAM:  [type={ref_link:Color}|int (RGB565)]   [name=background_color]                      [value=any color]
+    PARAM:  [type={ref_link:Color}|int (RGB565)]   [name=focused_background_color]              [value=any color]
+    PARAM:  [type={ref_link:Color}|int (RGB565)]   [name=pressed_background_color]              [value=any color]
 
-    PARAM:  [type={ref_link:Color}]           [name=outline_color]                              [value=any {ref_link:Color}]
-    PARAM:  [type={ref_link:Color}]           [name=focused_outline_color]                      [value=any {ref_link:Color}]
-    PARAM:  [type={ref_link:Color}]           [name=pressed_outline_color]                      [value=any {ref_link:Color}]
+    PARAM:  [type={ref_link:Color}|int (RGB565)]   [name=outline_color]                         [value=any color]
+    PARAM:  [type={ref_link:Color}|int (RGB565)]   [name=focused_outline_color]                 [value=any color]
+    PARAM:  [type={ref_link:Color}|int (RGB565)]   [name=pressed_outline_color]                 [value=any color]
 
     PARAM:  [type=float]                      [name=rotation]                                   [value=any (radians)]
     PARAM:  [type={ref_link:Vector2}]         [name=scale]                                      [value={ref_link:Vector2}]
@@ -668,17 +668,17 @@ static mp_attr_fun_t gui_button_2d_node_class_attr(mp_obj_t self_in, qstr attrib
     ATTR:   [type=float]                      [name=outline]                                    [value=any (how thick the outline should be, in px)]
     ATTR:   [type=float]                      [name=padding]                                    [value=any (amount of empty space between the text and outline, in px)]
 
-    ATTR:   [type={ref_link:Color}]           [name=text_color]                                 [value=any {ref_link:Color} that the base text color should blend to (works best with white text)]
-    ATTR:   [type={ref_link:Color}]           [name=focused_text_color]                         [value=any {ref_link:Color}]
-    ATTR:   [type={ref_link:Color}]           [name=pressed_text_color]                         [value=any {ref_link:Color}]
+    ATTR:   [type={ref_link:Color}|int (RGB565)]   [name=text_color]                            [value=color that the base text color should blend to (works best with white text)]
+    ATTR:   [type={ref_link:Color}|int (RGB565)]   [name=focused_text_color]                    [value=color]
+    ATTR:   [type={ref_link:Color}|int (RGB565)]   [name=pressed_text_color]                    [value=color]
 
-    ATTR:   [type={ref_link:Color}]           [name=background_color]                           [value=any {ref_link:Color}]
-    ATTR:   [type={ref_link:Color}]           [name=focused_background_color]                   [value=any {ref_link:Color}]
-    ATTR:   [type={ref_link:Color}]           [name=pressed_background_color]                   [value=any {ref_link:Color}]
+    ATTR:   [type={ref_link:Color}|int (RGB565)]   [name=background_color]                      [value=color]
+    ATTR:   [type={ref_link:Color}|int (RGB565)]   [name=focused_background_color]              [value=color]
+    ATTR:   [type={ref_link:Color}|int (RGB565)]   [name=pressed_background_color]              [value=color]
 
-    ATTR:   [type={ref_link:Color}]           [name=outline_color]                              [value=any {ref_link:Color}]
-    ATTR:   [type={ref_link:Color}]           [name=focused_outline_color]                      [value=any {ref_link:Color}]
-    ATTR:   [type={ref_link:Color}]           [name=pressed_outline_color]                      [value=any {ref_link:Color}]
+    ATTR:   [type={ref_link:Color}|int (RGB565)]   [name=outline_color]                         [value=color]
+    ATTR:   [type={ref_link:Color}|int (RGB565)]   [name=focused_outline_color]                 [value=color]
+    ATTR:   [type={ref_link:Color}|int (RGB565)]   [name=pressed_outline_color]                 [value=color]
 
     ATTR:   [type=float]                      [name=rotation]                                   [value=any (radians)]
     ATTR:   [type={ref_link:Vector2}]         [name=scale]                                      [value={ref_link:Vector2}]
@@ -780,11 +780,11 @@ mp_obj_t gui_button_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, 
     if(parsed_args[focused_text_color].u_obj == MP_OBJ_NULL) parsed_args[focused_text_color].u_obj = mp_const_none;
     if(parsed_args[pressed_text_color].u_obj == MP_OBJ_NULL) parsed_args[pressed_text_color].u_obj = mp_const_none;
 
-    if(parsed_args[background_color].u_obj == MP_OBJ_NULL) parsed_args[background_color].u_obj = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0x7bef)});
+    if(parsed_args[background_color].u_obj == MP_OBJ_NULL) parsed_args[background_color].u_obj = MP_OBJ_NEW_SMALL_INT(0x7bef);
     if(parsed_args[focused_background_color].u_obj == MP_OBJ_NULL) parsed_args[focused_background_color].u_obj = mp_const_none;
     if(parsed_args[pressed_background_color].u_obj == MP_OBJ_NULL) parsed_args[pressed_background_color].u_obj = mp_const_none;
 
-    if(parsed_args[outline_color].u_obj == MP_OBJ_NULL) parsed_args[outline_color].u_obj = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0xa554)});
+    if(parsed_args[outline_color].u_obj == MP_OBJ_NULL) parsed_args[outline_color].u_obj = MP_OBJ_NEW_SMALL_INT(0xa554);
     if(parsed_args[focused_outline_color].u_obj == MP_OBJ_NULL) parsed_args[focused_outline_color].u_obj = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0xff40)});
     if(parsed_args[pressed_outline_color].u_obj == MP_OBJ_NULL) parsed_args[pressed_outline_color].u_obj = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0xde60)});
 
@@ -818,17 +818,17 @@ mp_obj_t gui_button_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, 
     gui_button_2d_node->outline = parsed_args[outline].u_obj;
     gui_button_2d_node->padding = parsed_args[padding].u_obj;
 
-    gui_button_2d_node->text_color = parsed_args[text_color].u_obj;
-    gui_button_2d_node->focused_text_color = parsed_args[focused_text_color].u_obj;
-    gui_button_2d_node->pressed_text_color = parsed_args[pressed_text_color].u_obj;
+    gui_button_2d_node->text_color = engine_color_wrap_opt(parsed_args[text_color].u_obj);
+    gui_button_2d_node->focused_text_color = engine_color_wrap_opt(parsed_args[focused_text_color].u_obj);
+    gui_button_2d_node->pressed_text_color = engine_color_wrap_opt(parsed_args[pressed_text_color].u_obj);
 
-    gui_button_2d_node->background_color = parsed_args[background_color].u_obj;
-    gui_button_2d_node->focused_background_color = parsed_args[focused_background_color].u_obj;
-    gui_button_2d_node->pressed_background_color = parsed_args[pressed_background_color].u_obj;
+    gui_button_2d_node->background_color = engine_color_wrap(parsed_args[background_color].u_obj);
+    gui_button_2d_node->focused_background_color = engine_color_wrap_opt(parsed_args[focused_background_color].u_obj);
+    gui_button_2d_node->pressed_background_color = engine_color_wrap_opt(parsed_args[pressed_background_color].u_obj);
 
-    gui_button_2d_node->outline_color = parsed_args[outline_color].u_obj;
-    gui_button_2d_node->focused_outline_color = parsed_args[focused_outline_color].u_obj;
-    gui_button_2d_node->pressed_outline_color = parsed_args[pressed_outline_color].u_obj;
+    gui_button_2d_node->outline_color = engine_color_wrap(parsed_args[outline_color].u_obj);
+    gui_button_2d_node->focused_outline_color = engine_color_wrap_opt(parsed_args[focused_outline_color].u_obj);
+    gui_button_2d_node->pressed_outline_color = engine_color_wrap_opt(parsed_args[pressed_outline_color].u_obj);
 
     gui_button_2d_node->rotation = parsed_args[rotation].u_obj;
     gui_button_2d_node->scale = parsed_args[scale].u_obj;

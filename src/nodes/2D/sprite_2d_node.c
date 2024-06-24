@@ -318,7 +318,7 @@ bool sprite_2d_node_store_attr(engine_node_base_t *self_node_base, qstr attribut
             return true;
         break;
         case MP_QSTR_transparent_color:
-            self->transparent_color = destination[1];
+            self->transparent_color = engine_color_wrap(destination[1]);
             return true;
         break;
         case MP_QSTR_fps:
@@ -417,7 +417,7 @@ static mp_attr_fun_t sprite_2d_node_class_attr(mp_obj_t self_in, qstr attribute,
     DESC: Simple 2D sprite node that can be animated or static
     PARAM:  [type={ref_link:Vector2}]         [name=position]                                   [value={ref_link:Vector2}]
     PARAM:  [type={ref_link:TextureResource}] [name=texture]                                    [value={ref_link:TextureResource}]
-    PARAM:  [type=int]                        [name=transparent_color]                          [value=any 16-bit RGB565 color]
+    PARAM:  [type={ref_link:Color}|int (RGB565)]   [name=transparent_color]                     [value=color]
     PARAM:  [type=float]                      [name=fps]                                        [value=any]
     PARAM:  [type=int]                        [name=frame_count_x]                              [value=any positive integer]
     PARAM:  [type=int]                        [name=frame_count_y]                              [value=any positive integer]
@@ -438,7 +438,7 @@ static mp_attr_fun_t sprite_2d_node_class_attr(mp_obj_t self_in, qstr attribute,
     ATTR:   [type=function]                   [name={ref_link:tick}]                            [value=function]
     ATTR:   [type={ref_link:Vector2}]         [name=position]                                   [value={ref_link:Vector2}]
     ATTR:   [type={ref_link:TextureResource}] [name=texture]                                    [value={ref_link:TextureResource}]
-    ATTR:   [type=int]                        [name=transparent_color]                          [value=any 16-bit RGB565 color]
+    ATTR:   [type={ref_link:Color}|int (RGB565)]   [name=transparent_color]                     [value=color]
     ATTR:   [type=float]                      [name=fps]                                        [value=any]
     ATTR:   [type=int]                        [name=frame_count_x]                              [value=any positive integer]
     ATTR:   [type=int]                        [name=frame_count_y]                              [value=any positive integer]
@@ -491,7 +491,7 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
 
     if(parsed_args[position].u_obj == MP_OBJ_NULL) parsed_args[position].u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL);
     if(parsed_args[texture].u_obj == MP_OBJ_NULL) parsed_args[texture].u_obj = mp_const_none;
-    if(parsed_args[transparent_color].u_obj == MP_OBJ_NULL) parsed_args[transparent_color].u_obj = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(ENGINE_NO_TRANSPARENCY_COLOR)});
+    if(parsed_args[transparent_color].u_obj == MP_OBJ_NULL) parsed_args[transparent_color].u_obj = MP_OBJ_NEW_SMALL_INT(ENGINE_NO_TRANSPARENCY_COLOR);
     if(parsed_args[fps].u_obj == MP_OBJ_NULL) parsed_args[fps].u_obj = mp_obj_new_float(30.0f);
     if(parsed_args[frame_count_x].u_obj == MP_OBJ_NULL) parsed_args[frame_count_x].u_obj = mp_obj_new_int(1);
     if(parsed_args[frame_count_y].u_obj == MP_OBJ_NULL) parsed_args[frame_count_y].u_obj = mp_obj_new_int(1);
@@ -512,7 +512,7 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
     sprite_2d_node->tick_cb = mp_const_none;
     sprite_2d_node->position = parsed_args[position].u_obj;
     sprite_2d_node->texture_resource = parsed_args[texture].u_obj;
-    sprite_2d_node->transparent_color = parsed_args[transparent_color].u_obj;
+    sprite_2d_node->transparent_color = engine_color_wrap(parsed_args[transparent_color].u_obj);
     sprite_2d_node->fps = parsed_args[fps].u_obj;
     sprite_2d_node->frame_count_x = parsed_args[frame_count_x].u_obj;
     sprite_2d_node->frame_count_y = parsed_args[frame_count_y].u_obj;

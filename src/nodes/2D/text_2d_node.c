@@ -295,7 +295,7 @@ bool text_2d_node_store_attr(engine_node_base_t *self_node_base, qstr attribute,
             return true;
         break;
         case MP_QSTR_color:
-            self->color = destination[1];
+            self->color = engine_color_wrap(destination[1]);
             return true;
         break;
         default:
@@ -349,6 +349,7 @@ static mp_attr_fun_t text_2d_node_class_attr(mp_obj_t self_in, qstr attribute, m
     PARAM:  [type=float]                      [name=opacity]                                    [value=0 ~ 1.0]
     PARAM:  [type=float]                      [name=letter_spacing]                             [value=any]
     PARAM:  [type=float]                      [name=line_spacing]                               [value=any]
+    PARAM:  [type={ref_link:Color}|int (RGB565)]   [name=color]                                 [value=color]
     ATTR:   [type=function]                   [name={ref_link:add_child}]                       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_child}]                       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_child_count}]                 [value=function]
@@ -368,7 +369,7 @@ static mp_attr_fun_t text_2d_node_class_attr(mp_obj_t self_in, qstr attribute, m
     ATTR:   [type=float]                      [name=opacity]                                    [value=0 ~ 1.0]
     ATTR:   [type=float]                      [name=letter_spacing]                             [value=any]
     ATTR:   [type=float]                      [name=line_spacing]                               [value=any]
-    ATTR:   [type={ref_link:Color}]           [name=color]                                      [value={ref_link:Color}]
+    ATTR:   [type={ref_link:Color}|int (RGB565)]   [name=color]                                 [value=color]
     OVRR:   [type=function]                   [name={ref_link:tick}]                            [value=function]
 */
 mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
@@ -433,7 +434,7 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
     text_2d_node->opacity = parsed_args[opacity].u_obj;
     text_2d_node->letter_spacing = parsed_args[letter_spacing].u_obj;
     text_2d_node->line_spacing = parsed_args[line_spacing].u_obj;
-    text_2d_node->color = parsed_args[color].u_obj;
+    text_2d_node->color = engine_color_wrap_opt(parsed_args[color].u_obj);
     text_2d_node->width = mp_obj_new_int(0);
     text_2d_node->height = mp_obj_new_int(0);
 

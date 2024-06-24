@@ -16,8 +16,8 @@ static inline uint16_t round_float(float value){
 
 static inline void engine_color_split_u16(uint16_t color, uint16_t *r, uint16_t *g, uint16_t *b){
     *r = (color >> 11) & bitmask_5_bit;
-    *g = (color >> 5)  & bitmask_6_bit;
-    *b = (color >> 0)  & bitmask_5_bit;
+    *g = (color >>  5) & bitmask_6_bit;
+    *b = (color >>  0) & bitmask_5_bit;
 }
 
 // https://stackoverflow.com/a/29321264
@@ -27,11 +27,9 @@ uint16_t ENGINE_FAST_FUNCTION(engine_color_blend)(uint16_t from, uint16_t to, fl
     uint16_t to_r, to_g, to_b;
     engine_color_split_u16(to, &to_r, &to_g, &to_b);
 
-    amount = clamp_0_to_1(amount);
-
-    const uint16_t out_r = round_float(sqrtf((1.0f - amount) * (from_r*from_r) + amount * (to_r*to_r)));
-    const uint16_t out_g = round_float(sqrtf((1.0f - amount) * (from_g*from_g) + amount * (to_g*to_g)));
-    const uint16_t out_b = round_float(sqrtf((1.0f - amount) * (from_b*from_b) + amount * (to_b*to_b)));
+    const uint16_t out_r = round_float(clamp_0_to_1(sqrtf((1.0f - amount) * (from_r*from_r) + amount * (to_r*to_r))));
+    const uint16_t out_g = round_float(clamp_0_to_1(sqrtf((1.0f - amount) * (from_g*from_g) + amount * (to_g*to_g))));
+    const uint16_t out_b = round_float(clamp_0_to_1(sqrtf((1.0f - amount) * (from_b*from_b) + amount * (to_b*to_b))));
 
     return (out_r << 11) | (out_g << 5) | (out_b << 0);
 }
@@ -60,6 +58,39 @@ static void color_class_print(const mp_print_t *print, mp_obj_t self_in, mp_prin
 }
 
 
+uint16_t engine_color_class_color_value(mp_obj_t color) {
+    if (MP_OBJ_IS_TYPE(color, &color_class_type) || MP_OBJ_IS_TYPE(color, &const_color_class_type)) {
+        return ((color_class_obj_t*)MP_OBJ_TO_PTR(color))->value;
+    } else if(MP_OBJ_IS_INT(color)) {
+        return mp_obj_get_int(color);
+    } else {
+        mp_raise_TypeError(MP_ERROR_TEXT("Color: Expected Color or int (RGB565)"));
+    }
+}
+
+
+mp_obj_t engine_color_wrap(mp_obj_t color) {
+    if (MP_OBJ_IS_TYPE(color, &color_class_type) || MP_OBJ_IS_TYPE(color, &const_color_class_type)) {
+        return color;
+    } else if(MP_OBJ_IS_INT(color)) {
+        color_class_obj_t *color_obj = mp_obj_malloc(color_class_obj_t, &color_class_type);
+        color_obj->value = mp_obj_get_int(color);
+        return MP_OBJ_FROM_PTR(color_obj);
+    } else {
+        mp_raise_TypeError(MP_ERROR_TEXT("Color: Expected Color or int (RGB565)"));
+    }
+}
+
+
+mp_obj_t engine_color_wrap_opt(mp_obj_t color_or_none) {
+    if (color_or_none == mp_const_none) {
+        return mp_const_none;
+    } else {
+        return engine_color_wrap(color_or_none);
+    }
+}
+
+
 /*  --- doc ---
     NAME: Color
     ID: Color
@@ -77,18 +108,13 @@ mp_obj_t color_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, 
     color_class_obj_t *self = mp_obj_malloc(color_class_obj_t, &color_class_type);
     if (n_args == 0) {
         self->value = 0;
-    } else if(n_args == 1) {
-        if (mp_obj_is_type(args[0], &color_class_type)) {
-            self->value = ((color_class_obj_t*)MP_OBJ_TO_PTR(args[0]))->value;
-        } else {
-            self->value = mp_obj_get_int(args[0]);
-        }
-    } else if(n_args == 3) {
+    } else if (n_args == 1) {
+        self->value = engine_color_class_color_value(args[0]);
+    } else if (n_args == 3) {
         self->value = engine_color_from_rgb_float(mp_obj_get_float(args[0]), mp_obj_get_float(args[1]), mp_obj_get_float(args[2]));
-    }else{
+    } else {
         mp_raise_TypeError(MP_ERROR_TEXT("Color: ERROR: expected 0, 1 or 3 arguments"));
     }
-
     return MP_OBJ_FROM_PTR(self);
 }
 
@@ -119,6 +145,15 @@ uint16_t engine_color_from_rgb_float(float r, float g, float b){
         (round_float(clamp_0_to_1(b) * bitmask_5_bit) << 0);
 }
 
+
+static mp_obj_t engine_color_set(size_t n_args, const mp_obj_t *args) {
+    color_class_obj_t *self = MP_OBJ_TO_PTR(args[0]);
+    self->value = engine_color_from_rgb_float(mp_obj_get_float(args[1]), mp_obj_get_float(args[2]), mp_obj_get_float(args[3]));
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_color_set_obj, 4, 4, engine_color_set);
+
+
 static void color_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Color attr");
 
@@ -137,10 +172,16 @@ static void color_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destina
             break;
             case MP_QSTR_value:
                 destination[0] = MP_OBJ_NEW_SMALL_INT(self->value);
+            break;
             default:
-                return; // Fail
+                // Continue in locals_dict.
+                destination[1] = MP_OBJ_SENTINEL;
+                return;
         }
     }else if(destination[1] != MP_OBJ_NULL){    // Store
+        if(self->base.type == &const_color_class_type){
+            return; // Fail
+        }
         switch(attribute) {
             case MP_QSTR_r:
                 self->value = engine_color_set_r_float(self->value, mp_obj_get_float(destination[1]));
@@ -164,12 +205,28 @@ static void color_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destina
 }
 
 
+const mp_rom_map_elem_t color_class_locals_dict_table[] = {
+    { MP_ROM_QSTR(MP_QSTR_set), MP_ROM_PTR(&engine_color_set_obj) },
+};
+MP_DEFINE_CONST_DICT(color_class_locals_dict, color_class_locals_dict_table);
+
+
 MP_DEFINE_CONST_OBJ_TYPE(
     color_class_type,
     MP_QSTR_Color,
     MP_TYPE_FLAG_NONE,
 
     make_new, color_class_new,
+    attr, color_class_attr,
+    locals_dict, (mp_obj_dict_t*)&color_class_locals_dict,
+    print, color_class_print
+);
+
+MP_DEFINE_CONST_OBJ_TYPE(
+    const_color_class_type,
+    MP_QSTR_ConstColor,
+    MP_TYPE_FLAG_NONE,
+
     attr, color_class_attr,
     print, color_class_print
 );

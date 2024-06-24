@@ -419,7 +419,7 @@ bool voxelspace_sprite_node_store_attr(engine_node_base_t *self_node_base, qstr 
             return true;
         break;
         case MP_QSTR_transparent_color:
-            self->transparent_color = destination[1];
+            self->transparent_color = engine_color_wrap(destination[1]);
             return true;
         break;
         case MP_QSTR_fps:
@@ -510,7 +510,7 @@ static mp_attr_fun_t voxelspace_sprite_node_class_attr(mp_obj_t self_in, qstr at
     DESC: Simple 3D sprite node that can be animated or static for VoxelSpace rendering. Acts as a billboard that always faces the camera
     PARAM:  [type={ref_link:Vector3}]         [name=position]                                   [value={ref_link:Vector3}]
     PARAM:  [type={ref_link:TextureResource}] [name=texture]                                    [value={ref_link:TextureResource}]
-    PARAM:  [type=int]                        [name=transparent_color]                          [value=any 16-bit RGB565 color]
+    PARAM:  [type={ref_link:Color}|int (RGB565)]   [name=transparent_color]                     [value=color]
     PARAM:  [type=float]                      [name=fps]                                        [value=any]
     PARAM:  [type=int]                        [name=frame_count_x]                              [value=any positive integer]
     PARAM:  [type=int]                        [name=frame_count_y]                              [value=any positive integer]
@@ -533,7 +533,7 @@ static mp_attr_fun_t voxelspace_sprite_node_class_attr(mp_obj_t self_in, qstr at
     ATTR:   [type=function]                   [name={ref_link:tick}]                            [value=function]
     ATTR:   [type={ref_link:Vector2}]         [name=position]                                   [value={ref_link:Vector2}]
     ATTR:   [type={ref_link:TextureResource}] [name=texture]                                    [value={ref_link:TextureResource}]
-    ATTR:   [type=int]                        [name=transparent_color]                          [value=any 16-bit RGB565 color]
+    ATTR:   [type={ref_link:Color}|int (RGB565)]   [name=transparent_color]                     [value=color]
     ATTR:   [type=float]                      [name=fps]                                        [value=any]
     ATTR:   [type=int]                        [name=frame_count_x]                              [value=any positive integer]
     ATTR:   [type=int]                        [name=frame_count_y]                              [value=any positive integer]
@@ -591,7 +591,7 @@ mp_obj_t voxelspace_sprite_node_class_new(const mp_obj_type_t *type, size_t n_ar
 
     if(parsed_args[position].u_obj == MP_OBJ_NULL) parsed_args[position].u_obj = vector3_class_new(&vector3_class_type, 0, 0, NULL);
     if(parsed_args[texture].u_obj == MP_OBJ_NULL) parsed_args[texture].u_obj = mp_const_none;
-    if(parsed_args[transparent_color].u_obj == MP_OBJ_NULL) parsed_args[transparent_color].u_obj = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(ENGINE_NO_TRANSPARENCY_COLOR)});
+    if(parsed_args[transparent_color].u_obj == MP_OBJ_NULL) parsed_args[transparent_color].u_obj = MP_OBJ_NEW_SMALL_INT(ENGINE_NO_TRANSPARENCY_COLOR);
     if(parsed_args[fps].u_obj == MP_OBJ_NULL) parsed_args[fps].u_obj = mp_obj_new_float(30.0f);
     if(parsed_args[frame_count_x].u_obj == MP_OBJ_NULL) parsed_args[frame_count_x].u_obj = mp_obj_new_int(1);
     if(parsed_args[frame_count_y].u_obj == MP_OBJ_NULL) parsed_args[frame_count_y].u_obj = mp_obj_new_int(1);
@@ -613,7 +613,7 @@ mp_obj_t voxelspace_sprite_node_class_new(const mp_obj_type_t *type, size_t n_ar
     voxelspace_sprite_node->tick_cb = mp_const_none;
     voxelspace_sprite_node->position = parsed_args[position].u_obj;
     voxelspace_sprite_node->texture_resource = parsed_args[texture].u_obj;
-    voxelspace_sprite_node->transparent_color = parsed_args[transparent_color].u_obj;
+    voxelspace_sprite_node->transparent_color = engine_color_wrap(parsed_args[transparent_color].u_obj);
     voxelspace_sprite_node->fps = parsed_args[fps].u_obj;
     voxelspace_sprite_node->frame_count_x = parsed_args[frame_count_x].u_obj;
     voxelspace_sprite_node->frame_count_y = parsed_args[frame_count_y].u_obj;
