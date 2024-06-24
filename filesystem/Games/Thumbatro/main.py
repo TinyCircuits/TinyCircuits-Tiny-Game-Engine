@@ -45,6 +45,11 @@ def tween_scale(node, start_scale, end_scale, duration=1200):
     tw.start(node, 'scale', start_scale, end_scale, duration, 1, ONE_SHOT, EASE_SINE_IN)
     tweens.append(tw)
 
+def tween_color(node, start, end, duration=1200):
+    tw = Tween()
+    tw.start(node, 'color', start, end, duration, 1, ONE_SHOT, EASE_SINE_IN)
+    tweens.append(tw)
+
 class Modifier:
     def apply_bonus(self, card, selected_cards, hand):
         return 0, 0
@@ -872,8 +877,9 @@ class PokerGame(Rectangle2DNode):
         score_node.color = color
         score_node.set_layer(6)
         self.add_child(score_node)
-        tween_scale(score_node, Vector2(1, 1), Vector2(end_scale, end_scale))
-        tween_opacity(score_node, 1.0, 0.0, duration=1200)
+        duration= end_scale * 500
+        tween_scale(score_node, Vector2(1, 1), Vector2(end_scale, end_scale), duration)
+        tween_opacity(score_node, 1.0, 0.0, duration)
 
     def display_played_hand(self):
         start_x = 10
@@ -1121,7 +1127,7 @@ class PokerGame(Rectangle2DNode):
             joker_to_discard.mark_discarded()
             self.update_joker_display()
             if self.jokers:
-                self.current_card_index = min(self.current_card_index, len(self.jokers) - 1)
+                self.current_card_index = 0
                 self.update_joker_indicator_position()
             else:
                 self.joker_selection = False
