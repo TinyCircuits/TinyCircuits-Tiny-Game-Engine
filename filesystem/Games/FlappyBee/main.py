@@ -110,7 +110,7 @@ while tick < 180:
 
     # Only execute code as fast as the engine ticks (due to FPS limit)
     if engine.tick():
-        if engine_io.check_pressed(engine_io.A):
+        if engine_io.A.is_pressed:
             bee.velocity.y -= 0.2
 
         if collided:

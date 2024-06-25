@@ -38,35 +38,35 @@ class MyCam(CameraNode):
         # print(engine.get_running_fps())
         # print(self.position.x, self.position.y, self.position.z)
 
-        if engine_io.check_pressed(engine_io.BUMPER_RIGHT):
+        if engine_io.RB.is_pressed:
             self.rotation.y += 0.05
             engine_io.rumble(self.rotation.y)
-        if engine_io.check_pressed(engine_io.BUMPER_LEFT):
+        if engine_io.LB.is_pressed:
             self.rotation.y -= 0.05
             engine_io.rumble(self.rotation.y)
     
 
-        if engine_io.check_pressed(engine_io.DPAD_UP):
+        if engine_io.UP.is_pressed:
             self.forward()
-        if engine_io.check_pressed(engine_io.DPAD_DOWN):
+        if engine_io.DOWN.is_pressed:
             self.backward()
-        if engine_io.check_pressed(engine_io.DPAD_LEFT):
+        if engine_io.LEFT.is_pressed:
             self.left()
-        if engine_io.check_pressed(engine_io.DPAD_RIGHT):
+        if engine_io.RIGHT.is_pressed:
             self.right()
         
-        if engine_io.check_pressed(engine_io.A):
+        if engine_io.A.is_pressed:
             if self.mode == 0:
                 self.position.y -= 1
             else:
                 self.rotation.x -= 0.5
-        if engine_io.check_pressed(engine_io.B):
+        if engine_io.B.is_pressed:
             if self.mode == 0:
                 self.position.y += 1
             else:
                 self.rotation.x += 0.5
         
-        if engine_io.check_pressed(engine_io.MENU):
+        if engine_io.MENU.is_pressed:
             if self.mode == 0:
                 self.mode = 1
             else:

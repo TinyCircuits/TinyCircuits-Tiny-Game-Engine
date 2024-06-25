@@ -5,6 +5,7 @@
 #include "math/vector2.h"
 #include "nodes/node_base.h"
 #include "utility/linked_list.h"
+#include "io/engine_io_buttons.h"
 
 typedef struct{
     mp_obj_t position;
@@ -44,7 +45,7 @@ typedef struct{
     bool last_focused;
     bool pressed;
     bool last_pressed;
-    uint16_t button;
+    button_class_obj_t* button;
 
     float width;
     float height;
