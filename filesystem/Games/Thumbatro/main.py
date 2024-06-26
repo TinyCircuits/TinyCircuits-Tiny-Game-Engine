@@ -6,7 +6,7 @@ from engine_nodes import Sprite2DNode, CameraNode, Rectangle2DNode, Text2DNode
 from engine_resources import TextureResource, FontResource
 from engine_math import Vector2, Vector3
 from engine_draw import Color
-from engine_animation import Tween, ONE_SHOT, EASE_SINE_IN
+from engine_animation import Tween, Delay, ONE_SHOT, EASE_SINE_IN
 import random
 import time
 import math
@@ -1205,11 +1205,16 @@ class IntroSprite(Sprite2DNode):
     def __init__(self, position):
         super().__init__(self, position)
         self.triggered = False
+        self.start_time = None
 
     def tick(self, dt):
         if not self.triggered:
-            tween_opacity(self, 1.0, 0.0, 1500)
-            self.triggered = True
+            if self.start_time is None:
+                self.start_time = time.ticks_ms()
+
+            if time.ticks_diff(time.ticks_ms(), self.start_time) >= 1000:
+                tw = tween_opacity(self, 1.0, 0.0, 1000)
+                self.triggered = True
 
 # Load card sprite texture
 intro = TextureResource("title.bmp")
