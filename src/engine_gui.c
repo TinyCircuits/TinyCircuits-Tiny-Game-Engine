@@ -1,5 +1,5 @@
 #include "engine_gui.h"
-#include "io/engine_io_common.h"
+#include "io/engine_io_buttons.h"
 #include "io/engine_io_module.h"
 #include "nodes/2D/gui_button_2d_node.h"
 #include "nodes/2D/gui_bitmap_button_2d_node.h"
@@ -259,8 +259,8 @@ void engine_gui_tick(){
     // Every tick, see if the button to toggle GUI focus was pressed.
     // If the GUI toggle button is 0 that means None was set for the
     // toggle button and that we should not automaticaly switch focus
-    uint16_t gui_toggle_button = engine_io_get_gui_toggle_button();
-    if(gui_toggle_button != 0 && check_just_pressed(gui_toggle_button)){
+    button_class_obj_t* gui_toggle_button = engine_io_get_gui_toggle_button();
+    if(gui_toggle_button != NULL && button_is_just_pressed(gui_toggle_button)){
         engine_gui_toggle_focus();
 
         // If unfocus GUI entirely, make sure the focused node gets unfocused
@@ -281,20 +281,20 @@ void engine_gui_tick(){
         return;
     }
 
-    if(check_just_pressed(BUTTON_DPAD_LEFT)){
+    if(button_is_pressed_autorepeat(&BUTTON_DPAD_LEFT)){
         engine_gui_select_closest(engine_gui_is_left_check);
-    }else if(check_just_pressed(BUTTON_DPAD_RIGHT)){
+    }else if(button_is_pressed_autorepeat(&BUTTON_DPAD_RIGHT)){
         engine_gui_select_closest(engine_gui_is_right_check);
-    }else if(check_just_pressed(BUTTON_DPAD_UP)){
+    }else if(button_is_pressed_autorepeat(&BUTTON_DPAD_UP)){
         engine_gui_select_closest(engine_gui_is_up_check);
-    }else if(check_just_pressed(BUTTON_DPAD_DOWN)){
+    }else if(button_is_pressed_autorepeat(&BUTTON_DPAD_DOWN)){
         engine_gui_select_closest(engine_gui_is_down_check);
     }
 
     // Check if the focused/highlighted node should respond
     // to the currently pressed hardware button
     if(focused_gui_node_base != NULL){
-        uint16_t button = 0;
+        button_class_obj_t* button = NULL;
 
         // Figure out what hardware button this button should respond to
         if(mp_obj_is_type(focused_gui_node_base, &engine_gui_bitmap_button_2d_node_class_type)){
@@ -306,7 +306,7 @@ void engine_gui_tick(){
         }
 
         // Check if the button is pressed, if it is, indicate with flag that it is pressed
-        if(check_pressed(button)){
+        if(button_is_pressed(button)){
             if(mp_obj_is_type(focused_gui_node_base, &engine_gui_bitmap_button_2d_node_class_type)){
                 engine_gui_bitmap_button_2d_node_class_obj_t *focused_node = focused_gui_node_base->node;
                 focused_node->pressed = true;

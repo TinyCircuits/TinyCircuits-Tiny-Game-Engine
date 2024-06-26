@@ -119,7 +119,7 @@ class MyCam(CameraNode):
         self.t += 0.01
         # vox0.position.y = 20 + math.sin(self.t)
 
-        if engine_io.check_pressed(engine_io.BUMPER_RIGHT):
+        if engine_io.RB.is_pressed:
             if self.mode == 0:
                 self.rotation.y += 0.025
             elif self.mode == 2:
@@ -136,7 +136,7 @@ class MyCam(CameraNode):
                 vox1.scale.y += 1
             elif self.mode == 6:
                 self.fov += 0.05
-        if engine_io.check_pressed(engine_io.BUMPER_LEFT):
+        if engine_io.LB.is_pressed:
             if self.mode == 0:
                 self.rotation.y -= 0.025
             elif self.mode == 2:
@@ -155,29 +155,29 @@ class MyCam(CameraNode):
                 self.fov -= 0.05
 
 
-        if engine_io.check_pressed(engine_io.DPAD_UP):
+        if engine_io.UP.is_pressed:
             self.forward()
-        if engine_io.check_pressed(engine_io.DPAD_DOWN):
+        if engine_io.DOWN.is_pressed:
             self.backward()
-        if engine_io.check_pressed(engine_io.DPAD_LEFT):
+        if engine_io.LEFT.is_pressed:
             self.left()
-        if engine_io.check_pressed(engine_io.DPAD_RIGHT):
+        if engine_io.RIGHT.is_pressed:
             self.right()
 
-        if engine_io.check_pressed(engine_io.A):
+        if engine_io.A.is_pressed:
             if self.mode == 0:
                 self.position.y += 0.1
                 self.adjust()
             elif self.mode == 1:
                 self.rotation.x -= 0.1
-        if engine_io.check_pressed(engine_io.B):
+        if engine_io.B.is_pressed:
             if self.mode == 0:
                 self.position.y -= 0.1
                 self.adjust()
             elif self.mode == 1:
                 self.rotation.x += 0.1
 
-        if engine_io.check_just_pressed(engine_io.MENU):
+        if engine_io.MENU.is_just_pressed:
             # vox.scale.y += 0.5
             # print(vox.scale.y)
             self.mode = self.mode + 1

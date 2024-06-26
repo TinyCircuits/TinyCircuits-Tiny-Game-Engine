@@ -2,15 +2,12 @@
 #define ENGINE_IO_MODULE_H
 
 #include <stdint.h>
+#include "engine_io_buttons.h"
 
 void engine_io_setup();
-void engine_io_update_pressed_buttons();
+void engine_io_tick();
 
-bool check_pressed(uint16_t button_mask);
-bool check_just_changed(uint16_t button_mask);
-bool check_just_pressed(uint16_t button_mask);
-bool check_just_released(uint16_t button_mask);
-uint16_t engine_io_get_gui_toggle_button();
+button_class_obj_t* engine_io_get_gui_toggle_button();
 void engine_io_reset_gui_toggle_button();
 
 #endif  // ENGINE_IO_MODULE_H

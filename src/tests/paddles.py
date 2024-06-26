@@ -65,9 +65,9 @@ class PlayerPaddle(PhysicsRectangle2DNode):
         else:
             self.paddle_rectangle.color = engine_draw.green
 
-        if engine_io.check_pressed(engine_io.DPAD_UP):
+        if engine_io.UP.is_pressed:
             self.velocity.y = -1.5
-        elif engine_io.check_pressed(engine_io.DPAD_DOWN):
+        elif engine_io.DOWN.is_pressed:
             self.velocity.y = 1.5
         else:
             self.velocity.y = 0

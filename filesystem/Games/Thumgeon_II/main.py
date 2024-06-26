@@ -513,16 +513,16 @@ while True:
         monster_redraw = False
         deco_redraw = False
 
-        if engine_io.check_just_pressed(engine_io.DPAD_RIGHT):
+        if engine_io.RIGHT.is_just_pressed:
             action_dir = 0
-        elif engine_io.check_just_pressed(engine_io.DPAD_LEFT):
+        elif engine_io.LEFT.is_just_pressed:
             action_dir = 1
-        elif engine_io.check_just_pressed(engine_io.DPAD_DOWN):
+        elif engine_io.DOWN.is_just_pressed:
             action_dir = 2
-        elif engine_io.check_just_pressed(engine_io.DPAD_UP):
+        elif engine_io.UP.is_just_pressed:
             action_dir = 3
 
-        if engine_io.check_just_pressed(engine_io.A):
+        if engine_io.A.is_just_pressed:
             if(control_mode == mode_move):
                 if(player.held_item is not None and player.held_item_spr.frame_count_x > 1):
                     player.held_item_spr.frame_current_x = 1
@@ -560,7 +560,7 @@ while True:
                         selection_pos = Vector2(0,0)
                         cursor.opacity = 1.0
 
-        if engine_io.check_just_pressed(engine_io.B):
+        if engine_io.B.is_just_pressed:
             inventory_item_sel = 0
             eqp_drop = 0
             if(control_mode == mode_move):

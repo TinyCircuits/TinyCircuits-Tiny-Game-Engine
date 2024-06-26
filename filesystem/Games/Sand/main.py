@@ -182,7 +182,7 @@ def randomColor(pick):
 def render():
 
     # Viper pointers for quick access to the buffers
-    buf = ptr16(engine_draw.back_fb_data)
+    buf = ptr16(engine_draw.back_fb_data())
     pa = ptr8(particles)
     pal = ptr16(palettes)
 
@@ -419,13 +419,13 @@ while True:
 
         # Cursor Inputs
         cax, cay = 0, 0
-        if engine_io.check_pressed(engine_io.DPAD_UP):
+        if engine_io.UP.is_pressed:
             cay -= CURSOR_ACCEL
-        if engine_io.check_pressed(engine_io.DPAD_DOWN):
+        if engine_io.DOWN.is_pressed:
             cay += CURSOR_ACCEL
-        if engine_io.check_pressed(engine_io.DPAD_LEFT):
+        if engine_io.LEFT.is_pressed:
             cax -= CURSOR_ACCEL
-        if engine_io.check_pressed(engine_io.DPAD_RIGHT):
+        if engine_io.RIGHT.is_pressed:
             cax += CURSOR_ACCEL
 
         # Cursor Motion
@@ -441,9 +441,9 @@ while True:
         cpy = max(1, min(H-3, cpy + cdy))
 
         # Cycle particle selection
-        if engine_io.check_just_pressed(engine_io.BUMPER_RIGHT):
+        if engine_io.RB.is_just_pressed:
             cpick = (cpick + 1) % len(Picks)
-        if engine_io.check_just_pressed(engine_io.BUMPER_LEFT):
+        if engine_io.LB.is_just_pressed:
             cpick = (cpick + len(Picks) - 1) % len(Picks)
 
         # Rounded to nearest pixel
@@ -451,14 +451,14 @@ while True:
         cy = int(cpy)
 
         # Draw particles near cursor
-        if engine_io.check_pressed(engine_io.A):
+        if engine_io.A.is_pressed:
             p = Picks[cpick]
             for y in range(3):
                 for x in range(3):
                     particles[(cy+y)*W+cx+x] = randomColor(p)
 
         # Remove particles near cursor
-        if engine_io.check_pressed(engine_io.B):
+        if engine_io.B.is_pressed:
             for y in range(3):
                 for x in range(3):
                     particles[(cy+y)*W+cx+x] = P_AIR
@@ -470,7 +470,7 @@ while True:
         # Shape Physics
         shapePhysics()
 
-        fb = engine_draw.front_fb
+        fb = engine_draw.front_fb()
 
         # Overlay shape
         for spring in springs:

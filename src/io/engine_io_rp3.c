@@ -1,5 +1,5 @@
 #include "engine_io_rp3.h"
-#include "engine_io_common.h"
+#include "engine_io_button_codes.h"
 #include "debug/debug_print.h"
 
 #include "pico/stdlib.h"
@@ -66,22 +66,23 @@ void engine_io_rp3_setup(){
 }
 
 
-void engine_io_rp3_update_pressed_mask(){
-    // Reset this to all unpressed before checking if pressed
-    pressed_buttons = 0;
+uint16_t engine_io_rp3_pressed_buttons(){
+    uint16_t pressed = 0;
 
-    if(gpio_get(GPIO_BUTTON_DPAD_UP) == false) pressed_buttons |= BUTTON_DPAD_UP;
-    if(gpio_get(GPIO_BUTTON_DPAD_LEFT) == false) pressed_buttons |= BUTTON_DPAD_LEFT;
-    if(gpio_get(GPIO_BUTTON_DPAD_DOWN) == false) pressed_buttons |= BUTTON_DPAD_DOWN;
-    if(gpio_get(GPIO_BUTTON_DPAD_RIGHT) == false) pressed_buttons |= BUTTON_DPAD_RIGHT;
+    if(gpio_get(GPIO_BUTTON_DPAD_UP) == false) pressed |= BUTTON_CODE_DPAD_UP;
+    if(gpio_get(GPIO_BUTTON_DPAD_LEFT) == false) pressed |= BUTTON_CODE_DPAD_LEFT;
+    if(gpio_get(GPIO_BUTTON_DPAD_DOWN) == false) pressed |= BUTTON_CODE_DPAD_DOWN;
+    if(gpio_get(GPIO_BUTTON_DPAD_RIGHT) == false) pressed |= BUTTON_CODE_DPAD_RIGHT;
 
-    if(gpio_get(GPIO_BUTTON_A) == false) pressed_buttons |= BUTTON_A;
-    if(gpio_get(GPIO_BUTTON_B) == false) pressed_buttons |= BUTTON_B;
+    if(gpio_get(GPIO_BUTTON_A) == false) pressed |= BUTTON_CODE_A;
+    if(gpio_get(GPIO_BUTTON_B) == false) pressed |= BUTTON_CODE_B;
 
-    if(gpio_get(GPIO_BUTTON_BUMPER_LEFT) == false) pressed_buttons |= BUTTON_BUMPER_LEFT;
-    if(gpio_get(GPIO_BUTTON_BUMPER_RIGHT) == false) pressed_buttons |= BUTTON_BUMPER_RIGHT;
+    if(gpio_get(GPIO_BUTTON_BUMPER_LEFT) == false) pressed |= BUTTON_CODE_BUMPER_LEFT;
+    if(gpio_get(GPIO_BUTTON_BUMPER_RIGHT) == false) pressed |= BUTTON_CODE_BUMPER_RIGHT;
 
-    if(gpio_get(GPIO_BUTTON_MENU) == false) pressed_buttons |= BUTTON_MENU;
+    if(gpio_get(GPIO_BUTTON_MENU) == false) pressed |= BUTTON_CODE_MENU;
+
+    return pressed;
 }
 
 

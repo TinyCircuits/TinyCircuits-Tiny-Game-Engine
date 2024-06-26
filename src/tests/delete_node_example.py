@@ -23,7 +23,7 @@ while True:
 
     # Once A is pressed, delete a circle node (marks for collection by gc)
     # and then force it to be collected now instead of later
-    if engine_io.check_pressed(engine_io.A) and len(circles_list) > 0:
+    if engine_io.A.is_pressed and len(circles_list) > 0:
 
         # In the future I will add a function that can be called on each node
         # like `my_node.destroy()`
@@ -32,7 +32,7 @@ while True:
         print("Deleted a node!")
 
     # Add a circle once B is pressed
-    if engine_io.check_pressed(engine_io.B):
+    if engine_io.B.is_pressed:
         new_circle = Circle2DNode()
         new_circle.position.x = random.uniform(-1.0, 1.0) * 64.0
         new_circle.position.y = random.uniform(-1.0, 1.0) * 64.0

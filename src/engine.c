@@ -172,7 +172,7 @@ bool engine_tick(){
         ENGINE_PERFORMANCE_START(ENGINE_PERF_TIMER_1);
 
         // Update/grab which buttons are pressed before calling all node callbacks
-        engine_io_update_pressed_buttons();
+        engine_io_tick();
 
         // Goes through all animation components.
         // Do this first in case a camera is being

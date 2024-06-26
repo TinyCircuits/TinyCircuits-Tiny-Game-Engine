@@ -69,24 +69,24 @@ class MyCam(CameraNode):
         super().__init__(self)
     
     def tick(self, dt):
-        if engine_io.check_pressed(engine_io.A):
+        if engine_io.A.is_pressed:
             self.zoom -= 0.005
-        if engine_io.check_pressed(engine_io.B):
+        if engine_io.B.is_pressed:
             self.zoom += 0.005
         
-        if engine_io.check_pressed(engine_io.DPAD_UP):
+        if engine_io.UP.is_pressed:
             self.position.y -= 0.25
-        if engine_io.check_pressed(engine_io.DPAD_DOWN):
+        if engine_io.DOWN.is_pressed:
             self.position.y += 0.25
         
-        if engine_io.check_pressed(engine_io.DPAD_LEFT):
+        if engine_io.LEFT.is_pressed:
             self.position.x -= 0.25
-        if engine_io.check_pressed(engine_io.DPAD_RIGHT):
+        if engine_io.RIGHT.is_pressed:
             self.position.x += 0.25
         
-        if engine_io.check_pressed(engine_io.BUMPER_LEFT):
+        if engine_io.LB.is_pressed:
             self.rotation.z += 0.005
-        if engine_io.check_pressed(engine_io.BUMPER_RIGHT):
+        if engine_io.RB.is_pressed:
             self.rotation.z -= 0.005
 
 

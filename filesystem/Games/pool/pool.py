@@ -108,13 +108,13 @@ class Stick(Rectangle2DNode):
 
     def tick(self, dt):
         # Rotation
-        if engine_io.check_pressed(engine_io.BUMPER_LEFT):
+        if engine_io.LB.is_pressed:
             self.ball.rotation -= 0.025
-        elif engine_io.check_pressed(engine_io.BUMPER_RIGHT):
+        elif engine_io.RB.is_pressed:
             self.ball.rotation += 0.025
 
         # Power
-        if engine_io.check_pressed(engine_io.DPAD_DOWN):
+        if engine_io.DOWN.is_pressed:
             self.power += 1
 
             if self.power > self.max_power:
@@ -124,7 +124,7 @@ class Stick(Rectangle2DNode):
         self.power_indicator.set_percent(self.power / self.max_power)
 
         # Shoot
-        if engine_io.check_just_released(engine_io.DPAD_DOWN):
+        if engine_io.DOWN.is_just_released:
             self.ball.velocity.x = -math.cos(self.ball.rotation - math.pi/2) * self.power
             self.ball.velocity.y = math.sin(self.ball.rotation - math.pi/2) * self.power
             self.power = 0
@@ -135,9 +135,9 @@ class GameCamera(CameraNode):
         super().__init__(self)
 
     def tick(self, dt):
-        if engine_io.check_pressed(engine_io.A):
+        if engine_io.A.is_pressed:
             self.zoom += 0.005
-        elif engine_io.check_pressed(engine_io.B):
+        elif engine_io.B.is_pressed:
             self.zoom -= 0.005
 
 

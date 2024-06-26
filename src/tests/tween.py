@@ -74,11 +74,11 @@ class cam(CameraNode):
         self.intensity = 0.0
 
     def tick(self):
-        if engine_io.check_pressed(engine_io.BUMPER_RIGHT):
+        if engine_io.RB.is_pressed:
             self.intensity += 0.05
             engine_io.rumble(self.intensity)
             print(self.intensity)
-        if engine_io.check_pressed(engine_io.BUMPER_LEFT):
+        if engine_io.LB.is_pressed:
             self.intensity -= 0.05
             engine_io.rumble(self.intensity)
             print(self.intensity)
