@@ -18,7 +18,7 @@ from engine_animation import Tween, Delay, ONE_SHOT, LOOP, PING_PONG, EASE_ELAST
 import engine_debug
 #engine_debug.enable_all()
 #machine.freq(__freq)
-engine.set_fps_limit(60)
+engine.fps_limit(60)
 runner_texture = TextureResource("test_runner_frames_16bit.bmp")
 cam = CameraNode()
 player = Sprite2DNode()

@@ -9,7 +9,7 @@ from engine_math import Vector3, Vector2, Rectangle
 from engine_resources import TextureResource
 import math
 
-engine.set_fps_limit(60)
+engine.fps_limit(60)
 
 texture = TextureResource("32x32.bmp")
 
@@ -34,23 +34,23 @@ polygon.position = Vector2(-32, 0)
 class MyCam(CameraNode):
     def __init__(self):
         super().__init__(self)
-    
+
     def tick(self):
         if engine_io.is_dpad_up_pressed():
             self.position.y -= 1
         if engine_io.is_dpad_down_pressed():
             self.position.y += 1
-        
+
         if engine_io.is_dpad_left_pressed():
             self.position.x -= 1
         if engine_io.is_dpad_right_pressed():
             self.position.x += 1
-        
+
         if engine_io.is_a_pressed():
             self.zoom -= 0.1
         if engine_io.is_b_pressed():
             self.zoom += 0.1
-        
+
         if engine_io.is_bumper_left_pressed():
             self.rotation.z -= 0.25
         if engine_io.is_bumper_right_pressed():

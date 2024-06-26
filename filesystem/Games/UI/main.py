@@ -8,7 +8,7 @@ import engine_draw
 import engine_io
 from engine_animation import Tween, ONE_SHOT, LOOP, PING_PONG, EASE_CIRC_IN_OUT, EASE_BOUNCE_IN, EASE_BOUNCE_OUT
 
-engine.set_fps_limit(120)
+engine.fps_limit(120)
 
 font = FontResource("9pt-roboto-font.bmp")
 
@@ -17,7 +17,7 @@ class MyCam(CameraNode):
         super().__init__(self)
         self.zoom = 1
 
-    
+
     def tick(self, dt):
         if(engine_io.focused_node() != None):
             self.position.x = engine_io.focused_node().position.x
@@ -28,17 +28,17 @@ class MyCam(CameraNode):
             self.zoom -= 0.025
         if engine_io.check_pressed(engine_io.A):
             self.zoom += 0.025
-        
+
         if engine_io.check_pressed(engine_io.DPAD_UP):
             self.position.y -= 0.5
         if engine_io.check_pressed(engine_io.DPAD_DOWN):
             self.position.y += 0.5
-        
+
         if engine_io.check_pressed(engine_io.DPAD_LEFT):
             self.position.x -= 0.5
         if engine_io.check_pressed(engine_io.DPAD_RIGHT):
             self.position.x += 0.5
-        
+
         if engine_io.check_pressed(engine_io.BUMPER_LEFT):
             self.rotation.z += 0.0085
         if engine_io.check_pressed(engine_io.BUMPER_RIGHT):
@@ -63,28 +63,28 @@ bitmap_btn = GUIBitmapButton2DNode(position=Vector2(0, -32), font=font, text="Te
 class MyButton(GUIButton2DNode):
     def __init__(self):
         super().__init__(self)
-    
+
     def tick(self, dt):
         pass
-    
+
     def on_focused(self):
         print("Focused", self.text)
-    
+
     def on_just_focused(self):
         print("Just focused", self.text)
-    
+
     def on_just_unfocused(self):
         print("Just unfocused", self.text)
 
     def on_pressed(self):
         print("Pressed!", self.text)
-    
+
     def on_just_pressed(self):
         print("Just pressed!", self.text)
-    
+
     def on_just_released(self):
         print("Just released!", self.text)
-    
+
     def on_just_changed(self):
         print("Just changed!", self.text)
 

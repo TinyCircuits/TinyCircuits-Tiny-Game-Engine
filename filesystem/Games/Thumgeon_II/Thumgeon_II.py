@@ -18,7 +18,7 @@ import urandom
 import utime
 
 engine_physics.set_gravity(0.0, 0.0)
-engine.set_fps_limit(50)
+engine.fps_limit(50)
 #engine.disable_fps_limit()
 machine.freq(180000000)
 
@@ -48,7 +48,7 @@ class CursorSprite(Sprite2DNode):
         self.height = 32
         self.tween = Tween()
         Render.cam.add_child(self)
-        
+
 cursor = CursorSprite()
 cursor_pos = Vector2(0, 0)
 
@@ -56,7 +56,7 @@ mode_move = 0
 mode_action = 1
 
 control_mode = mode_move
-    
+
 tween_snap = 80 # Controls camera tween speed
 indicator_snap = 50 # Controls indicator tween speed
 
@@ -99,15 +99,15 @@ for i in range(5):
 
 def reset_camera_right(self):
     Render.renderer_x -= 1
-    
+
 def reset_camera_left(self):
     Render.renderer_x += 1
     Render.load_renderer_tiles(current_tilemap, Render.renderer_x, Render.renderer_y)
-    
+
 def reset_camera_down(self):
     Render.renderer_y += 1
     Render.load_renderer_tiles(current_tilemap, Render.renderer_x, Render.renderer_y)
-    
+
 def reset_camera_up(self):
     Render.renderer_y -= 1
 
@@ -119,12 +119,12 @@ def move_tiles_right():
 def move_tiles_left():
     Render.camera_tween.start(Render.cam, "position", Vector3(Render.camera_offset.x, Render.camera_offset.y, 0), Vector3(32 + Render.camera_offset.x, Render.camera_offset.y, 0), tween_snap, 1.0, ONE_SHOT, EASE_QUAD_IN)
     Render.camera_tween.after = reset_camera_left
-            
+
 def move_tiles_down():
     Render.load_renderer_tiles(current_tilemap, Render.renderer_x, Render.renderer_y-1)
     Render.camera_tween.start(Render.cam, "position", Vector3(Render.camera_offset.x, 32 + Render.camera_offset.y, 0), Vector3(Render.camera_offset.x, Render.camera_offset.y, 0), tween_snap, 1.0, ONE_SHOT, EASE_QUAD_IN)
     Render.camera_tween.after = reset_camera_up
-            
+
 def move_tiles_up():
     Render.camera_tween.start(Render.cam, "position", Vector3(Render.camera_offset.x, Render.camera_offset.y, 0), Vector3(Render.camera_offset.x, 32 + Render.camera_offset.y, 0), tween_snap, 1.0, ONE_SHOT, EASE_QUAD_IN)
     Render.camera_tween.after = reset_camera_down
@@ -163,8 +163,8 @@ def tile_action(x, y):
     else:
         # Item tile
         pass
-    
-    
+
+
     #Render.load_renderer_tiles(current_tilemap, Render.renderer_x, Render.renderer_y)
     #renderer_reload(None)
 
@@ -222,7 +222,7 @@ current_msg = MessageSprite()
 while True:
     # Only execute code as fast as the engine ticks (due to FPS limit)
     if engine.tick():
-        
+
         #print(urandom.random())
         #gc.collect()
         print(engine.get_running_fps())
@@ -231,7 +231,7 @@ while True:
         #print(str(Render.renderer_x) + ", " + str(Render.renderer_y))
         #print(str(selection_pos.x) + ", " + str(selection_pos.y))
         action_dir = -1
-        
+
         if engine_io.check_just_pressed(engine_io.DPAD_RIGHT):
             action_dir = 0
         elif engine_io.check_just_pressed(engine_io.DPAD_LEFT):
@@ -240,7 +240,7 @@ while True:
             action_dir = 2
         elif engine_io.check_just_pressed(engine_io.DPAD_UP):
             action_dir = 3
-            
+
         if engine_io.check_just_pressed(engine_io.A):
             if(control_mode == mode_move):
                 control_mode = mode_action
@@ -252,17 +252,17 @@ while True:
                 tile_action(int(2 + selection_pos.x + Render.renderer_x), int(2 + selection_pos.y + Render.renderer_y))
                 control_mode = mode_move
                 cursor.opacity = 0.0
-        
+
         if engine_io.check_just_pressed(engine_io.B):
             if(control_mode == mode_move):
                 pass
             elif(control_mode == mode_action):
                 control_mode = mode_move
                 cursor.opacity = 0.0
-            
+
         if(action_dir >= 0):
             action(action_dir)
-        
+
         look_ang = 0.0
         player.scale = Vector2(1.0, 1.0)
         if(control_mode == mode_action):
@@ -271,4 +271,3 @@ while True:
             if(look_ang > math.pi/2 or look_ang < -math.pi/2):
                 player.scale.x = -1.0
         player.held_item_spr.rotation = look_ang
-

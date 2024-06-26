@@ -8,7 +8,7 @@ import gc
 # NOTE: looks like there is a bug that's not deleting the last circle, looking into it...
 
 # Because there's no debouncing, set FPS low so it samples buttons less often...
-engine.set_fps_limit(10)
+engine.fps_limit(10)
 
 # List to hold all the circles we'll be adding and deleting
 circles_list = []
@@ -30,7 +30,7 @@ while True:
         del circles_list[0]
         gc.collect()
         print("Deleted a node!")
-    
+
     # Add a circle once B is pressed
     if engine_io.check_pressed(engine_io.B):
         new_circle = Circle2DNode()
