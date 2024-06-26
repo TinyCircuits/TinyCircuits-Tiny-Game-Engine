@@ -83,23 +83,23 @@ class Player(PhysicsRectangle2DNode):
     def tick(self, dt):
         ray.adjust_from_to(self.position, agent.position)
 
-        if engine_io.check_pressed(engine_io.DPAD_LEFT):
+        if engine_io.LEFT.is_pressed:
             self.velocity.x = -1.0
-        elif engine_io.check_pressed(engine_io.DPAD_RIGHT):
+        elif engine_io.RIGHT.is_pressed:
             self.velocity.x = 1.0
         else:
             self.velocity.x = 0.0
         
-        if engine_io.check_pressed(engine_io.DPAD_UP):
+        if engine_io.UP.is_pressed:
             self.velocity.y = -1.0
-        elif engine_io.check_pressed(engine_io.DPAD_DOWN):
+        elif engine_io.DOWN.is_pressed:
             self.velocity.y = 1.0
         else:
             self.velocity.y = 0.0
         
-        if engine_io.check_pressed(engine_io.BUMPER_RIGHT):
+        if engine_io.RB.is_pressed:
             self.rotation -= 0.1
-        elif engine_io.check_pressed(engine_io.BUMPER_LEFT):
+        elif engine_io.LB.is_pressed:
             self.rotation += 0.1
 
 player = Player(Vector2(0, 40))

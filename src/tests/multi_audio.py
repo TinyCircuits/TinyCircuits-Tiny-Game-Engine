@@ -18,26 +18,26 @@ camera = CameraNode()
 while True:
     # print(engine.get_running_fps())
     
-    if engine_io.check_just_pressed(engine_io.BUMPER_RIGHT):
+    if engine_io.RB.is_just_pressed:
         c = engine_audio.play(wave0, 0, False)
         c.gain = 1
         
-    if engine_io.check_just_pressed(engine_io.BUMPER_LEFT):
+    if engine_io.LB.is_just_pressed:
         c = engine_audio.play(tone0, 1, False)
         c.gain = 1
     
-    if engine_io.check_just_pressed(engine_io.A):
+    if engine_io.A.is_just_pressed:
         c = engine_audio.play(wave2, 2, False)
         c.gain = 1
         
-    if engine_io.check_just_pressed(engine_io.B):
+    if engine_io.B.is_just_pressed:
         c = engine_audio.play(wave3, 3, False)
         c.gain = 1
     
-    if engine_io.check_pressed(engine_io.DPAD_UP):
+    if engine_io.UP.is_pressed:
         tone0.frequency += 10.0
         print(tone0.frequency)
-    elif engine_io.check_pressed(engine_io.DPAD_DOWN):
+    elif engine_io.DOWN.is_pressed:
         tone0.frequency -= 10.0
         print(tone0.frequency)
     

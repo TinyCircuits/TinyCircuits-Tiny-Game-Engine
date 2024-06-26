@@ -17,7 +17,7 @@ count = 0
 
 while True:
     if engine.tick():
-        if engine_io.check_just_pressed(engine_io.A):
+        if engine_io.A.is_just_pressed:
             fb.fill(0xffff)
 
         count = count+1

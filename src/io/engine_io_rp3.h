@@ -4,7 +4,7 @@
 #include <stdbool.h>
 
 void engine_io_rp3_setup();
-void engine_io_rp3_update_pressed_mask();
+uint16_t engine_io_rp3_pressed_buttons();
 void engine_io_rp3_rumble(float intensity);
 
-#endif  // ENGINE_INPUT_RP3_H
+#endif // ENGINE_INPUT_RP3_H
