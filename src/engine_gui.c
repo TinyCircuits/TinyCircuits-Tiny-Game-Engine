@@ -13,6 +13,9 @@ engine_node_base_t *focused_gui_node_base = NULL;
 
 bool gui_focused = false;
 
+// Whether wrapping around when navigating GUI elements is enabled.
+bool gui_wrapping_enabled = true;
+
 
 vector2_class_obj_t *resolve_gui_node_position(engine_node_base_t *gui_node_base){
     if(mp_obj_is_type(focused_gui_node_base, &engine_gui_bitmap_button_2d_node_class_type)){
@@ -107,6 +110,15 @@ engine_node_base_t *engine_gui_get_focused(){
 }
 
 
+void engine_gui_set_wrapping(bool enabled){
+    gui_wrapping_enabled = enabled;
+}
+
+bool engine_gui_get_wrapping(){
+    return gui_wrapping_enabled;
+}
+
+
 // Given `focused_gui_node_base` and a direction, find the next closest gui node.
 void engine_gui_select_closest(float dir_x, float dir_y, bool allow_wrap){
     // Make sure to not do anything if no GUI nodes in scene
@@ -124,8 +136,8 @@ void engine_gui_select_closest(float dir_x, float dir_y, bool allow_wrap){
     if(gui_list->count < 2){
         return;
     }
-    linked_list_node *current_gui_list_node = gui_list->start;
     engine_node_base_t *closest_gui_node_base = NULL;
+    linked_list_node *current_gui_list_node = gui_list->start;
     float best_node_value = FLT_MAX;
 
     while(current_gui_list_node != NULL){
@@ -216,7 +228,39 @@ void engine_gui_select_closest(float dir_x, float dir_y, bool allow_wrap){
         // Nothing found in the specified direction, so try wrapping around. This is a rare case, so redoing some calculations
         // from before is fine. We don't optimise this case as much as the more common case above.
 
-        // TODO: Implement wrapping around. Possibly add a module-wide parameter that enables/disables wrapping.
+        current_gui_list_node = gui_list->start;
+        while(current_gui_list_node != NULL){
+            // Initial logic same as above.
+            if(current_gui_list_node->object == focused_gui_node_base){
+                current_gui_list_node = current_gui_list_node->next;
+                continue;
+            }
+            engine_node_base_t *searching_gui_node_base = current_gui_list_node->object;
+            vector2_class_obj_t *searching_gui_position = resolve_gui_node_position(searching_gui_node_base);
+            float rel_pos_x = searching_gui_position->x.value - focused_gui_position->x.value;
+            float rel_pos_y = searching_gui_position->y.value - focused_gui_position->y.value;
+            float rel_pos_len_sqr = engine_math_vector_length_sqr(rel_pos_x, rel_pos_y);
+            float dir_dot_rel = engine_math_dot_product(dir_x, dir_y, rel_pos_x, rel_pos_y);
+            // Only analyse nodes "behind" the focused node.
+            if (dir_dot_rel <= 0.0f){
+                float cos_theta_sqr = dir_dot_rel * dir_dot_rel / (dir_len_sqr * rel_pos_len_sqr);
+                // Accept only nodes within the 90 degree cone behind the focused node, so cos(theta) <= cos(135deg) = -sqrt(2)/2,
+                // so cos(theta)^2 >= 0.5.
+                if(cos_theta_sqr >= 0.5f){
+                    // When wrapping, the furthest node in the opposite direction along the dir axis should
+                    // be selected. The exact formula is probably not that important, as most of the time
+                    // wrapping will happen with dir having only one non-zero component. Diagonal wrapping
+                    // is also possible, but it is difficult to even determine what is the expected result.
+                    float node_value = -rel_pos_len_sqr * cos_theta_sqr * cos_theta_sqr * cos_theta_sqr;
+                    if(node_value < best_node_value){
+                        best_node_value = node_value;
+                        closest_gui_node_base = searching_gui_node_base;
+                    }
+                }
+            }
+
+            current_gui_list_node = current_gui_list_node->next;
+        }
     }
 
     // Found one! Focus it and make sure to unfocus the
@@ -308,10 +352,14 @@ void engine_gui_tick(){
         dir_y = 1.0f;
     }
     if(dir_x || dir_y){
-        // Allow wrapping only if any of the dpad buttons was just pressed. Use binary arithmetic instead of method calls for speed.
-        bool allow_wrap = (
-            (BUTTON_CODE_DPAD_UP | BUTTON_CODE_DPAD_DOWN | BUTTON_CODE_DPAD_LEFT | BUTTON_CODE_DPAD_RIGHT) &
-            pressed_buttons & ~prev_pressed_buttons) != 0;
+        bool allow_wrap = false;
+        if(gui_wrapping_enabled){
+            // Allow wrapping only if any of the dpad buttons was just pressed.
+            // Use binary arithmetic instead of method calls for speed.
+            allow_wrap = (
+                (BUTTON_CODE_DPAD_UP | BUTTON_CODE_DPAD_DOWN | BUTTON_CODE_DPAD_LEFT | BUTTON_CODE_DPAD_RIGHT) &
+                pressed_buttons & ~prev_pressed_buttons) != 0;
+        }
         engine_gui_select_closest(dir_x, dir_y, allow_wrap);
     }
 
