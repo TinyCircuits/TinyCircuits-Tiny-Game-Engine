@@ -55,12 +55,12 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_io_rumble_obj, engine_io_rumble);
 /*  --- doc ---
     NAME: gui_focused_toggle
     ID: gui_focused_toggle
-    DESC: Toggle between button inputs being consumed by the game or gui elements. Also reset all buttons (see {ref_link:reset_all_buttons})).
+    DESC: Toggle between button inputs being consumed by the game or gui elements. Also release all buttons (see {ref_link:release_all_buttons}).
     RETURN: bool
 */
 static mp_obj_t engine_io_gui_focused_toggle(){
     bool gui_focused = engine_gui_toggle_focus();
-    buttons_reset_all();
+    buttons_release_all();
     return mp_obj_new_bool(gui_focused);
 }
 MP_DEFINE_CONST_FUN_OBJ_0(engine_io_gui_focused_toggle_obj, engine_io_gui_focused_toggle);
@@ -69,14 +69,14 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_io_gui_focused_toggle_obj, engine_io_gui_focuse
 /*  --- doc ---
     NAME: gui_focused
     ID: gui_focused
-    DESC: Get or set whether the GUI is focused. If set, also reset all buttons (see {ref_link:reset_all_buttons})).
+    DESC: Get or set whether the GUI is focused. If set, also release all buttons (see {ref_link:release_all_buttons}).
     PARAM: [type=bool (optional)]   [name=gui_focused]  [value=True/False]
     RETURN: bool
 */
 static mp_obj_t engine_io_gui_focused(size_t n_args, const mp_obj_t *args){
     if (n_args == 1) {
         engine_gui_set_focused(mp_obj_get_int(args[0]));
-        buttons_reset_all();
+        buttons_release_all();
     }
     return mp_obj_new_bool(engine_gui_is_gui_focused());
 }
@@ -162,16 +162,29 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_io_module_init_obj, engine_io_module_init);
 
 
 /*  --- doc ---
-    NAME: reset_all_buttons
-    ID: reset_all_buttons
+    NAME: release_all_buttons
+    ID: release_all_buttons
     DESC: Treat each button as if released, until it is next pressed. This is very useful after changing app "screen", e.g. entering submenu.
     RETURN: None
 */
-static mp_obj_t engine_io_reset_all_buttons(){
-    buttons_reset_all();
+static mp_obj_t engine_io_release_all_buttons(){
+    buttons_release_all();
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_0(buttons_reset_all_obj, engine_io_reset_all_buttons);
+MP_DEFINE_CONST_FUN_OBJ_0(buttons_release_all_obj, engine_io_release_all_buttons);
+
+
+/*  --- doc ---
+    NAME: reset_all_buttons_params
+    ID: reset_all_buttons_params
+    DESC: Reset all button parameters to their default values.
+    RETURN: None
+*/
+static mp_obj_t engine_io_reset_all_buttons_params(){
+    buttons_reset_params_all();
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_0(buttons_reset_params_all_obj, engine_io_reset_all_buttons_params);
 
 
 /*  --- doc ---
@@ -194,7 +207,9 @@ MP_DEFINE_CONST_FUN_OBJ_0(buttons_reset_all_obj, engine_io_reset_all_buttons);
     ATTR: [type={ref_link:Button}]   [name=LB]                                  [value=the button object]
     ATTR: [type={ref_link:Button}]   [name=RB]                                  [value=the button object]
     ATTR: [type={ref_link:Button}]   [name=MENU]                                [value=the button object]
-    ATTR: [type=function]            [name={ref_link:reset_all_buttons}]        [value=function]
+    ATTR: [type=function]            [name={ref_link:release_all_buttons}]      [value=function]
+    ATTR: [type=function]            [name={ref_link:reset_all_buttons_params}] [value=function]
+
 */
 static const mp_rom_map_elem_t engine_io_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_io) },
@@ -215,7 +230,8 @@ static const mp_rom_map_elem_t engine_io_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_LB), MP_ROM_PTR(&BUTTON_BUMPER_LEFT) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_RB), MP_ROM_PTR(&BUTTON_BUMPER_RIGHT) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_MENU), MP_ROM_PTR(&BUTTON_MENU) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_reset_all_buttons), MP_ROM_PTR(&buttons_reset_all_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_release_all_buttons), MP_ROM_PTR(&buttons_release_all_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_reset_all_buttons_params), MP_ROM_PTR(&buttons_reset_params_all_obj) },
 };
 static MP_DEFINE_CONST_DICT (mp_module_engine_io_globals, engine_io_globals_table);
 

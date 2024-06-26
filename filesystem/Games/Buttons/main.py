@@ -11,7 +11,9 @@ engine_io.gui_toggle_button(None)
 font = FontResource(f"{ROOT_DIR}/assets/outrunner_outline.bmp")
 
 text = Text2DNode(
-    text="Status of A is\nprinted to\nconsole.\n\nPress B to\ncall A.reset()\n\nMENU - exit", font=font, line_spacing=1
+    text="Status of A is\nprinted to\nconsole.\n\nPress B to\ncall A.release()\n\nMENU - exit",
+    font=font,
+    line_spacing=1,
 )
 cam = CameraNode()
 
@@ -20,8 +22,8 @@ count = 0
 while True:
     if engine.tick():
         if engine_io.B.is_just_pressed:
-            print("A.reset()")
-            engine_io.A.reset()
+            print("A.release()")
+            engine_io.A.release()
         engine_io.A.print_info(not count)
         count = (count + 1) % 30
         if engine_io.MENU.is_just_short_released:

@@ -119,16 +119,30 @@ void button_update_state(button_class_obj_t *button, uint32_t now_millis) {
 }
 
 
-void buttons_reset_all() {
+inline void button_release_helper(button_class_obj_t *button) {
+    button->last_pressed_millis = MILLIS_NULL;
+    button->last_released_millis = MILLIS_NULL;
+}
+
+void buttons_release_all() {
     pressed_buttons = 0;
     long_pressed_buttons = 0;
     double_pressed_buttons = 0;
     prev_pressed_buttons = 0;
     prev_long_pressed_buttons = 0;
     assume_released_buttons = ~0;
+    button_release_helper(&BUTTON_DPAD_UP);
+    button_release_helper(&BUTTON_DPAD_DOWN);
+    button_release_helper(&BUTTON_DPAD_LEFT);
+    button_release_helper(&BUTTON_DPAD_RIGHT);
+    button_release_helper(&BUTTON_A);
+    button_release_helper(&BUTTON_B);
+    button_release_helper(&BUTTON_BUMPER_LEFT);
+    button_release_helper(&BUTTON_BUMPER_RIGHT);
+    button_release_helper(&BUTTON_MENU);
 }
 
-void button_reset(button_class_obj_t *button) {
+void button_release(button_class_obj_t *button) {
     uint16_t code = button->code;
     pressed_buttons &= ~code;
     long_pressed_buttons &= ~code;
@@ -136,6 +150,27 @@ void button_reset(button_class_obj_t *button) {
     prev_pressed_buttons &= ~code;
     prev_long_pressed_buttons &= ~code;
     assume_released_buttons |= code;
+    button_release_helper(button);
+}
+
+
+void buttons_reset_params_all() {
+    button_reset_params(&BUTTON_DPAD_UP);
+    button_reset_params(&BUTTON_DPAD_DOWN);
+    button_reset_params(&BUTTON_DPAD_LEFT);
+    button_reset_params(&BUTTON_DPAD_RIGHT);
+    button_reset_params(&BUTTON_A);
+    button_reset_params(&BUTTON_B);
+    button_reset_params(&BUTTON_BUMPER_LEFT);
+    button_reset_params(&BUTTON_BUMPER_RIGHT);
+    button_reset_params(&BUTTON_MENU);
+}
+
+void button_reset_params(button_class_obj_t *button) {
+    button->long_press_time = BUTTON_DEFAULT_LONG_PRESS_TIME;
+    button->double_press_time = BUTTON_DEFAULT_DOUBLE_PRESS_TIME;
+    button->autorepeat_delay_time = BUTTON_DEFAULT_AUTOREPEAT_DELAY_TIME;
+    button->autorepeat_interval_time = BUTTON_DEFAULT_AUTOREPEAT_INTERVAL_TIME;
 }
 
 
@@ -195,60 +230,81 @@ inline bool button_is_pressed_autorepeat(button_class_obj_t *button) {
 static void button_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination) {
     button_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
     if (destination[0] == MP_OBJ_NULL) { // Load
-        if (attribute == MP_QSTR_name) {
-            destination[0] = mp_obj_new_str(self->name, strlen(self->name));
-        } else
-        // Parameters:
-        if (attribute == MP_QSTR_long_press_time) {
-            destination[0] = mp_obj_new_int(self->long_press_time);
-        } else if (attribute == MP_QSTR_autorepeat_delay_time) {
-            destination[0] = mp_obj_new_int(self->autorepeat_delay_time);
-        } else if (attribute == MP_QSTR_autorepeat_interval_time) {
-            destination[0] = mp_obj_new_int(self->autorepeat_interval_time);
-        } else if (attribute == MP_QSTR_double_press_time) {
-            destination[0] = mp_obj_new_int(self->double_press_time);
-        } else
-        // Press state:
-        // Make all the buttons act as if released and reset if the GUI is focused.
-        if (attribute == MP_QSTR_press_time) {
-            destination[0] = mp_obj_new_int(engine_gui_is_gui_focused() ? 0 : button_press_time(self));
-        } else if (attribute == MP_QSTR_is_pressed) {
-            destination[0] = mp_obj_new_bool(!engine_gui_is_gui_focused() && button_is_pressed(self));
-        } else if (attribute == MP_QSTR_is_just_pressed) {
-            destination[0] = mp_obj_new_bool(!engine_gui_is_gui_focused() && button_is_just_pressed(self));
-        } else if (attribute == MP_QSTR_is_just_released) {
-            destination[0] = mp_obj_new_bool(!engine_gui_is_gui_focused() && button_is_just_released(self));
-        } else if (attribute == MP_QSTR_is_long_pressed) {
-            destination[0] = mp_obj_new_bool(!engine_gui_is_gui_focused() && button_is_long_pressed(self));
-        } else if (attribute == MP_QSTR_is_just_long_pressed) {
-            destination[0] = mp_obj_new_bool(!engine_gui_is_gui_focused() && button_is_just_long_pressed(self));
-        } else if (attribute == MP_QSTR_is_just_short_released) {
-            destination[0] = mp_obj_new_bool(!engine_gui_is_gui_focused() && button_is_just_short_released(self));
-        } else if (attribute == MP_QSTR_is_just_long_released) {
-            destination[0] = mp_obj_new_bool(!engine_gui_is_gui_focused() && button_is_just_long_released(self));
-        } else if (attribute == MP_QSTR_is_just_double_pressed) {
-            destination[0] = mp_obj_new_bool(!engine_gui_is_gui_focused() && button_is_just_double_pressed(self));
-        } else if (attribute == MP_QSTR_is_double_pressed) {
-            destination[0] = mp_obj_new_bool(!engine_gui_is_gui_focused() && button_is_double_pressed(self));
-        } else if (attribute == MP_QSTR_is_just_double_released) {
-            destination[0] = mp_obj_new_bool(!engine_gui_is_gui_focused() && button_is_just_double_released(self));
-        } else if (attribute == MP_QSTR_is_pressed_autorepeat) {
-            destination[0] = mp_obj_new_bool(!engine_gui_is_gui_focused() && button_is_pressed_autorepeat(self));
-        } else {
-            destination[1] = MP_OBJ_SENTINEL; // Continue in locals_dict.
+        switch (attribute) {
+            case MP_QSTR_name:
+                destination[0] = mp_obj_new_str(self->name, strlen(self->name));
+            break;
+            // Parameters:
+            case MP_QSTR_long_press_time:
+                destination[0] = mp_obj_new_int(self->long_press_time);
+            break;
+            case MP_QSTR_autorepeat_delay_time:
+                destination[0] = mp_obj_new_int(self->autorepeat_delay_time);
+            break;
+            case MP_QSTR_autorepeat_interval_time:
+                destination[0] = mp_obj_new_int(self->autorepeat_interval_time);
+            break;
+            case MP_QSTR_double_press_time:
+                destination[0] = mp_obj_new_int(self->double_press_time);
+            break;
+            // Press state:
+            // Make all the buttons act as if released and release if the GUI is focused.
+            case MP_QSTR_press_time:
+                destination[0] = mp_obj_new_int(engine_gui_is_gui_focused() ? 0 : button_press_time(self));
+            break;
+            case MP_QSTR_is_pressed:
+                destination[0] = mp_obj_new_bool(!engine_gui_is_gui_focused() && button_is_pressed(self));
+            break;
+            case MP_QSTR_is_just_pressed:
+                destination[0] = mp_obj_new_bool(!engine_gui_is_gui_focused() && button_is_just_pressed(self));
+            break;
+            case MP_QSTR_is_just_released:
+                destination[0] = mp_obj_new_bool(!engine_gui_is_gui_focused() && button_is_just_released(self));
+            break;
+            case MP_QSTR_is_long_pressed:
+                destination[0] = mp_obj_new_bool(!engine_gui_is_gui_focused() && button_is_long_pressed(self));
+            break;
+            case MP_QSTR_is_just_long_pressed:
+                destination[0] = mp_obj_new_bool(!engine_gui_is_gui_focused() && button_is_just_long_pressed(self));
+            break;
+            case MP_QSTR_is_just_short_released:
+                destination[0] = mp_obj_new_bool(!engine_gui_is_gui_focused() && button_is_just_short_released(self));
+            break;
+            case MP_QSTR_is_just_long_released:
+                destination[0] = mp_obj_new_bool(!engine_gui_is_gui_focused() && button_is_just_long_released(self));
+            break;
+            case MP_QSTR_is_just_double_pressed:
+                destination[0] = mp_obj_new_bool(!engine_gui_is_gui_focused() && button_is_just_double_pressed(self));
+            break;
+            case MP_QSTR_is_double_pressed:
+                destination[0] = mp_obj_new_bool(!engine_gui_is_gui_focused() && button_is_double_pressed(self));
+            break;
+            case MP_QSTR_is_just_double_released:
+                destination[0] = mp_obj_new_bool(!engine_gui_is_gui_focused() && button_is_just_double_released(self));
+            break;
+            case MP_QSTR_is_pressed_autorepeat:
+                destination[0] = mp_obj_new_bool(!engine_gui_is_gui_focused() && button_is_pressed_autorepeat(self));
+            break;
+            default:
+                destination[1] = MP_OBJ_SENTINEL; // Continue in locals_dict.
         }
     } else if (destination[1] != MP_OBJ_NULL) { // Store
         // Parameters:
-        if (attribute == MP_QSTR_long_press_time) {
-            self->long_press_time = mp_obj_get_int(destination[1]);
-        } else if (attribute == MP_QSTR_autorepeat_delay_time) {
-            self->autorepeat_delay_time = mp_obj_get_int(destination[1]);
-        } else if (attribute == MP_QSTR_autorepeat_interval_time) {
-            self->autorepeat_interval_time = mp_obj_get_int(destination[1]);
-        } else if (attribute == MP_QSTR_double_press_time) {
-            self->double_press_time = mp_obj_get_int(destination[1]);
-        } else {
-            return; // Fail
+        switch (attribute) {
+            case MP_QSTR_long_press_time:
+                self->long_press_time = mp_obj_get_int(destination[1]);
+            break;
+            case MP_QSTR_autorepeat_delay_time:
+                self->autorepeat_delay_time = mp_obj_get_int(destination[1]);
+            break;
+            case MP_QSTR_autorepeat_interval_time:
+                self->autorepeat_interval_time = mp_obj_get_int(destination[1]);
+            break;
+            case MP_QSTR_double_press_time:
+                self->double_press_time = mp_obj_get_int(destination[1]);
+            break;
+            default:
+                return; // Fail
         }
         destination[0] = MP_OBJ_NULL; // Success
     }
@@ -256,16 +312,29 @@ static void button_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destin
 
 
 /*  --- doc ---
-    NAME: reset
-    ID: reset
+    NAME: release
+    ID: release
     DESC: Treat the button as if released, until the next press.
     RETURN: None
 */
-static mp_obj_t button_reset_method(mp_obj_t self_in) {
-    button_reset(MP_OBJ_TO_PTR(self_in));
+static mp_obj_t button_release_method(mp_obj_t self_in) {
+    button_release(MP_OBJ_TO_PTR(self_in));
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_1(button_reset_obj, button_reset_method);
+MP_DEFINE_CONST_FUN_OBJ_1(button_release_obj, button_release_method);
+
+
+/*  --- doc ---
+    NAME: reset_params
+    ID: reset_params
+    DESC: Reset the button parameters to their default values.
+    RETURN: None
+*/
+static mp_obj_t button_reset_params_method(mp_obj_t self_in) {
+    button_reset_params(MP_OBJ_TO_PTR(self_in));
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_1(button_reset_params_obj, button_reset_params_method);
 
 
 #define INFO_TRUE_MARK          " + "
@@ -309,7 +378,8 @@ MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(button_print_info_obj, 1, 2, button_print_in
 
 
 const mp_rom_map_elem_t button_class_locals_dict_table[] = {
-    { MP_ROM_QSTR(MP_QSTR_reset), MP_ROM_PTR(&button_reset_obj) },
+    { MP_ROM_QSTR(MP_QSTR_release), MP_ROM_PTR(&button_release_obj) },
+    { MP_ROM_QSTR(MP_QSTR_reset_params), MP_ROM_PTR(&button_reset_params_obj) },
     { MP_ROM_QSTR(MP_QSTR_print_info), MP_ROM_PTR(&button_print_info_obj) },
 };
 MP_DEFINE_CONST_DICT(button_class_locals_dict, button_class_locals_dict_table);
@@ -324,7 +394,7 @@ static void button_class_print(const mp_print_t *print, mp_obj_t self_in, mp_pri
 /*  --- doc ---
     NAME: Button
     ID: Button
-    DESC: Button class allowing to check the state of a button.
+    DESC: Button class allowing to check the state of a button. Note: If the GUI is focused, all buttons are treated as released.
     ATTR:   [type=str]              [name=name]                         [value=string]
 
     ATTR:   [type=int]              [name=long_press_time]              [value=time in ms for a press to be considered long]
@@ -345,7 +415,8 @@ static void button_class_print(const mp_print_t *print, mp_obj_t self_in, mp_pri
     ATTR:   [type=bool]             [name=is_just_double_released]      [value=whether just released after a double press - RECOMMENDED FOR DETECTING A DOUBLE PRESS]
     ATTR:   [type=bool]             [name=is_pressed_autorepeat]        [value=whether this tick should invoke an autorepeated action - RECOMMENDED FOR AUTOREPEATED ACTIONS LIKE SCROLLING]
 
-    ATTR:   [type=function]         [name={ref_link:reset}]             [value=function]
+    ATTR:   [type=function]         [name={ref_link:release}]           [value=function]
+    ATTR:   [type=function]         [name={ref_link:reset_params}]      [value=function]
     ATTR:   [type=function]         [name={ref_link:print_info}]        [value=function]
 */
 MP_DEFINE_CONST_OBJ_TYPE(
