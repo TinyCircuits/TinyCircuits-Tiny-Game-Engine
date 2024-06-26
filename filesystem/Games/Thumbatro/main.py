@@ -11,12 +11,11 @@ import random
 import time
 import math
 
-# Load card sprite texture
 
 font = FontResource("munro-narrow_10.bmp")
 cards_texture = TextureResource("BiggerCards2read.bmp")
 background = TextureResource("thumbatrobackground.bmp")
-overlay = TextureResource("thumbatrooverlay.bmp")
+#overlay = TextureResource("thumbatrooverlay.bmp")
 
 # Constants
 SUITS = ["Hearts", "Spades", "Diamonds", "Clubs"]
@@ -40,6 +39,7 @@ def tween_opacity(node, start_opacity, end_opacity, duration=1000):
     tw = Tween()
     tw.start(node, 'opacity', start_opacity, end_opacity, duration, 1, ONE_SHOT, EASE_SINE_IN)
     tweens.append(tw)
+    return tw
 
 def tween_scale(node, start_scale, end_scale, duration=1200):
     tw = Tween()
@@ -328,13 +328,14 @@ class JokerCard(CardSprite):
         has_multiplier_bonus = any(isinstance(modifier, ScoreBonusModifier) and modifier.multiplier_bonus > 0 for modifier in self.modifiers)
 
         if self.rarity == 'uncommon':
+            self.background.opacity = 0
             self.background = self.create_overlay(12, 4)
 
         if self.rarity == 'rare':
             return self.create_overlay(9, 4, opacity=0.4)  # Rare equivalent
-        elif has_base_score_bonus:
+        elif has_base_score_bonus and not has_multiplier_bonus:
             return self.create_overlay(7, 4)
-        elif has_multiplier_bonus:
+        elif has_multiplier_bonus and not has_base_score_bonus:
             return self.create_overlay(8, 4)
         return None
     
@@ -513,7 +514,7 @@ class PokerGame(Rectangle2DNode):
         #self.overlay.texture = overlay
         #self.overlay.playing = False
         #self.overlay.set_layer(7)
-        #self.overlay.opacity = 0.1
+        #self.overlay.opacity = 0.05
         #self.overlay.transparent_color = engine_draw.white
         #self.add_child(self.overlay)
 
@@ -1200,9 +1201,31 @@ class PokerGame(Rectangle2DNode):
 # Make an instance of our game
 game = PokerGame(Vector2(0, 0), 256, 256)
 
+class IntroSprite(Sprite2DNode):
+    def __init__(self, position):
+        super().__init__(self, position)
+        self.triggered = False
+
+    def tick(self, dt):
+        if not self.triggered:
+            tween_opacity(self, 1.0, 0.0, 1500)
+            self.triggered = True
+
+# Load card sprite texture
+intro = TextureResource("title.bmp")
+introScr = IntroSprite(Vector2(63, 63))
+introScr.frame_count_x = 1
+introScr.frame_count_y = 1
+introScr.texture = intro
+introScr.playing = False
+introScr.set_layer(6)
+
 # Make a camera to render the scene
 camera = CameraNode()
 camera.position = Vector3(64, 64, 1)
+
+
+
 
 # Start rendering the scene
 engine.start()
