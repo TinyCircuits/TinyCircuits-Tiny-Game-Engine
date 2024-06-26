@@ -16,6 +16,7 @@ import math
 font = FontResource("munro-narrow_10.bmp")
 cards_texture = TextureResource("BiggerCards2read.bmp")
 background = TextureResource("thumbatrobackground.bmp")
+overlay = TextureResource("thumbatrooverlay.bmp")
 
 # Constants
 SUITS = ["Hearts", "Spades", "Diamonds", "Clubs"]
@@ -192,8 +193,9 @@ class OddCardModifier(ScoreBonusModifier):
         return "Odd " + super().get_rule_prefix()
 
 class CardSprite(Sprite2DNode):
-    def __init__(self, position, frame_x, frame_y, modifiers=None):
+    def __init__(self, position, frame_x, frame_y, rarity='common', modifiers=None):
         super().__init__(self, position)
+        self.rarity = rarity
         self.initialize_attributes(frame_x, frame_y, modifiers)
         self.background = self.create_background()
         self.bonus_overlay = self.create_bonus_overlay()
@@ -204,7 +206,7 @@ class CardSprite(Sprite2DNode):
     def initialize_attributes(self, frame_x, frame_y, modifiers):
         self.texture = cards_texture
         self.frame_count_x = 13
-        self.frame_count_y = 5
+        self.frame_count_y = 6
         self.original_frame_x = frame_x
         self.original_frame_y = frame_y
         self.frame_current_x = frame_x
@@ -246,7 +248,7 @@ class CardSprite(Sprite2DNode):
 
     def set_sprite_attributes(self, sprite, frame_x, frame_y, layer, opacity):
         sprite.frame_count_x = 13
-        sprite.frame_count_y = 5
+        sprite.frame_count_y = 6
         sprite.frame_current_x = frame_x
         sprite.frame_current_y = frame_y
         sprite.texture = cards_texture
@@ -313,26 +315,47 @@ class CardSprite(Sprite2DNode):
         return rule
     
 class JokerCard(CardSprite):
-    def __init__(self, position, frame_x, frame_y, modifiers=None):
-        super().__init__(position, frame_x, frame_y, modifiers)
+    def __init__(self, position, rarity, modifiers=None):
+        super().__init__(position, 0, 4, rarity, modifiers)
+        frame_x, frame_y = self.get_frame_for_modifiers(modifiers)  # Determine frame_x and frame_y based on modifiers
+        self.original_frame_x = frame_x
+        self.original_frame_y = frame_y
+        self.frame_current_x = frame_x
+        self.frame_current_y = frame_y
 
     def create_bonus_overlay(self):
         has_base_score_bonus = any(isinstance(modifier, ScoreBonusModifier) and modifier.base_score_bonus > 0 for modifier in self.modifiers)
         has_multiplier_bonus = any(isinstance(modifier, ScoreBonusModifier) and modifier.multiplier_bonus > 0 for modifier in self.modifiers)
-        has_full_base_score_bonus = any(isinstance(modifier, BaseScoreBonusModifier) for modifier in self.modifiers)
-        has_full_multiplier_bonus = any(isinstance(modifier, MultiplierBonusModifier) for modifier in self.modifiers)
-        has_rare_bonus = any(isinstance(modifier, RareBonusModifier) for modifier in self.modifiers)
 
-        if has_full_base_score_bonus or has_full_multiplier_bonus or has_rare_bonus:
+        if self.rarity == 'uncommon':
             self.background = self.create_overlay(12, 4)
 
-        if has_base_score_bonus and has_multiplier_bonus:
+        if self.rarity == 'rare':
             return self.create_overlay(9, 4, opacity=0.4)  # Rare equivalent
         elif has_base_score_bonus:
             return self.create_overlay(7, 4)
         elif has_multiplier_bonus:
             return self.create_overlay(8, 4)
         return None
+    
+    def get_frame_for_modifiers(self, modifiers):
+        modifier_frames = {
+            EvenCardModifier: (2, 5),
+            OddCardModifier: (1, 5),
+            FibonacciModifier: (5, 5),
+            AceModifier: (0, 5),
+            NonFaceCardModifier: (3, 5),
+            FaceCardModifier: (4, 5),
+            BaseScoreBonusModifier: (0, 4),
+            MultiplierBonusModifier: (1, 4),
+            RareBonusModifier: (2, 4)
+        }
+    
+        for modifier in modifiers:
+            modifier_type = type(modifier)
+            if modifier_type in modifier_frames:
+                return modifier_frames[modifier_type]
+        return 0, 4  # Default value if no matching modifier is found
 
     def print_rules(self):
         rule = "Joker"
@@ -484,6 +507,16 @@ class PokerGame(Rectangle2DNode):
         self.background.set_layer(0)
         self.add_child(self.background)
 
+        #self.overlay = Sprite2DNode(Vector2(63, 63))
+        #self.overlay.frame_count_x = 1
+        #self.overlay.frame_count_y = 1
+        #self.overlay.texture = overlay
+        #self.overlay.playing = False
+        #self.overlay.set_layer(7)
+        #self.overlay.opacity = 0.1
+        #self.overlay.transparent_color = engine_draw.white
+        #self.add_child(self.overlay)
+
         # Text nodes for displaying scores
         self.base_score_text = Text2DNode(Vector2(51, 24), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
         self.base_score_text.set_layer(1)
@@ -557,7 +590,7 @@ class PokerGame(Rectangle2DNode):
         indicator = Sprite2DNode(Vector2(7, 80))
         indicator.texture = cards_texture
         indicator.frame_count_x = 13
-        indicator.frame_count_y = 5
+        indicator.frame_count_y = 6
         indicator.frame_current_x = 5
         indicator.frame_current_y = 4
         indicator.playing = False
@@ -953,7 +986,7 @@ class PokerGame(Rectangle2DNode):
                         ], [0.3, 0.3, 0.3, 0.2, 0.2, 0.2]
                     )
                 ]
-                return JokerCard(Vector2(150, 80), 0, 4, modifiers=modifiers)
+                return JokerCard(Vector2(150, 80), joker_type, modifiers=modifiers)
             elif joker_type == 'uncommon':
                 modifiers = [
                     self.weighted_choice(
@@ -970,7 +1003,7 @@ class PokerGame(Rectangle2DNode):
                         ], [0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.25, 0.15]
                     )
                 ]
-                return JokerCard(Vector2(150, 80), 1, 4, modifiers=modifiers)
+                return JokerCard(Vector2(150, 80), joker_type, modifiers=modifiers)
             else:  # rare
                 modifiers = [
                     self.weighted_choice(
@@ -985,7 +1018,7 @@ class PokerGame(Rectangle2DNode):
                         ], [0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15]
                     )
                 ]
-                return JokerCard(Vector2(150, 80), 2, 4, modifiers=modifiers)
+                return JokerCard(Vector2(150, 80), joker_type, modifiers=modifiers)
 
         def generate_card(card_type):
             if card_type == 'joker':
