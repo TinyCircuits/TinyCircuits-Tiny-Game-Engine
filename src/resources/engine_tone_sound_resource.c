@@ -14,26 +14,13 @@
 
 enum fade_types {FADE_NONE=0, FADE_DOWN=1, FADE_UP=2};
 
-#define STEP 0.025f
+#define STEP 0.01f
 
 float ENGINE_FAST_FUNCTION(tone_sound_resource_get_sample)(tone_sound_resource_class_obj_t *self){
-    
-    // if(self->moving_to_target){
-    //     // self->target_frequency_interp += STEP;
-
-    //     // if(self->target_frequency_interp < 1.0f){
-    //     //     // self->frequency = glm_lerp(self->target_frequency_start, self->target_frequency_end, glm_ease_exp_out(self->target_frequency_interp));
-    //     //     self->frequency = glm_lerp(self->target_frequency_start, self->target_frequency_end, self->target_frequency_interp);
-    //     // }else{
-    //     //     self->frequency = self->target_frequency_end;
-    //     //     self->moving_to_target = false;
-    //     // }
-        
-    //     // self->omega = 2.0f * PI * self->frequency;
-    // }
-
     float gain = 1.0f;
 
+    // When the frequency of this resource is changed,
+    // fade gain to zero, switch f, and then back to 1.0
     if(self->fade_type == FADE_DOWN){
         self->fade_factor += STEP;
 
@@ -58,7 +45,6 @@ float ENGINE_FAST_FUNCTION(tone_sound_resource_get_sample)(tone_sound_resource_c
         }
     }
 
-    // float sample = engine_math_fast_sin(self->omega * self->time);
     float sample = sinf(self->omega * self->time) * gain;
     self->time += ENGINE_AUDIO_SAMPLE_DT;
     return sample;

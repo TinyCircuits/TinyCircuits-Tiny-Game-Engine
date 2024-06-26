@@ -54,27 +54,23 @@ const uint8_t octave_base = 4;
 // = 1.86[b/s]. This also means that the seconds per
 // beat is 1/1.86[b/s] = 0.54[s/b], therefore, the
 // interrupt samples per beat is 22050[samples/s] * 0.54[s/b] = 11854[samples/b]
-// However, we need to be able to play beats 8 times
-// faster since 32nd notes are an 8th of a beat,
 //
 //  https://www.pinterest.co.uk/pin/understanding-notes-and-rests-in-music-notation-reference-sheet--519039925783242366/
 //
 // Therefore, interrupt samples per 8th beat = 11864[samples/b] * 1[b]/8[8thb] = 1483[samples/8thb]
 //
 // Now, for various note durations, the actual duration a note lasts during a full beat (8 8th beats) is
-//  * note duration = 1  = (1/1)  * 4[b] = 4[b]     -> 8th_beats_per_this_note = 4[b]     * 8[8thb]/1[b] = 32[8thb]
-//  * note duration = 2  = (1/2)  * 4[b] = 2[b]     -> 8th_beats_per_this_note = 2[b]     * 8[8thb]/1[b] = 16[8thb]
-//  * note duration = 4  = (1/4)  * 4[b] = 1[b]     -> 8th_beats_per_this_note = 1[b]     * 8[8thb]/1[b] = 8[8thb]
-//  * note duration = 8  = (1/8)  * 4[b] = 0.5[b]   -> 8th_beats_per_this_note = 0.5[b]   * 8[8thb]/1[b] = 4[8thb]
-//  * note duration = 16 = (1/16) * 4[b] = 0.25[b]  -> 8th_beats_per_this_note = 0.25[b]  * 8[8thb]/1[b] = 2[8thb]
-//  * note duration = 32 = (1/32) * 4[b] = 0.125[b] -> 8th_beats_per_this_note = 0.125[b] * 8[8thb]/1[b] = 1[8thb]
+//  * note duration = 1  = (1/1)  * 4[b] = 4[b]     -> 8th_beats_per_this_note = 4[b]
+//  * note duration = 2  = (1/2)  * 4[b] = 2[b]     -> 8th_beats_per_this_note = 2[b]
+//  * note duration = 4  = (1/4)  * 4[b] = 1[b]     -> 8th_beats_per_this_note = 1[b]
+//  * note duration = 8  = (1/8)  * 4[b] = 0.5[b]   -> 8th_beats_per_this_note = 0.5[b]
+//  * note duration = 16 = (1/16) * 4[b] = 0.25[b]  -> 8th_beats_per_this_note = 0.25[b]
+//  * note duration = 32 = (1/32) * 4[b] = 0.125[b] -> 8th_beats_per_this_note = 0.125[b]
 //
 // If b=25 then 
 //      seconds_per_beat = 25[b/m] * 1[m]/60[s] = 0.42[b/s] -> 1/0.42[b/s] = 2.4[s/b] = seconds_per_beat
 //  ->  interrupt_samples_per_beat = 22050[samples/s] * 2.4[s/b] = 52920[samples/b] = interrupt_samples_per_beat
-//  ->  interrupt_samples_per_8th_beat = 52920[samples/b] * 1[b]/8[8thb] = 6615[samples/8thb] = interrupt_samples_per_8th_beat
-//
-//  -> note duration = 1 -> interrupt_samples_this_note = 32[8thb] * 6615[samples/8thb] = 211680[samples]
+//  ->  note duration = 1 -> interrupt_samples_this_note = 4[b] * 52920[samples/b] = 211680[samples]
 
 
 float ENGINE_FAST_FUNCTION(rtttl_sound_resource_get_sample)(rtttl_sound_resource_class_obj_t *self, bool *complete){
@@ -280,16 +276,17 @@ bool rtttl_sound_resource_get_next(uint32_t *note_interrupt_samples, float *note
         note_octave = default_octave;
     }
 
-    float beats_per_second = bpm/60.0f;                                                     // ex. beats_per_second               = 112[b]/1[m] * 1[m]/60[s] = 1.87[b]/[s]
-    float seconds_per_beat = 1.0f/beats_per_second;                                         // ex. seconds_per_beat               = 1.87[b]/[s] -> 1/1.87[b/s] = 0.54[s]/[b]
-    float interrupt_samples_per_beat = ENGINE_AUDIO_SAMPLE_RATE * seconds_per_beat;         // ex. interrupt_samples_per_beat     = 22050[samples]/[s] * 0.54[s]/[b] = 11854[samples]/[b]
-    float interrupt_samples_per_8th_beat = interrupt_samples_per_beat * 0.125f;             // ex. interrupt_samples_per_8th_beat = 11854[samples]/[b] * 1[b]/8[8thb] = 1483[samples]/[8thb]
+    float beats_per_second = bpm/60.0f;
+    float seconds_per_beat = 1.0f/beats_per_second;
+    float interrupt_samples_per_beat = ENGINE_AUDIO_SAMPLE_RATE * seconds_per_beat;
 
     // Based on the beats per minute, calculate how many
     // times the playback interrupt get_sample function
-    // needs to be called for this note
-    float note_8th_beats = (1.0f/(float)rtttl_note_duration) * 4.0f * 8.0f;                 // ex. note_8th_beats                  = ((1/32) * 4[b]) * 8[8thb]/1[b] = 1[8thb] 
-    *note_interrupt_samples = (uint32_t)(note_8th_beats * interrupt_samples_per_8th_beat);  // ex. note_interrupt_samples          = 1[8thb] * 1483[samples]/[8thb] = 1483[samples]
+    // needs to be called for this note.
+    // A whole note gets 4 beats and everything is a fraction
+    // of that
+    float note_beats = (1.0f/(float)rtttl_note_duration) * 4.0f;
+    *note_interrupt_samples = (uint32_t)(note_beats * interrupt_samples_per_beat);
 
     // https://www.mobilefish.com/tutorials/rtttl/rtttl_quickguide_specification.html#:~:text=optional%20dotting%20(which%20increases%20the%20duration%20of%20the%20note%20by%20one%20half)
     if(dotted){
