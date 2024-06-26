@@ -13,7 +13,7 @@
 
 #define BUTTON_DEFAULT_LONG_PRESS_TIME          400
 #define BUTTON_DEFAULT_DOUBLE_PRESS_TIME        300
-#define BUTTON_DEFAULT_AUTOREPEAT_DELAY_TIME    300
+#define BUTTON_DEFAULT_AUTOREPEAT_DELAY_TIME    400
 #define BUTTON_DEFAULT_AUTOREPEAT_INTERVAL_TIME 150
 
 #define NEW_BUTTON(btn_name, btn_code) { \
@@ -42,12 +42,15 @@ button_class_obj_t BUTTON_MENU = NEW_BUTTON("MENU", BUTTON_CODE_MENU);
 uint16_t pressed_buttons = 0;
 uint16_t long_pressed_buttons = 0;
 uint16_t double_pressed_buttons = 0;
+uint16_t autorepeat_buttons = 0;
 
 uint16_t prev_pressed_buttons = 0;
 uint16_t prev_long_pressed_buttons = 0;
 
 uint16_t assume_released_buttons = ~0;
 
+
+uint32_t prev_tick_millis = MILLIS_NULL;
 
 void buttons_update_state() {
     // Clear the double-pressed state for released buttons.
@@ -71,33 +74,43 @@ void buttons_update_state() {
     pressed_buttons &= ~assume_released_buttons;
     // Clear the long-pressed state for released buttons.
     long_pressed_buttons &= pressed_buttons;
+    // Clear the autorepeat state, individual buttons might set it for one tick only.
+    autorepeat_buttons = 0;
 
     uint32_t now_millis = millis();
+    int32_t tick_time = prev_tick_millis == MILLIS_NULL ? 0 : millis_diff(now_millis, prev_tick_millis);
     // Call update on each button. This sets the long press, double press and autorepeat states.
     // These operations cannot be done globally as they rely on constants which can be configured per button.
-    button_update_state(&BUTTON_DPAD_UP, now_millis);
-    button_update_state(&BUTTON_DPAD_DOWN, now_millis);
-    button_update_state(&BUTTON_DPAD_LEFT, now_millis);
-    button_update_state(&BUTTON_DPAD_RIGHT, now_millis);
-    button_update_state(&BUTTON_A, now_millis);
-    button_update_state(&BUTTON_B, now_millis);
-    button_update_state(&BUTTON_BUMPER_LEFT, now_millis);
-    button_update_state(&BUTTON_BUMPER_RIGHT, now_millis);
-    button_update_state(&BUTTON_MENU, now_millis);
+    button_update_state(&BUTTON_DPAD_UP, now_millis, tick_time);
+    button_update_state(&BUTTON_DPAD_DOWN, now_millis, tick_time);
+    button_update_state(&BUTTON_DPAD_LEFT, now_millis, tick_time);
+    button_update_state(&BUTTON_DPAD_RIGHT, now_millis, tick_time);
+    button_update_state(&BUTTON_A, now_millis, tick_time);
+    button_update_state(&BUTTON_B, now_millis, tick_time);
+    button_update_state(&BUTTON_BUMPER_LEFT, now_millis, tick_time);
+    button_update_state(&BUTTON_BUMPER_RIGHT, now_millis, tick_time);
+    button_update_state(&BUTTON_MENU, now_millis, tick_time);
+    prev_tick_millis = now_millis;
 }
 
-void button_update_state(button_class_obj_t *button, uint32_t now_millis) {
+void button_update_state(button_class_obj_t *button, uint32_t now_millis, int32_t tick_time) {
     uint16_t code = button->code;
     if (code & pressed_buttons) {
         if (code & prev_pressed_buttons) {  // Still pressed
+            int32_t pressed_time = millis_diff(now_millis, button->last_pressed_millis);
             // Check for a long press.
-            if (!(code & long_pressed_buttons)) {
-                int32_t pressed_time = millis_diff(now_millis, button->last_pressed_millis);
-                if (pressed_time >= button->long_press_time) {
-                    long_pressed_buttons |= code;
+            if (pressed_time >= button->long_press_time) {
+                long_pressed_buttons |= code;
+            }
+            // Check for autorepeat.
+            if (pressed_time >= button->autorepeat_delay_time) {
+                int32_t autorepeat_time = pressed_time - button->autorepeat_delay_time;
+                if (autorepeat_time % button->autorepeat_interval_time < tick_time) {
+                    autorepeat_buttons |= code;
                 }
             }
         } else { // Just pressed
+            autorepeat_buttons |= code;
             // Check for double press. It happens if the released time was less than the double press time, and the
             // previous press was not long.
             if (!(code & double_pressed_buttons) &&
@@ -128,6 +141,7 @@ void buttons_release_all() {
     pressed_buttons = 0;
     long_pressed_buttons = 0;
     double_pressed_buttons = 0;
+    autorepeat_buttons = 0;
     prev_pressed_buttons = 0;
     prev_long_pressed_buttons = 0;
     assume_released_buttons = ~0;
@@ -147,6 +161,7 @@ void button_release(button_class_obj_t *button) {
     pressed_buttons &= ~code;
     long_pressed_buttons &= ~code;
     double_pressed_buttons &= ~code;
+    autorepeat_buttons &= ~code;
     prev_pressed_buttons &= ~code;
     prev_long_pressed_buttons &= ~code;
     assume_released_buttons |= code;
@@ -222,8 +237,7 @@ inline bool button_is_just_double_released(button_class_obj_t *button) {
 }
 
 inline bool button_is_pressed_autorepeat(button_class_obj_t *button) {
-    // TODO: Implement the autorepeat.
-    return button_is_just_pressed(button);
+    return (button->code & autorepeat_buttons);
 }
 
 
@@ -357,7 +371,7 @@ static mp_obj_t button_print_info(size_t n_args, const mp_obj_t *args) {
         mp_printf(&mp_plat_print, "                      press  long   short  long    dbl    dbl   auto\n");
         mp_printf(&mp_plat_print, "Button  press   rel   time   press   rel    rel   press   rel    rep\n");
     }
-    mp_printf(&mp_plat_print, "%-6s   %s    %s   %5d   %s    %s    %s    %s    %s\n",
+    mp_printf(&mp_plat_print, "%-6s   %s    %s   %5d   %s    %s    %s    %s    %s    %s\n",
         self->name,
         button_is_just_pressed(self) ? INFO_JUST_TRUE_MARK :
             button_is_pressed(self) ? INFO_TRUE_MARK : INFO_FALSE_MARK,
@@ -370,7 +384,8 @@ static mp_obj_t button_print_info(size_t n_args, const mp_obj_t *args) {
         button_is_just_long_released(self) ? INFO_JUST_TRUE_MARK : INFO_FALSE_MARK,
         button_is_just_double_pressed(self) ? INFO_JUST_TRUE_MARK :
             button_is_double_pressed(self) ? INFO_TRUE_MARK : INFO_FALSE_MARK,
-        button_is_just_double_released(self) ? INFO_JUST_TRUE_MARK : INFO_FALSE_MARK
+        button_is_just_double_released(self) ? INFO_JUST_TRUE_MARK : INFO_FALSE_MARK,
+        button_is_pressed_autorepeat(self) ? INFO_TRUE_MARK : INFO_FALSE_MARK
     );
     return mp_const_none;
 }

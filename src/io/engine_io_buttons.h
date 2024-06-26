@@ -51,14 +51,14 @@ extern button_class_obj_t BUTTON_MENU;
 
 
 void buttons_update_state();
-void button_update_state(button_class_obj_t *button, uint32_t now_millis);
-
+void button_update_state(button_class_obj_t *button, uint32_t now_millis, int32_t tick_time);
 
 void buttons_release_all();
 void button_release(button_class_obj_t *button);
 
 void buttons_reset_params_all();
 void button_reset_params(button_class_obj_t *button);
+
 
 bool button_is_pressed(button_class_obj_t *button);
 bool button_is_just_pressed(button_class_obj_t *button);
