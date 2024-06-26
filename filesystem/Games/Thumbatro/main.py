@@ -228,13 +228,13 @@ class CardSprite(Sprite2DNode):
     def create_bonus_overlay(self):
         for modifier in self.modifiers:
             if isinstance(modifier, RareBonusModifier):
-                return self.create_overlay(9, 4, opacity=0.4)
+                return self.create_overlay(9, random.randint(9,10), opacity=0.4)
             if isinstance(modifier, BaseScoreBonusModifier):
                 return self.create_overlay(7, 4)
             if isinstance(modifier, MultiplierBonusModifier):
                 return self.create_overlay(8, 4)
             if isinstance(modifier, WildcardModifier):
-                return self.create_overlay(10, 4)
+                return self.create_overlay(6, 5)
             if isinstance(modifier, SteelCardModifier):
                 return self.create_overlay(12, 4)
             if isinstance(modifier, CoinCardModifier):
@@ -332,11 +332,11 @@ class JokerCard(CardSprite):
             self.background = self.create_overlay(12, 4)
 
         if self.rarity == 'rare':
-            return self.create_overlay(9, 4, opacity=0.4)  # Rare equivalent
+            return self.create_overlay(random.randint(9,10), random.randint(4,5), opacity=0.4) 
         elif has_base_score_bonus and not has_multiplier_bonus:
-            return self.create_overlay(7, 4)
+            return self.create_overlay(7, 5)
         elif has_multiplier_bonus and not has_base_score_bonus:
-            return self.create_overlay(8, 4)
+            return self.create_overlay(8, 5)
         return None
     
     def get_frame_for_modifiers(self, modifiers):
@@ -458,7 +458,7 @@ class Deck:
         self.shuffle()
 
     def create_deck(self):
-        return [CardSprite(Vector2(150, 80), card.original_frame_x, card.original_frame_y, card.modifiers) for card in self.collection]
+        return [CardSprite(Vector2(150, 80), card.original_frame_x, card.original_frame_y, card.rarity, card.modifiers) for card in self.collection]
 
     def draw_cards(self, num):
         drawn_cards = []
@@ -618,7 +618,8 @@ class PokerGame(Rectangle2DNode):
             if self.game_over_time is None:
                 self.game_over_time = time.time()  
             elif time.time() - self.game_over_time >= 5:
-                engine.reset()
+                engine.end()
+                import engine_main
             return
 
         if self.hand_display_time and time.time() - self.hand_display_time >= 2:
@@ -684,7 +685,7 @@ class PokerGame(Rectangle2DNode):
         if self.jokers and 0 <= self.current_card_index < len(self.jokers):
             joker_position = self.jokers[self.current_card_index].position
             self.hand_indicator.position = Vector2(joker_position.x, joker_position.y + 20)
-            self.hand_indicator.set_layer(7)
+            self.hand_indicator.set_layer(6)
 
     def update_selected_joker_rules(self):
         self.hand_type_text.text = self.jokers[self.current_card_index].print_rules()
@@ -703,7 +704,7 @@ class PokerGame(Rectangle2DNode):
         if not self.joker_selection and self.hand and 0 <= self.current_card_index < len(self.hand):
             card_position = self.hand[self.current_card_index].position
             self.hand_indicator.position = Vector2(card_position.x, card_position.y + 20)
-            self.hand_indicator.set_layer(7)
+            self.hand_indicator.set_layer(6)
 
     def update_selected_card_rules(self):
         if not self.joker_selection:
