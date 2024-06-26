@@ -465,6 +465,8 @@ class Deck:
         for _ in range(num):
             if self.cards:
                 drawn_cards.append(self.cards.pop())
+            else:
+                return None
         return drawn_cards
 
     def shuffle(self):
@@ -500,6 +502,7 @@ class PokerGame(Rectangle2DNode):
         self.extra_booster_count = 0
         self.hand_display_time = None
         self.game_over = False
+        self.game_over_time = None
         self.background = Sprite2DNode(Vector2(63, 63))
         self.background.frame_count_x = 1
         self.background.frame_count_y = 1
@@ -576,6 +579,9 @@ class PokerGame(Rectangle2DNode):
 
     def draw_hand(self):
         self.hand = self.deck.draw_cards(8)
+        if self.hand is None:
+            self.end_game()
+            return
         self.update_hand_positions()
         self.update_hand_indicator_position()
 
@@ -609,7 +615,11 @@ class PokerGame(Rectangle2DNode):
                 self.update_hand_indicator_position()
 
         if self.game_over:
-            return  # Disable inputs when the game is over
+            if self.game_over_time is None:
+                self.game_over_time = time.time()  
+            elif time.time() - self.game_over_time >= 5:
+                engine.reset()
+            return
 
         if self.hand_display_time and time.time() - self.hand_display_time >= 2:
             # Tween played cards off to the left
@@ -747,6 +757,9 @@ class PokerGame(Rectangle2DNode):
                     self.end_game()
             else:
                 new_cards = self.deck.draw_cards(len(self.selected_cards))
+                if new_cards is None:
+                    self.end_game()
+                    return
                 self.hand.extend(new_cards)
                 self.update_hand_positions()
                 self.selected_cards = []
@@ -761,6 +774,9 @@ class PokerGame(Rectangle2DNode):
                 card.mark_destroy()
                 card.mark_discarded()
             new_cards = self.deck.draw_cards(len(self.selected_cards))
+            if new_cards is None:
+                self.end_game()
+                return
             self.hand.extend(new_cards)
             self.update_hand_positions()
             self.selected_cards = []
@@ -953,6 +969,7 @@ class PokerGame(Rectangle2DNode):
         self.hand_indicator.opacity = 0
         self.hand_type_text.text = f"Game Over!"
         self.best_hand_text.text = f"Best Hand: {self.highest_individual_hand_score}"
+        self.game_over_time = time.time()
 
 
     def open_booster_packs(self):
@@ -1223,7 +1240,7 @@ introScr.frame_count_x = 1
 introScr.frame_count_y = 1
 introScr.texture = intro
 introScr.playing = False
-introScr.set_layer(6)
+introScr.set_layer(7)
 
 # Make a camera to render the scene
 camera = CameraNode()
