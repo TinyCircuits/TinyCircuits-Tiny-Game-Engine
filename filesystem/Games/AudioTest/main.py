@@ -24,16 +24,16 @@ c = 0
 
 while True:
     if engine.tick():
-        if engine_io.check_pressed(engine_io.BUMPER_LEFT):
+        if engine_io.LB.is_pressed:
             t.frequency -= 100
             print(t.frequency)
-        elif engine_io.check_pressed(engine_io.BUMPER_RIGHT):
+        elif engine_io.RB.is_pressed:
             t.frequency += 100
             print(t.frequency)
         
-        if engine_io.check_just_pressed(engine_io.A):
+        if engine_io.A.is_just_pressed:
             engine_audio.play(t, 0, True)
-        elif engine_io.check_just_pressed(engine_io.B):
+        elif engine_io.B.is_just_pressed:
             print(c)
             engine_audio.play(wavs[c], 0, False)
             c = c + 1
