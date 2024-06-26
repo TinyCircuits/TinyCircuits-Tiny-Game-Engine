@@ -17,7 +17,7 @@ class MyCam(CameraNode):
         super().__init__(self)
         self.zoom = 1
 
-    
+
     def tick(self, dt):
         if(engine_io.focused_node() != None):
             self.position.x = engine_io.focused_node().position.x
@@ -28,17 +28,17 @@ class MyCam(CameraNode):
             self.zoom -= 0.025
         if engine_io.A.is_pressed:
             self.zoom += 0.025
-        
+
         if engine_io.UP.is_pressed:
             self.position.y -= 0.5
         if engine_io.DOWN.is_pressed:
             self.position.y += 0.5
-        
+
         if engine_io.LEFT.is_pressed:
             self.position.x -= 0.5
         if engine_io.RIGHT.is_pressed:
             self.position.x += 0.5
-        
+
         if engine_io.LB.is_pressed:
             self.rotation.z += 0.0085
         if engine_io.RB.is_pressed:
@@ -63,40 +63,37 @@ bitmap_btn = GUIBitmapButton2DNode(position=Vector2(0, -32), font=font, text="Te
 class MyButton(GUIButton2DNode):
     def __init__(self):
         super().__init__(self)
-    
+
     def tick(self, dt):
         pass
-    
-    def on_focused(self):
-        print("Focused", self.text)
-    
+
     def on_just_focused(self):
         print("Just focused", self.text)
-    
+
     def on_just_unfocused(self):
         print("Just unfocused", self.text)
 
     def on_pressed(self):
         print("Pressed!", self.text)
-    
+
     def on_just_pressed(self):
         print("Just pressed!", self.text)
-    
+
     def on_just_released(self):
         print("Just released!", self.text)
-    
+
     def on_just_changed(self):
         print("Just changed!", self.text)
 
 
 
 buttons = []
-for x in range(5):
-    for y in range(5):
+for x in range(10):
+    for y in range(10):
         button = MyButton()
-        button.position = Vector2(x*30, y*30)
+        button.position = Vector2(x*60, y*30)
         button.font = font
-        button.text = str(x) + str(y)
+        button.text = f"N({x}, {y})"
         button.rotation = 0
         button.scale = Vector2(1, 1)
         button.padding = 4

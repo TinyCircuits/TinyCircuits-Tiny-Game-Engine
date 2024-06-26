@@ -14,7 +14,7 @@
 #define BUTTON_DEFAULT_LONG_PRESS_TIME          400
 #define BUTTON_DEFAULT_DOUBLE_PRESS_TIME        300
 #define BUTTON_DEFAULT_AUTOREPEAT_DELAY_TIME    400
-#define BUTTON_DEFAULT_AUTOREPEAT_INTERVAL_TIME 150
+#define BUTTON_DEFAULT_AUTOREPEAT_INTERVAL_TIME 100
 
 #define NEW_BUTTON(btn_name, btn_code) { \
     {&button_class_type}, \
@@ -104,8 +104,11 @@ void button_update_state(button_class_obj_t *button, uint32_t now_millis, int32_
             }
             // Check for autorepeat.
             if (pressed_time >= button->autorepeat_delay_time) {
-                int32_t autorepeat_time = pressed_time - button->autorepeat_delay_time;
-                if (autorepeat_time % button->autorepeat_interval_time < tick_time) {
+                // Use now_millis as the base for autorepeat to synchronise the autorepeat
+                // of all the buttons that have the same autorepeat interval.
+                // This is not ideal - the second autorepeat trigger can be delayed by up to autorepeat interval,
+                // but it should be good enough.
+                if (now_millis % button->autorepeat_interval_time < (uint32_t)tick_time) {
                     autorepeat_buttons |= code;
                 }
             }
