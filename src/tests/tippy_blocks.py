@@ -7,4 +7,4 @@ from engine_nodes import Rectangle2DNode, Circle2DNode, CameraNode, PhysicsRecta
 import random
 import math
 
-engine.set_fps_limit(60)
+engine.fps_limit(60)

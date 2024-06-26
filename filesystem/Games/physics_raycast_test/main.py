@@ -6,7 +6,7 @@ import engine_draw
 from engine_math import Vector2
 from engine_nodes import PhysicsRectangle2DNode, PhysicsCircle2DNode, CameraNode
 
-engine.set_fps_limit(60)
+engine.fps_limit(60)
 
 circle = PhysicsCircle2DNode(position=Vector2(0, -35), radius=7, outline=True, dynamic=False, collision_mask=0b0000_0000_0000_0000_0000_0000_0000_0011)
 ground = PhysicsRectangle2DNode(position=Vector2(0, 50), width=110, height=10, outline=True, dynamic=False, collision_mask=0b0000_0000_0000_0000_0000_0000_0000_0011)
@@ -25,10 +25,10 @@ class Ray(PhysicsRectangle2DNode):
 
     def on_collide(self, contact):
         self.outline_color = engine_draw.red
-    
+
     def on_separate(self):
         self.outline_color = engine_draw.green
-    
+
 class Sensor(PhysicsCircle2DNode):
     def __init__(self, position):
         super().__init__(self)
@@ -42,7 +42,7 @@ class Sensor(PhysicsCircle2DNode):
 
     def on_collide(self, contact):
         self.outline_color = engine_draw.red
-    
+
     def on_separate(self):
         self.outline_color = engine_draw.green
 
@@ -79,7 +79,7 @@ class Player(PhysicsRectangle2DNode):
         sen1 = Sensor(Vector2(15, -25))
         self.add_child(sen1)
         self.sensors.append(sen1)
-    
+
     def tick(self, dt):
         ray.adjust_from_to(self.position, agent.position)
 

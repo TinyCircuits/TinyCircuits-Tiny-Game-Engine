@@ -10,7 +10,7 @@ import random
 import math
 
 
-engine.set_fps_limit(50)
+engine.fps_limit(50)
 
 
 # Imagine we're targeting a top-down game, turn gravity off on each axis
@@ -26,7 +26,7 @@ box_physics_0 = PhysicsRectangle2DNode(width=20, height=20, position=Vector2(25,
 box_0 = Rectangle2DNode(width=20, height=20, outline=True)
 box_0.color = engine_draw.blue
 box_physics_0.add_child(box_0)
- 
+
 
 floor_box_physics = PhysicsRectangle2DNode(width=128, height=10, position=Vector2(0, 64), dynamic=False, bounciness=0.5)
 floor_box = Rectangle2DNode(width=128, height=10, color=engine_draw.green, outline=True)
@@ -62,7 +62,7 @@ class Player(PhysicsCircle2DNode):
 
         self.count = 0
         print(self.count)
-    
+
     def tick(self, dt):
         if engine_io.LEFT.is_pressed:
             self.velocity.x = -0.3
@@ -78,7 +78,7 @@ class Player(PhysicsCircle2DNode):
             self.rotation += 0.0045
         elif engine_io.RB.is_pressed:
             self.rotation -= 0.0045
-    
+
     def collision(self, contact):
         self.count = self.count + 1
         # print("Collision!", self.count)
@@ -104,10 +104,10 @@ class rect(PhysicsRectangle2DNode):
         self.height=15
         self.rotation=math.pi/4
         self.dynamic=False
-    
+
     def tick(self, dt):
         self.rotation -= 0.0025
-    
+
 
 class Gate(PhysicsRectangle2DNode):
     def __init__(self):
@@ -118,7 +118,7 @@ class Gate(PhysicsRectangle2DNode):
 
         self.gate = Rectangle2DNode(width=30, height=3, color=engine_draw.red)
         self.add_child(self.gate)
-    
+
     def collision(self, contact):
         if self.position.x > -40:
             self.position.x = self.position.x - 0.05

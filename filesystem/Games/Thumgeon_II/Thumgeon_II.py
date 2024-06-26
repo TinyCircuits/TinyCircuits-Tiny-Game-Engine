@@ -29,8 +29,8 @@ import urandom
 import utime
 
 engine_physics.set_gravity(0.0, 0.0)
-engine.set_fps_limit(50)
-# engine.disable_fps_limit()
+engine.fps_limit(50)
+#engine.disable_fps_limit()
 machine.freq(180000000)
 
 os.chdir("/Games/Thumgeon_II")
@@ -60,7 +60,6 @@ class CursorSprite(Sprite2DNode):
         self.height = 32
         self.tween = Tween()
         Render.cam.add_child(self)
-
 
 cursor = CursorSprite()
 cursor_pos = Vector2(0, 0)
@@ -115,16 +114,13 @@ for i in range(5):
 def reset_camera_right(self):
     Render.renderer_x -= 1
 
-
 def reset_camera_left(self):
     Render.renderer_x += 1
     Render.load_renderer_tiles(current_tilemap, Render.renderer_x, Render.renderer_y)
 
-
 def reset_camera_down(self):
     Render.renderer_y += 1
     Render.load_renderer_tiles(current_tilemap, Render.renderer_x, Render.renderer_y)
-
 
 def reset_camera_up(self):
     Render.renderer_y -= 1
@@ -158,7 +154,6 @@ def move_tiles_left():
     )
     Render.camera_tween.after = reset_camera_left
 
-
 def move_tiles_down():
     Render.load_renderer_tiles(current_tilemap, Render.renderer_x, Render.renderer_y - 1)
     Render.camera_tween.start(
@@ -172,7 +167,6 @@ def move_tiles_down():
         EASE_QUAD_IN,
     )
     Render.camera_tween.after = reset_camera_up
-
 
 def move_tiles_up():
     Render.camera_tween.start(

@@ -23,7 +23,7 @@ import math
 gc.threshold(1024*32)
 #gc.disable()
 engine_physics.set_gravity(0.0, 0.0)
-engine.set_fps_limit(60)
+engine.fps_limit(60)
 #engine.disable_fps_limit()
 # machine.freq(180000000)
 
@@ -56,7 +56,7 @@ class CursorSprite(Sprite2DNode):
         self.height = 32
         self.tween = Tween()
         Render.cam.add_child(self)
-        
+
 cursor = CursorSprite()
 cursor_pos = Vector2(0, 0)
 
@@ -65,7 +65,7 @@ mode_action = 1
 mode_inventory = 2
 
 control_mode = mode_move
-    
+
 tween_snap = 80 # Controls camera tween speed
 indicator_snap = 50 # Controls indicator tween speed
 
@@ -112,19 +112,19 @@ def reset_camera_right(self):
     Render.load_renderer_tiles(current_tilemap, player_x-2, player_y-2)
     Render.load_renderer_deco(current_tilemap, player_x-2, player_y-2)
     Render.load_renderer_monsters(current_tilemap)
-    
+
 def reset_camera_left(self):
     Render.renderer_x += 1
     Render.load_renderer_tiles(current_tilemap, player_x-2, player_y-2)
     Render.load_renderer_deco(current_tilemap, player_x-2, player_y-2)
     Render.load_renderer_monsters(current_tilemap)
-    
+
 def reset_camera_down(self):
     Render.renderer_y += 1
     Render.load_renderer_tiles(current_tilemap, player_x-2, player_y-2)
     Render.load_renderer_deco(current_tilemap, player_x-2, player_y-2)
     Render.load_renderer_monsters(current_tilemap)
-    
+
 def reset_camera_up(self):
     Render.renderer_y -= 1
     Render.load_renderer_tiles(current_tilemap, player_x-2, player_y-2)
@@ -145,7 +145,7 @@ def move_tiles_left():
     player_x += 1
     Render.camera_tween.start(Render.cam, "position", Vector3(Render.camera_offset.x, Render.camera_offset.y, 0), Vector3(32 + Render.camera_offset.x, Render.camera_offset.y, 0), tween_snap, 1.0, ONE_SHOT, EASE_QUAD_IN)
     Render.camera_tween.after = reset_camera_left
-            
+
 def move_tiles_down():
     global player_y
     player_y -= 1
@@ -154,7 +154,7 @@ def move_tiles_down():
     Render.load_renderer_monsters(current_tilemap, Vector2(0, 1))
     Render.camera_tween.start(Render.cam, "position", Vector3(Render.camera_offset.x, 32 + Render.camera_offset.y, 0), Vector3(Render.camera_offset.x, Render.camera_offset.y, 0), tween_snap, 1.0, ONE_SHOT, EASE_QUAD_IN)
     Render.camera_tween.after = reset_camera_up
-            
+
 def move_tiles_up():
     global player_y
     player_y += 1
@@ -175,12 +175,12 @@ def renderer_reload(dummy):
     Render.load_renderer_tiles(current_tilemap, Render.renderer_x, Render.renderer_y)
     Render.load_renderer_deco(current_tilemap, Render.renderer_x, Render.renderer_y)
     Render.load_renderer_monsters(current_tilemap)
-    
+
 def draw_inventory():
     item_offset = -64
     for i in player.inventory:
         inventory_sprites.append(Sprite2DNode())
-        
+
 
 class Ghost(Sprite2DNode):
     def __init__(self):
@@ -190,11 +190,11 @@ class Ghost(Sprite2DNode):
         self.frame_current_x = 0
         self.set_layer(7)
         Render.cam.add_child(self)
-        
+
     def set_frame_count(self, c):
         self.frame_count_x = c
         self.frame_current_x = 0
-        
+
 class MessageSprite(Text2DNode):
     def __init__(self):
         super().__init__(self)
@@ -205,7 +205,7 @@ class MessageSprite(Text2DNode):
         self.font = Resources.roboto_font
         self.opacity = 1.0
         Render.cam.add_child(self)
-        
+
 current_msg = MessageSprite()
 
 def update_monsters():
@@ -257,7 +257,7 @@ def update_monsters():
         print(m.position)
         current_tilemap.monster_list.append(m)
     #Render.load_renderer_monsters(current_tilemap)
-        
+
 inventory_item_sel = 0
 eqp_drop = 0
 
@@ -284,7 +284,7 @@ def tile_action(x, y):
             current_tilemap.set_tile_data1(x, y, 4)
             player.inventory.remove(item)
             player.wt -= Player.item_weights[item.id]
-            
+
             if(player.held_item == item):
                         player.held_item = None
                         player.remove_child(player.held_item_spr)
@@ -294,7 +294,7 @@ def tile_action(x, y):
             return
         else:
             pass
-        
+
     Render.tile_animate_action(int(2 + selection_pos.x), int(2 + selection_pos.y), renderer_reload)
     #Render.tile_animate_action(int(2 + selection_pos.x), int(2 + selection_pos.y), None)
     if((current_tilemap.get_tile_data1(x, y) & (1 << 2)) == 0):
@@ -365,7 +365,7 @@ def tile_action(x, y):
                     deco_redraw = True
             monster_redraw = True
             #tiles_redraw = True
-            
+
             print("Other action")
     elif(abs(selection_pos.x) <= 1 and abs(selection_pos.y) <= 1):
         # Item tile
@@ -388,10 +388,10 @@ def tile_action(x, y):
             current_tilemap.set_deco_item(x, y, False)
         else:
             print("Too heavy!")
-            
+
         pass
-    
-    
+
+
     #Render.load_renderer_tiles(current_tilemap, Render.renderer_x, Render.renderer_y)
     #renderer_reload(None)
 
@@ -438,7 +438,7 @@ def action(direction):
             cursor.tween.start(cursor, "position", cursor.position, cursor_pos, indicator_snap, 1.0, ONE_SHOT, EASE_QUAD_IN)
         elif (direction == 2 and cursor_pos.y < range):
             selection_pos.y += 1
-            
+
             cursor_pos.y += 32
             cursor.tween.start(cursor, "position", cursor.position, cursor_pos, indicator_snap, 1.0, ONE_SHOT, EASE_QUAD_IN)
         elif (direction == 3 and cursor_pos.y > -range):
@@ -451,7 +451,7 @@ def set_cursor():
     for m in current_tilemap.monster_list:
         if(player_x + selection_pos.x == m.position.x and player_y + selection_pos.y == m.position.y):
             cursor.texture = Tiles.attack_indicator
-    
+
 print(gc.mem_free())
 
 class InventoryRenderer(Sprite2DNode):
@@ -476,7 +476,7 @@ mp_text.font = Resources.roboto_font
 
 hp_text.text = "HP: "+str(player.maxhp)+" / "+str(player.maxhp)
 mp_text.text = "MP: "+str(player.maxmp)+" / "+str(player.maxmp)
-        
+
 hp_text.set_layer(7)
 mp_text.set_layer(7)
 
@@ -490,12 +490,12 @@ deco_redraw = False
 
 
 print("Entering game loop")
-    
+
 while True:
     # Only execute code as fast as the engine ticks (due to FPS limit)
     if engine.tick():
         #print(1)
-        
+
         #print(urandom.random())
         #gc.collect()
         #print(engine.get_running_fps())
@@ -507,12 +507,12 @@ while True:
         #print(str(Render.renderer_x + 2 + selection_pos.x) + ", " + str(Render.renderer_y + 2 + selection_pos.y))
         action_dir = -1
         b_press = -1
-        
+
         monster_turn = False
         tiles_redraw = False
         monster_redraw = False
         deco_redraw = False
-        
+
         if engine_io.RIGHT.is_just_pressed:
             action_dir = 0
         elif engine_io.LEFT.is_just_pressed:
@@ -521,7 +521,7 @@ while True:
             action_dir = 2
         elif engine_io.UP.is_just_pressed:
             action_dir = 3
-            
+
         if engine_io.A.is_just_pressed:
             if(control_mode == mode_move):
                 if(player.held_item is not None and player.held_item_spr.frame_count_x > 1):
@@ -559,7 +559,7 @@ while True:
                         cursor_pos = Vector2(0,0)
                         selection_pos = Vector2(0,0)
                         cursor.opacity = 1.0
-        
+
         if engine_io.B.is_just_pressed:
             inventory_item_sel = 0
             eqp_drop = 0
@@ -572,10 +572,10 @@ while True:
                     player.held_item_spr.frame_current_x = 0
                 control_mode = mode_move
                 cursor.opacity = 0.0
-            
+
         if(action_dir >= 0):
             action(action_dir)
-            
+
         if(tiles_redraw):
             Render.load_renderer_tiles(current_tilemap, player_x-2, player_y-2)
         if(deco_redraw):
@@ -584,15 +584,15 @@ while True:
             Render.load_renderer_monsters(current_tilemap)
         if(monster_turn):
             update_monsters()
-        
+
         look_ang = 0.0
         player.scale = Vector2(1.0, 1.0)
         if(control_mode == mode_action):
             look_ang = math.atan2(-cursor.position.y, cursor.position.x)
         player.look_ang = look_ang
-        
+
         set_cursor()
-        
+
         hp_text.text = "HP: "+str(player.hp) + " / " + str(player.maxhp)
         mp_text.text = "MP: "+str(player.mp) + " / " + str(player.maxmp)
 
@@ -610,11 +610,11 @@ while True:
                     inventory_item_sel = 0
             elif(action_dir == 2 or action_dir == 3):
                 eqp_drop = 1-eqp_drop
-                
+
             gp_text = Text2DNode()
             wt_text = Text2DNode()
             runes_text = Text2DNode()
-            
+
             eqp = Text2DNode()
             drop = Text2DNode()
             if(player.inventory[inventory_item_sel] == player.held_item):
@@ -631,39 +631,39 @@ while True:
                 else:
                     eqp.text = "equip/use"
                     drop.text = ">drop"
-            
+
             gp_text.text = "GP: "+str(player.gp)
             wt_text.text = "WT: "+str(player.wt)+"/"+str(player.maxwt)
             runes_text.text = "Runes: "+str(player.runes)
-            
+
             gp_text.font = Resources.roboto_font
             wt_text.font = Resources.roboto_font
             eqp.font = Resources.roboto_font
             drop.font = Resources.roboto_font
             runes_text.font = Resources.roboto_font
-            
+
             gp_text.position =  Vector2(32, -4)
             wt_text.position =  Vector2(32, 4)
             runes_text.position = Vector2(32, 12)
-            
+
             eqp.position = Vector2(-32, -4)
             drop.position = Vector2(-32, 4)
-            
+
             gp_text.set_layer(7)
             wt_text.set_layer(7)
             eqp.set_layer(7)
             drop.set_layer(7)
             runes_text.set_layer(7)
-            
+
             inventory_renderer.add_child(gp_text)
             inventory_renderer.add_child(wt_text)
             inventory_renderer.add_child(eqp)
             inventory_renderer.add_child(drop)
             inventory_renderer.add_child(runes_text)
-            
+
             item_spr_offset = Vector2(-inventory_item_sel*32, -32)
             for i in player.inventory:
-                
+
                 frame_spr = Sprite2DNode()
                 frame_spr.texture = Player.frame_texture
                 frame_spr.position.x = item_spr_offset.x
@@ -673,7 +673,7 @@ while True:
                 frame_spr.set_layer(6)
                 frame_spr.frame_count_x = 1
                 frame_spr.frame_current_x = 0
-                
+
                 item_spr = Sprite2DNode()
                 item_spr.texture = i.texture
                 item_spr.position.x = item_spr_offset.x
@@ -688,5 +688,5 @@ while True:
                 inventory_renderer.sprlist.append(item_spr)
                 inventory_renderer.add_child(frame_spr)
                 inventory_renderer.add_child(item_spr)
-                
+
         #ghost.set_frame_count(1)
