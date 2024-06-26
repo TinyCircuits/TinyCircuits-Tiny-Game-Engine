@@ -64,19 +64,19 @@ class Player(PhysicsCircle2DNode):
         print(self.count)
     
     def tick(self, dt):
-        if engine_io.check_pressed(engine_io.DPAD_LEFT):
+        if engine_io.LEFT.is_pressed:
             self.velocity.x = -0.3
-        elif engine_io.check_pressed(engine_io.DPAD_RIGHT):
+        elif engine_io.RIGHT.is_pressed:
             self.velocity.x = 0.3
 
-        if engine_io.check_pressed(engine_io.DPAD_UP):
+        if engine_io.UP.is_pressed:
             self.velocity.y = -0.3
-        elif engine_io.check_pressed(engine_io.DPAD_DOWN):
+        elif engine_io.DOWN.is_pressed:
             self.velocity.y = 0.3
 
-        if engine_io.check_pressed(engine_io.BUMPER_LEFT):
+        if engine_io.LB.is_pressed:
             self.rotation += 0.0045
-        elif engine_io.check_pressed(engine_io.BUMPER_RIGHT):
+        elif engine_io.RB.is_pressed:
             self.rotation -= 0.0045
     
     def collision(self, contact):

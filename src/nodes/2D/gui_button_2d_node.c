@@ -15,7 +15,7 @@
 #include "draw/engine_color.h"
 #include "resources/engine_font_resource.h"
 #include "engine_gui.h"
-#include "io/engine_io_common.h"
+#include "io/engine_io_module.h"
 #include "engine_collections.h"
 
 #include <string.h>
@@ -374,7 +374,7 @@ bool button_2d_node_load_attr(engine_node_base_t *self_node_base, qstr attribute
             return true;
         break;
         case MP_QSTR_button:
-            destination[0] = mp_obj_new_int(self->button);
+            destination[0] = self->button ? MP_OBJ_FROM_PTR(self->button) : mp_const_none;
             return true;
         break;
         case MP_QSTR_width:
@@ -524,7 +524,10 @@ bool button_2d_node_store_attr(engine_node_base_t *self_node_base, qstr attribut
             return true;
         break;
         case MP_QSTR_button:
-            self->button = mp_obj_get_int(destination[1]);
+            if (!mp_obj_is_type(destination[1], &button_class_type)) {
+                mp_raise_msg(&mp_type_ValueError, MP_ERROR_TEXT("GUIBitmapButton2DNode: 'button' must be a Button object!"));
+            }
+            self->button = MP_OBJ_TO_PTR(destination[1]);
             return true;
         break;
         case MP_QSTR_width:
@@ -840,7 +843,7 @@ mp_obj_t gui_button_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, 
     gui_button_2d_node->focused = false;
     gui_button_2d_node->pressed = false;
     gui_button_2d_node->last_pressed = false;
-    gui_button_2d_node->button = BUTTON_A;
+    gui_button_2d_node->button = &BUTTON_A;
 
     if(inherited == true){
         // Get the Python class instance

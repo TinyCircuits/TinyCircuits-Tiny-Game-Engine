@@ -130,13 +130,13 @@ class Game(Rectangle2DNode):
             self.show_winner("AI Wins!")
             return
         if self.current_player == 1:
-            if engine_io.check_just_pressed(engine_io.DPAD_LEFT):
+            if engine_io.LEFT.is_just_pressed:
                 self.selected_col = max(0, self.selected_col - 1)
                 self.grid_node.selected_col = self.selected_col
-            elif engine_io.check_just_pressed(engine_io.DPAD_RIGHT):
+            elif engine_io.RIGHT.is_just_pressed:
                 self.selected_col = min(GRID_COLS - 1, self.selected_col + 1)
                 self.grid_node.selected_col = self.selected_col
-            elif engine_io.check_just_pressed(engine_io.A):
+            elif engine_io.A.is_just_pressed:
                 if self.make_move(self.selected_col, 1):
                     self.current_player = 2
         elif self.current_player == 2:
