@@ -11,7 +11,7 @@ from engine_math import Vector2, Vector3
 from engine_nodes import Rectangle2DNode, CameraNode, PhysicsRectangle2DNode, PhysicsCircle2DNode, Circle2DNode, Text2DNode, Sprite2DNode
 from engine_resources import FontResource, TextureResource
 
-#engine.set_fps_limit(30)
+#engine.fps_limit(30)
 random.seed(time.ticks_ms())
 
 # engine_debug.enable_all()
@@ -128,7 +128,7 @@ class GridNode(Rectangle2DNode):
         else:
             self.draw_piece(Vector2(x, OFFSET), yellow_texture )
 
-        
+
 
     def update_indicator(self):
         if game.current_player == 1:
@@ -243,7 +243,7 @@ class Game(Rectangle2DNode):
                 print(f"Player {player} placed piece at ({col}, {row})")
                 return True
         return False
-    
+
     def print_grid(self):
         for row in self.grid:
             print(' '.join(str(cell) for cell in row))
@@ -368,17 +368,17 @@ class Game(Rectangle2DNode):
 
     def valid_moves(self, grid):
         return [c for c in range(GRID_COLS) if grid[0][c] == 0]
-    
+
     def get_next_open_row(self, grid, col):
         for r in range(GRID_ROWS-1, -1, -1):
             if grid[r][col] == 0:
                 return r
         return None
-    
+
     def minimax(self,grid, depth, isMaximizing, alpha, beta):
         if depth == 0 or self.check_win(1,grid) or self.check_win(2,grid):
             return self.evaluate_board(grid)
-        
+
         if isMaximizing:
             maxEval = float('-inf')
             for col in range(GRID_COLS):

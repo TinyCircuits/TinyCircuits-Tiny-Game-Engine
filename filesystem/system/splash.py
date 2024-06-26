@@ -6,7 +6,7 @@ from engine_animation import Tween, Delay, ONE_SHOT, EASE_ELAST_OUT
 from engine_math import Vector2
 import random
 
-engine.set_fps_limit(60)
+engine.fps_limit(60)
 
 # Camera to render scene
 camera = CameraNode()

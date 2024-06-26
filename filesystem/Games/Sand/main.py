@@ -412,7 +412,7 @@ CURSOR_DRAG = const(0.8)
 
 loadShape("square")
 
-engine.set_fps_limit(60)
+engine.fps_limit(60)
 
 while True:
     if engine.tick():

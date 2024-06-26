@@ -8,7 +8,7 @@ import math
 from engine_math import Vector2
 from engine_nodes import Rectangle2DNode, Circle2DNode, CameraNode, PhysicsRectangle2DNode, PhysicsCircle2DNode
 
-engine.set_fps_limit(60)
+engine.fps_limit(60)
 engine_physics.set_gravity(0, 0)
 
 
@@ -35,7 +35,7 @@ class Border(PhysicsRectangle2DNode):
         elif(direction == "v"):
             self.width = table_wall_thickness_mm
             self.height = length
-        
+
         self.position = position
         self.outline = True
         self.dynamic = False
@@ -64,7 +64,7 @@ class PowerIndicator(Rectangle2DNode):
         self.add_child(self.bar)
 
         self.set_percent(0)
-    
+
     def set_percent(self, percent):
         self.bar.width = (self.width) * percent
         self.bar.position.x = 1 - self.width/2 + self.bar.width/2
@@ -76,8 +76,8 @@ class Ball(PhysicsCircle2DNode):
 
         self.outline = True
         self.radius = ball_dia_mm/2
-    
-    def tick(self, dt):    
+
+    def tick(self, dt):
         vel_length = self.velocity.length()
         if vel_length > 0.5:
             normal = self.velocity.normalized()
@@ -112,17 +112,17 @@ class Stick(Rectangle2DNode):
             self.ball.rotation -= 0.025
         elif engine_io.RB.is_pressed:
             self.ball.rotation += 0.025
-        
+
         # Power
         if engine_io.DOWN.is_pressed:
             self.power += 1
 
             if self.power > self.max_power:
                 self.power = self.max_power
-        
+
         percent = self.power / self.max_power
         self.power_indicator.set_percent(self.power / self.max_power)
-        
+
         # Shoot
         if engine_io.DOWN.is_just_released:
             self.ball.velocity.x = -math.cos(self.ball.rotation - math.pi/2) * self.power
@@ -133,7 +133,7 @@ class Stick(Rectangle2DNode):
 class GameCamera(CameraNode):
     def __init__(self):
         super().__init__(self)
-    
+
     def tick(self, dt):
         if engine_io.A.is_pressed:
             self.zoom += 0.005

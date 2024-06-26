@@ -90,7 +90,7 @@ def get_games_in_dir(dir):
 
 games = get_games_in_dir("Games")
 
-engine.set_fps_limit(60)
+engine.fps_limit(60)
 
 font = FontResource("assets/outrunner_outline.bmp")
 launcher_tile_texture = TextureResource("assets/launcher-tile.bmp")

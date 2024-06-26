@@ -9,7 +9,7 @@ from engine_math import Vector2
 from engine_nodes import Rectangle2DNode, Circle2DNode, CameraNode, PhysicsRectangle2DNode, PhysicsCircle2DNode
 import random
 
-engine.set_fps_limit(30)
+engine.fps_limit(30)
 
 # Don't want gravity in pong, zero out the axes
 engine_physics.set_gravity(0, 0)
@@ -54,7 +54,7 @@ class PlayerPaddle(PhysicsRectangle2DNode):
         self.add_child(self.paddle_rectangle)
 
         self.contact_anim_counter = 100
-    
+
     def tick(self, dt):
         self.velocity.x = 0
         self.position.x = -50
@@ -71,7 +71,7 @@ class PlayerPaddle(PhysicsRectangle2DNode):
             self.velocity.y = 1.5
         else:
             self.velocity.y = 0
-    
+
     def collision(self, contact_point):
         # On contact with anything, flash color for a bit
         self.contact_anim_counter = 0
@@ -89,7 +89,7 @@ class AIPaddle(PhysicsRectangle2DNode):
         self.add_child(self.paddle_rectangle)
 
         self.contact_anim_counter = 100
-    
+
     def tick(self, dt):
         self.velocity.x = 0
         self.position.x = 50
@@ -108,7 +108,7 @@ class AIPaddle(PhysicsRectangle2DNode):
                 self.velocity.y = 1.5
         else:
             self.velocity.y = 0
-    
+
     def collision(self, contact_point):
         # On contact with anything, flash color for a bit
         self.contact_anim_counter = 0
