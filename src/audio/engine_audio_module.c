@@ -144,11 +144,7 @@ volatile float master_volume = 1.0f;
                 source->play_counter = 0;
             }else if(source->sample_rate == 22050 && source->play_counter == 1){
                 source->play_counter = 0;
-            }
-            // else if(source->sample_rate == 44100 && source->play_counter == 1){
-            //     source->play_counter = 0;
-            // }
-            else{
+            }else{
                 source->play_counter++;
                 return source->last_sample;
             }
@@ -167,8 +163,6 @@ volatile float master_volume = 1.0f;
                 uint8_t sample_byte = channel->buffers[buffer_index][buffer_byte_offset];       // Get sample as unsigned 8-bit value from 0 to 255
                 source->last_sample = (int8_t)(sample_byte - 128);                              // Center sample in preparation for scaling to -1.0 ~ 1.0. Subtract 128 so that 0 -> -128 and 255 -> 127
                 source->last_sample = source->last_sample / (float)INT8_MAX;                    // Scale from -128 ~ 127 to -1.0078 ~ 1.0 (will clamp later)
-                source->last_sample = source->last_sample * channel->gain * master_volume;      // Scale sample by channel gain and master volume (that can be 0.0 ~ 1.0 each)
-                source->last_sample = (engine_math_clamp(source->last_sample, -1.0f, 1.0f));    // Clamp volume scaled sample to -1.0 ~ 1.0
             }
             break;
             case 2:
@@ -177,8 +171,6 @@ volatile float master_volume = 1.0f;
                 uint8_t sample_byte_msb = channel->buffers[buffer_index][buffer_byte_offset+1]; // Get the left-most 8-bits as unsigned 8-bit (really is signed 16-bit byte, bits will still exist in same pattern)
                 source->last_sample = (int16_t)((sample_byte_msb << 8) + sample_byte_lsb);      // Combine bytes to make signed 16-bit value from -32768 ~ 32767
                 source->last_sample = source->last_sample / (float)INT16_MAX;                   // Scale from -32768 ~ 32767 to -1.000031 ~ 1.0 (will clamp later)
-                source->last_sample = source->last_sample * channel->gain * master_volume;      // Scale sample by channel gain and master volume (that can be 0.0 ~ 1.0 each)
-                source->last_sample = engine_math_clamp(source->last_sample, -1.0f, 1.0f);      // Clamp volume scaled sample to -1.0 ~ 1.0
             }
             break;
             default:
@@ -222,14 +214,17 @@ volatile float master_volume = 1.0f;
 
             // Playing at least one sample, switch flag
             play_sample = true;
+            float sample = 0.0f;
 
             if(mp_obj_is_type(channel->source, &wave_sound_resource_class_type)){
-                total_sample += get_wave_sample(channel, &complete);
+                sample = get_wave_sample(channel, &complete);
             }else if(mp_obj_is_type(channel->source, &tone_sound_resource_class_type)){
-                total_sample += get_tone_sample(channel);
+                sample = get_tone_sample(channel);
             }else if(mp_obj_is_type(channel->source, &rtttl_sound_resource_class_type)){
-                total_sample += get_rtttl_sample(channel, &complete);
+                sample = get_rtttl_sample(channel, &complete);
             }
+
+            total_sample += sample * channel->gain * master_volume;
 
             if(complete && channel->loop == false){
                 audio_channel_stop(channel);
@@ -294,10 +289,6 @@ void engine_audio_setup(){
     #if defined(__unix__)
         // Nothing to do
     #elif defined(__arm__)
-        // if(add_repeating_timer_us((int64_t)((1.0/ENGINE_AUDIO_SAMPLE_RATE) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer) == false){
-        //     mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("AudioModule: No timer slots available, could not audio callback!"));
-        // }
-
         //generate the interrupt at the audio sample rate to set the PWM duty cycle
         audio_callback_pwm_pin_slice = pwm_gpio_to_slice_num(AUDIO_CALLBACK_PWM_PIN);
         pwm_clear_irq(audio_callback_pwm_pin_slice);
@@ -414,11 +405,14 @@ MP_DEFINE_CONST_FUN_OBJ_3(engine_audio_play_obj, engine_audio_play);
     NAME: set_volume
     ID: set_volume
     DESC: Sets the master volume clamped between 0.0 and 1.0. In the future, this will be persistent and stored/restored using a settings file (TODO)
-    PARAM: [type=float] [name=set_volume] [value=0.0 ~ 1.0]
+    PARAM: [type=float] [name=set_volume] [value=any]
     RETURN: None
 */
 static mp_obj_t engine_audio_set_volume(mp_obj_t new_volume){
-    master_volume = engine_math_clamp(mp_obj_get_float(new_volume), 0.0f, 1.0f);
+    // Don't clamp so that users can clip their waveforms
+    // which adds more area under the curve and therefore
+    // is louder (sounds worse though)
+    master_volume = mp_obj_get_float(new_volume);
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(engine_audio_set_volume_obj, engine_audio_set_volume);
@@ -434,7 +428,6 @@ static mp_obj_t engine_audio_get_volume(){
     return mp_obj_new_float(master_volume);
 }
 MP_DEFINE_CONST_FUN_OBJ_0(engine_audio_get_volume_obj, engine_audio_get_volume);
-
 
 
 static mp_obj_t engine_audio_module_init(){
