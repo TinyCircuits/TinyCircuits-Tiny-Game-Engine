@@ -25,7 +25,7 @@
 volatile mp_obj_t channels[CHANNEL_COUNT];
 
 // The master volume that all mixed samples are scaled by (0.0 ~ 1.0)
-volatile float master_volume = 1.0f;
+volatile float master_volume = 10.0f;
 
 
 #if defined(__unix__)

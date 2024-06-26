@@ -10,8 +10,16 @@ typedef struct{
     audio_channel_class_obj_t *channel;
 
     float frequency;
-    float omega;
 
+    float next_frequency;
+    uint8_t fade_type;
+    float fade_factor;
+    // float moving_to_target;
+    // float target_frequency_start;
+    // float target_frequency_end;
+    // float target_frequency_interp;
+
+    float omega;
     float time;
     bool busy;
 }tone_sound_resource_class_obj_t;

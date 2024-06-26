@@ -10,11 +10,56 @@
 
 
 #include "../lib/cglm/include/cglm/util.h"
+#include "../lib/cglm/include/cglm/ease.h"
 
+enum fade_types {FADE_NONE=0, FADE_DOWN=1, FADE_UP=2};
+
+#define STEP 0.025f
 
 float ENGINE_FAST_FUNCTION(tone_sound_resource_get_sample)(tone_sound_resource_class_obj_t *self){
+    
+    // if(self->moving_to_target){
+    //     // self->target_frequency_interp += STEP;
+
+    //     // if(self->target_frequency_interp < 1.0f){
+    //     //     // self->frequency = glm_lerp(self->target_frequency_start, self->target_frequency_end, glm_ease_exp_out(self->target_frequency_interp));
+    //     //     self->frequency = glm_lerp(self->target_frequency_start, self->target_frequency_end, self->target_frequency_interp);
+    //     // }else{
+    //     //     self->frequency = self->target_frequency_end;
+    //     //     self->moving_to_target = false;
+    //     // }
+        
+    //     // self->omega = 2.0f * PI * self->frequency;
+    // }
+
+    float gain = 1.0f;
+
+    if(self->fade_type == FADE_DOWN){
+        self->fade_factor += STEP;
+
+        if(self->fade_factor < 1.0f){
+            gain = glm_lerp(1.0f, 0.0, self->fade_factor);
+        }else{
+            gain = 0.0f;
+            self->frequency = self->next_frequency;
+            self->omega = 2.0f * PI * self->frequency;
+
+            self->fade_type = FADE_UP;
+            self->fade_factor = 0.0f;
+        }
+    }else if(self->fade_type == FADE_UP){
+        self->fade_factor += STEP;
+
+        if(self->fade_factor < 1.0f){
+            gain = glm_lerp(0.0f, 1.0, self->fade_factor);
+        }else{
+            self->fade_type = FADE_NONE;
+            gain = 1.0f;
+        }
+    }
+
     // float sample = engine_math_fast_sin(self->omega * self->time);
-    float sample = sinf(self->omega * self->time);
+    float sample = sinf(self->omega * self->time) * gain;
     self->time += ENGINE_AUDIO_SAMPLE_DT;
     return sample;
 }
@@ -33,13 +78,18 @@ mp_obj_t tone_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
     self->omega = 2.0f * PI * self->frequency;
     self->time = 0.0f;
 
+    self->next_frequency = 0.0f;
+    self->fade_type = FADE_NONE; 
+    self->fade_factor = 0.0f;
+
     return MP_OBJ_FROM_PTR(self);
 }
 
 
 void tone_sound_resource_set_frequency(tone_sound_resource_class_obj_t *self, float frequency){
-    self->frequency = frequency;
-    self->omega = 2.0f * PI * self->frequency;
+    self->next_frequency = frequency;
+    self->fade_type = FADE_DOWN;
+    self->fade_factor = 0.0f;
 }
 
 
