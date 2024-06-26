@@ -2,7 +2,7 @@ import engine
 from engine_nodes import CameraNode, Text2DNode
 from engine_resources import FontResource
 
-engine.set_fps_limit(60)
+engine.fps_limit(60)
 
 font = FontResource("assets/outrunner_outline.bmp")
 

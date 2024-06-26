@@ -103,7 +103,7 @@ from engine_nodes import Sprite2DNode, CameraNode
 from engine_resources import TextureResource
 
 # Set the FPS limit so that game code doesn't run too fast
-engine.set_fps_limit(60)
+engine.fps_limit(60)
 
 # All BMPs need to be saved in RGB565 16-bit (no alpha)
 background_texture = TextureResource("background.bmp")

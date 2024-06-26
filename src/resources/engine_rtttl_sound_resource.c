@@ -14,26 +14,23 @@
 
 
 // https://producelikeapro.com/blog/wp-content/uploads/2022/01/Understanding-Note-Frequency-Charts-And-Why-You-Should-Be-Using-One_2.jpg
-const float octave_4_notes[14] = {
+const float octave_4_notes[7] = {
     440.00f,    // A
-    466.16f,    // A#
-
     493.88f,    // B
-    0.0f,       // Doesn't exist, for mapping only
-
     261.63f,    // C
-    277.18f,    // C#
-
     293.66f,    // D
-    311.13f,    // D#
-
     329.63f,    // E
-    0.0f,       // Doesn't exist, for mapping only
-
     349.23f,    // F
-    369.99f,    // F#
-
     392.00f,    // G
+};
+
+const float octave_4_notes_flat[7] = {
+    466.16f,    // A#
+    0.0f,       // B# Doesn't exist, for mapping only
+    277.18f,    // C#
+    311.13f,    // D#
+    0.0f,       // E# Doesn't exist, for mapping only
+    369.99f,    // F#
     415.30f     // G#
 };
 
@@ -52,156 +49,285 @@ const uint8_t ascii_to_note_offset_small = 97;
 //      freq = 440 * pwr_of_2 = 440*8 = 3520Hz (works!)
 const uint8_t octave_base = 4;
 
+// if the beats per minute is 112[b/m] then that
+// means the beats per second is 112[b/m] * 1[m]/60[s]
+// = 1.86[b/s]. This also means that the seconds per
+// beat is 1/1.86[b/s] = 0.54[s/b], therefore, the
+// interrupt samples per beat is 22050[samples/s] * 0.54[s/b] = 11854[samples/b]
+//
+//  https://www.pinterest.co.uk/pin/understanding-notes-and-rests-in-music-notation-reference-sheet--519039925783242366/
+//
+// Therefore, interrupt samples per 8th beat = 11864[samples/b] * 1[b]/8[8thb] = 1483[samples/8thb]
+//
+// Now, for various note durations, the actual duration a note lasts during a full beat (8 8th beats) is
+//  * note duration = 1  = (1/1)  * 4[b] = 4[b]     -> 8th_beats_per_this_note = 4[b]
+//  * note duration = 2  = (1/2)  * 4[b] = 2[b]     -> 8th_beats_per_this_note = 2[b]
+//  * note duration = 4  = (1/4)  * 4[b] = 1[b]     -> 8th_beats_per_this_note = 1[b]
+//  * note duration = 8  = (1/8)  * 4[b] = 0.5[b]   -> 8th_beats_per_this_note = 0.5[b]
+//  * note duration = 16 = (1/16) * 4[b] = 0.25[b]  -> 8th_beats_per_this_note = 0.25[b]
+//  * note duration = 32 = (1/32) * 4[b] = 0.125[b] -> 8th_beats_per_this_note = 0.125[b]
+//
+// If b=25 then 
+//      seconds_per_beat = 25[b/m] * 1[m]/60[s] = 0.42[b/s] -> 1/0.42[b/s] = 2.4[s/b] = seconds_per_beat
+//  ->  interrupt_samples_per_beat = 22050[samples/s] * 2.4[s/b] = 52920[samples/b] = interrupt_samples_per_beat
+//  ->  note duration = 1 -> interrupt_samples_this_note = 4[b] * 52920[samples/b] = 211680[samples]
+
 
 float ENGINE_FAST_FUNCTION(rtttl_sound_resource_get_sample)(rtttl_sound_resource_class_obj_t *self, bool *complete){
-    self->seconds_since_8th_beat += ENGINE_AUDIO_SAMPLE_DT;
+    if(self->interrupt_samples_counting >= self->interrupt_samples_until_next){
+        // Reset counter and cast data to something more accessible
+        self->interrupt_samples_counting = 0;
+        uint8_t *data = ENGINE_BYTEARRAY_OBJ_TO_DATA(self->data);
 
-    // Notes are played/checked at smallest time division
-    // of eighth notes
-    if(self->seconds_since_8th_beat >= self->seconds_per_8th_beat){
-        self->seconds_since_8th_beat = 0.0f;
-        self->note_beat_count++;
+        // Copy data into types from track
+        uint32_t index = self->note_cursor * 8;
+        uint32_t duration = 0;
+        float frequency = 0.0f;
 
-        // Only change notes when the current note has played
-        // for enough beats
-        if(self->note_beat_count >= self->note_beat_duration){
-            self->note_beat_count = 0;
+        memcpy(&duration, data+index, 4);
+        memcpy(&frequency, data+index+4, 4);
 
-            // The attributes of the note we need to collect are:
-            // * duration
-            // * pitch (frequency/note)
-            // * octave (power of 2 frequency multiplier)
-            // * rest (should we actually do nothing this duration?)
-            self->note_beat_duration = self->default_d;
-            self->rest = false;
-            uint8_t note_octave = self->default_o;
+        // Use the data to set the duration this
+        // note will return samples for and
+        // then set the frequency
+        self->interrupt_samples_until_next = duration;
+        tone_sound_resource_set_frequency(self->tone, frequency);
 
-            // When/if a note is found, save it's index.
-            // If a flat/# is found, add 1 to this index
-            uint8_t note_index = 0;
-            bool note_collected = false;
-
-            // Duration (1, 2, 4, 8, 16, 32) and octave (4, 5, 6, 7) will both be stored here
-            char duration_digits[3] = {'0', '\0', '\0'};
-            char octave_digits[2] = {'0', '\0'};
-            uint8_t duration_digit_index = 0;
-
-            bool dotted = false;
-
-            // Get the character at current cursor position
-            uint8_t *data = ENGINE_BYTEARRAY_OBJ_TO_DATA(self->data);
-            uint8_t current_char = data[self->cursor];
-
-            // While not a comma, collect note and configure tone afterwards
-            while(current_char != 44){
-                // Evaluate current character and set flags for state-machine
-
-                // Is this an ASCII base-10 number/digit?
-                // If not a digit, is it the letter p?
-                // If not p, is it a flat/#? 
-                // If not a flat, is it a dot?
-                // if not a dot, is it a note?
-                if(current_char >= 49 && current_char <= 57){
-                    // Handle digit
-
-                    // If we've collected a note, must be the octave
-                    if(note_collected){
-                        octave_digits[0] = current_char;
-                    }else{
-                        duration_digits[duration_digit_index] = current_char;
-                        duration_digit_index++;
-                    }
-                }else if(current_char == 112){
-                    // Handle pause
-                    self->rest = true;
-                }else if(current_char == 35){
-                    // Handle flat/#
-                    note_index += 1;
-                }else if(current_char == 46){
-                    // Handle dot
-                    dotted = true;
-                }else{
-                    // Handle note
-                    // Depending on if upper or lower case char,
-                    // get the correct pitch from the table
-                    if(current_char >= 65 && current_char <= 71){           // Upper
-                        note_index = current_char - ascii_to_note_offset_large;
-                    }else if(current_char >= 97 && current_char <= 103){    // Lower
-                        note_index = current_char - ascii_to_note_offset_small;
-                    }else{
-                        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("RTTTLSoundResource: ERROR: Encountered a character that's not supported!"));
-                    }
-
-                    note_collected = true;
-                }
-
-                // Progress to the next char
-                self->cursor++;
-
-                if(self->cursor >= self->data_size){
-                    break;
-                }
-
-                current_char = data[self->cursor];
-            }
-
-
-            // Now that the information is extracted, set the duration and tone
-            if(duration_digit_index > 0){
-                self->note_beat_duration = atoi(duration_digits);
-
-                // A note divisor of 1 means this note gets 4 beats
-                // but needs to last 4 * 8 = 32 8th notes (that's the playback rate)
-                // A note divisor of 32 means this note gets 1/8th beat
-                // but needs to last 4/32 * 8 = 1 8th note
-                self->note_beat_duration = (uint8_t)((4.0f / self->note_beat_duration) * 8.0f);
-
-                // https://www.mobilefish.com/tutorials/rtttl/rtttl_quickguide_specification.html#:~:text=A%20dotted%20duration%20is%20one%20in%20which%20a%20note%20is%20given%20the%20duration%20of%20%22itself%20%2B%20half%20of%20itself.%22
-                if(dotted){
-                    self->note_beat_duration += self->note_beat_duration / 2;
-                }
-            }
-
-            if(self->rest == false && octave_digits[0] != '0'){
-                note_octave = atoi(octave_digits);
-            }
-
-            if(self->rest == false){
-                float frequency = octave_4_notes[note_index];
-                uint8_t note_octave_power_of_2 = note_octave - octave_base;
-
-                frequency = frequency * powf(2.0f, note_octave_power_of_2);
-
-                tone_sound_resource_set_frequency(self->tone, frequency);
-            }
-
-            // If we end, loop, otherwise skip comma
-            if(self->cursor >= self->data_size){
-                self->cursor = 0;
-                *complete = true;
-            }else{
-                // Skip comma
-                self->cursor++;
-            }
+        // Loop if reach end of track
+        self->note_cursor++;
+        if(self->note_cursor >= self->note_count){
+            self->note_cursor = 0;
         }
     }
 
-    // Always return the current note that should be playing
-    if(self->rest == false){
-        return tone_sound_resource_get_sample(self->tone);
+    self->interrupt_samples_counting++;
+    return tone_sound_resource_get_sample(self->tone);
+}
+
+
+bool rtttl_sound_resource_get_substr(void *substr, uint8_t substr_max_len, const char *start, uint8_t start_len, const char *end, uint8_t end_len){
+    uint32_t file_size = engine_file_size(0);
+    
+    // Search for start and end substrings
+    uint32_t start_offset = engine_file_seek_until(0, start, start_len);
+    uint32_t end_offset = engine_file_seek_until(0, end, end_len);
+
+    // If start not found, return false
+    if(start_offset == file_size){
+        return false;
+    }
+
+    // Correct end offset to refer to end of substring
+    // as long as not at end of file, in which case,
+    // the end offset is assumed to be correct
+    if(end_offset != file_size) end_offset -= end_len;
+
+    // If size of substring is too large, return false
+    uint32_t substr_len = end_offset - start_offset;
+    if(substr_len > substr_max_len){
+        return false;
+    }
+
+    // Made it through all the checks, read the substring
+    engine_file_seek(0, start_offset, MP_SEEK_SET);
+    engine_file_read(0, substr, substr_len);
+
+    return true;
+}
+
+
+bool rtttl_sound_resource_extract_default(uint16_t *output, const char *start, const char *end){
+    // Always look from start
+    engine_file_seek(0, 0, MP_SEEK_SET);
+
+    char buffer[4] = {'0', '\0', '\0', '\0'};
+    if(rtttl_sound_resource_get_substr(buffer, 3, start, 2, end, 1)){
+        *output = atoi(buffer);
+        return true;
+    }
+
+    return false;
+}
+
+
+void rtttl_sound_resource_get_defaults(uint8_t *note_duration, uint8_t *octave, uint16_t *beats_per_minute){
+    // Try to extract default values. Try twice since,
+    // depending on order, the substring could end with
+    // `,` or `:`
+    bool found_duration = rtttl_sound_resource_extract_default((uint16_t*)note_duration, "d=", ",");
+    bool found_octave = rtttl_sound_resource_extract_default((uint16_t*)octave, "o=", ",");
+    bool found_beats_per_minute = rtttl_sound_resource_extract_default(beats_per_minute, "b=", ",");
+
+    if(found_duration == false)         found_duration = rtttl_sound_resource_extract_default((uint16_t*)note_duration, "d=", ":");
+    if(found_octave == false)           found_octave = rtttl_sound_resource_extract_default((uint16_t*)octave, "o=", ":");
+    if(found_beats_per_minute == false) found_beats_per_minute = rtttl_sound_resource_extract_default(beats_per_minute, "b=", ":");
+
+    // https://www.mobilefish.com/tutorials/rtttl/rtttl_quickguide_specification.html#:~:text=defaults%20are%20assumed%3A-,d%3D4%2Co%3D6%2Cb%3D63.,-The%20data%20section
+    if(found_duration == false)         *note_duration = 4;
+    if(found_octave == false)           *octave = 6;
+    if(found_beats_per_minute == false) *beats_per_minute = 63;
+}
+
+
+uint16_t rtttl_sound_resource_count_notes(){
+    // Always look from start
+    engine_file_seek(0, 0, MP_SEEK_SET);
+
+    // Get to note data
+    engine_file_seek_until(0, ":", 1);
+    engine_file_seek_until(0, ":", 1);
+
+    // Start with one noted counted since
+    // last note does not end with comma
+    uint16_t note_count = 1;
+
+    // The current character
+    char c = ' ';
+
+    // Read until the end of the file
+    while(engine_file_read(0, &c, 1) != 0){
+        if(c == ',') note_count++;
+    }
+
+    return note_count;
+}
+
+
+bool rtttl_sound_resource_get_next(uint32_t *note_interrupt_samples, float *note_frequency, const char *start, uint8_t default_duration, uint8_t default_octave, uint16_t bpm){
+    // Longest note: 32a#7.
+    char note_buffer[7] = {'\0', '\0', '\0', '\0', '\0', '\0', '\0'};
+
+    // Try to find note
+    if(rtttl_sound_resource_get_substr(note_buffer, 6, start, 1, ",", 1) == false){
+        return false;
+    }
+
+    // Setup for extracting specific data and then extract note info
+    char duration_buffer[3] = {'\0', '\0', '\0'};
+    char octave_buffer[2] = {'\0', '\0'};
+
+    bool note_collected = false;        // Flag switched when note collected so that next digit is put in octave buffer (duration -> note -> octave)
+    uint8_t duration_index = 0;         // Index into `duration_buffer` for where next digit should be placed
+    uint8_t octave_4_index = 0;         // Index into `octave_4_notes` based on note
+    bool octave_flat = false;
+    bool dotted = false;                // Flag switched to indicate if duration should be increased by one half
+    bool paused = false;                // Flag switched to indicate if this is just a pause
+    uint8_t note_buffer_index = 0;
+    char current_char = note_buffer[note_buffer_index];
+
+    while(current_char != '\0'){
+        // Is this an ASCII base-10 number/digit?
+        // If not a digit, is it the letter p?
+        // If not p, is it a flat/#? 
+        // If not a flat, is it a dot?
+        // if not a dot, is it a note?
+        if((uint8_t)current_char >= 49 && (uint8_t)current_char <= 57){
+            // Handle digit
+
+            // If we've collected `duration_collected`, must be the octave
+            if(note_collected){
+                octave_buffer[0] = current_char;
+            }else{
+                duration_buffer[duration_index] = current_char;
+                duration_index++;
+            }
+        }else if(current_char == 'p'){
+            // Handle pause
+            paused = true;
+        }else if(current_char == '#'){
+            // Handle flat/#
+            octave_flat = true;
+        }else if(current_char == '.'){
+            // Handle dot
+            dotted = true;
+        }else{
+            // Handle note
+            // Depending on if upper or lower case char,
+            // get the correct pitch from the table
+            if((uint8_t)current_char >= 65 && (uint8_t)current_char <= 71){           // Upper
+                octave_4_index = (uint8_t)current_char - ascii_to_note_offset_large;
+            }else if((uint8_t)current_char >= 97 && (uint8_t)current_char <= 103){    // Lower
+                octave_4_index = (uint8_t)current_char - ascii_to_note_offset_small;
+            }else{
+                mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("RTTTLSoundResource: ERROR: Encountered a character that's not supported!"));
+            }
+
+            note_collected = true;
+        }
+
+        note_buffer_index++;
+        current_char = note_buffer[note_buffer_index];
+    }
+
+    // If the duration buffer was filled with something,
+    // decode duration, otherwise user default (same
+    // for octave)
+    uint8_t rtttl_note_duration = 0;
+    if(duration_buffer[0] != '\0'){
+        rtttl_note_duration = atoi(duration_buffer);
     }else{
-        return 0.0f;
+        rtttl_note_duration = default_duration;
+    }
+
+    uint8_t note_octave = 0;
+    if(octave_buffer[0] != '\0'){
+        note_octave = atoi(octave_buffer);
+    }else{
+        note_octave = default_octave;
+    }
+
+    float beats_per_second = bpm/60.0f;
+    float seconds_per_beat = 1.0f/beats_per_second;
+    float interrupt_samples_per_beat = ENGINE_AUDIO_SAMPLE_RATE * seconds_per_beat;
+
+    // Based on the beats per minute, calculate how many
+    // times the playback interrupt get_sample function
+    // needs to be called for this note.
+    // A whole note gets 4 beats and everything is a fraction
+    // of that
+    float note_beats = (1.0f/(float)rtttl_note_duration) * 4.0f;
+    *note_interrupt_samples = (uint32_t)(note_beats * interrupt_samples_per_beat);
+
+    // https://www.mobilefish.com/tutorials/rtttl/rtttl_quickguide_specification.html#:~:text=optional%20dotting%20(which%20increases%20the%20duration%20of%20the%20note%20by%20one%20half)
+    if(dotted){
+        *note_interrupt_samples = *note_interrupt_samples + (*note_interrupt_samples/2);
+    }
+    
+    if(paused){
+        *note_frequency = 0.0f;
+        return true;
+    }else{
+        // Lookup base octave-4 frequency depending on if flat or not
+        if(octave_flat){
+            *note_frequency = octave_4_notes_flat[octave_4_index];
+        }else{
+            *note_frequency = octave_4_notes[octave_4_index];
+        }
+        
+        // Multiply up to frequency using base and octave
+        if(note_octave > octave_base){
+            uint8_t note_octave_power_of_2 = note_octave - octave_base;
+            *note_frequency = *note_frequency * powf(2.0f, note_octave_power_of_2);
+        }
+        return true;
     }
 }
 
 
-void rtttl_sound_resource_set_b(rtttl_sound_resource_class_obj_t *self, uint16_t b){
-    self->b = b;
+void rtttl_sound_resource_store_note(uint32_t note_interrupt_samples, float note_frequency){
+    uint8_t data[4];
 
-    // Calculate beats per minute and divide by 8 to account for 1/32 notes:
-    // https://images.app.goo.gl/J4eHkGHcoSyJuZ5W6
-    self->seconds_per_8th_beat = (60.0f / (float)self->b) / 8.0f;
-    self->seconds_since_8th_beat = 0.0f;
+    memcpy(data, &note_interrupt_samples, 4);
+    engine_resource_store_u8(data[0]);
+    engine_resource_store_u8(data[1]);
+    engine_resource_store_u8(data[2]);
+    engine_resource_store_u8(data[3]);
+
+    memcpy(data, &note_frequency, 4);
+    engine_resource_store_u8(data[0]);
+    engine_resource_store_u8(data[1]);
+    engine_resource_store_u8(data[2]);
+    engine_resource_store_u8(data[3]);
 }
 
 
@@ -214,127 +340,50 @@ mp_obj_t rtttl_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args
     self->channel = NULL;
     self->tone = tone_sound_resource_class_new(&tone_sound_resource_class_type, 0, 0, NULL);
     self->data = NULL;
-    self->data_size = 0;
-    self->cursor = 0;
-
-    // https://www.mobilefish.com/tutorials/rtttl/rtttl_quickguide_specification.html#:~:text=defaults%20are%20assumed%3A-,d%3D4%2Co%3D6%2Cb%3D63.,-The%20data%20section
-    self->default_d = 4;
-    self->default_o = 6;
-    rtttl_sound_resource_set_b(self, 63);
-
-    self->note_beat_duration = 0;
-    self->note_beat_count = 0;
-    self->rest = false;
+    self->interrupt_samples_until_next = 0;
+    self->interrupt_samples_counting = 0;
+    self->note_cursor = 0;
 
     // Open one-time file
     engine_file_open_read(0, args[0]);
-    self->data_size = engine_file_size(0);
 
-    // ### STEP 1: Don't care about the name, subtract name colon from the size ###
-    // Need to subtract non-data portion of file size.
-    // Subtract a byte until we find first colon or at
-    // least stop if no colon is found and the data is all
-    // the way subtracted
-    uint8_t current_char = engine_file_seek_get_u8(0, self->cursor);
-    while(current_char != 58 && self->data_size != 0){
-        self->cursor++;
-        self->data_size--;
-        current_char = engine_file_seek_get_u8(0, self->cursor);
-    }
+    // Get default note duration, octave, and bpm
+    uint8_t default_duration = 0;
+    uint8_t default_octave = 0;
+    uint16_t beats_per_minute = 0;
 
-    // Skip the colon and subtract the first colon from the size
-    self->cursor++;
-    self->data_size--;
+    rtttl_sound_resource_get_defaults(&default_duration,
+                                      &default_octave,
+                                      &beats_per_minute);
+    
+    // Get note count
+    self->note_count = rtttl_sound_resource_count_notes();
 
-    // ### STEP 2: Subtract the default value section from the size and get the default values ###
-    char default_duration_digits[3] = {'0', '\0', '\0'};
-    char default_octave_digits[3] = {'0', '\0', '\0'};
-    char default_beats_digits[4] = {'0', '\0', '\0', '\0'};
-    uint8_t duration_digit_index = 0;
-    uint8_t octave_digit_index = 0;
-    uint8_t beats_digit_index = 0;
-    char gathering_default = ' ';
-
-    current_char = engine_file_seek_get_u8(0, self->cursor);
-    while(current_char != 58 && self->data_size != 0){  // ;
-        switch(current_char){
-            case 100:   // d
-            {
-                gathering_default = 'd';
-                self->cursor++; // Skip `=`
-                self->data_size--;
-            }
-            break;
-            case 111:   // o
-            {
-                gathering_default = 'o';
-                self->cursor++; // Skip `=`
-                self->data_size--;
-            }
-            break;
-            case 98:    // b
-            {
-                gathering_default = 'b';
-                self->cursor++; // Skip `=`
-                self->data_size--;
-            }
-            break;
-            default:
-            {
-                if(current_char != 44){ // ,
-                    if(gathering_default == 'd'){
-                        default_duration_digits[duration_digit_index] = current_char;
-                        duration_digit_index++;
-                    }else if(gathering_default == 'o'){
-                        default_octave_digits[octave_digit_index] = current_char;
-                        octave_digit_index++;
-                    }else if(gathering_default == 'b'){
-                        default_beats_digits[beats_digit_index] = current_char;
-                        beats_digit_index++;
-                    }
-                }
-            }
-        }
-
-        self->cursor++;
-        self->data_size--;
-        current_char = engine_file_seek_get_u8(0, self->cursor);
-    }
-
-    // Actually assign the default values from the extracted strings
-    if(duration_digit_index > 0){
-        self->default_d = atoi(default_duration_digits);
-    }
-
-    if(octave_digit_index > 0){
-        self->default_o = atoi(default_octave_digits);
-    }
-
-    if(beats_digit_index > 0){
-        rtttl_sound_resource_set_b(self, atoi(default_beats_digits));
-    }
-
-    // Skip the colon and subtract the second colon from the size
-    self->cursor++;
-    self->data_size--;
-
-    // Get space in ram for notes to live
-    self->data = engine_resource_get_space_bytearray(self->data_size, true);
+    // To reduce interrupt complexity, for each note cache
+    //  * Times get_sample needs to be called before moving to next sample (32-bits/4 bytes)
+    //  * Complete frequency (32-bits/4 bytes)
+    self->data = engine_resource_get_space_bytearray(self->note_count * (4+4), true);
     engine_resource_start_storing(self->data, true);
 
-    // One byte at a time, copy data from LFS to scratch space
-    for(uint32_t idx=0; idx<self->data_size; idx++){
-        engine_resource_store_u8(engine_file_seek_get_u8(0, self->cursor));
-        self->cursor++;
+    // Get to first `:` to skip it
+    engine_file_seek(0, 0, MP_SEEK_SET);
+    engine_file_seek_until(0, ":", 1);
+
+    uint32_t note_interrupt_samples = 0;
+    float note_frequency = 0.0f;
+
+    // Get the first note starting with `:`
+    rtttl_sound_resource_get_next(&note_interrupt_samples, &note_frequency, ":", default_duration, default_octave, beats_per_minute);
+    rtttl_sound_resource_store_note(note_interrupt_samples, note_frequency);
+
+    // Get the rest of the notes starting with `,`
+    while(rtttl_sound_resource_get_next(&note_interrupt_samples, &note_frequency, ",", default_duration, default_octave, beats_per_minute)){
+        rtttl_sound_resource_store_note(note_interrupt_samples, note_frequency);
     }
-    
+
     // Stop storing and close one-time file
     engine_resource_stop_storing();
     engine_file_close(0);
-
-    // Reset cursor to play music instead of seek through file
-    self->cursor = 0;
-    self->data_size--;  // <- not exactly sure why one less is needed not to seg fault
 
     return MP_OBJ_FROM_PTR(self);
 }
@@ -381,9 +430,6 @@ static void rtttl_sound_resource_class_attr(mp_obj_t self_in, qstr attribute, mp
             case MP_QSTR_tone:
                 destination[0] = self->tone;
             break;
-            case MP_QSTR_tempo:
-                destination[0] = mp_obj_new_int(self->b);   // beats per minute
-            break;
             case MP_QSTR_data:
                 destination[0] = self->data;
             break;
@@ -392,12 +438,8 @@ static void rtttl_sound_resource_class_attr(mp_obj_t self_in, qstr attribute, mp
         }
     }else if(destination[1] != MP_OBJ_NULL){    // Store
         switch(attribute){
-            case MP_QSTR_tempo:
-                self->b = mp_obj_get_int(destination[1]);
-            break;
             case MP_QSTR_data:
-                self->data = destination[1];
-                self->data_size = ENGINE_BYTEARRAY_OBJ_LEN(self->data);
+                mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("RTTTLSoundResource: ERROR: Setting data directly is not allowed!"));
             break; 
             default:
                 return; // Fail

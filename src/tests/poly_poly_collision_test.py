@@ -9,7 +9,7 @@ from engine_math import Vector3, Vector2, Rectangle
 from engine_resources import TextureResource
 import math
 
-engine.set_fps_limit(60)
+engine.fps_limit(60)
 engine_physics.set_physics_fps_limit(60)
 
 

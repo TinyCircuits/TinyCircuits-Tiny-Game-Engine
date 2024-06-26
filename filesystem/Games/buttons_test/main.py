@@ -5,7 +5,7 @@ import engine
 import engine_io
 from system.root_dir import ROOT_DIR
 
-engine.fps_limit(15)
+engine.set_fps_limit(15)
 engine_io.gui_toggle_button(None)
 
 font = FontResource(f"{ROOT_DIR}/assets/outrunner_outline.bmp")

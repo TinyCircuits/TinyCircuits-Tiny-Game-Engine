@@ -8,7 +8,7 @@ import engine_draw
 import engine_io
 from engine_animation import Tween, ONE_SHOT, LOOP, PING_PONG, EASE_CIRC_IN_OUT, EASE_BOUNCE_IN, EASE_BOUNCE_OUT
 
-engine.set_fps_limit(120)
+engine.fps_limit(120)
 
 font = FontResource("9pt-roboto-font.bmp")
 

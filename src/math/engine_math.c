@@ -729,9 +729,11 @@ int16_t sin_table[512] = {
 0
 };
 
+const float factor = 512.0f / TWICE_PI;
+const float max16_factor = 1.0f / (float)INT16_MAX;
 
-float engine_math_fast_sin(float angle_radians){
-    angle_radians = fmodf(angle_radians, TWICE_PI);
-    angle_radians *= 512 / TWICE_PI;
-    return (float)((float)sin_table[(uint16_t)angle_radians] / (float)INT16_MAX);
+inline float engine_math_fast_sin(float angle_radians){
+    int angle_radians_quant = (int)(angle_radians * factor);
+    angle_radians_quant &= 511;
+    return (float)sin_table[angle_radians_quant] * max16_factor;
 }
