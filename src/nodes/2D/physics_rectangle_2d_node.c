@@ -41,7 +41,6 @@ void physics_rectangle_2d_node_class_draw(mp_obj_t rectangle_node_base_obj, mp_o
         color = outline_color->value;
     }
 
-    vector3_class_obj_t *camera_position = camera->position;
     rectangle_class_obj_t *camera_viewport = camera->viewport;
     float camera_zoom = mp_obj_get_float(camera->zoom);
 
@@ -63,11 +62,8 @@ void physics_rectangle_2d_node_class_draw(mp_obj_t rectangle_node_base_obj, mp_o
         node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
         camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
 
-        rectangle_rotated_x -= camera_resolved_hierarchy_x;
-        rectangle_rotated_y -= camera_resolved_hierarchy_y;
-
-        // Scale transformation due to camera zoom
-        engine_math_scale_point(&rectangle_rotated_x, &rectangle_rotated_y, camera_position->x.value, camera_position->y.value, camera_zoom);
+        rectangle_rotated_x = (rectangle_rotated_x - camera_resolved_hierarchy_x) * camera_zoom;
+        rectangle_rotated_y = (rectangle_rotated_y - camera_resolved_hierarchy_y) * camera_zoom;
 
         // Rotate rectangle origin about the camera
         engine_math_rotate_point(&rectangle_rotated_x, &rectangle_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
@@ -147,7 +143,7 @@ void engine_physics_rectangle_2d_node_calculate(engine_physics_node_base_t *phys
     // know the size of the final normal list size, just use
     // append for now: TODO). Only need two perpendicular normals
     // for checking collisions between rectangles
-    for(uint32_t ivx=0; ivx<2; ivx++){        
+    for(uint32_t ivx=0; ivx<2; ivx++){
         // 2D Cross product (perpendicular vector to the direction of the edge): FLIP: https://stackoverflow.com/a/1243676
         float temp_face_normal_x = vertices_x[ivx + 1] - vertices_x[ivx];
         float temp_face_normal_y = vertices_y[ivx + 1] - vertices_y[ivx];
@@ -185,10 +181,10 @@ static MP_DEFINE_CONST_FUN_OBJ_1(physics_rectangle_2d_node_class_del_obj, physic
     NAME: adjust_from_to
     ID: adjust_from_to
     DESC: Adjust position, rotation, and height such that the rectangle touches the `from` and `to` positions (`width` is not modifed)
-    PARAM: [type={ref_link:Vector2}] [name=from] [value={ref_link:Vector2}]       
-    PARAM: [type={ref_link:Vector2}] [name=to] [value={ref_link:Vector2}]                                                                                           
+    PARAM: [type={ref_link:Vector2}] [name=from] [value={ref_link:Vector2}]
+    PARAM: [type={ref_link:Vector2}] [name=to] [value={ref_link:Vector2}]
     RETURN: None
-*/ 
+*/
 mp_obj_t physics_rectangle_2d_node_class_adjust_from_to(mp_obj_t self_in, mp_obj_t from_in, mp_obj_t to_in){
     engine_node_base_t *node_base = self_in;
     engine_physics_node_base_t *physics_node_base = node_base->node;
@@ -457,7 +453,7 @@ static mp_attr_fun_t physics_rectangle_2d_node_class_attr(mp_obj_t self_in, qstr
 */
 mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New PhysicsRectangle2DNode");
-    
+
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_child_class,      MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_position,         MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
@@ -480,7 +476,7 @@ mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n
     enum arg_ids {child_class, position, width, height, velocity, angular_velocity, rotation, density, friction, bounciness, dynamic, solid, gravity_scale, outline, outline_color, collision_mask};
     bool inherited = false;
 
-    // If there is one positional argument and it isn't the first 
+    // If there is one positional argument and it isn't the first
     // expected argument (as is expected when using positional
     // arguments) then define which way to parse the arguments
     if(n_args >= 1 && mp_obj_get_type(args[0]) != &vector2_class_type){

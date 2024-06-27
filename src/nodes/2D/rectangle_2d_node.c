@@ -36,7 +36,6 @@ void rectangle_2d_node_class_draw(mp_obj_t rectangle_node_base_obj, mp_obj_t cam
     color_class_obj_t *rectangle_color = rectangle_2d_node->color;
     bool rectangle_outlined = mp_obj_get_int(rectangle_2d_node->outline);
 
-    vector3_class_obj_t *camera_position = camera->position;
     rectangle_class_obj_t *camera_viewport = camera->viewport;
     float camera_zoom = mp_obj_get_float(camera->zoom);
 
@@ -58,11 +57,8 @@ void rectangle_2d_node_class_draw(mp_obj_t rectangle_node_base_obj, mp_obj_t cam
         node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
         camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
 
-        rectangle_rotated_x -= camera_resolved_hierarchy_x;
-        rectangle_rotated_y -= camera_resolved_hierarchy_y;
-
-        // Scale transformation due to camera zoom
-        engine_math_scale_point(&rectangle_rotated_x, &rectangle_rotated_y, camera_position->x.value, camera_position->y.value, camera_zoom);
+        rectangle_rotated_x = (rectangle_rotated_x - camera_resolved_hierarchy_x) * camera_zoom;
+        rectangle_rotated_y = (rectangle_rotated_y - camera_resolved_hierarchy_y) * camera_zoom;
 
         // Rotate rectangle origin about the camera
         engine_math_rotate_point(&rectangle_rotated_x, &rectangle_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
