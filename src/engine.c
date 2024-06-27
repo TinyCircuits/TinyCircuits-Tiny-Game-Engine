@@ -268,7 +268,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_module_init_obj, engine_module_init);
    ID: engine
    DESC: Main component for controlling vital engine features
    ATTR: [type=function] [name={ref_link:fps_limit}]            [value=getter/setter function]
-   ATTR: [type=function] [name={ref_link:disable_fps_limit}]    [value=function (fps limit is disabled by default, use {ref_link:set_fps_limit} to enable it)]
+   ATTR: [type=function] [name={ref_link:disable_fps_limit}]    [value=function (fps limit is disabled by default, use {ref_link:fps_limit} to enable it)]
    ATTR: [type=function] [name={ref_link:get_running_fps}]      [value=function]
    ATTR: [type=function] [name={ref_link:engine_tick}]          [value=function]
    ATTR: [type=function] [name={ref_link:engine_start}]         [value=function]
