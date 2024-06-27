@@ -1,3 +1,4 @@
+#include "engine_main.h"
 #include "engine_file.h"
 #include "math/engine_math.h"
 #include "debug/debug_print.h"
@@ -13,9 +14,28 @@ MP_REGISTER_ROOT_POINTER(mp_obj_t files[2]);
 const mp_stream_p_t *file_streams[2];
 
 
+mp_obj_str_t* engine_file_to_system_path(mp_obj_str_t *filename){
+    #ifdef __unix__
+        if(!mp_obj_is_str(filename)){
+            return filename;
+        }
+        GET_STR_DATA_LEN(filename, filename_str, str_len);
+        if(filename_str[0] != '/'){
+            return filename;
+        }
+        // This is an absolute path, prefix with filesystem root.
+        char buff[1024];
+        sprintf(buff, "%s%s", filesystem_root, filename_str);
+        return mp_obj_new_str(buff, strlen(buff));
+    #else
+        return filename;
+    #endif
+}
+
+
 void engine_file_open_read(uint8_t file_index, mp_obj_str_t *filename){
     mp_obj_t file_open_args[2] = {
-        filename,
+        engine_file_to_system_path(filename),
         MP_ROM_QSTR(MP_QSTR_rb) // See extmod/vfs_posix_file.c and extmod/vfs_lfsx_file.c
     };
 
@@ -27,7 +47,7 @@ void engine_file_open_read(uint8_t file_index, mp_obj_str_t *filename){
 
 void engine_file_open_create_write(uint8_t file_index, mp_obj_str_t *filename){
     mp_obj_t file_open_args[2] = {
-        filename,
+        engine_file_to_system_path(filename),
         MP_ROM_QSTR(MP_QSTR_wb) // See extmod/vfs_posix_file.c and extmod/vfs_lfsx_file.c
     };
 
@@ -170,18 +190,18 @@ uint32_t engine_file_copy_from_to_until(uint8_t from_file_index, uint8_t to_file
 
 
 void engine_file_remove(mp_obj_str_t *filename){
-    mp_vfs_remove(filename);
+    mp_vfs_remove(engine_file_to_system_path(filename));
 }
 
 
 void engine_file_rename(mp_obj_str_t *old, mp_obj_str_t *new){
-    mp_vfs_rename(old, new);
+    mp_vfs_rename(engine_file_to_system_path(old), engine_file_to_system_path(new));
 }
 
 
 bool engine_file_exists(mp_obj_str_t *filename){
     // This does some copying and stuff at a low level, maybe could get away from that: TODO
-    if(mp_vfs_import_stat(mp_obj_str_get_str(filename)) == MP_IMPORT_STAT_NO_EXIST){
+    if(mp_vfs_import_stat(mp_obj_str_get_str(engine_file_to_system_path(filename))) == MP_IMPORT_STAT_NO_EXIST){
         return false;
     }
 

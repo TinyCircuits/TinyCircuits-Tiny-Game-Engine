@@ -3,12 +3,11 @@ from engine_nodes import CameraNode, Text2DNode
 from engine_resources import FontResource
 import engine
 import engine_io
-from system.root_dir import ROOT_DIR
 
 engine.fps_limit(15)
 engine_io.gui_toggle_button(None)
 
-font = FontResource(f"{ROOT_DIR}/assets/outrunner_outline.bmp")
+font = FontResource("/assets/outrunner_outline.bmp")
 
 text = Text2DNode(
     text="Status of A is\nprinted to\nconsole.\n\nPress B to\ncall A.release()\n\nMENU - exit",

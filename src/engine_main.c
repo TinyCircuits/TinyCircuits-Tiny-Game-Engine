@@ -31,6 +31,10 @@ void engine_main_raise_if_not_initialized(){
     }
 }
 
+#if defined(__unix__)
+    #include <unistd.h>
+    char filesystem_root[1024];
+#endif
 
 void engine_main_reset(){
     ENGINE_PRINTF("EngineMain: Resetting engine...\n");
@@ -76,6 +80,13 @@ static mp_obj_t engine_main_module_init(){
     is_engine_initialized = true;
 
     ENGINE_PRINTF("Engine init!\n");
+
+    #if defined(__unix__)
+        if (getcwd(filesystem_root, sizeof(filesystem_root)) == NULL){
+            filesystem_root[0] = '\0';
+        }
+        ENGINE_PRINTF("Filesystem root: %s\n", filesystem_root);
+    #endif
 
     // Init display first
     engine_display_init();
