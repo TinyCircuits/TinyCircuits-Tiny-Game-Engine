@@ -32,10 +32,8 @@ try:
     thumby_reset(True)
 
 except Exception as ex:
+    sys.print_exception(ex)
     # Catch any exception, including one originating from a system file.
     with open("last_crash.txt", "w") as f:
         sys.print_exception(ex, f)
     execfile("system/crash.py")
-
-    # Raise again so that it prints: https://forum.micropython.org/viewtopic.php?t=2175#p12312
-    raise ex
