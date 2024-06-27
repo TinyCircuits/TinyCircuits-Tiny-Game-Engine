@@ -51,6 +51,8 @@ uint16_t assume_released_buttons = ~0;
 
 
 uint32_t prev_tick_millis = MILLIS_NULL;
+// The reference time from which autorepeat is calculated. It is set when autorepeat occurs, and cleared when buttons are released.
+uint32_t autorepeat_base_millis = MILLIS_NULL;
 
 void buttons_update_state() {
     // Clear the double-pressed state for released buttons.
@@ -76,6 +78,10 @@ void buttons_update_state() {
     long_pressed_buttons &= pressed_buttons;
     // Clear the autorepeat state, individual buttons might set it for one tick only.
     autorepeat_buttons = 0;
+    // Clear the autorepeat base if all buttons are released.
+    if (!pressed_buttons) {
+        autorepeat_base_millis = MILLIS_NULL;
+    }
 
     uint32_t now_millis = millis();
     int32_t tick_time = prev_tick_millis == MILLIS_NULL ? 0 : millis_diff(now_millis, prev_tick_millis);
@@ -104,11 +110,12 @@ void button_update_state(button_class_obj_t *button, uint32_t now_millis, int32_
             }
             // Check for autorepeat.
             if (pressed_time >= button->autorepeat_delay_time) {
-                // Use now_millis as the base for autorepeat to synchronise the autorepeat
-                // of all the buttons that have the same autorepeat interval.
-                // This is not ideal - the second autorepeat trigger can be delayed by up to autorepeat interval,
-                // but it should be good enough.
-                if (now_millis % button->autorepeat_interval_time < (uint32_t)tick_time) {
+                // Set the base for autorepeat. Another autorepeated button will use the same base, so if it has
+                // the same interval, autorepeat ticks will be synchronised between them.
+                if (autorepeat_base_millis == MILLIS_NULL) {
+                    autorepeat_base_millis = now_millis;
+                }
+                if (millis_diff(now_millis, autorepeat_base_millis) % button->autorepeat_interval_time < tick_time) {
                     autorepeat_buttons |= code;
                 }
             }
