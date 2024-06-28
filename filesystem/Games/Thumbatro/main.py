@@ -1053,10 +1053,10 @@ class PokerGame(Rectangle2DNode):
                     return RemoveRankTarotCard(Vector2(150, 80), 4, 4, rank_to_remove, level_bonus)
                 elif tarot_type == 'suite':
                     suit_to_remove = random.randint(0, 3)
-                    return RemoveSuitTarotCard(Vector2(150, 80), 4, 4, suit_to_remove, level_bonus)
+                    return RemoveSuitTarotCard(Vector2(150, 80), 12, 5, suit_to_remove, level_bonus)
                 else:
                     rank_to_upgrade = random.randint(1, 12)  # Exclude Ace (index 0)
-                    return UpgradeRankTarotCard(Vector2(150, 80), 4, 4, rank_to_upgrade, level_bonus)
+                    return UpgradeRankTarotCard(Vector2(150, 80), 13, 5, rank_to_upgrade, level_bonus)
             elif card_type == 'bonus':
                 card_type = self.weighted_choice(['common', 'uncommon', 'rare'], [0.7, 0.2, 0.1])
                 frame_x, frame_y = random.randint(0, 12), random.randint(0, 3)
