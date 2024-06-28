@@ -145,40 +145,6 @@ __GcHeapEnd = ORIGIN(RAM) + LENGTH(RAM);
 ``
 (from memmap_mp_old.ld and these are used in `ports/rp2/main.c` to setup the GC heap)
 
-
----
-* Commented out RISCV_DM_DUMMY_ADDRESS_FIXME on lines 18 and 87 in lib/pico-sdk/src/rp235x/hardware_regs/include/hardware/regs/addressmap.h
-* Commented out RTC clock config on line 148 in modmachine.c
-* Commented out needs_love_rp235x() on line 21 in lib/pico-sdk/src/rp2_common/hardware_rtc/rtc.c
-* Added -DPICO_PLATFORM=rp235x-arm-s to makefile in rp2 port at CMAKE_ARGS
-* In modmachine.c, at line 108, comment out contents of `mp_machine_lightsleep` (clock setting is incorrect related to RTC)
-* In ports/rp2/mpconfigport.h set `#define MICROPY_LONGINT_IMPL (MICROPY_LONGINT_IMPL_LONGLONG)`
-* In ports/rp2/memmap_mp.ld change
-
-MEMORY
-{
-    FLASH(rx) : ORIGIN = 0x10000000, LENGTH = 2048k
-    RAM(rwx) : ORIGIN =  0x20000000, LENGTH = 256k
-    SCRATCH_X(rwx) : ORIGIN = 0x20040000, LENGTH = 4k
-    SCRATCH_Y(rwx) : ORIGIN = 0x20041000, LENGTH = 4k
-}
-```
-
-to
-
-MEMORY
-{
-    FLASH(rx) : ORIGIN = 0x10000000, LENGTH = 4096k
-    RAM(rwx) : ORIGIN =  0x20000000, LENGTH = 512k
-    SCRATCH_X(rwx) : ORIGIN = 0x20080000, LENGTH = 4k
-    SCRATCH_Y(rwx) : ORIGIN = 0x20081000, LENGTH = 4k
-}
-```
-
-AND
-
-ASSERT( __binary_info_header_end - __logical_binary_start <= 256, "Binary info must be in first 256 bytes of the binary")
-
-to
-
-ASSERT( __binary_info_header_end - __logical_binary_start <= 1024, "Binary info must be in first 256 bytes of the binary")
+# Config UNIX port to work
+1. Inside `ports/unix/mpconfigport.mk` change `MICROPY_PY_BTREE = 1` -> `MICROPY_PY_BTREE = 0`
+2. Inside `ports/unix/variants/mpconfigvariant_common.h` add `#define MICROPY_TRACKED_ALLOC (1)` anywhere
