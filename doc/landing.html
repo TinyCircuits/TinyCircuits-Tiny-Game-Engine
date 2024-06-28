@@ -2,14 +2,12 @@
 <html>
 
     <style>
-        h{color:white; line-height: 1.8}
-        h3{color:white;}
-        b{color:white; line-height: 1.8}
-        code{color:white; line-height: 1.8}
-        a{color:lightblue; line-height: 1.8}
+        code, pre {background-color: #333; padding: 0 2px; line-height: 1.8; border: solid #666 1px; border-radius: 4px;}
+        a {color:lightblue}
+        hr {margin: 2rem 0;}
     </style>
 
-    <body style="background-color:black">
+    <body style="background-color: black; color: white; line-height: 1.5;">
         <h3>Importable Modules:</h3>
         <a href="build/engine.html">engine</a><br>
         <a href="build/engine_nodes.html">engine_nodes</a><br>
@@ -22,69 +20,61 @@
         <a href="build/engine_debug.html">engine_debug</a><br>
         <a href="build/engine_animation.html">engine_animation</a><br>
         <a href="build/engine_save.html">engine_save</a><br>
-        
 
-        <br>
         <hr>
-        <br>
 
-
-        <h>
+        <p>
             WARNING: It is not recommended to save files to Thumby Color. Make sure everything is saved to a computer, opened in Thonny, and then the green run/play button (explained later) is used to upload and run the script. Assets need to be saved/uploaded to the device, make sure those are also backed up on a computer.
             <br>
-            NOTE: Need to do `import engine_main` before anything else to start engine and consistently reset it
+            NOTE: Need to do <code>import engine_main</code> before anything else to start engine and consistently reset it
             <br>
             NOTE: The engine is still under development and the API may change in some spots, we'll try to help convert any code in the future.
             <br>
             NOTE: <b>Physics</b> and <b>Audio</b> are still under development and partially function. The API and functionality still need worked on.
-        </h>
+        </p>
 
 
         <h3>Getting Started:</h3>
-        <h>
-            The Thonny IDE can be used to upload files and run scripts, it can be downloaded from <a href="https://thonny.org/">here</a>.
-            <br>
-            <br>
-            <b>Setting up Thonny:</b>
-            <br>1. Plug Thumby Color in and flip switch to on (to the right when looking at the screen)
-            <br>2. In the bottom-right of Thonny, click the `no backend` or `Local Python 3` text
-            <br>3. Select `MicroPython (generic) * Board CDC COMXX` (may need to press the red stop sign in the top-left)
+            <pr>The Thonny IDE can be used to upload files and run scripts, it can be downloaded from <a href="https://thonny.org/">here</a>.
 
-            <br>
-            <br>
-            <b>Uploading an asset/file using Thonny:</b>
-            <br>1. Plug Thumby Color in
-            <br>2. Turn it ON
-            <br>3. Press the red stop sign button in Thonny
-            <br>4. Wait for the Thonny shell to print something like "Type "help()" for more information"
-            <br>5. In the top-left `Files` panel navigate to the folder containing your files/assets you want to upload
-            <br>6. Right-click the file/asset and left-click "Upload to /"
-            <br>
+            <h4>Setting up Thonny:</h4>
+            <ol>
+                <li>Plug Thumby Color in and flip switch to on (to the right when looking at the screen)
+                <li>In the bottom-right of Thonny, click the `no backend` or `Local Python 3` text
+                <li>Select `MicroPython (generic) * Board CDC COMXX` (may need to press the red stop sign in the top-left)
+            </ol>
+
+            <h4>Uploading an asset/file using Thonny:</h4>
+            <ol>
+                <li>Plug Thumby Color in
+                <li>Turn it ON
+                <li>Press the red stop sign button in Thonny
+                <li>Wait for the Thonny shell to print something like "Type "help()" for more information"
+                <li>In the top-left `Files` panel navigate to the folder containing your files/assets you want to upload
+                <li>Right-click the file/asset and left-click "Upload to /"
+            </ol>
             Now your file should be on the device.
-            <br>
-            <br>
-            <b>Running a script using Thonny:</b>
-            <br>1. Plug Thumby Color in
-            <br>2. Turn it ON
-            <br>3. Press the red stop sign button in Thonny
-            <br>4. Type code into the Thonny editor or open a Python file
-            <br>5. Press the green play/run button in the top, the script should start running.
-            <br>
-            <br>
-            <b>Common errors:</b>
-            <br>* If an exception occurs at the line where `engine.start()` is, that probably means something in the engine tried to cast some type of data to another type that is not supported. Let Jason know
-        </h>
 
-        <br>
+            <h4>Running a script using Thonny:</h4>
+            <ol>
+                <li>Plug Thumby Color in
+                <li>Turn it ON
+                <li>Press the red stop sign button in Thonny
+                <li>Type code into the Thonny editor or open a Python file
+                <li>Press the green play/run button in the top, the script should start running.
+            </ol>
+
+            <h4>Common errors:</h4>
+            <ul>
+                <li>If an exception occurs at the line where <code>engine.start()</code> is, that probably means something in the engine tried to cast some type of data to another type that is not supported. Let Jason know
+            </ul>
+
         <hr>
-        <br>
 
         <h3>Examples:</h3>
-        
 
-        <b><h>Example #1: Hello World!</h></b>
-        <br>
-        <pre><code>
+        <h4>Example #1: Hello World!</c></h4>
+        <pre>
 import engine_main
 
 import engine
@@ -99,11 +89,11 @@ camera = CameraNode()
 
 # Start rendering the scene
 engine.start()
-        </code></pre>
+</pre>
 
 
-        <b><h>Example #2: Using node callbacks</h></b>
-        <pre><code>
+        <h4>Example #2: Using node callbacks</h4>
+        <pre>
 import engine_main
 
 import engine
@@ -113,7 +103,7 @@ from engine_nodes import Sprite2DNode, CameraNode
 from engine_resources import TextureResource
 
 # Set the FPS limit so that game code doesn't run too fast
-engine.set_fps_limit(60)
+engine.fps_limit(60)
 
 # All BMPs need to be saved in RGB565 16-bit (no alpha)
 background_texture = TextureResource("background.bmp")
@@ -134,7 +124,7 @@ class Player(Sprite2DNode):
         self.fps = 5
         self.playing = True
         self.transparent_color = engine_draw.black
-    
+
     # Define a callback that the engine will invoke every game tick
     def tick(self, dt):
         # NOTE: Game coordinate system is -y = to top of screen, +y = to bottom of screen
@@ -142,7 +132,7 @@ class Player(Sprite2DNode):
             self.position.y -= 1
         elif engine_io.check_pressed(engine_io.DPAD_DOWN):
             self.position.y += 1
-        
+
         # X axis works how it should
         if engine_io.check_pressed(engine_io.DPAD_LEFT):
             self.position.x -= 1
@@ -157,45 +147,44 @@ camera = CameraNode()
 
 # Start rendering the scene
 engine.start()
-        </code></pre>
+</pre>
 
-
-        <br>
         <hr>
-        <br>
-
 
         <h3>Launcher Folder Structure:</h3>
-        <h>
-            <b>Minimal example</b>:
-            <br> <code>- /Games/mygame</code>
-            <br> <code>- /Games/mygame/main.py</code>
-            <br> The game doesn't have to exist in <code>/Games</code>, it could just exist in <code>/mygame</code> and it would still be found. It's only required that a <code>main.py</code> exist for a game to be launchable. This type of format will show up with a question mark as the icon and the folder name as the game name.
+        Games have to be in subdirectories of <code>/Games</code>. They can be organised in any directory structure.
 
-            <br>
-            <br>
+        <h4>Minimal example:</h4>
+            <pre>
+─ /Games/mygame
+  ├─ main.py
+</pre>
+            This type of format will show up with a question mark as the icon and the folder name as the game name.
 
-            <b>Minimal example with icon</b>:
-            <br> <code>- /Games/mygame</code>
-            <br> <code>- /Games/mygame/main.py</code>
-            <br> <code>- /Games/mygame/icon.bmp</code>
-            <br> Instead of a question mark, the game will show up with <code>icon.bmp</code> as the icon. For now, the only supported resolution is 64x64.
+        <h4>Minimal example with icon:</h4>
+            <pre>
+─ /Games/mygame
+  ├─ main.py
+  ├─ icon.bmp
+</pre>
+            Instead of a question mark, the game will show up with <code>icon.bmp</code> as the icon. For now, the only supported resolution is 64x64.
 
-            <br>
-            <br>
-
-            <b>Full example</b>:
-            <br> <code>- /Games/mygame</code>
-            <br> <code>- /Games/mygame/game.py</code>
-            <br> <code>- /Games/mygame/game_icon.bmp</code>
-            <br> <code>- /Games/mygame/settings.ini</code>
-            <br> In this example, the names of all the assets doesn't matter. The only file that needs to exist is one ending with <code>.ini</code>. Inside the <code>.ini</code> the following lines can be defined to point to each file:
-            <br> <code>* main=game.py</code>
-            <br> <code>* name=AnyNameIWant</code>
-            <br> <code>* icon=game_icon.bmp</code>
-        </h>
-
-
+        <h4>Full example:</h4>
+            <pre>
+─ /Games/mygame
+  ├─ manifest.ini
+  ├─ game.py
+  ├─ game_icon.bmp
+</pre>
+            In this example, the names of all the assets are configured in <code>manifest.ini</code>. In the manifest the following lines can be present:
+            <pre>
+name = Any Name I Want
+version = 0.3
+main = game.py
+icon = game_icon.bmp
+</pre>
+            This format is recommended, and at least the version entry should appear in the manifest. The other entries are optional, defaulting
+            to directory name, main.py and icon.bmp.
 
     </body>
 </html>

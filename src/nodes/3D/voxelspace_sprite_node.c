@@ -72,8 +72,7 @@ void voxelspace_sprite_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t c
     uint32_t sprite_frame_fb_start_index = sprite_frame_abs_y * spritesheet_width + sprite_frame_abs_x;
 
     float view_angle = camera_rotation->x.value;
-    view_angle = engine_math_clamp(view_angle, -PI/2.0f, PI/2.0f);
-    view_angle = engine_math_map(view_angle, -PI/2.0f, PI/2.0f, -SCREEN_HEIGHT*2.0f, SCREEN_HEIGHT*2.0f);
+    view_angle = engine_math_map_clamp(view_angle, -PI/2.0f, PI/2.0f, -SCREEN_HEIGHT*2.0f, SCREEN_HEIGHT*2.0f);
 
     // Will need to pick a z that is valid. The z should be
     // such that it is picked on a line between 1.0 and
@@ -81,7 +80,7 @@ void voxelspace_sprite_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t c
     // an angle camera_fov_half from the view direction line
     // that has a length of `camera_view_distance`:
     /*
-            
+
                    opposite
             \---------------------|                     /  ---
              \         P          |                    /    |
@@ -92,7 +91,7 @@ void voxelspace_sprite_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t c
           \      u\      |       j|a              /         | e
            \      l\      \      -|d             /          | w
             \      l\      |     a|j            /           |
-             \      _\     |     d|a           /            | d 
+             \      _\     |     d|a           /            | d
               \      l\   D \    j|c          /             | i
               z\      e\     |   a|e         /              | s
                 \      n\    |   c|n        /               | t
@@ -114,7 +113,7 @@ void voxelspace_sprite_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t c
         * adjacent = view_distance (is given/provided)
         * full_length = view_distance / cosf(A) [soh-cah-toa -> cah -> cosO = addj/hypt -> full_length = view_distance / cosA]
         * opposite = soh-cah-toa -> sinO = opp/hypt -> opposite = full_length * sinf(camera_fov_half)
-         
+
         To do the correct projection we need to find a distance along 'full_length' that we can
         use to find L and R based on the voxelspace calculations below. We need to choose this
         distance based on the point P relative to C. Once we have L and R we can see how far along
@@ -230,7 +229,7 @@ void voxelspace_sprite_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t c
     }else{
         shader = engine_get_builtin_shader(EMPTY_SHADER);
     }
-    
+
     engine_draw_blit_depth(sprite_pixel_data+sprite_frame_fb_start_index,
                      floorf(sprite_rotated_x), floorf(sprite_rotated_y),
                      sprite_frame_width, sprite_frame_height,
@@ -238,11 +237,11 @@ void voxelspace_sprite_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t c
                      scale_x,
                      scale_y,
                      -sprite_rotation,
-                     transparent_color->value.val,
+                     transparent_color->value,
                      sprite_opacity,
                      depth,
                      shader);
-    
+
     // engine_draw_pixel(0b1111100000000000, floorf(((value/max) * SCREEN_WIDTH)), floorf(sprite_rotated_y), 1.0f, shader);
 
     // After drawing, go to the next frame if it is time to and the animation is playing
@@ -251,7 +250,7 @@ void voxelspace_sprite_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t c
         uint16_t sprite_period = (uint16_t)((1.0f/sprite_fps) * 1000.0f);
 
         uint32_t current_ms_time = millis();
-        if(current_ms_time - voxelspace_sprite_node->time_at_last_animation_update_ms >= sprite_period){
+        if(millis_diff(current_ms_time, voxelspace_sprite_node->time_at_last_animation_update_ms) >= sprite_period){
             sprite_frame_current_x++;
 
             // If reach end of x-axis frames, go to the next line and restart x
@@ -285,18 +284,18 @@ bool voxelspace_sprite_node_load_attr(engine_node_base_t *self_node_base, qstr a
             destination[1] = self_node_base;
             return true;
         break;
-        case MP_QSTR_destroy:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_obj);
+        case MP_QSTR_mark_destroy:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_mark_destroy_obj);
             destination[1] = self_node_base;
             return true;
         break;
-        case MP_QSTR_destroy_all:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_all_obj);
+        case MP_QSTR_mark_destroy_all:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_mark_destroy_all_obj);
             destination[1] = self_node_base;
             return true;
         break;
-        case MP_QSTR_destroy_children:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_children_obj);
+        case MP_QSTR_mark_destroy_children:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_mark_destroy_children_obj);
             destination[1] = self_node_base;
             return true;
         break;
@@ -420,7 +419,7 @@ bool voxelspace_sprite_node_store_attr(engine_node_base_t *self_node_base, qstr 
             return true;
         break;
         case MP_QSTR_transparent_color:
-            self->transparent_color = destination[1];
+            self->transparent_color = engine_color_wrap(destination[1]);
             return true;
         break;
         case MP_QSTR_fps:
@@ -511,22 +510,22 @@ static mp_attr_fun_t voxelspace_sprite_node_class_attr(mp_obj_t self_in, qstr at
     DESC: Simple 3D sprite node that can be animated or static for VoxelSpace rendering. Acts as a billboard that always faces the camera
     PARAM:  [type={ref_link:Vector3}]         [name=position]                                   [value={ref_link:Vector3}]
     PARAM:  [type={ref_link:TextureResource}] [name=texture]                                    [value={ref_link:TextureResource}]
-    PARAM:  [type=int]                        [name=transparent_color]                          [value=any 16-bit RGB565 color]
+    PARAM:  [type={ref_link:Color}|int (RGB565)]   [name=transparent_color]                     [value=color]
     PARAM:  [type=float]                      [name=fps]                                        [value=any]
     PARAM:  [type=int]                        [name=frame_count_x]                              [value=any positive integer]
     PARAM:  [type=int]                        [name=frame_count_y]                              [value=any positive integer]
     PARAM:  [type=float]                      [name=rotation]                                   [value=any (radians)]
     PARAM:  [type={ref_link:Vector2}]         [name=scale]                                      [value={ref_link:Vector2}]
-    PARAM:  [type=float]                      [name=opacity]                                    [value=0 ~ 1.0] 
+    PARAM:  [type=float]                      [name=opacity]                                    [value=0 ~ 1.0]
     PARAM:  [type=boolean]                    [name=playing]                                    [value=boolean]
     PARAM:  [type=boolean]                    [name=fov_distort]                                [value=boolean (True means the sprite will be scaled by the FOV (TODO: review implementation, not perfect) and False means it will not be distorted, default: True)]
     PARAM:  [type={ref_link:Vector2}]         [name=texture_offset]                             [value={ref_link:Vector2} (local offset of the texture at the rendered origin. Sprites render at center/origin by default, use this to shift them)]
-    ATTR:   [type=function]                   [name={ref_link:add_child}]                       [value=function] 
+    ATTR:   [type=function]                   [name={ref_link:add_child}]                       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_child}]                       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_child_count}]                 [value=function]
-    ATTR:   [type=function]                   [name={ref_link:node_base_destroy}]               [value=function]
-    ATTR:   [type=function]                   [name={ref_link:node_base_destroy_all}]           [value=function]
-    ATTR:   [type=function]                   [name={ref_link:node_base_destroy_children}]      [value=function]
+    ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy}]               [value=function]
+    ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy_all}]           [value=function]
+    ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy_children}]      [value=function]
     ATTR:   [type=function]                   [name={ref_link:remove_child}]                    [value=function]
     ATTR:   [type=function]                   [name={ref_link:set_layer}]                       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_layer}]                       [value=function]
@@ -534,7 +533,7 @@ static mp_attr_fun_t voxelspace_sprite_node_class_attr(mp_obj_t self_in, qstr at
     ATTR:   [type=function]                   [name={ref_link:tick}]                            [value=function]
     ATTR:   [type={ref_link:Vector2}]         [name=position]                                   [value={ref_link:Vector2}]
     ATTR:   [type={ref_link:TextureResource}] [name=texture]                                    [value={ref_link:TextureResource}]
-    ATTR:   [type=int]                        [name=transparent_color]                          [value=any 16-bit RGB565 color]
+    ATTR:   [type={ref_link:Color}|int (RGB565)]   [name=transparent_color]                     [value=color]
     ATTR:   [type=float]                      [name=fps]                                        [value=any]
     ATTR:   [type=int]                        [name=frame_count_x]                              [value=any positive integer]
     ATTR:   [type=int]                        [name=frame_count_y]                              [value=any positive integer]
@@ -573,7 +572,7 @@ mp_obj_t voxelspace_sprite_node_class_new(const mp_obj_type_t *type, size_t n_ar
     enum arg_ids {child_class, position, texture, transparent_color, fps, frame_count_x, frame_count_y, rotation, scale, opacity, playing, fov_distort, texture_offset};
     bool inherited = false;
 
-    // If there is one positional argument and it isn't the first 
+    // If there is one positional argument and it isn't the first
     // expected argument (as is expected when using positional
     // arguments) then define which way to parse the arguments
     if(n_args >= 1 && mp_obj_get_type(args[0]) != &vector2_class_type){
@@ -592,7 +591,7 @@ mp_obj_t voxelspace_sprite_node_class_new(const mp_obj_type_t *type, size_t n_ar
 
     if(parsed_args[position].u_obj == MP_OBJ_NULL) parsed_args[position].u_obj = vector3_class_new(&vector3_class_type, 0, 0, NULL);
     if(parsed_args[texture].u_obj == MP_OBJ_NULL) parsed_args[texture].u_obj = mp_const_none;
-    if(parsed_args[transparent_color].u_obj == MP_OBJ_NULL) parsed_args[transparent_color].u_obj = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(ENGINE_NO_TRANSPARENCY_COLOR)});
+    if(parsed_args[transparent_color].u_obj == MP_OBJ_NULL) parsed_args[transparent_color].u_obj = MP_OBJ_NEW_SMALL_INT(ENGINE_NO_TRANSPARENCY_COLOR);
     if(parsed_args[fps].u_obj == MP_OBJ_NULL) parsed_args[fps].u_obj = mp_obj_new_float(30.0f);
     if(parsed_args[frame_count_x].u_obj == MP_OBJ_NULL) parsed_args[frame_count_x].u_obj = mp_obj_new_int(1);
     if(parsed_args[frame_count_y].u_obj == MP_OBJ_NULL) parsed_args[frame_count_y].u_obj = mp_obj_new_int(1);
@@ -614,7 +613,7 @@ mp_obj_t voxelspace_sprite_node_class_new(const mp_obj_type_t *type, size_t n_ar
     voxelspace_sprite_node->tick_cb = mp_const_none;
     voxelspace_sprite_node->position = parsed_args[position].u_obj;
     voxelspace_sprite_node->texture_resource = parsed_args[texture].u_obj;
-    voxelspace_sprite_node->transparent_color = parsed_args[transparent_color].u_obj;
+    voxelspace_sprite_node->transparent_color = engine_color_wrap(parsed_args[transparent_color].u_obj);
     voxelspace_sprite_node->fps = parsed_args[fps].u_obj;
     voxelspace_sprite_node->frame_count_x = parsed_args[frame_count_x].u_obj;
     voxelspace_sprite_node->frame_count_y = parsed_args[frame_count_y].u_obj;

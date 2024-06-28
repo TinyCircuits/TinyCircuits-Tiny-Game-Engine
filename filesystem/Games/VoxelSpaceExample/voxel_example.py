@@ -17,9 +17,9 @@ import time
 
 # machine.freq(250 * 1000 * 1000)
 
-engine_io.gui_toggle_button = None
+engine_io.gui_toggle_button(None)
 
-engine.set_fps_limit(60)
+engine.fps_limit(60)
 engine_draw.set_background_color(engine_draw.skyblue)
 
 
@@ -32,8 +32,8 @@ vox0 = VoxelSpaceNode(texture=C18W, heightmap=D18)
 vox0.position.x = 0
 vox0.position.y = 30
 vox0.scale.y = 35
-vox0.scale.x = 1
-vox0.scale.z = 1
+vox0.scale.x = 2
+vox0.scale.z = 2
 vox0.flip = True
 vox0.repeat = True
 
@@ -44,10 +44,11 @@ vox1.position.x = 0
 vox1.position.y = 0
 vox1.position.z = 0
 vox1.scale.y = 32
-vox1.scale.x = 1
-vox1.scale.z = 1
+vox1.scale.x = 0.75
+vox1.scale.z = 0.75
 vox1.flip = False
 vox1.thickness = 100
+# vox1.repeat = True
 # vox1.set_layer(1)
 
 tree = VoxelSpaceSpriteNode(texture=tree_bmp, position=Vector3(0, 0, 0), scale=Vector3(1.0, 1.0, 1.0))
@@ -87,25 +88,25 @@ class MyCam(CameraNode):
 
         if(vox1_height != None and self.position.y < vox1_height):
             self.position.y = vox1_height
-        
+
         if(vox0_height != None and self.position.y > vox0_height):
             self.position.y = vox0_height
 
     def forward(self):
         self.position.x += math.cos(self.rotation.y) * self.distance
         self.position.z += math.sin(self.rotation.y) * self.distance
-        self.adjust()            
-    
+        self.adjust()
+
     def backward(self):
         self.position.x -= math.cos(self.rotation.y) * self.distance
         self.position.z -= math.sin(self.rotation.y) * self.distance
-        self.adjust() 
-    
+        self.adjust()
+
     def left(self):
         self.position.x -= math.cos(self.rotation.y+(math.pi/2)) * self.distance
         self.position.z -= math.sin(self.rotation.y+(math.pi/2)) * self.distance
-        self.adjust() 
-    
+        self.adjust()
+
     def right(self):
         self.position.x += math.cos(self.rotation.y+(math.pi/2)) * self.distance
         self.position.z += math.sin(self.rotation.y+(math.pi/2)) * self.distance
@@ -113,11 +114,12 @@ class MyCam(CameraNode):
 
     def tick(self, dt):
         gc.collect()
+        print(self.position)
         # print(engine.get_running_fps())
         self.t += 0.01
         # vox0.position.y = 20 + math.sin(self.t)
 
-        if engine_io.check_pressed(engine_io.BUMPER_RIGHT):
+        if engine_io.RB.is_pressed:
             if self.mode == 0:
                 self.rotation.y += 0.025
             elif self.mode == 2:
@@ -134,7 +136,7 @@ class MyCam(CameraNode):
                 vox1.scale.y += 1
             elif self.mode == 6:
                 self.fov += 0.05
-        if engine_io.check_pressed(engine_io.BUMPER_LEFT):
+        if engine_io.LB.is_pressed:
             if self.mode == 0:
                 self.rotation.y -= 0.025
             elif self.mode == 2:
@@ -151,37 +153,37 @@ class MyCam(CameraNode):
                 vox1.scale.y -= 1
             elif self.mode == 6:
                 self.fov -= 0.05
-    
 
-        if engine_io.check_pressed(engine_io.DPAD_UP):
+
+        if engine_io.UP.is_pressed:
             self.forward()
-        if engine_io.check_pressed(engine_io.DPAD_DOWN):
+        if engine_io.DOWN.is_pressed:
             self.backward()
-        if engine_io.check_pressed(engine_io.DPAD_LEFT):
+        if engine_io.LEFT.is_pressed:
             self.left()
-        if engine_io.check_pressed(engine_io.DPAD_RIGHT):
+        if engine_io.RIGHT.is_pressed:
             self.right()
-        
-        if engine_io.check_pressed(engine_io.A):
+
+        if engine_io.A.is_pressed:
             if self.mode == 0:
                 self.position.y += 0.1
-                self.adjust() 
+                self.adjust()
             elif self.mode == 1:
                 self.rotation.x -= 0.1
-        if engine_io.check_pressed(engine_io.B):
+        if engine_io.B.is_pressed:
             if self.mode == 0:
                 self.position.y -= 0.1
-                self.adjust() 
+                self.adjust()
             elif self.mode == 1:
                 self.rotation.x += 0.1
-        
-        if engine_io.check_just_pressed(engine_io.MENU):
+
+        if engine_io.MENU.is_just_pressed:
             # vox.scale.y += 0.5
             # print(vox.scale.y)
             self.mode = self.mode + 1
             if self.mode >= 7:
                 self.mode = 0
-            
+
             print(self.mode)
 
 

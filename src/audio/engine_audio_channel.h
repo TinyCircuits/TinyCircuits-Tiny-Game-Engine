@@ -37,7 +37,7 @@ typedef struct sound_resource_base_class_obj_t sound_resource_base_class_obj_t;
 
 typedef struct audio_channel_class_obj_t{
     mp_obj_base_t base;
-    mp_obj_t *source;                           // Source of the audio for the channel, currently
+    mp_obj_t source;                            // Source of the audio for the channel, currently
     uint32_t source_byte_offset;                // The total byte position inside the source that the ISR is using to start filling from
     float gain;                                 // Multiplier on each sample, 1.0 changes nothing
     float time;                                 // Where in the 'channel_source' the audio is being played from

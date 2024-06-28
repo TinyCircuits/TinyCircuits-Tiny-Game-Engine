@@ -9,7 +9,7 @@ import math
 # import machine
 # machine.freq(250 * 1000 * 1000)
 
-engine.set_fps_limit(60)
+engine.fps_limit(60)
 
 class MyCam(CameraNode):
     def __init__(self):
@@ -21,15 +21,15 @@ class MyCam(CameraNode):
     def forward(self):
         self.position.x += math.cos(self.rotation.y) * self.distance
         self.position.z += math.sin(self.rotation.y) * self.distance
-    
+
     def backward(self):
         self.position.x -= math.cos(self.rotation.y) * self.distance
         self.position.z -= math.sin(self.rotation.y) * self.distance
-    
+
     def left(self):
         self.position.x -= math.cos(self.rotation.y+(math.pi/2)) * self.distance
         self.position.z -= math.sin(self.rotation.y+(math.pi/2)) * self.distance
-    
+
     def right(self):
         self.position.x += math.cos(self.rotation.y+(math.pi/2)) * self.distance
         self.position.z += math.sin(self.rotation.y+(math.pi/2)) * self.distance
@@ -38,35 +38,35 @@ class MyCam(CameraNode):
         # print(engine.get_running_fps())
         # print(self.position.x, self.position.y, self.position.z)
 
-        if engine_io.check_pressed(engine_io.BUMPER_RIGHT):
+        if engine_io.RB.is_pressed:
             self.rotation.y += 0.05
             engine_io.rumble(self.rotation.y)
-        if engine_io.check_pressed(engine_io.BUMPER_LEFT):
+        if engine_io.LB.is_pressed:
             self.rotation.y -= 0.05
             engine_io.rumble(self.rotation.y)
-    
 
-        if engine_io.check_pressed(engine_io.DPAD_UP):
+
+        if engine_io.UP.is_pressed:
             self.forward()
-        if engine_io.check_pressed(engine_io.DPAD_DOWN):
+        if engine_io.DOWN.is_pressed:
             self.backward()
-        if engine_io.check_pressed(engine_io.DPAD_LEFT):
+        if engine_io.LEFT.is_pressed:
             self.left()
-        if engine_io.check_pressed(engine_io.DPAD_RIGHT):
+        if engine_io.RIGHT.is_pressed:
             self.right()
-        
-        if engine_io.check_pressed(engine_io.A):
+
+        if engine_io.A.is_pressed:
             if self.mode == 0:
                 self.position.y -= 1
             else:
                 self.rotation.x -= 0.5
-        if engine_io.check_pressed(engine_io.B):
+        if engine_io.B.is_pressed:
             if self.mode == 0:
                 self.position.y += 1
             else:
                 self.rotation.x += 0.5
-        
-        if engine_io.check_pressed(engine_io.MENU):
+
+        if engine_io.MENU.is_pressed:
             if self.mode == 0:
                 self.mode = 1
             else:
@@ -104,7 +104,7 @@ for x in range(16):
             gz = z * size - 8*size
 
             this_solid = is_solid(x, y, z)
-            
+
             if this_solid != is_solid(x+1, y, z):
                 if this_solid:
                     add_quad(Vector3(gx, gy-size, gz-size),
@@ -116,7 +116,7 @@ for x in range(16):
                              Vector3(gx, gy-size, gz),
                              Vector3(gx, gy,      gz),
                              Vector3(gx, gy,      gz-size))
-            
+
             if this_solid != is_solid(x, y+1, z):
                 if this_solid:
                     add_quad(Vector3(gx-size, gy, gz-size),
@@ -128,7 +128,7 @@ for x in range(16):
                              Vector3(gx,      gy, gz-size),
                              Vector3(gx,      gy, gz),
                              Vector3(gx-size, gy, gz))
-            
+
             if this_solid != is_solid(x, y, z+1):
                 if this_solid:
                     add_quad(Vector3(gx-size, gy-size, gz),

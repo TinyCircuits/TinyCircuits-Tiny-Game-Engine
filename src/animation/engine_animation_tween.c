@@ -16,7 +16,7 @@
 // Function positions in this array must correlate to enums in `engine_animation_ease_types`
 float (*ease[31])(float) = {
     &glm_ease_linear,
-    
+
     &glm_ease_sine_in,
     &glm_ease_sine_out,
     &glm_ease_sine_inout,
@@ -105,10 +105,7 @@ void set_value_to_end(tween_class_obj_t *tween){
         value->z.value = tween->end_2;
     }else if(tween->tween_type == tween_type_color){
         color_class_obj_t *value = tweening_value;
-        value->r.value = tween->end_0;
-        value->g.value = tween->end_1;
-        value->b.value = tween->end_2;
-        engine_color_sync_rgb_to_u16(value);
+        value->value = engine_color_from_rgb_float(tween->end_0, tween->end_1, tween->end_2);
     }
 }
 
@@ -251,11 +248,7 @@ static mp_obj_t tween_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
 
         // https://www.alanzucconi.com/2016/01/06/colour-interpolation/#:~:text=can%20be%20done-,as%20such,-%3A
         // Lame way of interpolating RGB: TODO
-        value->r.value = r0 + (r1 - r0) * t;
-        value->g.value = g0 + (g1 - g0) * t;
-        value->b.value = b0 + (b1 - b0) * t;
-
-        engine_color_sync_rgb_to_u16(value);
+        value->value = engine_color_from_rgb_float(r0 + (r1 - r0) * t, g0 + (g1 - g0) * t, b0 + (b1 - b0) * t);
     }
 
     return mp_const_none;
@@ -269,7 +262,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(tween_class_tick_obj, tween_class_tick);
    DESC: Starts tweening a value. See https://easings.net/ for plots of the various easing functions
    PARAM: [type=object]      [name=object]         [value=object (the object that has an attribute to be tweened)]
    PARAM: [type=string]      [name=attribute_name] [value=string]
-   PARAM: [type=object]      [name=start]          [value=object (must be the same type as the attribute from `attribute_name`)]
+   PARAM: [type=None|object] [name=start]          [value=None|object (None means the current value, otherwise must be the same type as the attribute from `attribute_name`)]
    PARAM: [type=object]      [name=end]            [value=object (must be the same type as the attribute from `attribute_name`)]
    PARAM: [type=int]         [name=duration]       [value=any positive value representing milliseconds]
    PARAM: [type=float]       [name=speed]          [value=any]
@@ -299,21 +292,24 @@ mp_obj_t tween_class_start(size_t n_args, const mp_obj_t *args){
     if(strlen(attr_name) == 0){
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Tween: ERROR: Trying to tween without an attribute name to lookup!"));
     }
-    
+
     // Get the qstr for the attribute that should be tweened
     tween->attr = mp_obj_str_get_qstr(args[2]);
 
-    const mp_obj_type_t *value_type = mp_obj_get_type(mp_load_attr(tween->object, tween->attr));
-    const mp_obj_type_t *start_type = mp_obj_get_type(args[3]);
-    const mp_obj_type_t *end_type = mp_obj_get_type(args[4]);
+    const mp_obj_t start_value = mp_load_attr(tween->object, tween->attr);
+    const mp_obj_type_t *value_type = mp_obj_get_type(start_value);
+    const mp_obj_t tween_start_value = args[3] == mp_const_none ? start_value : args[3];
+    const mp_obj_t tween_end_value = args[4];
+    const mp_obj_type_t *start_type = mp_obj_get_type(tween_start_value);
+    const mp_obj_type_t *end_type = mp_obj_get_type(tween_end_value);
 
     if(value_type == &mp_type_float && start_type == &mp_type_float && end_type == &mp_type_float){
-        tween->initial_0  = mp_obj_get_float(args[3]);
-        tween->end_0      = mp_obj_get_float(args[4]);
+        tween->initial_0  = mp_obj_get_float(tween_start_value);
+        tween->end_0      = mp_obj_get_float(tween_end_value);
         tween->tween_type = tween_type_float;
     }else if(value_type == &vector2_class_type && start_type == &vector2_class_type && end_type == &vector2_class_type){
-        vector2_class_obj_t *start = args[3];
-        vector2_class_obj_t *end = args[4];
+        vector2_class_obj_t *start = tween_start_value;
+        vector2_class_obj_t *end = tween_end_value;
 
         tween->initial_0 = start->x.value;
         tween->initial_1 = start->y.value;
@@ -323,8 +319,8 @@ mp_obj_t tween_class_start(size_t n_args, const mp_obj_t *args){
 
         tween->tween_type = tween_type_vec2;
     }else if(value_type == &vector3_class_type && start_type == &vector3_class_type && end_type == &vector3_class_type){
-        vector3_class_obj_t *start = args[3];
-        vector3_class_obj_t *end = args[4];
+        vector3_class_obj_t *start = tween_start_value;
+        vector3_class_obj_t *end = tween_end_value;
 
         tween->initial_0 = start->x.value;
         tween->initial_1 = start->y.value;
@@ -336,20 +332,21 @@ mp_obj_t tween_class_start(size_t n_args, const mp_obj_t *args){
 
         tween->tween_type = tween_type_vec3;
     }else if(value_type == &color_class_type && start_type == &color_class_type && end_type == &color_class_type){
-        color_class_obj_t *start = args[3];
-        color_class_obj_t *end = args[4];
+        color_class_obj_t *start = tween_start_value;
+        color_class_obj_t *end = tween_end_value;
 
-        tween->initial_0 = start->r.value;
-        tween->initial_1 = start->g.value;
-        tween->initial_2 = start->b.value;
+        tween->initial_0 = engine_color_get_r_float(start->value);
+        tween->initial_1 = engine_color_get_g_float(start->value);
+        tween->initial_2 = engine_color_get_b_float(start->value);
 
-        tween->end_0 = end->r.value;
-        tween->end_1 = end->g.value;
-        tween->end_2 = end->b.value;
+        tween->end_0 = engine_color_get_r_float(end->value);
+        tween->end_1 = engine_color_get_g_float(end->value);
+        tween->end_2 = engine_color_get_b_float(end->value);
 
         tween->tween_type = tween_type_color;
     }else{
-        ENGINE_PRINTF("ERROR: Got types value: %s, start: %s, end %s:\n", mp_obj_get_type_str(args[1]), mp_obj_get_type_str(args[3]), mp_obj_get_type_str(args[4]));
+        ENGINE_PRINTF("ERROR: Got types value: %s, start: %s, end %s:\n",
+            mp_obj_get_type_str(args[1]), mp_obj_get_type_str(tween_start_value), mp_obj_get_type_str(tween_end_value));
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Tween: ERROR: Unknown combination of `value`, `start`, and `end` object types"));
     }
 

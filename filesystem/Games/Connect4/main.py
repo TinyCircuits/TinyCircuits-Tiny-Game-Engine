@@ -10,7 +10,7 @@ from engine_math import Vector2,Vector3
 from engine_nodes import Rectangle2DNode, Text2DNode, CameraNode, Circle2DNode
 from engine_resources import FontResource
 
-engine.set_fps_limit(30)
+engine.fps_limit(30)
 
 #engine_debug.enable_all()
 
@@ -130,13 +130,13 @@ class Game(Rectangle2DNode):
             self.show_winner("AI Wins!")
             return
         if self.current_player == 1:
-            if engine_io.check_just_pressed(engine_io.DPAD_LEFT):
+            if engine_io.LEFT.is_just_pressed:
                 self.selected_col = max(0, self.selected_col - 1)
                 self.grid_node.selected_col = self.selected_col
-            elif engine_io.check_just_pressed(engine_io.DPAD_RIGHT):
+            elif engine_io.RIGHT.is_just_pressed:
                 self.selected_col = min(GRID_COLS - 1, self.selected_col + 1)
                 self.grid_node.selected_col = self.selected_col
-            elif engine_io.check_just_pressed(engine_io.A):
+            elif engine_io.A.is_just_pressed:
                 if self.make_move(self.selected_col, 1):
                     self.current_player = 2
         elif self.current_player == 2:
@@ -262,17 +262,17 @@ class Game(Rectangle2DNode):
 
     def valid_moves(self):
         return [c for c in range(GRID_COLS) if self.grid[0][c] == 0]
-    
+
     def get_next_open_row(self, grid, col):
         for r in range(GRID_ROWS-1, -1, -1):
             if grid[r][col] == 0:
                 return r
         return None
-    
+
     def minimax(self,grid, depth, isMaximizing, alpha, beta):
         if depth == 0 or self.check_win(1) or self.check_win(2):
             return self.evaluate_board(grid)
-        
+
         if isMaximizing:
             maxEval = float('-inf')
             for col in range(GRID_COLS):

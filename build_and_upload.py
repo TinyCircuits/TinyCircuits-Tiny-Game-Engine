@@ -24,7 +24,7 @@ def execute(cmd):
         raise CalledProcessError(p.returncode, p.args)
 
 
-# Helper for getting mounted drives on computer (RP3 only)
+# Helper for getting mounted drives on computer (rp3 only)
 # https://stackoverflow.com/questions/827371/is-there-a-way-to-list-all-the-available-windows-drives
 def get_drives():
     partitions = psutil.disk_partitions()
@@ -40,15 +40,15 @@ def get_drives():
 arguments = sys.argv[1:]
 
 if len(arguments) > 0 and arguments[0] == "clean":
-    execute(['make', '-C', '../../../ports/rp3', 'clean', 'BOARD=THUMBY_COLOR'])
-    print("\n\nSUCCESS: Done cleaning rp3 port!\n")
+    execute(['make', '-C', '../ports/rp2', 'clean', 'BOARD=THUMBY_COLOR'])
+    print("\n\nSUCCESS: Done cleaning rp2 port!\n")
     exit(1)
 
 
 # ### Step 2: Build the firmware (which will freeze everything in `modules`)
-print("\n\nBuilding rp3 port...\n")
-execute(['make', '-C', '../../../ports/rp3', '-j8', 'BOARD=THUMBY_COLOR', 'USER_C_MODULES=../../examples/usercmodule/TinyCircuits-Tiny-Game-Engine/src/micropython.cmake'])
-print("\n\nDone building rp3 port!\n")
+print("\n\nBuilding rp2 port...\n")
+execute(['make', '-C', '../ports/rp2', '-j8', 'BOARD=THUMBY_COLOR', 'USER_C_MODULES=../../TinyCircuits-Tiny-Game-Engine/src/micropython.cmake'])
+print("\n\nDone building rp2 port!\n")
 
 
 # ### Step 3: Assume that the port is plugged in and may be running a program, connect to it
@@ -97,7 +97,7 @@ while done == False:
 print("Found drive! " + mount)
 
 print("Copying firmware to device...")
-execute(['sudo', 'cp', '../../../ports/rp3/build-THUMBY_COLOR/firmware.uf2', mount + "/firmware.uf2"])
+execute(['sudo', 'cp', '../ports/rp2/build-THUMBY_COLOR/firmware.uf2', mount + "/firmware.uf2"])
 print("SUCCESS: Copied firmware to device!\n")
 
 # Wait for logo to end if calling in succession with run.py

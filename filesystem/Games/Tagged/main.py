@@ -18,7 +18,7 @@ from engine_animation import Tween, Delay, ONE_SHOT, LOOP, PING_PONG, EASE_ELAST
 import engine_debug
 #engine_debug.enable_all()
 #machine.freq(__freq)
-engine.set_fps_limit(60)
+engine.fps_limit(60)
 runner_texture = TextureResource("test_runner_frames_16bit.bmp")
 cam = CameraNode()
 player = Sprite2DNode()
@@ -50,7 +50,7 @@ class PlayerHitbox(PhysicsRectangle2DNode):
             print("Player pre-ticked on ground!")
         else:
             print("Player pre-ticked midair!")
-        if(engine_io.check_pressed(engine_io.DPAD_LEFT)):
+        if(engine_io.LEFT.is_pressed):
             if(self.on_ground):
                 self.velocity.x -= GROUND_ACCEL
                 if(self.velocity.x < -GROUND_MAX):
@@ -68,7 +68,7 @@ class PlayerHitbox(PhysicsRectangle2DNode):
                 self.velocity.x += AIR_DECEL
                 if(self.velocity.x > 0):
                     self.velocity.x = 0
-        if(engine_io.check_pressed(engine_io.DPAD_RIGHT)):
+        if(engine_io.RIGHT.is_pressed):
             if(self.on_ground):
                 print("Ground accel")
                 self.velocity.x += GROUND_ACCEL
@@ -88,7 +88,7 @@ class PlayerHitbox(PhysicsRectangle2DNode):
                 self.velocity.x -= AIR_DECEL
                 if(self.velocity.x < 0):
                     self.velocity.x = 0
-        if(engine_io.check_pressed(engine_io.A) and self.on_ground):
+        if(engine_io.A.is_pressed and self.on_ground):
             self.velocity.y -= 0.6
         #if(self.on_ground):
         #    self.player_spr.frame_current_y = 0

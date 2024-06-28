@@ -35,8 +35,8 @@
 bool is_engine_looping = false;
 bool fps_limit_disabled = true;
 float engine_fps_limit_period_ms = 16.6667f;
-float engine_fps_time_at_last_tick_ms = 0.0f;
-float engine_fps_time_at_before_last_tick_ms = 0.0f;
+uint32_t engine_fps_time_at_last_tick_ms = 0;
+uint32_t engine_fps_time_at_before_last_tick_ms = 0;
 float dt;
 
 
@@ -46,25 +46,36 @@ float engine_get_fps_limit_ms(){
 
 
 /* --- doc ---
-   NAME: set_fps_limit
-   ID: set_fps_limit
-   DESC: Sets the FPS limit that the game engine can run at. If the game runs fast enough to reach this, engine busy waits until it is time for the next frame
-   PARAM: [type=float] [name=fps] [value=any positive value]
-   RETURN: None
+   NAME: fps_limit
+   ID: fps_limit
+   DESC: Gets or sets the FPS limit that the game engine can run at. If the game runs fast enough to reach this, engine busy waits until it is time for the next frame. Infinity (math.inf) means a disabled FPS limit.
+   PARAM: [type=float (optional)] [name=fps] [value=a positive FPS value]
+   RETURN: None or float
 */
-static mp_obj_t engine_set_fps_limit(mp_obj_t fps_obj){
+static mp_obj_t engine_fps_limit(size_t n_args, const mp_obj_t *args){
+    if(n_args == 0){
+        if (fps_limit_disabled){
+            return mp_obj_new_float(INFINITY);
+        }
+        return mp_obj_new_float(1000.0f / engine_get_fps_limit_ms());
+    }
+
     ENGINE_INFO_PRINTF("Engine: Setting FPS");
-    float fps = mp_obj_get_float(fps_obj);
-    
+    float fps = mp_obj_get_float(args[0]);
+
     if(fps <= 0){
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Engine: ERROR: Tried to set fps limit to 0 (would divide by zero) or negative value"));
     }
-    
-    fps_limit_disabled = false;
-    engine_fps_limit_period_ms = (1.0f / fps) * 1000.0f;
+
+    if(fps == INFINITY){
+        fps_limit_disabled = true;
+    }else{
+        fps_limit_disabled = false;
+        engine_fps_limit_period_ms = 1000.0f / fps;
+    }
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_1(engine_set_fps_limit_obj, engine_set_fps_limit);
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_fps_limit_obj, 0, 1, engine_fps_limit);
 
 
 /* --- doc ---
@@ -89,7 +100,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_disable_fps_limit_obj, engine_disable_fps_limit
 */
 static mp_obj_t engine_get_running_fps(){
     ENGINE_INFO_PRINTF("Engine: Getting FPS");
-    float period = (engine_fps_time_at_last_tick_ms - engine_fps_time_at_before_last_tick_ms) / 1000.0f;    // Seconds
+    float period = millis_diff(engine_fps_time_at_last_tick_ms, engine_fps_time_at_before_last_tick_ms) / 1000.0f;    // Seconds
     float fps = 1.0f / period;
 
     if(engine_math_compare_floats(fps, 0.0f) == true){
@@ -140,11 +151,13 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_end_obj, engine_end);
 
 
 bool engine_tick(){
-    // Not sure why this is needed exactly for handling ctrl-c 
+    bool ticked = false;
+
+    // Not sure why this is needed exactly for handling ctrl-c
     // correctly, just replicating what happens in modutime.c
     MP_THREAD_GIL_EXIT();
 
-    dt = millis() - engine_fps_time_at_last_tick_ms;
+    dt = millis_diff(millis(), engine_fps_time_at_last_tick_ms);
     float dt_s = dt * 0.001f;
 
     // Now that all the node callbacks were called and potentially moved
@@ -159,7 +172,7 @@ bool engine_tick(){
         ENGINE_PERFORMANCE_START(ENGINE_PERF_TIMER_1);
 
         // Update/grab which buttons are pressed before calling all node callbacks
-        engine_io_update_pressed_buttons();
+        engine_io_tick();
 
         // Goes through all animation components.
         // Do this first in case a camera is being
@@ -177,10 +190,12 @@ bool engine_tick(){
         // Clear the depth buffer, if needed
         engine_display_clear_depth_buffer();
 
-        return true;
+        ticked = true;
     }
 
-    // Not sure why this is needed exactly for handling ctrl-c 
+    engine_objects_clear_deletable();
+
+    // Not sure why this is needed exactly for handling ctrl-c
     // correctly, just replicating what happens in modutime.c
     MP_THREAD_GIL_ENTER();
 
@@ -194,7 +209,7 @@ bool engine_tick(){
         engine_end();
     }
 
-    return false;
+    return ticked;
 }
 
 
@@ -221,7 +236,7 @@ static mp_obj_t engine_start(){
 
     is_engine_looping = true;
     while(is_engine_looping){
-        
+
         engine_tick();
         // // See ports/rp2/mphalport.h, ports/rp2/mphalport.c, py/mphal.h, shared/runtime/sys_stdio_mphal.c
         // // Can get chars from REPL and do stuff with them!
@@ -252,8 +267,8 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_module_init_obj, engine_module_init);
    NAME: engine
    ID: engine
    DESC: Main component for controlling vital engine features
-   ATTR: [type=function] [name={ref_link:set_fps_limit}]        [value=function]
-   ATTR: [type=function] [name={ref_link:disable_fps_limit}]    [value=function (fps limit is disabled by default, use {ref_link:set_fps_limit} to enable it)]
+   ATTR: [type=function] [name={ref_link:fps_limit}]            [value=getter/setter function]
+   ATTR: [type=function] [name={ref_link:disable_fps_limit}]    [value=function (fps limit is disabled by default, use {ref_link:fps_limit} to enable it)]
    ATTR: [type=function] [name={ref_link:get_running_fps}]      [value=function]
    ATTR: [type=function] [name={ref_link:engine_tick}]          [value=function]
    ATTR: [type=function] [name={ref_link:engine_start}]         [value=function]
@@ -263,7 +278,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_module_init_obj, engine_module_init);
 static const mp_rom_map_elem_t engine_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine) },
     { MP_OBJ_NEW_QSTR(MP_QSTR___init__), (mp_obj_t)&engine_module_init_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_set_fps_limit), (mp_obj_t)&engine_set_fps_limit_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_fps_limit), (mp_obj_t)&engine_fps_limit_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_disable_fps_limit), (mp_obj_t)&engine_disable_fps_limit_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_get_running_fps), (mp_obj_t)&engine_get_running_fps_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_tick), (mp_obj_t)&engine_mp_tick_obj },

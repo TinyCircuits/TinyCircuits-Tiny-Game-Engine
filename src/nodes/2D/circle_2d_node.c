@@ -15,7 +15,7 @@
 
 void circle_2d_node_class_draw(mp_obj_t circle_node_base_obj, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("Circle2DNode: Drawing");
-    
+
     engine_node_base_t *circle_node_base = circle_node_base_obj;
     engine_circle_2d_node_class_obj_t *circle_2d_node = circle_node_base->node;
 
@@ -88,9 +88,9 @@ void circle_2d_node_class_draw(mp_obj_t circle_node_base_obj, mp_obj_t camera_no
     }
 
     if(circle_outlined == false){
-        engine_draw_filled_circle(circle_color->value.val, floorf(circle_rotated_x), floorf(circle_rotated_y), circle_radius, circle_opacity, shader);
+        engine_draw_filled_circle(circle_color->value, floorf(circle_rotated_x), floorf(circle_rotated_y), circle_radius, circle_opacity, shader);
     }else{
-        engine_draw_outline_circle(circle_color->value.val, floorf(circle_rotated_x), floorf(circle_rotated_y), circle_radius, circle_opacity, shader);
+        engine_draw_outline_circle(circle_color->value, floorf(circle_rotated_x), floorf(circle_rotated_y), circle_radius, circle_opacity, shader);
     }
 }
 
@@ -106,18 +106,18 @@ bool circle_2d_node_load_attr(engine_node_base_t *self_node_base, qstr attribute
             destination[1] = self_node_base;
             return true;
         break;
-        case MP_QSTR_destroy:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_obj);
+        case MP_QSTR_mark_destroy:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_mark_destroy_obj);
             destination[1] = self_node_base;
             return true;
         break;
-        case MP_QSTR_destroy_all:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_all_obj);
+        case MP_QSTR_mark_destroy_all:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_mark_destroy_all_obj);
             destination[1] = self_node_base;
             return true;
         break;
-        case MP_QSTR_destroy_children:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_children_obj);
+        case MP_QSTR_mark_destroy_children:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_mark_destroy_children_obj);
             destination[1] = self_node_base;
             return true;
         break;
@@ -217,7 +217,7 @@ bool circle_2d_node_store_attr(engine_node_base_t *self_node_base, qstr attribut
             return true;
         break;
         case MP_QSTR_color:
-            self->color = destination[1];
+            self->color = engine_color_wrap(destination[1]);
             return true;
         break;
         case MP_QSTR_opacity:
@@ -275,29 +275,29 @@ static mp_attr_fun_t circle_2d_node_class_attr(mp_obj_t self_in, qstr attribute,
    DESC: Simple node that draws a colored circle given a radius
    PARAM:   [type={ref_link:Vector2}]  [name=position]                                  [value={ref_link:Vector2}]
    PARAM:   [type=float]               [name=radius]                                    [value=any]
-   PARAM:   [type=int]                 [name=color]                                     [value={ref_link:Color}]
+   PARAM:   [type={ref_link:Color}|int (RGB565)]  [name=color]                          [value=color]
    PARAM:   [type=float]               [name=opacity]                                   [value=0 ~ 1.0]
    PARAM:   [type=bool]                [name=outline]                                   [value=True or False]
-   PARAM:   [type=float]               [name=rotation]                                  [value=any] 
-   PARAM:   [type=float]               [name=scale]                                     [value=any] 
+   PARAM:   [type=float]               [name=rotation]                                  [value=any]
+   PARAM:   [type=float]               [name=scale]                                     [value=any]
    ATTR:    [type=function]            [name={ref_link:add_child}]                      [value=function]
    ATTR:    [type=function]            [name={ref_link:get_child}]                      [value=function]
    ATTR:    [type=function]            [name={ref_link:get_child_count}]                [value=function]
-   ATTR:    [type=function]            [name={ref_link:node_base_destroy}]              [value=function]
-   ATTR:    [type=function]            [name={ref_link:node_base_destroy_all}]          [value=function]
-   ATTR:    [type=function]            [name={ref_link:node_base_destroy_children}]     [value=function]  
-   ATTR:    [type=function]            [name={ref_link:remove_child}]                   [value=function]                                        
-   ATTR:    [type=function]            [name={ref_link:set_layer}]                      [value=function]                                        
+   ATTR:    [type=function]            [name={ref_link:node_base_mark_destroy}]              [value=function]
+   ATTR:    [type=function]            [name={ref_link:node_base_mark_destroy_all}]          [value=function]
+   ATTR:    [type=function]            [name={ref_link:node_base_mark_destroy_children}]     [value=function]
+   ATTR:    [type=function]            [name={ref_link:remove_child}]                   [value=function]
+   ATTR:    [type=function]            [name={ref_link:set_layer}]                      [value=function]
    ATTR:    [type=function]            [name={ref_link:get_layer}]                      [value=function]
-   ATTR:    [type=function]            [name={ref_link:tick}]                           [value=function]                                
-   ATTR:    [type={ref_link:Vector2}]  [name=position]                                  [value={ref_link:Vector2}]                                
-   ATTR:    [type=float]               [name=radius]                                    [value=any]                                             
-   ATTR:    [type=float]               [name=rotation]                                  [value=any]                                             
-   ATTR:    [type=int]                 [name=color]                                     [value=0 ~ 65535 (16-bit RGB565 0bRRRRRGGGGGGBBBBB)]
+   ATTR:    [type=function]            [name={ref_link:tick}]                           [value=function]
+   ATTR:    [type={ref_link:Vector2}]  [name=position]                                  [value={ref_link:Vector2}]
+   ATTR:    [type=float]               [name=radius]                                    [value=any]
+   ATTR:    [type=float]               [name=rotation]                                  [value=any]
+   ATTR:    [type={ref_link:Color}|int (RGB565)]  [name=color]                          [value=color]
    ATTR:    [type=float]               [name=opacity]                                   [value=0 ~ 1.0]
-   ATTR:    [type=float]               [name=scale]                                     [value=any]           
-   ATTR:    [type=bool]                [name=outline]                                   [value=True or False]     
-   OVRR:    [type=function]            [name={ref_link:tick}]                           [value=function]                          
+   ATTR:    [type=float]               [name=scale]                                     [value=any]
+   ATTR:    [type=bool]                [name=outline]                                   [value=True or False]
+   OVRR:    [type=function]            [name={ref_link:tick}]                           [value=function]
 */
 mp_obj_t circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Circle2DNode");
@@ -316,7 +316,7 @@ mp_obj_t circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
     enum arg_ids {child_class, position, radius, color, opacity, outline, rotation, scale};
     bool inherited = false;
 
-    // If there is one positional argument and it isn't the first 
+    // If there is one positional argument and it isn't the first
     // expected argument (as is expected when using positional
     // arguments) then define which way to parse the arguments
     if(n_args >= 1 && mp_obj_get_type(args[0]) != &vector2_class_type){
@@ -335,7 +335,7 @@ mp_obj_t circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
 
     if(parsed_args[position].u_obj == MP_OBJ_NULL) parsed_args[position].u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL);
     if(parsed_args[radius].u_obj == MP_OBJ_NULL) parsed_args[radius].u_obj = mp_obj_new_float(5.0f);
-    if(parsed_args[color].u_obj == MP_OBJ_NULL) parsed_args[color].u_obj = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0xffff)});
+    if(parsed_args[color].u_obj == MP_OBJ_NULL) parsed_args[color].u_obj = MP_OBJ_NEW_SMALL_INT(0xffff);
     if(parsed_args[opacity].u_obj == MP_OBJ_NULL) parsed_args[opacity].u_obj = mp_obj_new_float(1.0f);
     if(parsed_args[outline].u_obj == MP_OBJ_NULL) parsed_args[outline].u_obj = mp_obj_new_bool(false);
     if(parsed_args[rotation].u_obj == MP_OBJ_NULL) parsed_args[rotation].u_obj = mp_obj_new_float(0.0f);
@@ -352,7 +352,7 @@ mp_obj_t circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
     circle_2d_node->position = parsed_args[position].u_obj;
     circle_2d_node->radius = parsed_args[radius].u_obj;
     circle_2d_node->rotation = parsed_args[rotation].u_obj;
-    circle_2d_node->color = parsed_args[color].u_obj;
+    circle_2d_node->color = engine_color_wrap(parsed_args[color].u_obj);
     circle_2d_node->opacity = parsed_args[opacity].u_obj;
     circle_2d_node->scale = parsed_args[scale].u_obj;
     circle_2d_node->outline = parsed_args[outline].u_obj;
