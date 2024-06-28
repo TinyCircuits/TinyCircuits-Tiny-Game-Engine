@@ -2,6 +2,7 @@
 #include "engine_gui.h"
 #include "engine_io_buttons.h"
 #include "py/obj.h"
+#include <string.h>
 
 #ifdef __unix__
     #include "engine_io_sdl.h"

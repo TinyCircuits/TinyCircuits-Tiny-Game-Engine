@@ -5,6 +5,13 @@
 #include "math/engine_math.h"
 #include "utility/engine_defines.h"
 
+#ifdef __unix__
+    #include "engine_io_sdl.h"
+#else
+    #include "engine_io_rp3.h"
+    #include "hardware/adc.h"
+#endif
+
 
 button_class_obj_t* gui_toggle_button = &BUTTON_MENU;
 
