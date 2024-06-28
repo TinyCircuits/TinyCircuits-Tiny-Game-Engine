@@ -2,8 +2,10 @@ import engine_main
 import engine
 import engine_draw
 import engine_io
+import engine_audio
+
 from engine_nodes import Sprite2DNode, CameraNode, Rectangle2DNode, Text2DNode
-from engine_resources import TextureResource, FontResource
+from engine_resources import TextureResource, FontResource, WaveSoundResource
 from engine_math import Vector2, Vector3
 from engine_draw import Color
 from engine_animation import Tween, Delay, ONE_SHOT, EASE_SINE_IN
@@ -15,6 +17,7 @@ import math
 font = FontResource("munro-narrow_10.bmp")
 cards_texture = TextureResource("BiggerCards2read.bmp")
 background = TextureResource("thumbatrobackground.bmp")
+money_sound = WaveSoundResource("money.wav")
 #overlay = TextureResource("thumbatrooverlay.bmp")
 
 # Constants
@@ -311,7 +314,6 @@ class CardSprite(Sprite2DNode):
         rule = get_rule(rank, suit)
         if len(rule) > 20:
             rule = get_rule(short_rank, short_suit)
-
         return rule
     
 class JokerCard(CardSprite):
@@ -436,7 +438,7 @@ class UpgradeRankTarotCard(TarotCard):
         eligible_cards = [card for card in game.player_collection if card.original_frame_x == self.rank_to_upgrade]
         cards_to_upgrade = random_sample(eligible_cards, self.level_bonus)
         for card in cards_to_upgrade:
-            card.original_frame_x += 1
+            card.original_frame_x = (card.original_frame_x + 1) % 13
 
     def print_rules(self):
         rank_name = RANK_NAMES[self.rank_to_upgrade]
@@ -510,6 +512,7 @@ class PokerGame(Rectangle2DNode):
         self.background.playing = False
         self.background.set_layer(0)
         self.add_child(self.background)
+        self.audio = None
 
         #self.overlay = Sprite2DNode(Vector2(63, 63))
         #self.overlay.frame_count_x = 1
@@ -613,6 +616,10 @@ class PokerGame(Rectangle2DNode):
             if tween.finished:
                 tweens.remove(tween)
                 self.update_hand_indicator_position()
+
+        if self.audio and not tweens:
+            self.audio.stop()
+            self.audio = None
 
         if self.game_over:
             if self.game_over_time is None:
@@ -951,6 +958,7 @@ class PokerGame(Rectangle2DNode):
         duration= 1000 + end_scale * 500
         tween_scale(score_node, Vector2(1, 1), Vector2(end_scale, end_scale), duration)
         tween_opacity(score_node, 1.0, 0.0, duration)
+        self.audio = engine_audio.play(money_sound, 0, True)
 
     def display_played_hand(self):
         start_x = 10
