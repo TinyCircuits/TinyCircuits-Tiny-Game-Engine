@@ -151,48 +151,11 @@ class Game(Rectangle2DNode):
         self.winner_timer = 0
         self.selected_difficulty = selected_difficulty
 
-        # Initialize FPS counter
-        self.fps_counter = Text2DNode(position=Vector2(10, 5),
-                                      font=font,
-                                      text="0",
-                                      rotation=0,
-                                      scale=Vector2(1, 1),
-                                      opacity=1.0,
-                                      letter_spacing=1,
-                                      line_spacing=1)
-        self.fps_counter.set_layer(7)
-        self.add_child(self.fps_counter)
-        self.frame_count = 0
-        self.elapsed_time = 0
-        self.fps_records = []
-
     def setCurrentPlayer(self,player):
         self.current_player=player
 
     def tick(self, dt):
         global planned_ai_move, ai_thinking
-        # Update frame count and elapsed time
-        self.frame_count += 1
-        self.elapsed_time += dt
-        # Update FPS counter every second
-        self.frame_count += 1
-        self.elapsed_time += dt
-
-        # Update FPS counter every second
-        if self.elapsed_time >= 1.0:
-            # Record the FPS for this second
-            fps = self.frame_count / self.elapsed_time
-            self.fps_records.append(fps)
-            self.frame_count = 0
-            self.elapsed_time = 0
-
-            # Keep only the last 5 seconds of FPS data
-            if len(self.fps_records) > 5:
-                self.fps_records.pop(0)
-
-            # Calculate the moving average FPS
-            average_fps = sum(self.fps_records) / len(self.fps_records)
-            self.fps_counter.text = f"{int(average_fps)}"
 
         with game_state_lock:
             if self.winner_message:
@@ -424,7 +387,7 @@ def start_game(selected_difficulty):
 camera = CameraNode()
 camera.position = Vector3(DISP_WIDTH / 2, DISP_WIDTH / 2, 1)
 difficulty_levels = ["Very Easy", "Easy", "Medium", "Hard", "Ultra"]
-menu = SimpleTextMenu("Select\nDifficulty", difficulty_levels, start_game, font, DISP_WIDTH-20, DISP_HEIGHT-20, engine_draw.white, engine_draw.yellow )
+menu = SimpleTextMenu("Select\nDifficulty", difficulty_levels, start_game, font, DISP_WIDTH, DISP_HEIGHT, engine_draw.white, engine_draw.yellow )
 game = None
 
 engine.start()
