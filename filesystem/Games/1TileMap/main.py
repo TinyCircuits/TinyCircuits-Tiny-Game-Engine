@@ -10,6 +10,18 @@ import random, time
 from math import sin, cos, radians, sqrt, log, pi
 from array import array
 
+import gc
+
+def print_memory_usage():
+    gc.collect()
+    free_memory = gc.mem_free()
+    allocated_memory = gc.mem_alloc()
+    total_memory = free_memory + allocated_memory
+    print(f"Total Memory: {total_memory} bytes")
+    print(f"Allocated Memory: {allocated_memory} bytes")
+    print(f"Free Memory: {free_memory} bytes")
+    print()
+
 def generate_cellular_automata(width, height, seed, fill_percent, edges_are_walls):
     random.seed(seed)
     
@@ -24,6 +36,13 @@ def generate_cellular_automata(width, height, seed, fill_percent, edges_are_wall
                 map[x * height + y] = 1 if random.randint(0, 100) < fill_percent else 0
                 
     return map
+
+def print_map(map, width, height):
+    for y in range(height):
+        for x in range(width):
+            print(map[x * height + y], end=" ")
+        print()
+    print()
 
 def get_moore_surrounding_tiles(map, x, y, width, height, edges_are_walls):
     tile_count = 0
@@ -106,6 +125,7 @@ def generate_random_walk_river(map, width, height, start, length):
         y = (y + direction[1]) % height
         if map[x * height + y] == 1:
             break
+    
     return map
 
 def gaussian_random(mean, stddev):
@@ -128,14 +148,24 @@ def generate_golf_hole(global_width, global_height, seed):
 
     # Generate the rough background
     rough_map = generate_cellular_automata(global_width, global_height, seed, 70, True)
+    print("Initial rough_map:")
+    print_map(rough_map, global_width, global_height)
 
     # Generate the fairway
     fairway_map = generate_cellular_automata(global_width, global_height, seed, density, True)
+    print("Initial fairway_map:")
+    print_map(fairway_map, global_width, global_height)
     fairway_map = smooth_moore_cellular_automata(fairway_map, global_width, global_height, False, smoothness)
+    print("Smoothed fairway_map:")
+    print_map(fairway_map, global_width, global_height)
 
     # Generate the green
     green_map = generate_cellular_automata(global_width, global_height, seed, 65, True)
+    print("Initial green_map:")
+    print_map(green_map, global_width, global_height)
     green_map = smooth_moore_cellular_automata(green_map, global_width, global_height, False, 10)
+    print("Smoothed green_map:")
+    print_map(green_map, global_width, global_height)
 
     # Draw fairway and green shapes
     hole_shape = [(global_width // 2, 0)]
@@ -156,6 +186,8 @@ def generate_golf_hole(global_width, global_height, seed):
         launch_point = (x, y)
         distance_so_far += segment_distance
 
+    print(f"Hole shape: {hole_shape}")
+
     # Draw fairway and green shapes on the map
     for i in range(len(hole_shape) - 1):
         fairway_map = draw_line_on_map(fairway_map, global_width, global_height, hole_shape[i], hole_shape[i+1], fairway_width)
@@ -165,19 +197,27 @@ def generate_golf_hole(global_width, global_height, seed):
 
     # Generate water hazards
     water_map = generate_cellular_automata(global_width, global_height, seed, 40, True)
+    print("Initial water_map:")
+    print_map(water_map, global_width, global_height)
     for _ in range(random.randint(1, 3)):
         start = (random.randint(0, global_width - 1), random.randint(0, global_height - 1))
         length = random.randint(10, 50)
         water_map = generate_random_walk_river(water_map, global_width, global_height, start, length)
     water_map = smooth_moore_cellular_automata(water_map, global_width, global_height, False, 3)
+    print("Smoothed water_map:")
+    print_map(water_map, global_width, global_height)
 
     # Generate bunkers
     bunker_map = generate_cellular_automata(global_width, global_height, seed, 30, True)
+    print("Initial bunker_map:")
+    print_map(bunker_map, global_width, global_height)
     for _ in range(random.randint(1, 3)):
         center = (random.randint(0, global_width - 1), random.randint(0, global_height - 1))
         width = random.randint(3, 7)
         bunker_map = draw_circle_on_map(bunker_map, global_width, global_height, center, width)
     bunker_map = smooth_moore_cellular_automata(bunker_map, global_width, global_height, False, 3)
+    print("Smoothed bunker_map:")
+    print_map(bunker_map, global_width, global_height)
 
     return rough_map, fairway_map, green_map, water_map, bunker_map
 
@@ -199,57 +239,77 @@ green_tile = TTileType('green', green_texture, frame_count_x=3, frame_count_y=6)
 trees_tile = TTileType('dirt', trees_texture, frame_count_x=3, frame_count_y=6)
 
 # Define map dimensions and parameters
-global_width = 10
-global_height = 50
+global_width = 30
+global_height = 80
 seed = time.time()
-
+print_memory_usage()
 # Generate a random golf hole
 rough_map, fairway_map, green_map, water_map, bunker_map = generate_golf_hole(global_width, global_height, seed)
+print_memory_usage()
 
-# Initialize renderers for each map
-#renderer_rough = TilingRenderer(rough_map, grass_tile, tile_rules, global_width, global_height)
-#renderer_rough.set_layer(1)
+print_memory_usage()
+def count_ones(map):
+    return sum(map)
 
-renderer_fairway = TilingRenderer(fairway_map, grass_tile, tile_rules, global_width, global_height)
-renderer_fairway.set_layer(2)
-
-#renderer_green = TilingRenderer(green_map, green_tile, tile_rules, global_width, global_height)
-#renderer_green.set_layer(3)
-
-renderer_water = TilingRenderer(water_map, water_tile, tile_rules, global_width, global_height)
-renderer_water.set_layer(4)
-
-renderer_bunker = TilingRenderer(bunker_map, sand_tile, tile_rules, global_width, global_height)
-renderer_bunker.set_layer(5)
+#print(f"Number of 1s in rough_map: {count_ones(rough_map)}")
+print(f"Number of 1s in fairway_map: {count_ones(fairway_map)}")
+#print(f"Number of 1s in green_map: {count_ones(green_map)}")
+print(f"Number of 1s in water_map: {count_ones(water_map)}")
+print(f"Number of 1s in bunker_map: {count_ones(bunker_map)}")
 
 class MovingCamera(CameraNode):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, renderers):
+        super().__init__(self)
         self.zoom_levels = [0.125, 0.25, 0.5, 1, 2, 3, 4, 5]
         self.zoom_index = 3  # Start with zoom level 1 (index 3)
         self.zoom = self.zoom_levels[self.zoom_index]
+        self.renderers = renderers
 
     def tick(self, dt):
-        # NOTE: Game coordinate system is -y = to top of screen, +y = to bottom of screen
+        moved = False
+
+        # Camera movement logic
         if engine_io.check_pressed(engine_io.DPAD_UP):
             self.position.y -= 1
+            moved = True
         elif engine_io.check_pressed(engine_io.DPAD_DOWN):
             self.position.y += 1
-        
-        # X axis works how it should
+            moved = True
+
         if engine_io.check_pressed(engine_io.DPAD_LEFT):
             self.position.x -= 1
+            moved = True
         elif engine_io.check_pressed(engine_io.DPAD_RIGHT):
             self.position.x += 1
+            moved = True
 
         if engine_io.check_just_pressed(engine_io.B):
             self.zoom_index = max(0, self.zoom_index - 1)
             self.zoom = self.zoom_levels[self.zoom_index]
+            moved = True
         elif engine_io.check_just_pressed(engine_io.A):
             self.zoom_index = min(len(self.zoom_levels) - 1, self.zoom_index + 1)
             self.zoom = self.zoom_levels[self.zoom_index]
+            moved = True
 
-camera = MovingCamera()
+        if moved:
+            # Update all renderers' visible tiles
+            for renderer in self.renderers:
+                renderer.render_tiles()
+
+camera = MovingCamera([])  # Initialize without renderers first
+
+renderer_fairway = TilingRenderer(fairway_map, grass_tile, tile_rules, global_width, global_height, camera)
+renderer_fairway.set_layer(2)
+
+renderer_water = TilingRenderer(water_map, water_tile, tile_rules, global_width, global_height, camera)
+renderer_water.set_layer(4)
+
+renderer_bunker = TilingRenderer(bunker_map, sand_tile, tile_rules, global_width, global_height, camera)
+renderer_bunker.set_layer(5)
+
+# Now add the renderers to the camera
+camera.renderers = [renderer_fairway, renderer_water, renderer_bunker]
 camera.position = Vector3(DISP_WIDTH / 2, DISP_WIDTH / 2, 1)
 
 engine.start()

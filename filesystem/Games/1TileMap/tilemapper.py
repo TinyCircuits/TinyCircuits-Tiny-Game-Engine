@@ -5,6 +5,18 @@ import engine_io
 from engine_math import Vector2
 from engine_nodes import Rectangle2DNode, Sprite2DNode
 
+import gc
+
+def print_memory_usage():
+    gc.collect()
+    free_memory = gc.mem_free()
+    allocated_memory = gc.mem_alloc()
+    total_memory = free_memory + allocated_memory
+    print(f"Total Memory: {total_memory} bytes")
+    print(f"Allocated Memory: {allocated_memory} bytes")
+    print(f"Free Memory: {free_memory} bytes")
+    print()
+
 class TTileType:
     def __init__(self, name, texture, frame_count_x, frame_count_y):
         self.name = name
@@ -56,28 +68,52 @@ class TileRules:
         return True
 
 class TilingRenderer(Rectangle2DNode):
-    def __init__(self, tile_map, tile_type, tile_rules, map_width, map_height):
+    def __init__(self, tile_map, tile_type, tile_rules, map_width, map_height, camera):
         super().__init__(self)
         self.tile_map = tile_map
         self.tile_type = tile_type
         self.tile_rules = tile_rules
         self.map_width = map_width
         self.map_height = map_height
-        self.render_tiles()
         self.sprites = []
+        self.camera = camera
+        self.tile_size = self.tile_type.texture.width // self.tile_type.frame_count_x
         self.opacity = 0.0
+        # Precalculate the sprites for each tile
+        self.precalculated_sprites = [[None for _ in range(map_height)] for _ in range(map_width)]
+        self.precalculate_sprites()
 
-    def render_tiles(self):
-        #self.destroy_children()
-        self.sprites = []
+    def precalculate_sprites(self):
         for y in range(self.map_height):
             for x in range(self.map_width):
                 if self.tile_map[x * self.map_height + y] == 1:
                     surrounding = self.get_surrounding(x, y)
                     result = self.tile_rules.get_tile(surrounding)
-                    if result is None:
-                        continue
-                    frame_x, frame_y = result
+                    if result:
+                        frame_x, frame_y = result
+                        self.precalculated_sprites[x][y] = (frame_x, frame_y)
+
+    def render_tiles(self):
+        # Clear existing sprites
+        self.sprites=[]
+
+        # Calculate the visible area based on the camera position and zoom level
+        camera_left = self.camera.position.x - (self.map_width * 2) / self.camera.zoom
+        camera_right = self.camera.position.x + (self.map_width * 2) / self.camera.zoom
+        camera_top = self.camera.position.y - (self.map_height * 2) / self.camera.zoom
+        camera_bottom = self.camera.position.y + (self.map_height * 2) / self.camera.zoom
+
+        # Convert the camera bounds to tile coordinates
+        start_x = max(0, int(camera_left // self.tile_size))
+        end_x = min(self.map_width, int(camera_right // self.tile_size) + 1)
+        start_y = max(0, int(camera_top // self.tile_size))
+        end_y = min(self.map_height, int(camera_bottom // self.tile_size) + 1)
+
+        for y in range(start_y, end_y):
+            for x in range(start_x, end_x):
+                frame = self.precalculated_sprites[x][y]
+                if frame:
+                    frame_x, frame_y = frame
                     self.render_tile(x, y, frame_x, frame_y)
 
     def get_surrounding(self, x, y):
