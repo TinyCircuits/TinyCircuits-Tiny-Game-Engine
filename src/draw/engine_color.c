@@ -69,8 +69,17 @@ static void color_class_print(const mp_print_t *print, mp_obj_t self_in, mp_prin
 }
 
 
+inline bool engine_color_is_instance(mp_obj_t obj) {
+    return MP_OBJ_IS_TYPE(obj, &color_class_type) || MP_OBJ_IS_TYPE(obj, &const_color_class_type);
+}
+
+inline bool engine_color_is_class(const mp_obj_type_t *type) {
+    return type == &color_class_type || type == &const_color_class_type;
+}
+
+
 uint16_t engine_color_class_color_value(mp_obj_t color) {
-    if (MP_OBJ_IS_TYPE(color, &color_class_type) || MP_OBJ_IS_TYPE(color, &const_color_class_type)) {
+    if (engine_color_is_instance(color)) {
         return ((color_class_obj_t*)MP_OBJ_TO_PTR(color))->value;
     } else if(MP_OBJ_IS_INT(color)) {
         return mp_obj_get_int(color);
@@ -81,7 +90,7 @@ uint16_t engine_color_class_color_value(mp_obj_t color) {
 
 
 mp_obj_t engine_color_wrap(mp_obj_t color) {
-    if (MP_OBJ_IS_TYPE(color, &color_class_type) || MP_OBJ_IS_TYPE(color, &const_color_class_type)) {
+    if (engine_color_is_instance(color)) {
         return color;
     } else if(MP_OBJ_IS_INT(color)) {
         color_class_obj_t *color_obj = mp_obj_malloc(color_class_obj_t, &color_class_type);

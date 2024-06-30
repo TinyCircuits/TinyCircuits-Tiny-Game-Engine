@@ -331,7 +331,7 @@ mp_obj_t tween_class_start(size_t n_args, const mp_obj_t *args){
         tween->end_2 = end->z.value;
 
         tween->tween_type = tween_type_vec3;
-    }else if(value_type == &color_class_type && start_type == &color_class_type && end_type == &color_class_type){
+    }else if(engine_color_is_class(value_type) && engine_color_is_class(start_type) && engine_color_is_class(end_type)){
         color_class_obj_t *start = tween_start_value;
         color_class_obj_t *end = tween_end_value;
 
