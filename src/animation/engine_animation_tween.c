@@ -331,23 +331,27 @@ mp_obj_t tween_class_start(size_t n_args, const mp_obj_t *args){
         tween->end_2 = end->z.value;
 
         tween->tween_type = tween_type_vec3;
-    }else if(engine_color_is_class(value_type) && engine_color_is_class(start_type) && engine_color_is_class(end_type)){
-        color_class_obj_t *start = tween_start_value;
-        color_class_obj_t *end = tween_end_value;
+    }else if(engine_color_is_instance(start_value) &&
+            (engine_color_is_instance(tween_start_value) || mp_obj_is_int(tween_start_value)) &&
+            (engine_color_is_instance(tween_end_value) || mp_obj_is_int(tween_end_value))){
+        uint16_t start = mp_obj_is_int(tween_start_value) ? mp_obj_get_int(tween_start_value) : ((color_class_obj_t*)tween_start_value)->value;
+        uint16_t end = mp_obj_is_int(tween_end_value) ? mp_obj_get_int(tween_end_value) : ((color_class_obj_t*)tween_end_value)->value;
 
-        tween->initial_0 = engine_color_get_r_float(start->value);
-        tween->initial_1 = engine_color_get_g_float(start->value);
-        tween->initial_2 = engine_color_get_b_float(start->value);
+        tween->initial_0 = engine_color_get_r_float(start);
+        tween->initial_1 = engine_color_get_g_float(start);
+        tween->initial_2 = engine_color_get_b_float(start);
 
-        tween->end_0 = engine_color_get_r_float(end->value);
-        tween->end_1 = engine_color_get_g_float(end->value);
-        tween->end_2 = engine_color_get_b_float(end->value);
+        tween->end_0 = engine_color_get_r_float(end);
+        tween->end_1 = engine_color_get_g_float(end);
+        tween->end_2 = engine_color_get_b_float(end);
 
         tween->tween_type = tween_type_color;
     }else{
         ENGINE_PRINTF("ERROR: Got types value: %s, start: %s, end %s:\n",
-            mp_obj_get_type_str(args[1]), mp_obj_get_type_str(tween_start_value), mp_obj_get_type_str(tween_end_value));
-        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Tween: ERROR: Unknown combination of `value`, `start`, and `end` object types"));
+            mp_obj_get_type_str(start_value), mp_obj_get_type_str(tween_start_value), mp_obj_get_type_str(tween_end_value));
+        mp_raise_msg_varg(&mp_type_RuntimeError,
+            MP_ERROR_TEXT("Tween: ERROR: Unknown combination of types: value is %s, start is %s, end is %s"),
+            mp_obj_get_type_str(start_value), mp_obj_get_type_str(tween_start_value), mp_obj_get_type_str(tween_end_value));
     }
 
     if(n_args >= 6){

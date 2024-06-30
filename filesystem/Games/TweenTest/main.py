@@ -26,9 +26,9 @@ r1.position.x = 10
 r1.position.y = 0
 r1.rotation = 0.0
 
-
+print(str(engine_draw.Color(0.3, 0, 1).value))
 r1.tween.start(r1, "rotation", 0.0, 2*math.pi, 3000, 1.0, ONE_SHOT, EASE_ELAST_IN_OUT)
-r1.tween2.start(r1, "color", engine_draw.red, engine_draw.blue, 3000, 1.0, ONE_SHOT, EASE_SINE_IN_OUT)
+r1.tween2.start(r1, "color", engine_draw.red, 0x481F, 3000, 1.0, ONE_SHOT, EASE_SINE_IN_OUT)
 # r1.tween.start(r1, "position", r1.position, Vector2(30, 30), 1000, 1.0, ONE_SHOT, EASE_ELAST_IN_OUT)
 
 

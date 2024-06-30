@@ -73,10 +73,6 @@ inline bool engine_color_is_instance(mp_obj_t obj) {
     return MP_OBJ_IS_TYPE(obj, &color_class_type) || MP_OBJ_IS_TYPE(obj, &const_color_class_type);
 }
 
-inline bool engine_color_is_class(const mp_obj_type_t *type) {
-    return type == &color_class_type || type == &const_color_class_type;
-}
-
 
 uint16_t engine_color_class_color_value(mp_obj_t color) {
     if (engine_color_is_instance(color)) {
