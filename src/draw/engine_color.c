@@ -10,6 +10,17 @@ static inline float clamp_0_to_1(float value) {
     return engine_math_clamp(value, 0.0f, 1.0f);
 }
 
+static inline uint16_t clamp_int(uint16_t value, uint16_t max) {
+    if (value > 0x1FFF) {
+        // The value is negative, but wrapped around as it's an unsigned type.
+        return 0;
+    }
+    if (value > max) {
+        return max;
+    }
+    return value;
+}
+
 static inline uint16_t round_float(float value){
     return (uint16_t)(value + 0.5f);
 }
@@ -27,9 +38,9 @@ uint16_t ENGINE_FAST_FUNCTION(engine_color_blend)(uint16_t from, uint16_t to, fl
     uint16_t to_r, to_g, to_b;
     engine_color_split_u16(to, &to_r, &to_g, &to_b);
 
-    const uint16_t out_r = round_float(clamp_0_to_1(sqrtf((1.0f - amount) * (from_r*from_r) + amount * (to_r*to_r))));
-    const uint16_t out_g = round_float(clamp_0_to_1(sqrtf((1.0f - amount) * (from_g*from_g) + amount * (to_g*to_g))));
-    const uint16_t out_b = round_float(clamp_0_to_1(sqrtf((1.0f - amount) * (from_b*from_b) + amount * (to_b*to_b))));
+    const uint16_t out_r = clamp_int(round_float(sqrtf((1.0f - amount) * (from_r*from_r) + amount * (to_r*to_r))), bitmask_5_bit);
+    const uint16_t out_g = clamp_int(round_float(sqrtf((1.0f - amount) * (from_g*from_g) + amount * (to_g*to_g))), bitmask_6_bit);
+    const uint16_t out_b = clamp_int(round_float(sqrtf((1.0f - amount) * (from_b*from_b) + amount * (to_b*to_b))), bitmask_5_bit);
 
     return (out_r << 11) | (out_g << 5) | (out_b << 0);
 }
