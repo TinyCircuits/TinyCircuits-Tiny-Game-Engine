@@ -60,20 +60,6 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_io_rumble_obj, engine_io_rumble);
 
 
 /*  --- doc ---
-    NAME: gui_focused_toggle
-    ID: gui_focused_toggle
-    DESC: Toggle between button inputs being consumed by the game or gui elements. Also release all buttons (see {ref_link:release_all_buttons}).
-    RETURN: bool
-*/
-static mp_obj_t engine_io_gui_focused_toggle(){
-    bool gui_focused = engine_gui_toggle_focus();
-    buttons_release_all();
-    return mp_obj_new_bool(gui_focused);
-}
-MP_DEFINE_CONST_FUN_OBJ_0(engine_io_gui_focused_toggle_obj, engine_io_gui_focused_toggle);
-
-
-/*  --- doc ---
     NAME: gui_focused
     ID: gui_focused
     DESC: Get or set whether the GUI is focused. If set, also release all buttons (see {ref_link:release_all_buttons}).
@@ -88,6 +74,37 @@ static mp_obj_t engine_io_gui_focused(size_t n_args, const mp_obj_t *args){
     return mp_obj_new_bool(engine_gui_is_gui_focused());
 }
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_io_gui_focused_obj, 0, 1, engine_io_gui_focused);
+
+
+/*  --- doc ---
+    NAME: gui_focused_toggle
+    ID: gui_focused_toggle
+    DESC: Toggle between button inputs being consumed by the game or gui elements. Also release all buttons (see {ref_link:release_all_buttons}).
+    RETURN: bool
+*/
+static mp_obj_t engine_io_gui_focused_toggle(){
+    bool gui_focused = engine_gui_toggle_focus();
+    buttons_release_all();
+    return mp_obj_new_bool(gui_focused);
+}
+MP_DEFINE_CONST_FUN_OBJ_0(engine_io_gui_focused_toggle_obj, engine_io_gui_focused_toggle);
+
+
+/*  --- doc ---
+    NAME: gui_wrapping
+    ID: gui_wrapping
+    DESC: Get or set whether the GUI nodes navigation using the D-pad wraps around the screen when there are no nodes to go to. Default: True.
+    PARAM: [type=bool (optional)]   [name=wrapping_enabled]  [value=bool]
+    RETURN: bool or None
+*/
+static mp_obj_t engine_io_gui_wrapping(size_t n_args, const mp_obj_t *args){
+    if (n_args == 1) {
+        engine_gui_set_wrapping(mp_obj_get_int(args[0]));
+        return mp_const_none;
+    }
+    return mp_obj_new_bool(engine_gui_get_wrapping());
+}
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_io_gui_wrapping_obj, 0, 1, engine_io_gui_wrapping);
 
 
 /*  --- doc ---
@@ -201,6 +218,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(buttons_reset_params_all_obj, engine_io_reset_all_butt
     ATTR: [type=function]            [name={ref_link:rumble}]                   [value=function]
     ATTR: [type=function]            [name={ref_link:gui_focused}]              [value=getter/setter function]
     ATTR: [type=function]            [name={ref_link:gui_focused_toggle}]       [value=function]
+    ATTR: [type=function]            [name={ref_link:gui_wrapping}]             [value=getter/setter function]
     ATTR: [type=function]            [name={ref_link:battery_level}]            [value=function]
     ATTR: [type=function]            [name={ref_link:focused_node}]             [value=function]
     ATTR: [type=function]            [name={ref_link:gui_toggle_button}]        [value=setter/setter function]
@@ -224,6 +242,7 @@ static const mp_rom_map_elem_t engine_io_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_rumble), MP_ROM_PTR(&engine_io_rumble_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_gui_focused), MP_ROM_PTR(&engine_io_gui_focused_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_gui_focused_toggle), MP_ROM_PTR(&engine_io_gui_focused_toggle_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_gui_wrapping), MP_ROM_PTR(&engine_io_gui_wrapping_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_battery_level), MP_ROM_PTR(&engine_io_battery_level_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_focused_node), MP_ROM_PTR(&engine_io_focused_node_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_gui_toggle_button), MP_ROM_PTR(&engine_io_gui_toggle_button_obj) },

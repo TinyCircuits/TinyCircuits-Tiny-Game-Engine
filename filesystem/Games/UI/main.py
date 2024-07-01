@@ -67,9 +67,6 @@ class MyButton(GUIButton2DNode):
     def tick(self, dt):
         pass
 
-    def on_focused(self):
-        print("Focused", self.text)
-
     def on_just_focused(self):
         print("Just focused", self.text)
 
@@ -91,12 +88,12 @@ class MyButton(GUIButton2DNode):
 
 
 buttons = []
-for x in range(5):
-    for y in range(5):
+for x in range(10):
+    for y in range(10):
         button = MyButton()
-        button.position = Vector2(x*30, y*30)
+        button.position = Vector2(x*60, y*30)
         button.font = font
-        button.text = str(x) + str(y)
+        button.text = f"N({x}, {y})"
         button.rotation = 0
         button.scale = Vector2(1, 1)
         button.padding = 4

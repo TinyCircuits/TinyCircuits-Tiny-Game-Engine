@@ -13,6 +13,9 @@ engine_node_base_t *focused_gui_node_base = NULL;
 
 bool gui_focused = false;
 
+// Whether wrapping around when navigating GUI elements is enabled.
+bool gui_wrapping_enabled = true;
+
 
 vector2_class_obj_t *resolve_gui_node_position(engine_node_base_t *gui_node_base){
     if(mp_obj_is_type(focused_gui_node_base, &engine_gui_bitmap_button_2d_node_class_type)){
@@ -107,62 +110,35 @@ engine_node_base_t *engine_gui_get_focused(){
 }
 
 
-bool engine_gui_is_left_check(float angle_radians){
-    // 135 to 225
-    if(angle_radians >= 135.0f && angle_radians <= 225.0f){
-        return true;
-    }else{
-        return false;
-    }
+void engine_gui_set_wrapping(bool enabled){
+    gui_wrapping_enabled = enabled;
+}
+
+bool engine_gui_get_wrapping(){
+    return gui_wrapping_enabled;
 }
 
 
-bool engine_gui_is_right_check(float angle_radians){
-    // 315 to 45
-    if((angle_radians >= 315.0f && angle_radians <= 360.0f) || (angle_radians >= 0.0f && angle_radians <= 45.0f)){
-        return true;
-    }else{
-        return false;
-    }
-}
-
-
-bool engine_gui_is_up_check(float angle_radians){
-    // 225 to 315 (remember positions towards the top of the screen are at -y)
-    if(angle_radians >= 225.0f && angle_radians <= 315.0f){
-        return true;
-    }else{
-        return false;
-    }
-}
-
-
-bool engine_gui_is_down_check(float angle_radians){
-    // 45 to 135
-    if(angle_radians >= 45.0f && angle_radians <= 135.0f){
-        return true;
-    }else{
-        return false;
-    }
-}
-
-
-// Given `focused_gui_node_base`, find the next closest
-// gui node.
-void engine_gui_select_closest(bool (direction_check)(float)){
+// Given `focused_gui_node_base` and a direction, find the next closest gui node.
+void engine_gui_select_closest(float dir_x, float dir_y, bool allow_wrap){
     // Make sure to not do anything if no GUI nodes in scene
     if(focused_gui_node_base == NULL){
         return;
     }
+
+    float dir_len_sqr = engine_math_vector_length_sqr(dir_x, dir_y);
 
     // Get the position of the currently focused GUI node
     vector2_class_obj_t *focused_gui_position = resolve_gui_node_position(focused_gui_node_base);
 
     // Setup for looping through all GUI nodes and finding closest
     linked_list *gui_list = engine_collections_get_gui_list();
-    linked_list_node *current_gui_list_node = gui_list->start;
+    if(gui_list->count < 2){
+        return;
+    }
     engine_node_base_t *closest_gui_node_base = NULL;
-    float shortest_distance = FLT_MAX;
+    linked_list_node *current_gui_list_node = gui_list->start;
+    float best_node_value = FLT_MAX;
 
     while(current_gui_list_node != NULL){
 
@@ -179,30 +155,112 @@ void engine_gui_select_closest(bool (direction_check)(float)){
         // Get the position of the current GUI node
         vector2_class_obj_t *searching_gui_position = resolve_gui_node_position(searching_gui_node_base);
 
-        // Get the angle between the focused node and
-        // the node we looped to now
-        float angle_radians = engine_math_angle_between(focused_gui_position->x.value, focused_gui_position->y.value, searching_gui_position->x.value, searching_gui_position->y.value);
+        // Find the position of the current node relative to the focused node, as a vector.
+        float rel_pos_x = searching_gui_position->x.value - focused_gui_position->x.value;
+        float rel_pos_y = searching_gui_position->y.value - focused_gui_position->y.value;
+        float rel_pos_len_sqr = engine_math_vector_length_sqr(rel_pos_x, rel_pos_y);
 
-        // Convert from -180 ~ 180 to 0 ~ 360: https://stackoverflow.com/a/25725005
-        angle_radians = fmodf(angle_radians + TWICE_PI, TWICE_PI);
+        float dir_dot_rel = engine_math_dot_product(dir_x, dir_y, rel_pos_x, rel_pos_y);
+        // Skip any nodes "behind" the focused node.
+        if (dir_dot_rel >= 0.0f){
+            // Find the angle between the position vector and the dir, using the dot product property:
+            //   a·b = |a||b|cos(theta)
+            float cos_theta_sqr = dir_dot_rel * dir_dot_rel / (dir_len_sqr * rel_pos_len_sqr);
 
-        // Convert to degrees (for readability)
-        angle_radians = angle_radians * 180.0f / PI;
-
-        // Using the passed function, see if the angle
-        // is in the direction we want to go
-        if(direction_check(angle_radians)){
-            float distance = engine_math_distance_between(focused_gui_position->x.value, focused_gui_position->y.value, searching_gui_position->x.value, searching_gui_position->y.value);
-
-            // If the distance is closer than the last one
-            // we compared to, set it as the closest
-            if(distance < shortest_distance){
-                shortest_distance = distance;
-                closest_gui_node_base = searching_gui_node_base;
+            // Accept only nodes within the 90 degree cone in front of the focused node, so cos(theta) >= cos(45deg) = sqrt(2)/2,
+            // so cos(theta)^2 >= 0.5.
+            if(cos_theta_sqr >= 0.5f){
+                // Prefer nodes that are closer to the focused node, and at a direction closer to the specified direction.
+                //
+                // In particular, consider a rectangular grid of nodes, where A is the focused node. The geometric distance
+                // |AC| is 1, and |AB| is some constant k. The dir is a diagonal vector pointing down and right, at 45 degrees.
+                // We expect that in a square or close to square grid (i.e. when k is close to 1), node D will be selected.
+                // We also never want the node F (which has theta closer to 0) to be selected.
+                //
+                //     [A]  B
+                //      C   D
+                //      E   F
+                //
+                //                                                           dist1 =                 dist2 =                 dist3 =
+                // Node      distance        |theta|       cos(theta)  distance/cos(theta)^2   distance/cos(theta)^3   distance/cos(theta)^4
+                // -------------------------------------------------------------------------------------------------------------------------
+                //   B          k             45deg        sqrt(2)/2           2k                     2.83k                    4k
+                //   C          1             45deg        sqrt(2)/2           2                      2.83                     4
+                //   D      sqrt(k^2+1)   atan(k)-45deg
+                //   F      sqrt(k^2+4)  atan(k/2)-45deg
+                //
+                // For k=1:
+                //   D         1.41             0              1              1.41                    1.41                    1.41
+                //   F         2.24           -18deg         0.95             2.48                    2.62                    2.76
+                //                                                          best is D               best is D               best is D
+                // For k=1.5:
+                //   D         1.80            11deg         0.98             1.87                    1.91                    1.95
+                //   F         2.50            -8deg         0.99             2.55                    2.58                    2.60
+                //                                                          best is D               best is D               best is D
+                // For k=2:
+                //   D         2.23            18deg         0.94             2.48                    2.62                    2.76
+                //   F         2.83             0              1              2.83                    2.83                    2.83
+                //                                                          best is C!              best is D               best is D
+                // For k=2.5:
+                //   D         2.69            23deg         0.92             3.19                    3.47                    3.77
+                //   F         3.20             6deg         0.99             3.24                    3.26                    3.28
+                //                                                          best is C!              best is C!               best is F!
+                //
+                // The last three columns present three candidates for the distance metric function.
+                // The node with the lowest value is selected. The dist2 formula will select the node D
+                // even for k=2, while the other formulas will select C or F instead. The dist2 formula
+                // will also never select node F, regardless of the value of k, which makes it a good candidate.
+                //
+                // To avoid using the square root function, we use the square of the above formula, so finally
+                // node_value = dist2^2 = distance^2 / cos(theta)^6.
+                float node_value = rel_pos_len_sqr / (cos_theta_sqr * cos_theta_sqr * cos_theta_sqr);
+                if(node_value < best_node_value){
+                    best_node_value = node_value;
+                    closest_gui_node_base = searching_gui_node_base;
+                }
             }
         }
 
         current_gui_list_node = current_gui_list_node->next;
+    }
+
+    if(allow_wrap && closest_gui_node_base == NULL){
+        // Nothing found in the specified direction, so try wrapping around. This is a rare case, so redoing some calculations
+        // from before is fine. We don't optimise this case as much as the more common case above.
+
+        current_gui_list_node = gui_list->start;
+        while(current_gui_list_node != NULL){
+            // Initial logic same as above.
+            if(current_gui_list_node->object == focused_gui_node_base){
+                current_gui_list_node = current_gui_list_node->next;
+                continue;
+            }
+            engine_node_base_t *searching_gui_node_base = current_gui_list_node->object;
+            vector2_class_obj_t *searching_gui_position = resolve_gui_node_position(searching_gui_node_base);
+            float rel_pos_x = searching_gui_position->x.value - focused_gui_position->x.value;
+            float rel_pos_y = searching_gui_position->y.value - focused_gui_position->y.value;
+            float rel_pos_len_sqr = engine_math_vector_length_sqr(rel_pos_x, rel_pos_y);
+            float dir_dot_rel = engine_math_dot_product(dir_x, dir_y, rel_pos_x, rel_pos_y);
+            // Only analyse nodes "behind" the focused node.
+            if (dir_dot_rel <= 0.0f){
+                float cos_theta_sqr = dir_dot_rel * dir_dot_rel / (dir_len_sqr * rel_pos_len_sqr);
+                // Accept only nodes within the 90 degree cone behind the focused node, so cos(theta) <= cos(135deg) = -sqrt(2)/2,
+                // so cos(theta)^2 >= 0.5.
+                if(cos_theta_sqr >= 0.5f){
+                    // When wrapping, the furthest node in the opposite direction along the dir axis should
+                    // be selected. The exact formula is probably not that important, as most of the time
+                    // wrapping will happen with dir having only one non-zero component. Diagonal wrapping
+                    // is also possible, but it is difficult to even determine what is the expected result.
+                    float node_value = -rel_pos_len_sqr * cos_theta_sqr * cos_theta_sqr * cos_theta_sqr;
+                    if(node_value < best_node_value){
+                        best_node_value = node_value;
+                        closest_gui_node_base = searching_gui_node_base;
+                    }
+                }
+            }
+
+            current_gui_list_node = current_gui_list_node->next;
+        }
     }
 
     // Found one! Focus it and make sure to unfocus the
@@ -281,14 +339,28 @@ void engine_gui_tick(){
         return;
     }
 
+    float dir_x = 0.0f;
+    float dir_y = 0.0f;
     if(button_is_pressed_autorepeat(&BUTTON_DPAD_LEFT)){
-        engine_gui_select_closest(engine_gui_is_left_check);
+        dir_x = -1.0f;
     }else if(button_is_pressed_autorepeat(&BUTTON_DPAD_RIGHT)){
-        engine_gui_select_closest(engine_gui_is_right_check);
-    }else if(button_is_pressed_autorepeat(&BUTTON_DPAD_UP)){
-        engine_gui_select_closest(engine_gui_is_up_check);
+        dir_x = 1.0f;
+    }
+    if(button_is_pressed_autorepeat(&BUTTON_DPAD_UP)){
+        dir_y = -1.0f;
     }else if(button_is_pressed_autorepeat(&BUTTON_DPAD_DOWN)){
-        engine_gui_select_closest(engine_gui_is_down_check);
+        dir_y = 1.0f;
+    }
+    if(dir_x || dir_y){
+        bool allow_wrap = false;
+        if(gui_wrapping_enabled){
+            // Allow wrapping only if any of the dpad buttons was just pressed.
+            // Use binary arithmetic instead of method calls for speed.
+            allow_wrap = (
+                (BUTTON_CODE_DPAD_UP | BUTTON_CODE_DPAD_DOWN | BUTTON_CODE_DPAD_LEFT | BUTTON_CODE_DPAD_RIGHT) &
+                pressed_buttons & ~prev_pressed_buttons) != 0;
+        }
+        engine_gui_select_closest(dir_x, dir_y, allow_wrap);
     }
 
     // Check if the focused/highlighted node should respond
