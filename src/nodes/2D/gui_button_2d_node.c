@@ -38,7 +38,6 @@ void gui_button_2d_node_class_draw(mp_obj_t button_node_base_obj, mp_obj_t camer
         engine_camera_node_class_obj_t *camera = camera_node_base->node;
 
 
-        vector3_class_obj_t *camera_position = camera->position;
         rectangle_class_obj_t *camera_viewport = camera->viewport;
         float camera_zoom = mp_obj_get_float(camera->zoom);
 
@@ -61,11 +60,8 @@ void gui_button_2d_node_class_draw(mp_obj_t button_node_base_obj, mp_obj_t camer
             node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
             camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
 
-            button_rotated_x -= camera_resolved_hierarchy_x;
-            button_rotated_y -= camera_resolved_hierarchy_y;
-
-            // Scale transformation due to camera zoom
-            engine_math_scale_point(&button_rotated_x, &button_rotated_y, camera_position->x.value, camera_position->y.value, camera_zoom);
+            button_rotated_x = (button_rotated_x - camera_resolved_hierarchy_x) * camera_zoom;
+            button_rotated_y = (button_rotated_y - camera_resolved_hierarchy_y) * camera_zoom;
 
             // Rotate rectangle origin about the camera
             engine_math_rotate_point(&button_rotated_x, &button_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
