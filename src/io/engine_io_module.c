@@ -146,37 +146,69 @@ static mp_obj_t engine_io_gui_toggle_button(size_t n_args, const mp_obj_t *args)
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_io_gui_toggle_button_obj, 0, 1, engine_io_gui_toggle_button);
 
 
+#if defined(__arm__)
+static float engine_io_raw_half_battery_voltage(){
+    // Read the 12-bit sample with ADC max ref voltage of 3.3V
+    uint16_t battery_voltage_12_bit = adc_read();
+    // Battery voltage is either 5V when charging or 4.2V to 2.75V on battery.
+    // The input voltage we're measuring is before the LDO. The measured voltage
+    // is dropped to below max readable reference voltage of 3.3V through 1/(1+1)
+    // voltage divider (cutting it in half):
+    // 5/2    = 2.5V    <- CHARGING
+    // 4.2/2  = 2.1V    <- MAX
+    // 3.3/2 = 1.65V    <- MIN
+    return battery_voltage_12_bit * ADC_CONV_FACTOR;
+}
+#endif
+
+
+/*  --- doc ---
+    NAME: battery_voltage
+    ID: battery_voltage
+    DESC: Get the battery voltage in volts. Ideally it is 5 when charging, or in range 2.75 to 4.2 when on battery.
+    RETURN: float
+*/
+static mp_obj_t engine_io_battery_voltage(){
+    #if defined(__arm__)
+        return mp_obj_new_float(2 * engine_io_raw_half_battery_voltage());
+    #endif
+    return mp_obj_new_float(5.0f);
+}
+MP_DEFINE_CONST_FUN_OBJ_0(engine_io_battery_voltage_obj, engine_io_battery_voltage);
+
+
 /*  --- doc ---
     NAME: battery_level
     ID: battery_level
-    DESC: Get the battery level as a float between 0.0 and 1.0
-    RETURN: float
-
+    DESC: Get the battery level percentage as an int between 0 and 100. This is obviously approximate.
+    RETURN: int
 */
 static mp_obj_t engine_io_battery_level(){
     #if defined(__arm__)
-        // Read the 12-bit sample with ADC max ref voltage of 3.3V
-        uint16_t battery_voltage_12_bit = adc_read();
-
-        // Battery voltage is either 5V when charging or 4.2V to 2.75V on battery.
-        // The input voltage we're measuring is before the LDO. The measured voltage
-        // is dropped to below max readable reference voltage of 3.3V through 1/(1+1)
-        // voltage divider (cutting it in half):
-        // 5/2    = 2.5V
-        // 4.2/2  = 2.1V    <- MAX
-        // 3.3/2 = 1.65V    <- MIN
-        float battery_half_voltage = battery_voltage_12_bit * ADC_CONV_FACTOR;
-
+        float battery_half_voltage = engine_io_raw_half_battery_voltage();
         // Map to the range we want to return.
-        // Clamp since we only care showing between 0.0 and 1.0 for this function
-        float battery_percentage = engine_math_map_clamp(battery_half_voltage, 1.65f, 2.1f, 0.0f, 1.0f);
-
-        return mp_obj_new_float(battery_percentage);
+        // Clamp since we only care showing between 0 and 100 for this function. Round to nearest int (hence +0.5).
+        return mp_obj_new_int((uint16_t)engine_math_map_clamp(engine_io_raw_half_battery_voltage(), 1.65f, 2.1f, 0.5f, 100.5f));
     #endif
-
-    return mp_obj_new_float(1.0f);
+    return mp_obj_new_int(100);
 }
 MP_DEFINE_CONST_FUN_OBJ_0(engine_io_battery_level_obj, engine_io_battery_level);
+
+
+/*  --- doc ---
+    NAME: is_charging
+    ID: is_charging
+    DESC: Get whether the device is currently connected to external power.
+    RETURN: bool
+*/
+static mp_obj_t engine_io_is_charging(){
+    #if defined(__arm__)
+        return mp_obj_new_bool(engine_io_raw_half_battery_voltage() >= 2.4f);
+    #endif
+    return mp_const_true;
+}
+MP_DEFINE_CONST_FUN_OBJ_0(engine_io_is_charging_obj, engine_io_is_charging);
+
 
 static mp_obj_t engine_io_module_init(){
     engine_main_raise_if_not_initialized();
@@ -219,7 +251,9 @@ MP_DEFINE_CONST_FUN_OBJ_0(buttons_reset_params_all_obj, engine_io_reset_all_butt
     ATTR: [type=function]            [name={ref_link:gui_focused}]              [value=getter/setter function]
     ATTR: [type=function]            [name={ref_link:gui_focused_toggle}]       [value=function]
     ATTR: [type=function]            [name={ref_link:gui_wrapping}]             [value=getter/setter function]
+    ATTR: [type=function]            [name={ref_link:battery_voltage}]          [value=function]
     ATTR: [type=function]            [name={ref_link:battery_level}]            [value=function]
+    ATTR: [type=function]            [name={ref_link:is_charging}]              [value=function]
     ATTR: [type=function]            [name={ref_link:focused_node}]             [value=function]
     ATTR: [type=function]            [name={ref_link:gui_toggle_button}]        [value=setter/setter function]
     ATTR: [type=type]                [name={ref_link:Button}]                   [value=the Button class]
@@ -243,7 +277,9 @@ static const mp_rom_map_elem_t engine_io_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_gui_focused), MP_ROM_PTR(&engine_io_gui_focused_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_gui_focused_toggle), MP_ROM_PTR(&engine_io_gui_focused_toggle_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_gui_wrapping), MP_ROM_PTR(&engine_io_gui_wrapping_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_battery_voltage), MP_ROM_PTR(&engine_io_battery_voltage_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_battery_level), MP_ROM_PTR(&engine_io_battery_level_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_is_charging), MP_ROM_PTR(&engine_io_is_charging_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_focused_node), MP_ROM_PTR(&engine_io_focused_node_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_gui_toggle_button), MP_ROM_PTR(&engine_io_gui_toggle_button_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Button), MP_ROM_PTR(&button_class_type) },
