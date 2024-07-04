@@ -35,8 +35,8 @@
 bool is_engine_looping = false;
 bool fps_limit_disabled = true;
 float engine_fps_limit_period_ms = 1;  // limit disabled initially anyway
-uint32_t engine_fps_time_at_last_tick_ms = 0;
-uint32_t engine_fps_time_at_before_last_tick_ms = 0;
+uint32_t engine_fps_time_at_last_tick_ms = MILLIS_NULL;
+uint32_t engine_fps_time_at_before_last_tick_ms = MILLIS_NULL;
 
 
 float engine_get_fps_limit_ms(){
@@ -99,6 +99,9 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_disable_fps_limit_obj, engine_disable_fps_limit
 */
 static mp_obj_t engine_get_running_fps(){
     ENGINE_INFO_PRINTF("Engine: Getting FPS");
+    if(engine_fps_time_at_before_last_tick_ms == MILLIS_NULL){
+        return mp_obj_new_float(99999);
+    }
     float period = millis_diff(engine_fps_time_at_last_tick_ms, engine_fps_time_at_before_last_tick_ms) / 1000.0f;    // Seconds
     float fps = 1.0f / period;
 
@@ -158,7 +161,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_end_obj, engine_end);
 */
 static mp_obj_t engine_mp_time_to_next_tick(){
     int32_t time_to_next_tick;
-    if(fps_limit_disabled){
+    if(fps_limit_disabled || engine_fps_time_at_last_tick_ms == MILLIS_NULL){
         time_to_next_tick = 0;
     }else{
         int32_t dt_ms = millis_diff(millis(), engine_fps_time_at_last_tick_ms);
@@ -180,7 +183,12 @@ bool engine_tick(){
     MP_THREAD_GIL_EXIT();
 
     uint32_t now = millis();
-    float dt_ms = (float)millis_diff(now, engine_fps_time_at_last_tick_ms);
+    float dt_ms;
+    if(engine_fps_time_at_last_tick_ms == MILLIS_NULL){
+        dt_ms = engine_fps_limit_period_ms;
+    }else{
+        dt_ms = (float)millis_diff(now, engine_fps_time_at_last_tick_ms);
+    }
 
     // Now that all the node callbacks were called and potentially moved
     // physics nodes around, step the physics engine another tick.
