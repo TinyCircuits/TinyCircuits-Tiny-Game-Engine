@@ -22,7 +22,7 @@ void engine_animation_init(){
 }
 
 
-void engine_animation_tick(float dt){
+void engine_animation_tick(float dt_ms){
     linked_list_node *current = animation_list.start;
     mp_obj_t exec[3];
 
@@ -35,20 +35,20 @@ void engine_animation_tick(float dt){
             if(tween->during != mp_const_none && tween->finished == false){
                 exec[0] = tween->during;
                 exec[1] = tween->self;
-                exec[2] = mp_obj_new_float(dt);
+                exec[2] = mp_obj_new_float(dt_ms);
                 mp_call_method_n_kw(1, 0, exec);
             }
 
             exec[0] = tween->tick;
             exec[1] = tween->self;
-            exec[2] = mp_obj_new_float(dt);
+            exec[2] = mp_obj_new_float(dt_ms);
             mp_call_method_n_kw(1, 0, exec);
         }else{
             delay_class_obj_t *delay = current->object;
 
             exec[0] = delay->tick;
             exec[1] = delay->self;
-            exec[2] = mp_obj_new_float(dt);
+            exec[2] = mp_obj_new_float(dt_ms);
 
             mp_call_method_n_kw(1, 0, exec);
         }
@@ -69,8 +69,8 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_animation_module_init_obj, engine_animation_mod
    NAME: engine_animation
    ID: engine_animation
    DESC: Module for animating certain aspects of the engine
-   ATTR: [type=object]     [name={ref_link:Tween}]      [value=object] 
-   ATTR: [type=object]     [name={ref_link:Delay}]      [value=object] 
+   ATTR: [type=object]     [name={ref_link:Tween}]      [value=object]
+   ATTR: [type=object]     [name={ref_link:Delay}]      [value=object]
    ATTR: [type=enum/int]   [name=LOOP]                  [value=1]
    ATTR: [type=enum/int]   [name=ONE_SHOT]              [value=2]
    ATTR: [type=enum/int]   [name=PING_PONG]             [value=3]
