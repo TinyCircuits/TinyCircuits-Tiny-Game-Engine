@@ -18,6 +18,9 @@ font = FontResource("munro-narrow_10.bmp")
 cards_texture = TextureResource("BiggerCards2read.bmp")
 background = TextureResource("thumbatrobackground.bmp")
 money_sound = WaveSoundResource("money.wav")
+select_sound = WaveSoundResource("select.wav")
+play_sound = WaveSoundResource("play.wav")
+shuffle_sound = WaveSoundResource("shuffle.wav")
 #overlay = TextureResource("thumbatrooverlay.bmp")
 
 # Constants
@@ -518,6 +521,8 @@ class PokerGame(Rectangle2DNode):
         self.last_sound_time = None
         self.playing_sounds = []
         self.current_channel = 0
+        self.sound_play_duration = 0
+        self.sound_start_time = None
 
         #self.overlay = Sprite2DNode(Vector2(63, 63))
         #self.overlay.frame_count_x = 1
@@ -639,6 +644,8 @@ class PokerGame(Rectangle2DNode):
         self.playing_sounds = []
         self.sound_interval = 400
         self.last_sound_time = None
+        self.sound_play_duration = 0
+        self.sound_start_time = None
 
     def tick(self, dt):
         if engine_io.MENU.is_just_pressed:
@@ -654,12 +661,12 @@ class PokerGame(Rectangle2DNode):
             if self.last_sound_time:
                 if time.ticks_diff(time.ticks_ms(), self.last_sound_time) >= self.sound_interval:
                     self.play_sound()
-                    self.sound_interval = max(20, self.sound_interval - 20)  # Decrease interval, but not below 50ms
+                    self.sound_interval = max(20, self.sound_interval - 20)  # Decrease interval, but not below 20ms
                     self.last_sound_time = time.ticks_ms()
 
-        # Check if all tweens are finished and stop all sounds
-        if not tweens and self.playing_sounds:
-            self.stop_all_sounds()
+            # Stop sounds after the play duration has elapsed
+            if self.sound_start_time and time.ticks_diff(time.ticks_ms(), self.sound_start_time) >= self.sound_play_duration:
+                self.stop_all_sounds()
 
         if self.game_over:
             if self.game_over_time is None:
@@ -764,6 +771,7 @@ class PokerGame(Rectangle2DNode):
             card.select(True)
             self.selected_cards.append(card)
             self.update_hand_score_display()
+            engine_audio.play(select_sound, 0, False)
 
     def deselect_card(self):
         card = self.hand[self.current_card_index]
@@ -771,6 +779,7 @@ class PokerGame(Rectangle2DNode):
             card.select(False)
             self.selected_cards.remove(card)
             self.update_hand_score_display()
+            engine_audio.play(select_sound, 0, False)
 
     def update_hand_score_display(self):
         if not self.selected_cards:
@@ -812,6 +821,7 @@ class PokerGame(Rectangle2DNode):
                 self.hand.extend(new_cards)
                 self.update_hand_positions()
                 self.selected_cards = []
+            engine_audio.play(play_sound, 0, False)
         self.update_game_info()
 
     def discard_and_draw(self):
@@ -830,6 +840,7 @@ class PokerGame(Rectangle2DNode):
             self.update_hand_positions()
             self.selected_cards = []
             self.discard_limit -= 1
+            engine_audio.play(play_sound, 0, False)
 
         self.update_game_info()
 
@@ -999,6 +1010,8 @@ class PokerGame(Rectangle2DNode):
         duration= 1000 + end_scale * 500
         tween_scale(score_node, Vector2(1, 1), Vector2(end_scale, end_scale), duration)
         tween_opacity(score_node, 1.0, 0.0, duration)
+        self.sound_play_duration = 500 + end_scale * 500
+        self.sound_start_time = time.ticks_ms()
         self.play_sound()
 
     def display_played_hand(self):
@@ -1203,12 +1216,14 @@ class PokerGame(Rectangle2DNode):
         if card not in self.selected_cards and len(self.selected_cards) < 2:
             card.select(True)
             self.selected_cards.append(card)
+            engine_audio.play(select_sound, 0, False)
 
     def deselect_booster_card(self):
         card = self.booster_cards[self.current_card_index]
         if card in self.selected_cards:
             card.select(False)
             self.selected_cards.remove(card)
+            engine_audio.play(select_sound, 0, False)
 
     def confirm_booster_selection(self):
         if not self.selected_cards:
@@ -1265,6 +1280,7 @@ class PokerGame(Rectangle2DNode):
         self.draw_hand()
         self.hand_indicator.opacity = 1
         self.update_game_info()
+        engine_audio.play(shuffle_sound, 0, False)
 
 
 engine_io.gui_toggle_button(None)
