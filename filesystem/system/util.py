@@ -65,13 +65,11 @@ def dirname(path):
     return "/" if ind < 0 else path[:ind]
 
 
-def is_thumby():
-    # TODO: Maybe use information from sys instead?
-    return ROOT_DIR == "/"
+IS_THUMBY = "TinyCircuits Thumby Color" in sys.implementation._machine
 
 
 def thumby_reset(hard):
-    if is_thumby():
+    if IS_THUMBY:
         if hard:
             machine.reset()
         else:

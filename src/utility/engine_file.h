@@ -6,6 +6,11 @@
 #include "py/objstr.h"
 #include "py/stream.h"
 
+// The file path on the current filesystem.
+// For Thumby hardware, this returns the same filename. For unix, if the path is absolute,
+// it returns the path relative to the emulator filesystem.
+mp_obj_str_t* engine_file_to_system_path(mp_obj_str_t *filename);
+
 // Open a file instance until it is closed (cannot use this
 // across the engine to open multiple files at the same time)
 void engine_file_open_read(uint8_t file_index, mp_obj_str_t *filename);

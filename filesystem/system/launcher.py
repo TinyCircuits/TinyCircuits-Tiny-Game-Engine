@@ -92,9 +92,9 @@ games = get_games_in_dir("Games")
 
 engine.fps_limit(60)
 
-font = FontResource("assets/outrunner_outline.bmp")
-launcher_tile_texture = TextureResource("assets/launcher-tile.bmp")
-launcher_tile_mark_texture = TextureResource("assets/launcher-tile-mark.bmp")
+font = FontResource("/assets/outrunner_outline.bmp")
+launcher_tile_texture = TextureResource("/assets/launcher-tile.bmp")
+launcher_tile_mark_texture = TextureResource("/assets/launcher-tile-mark.bmp")
 
 
 class BatteryIndicator(Sprite2DNode):
