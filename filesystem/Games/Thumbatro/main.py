@@ -66,7 +66,7 @@ class AnimatedText2DNode(Text2DNode):
     def tick(self, dt):
         if self.finished:
             return
-        elapsed_time = time.ticks_ms() - self.start_time
+        elapsed_time = time.ticks_diff(time.ticks_ms(), self.start_time)
         if elapsed_time >= self.duration:
             self.text = str(self.target_value)
             self.finished = True
@@ -512,7 +512,12 @@ class PokerGame(Rectangle2DNode):
         self.background.playing = False
         self.background.set_layer(0)
         self.add_child(self.background)
-        self.audio = None
+        self.volume = .25
+        engine_audio.set_volume(self.volume)
+        self.sound_interval = 400
+        self.last_sound_time = None
+        self.playing_sounds = []
+        self.current_channel = 0
 
         #self.overlay = Sprite2DNode(Vector2(63, 63))
         #self.overlay.frame_count_x = 1
@@ -611,25 +616,60 @@ class PokerGame(Rectangle2DNode):
     def setup_board(self):
         self.color = Color(0x0400)
 
+    def toggle_volume(self):
+        if self.volume == .25:
+            self.volume = 0
+        else:
+            self.volume = .25
+        engine_audio.set_volume(self.volume)
+        self.hand_type_text.text = f"Volume: {engine_audio.get_volume()}"
+
+    def play_sound(self):
+        # Play the sound and keep track of the playing sound
+        if self.volume == 0:
+            return
+        audio_channel = engine_audio.play(money_sound, self.current_channel, False)
+        self.playing_sounds.append(audio_channel)
+        engine_io.rumble(0.5)
+        self.last_sound_time = time.ticks_ms()
+        self.current_channel = (self.current_channel + 1) % 4  # Iterate over the 4 channels
+
+
+    def stop_all_sounds(self):
+        self.playing_sounds = []
+        self.sound_interval = 400
+        self.last_sound_time = None
+
     def tick(self, dt):
+        if engine_io.MENU.is_just_pressed:
+            self.toggle_volume()
+
         for tween in tweens[:]:
             if tween.finished:
                 tweens.remove(tween)
                 self.update_hand_indicator_position()
 
-        if self.audio and not tweens:
-            self.audio.stop()
-            self.audio = None
+        if self.playing_sounds:
+            # Play sounds with decreasing intervals
+            if self.last_sound_time:
+                if time.ticks_diff(time.ticks_ms(), self.last_sound_time) >= self.sound_interval:
+                    self.play_sound()
+                    self.sound_interval = max(20, self.sound_interval - 20)  # Decrease interval, but not below 50ms
+                    self.last_sound_time = time.ticks_ms()
+
+        # Check if all tweens are finished and stop all sounds
+        if not tweens and self.playing_sounds:
+            self.stop_all_sounds()
 
         if self.game_over:
             if self.game_over_time is None:
-                self.game_over_time = time.time()  
-            elif time.time() - self.game_over_time >= 5:
+                self.game_over_time = time.ticks_ms()  
+            elif time.ticks_ms() - self.game_over_time >= 5000:
                 engine.end()
                 import engine_main
             return
 
-        if self.hand_display_time and time.time() - self.hand_display_time >= 2:
+        if self.hand_display_time and time.ticks_diff(time.ticks_ms(), self.hand_display_time) >= 2000:
             # Tween played cards off to the left
             for card in self.played_cards:
                 target_position = Vector2(card.position.x - 100, card.position.y)
@@ -641,42 +681,43 @@ class PokerGame(Rectangle2DNode):
             if not self.hand_display_time and not tweens:  # Only proceed if all tweens are finished
                 self.open_booster_packs()
         elif self.joker_selection:
-            if engine_io.check_just_pressed(engine_io.BUMPER_LEFT) or engine_io.check_just_pressed(engine_io.BUMPER_RIGHT):
+            if engine_io.LB.is_just_pressed or engine_io.RB.is_just_pressed:
                 self.joker_selection = False
                 self.update_hand_indicator_position()
-            elif engine_io.check_just_pressed(engine_io.DPAD_LEFT):
+            elif engine_io.LEFT.is_just_pressed:
                 self.move_left_joker()
-            elif engine_io.check_just_pressed(engine_io.DPAD_RIGHT):
+            elif engine_io.RIGHT.is_just_pressed:
                 self.move_right_joker()
-            elif engine_io.check_just_pressed(engine_io.B) and self.is_booster_selection:
+            elif engine_io.B.is_just_pressed and self.is_booster_selection:
                 self.discard_joker()
         elif self.is_booster_selection:
-            if (engine_io.check_just_pressed(engine_io.BUMPER_LEFT) or engine_io.check_just_pressed(engine_io.BUMPER_RIGHT)) and self.jokers:
+            if (engine_io.LB.is_just_pressed or engine_io.RB.is_just_pressed) and self.jokers:
                 self.joker_selection = True
-                self.current_card_index = 0 if engine_io.check_just_pressed(engine_io.BUMPER_LEFT) else len(self.jokers) - 1
+                self.current_card_index = 0 if engine_io.LB.is_just_pressed else len(self.jokers) - 1
                 self.update_joker_indicator_position()
                 self.update_selected_joker_rules()
             else:
                 self.handle_booster_selection()
                 self.update_booster_indicator_position()
         else:
-            if (engine_io.check_just_pressed(engine_io.BUMPER_LEFT) or engine_io.check_just_pressed(engine_io.BUMPER_RIGHT)) and self.jokers:
+            if (engine_io.LB.is_just_pressed or engine_io.RB.is_just_pressed) and self.jokers:
                 self.joker_selection = True
-                self.current_card_index = 0 if engine_io.check_just_pressed(engine_io.BUMPER_LEFT) else len(self.jokers) - 1
+                self.current_card_index = 0 if engine_io.LB.is_just_pressed else len(self.jokers) - 1
                 self.update_joker_indicator_position()
                 self.update_selected_joker_rules()
-            elif engine_io.check_just_pressed(engine_io.DPAD_LEFT):
+            elif engine_io.LEFT.is_just_pressed:
                 self.move_left()
-            elif engine_io.check_just_pressed(engine_io.DPAD_RIGHT):
+            elif engine_io.RIGHT.is_just_pressed:
                 self.move_right()
-            elif engine_io.check_just_pressed(engine_io.DPAD_UP):
+            elif engine_io.UP.is_just_pressed:
                 self.select_card()
-            elif engine_io.check_just_pressed(engine_io.DPAD_DOWN):
+            elif engine_io.DOWN.is_just_pressed:
                 self.deselect_card()
-            elif engine_io.check_just_pressed(engine_io.A):
+            elif engine_io.A.is_just_pressed:
                 self.play_hand()
-            elif engine_io.check_just_pressed(engine_io.B):
+            elif engine_io.B.is_just_pressed:
                 self.discard_and_draw()
+
 
     def move_left_joker(self):
         self.current_card_index = (self.current_card_index - 1) % len(self.jokers)
@@ -851,7 +892,7 @@ class PokerGame(Rectangle2DNode):
         if final_score > self.highest_individual_hand_score:
             self.highest_individual_hand_score = final_score
 
-        self.display_main_score_animation(final_score, Vector2(64,82), round(math.log10(final_score)), engine_draw.white )
+        self.display_main_score_animation(final_score, Vector2(64,82), math.log10(final_score), engine_draw.white )
 
         self.base_score_text.text = f"{base_score}"
         self.mult_score_text.text = f"{multiplier}"
@@ -958,7 +999,7 @@ class PokerGame(Rectangle2DNode):
         duration= 1000 + end_scale * 500
         tween_scale(score_node, Vector2(1, 1), Vector2(end_scale, end_scale), duration)
         tween_opacity(score_node, 1.0, 0.0, duration)
-        self.audio = engine_audio.play(money_sound, 0, True)
+        self.play_sound()
 
     def display_played_hand(self):
         start_x = 10
@@ -967,7 +1008,7 @@ class PokerGame(Rectangle2DNode):
             tween_card(card, Vector2(start_x + i * 18 + (1 if i != 0 else 0), y_position))
             card.mark_played()
             self.add_child(card)
-        self.hand_display_time = time.time()
+        self.hand_display_time = time.ticks_ms()
 
     def end_game(self):
         self.game_over = True
@@ -978,7 +1019,7 @@ class PokerGame(Rectangle2DNode):
         self.hand_indicator.opacity = 0
         self.hand_type_text.text = f"Game Over!"
         self.best_hand_text.text = f"Best Hand: {self.highest_individual_hand_score}"
-        self.game_over_time = time.time()
+        self.game_over_time = time.ticks_ms()
 
 
     def open_booster_packs(self):
@@ -1127,16 +1168,17 @@ class PokerGame(Rectangle2DNode):
         self.add_child(booster_label)
 
     def handle_booster_selection(self):
-        if engine_io.check_just_pressed(engine_io.DPAD_LEFT):
+        if engine_io.LEFT.is_just_pressed:
             self.move_left_booster()
-        elif engine_io.check_just_pressed(engine_io.DPAD_RIGHT):
+        elif engine_io.RIGHT.is_just_pressed:
             self.move_right_booster()
-        if engine_io.check_just_pressed(engine_io.DPAD_UP):
+        if engine_io.UP.is_just_pressed:
             self.select_booster_card()
-        elif engine_io.check_just_pressed(engine_io.DPAD_DOWN):
+        elif engine_io.DOWN.is_just_pressed:
             self.deselect_booster_card()
-        if engine_io.check_just_pressed(engine_io.A):
+        if engine_io.A.is_just_pressed:
             self.confirm_booster_selection()
+
 
     def move_left_booster(self):
         self.current_card_index = (self.current_card_index - 1) % len(self.booster_cards)
@@ -1224,6 +1266,8 @@ class PokerGame(Rectangle2DNode):
         self.hand_indicator.opacity = 1
         self.update_game_info()
 
+
+engine_io.gui_toggle_button(None)
 # Make an instance of our game
 game = PokerGame(Vector2(0, 0), 256, 256)
 

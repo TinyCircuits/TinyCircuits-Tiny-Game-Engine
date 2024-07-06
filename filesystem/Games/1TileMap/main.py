@@ -78,39 +78,44 @@ def draw_line_on_map(map, width, height, start, end, line_width):
     w2 = (line_width / 2) ** 2
     for x in range(width):
         for y in range(height):
-            if distance_from_point_to_segment(start, end, (x, y)) <= w2:
+            if distance_from_point_to_segment(start, end, (x, y)) <= w2 and map[x * height + y]==1:
                 map[x * height + y] = 1
+            else:
+                map[x * height + y] = 0
     return map
 
 def draw_circle_on_map(map, width, height, center, circle_width):
     for x in range(width):
         for y in range(height):
-            if distance(center, (x, y)) <= circle_width / 2:
+            if distance(center, (x, y)) <= circle_width / 2 and map[x * height + y]==1:
                 map[x * height + y] = 1
-    return map
-
-def draw_stroked_line_on_map(map, width, height, start, end, line_width, core_width):
-    w2 = (line_width / 2) ** 2
-    c2 = (core_width / 2) ** 2
-    for x in range(width):
-        for y in range(height):
-            dist = distance_from_point_to_segment(start, end, (x, y))
-            if dist <= w2 and dist > c2:
-                map[x * height + y] = 1
+            else:
+                map[x * height + y] = 0
     return map
 
 def distance(p1, p2):
     return sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
 
 def distance_from_point_to_segment(a, b, p):
+    if a == b:
+        # If start and end points are the same, return distance to start point 'a'
+        return (p[0] - a[0]) ** 2 + (p[1] - a[1]) ** 2
+    
     n = (b[0] - a[0], b[1] - a[1])
     pa = (a[0] - p[0], a[1] - p[1])
+    
+    if n[0] ** 2 + n[1] ** 2 == 0:
+        return pa[0] ** 2 + pa[1] ** 2
+    
     c = n[0] * pa[0] + n[1] * pa[1]
+    
     if c > 0.0:
         return pa[0] ** 2 + pa[1] ** 2
+    
     bp = (p[0] - b[0], p[1] - b[1])
     if n[0] * bp[0] + n[1] * bp[1] > 0.0:
         return bp[0] ** 2 + bp[1] ** 2
+    
     e = (pa[0] - n[0] * (c / (n[0] ** 2 + n[1] ** 2)), pa[1] - n[1] * (c / (n[0] ** 2 + n[1] ** 2)))
     return e[0] ** 2 + e[1] ** 2
 
@@ -140,8 +145,8 @@ def generate_golf_hole(global_width, global_height, seed):
     world_scale_factor = 6
 
     # Define the parameters for the golf hole generation
-    hole_length = int(gaussian_random(20, 5) / world_scale_factor)
-    fairway_width = random.randint(2, 4)
+    hole_length = int(gaussian_random(60, 5) / world_scale_factor)
+    fairway_width = random.randint(2, 4)  # Reduce fairway width
     green_width = fairway_width - 1
     density = random.randint(66, 68)
     smoothness = random.randint(5, 30)
@@ -173,7 +178,7 @@ def generate_golf_hole(global_width, global_height, seed):
     distance_so_far = 0
 
     while distance_so_far < hole_length:
-        segment_distance = gaussian_random(20, 3) / world_scale_factor
+        segment_distance = gaussian_random(40, 3) / world_scale_factor
         if distance_so_far + segment_distance > hole_length:
             segment_distance = hole_length - distance_so_far
 
@@ -193,7 +198,7 @@ def generate_golf_hole(global_width, global_height, seed):
         fairway_map = draw_line_on_map(fairway_map, global_width, global_height, hole_shape[i], hole_shape[i+1], fairway_width)
 
     green_center = hole_shape[-1]
-    green_map = draw_circle_on_map(green_map, global_width, global_height, green_center, green_width)
+    green_map = draw_circle_on_map(green_map, 4, 4, green_center, green_width)  # Corrected parameters
 
     # Generate water hazards
     water_map = generate_cellular_automata(global_width, global_height, seed, 40, True)
@@ -239,8 +244,8 @@ green_tile = TTileType('green', green_texture, frame_count_x=3, frame_count_y=6)
 trees_tile = TTileType('dirt', trees_texture, frame_count_x=3, frame_count_y=6)
 
 # Define map dimensions and parameters
-global_width = 30
-global_height = 80
+global_width = 20
+global_height = 60
 seed = time.time()
 print_memory_usage()
 # Generate a random golf hole
@@ -253,7 +258,7 @@ def count_ones(map):
 
 #print(f"Number of 1s in rough_map: {count_ones(rough_map)}")
 print(f"Number of 1s in fairway_map: {count_ones(fairway_map)}")
-#print(f"Number of 1s in green_map: {count_ones(green_map)}")
+print(f"Number of 1s in green_map: {count_ones(green_map)}")
 print(f"Number of 1s in water_map: {count_ones(water_map)}")
 print(f"Number of 1s in bunker_map: {count_ones(bunker_map)}")
 
@@ -302,6 +307,9 @@ camera = MovingCamera([])  # Initialize without renderers first
 renderer_fairway = TilingRenderer(fairway_map, grass_tile, tile_rules, global_width, global_height, camera)
 renderer_fairway.set_layer(2)
 
+renderer_green = TilingRenderer(green_map, green_tile, tile_rules, global_width, global_height, camera)
+renderer_green.set_layer(3)
+
 renderer_water = TilingRenderer(water_map, water_tile, tile_rules, global_width, global_height, camera)
 renderer_water.set_layer(4)
 
@@ -309,7 +317,11 @@ renderer_bunker = TilingRenderer(bunker_map, sand_tile, tile_rules, global_width
 renderer_bunker.set_layer(5)
 
 # Now add the renderers to the camera
-camera.renderers = [renderer_fairway, renderer_water, renderer_bunker]
+camera.renderers = [renderer_fairway, renderer_green, renderer_water, renderer_bunker]
 camera.position = Vector3(DISP_WIDTH / 2, DISP_WIDTH / 2, 1)
+
+# Update all renderers' visible tiles
+for renderer in camera.renderers:
+    renderer.render_tiles()
 
 engine.start()

@@ -6,7 +6,6 @@ import engine_debug
 import engine_physics
 import random
 import time
-import _thread
 from engine_math import Vector2, Vector3
 from engine_nodes import Rectangle2DNode, CameraNode, PhysicsRectangle2DNode, PhysicsCircle2DNode, Circle2DNode, Text2DNode, Sprite2DNode
 from engine_resources import FontResource, TextureResource
@@ -41,7 +40,6 @@ HEADER_HEIGHT = GRID_ROWS * 2
 
 planned_ai_move = None
 ai_thinking = False
-game_state_lock = _thread.allocate_lock()
 
 def deepcopy_2d_list(original):
     return [row[:] for row in original]
@@ -150,48 +148,56 @@ class Game(Rectangle2DNode):
         self.winner_message = None
         self.winner_timer = 0
         self.selected_difficulty = selected_difficulty
+        self.last_move_time = None
 
     def setCurrentPlayer(self,player):
         self.current_player=player
 
+    def enough_time_passed(self):
+        if self.last_move_time is None:
+            return True
+        return time.ticks_diff(time.ticks_ms(), self.last_move_time) >= 2500
+    
     def tick(self, dt):
         global planned_ai_move, ai_thinking
 
-        with game_state_lock:
-            if self.winner_message:
-                self.winner_timer -= dt
-                if self.winner_timer <= 0:
-                    self.reset_game()
-                return
+        if self.winner_message:
+            self.winner_timer -= dt
+            if self.winner_timer <= 0:
+                self.reset_game()
+            return
 
-            if self.check_win(1,self.grid):
-                self.show_winner("Player Wins!")
-                return
-            if self.check_win(2,self.grid):
-                self.show_winner("AI Wins!")
-                return
+        if self.check_win(1, self.grid):
+            self.show_winner("Player Wins!")
+            return
+        if self.check_win(2, self.grid):
+            self.show_winner("AI Wins!")
+            return
 
-            if self.current_player == 1:
-                if engine_io.check_just_pressed(engine_io.DPAD_LEFT):
-                    self.selected_col = max(0, self.selected_col - 1)
-                    self.grid_node.selected_col = self.selected_col
+        if self.current_player == 1:
+            if engine_io.LEFT.is_just_pressed:
+                self.selected_col = max(0, self.selected_col - 1)
+                self.grid_node.selected_col = self.selected_col
+                self.grid_node.update_indicator()
+            elif engine_io.RIGHT.is_just_pressed:
+                self.selected_col = min(GRID_COLS - 1, self.selected_col + 1)
+                self.grid_node.selected_col = self.selected_col
+                self.grid_node.update_indicator()
+            elif engine_io.A.is_just_pressed:
+                if self.make_move(self.selected_col, 1):
+                    self.setCurrentPlayer(2)
+                    self.last_move_time = time.ticks_ms() 
                     self.grid_node.update_indicator()
-                elif engine_io.check_just_pressed(engine_io.DPAD_RIGHT):
-                    self.selected_col = min(GRID_COLS - 1, self.selected_col + 1)
-                    self.grid_node.selected_col = self.selected_col
-                    self.grid_node.update_indicator()
-                elif engine_io.check_just_pressed(engine_io.A):
-                    if self.make_move(self.selected_col, 1):
-                        self.setCurrentPlayer(2)
-                        self.grid_node.update_indicator()
-            elif self.current_player == 2:
+        elif self.current_player == 2:
+            if self.enough_time_passed():
                 if not ai_thinking and planned_ai_move is not None:
                     if self.make_move(planned_ai_move, 2):
                         self.setCurrentPlayer(1)
                         self.grid_node.update_indicator()
                         planned_ai_move = None
+                        self.last_move_time = time.ticks_ms() 
                 elif not ai_thinking and planned_ai_move is None:
-                    _thread.start_new_thread(self.ai_move, ())
+                    self.ai_move()
 
     def show_winner(self, message):
         self.winner_message = message
@@ -283,8 +289,7 @@ class Game(Rectangle2DNode):
 
     def ai_move(self):
         global planned_ai_move, ai_thinking
-        with game_state_lock:
-            ai_thinking = True
+        ai_thinking = True
 
         start_time = time.ticks_ms()
 
@@ -332,8 +337,7 @@ class Game(Rectangle2DNode):
         if elapsed_time < 1000:
             time.sleep_ms(1000 - elapsed_time)
 
-        with game_state_lock:
-            ai_thinking = False
+        ai_thinking = False
 
     def valid_moves(self, grid):
         return [c for c in range(GRID_COLS) if grid[0][c] == 0]

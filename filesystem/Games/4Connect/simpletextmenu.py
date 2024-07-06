@@ -1,5 +1,6 @@
 import engine_draw
 import engine_io
+import time
 from engine_math import Vector2
 from engine_nodes import Rectangle2DNode, Text2DNode
 from engine_resources import TextureResource
@@ -76,14 +77,14 @@ class SimpleTextMenu(Rectangle2DNode):
         self.text_color = text_color
         self.selected_color = selected_color
         self.font = font
-        bordertexture = TextureResource("panel9slice.bmp")
-        bordertile = TTileType('grass', bordertexture, frame_count_x=3, frame_count_y=3)
-        width_div_5 = disp_width // 5
-        height_div_5 = disp_height // 5
-        array_of_ones = [[1 for _ in range(width_div_5)] for _ in range(height_div_5)]
-        self.backgroundborder = TilingRenderer(array_of_ones, bordertile, tile_rules)
-        self.backgroundborder.set_layer(1)
-        self.add_child(self.backgroundborder)
+        #bordertexture = TextureResource("panel9slice.bmp")
+        #bordertile = TTileType('grass', bordertexture, frame_count_x=3, frame_count_y=3)
+        #width_div_5 = disp_width // 5
+        #height_div_5 = disp_height // 5
+        #array_of_ones = [[1 for _ in range(width_div_5)] for _ in range(height_div_5)]
+        #self.backgroundborder = TilingRenderer(array_of_ones, bordertile, tile_rules)
+        #self.backgroundborder.set_layer(1)
+        #self.add_child(self.backgroundborder)
         self.create_menu()
 
     def create_menu(self):
@@ -119,12 +120,14 @@ class SimpleTextMenu(Rectangle2DNode):
             text_node.color = self.text_color if i != self.selected_option else self.selected_color
 
     def tick(self, dt):
-        if engine_io.check_just_pressed(engine_io.DPAD_UP):
+        if engine_io.UP.is_just_pressed:
             self.selected_option = max(0, self.selected_option - 1)
             self.update_selection()
-        elif engine_io.check_just_pressed(engine_io.DPAD_DOWN):
+        elif engine_io.DOWN.is_just_pressed:
             self.selected_option = min(len(self.options) - 1, self.selected_option + 1)
             self.update_selection()
-        elif engine_io.check_just_pressed(engine_io.A):
+        elif engine_io.A.is_just_pressed:
+            time.sleep_ms(1000)
             self.callback(self.selected_option)
+            self.position.x = self.position.x -200
             #self.destroy()

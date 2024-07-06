@@ -98,10 +98,10 @@ class TilingRenderer(Rectangle2DNode):
         self.sprites=[]
 
         # Calculate the visible area based on the camera position and zoom level
-        camera_left = self.camera.position.x - (self.map_width * 2) / self.camera.zoom
-        camera_right = self.camera.position.x + (self.map_width * 2) / self.camera.zoom
-        camera_top = self.camera.position.y - (self.map_height * 2) / self.camera.zoom
-        camera_bottom = self.camera.position.y + (self.map_height * 2) / self.camera.zoom
+        camera_left = self.camera.position.x - ((128/self.tile_size) * 8) / self.camera.zoom
+        camera_right = self.camera.position.x + ((128/self.tile_size) * 8) / self.camera.zoom
+        camera_top = self.camera.position.y - ((128/self.tile_size) * 8) / self.camera.zoom
+        camera_bottom = self.camera.position.y + ((128/self.tile_size) * 8) / self.camera.zoom
 
         # Convert the camera bounds to tile coordinates
         start_x = max(0, int(camera_left // self.tile_size))
@@ -115,6 +115,8 @@ class TilingRenderer(Rectangle2DNode):
                 if frame:
                     frame_x, frame_y = frame
                     self.render_tile(x, y, frame_x, frame_y)
+
+        print(len(self.sprites))
 
     def get_surrounding(self, x, y):
         surrounding = []

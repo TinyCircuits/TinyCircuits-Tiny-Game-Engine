@@ -279,17 +279,17 @@ class SolitaireGame(Rectangle2DNode):
             return
 
         # Handle user input and game logic here
-        if engine_io.check_just_pressed(engine_io.DPAD_UP):
+        if engine_io.UP.is_just_pressed:
             self.move_up()
-        elif engine_io.check_just_pressed(engine_io.DPAD_DOWN):
+        elif engine_io.DOWN.is_just_pressed:
             self.move_down()
-        if engine_io.check_just_pressed(engine_io.DPAD_LEFT):
+        if engine_io.LEFT.is_just_pressed:
             self.move_left()
-        elif engine_io.check_just_pressed(engine_io.DPAD_RIGHT):
+        elif engine_io.RIGHT.is_just_pressed:
             self.move_right()
-        if engine_io.check_just_pressed(engine_io.A):
+        if engine_io.A.is_just_pressed:
             self.handle_selection()
-        if engine_io.check_just_pressed(engine_io.B):
+        if engine_io.B.is_just_pressed:
             self.undo_selection()
         
         self.update_hand_indicator_position()
