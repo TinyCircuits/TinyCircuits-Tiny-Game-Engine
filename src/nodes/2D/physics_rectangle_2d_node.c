@@ -15,6 +15,7 @@
 #include "physics/engine_physics.h"
 #include "physics/engine_physics_ids.h"
 #include "engine_collections.h"
+#include "draw/engine_color.h"
 
 
 void physics_rectangle_2d_node_class_draw(mp_obj_t rectangle_node_base_obj, mp_obj_t camera_node){
@@ -33,6 +34,12 @@ void physics_rectangle_2d_node_class_draw(mp_obj_t rectangle_node_base_obj, mp_o
 
     float rectangle_width = mp_obj_get_float(physics_rectangle_2d_node->width);
     float rectangle_height = mp_obj_get_float(physics_rectangle_2d_node->height);
+    uint16_t color = 0xffff;
+
+    if(physics_node_base->outline_color != mp_const_none){
+        color_class_obj_t *outline_color = physics_node_base->outline_color;
+        color = outline_color->value;
+    }
 
     vector3_class_obj_t *camera_position = camera->position;
     rectangle_class_obj_t *camera_viewport = camera->viewport;
@@ -101,19 +108,18 @@ void physics_rectangle_2d_node_class_draw(mp_obj_t rectangle_node_base_obj, mp_o
 
     engine_shader_t *shader = engine_get_builtin_shader(EMPTY_SHADER);
 
-    engine_draw_line(0xffff, tlx, tly, trx, try, camera_node, 1.0f, shader);
-    engine_draw_line(0xffff, trx, try, brx, bry, camera_node, 1.0f, shader);
-    engine_draw_line(0xffff, brx, bry, blx, bly, camera_node, 1.0f, shader);
-    engine_draw_line(0xffff, blx, bly, tlx, tly, camera_node, 1.0f, shader);
+    engine_draw_line(color, tlx, tly, trx, try, camera_node, 1.0f, shader);
+    engine_draw_line(color, trx, try, brx, bry, camera_node, 1.0f, shader);
+    engine_draw_line(color, brx, bry, blx, bly, camera_node, 1.0f, shader);
+    engine_draw_line(color, blx, bly, tlx, tly, camera_node, 1.0f, shader);
 }
 
 
-void engine_physics_rectangle_2d_node_update(engine_physics_node_base_t *physics_node_base){
+void engine_physics_rectangle_2d_node_calculate(engine_physics_node_base_t *physics_node_base, float *vertices_x, float *vertices_y, float *normals_x, float *normals_y, float rotation){
     engine_physics_rectangle_2d_node_class_obj_t *self = physics_node_base->unique_data;
 
     float half_width = mp_obj_get_float(self->width) * 0.5f;
     float half_height = mp_obj_get_float(self->height) * 0.5f;
-    float rotation = physics_node_base->rotation;
 
     float x_traversal_cos = cosf(rotation) * half_width;
     float x_traversal_sin = sinf(rotation) * half_width;
@@ -122,20 +128,20 @@ void engine_physics_rectangle_2d_node_update(engine_physics_node_base_t *physics
     float y_traversal_sin = sinf(rotation + HALF_PI) * half_height;
 
     // top-left
-    self->vertices_x[0] = -x_traversal_cos + y_traversal_cos;
-    self->vertices_y[0] =  x_traversal_sin - y_traversal_sin;
+    vertices_x[0] = -x_traversal_cos + y_traversal_cos;
+    vertices_y[0] =  x_traversal_sin - y_traversal_sin;
 
     // top-right
-    self->vertices_x[1] =  x_traversal_cos + y_traversal_cos;
-    self->vertices_y[1] = -x_traversal_sin - y_traversal_sin;
+    vertices_x[1] =  x_traversal_cos + y_traversal_cos;
+    vertices_y[1] = -x_traversal_sin - y_traversal_sin;
 
     // bottom-right
-    self->vertices_x[2] =  x_traversal_cos - y_traversal_cos;
-    self->vertices_y[2] = -x_traversal_sin + y_traversal_sin;
+    vertices_x[2] =  x_traversal_cos - y_traversal_cos;
+    vertices_y[2] = -x_traversal_sin + y_traversal_sin;
 
     // bottom-left
-    self->vertices_x[3] = -x_traversal_cos - y_traversal_cos;
-    self->vertices_y[3] =  x_traversal_sin + y_traversal_sin;
+    vertices_x[3] = -x_traversal_cos - y_traversal_cos;
+    vertices_y[3] =  x_traversal_sin + y_traversal_sin;
 
     // Calculate a new list of normals (should be able to
     // know the size of the final normal list size, just use
@@ -143,8 +149,8 @@ void engine_physics_rectangle_2d_node_update(engine_physics_node_base_t *physics
     // for checking collisions between rectangles
     for(uint32_t ivx=0; ivx<2; ivx++){        
         // 2D Cross product (perpendicular vector to the direction of the edge): FLIP: https://stackoverflow.com/a/1243676
-        float temp_face_normal_x = self->vertices_x[ivx + 1] - self->vertices_x[ivx];
-        float temp_face_normal_y = self->vertices_y[ivx + 1] - self->vertices_y[ivx];
+        float temp_face_normal_x = vertices_x[ivx + 1] - vertices_x[ivx];
+        float temp_face_normal_y = vertices_y[ivx + 1] - vertices_y[ivx];
 
         float face_normal_length_squared = (temp_face_normal_x*temp_face_normal_x) + (temp_face_normal_y*temp_face_normal_y);
 
@@ -153,8 +159,8 @@ void engine_physics_rectangle_2d_node_update(engine_physics_node_base_t *physics
         float face_normal_y = -temp_face_normal_x / face_normal_length;
         float face_normal_x =  temp_face_normal_y / face_normal_length;
 
-        self->normals_x[ivx] = face_normal_x;
-        self->normals_y[ivx] = face_normal_y;
+        normals_x[ivx] = face_normal_x;
+        normals_y[ivx] = face_normal_y;
     }
 }
 
@@ -173,6 +179,40 @@ mp_obj_t physics_rectangle_2d_node_class_del(mp_obj_t self_in){
     return mp_const_none;
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(physics_rectangle_2d_node_class_del_obj, physics_rectangle_2d_node_class_del);
+
+
+/*  --- doc ---
+    NAME: adjust_from_to
+    ID: adjust_from_to
+    DESC: Adjust position, rotation, and height such that the rectangle touches the `from` and `to` positions (`width` is not modifed)
+    PARAM: [type={ref_link:Vector2}] [name=from] [value={ref_link:Vector2}]       
+    PARAM: [type={ref_link:Vector2}] [name=to] [value={ref_link:Vector2}]                                                                                           
+    RETURN: None
+*/ 
+mp_obj_t physics_rectangle_2d_node_class_adjust_from_to(mp_obj_t self_in, mp_obj_t from_in, mp_obj_t to_in){
+    engine_node_base_t *node_base = self_in;
+    engine_physics_node_base_t *physics_node_base = node_base->node;
+    engine_physics_rectangle_2d_node_class_obj_t *node = physics_node_base->unique_data;
+
+    vector2_class_obj_t *position = physics_node_base->position;
+    vector2_class_obj_t *from = from_in;
+    vector2_class_obj_t *to = to_in;
+
+    float mid_x = 0.0f;
+    float mid_y = 0.0f;
+    engine_math_2d_midpoint(from->x.value, from->y.value, to->x.value, to->y.value, &mid_x, &mid_y);
+
+    float length = engine_math_distance_between(from->x.value, from->y.value, to->x.value, to->y.value);
+    float rotation = engine_math_angle_between(from->x.value, -from->y.value, to->x.value, -to->y.value) - HALF_PI;
+
+    node->height = mp_obj_new_float(length);
+    physics_node_base->rotation = rotation;
+    position->x.value = mid_x;
+    position->y.value = mid_y;
+
+    return mp_const_none;
+}
+static MP_DEFINE_CONST_FUN_OBJ_3(physics_rectangle_2d_node_class_adjust_from_to_obj, physics_rectangle_2d_node_class_adjust_from_to);
 
 
 void physics_rectangle_2d_calculate_inverse_mass(engine_node_base_t *node_base){
@@ -223,18 +263,18 @@ bool physics_rectangle_2d_load_attr(engine_node_base_t *self_node_base, qstr att
             destination[1] = self_node_base;
             return true;
         break;
-        case MP_QSTR_destroy:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_obj);
+        case MP_QSTR_mark_destroy:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_mark_destroy_obj);
             destination[1] = self_node_base;
             return true;
         break;
-        case MP_QSTR_destroy_all:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_all_obj);
+        case MP_QSTR_mark_destroy_all:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_mark_destroy_all_obj);
             destination[1] = self_node_base;
             return true;
         break;
-        case MP_QSTR_destroy_children:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_children_obj);
+        case MP_QSTR_mark_destroy_children:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_mark_destroy_children_obj);
             destination[1] = self_node_base;
             return true;
         break;
@@ -268,6 +308,11 @@ bool physics_rectangle_2d_load_attr(engine_node_base_t *self_node_base, qstr att
             destination[1] = self_node_base;
             return true;
         break;
+        case MP_QSTR_adjust_from_to:
+            destination[0] = MP_OBJ_FROM_PTR(&physics_rectangle_2d_node_class_adjust_from_to_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
         case MP_QSTR_node_base:
             destination[0] = self_node_base;
             return true;
@@ -295,7 +340,6 @@ bool physics_rectangle_2d_store_attr(engine_node_base_t *self_node_base, qstr at
     switch(attribute){
         case MP_QSTR_width:
             self->width = destination[1];
-            engine_physics_rectangle_2d_node_update(physics_node_base);
 
             // As the dimensions change so does the mass due to density
             physics_rectangle_2d_calculate_inverse_mass(self_node_base);
@@ -304,7 +348,6 @@ bool physics_rectangle_2d_store_attr(engine_node_base_t *self_node_base, qstr at
         break;
         case MP_QSTR_height:
             self->height = destination[1];
-            engine_physics_rectangle_2d_node_update(physics_node_base);
 
             // As the dimensions change so does the mass due to density
             physics_rectangle_2d_calculate_inverse_mass(self_node_base);
@@ -313,7 +356,6 @@ bool physics_rectangle_2d_store_attr(engine_node_base_t *self_node_base, qstr at
         break;
         case MP_QSTR_rotation:  // Special case, want to handle rotation here instead of base
             physics_node_base->rotation = mp_obj_get_float(destination[1]);
-            engine_physics_rectangle_2d_node_update(physics_node_base);
             return true;
         break;
         case MP_QSTR_density:
@@ -377,17 +419,22 @@ static mp_attr_fun_t physics_rectangle_2d_node_class_attr(mp_obj_t self_in, qstr
     PARAM: [type=boolean]                                [name=solid]                                       [value=True or False]
     PARAM: [type={ref_link:Vector2}]                     [name=gravity_scale]                               [value={ref_link:Vector2}]
     PARAM: [type=boolean]                                [name=outline]                                     [value=True or False (default: False)]
+    PARAM: [type={ref_link:Color}]                       [name=outline_color]                               [value={ref_link:Color}]
+    PARAM: [type=int]                                    [name=collision_mask]                              [value=32-bit bitmask (nodes with the same true bits will collide, set to 1 by default)]
     ATTR:  [type=function]                               [name={ref_link:add_child}]                        [value=function]
     ATTR:  [type=function]                               [name={ref_link:get_child}]                        [value=function]
     ATTR:  [type=function]                               [name={ref_link:get_child_count}]                  [value=function]
-    ATTR:  [type=function]                               [name={ref_link:node_base_destroy}]                [value=function]
-    ATTR:  [type=function]                               [name={ref_link:node_base_destroy_all}]            [value=function]
-    ATTR:  [type=function]                               [name={ref_link:node_base_destroy_children}]       [value=function]
+    ATTR:  [type=function]                               [name={ref_link:node_base_mark_destroy}]           [value=function]
+    ATTR:  [type=function]                               [name={ref_link:node_base_mark_destroy_all}]       [value=function]
+    ATTR:  [type=function]                               [name={ref_link:node_base_mark_destroy_children}]  [value=function]
     ATTR:  [type=function]                               [name={ref_link:remove_child}]                     [value=function]
     ATTR:  [type=function]                               [name={ref_link:set_layer}]                        [value=function]
     ATTR:  [type=function]                               [name={ref_link:get_layer}]                        [value=function]
     ATTR:  [type=function]                               [name={ref_link:remove_child}]                     [value=function]
     ATTR:  [type=function]                               [name={ref_link:tick}]                             [value=function]
+    ATTR:  [type=function]                               [name={ref_link:enable_collision_layer}]           [value=function]
+    ATTR:  [type=function]                               [name={ref_link:disable_collision_layer}]          [value=function]
+    ATTR:  [type=function]                               [name={ref_link:adjust_from_to}]                   [value=function]
     ATTR:  [type={ref_link:Vector2}]                     [name=position]                                    [value={ref_link:Vector2}]
     ATTR:  [type=float]                                  [name=width]                                       [value=any]
     ATTR:  [type=float]                                  [name=height]                                      [value=any]
@@ -399,14 +446,18 @@ static mp_attr_fun_t physics_rectangle_2d_node_class_attr(mp_obj_t self_in, qstr
     ATTR:  [type=boolean]                                [name=solid]                                       [value=True or False]
     ATTR:  [type={ref_link:Vector2}]                     [name=gravity_scale]                               [value={ref_link:Vector2}]
     ATTR:  [type=boolean]                                [name=outline]                                     [value=True or False (default: False)]
-    ATTR:  [type=function]                               [name={ref_link:collision}]                        [value=function]
+    ATTR:  [type={ref_link:Color}]                       [name=outline_color]                               [value={ref_link:Color}]
+    ATTR:  [type=int]                                    [name=collision_mask]                              [value=32-bit bitmask (nodes with the same true bits will collide, set to 1 by default)]
+    ATTR:  [type=function]                               [name={ref_link:on_collide}]                       [value=function]
+    ATTR:  [type=function]                               [name={ref_link:on_separate}]                      [value=function]
     OVRR:  [type=function]                               [name={ref_link:physics_tick}]                     [value=function]
     OVRR:  [type=function]                               [name={ref_link:tick}]                             [value=function]
-    OVRR:  [type=function]                               [name={ref_link:collision}]                        [value=function]
+    OVRR:  [type=function]                               [name={ref_link:on_collide}]                       [value=function]
+    OVRR:  [type=function]                               [name={ref_link:on_separate}]                      [value=function]
 */
 mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New PhysicsRectangle2DNode");
-
+    
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_child_class,      MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_position,         MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
@@ -422,9 +473,11 @@ mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n
         { MP_QSTR_solid,            MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_gravity_scale,    MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_outline,          MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_outline_color,    MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_collision_mask,   MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
-    enum arg_ids {child_class, position, width, height, velocity, angular_velocity, rotation, density, friction, bounciness, dynamic, solid, gravity_scale, outline};
+    enum arg_ids {child_class, position, width, height, velocity, angular_velocity, rotation, density, friction, bounciness, dynamic, solid, gravity_scale, outline, outline_color, collision_mask};
     bool inherited = false;
 
     // If there is one positional argument and it isn't the first 
@@ -457,6 +510,8 @@ mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n
     if(parsed_args[solid].u_obj == MP_OBJ_NULL) parsed_args[solid].u_obj = mp_obj_new_int(1);
     if(parsed_args[gravity_scale].u_obj == MP_OBJ_NULL) parsed_args[gravity_scale].u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)});
     if(parsed_args[outline].u_obj == MP_OBJ_NULL) parsed_args[outline].u_obj = mp_obj_new_int(0);
+    if(parsed_args[outline_color].u_obj == MP_OBJ_NULL) parsed_args[outline_color].u_obj = mp_const_none;
+    if(parsed_args[collision_mask].u_obj == MP_OBJ_NULL) parsed_args[collision_mask].u_obj = mp_obj_new_int(1);
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = mp_obj_malloc_with_finaliser(engine_node_base_t, &engine_physics_rectangle_2d_node_class_type);
@@ -482,11 +537,15 @@ mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n
     physics_node_base->solid = parsed_args[solid].u_obj;
     physics_node_base->gravity_scale = parsed_args[gravity_scale].u_obj;
     physics_node_base->outline = parsed_args[outline].u_obj;
+    physics_node_base->outline_color = parsed_args[outline_color].u_obj;
+    physics_node_base->collision_mask = mp_obj_get_int(parsed_args[collision_mask].u_obj);
 
     physics_node_base->physics_id = engine_physics_ids_take_available();
     physics_node_base->mass = 0.0f;
     physics_node_base->total_position_correction_x = 0.0f;
     physics_node_base->total_position_correction_y = 0.0f;
+    physics_node_base->was_colliding = false;
+    physics_node_base->colliding = false;
 
     // Track the node base for this physics node so that it can
     // be looped over quickly in a linked list
@@ -494,7 +553,8 @@ mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n
 
     physics_node_base->physics_tick_cb = mp_const_none;
     physics_node_base->tick_cb = mp_const_none;
-    physics_node_base->collision_cb = mp_const_none;
+    physics_node_base->on_collide_cb = mp_const_none;
+    physics_node_base->on_separate_cb = mp_const_none;
 
     physics_rectangle_2d_node->width = parsed_args[width].u_obj;
     physics_rectangle_2d_node->height = parsed_args[height].u_obj;
@@ -527,11 +587,18 @@ mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n
             physics_node_base->tick_cb = dest[0];
         }
 
-        mp_load_method_maybe(node_instance, MP_QSTR_collision, dest);
+        mp_load_method_maybe(node_instance, MP_QSTR_on_collide, dest);
         if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
-            physics_node_base->collision_cb = mp_const_none;
+            physics_node_base->on_collide_cb = mp_const_none;
         }else{                                                  // Likely found method (could be attribute)
-            physics_node_base->collision_cb = dest[0];
+            physics_node_base->on_collide_cb = dest[0];
+        }
+
+        mp_load_method_maybe(node_instance, MP_QSTR_on_separate, dest);
+        if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
+            physics_node_base->on_separate_cb = mp_const_none;
+        }else{                                                  // Likely found method (could be attribute)
+            physics_node_base->on_separate_cb = dest[0];
         }
 
         // Store one pointer on the instance. Need to be able to get the
@@ -548,8 +615,6 @@ mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n
         // Need a way to access the object node instance instead of the native type for callbacks (tick, draw, collision)
         node_base->attr_accessor = node_instance;
     }
-
-    engine_physics_rectangle_2d_node_update(physics_node_base);
 
     return MP_OBJ_FROM_PTR(node_base);
 }

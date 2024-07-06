@@ -23,9 +23,13 @@ void engine_collections_untrack_physics(linked_list_node *physics_list_node);
 linked_list_node *engine_collections_track_gui(engine_node_base_t *gui_node_base);
 void engine_collections_untrack_gui(linked_list_node *gui_list_node);
 
+linked_list_node *engine_collections_track_deletable(engine_node_base_t *node_base);
+void engine_collections_untrack_deletable(linked_list_node *node_base_node);
+
 linked_list *engine_collections_get_camera_list();
 linked_list *engine_collections_get_physics_list();
 linked_list *engine_collections_get_gui_list();
+linked_list *engine_collections_get_deletable_list();
 
 
 #endif

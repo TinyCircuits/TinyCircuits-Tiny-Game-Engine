@@ -12,15 +12,14 @@
     NAME: set_background_color
     ID: set_background_color
     DESC: Sets the background (the data that clears the framebuffer) to a color
-    PARAM: [type=enum/int]   [name=background_color]  [value=enum/int (16-bit RGB565)]
+    PARAM: [type={ref_link:Color}|int]   [name=background_color]  [value=Color or int (RGB565)]
     RETURN: None
-*/ 
-static mp_obj_t engine_draw_set_background_color(mp_obj_t module, mp_obj_t background_color){
-    color_class_obj_t *color = background_color;
-    engine_display_set_fill_color(color->value.val);
+*/
+static mp_obj_t engine_draw_set_background_color(mp_obj_t background_color){
+    engine_display_set_fill_color(engine_color_class_color_value(background_color));
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_2(engine_draw_set_background_color_obj, engine_draw_set_background_color);
+MP_DEFINE_CONST_FUN_OBJ_1(engine_draw_set_background_color_obj, engine_draw_set_background_color);
 
 
 /*  --- doc ---
@@ -29,8 +28,8 @@ MP_DEFINE_CONST_FUN_OBJ_2(engine_draw_set_background_color_obj, engine_draw_set_
     DESC: Sets the background (the data that clears the framebuffer) to a {ref_link:TextureResource}
     PARAM: [type=object]   [name=background]  [value={ref_link:TextureResource}]
     RETURN: None
-*/ 
-static mp_obj_t engine_draw_set_background(mp_obj_t module, mp_obj_t background){
+*/
+static mp_obj_t engine_draw_set_background(mp_obj_t background){
     texture_resource_class_obj_t *background_texture_resource = background;
 
     if(background_texture_resource->width != SCREEN_WIDTH || background_texture_resource->height != SCREEN_HEIGHT){
@@ -41,7 +40,7 @@ static mp_obj_t engine_draw_set_background(mp_obj_t module, mp_obj_t background)
     engine_display_set_fill_background(texture_data);
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_2(engine_draw_set_background_obj, engine_draw_set_background);
+MP_DEFINE_CONST_FUN_OBJ_1(engine_draw_set_background_obj, engine_draw_set_background);
 
 
 static mp_obj_t engine_draw_module_init(){
@@ -52,186 +51,172 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_draw_module_init_obj, engine_draw_module_init);
 
 
 /*  --- doc ---
+    NAME: back_fb_data
+    ID: back_fb_data
+    DESC: Get or set the back framebuffer data.
+    PARAM: [type=bytearray (optional)]   [name=back_fb_data]  [value=bytearray 128*128*2]
+    RETURN: bytearray | None
+*/
+static mp_obj_t engine_draw_back_fb_data(size_t n_args, const mp_obj_t *args){
+    if (n_args == 0) {
+        return MP_STATE_VM(back_fb_data);
+    } else {
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("ERROR: Setting back_fb_data not supported yet!"));
+    }
+}
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_draw_back_fb_data_obj, 0, 1, engine_draw_back_fb_data);
+
+/*  --- doc ---
+    NAME: front_fb_data
+    ID: front_fb_data
+    DESC: Get or set the front framebuffer data.
+    PARAM: [type=bytearray (optional)]   [name=front_fb_data]  [value=bytearray 128*128*2]
+    RETURN: bytearray | None
+*/
+static mp_obj_t engine_draw_front_fb_data(size_t n_args, const mp_obj_t *args){
+    if (n_args == 0) {
+        return MP_STATE_VM(front_fb_data);
+    } else {
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("ERROR: Setting front_fb_data not supported yet!"));
+    }
+}
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_draw_front_fb_data_obj, 0, 1, engine_draw_front_fb_data);
+
+/*  --- doc ---
+    NAME: back_fb
+    ID: back_fb
+    DESC: Get or set the back framebuffer.
+    PARAM: [type=framebuf (optional)]   [name=back_fb]  [value=framebuf]
+    RETURN: framebuf | None
+*/
+static mp_obj_t engine_draw_back_fb(size_t n_args, const mp_obj_t *args){
+    if (n_args == 0) {
+        return MP_STATE_VM(back_fb);
+    } else {
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("ERROR: Setting back_fb not supported yet!"));
+    }
+}
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_draw_back_fb_obj, 0, 1, engine_draw_back_fb);
+
+/*  --- doc ---
+    NAME: front_fb
+    ID: front_fb
+    DESC: Get or set the front framebuffer.
+    PARAM: [type=framebuf (optional)]   [name=front_fb]  [value=framebuf]
+    RETURN: framebuf | None
+*/
+static mp_obj_t engine_draw_front_fb(size_t n_args, const mp_obj_t *args){
+    if (n_args == 0) {
+        return MP_STATE_VM(front_fb);
+    } else {
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("ERROR: Setting front_fb not supported yet!"));
+    }
+}
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_draw_front_fb_obj, 0, 1, engine_draw_front_fb);
+
+
+color_class_obj_t black         = {{&const_color_class_type}, .value = 0x0000};
+color_class_obj_t navy          = {{&const_color_class_type}, .value = 0x000F};
+color_class_obj_t darkgreen     = {{&const_color_class_type}, .value = 0x03E0};
+color_class_obj_t darkcyan      = {{&const_color_class_type}, .value = 0x03EF};
+color_class_obj_t maroon        = {{&const_color_class_type}, .value = 0x7800};
+color_class_obj_t purple        = {{&const_color_class_type}, .value = 0x780F};
+color_class_obj_t olive         = {{&const_color_class_type}, .value = 0x7BE0};
+color_class_obj_t lightgrey     = {{&const_color_class_type}, .value = 0xD69A};
+color_class_obj_t darkgrey      = {{&const_color_class_type}, .value = 0x7BEF};
+color_class_obj_t blue          = {{&const_color_class_type}, .value = 0x001F};
+color_class_obj_t green         = {{&const_color_class_type}, .value = 0x07E0};
+color_class_obj_t cyan          = {{&const_color_class_type}, .value = 0x07FF};
+color_class_obj_t red           = {{&const_color_class_type}, .value = 0xF800};
+color_class_obj_t magenta       = {{&const_color_class_type}, .value = 0xF81F};
+color_class_obj_t yellow        = {{&const_color_class_type}, .value = 0xFFE0};
+color_class_obj_t white         = {{&const_color_class_type}, .value = 0xFFFF};
+color_class_obj_t orange        = {{&const_color_class_type}, .value = 0xFDA0};
+color_class_obj_t greenyellow   = {{&const_color_class_type}, .value = 0xB7E0};
+color_class_obj_t pink          = {{&const_color_class_type}, .value = 0xFE19};
+color_class_obj_t brown         = {{&const_color_class_type}, .value = 0x9A60};
+color_class_obj_t gold          = {{&const_color_class_type}, .value = 0xFEA0};
+color_class_obj_t silver        = {{&const_color_class_type}, .value = 0xC618};
+color_class_obj_t skyblue       = {{&const_color_class_type}, .value = 0x867D};
+color_class_obj_t violet        = {{&const_color_class_type}, .value = 0x915C};
+
+
+/*  --- doc ---
     NAME: engine_draw
     ID: engine_draw
     DESC: Module for drawing to the framebuffer
-    ATTR: [type=function]   [name={ref_link:set_background_color}]  [value=function] 
-    ATTR: [type=function]   [name={ref_link:set_background}]        [value=function]
-    ATTR: [type=enum/int]   [name=black]                            [value=0x0000]
-    ATTR: [type=enum/int]   [name=navy]                             [value=0x000F]
-    ATTR: [type=enum/int]   [name=darkgreen]                        [value=0x03E0]
-    ATTR: [type=enum/int]   [name=darkcyan]                         [value=0x03EF]
-    ATTR: [type=enum/int]   [name=maroon]                           [value=0x7800]
-    ATTR: [type=enum/int]   [name=purple]                           [value=0x780F]
-    ATTR: [type=enum/int]   [name=olive]                            [value=0x7BE0]
-    ATTR: [type=enum/int]   [name=lightgrey]                        [value=0xD69A]
-    ATTR: [type=enum/int]   [name=darkgrey]                         [value=0x7BEF]
-    ATTR: [type=enum/int]   [name=blue]                             [value=0x001F]
-    ATTR: [type=enum/int]   [name=green]                            [value=0x07E0]
-    ATTR: [type=enum/int]   [name=cyan]                             [value=0x07FF]
-    ATTR: [type=enum/int]   [name=red]                              [value=0xF800]
-    ATTR: [type=enum/int]   [name=magenta]                          [value=magenta]
-    ATTR: [type=enum/int]   [name=yellow]                           [value=yellow]
-    ATTR: [type=enum/int]   [name=white]                            [value=white]
-    ATTR: [type=enum/int]   [name=orange]                           [value=orange]
-    ATTR: [type=enum/int]   [name=greenyellow]                      [value=greenyellow]
-    ATTR: [type=enum/int]   [name=pink]                             [value=0xFE19]
-    ATTR: [type=enum/int]   [name=brown]                            [value=0x9A60]
-    ATTR: [type=enum/int]   [name=gold]                             [value=0xFEA0]
-    ATTR: [type=enum/int]   [name=silver]                           [value=0xC618]
-    ATTR: [type=enum/int]   [name=skyblue]                          [value=0x867D]
-    ATTR: [type=enum/int]   [name=violet]                           [value=0x915C]
-    ATTR: [type=bytearray]  [name=back_fb_data]                     [value=128*128*2 bytearray]
-    ATTR: [type=bytearray]  [name=front_fb_data]                    [value=128*128*2 bytearray]
-    ATTR: [type=framebuf]   [name=back_fb]                          [value=framebuf]
-    ATTR: [type=framebuf]   [name=front_fb]                         [value=framebuf]
+    ATTR: [type=function]           [name={ref_link:set_background_color}]  [value=function]
+    ATTR: [type=function]           [name={ref_link:set_background}]        [value=function]
+    ATTR: [type=function]           [name={ref_link:back_fb_data}]          [value=getter/setter function]
+    ATTR: [type=function]           [name={ref_link:front_fb_data}]         [value=getter/setter function]
+    ATTR: [type=function]           [name={ref_link:back_fb}]               [value=getter/setter function]
+    ATTR: [type=function]           [name={ref_link:front_fb}]              [value=getter/setter function]
+    ATTR: [type=type]               [name={ref_link:Color}]                 [value=type]
+    ATTR: [type={ref_link:Color}]   [name=black]                            [value=0x0000]
+    ATTR: [type={ref_link:Color}]   [name=navy]                             [value=0x000F]
+    ATTR: [type={ref_link:Color}]   [name=darkgreen]                        [value=0x03E0]
+    ATTR: [type={ref_link:Color}]   [name=darkcyan]                         [value=0x03EF]
+    ATTR: [type={ref_link:Color}]   [name=maroon]                           [value=0x7800]
+    ATTR: [type={ref_link:Color}]   [name=purple]                           [value=0x780F]
+    ATTR: [type={ref_link:Color}]   [name=olive]                            [value=0x7BE0]
+    ATTR: [type={ref_link:Color}]   [name=lightgrey]                        [value=0xD69A]
+    ATTR: [type={ref_link:Color}]   [name=darkgrey]                         [value=0x7BEF]
+    ATTR: [type={ref_link:Color}]   [name=blue]                             [value=0x001F]
+    ATTR: [type={ref_link:Color}]   [name=green]                            [value=0x07E0]
+    ATTR: [type={ref_link:Color}]   [name=cyan]                             [value=0x07FF]
+    ATTR: [type={ref_link:Color}]   [name=red]                              [value=0xF800]
+    ATTR: [type={ref_link:Color}]   [name=magenta]                          [value=0xF81F]
+    ATTR: [type={ref_link:Color}]   [name=yellow]                           [value=0xFFE0]
+    ATTR: [type={ref_link:Color}]   [name=white]                            [value=0xFFFF]
+    ATTR: [type={ref_link:Color}]   [name=orange]                           [value=0xFDA0]
+    ATTR: [type={ref_link:Color}]   [name=greenyellow]                      [value=0xB7E0]
+    ATTR: [type={ref_link:Color}]   [name=pink]                             [value=0xFE19]
+    ATTR: [type={ref_link:Color}]   [name=brown]                            [value=0x9A60]
+    ATTR: [type={ref_link:Color}]   [name=gold]                             [value=0xFEA0]
+    ATTR: [type={ref_link:Color}]   [name=silver]                           [value=0xC618]
+    ATTR: [type={ref_link:Color}]   [name=skyblue]                          [value=0x867D]
+    ATTR: [type={ref_link:Color}]   [name=violet]                           [value=0x915C]
 */
 static const mp_rom_map_elem_t engine_draw_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_draw) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR___init__), (mp_obj_t)&engine_draw_module_init_obj }
+    { MP_OBJ_NEW_QSTR(MP_QSTR___init__), MP_ROM_PTR(&engine_draw_module_init_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_set_background_color), MP_ROM_PTR(&engine_draw_set_background_color_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_set_background), MP_ROM_PTR(&engine_draw_set_background_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_Color), MP_ROM_PTR(&color_class_type) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_black), MP_ROM_PTR(&black) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_navy), MP_ROM_PTR(&navy) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_darkgreen), MP_ROM_PTR(&darkgreen) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_darkcyan), MP_ROM_PTR(&darkcyan) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_maroon), MP_ROM_PTR(&maroon) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_purple), MP_ROM_PTR(&purple) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_olive), MP_ROM_PTR(&olive) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_lightgrey), MP_ROM_PTR(&lightgrey) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_darkgrey), MP_ROM_PTR(&darkgrey) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_blue), MP_ROM_PTR(&blue) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_green), MP_ROM_PTR(&green) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_cyan), MP_ROM_PTR(&cyan) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_red), MP_ROM_PTR(&red) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_magenta), MP_ROM_PTR(&magenta) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_yellow), MP_ROM_PTR(&yellow) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_white), MP_ROM_PTR(&white) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_orange), MP_ROM_PTR(&orange) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_greenyellow), MP_ROM_PTR(&greenyellow) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_pink), MP_ROM_PTR(&pink) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_brown), MP_ROM_PTR(&brown) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_gold), MP_ROM_PTR(&gold) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_silver), MP_ROM_PTR(&silver) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_skyblue), MP_ROM_PTR(&skyblue) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_violet), MP_ROM_PTR(&violet) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_back_fb_data), MP_ROM_PTR(&engine_draw_back_fb_data_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_front_fb_data), MP_ROM_PTR(&engine_draw_front_fb_data_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_back_fb), MP_ROM_PTR(&engine_draw_back_fb_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_front_fb), MP_ROM_PTR(&engine_draw_front_fb_obj) },
 };
-
-// Module init
 static MP_DEFINE_CONST_DICT (mp_module_engine_draw_globals, engine_draw_globals_table);
 
 
-static void draw_class_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind){
-    ENGINE_FORCE_PRINTF("print(): Draw");
-}
-
-
-static void draw_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
-    if(destination[0] == MP_OBJ_NULL){          // Load
-        switch(attribute) {
-            case MP_QSTR_set_background_color:
-                destination[0] = MP_OBJ_FROM_PTR(&engine_draw_set_background_color_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_set_background:
-                destination[0] = MP_OBJ_FROM_PTR(&engine_draw_set_background_obj);
-                destination[1] = self_in;
-            break;
-            case MP_QSTR_Color:
-                destination[0] = (mp_obj_type_t*)&color_class_type;
-            break;
-            case MP_QSTR_black:
-                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0x0000)});
-            break;
-            case MP_QSTR_navy:
-                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0x000F)});
-            break;
-            case MP_QSTR_darkgreen:
-                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0x03E0)});
-            break;
-            case MP_QSTR_darkcyan:
-                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0x03EF)});
-            break;
-            case MP_QSTR_maroon:
-                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0x7800)});
-            break;
-            case MP_QSTR_purple:
-                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0x780F)});
-            break;
-            case MP_QSTR_olive:
-                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0x7BE0)});
-            break;
-            case MP_QSTR_lightgrey:
-                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0xD69A)});
-            break;
-            case MP_QSTR_darkgrey:
-                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0x7BEF)});
-            break;
-            case MP_QSTR_blue:
-                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0x001F)});
-            break;
-            case MP_QSTR_green:
-                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0x07E0)});
-            break;
-            case MP_QSTR_cyan:
-                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0x07FF)});
-            break;
-            case MP_QSTR_red:
-                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0xF800)});
-            break;
-            case MP_QSTR_magenta:
-                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0xF81F)});
-            break;
-            case MP_QSTR_yellow:
-                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0xFFE0)});
-            break;
-            case MP_QSTR_white:
-                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0xFFFF)});
-            break;
-            case MP_QSTR_orange:
-                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0xFDA0)});
-            break;
-            case MP_QSTR_greenyellow:
-                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0xB7E0)});
-            break;
-            case MP_QSTR_pink:
-                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0xFE19)});
-            break;
-            case MP_QSTR_brown:
-                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0x9A60)});
-            break;
-            case MP_QSTR_gold:
-                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0xFEA0)});
-            break;
-            case MP_QSTR_silver:
-                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0xC618)});
-            break;
-            case MP_QSTR_skyblue:
-                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0x867D)});
-            break;
-            case MP_QSTR_violet:
-                destination[0] = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(0x915C)});
-            break;
-            case MP_QSTR_back_fb_data:
-                destination[0] = MP_STATE_VM(back_fb_data);
-            break;
-            case MP_QSTR_front_fb_data:
-                destination[0] = MP_STATE_VM(front_fb_data);
-            break;
-            case MP_QSTR_back_fb:
-                destination[0] = MP_STATE_VM(back_fb);
-            break;
-            case MP_QSTR_front_fb:
-                destination[0] = MP_STATE_VM(front_fb);
-            break;
-            default:
-                return; // Fail
-        }
-    }else if(destination[1] != MP_OBJ_NULL){    // Store
-        switch(attribute) {
-            case MP_QSTR_back_fb_data:
-                mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("ERROR: Setting the back buffer data is not supported yet!"));
-            break;
-            case MP_QSTR_front_fb_data:
-                mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("ERROR: Setting the back buffer is not supported yet!"));
-            break;
-            case MP_QSTR_back_fb:
-                mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("ERROR: Setting the front buffer data is not supported yet!"));
-            break;
-            case MP_QSTR_front_fb:
-                mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("ERROR: Setting the front buffer is not supported yet!"));
-            break;
-            default:
-                return; // Fail
-        }
-    }
-}
-
-
-MP_DEFINE_CONST_OBJ_TYPE(
-    mp_type_color_module,
-    MP_QSTR_module,
-    MP_TYPE_FLAG_NONE,
-    print, draw_class_print,
-    attr, draw_class_attr
-);
-
 const mp_obj_module_t engine_draw_user_cmodule = {
-    .base = { &mp_type_color_module },
+    .base = { &mp_type_module },
     .globals = (mp_obj_dict_t*)&mp_module_engine_draw_globals,
 };
 

@@ -17,6 +17,24 @@
 #include "py/obj.h"
 
 
+void sprite_2d_node_clamp_current_x(engine_sprite_2d_node_class_obj_t *sprite){
+    uint16_t count_x = mp_obj_get_int(sprite->frame_count_x);
+    uint16_t current_x = mp_obj_get_int(sprite->frame_current_x);
+    if(current_x >= count_x){
+        sprite->frame_current_x = mp_obj_new_int(count_x-1);
+    }
+}
+
+
+void sprite_2d_node_clamp_current_y(engine_sprite_2d_node_class_obj_t *sprite){
+    uint16_t count_y = mp_obj_get_int(sprite->frame_count_y);
+    uint16_t current_y = mp_obj_get_int(sprite->frame_current_y);
+    if(current_y >= count_y){
+        sprite->frame_current_y = mp_obj_new_int(count_y-1);
+    }
+}
+
+
 void sprite_2d_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("Sprite2DNode: Drawing");
 
@@ -112,7 +130,7 @@ void sprite_2d_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t camera_no
                      sprite_scale->x.value*camera_zoom,
                      sprite_scale->y.value*camera_zoom,
                     -sprite_rotation,
-                     transparent_color->value.val,
+                     transparent_color->value,
                      sprite_opacity,
                      shader);
 
@@ -122,7 +140,7 @@ void sprite_2d_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t camera_no
         uint16_t sprite_period = (uint16_t)((1.0f/sprite_fps) * 1000.0f);
 
         uint32_t current_ms_time = millis();
-        if(current_ms_time - sprite_2d_node->time_at_last_animation_update_ms >= sprite_period){
+        if(millis_diff(current_ms_time, sprite_2d_node->time_at_last_animation_update_ms) >= sprite_period){
             sprite_frame_current_x++;
 
             // If reach end of x-axis frames, go to the next line and restart x
@@ -169,18 +187,18 @@ bool sprite_2d_node_load_attr(engine_node_base_t *self_node_base, qstr attribute
             destination[1] = self_node_base;
             return true;
         break;
-        case MP_QSTR_destroy:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_obj);
+        case MP_QSTR_mark_destroy:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_mark_destroy_obj);
             destination[1] = self_node_base;
             return true;
         break;
-        case MP_QSTR_destroy_all:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_all_obj);
+        case MP_QSTR_mark_destroy_all:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_mark_destroy_all_obj);
             destination[1] = self_node_base;
             return true;
         break;
-        case MP_QSTR_destroy_children:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_children_obj);
+        case MP_QSTR_mark_destroy_children:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_mark_destroy_children_obj);
             destination[1] = self_node_base;
             return true;
         break;
@@ -300,7 +318,7 @@ bool sprite_2d_node_store_attr(engine_node_base_t *self_node_base, qstr attribut
             return true;
         break;
         case MP_QSTR_transparent_color:
-            self->transparent_color = destination[1];
+            self->transparent_color = engine_color_wrap(destination[1]);
             return true;
         break;
         case MP_QSTR_fps:
@@ -308,12 +326,18 @@ bool sprite_2d_node_store_attr(engine_node_base_t *self_node_base, qstr attribut
             return true;
         break;
         case MP_QSTR_frame_count_x:
+        {
             self->frame_count_x = destination[1];
+            sprite_2d_node_clamp_current_x(self);
             return true;
+        }
         break;
         case MP_QSTR_frame_count_y:
+        {
             self->frame_count_y = destination[1];
+            sprite_2d_node_clamp_current_y(self);
             return true;
+        }
         break;
         case MP_QSTR_rotation:
             self->rotation = destination[1];
@@ -336,12 +360,18 @@ bool sprite_2d_node_store_attr(engine_node_base_t *self_node_base, qstr attribut
             return true;
         break;
         case MP_QSTR_frame_current_x:
+        {
             self->frame_current_x = destination[1];
+            sprite_2d_node_clamp_current_x(self);
             return true;
+        }
         break;
         case MP_QSTR_frame_current_y:
+        {
             self->frame_current_y = destination[1];
+            sprite_2d_node_clamp_current_y(self);
             return true;
+        }
         break;
         default:
             return false; // Fail
@@ -387,20 +417,20 @@ static mp_attr_fun_t sprite_2d_node_class_attr(mp_obj_t self_in, qstr attribute,
     DESC: Simple 2D sprite node that can be animated or static
     PARAM:  [type={ref_link:Vector2}]         [name=position]                                   [value={ref_link:Vector2}]
     PARAM:  [type={ref_link:TextureResource}] [name=texture]                                    [value={ref_link:TextureResource}]
-    PARAM:  [type=int]                        [name=transparent_color]                          [value=any 16-bit RGB565 color]
+    PARAM:  [type={ref_link:Color}|int (RGB565)]   [name=transparent_color]                     [value=color]
     PARAM:  [type=float]                      [name=fps]                                        [value=any]
     PARAM:  [type=int]                        [name=frame_count_x]                              [value=any positive integer]
     PARAM:  [type=int]                        [name=frame_count_y]                              [value=any positive integer]
     PARAM:  [type=float]                      [name=rotation]                                   [value=any (radians)]
     PARAM:  [type={ref_link:Vector2}]         [name=scale]                                      [value={ref_link:Vector2}]
-    PARAM:  [type=float]                      [name=opacity]                                    [value=0 ~ 1.0] 
+    PARAM:  [type=float]                      [name=opacity]                                    [value=0 ~ 1.0]
     PARAM:  [type=boolean]                    [name=playing]                                    [value=boolean]
-    ATTR:   [type=function]                   [name={ref_link:add_child}]                       [value=function] 
+    ATTR:   [type=function]                   [name={ref_link:add_child}]                       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_child}]                       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_child_count}]                 [value=function]
-    ATTR:   [type=function]                   [name={ref_link:node_base_destroy}]               [value=function]
-    ATTR:   [type=function]                   [name={ref_link:node_base_destroy_all}]           [value=function]
-    ATTR:   [type=function]                   [name={ref_link:node_base_destroy_children}]      [value=function]
+    ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy}]               [value=function]
+    ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy_all}]           [value=function]
+    ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy_children}]      [value=function]
     ATTR:   [type=function]                   [name={ref_link:remove_child}]                    [value=function]
     ATTR:   [type=function]                   [name={ref_link:set_layer}]                       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_layer}]                       [value=function]
@@ -408,7 +438,7 @@ static mp_attr_fun_t sprite_2d_node_class_attr(mp_obj_t self_in, qstr attribute,
     ATTR:   [type=function]                   [name={ref_link:tick}]                            [value=function]
     ATTR:   [type={ref_link:Vector2}]         [name=position]                                   [value={ref_link:Vector2}]
     ATTR:   [type={ref_link:TextureResource}] [name=texture]                                    [value={ref_link:TextureResource}]
-    ATTR:   [type=int]                        [name=transparent_color]                          [value=any 16-bit RGB565 color]
+    ATTR:   [type={ref_link:Color}|int (RGB565)]   [name=transparent_color]                     [value=color]
     ATTR:   [type=float]                      [name=fps]                                        [value=any]
     ATTR:   [type=int]                        [name=frame_count_x]                              [value=any positive integer]
     ATTR:   [type=int]                        [name=frame_count_y]                              [value=any positive integer]
@@ -442,7 +472,7 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
     enum arg_ids {child_class, position, texture, transparent_color, fps, frame_count_x, frame_count_y, rotation, scale, opacity, playing, loop};
     bool inherited = false;
 
-    // If there is one positional argument and it isn't the first 
+    // If there is one positional argument and it isn't the first
     // expected argument (as is expected when using positional
     // arguments) then define which way to parse the arguments
     if(n_args >= 1 && mp_obj_get_type(args[0]) != &vector2_class_type){
@@ -461,7 +491,7 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
 
     if(parsed_args[position].u_obj == MP_OBJ_NULL) parsed_args[position].u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL);
     if(parsed_args[texture].u_obj == MP_OBJ_NULL) parsed_args[texture].u_obj = mp_const_none;
-    if(parsed_args[transparent_color].u_obj == MP_OBJ_NULL) parsed_args[transparent_color].u_obj = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(ENGINE_NO_TRANSPARENCY_COLOR)});
+    if(parsed_args[transparent_color].u_obj == MP_OBJ_NULL) parsed_args[transparent_color].u_obj = MP_OBJ_NEW_SMALL_INT(ENGINE_NO_TRANSPARENCY_COLOR);
     if(parsed_args[fps].u_obj == MP_OBJ_NULL) parsed_args[fps].u_obj = mp_obj_new_float(30.0f);
     if(parsed_args[frame_count_x].u_obj == MP_OBJ_NULL) parsed_args[frame_count_x].u_obj = mp_obj_new_int(1);
     if(parsed_args[frame_count_y].u_obj == MP_OBJ_NULL) parsed_args[frame_count_y].u_obj = mp_obj_new_int(1);
@@ -482,7 +512,7 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
     sprite_2d_node->tick_cb = mp_const_none;
     sprite_2d_node->position = parsed_args[position].u_obj;
     sprite_2d_node->texture_resource = parsed_args[texture].u_obj;
-    sprite_2d_node->transparent_color = parsed_args[transparent_color].u_obj;
+    sprite_2d_node->transparent_color = engine_color_wrap(parsed_args[transparent_color].u_obj);
     sprite_2d_node->fps = parsed_args[fps].u_obj;
     sprite_2d_node->frame_count_x = parsed_args[frame_count_x].u_obj;
     sprite_2d_node->frame_count_y = parsed_args[frame_count_y].u_obj;

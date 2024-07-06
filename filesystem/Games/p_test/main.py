@@ -28,11 +28,11 @@ import engine_debug
 
 #machine.freq(__freq)
 
-engine.set_fps_limit(60)
+engine.fps_limit(60)
 
 cam = CameraNode()
 engine_physics.set_gravity(0.0, -0.1)
-        
+
 ground_box = PhysicsRectangle2DNode(width=128, height=16, position=Vector2(0, 64), rotation=0, dynamic=False, bounciness = 1.)
 ground_box.outline = True
 ground_box.velocity = Vector2(0, 0)
@@ -84,16 +84,16 @@ def collision(box, contact):
 
 for i in range(BOXES_N):
     rect = PhysicsCircle2DNode(position=Vector2(urandom.randrange(-32, 32), urandom.randrange(-32, 32)))
-    
+
     rect.friction = 0.0
     rect.bounciness = 0.3
     rect.outline = True
     rect.collision = collision
     boxes[i] = rect
-    
+
 #def platform_tick(plat, dt):
 #    plat.rotation += dt
-    
+
 #platform_box.tick = platform_tick
 
 

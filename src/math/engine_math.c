@@ -44,14 +44,14 @@ float engine_math_3d_vector_length(float vx, float vy, float vz){
 void engine_math_normalize(float *vx, float *vy){
     float length = engine_math_vector_length(*vx, *vy);
 
-    // https://stackoverflow.com/a/66446497
-    if(engine_math_compare_floats(length, 0.0)){
-        length = 0.0001f;
+    if(length == 0.0f){
+        // The length is zero so all components are zero, no use scaling them by anything.
+        return;
     }
 
     const float factor = 1.0f / length;
-    *vx = (*vx) * factor;
-    *vy = (*vy) * factor;
+    *vx *= factor;
+    *vy *= factor;
 }
 
 
@@ -59,15 +59,15 @@ void engine_math_normalize(float *vx, float *vy){
 void engine_math_3d_normalize(float *vx, float *vy, float *vz){
     float length = engine_math_3d_vector_length(*vx, *vy, *vz);
 
-    // https://stackoverflow.com/a/66446497
-    if(engine_math_compare_floats(length, 0.0)){
-        length = 0.0001f;
+    if(length == 0.0f){
+        // The length is zero so all components are zero, no use scaling them by anything.
+        return;
     }
 
     const float factor = 1.0f / length;
-    *vx = (*vx) * factor;
-    *vy = (*vy) * factor;
-    *vz = (*vz) * factor;
+    *vx *= factor;
+    *vy *= factor;
+    *vz *= factor;
 }
 
 
@@ -78,19 +78,33 @@ float engine_math_vector_length_sqr(float x, float y){
 
 // https://stackoverflow.com/a/16659263
 float engine_math_clamp(float value, float min, float max){
-    const float t = value < min ? min : value;
-    return t > max ? max : t;
+    if(value <= min){
+        return min;
+    }
+    if(value >= max){
+        return max;
+    }
+    return value;
 }
 
 
 float engine_math_map(float value, float in_min, float in_max, float out_min, float out_max){
-    return (value - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+    float in_range = in_max - in_min;
+    if(in_range == 0.0f){
+        return (out_max - out_min) / 2.0f;
+    }
+    return (value - in_min) * (out_max - out_min) / in_range + out_min;
 }
 
 
-float engine_math_map_clamp_out(float value, float in_min, float in_max, float out_min, float out_max){
-    value = engine_math_map(value, in_min, in_max, out_min, out_max);
-    return engine_math_clamp(value, out_min, out_max);
+float engine_math_map_clamp(float value, float in_min, float in_max, float out_min, float out_max){
+    if(value <= in_min){
+        return out_min;
+    }
+    if(value >= in_max){
+        return out_max;
+    }
+    return engine_math_map(value, in_min, in_max, out_min, out_max);
 }
 
 
@@ -142,7 +156,7 @@ void engine_math_2d_midpoint(float x0, float y0, float x1, float y1, float *mx, 
 
 // https://stackoverflow.com/a/1968345
 // https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection#:~:text=Given%20two%20points%20on%20each%20line%20segment
-bool engine_math_2d_do_segments_intersect(float line_0_start_x, float line_0_start_y, float line_0_end_x, float line_0_end_y, 
+bool engine_math_2d_do_segments_intersect(float line_0_start_x, float line_0_start_y, float line_0_end_x, float line_0_end_y,
                                           float line_1_start_x, float line_1_start_y, float line_1_end_x, float line_1_end_y,
                                           float *intersect_x, float *intersect_y){
 
@@ -154,7 +168,7 @@ bool engine_math_2d_do_segments_intersect(float line_0_start_x, float line_0_sta
 
     float denominator = -segment_1_x * segment_0_y + segment_0_x * segment_1_y;
 
-    if(engine_math_compare_floats(denominator, 0.0f)){
+    if(denominator == 0.0f){
         return false;
     }
 
@@ -195,8 +209,8 @@ void engine_math_rotate_point(float *px, float *py, float cx, float cy, float an
 // https://math.stackexchange.com/a/234631
 // https://stackoverflow.com/a/49135089
 void engine_math_scale_point(float *px, float *py, float cx, float cy, float scale){
-    *px = scale * (((*px)-cx)+cx);
-    *py = scale * (((*py)-cy)+cy);
+    *px = scale * (*px-cx) + cx;
+    *py = scale * (*py-cy) + cy;
 }
 
 
@@ -715,9 +729,11 @@ int16_t sin_table[512] = {
 0
 };
 
+const float factor = 512.0f / TWICE_PI;
+const float max16_factor = 1.0f / (float)INT16_MAX;
 
-float engine_math_fast_sin(float angle_radians){
-    angle_radians = fmodf(angle_radians, TWICE_PI);
-    angle_radians *= 512 / TWICE_PI;
-    return (float)((float)sin_table[(uint16_t)angle_radians] / (float)INT16_MAX);
+inline float engine_math_fast_sin(float angle_radians){
+    int angle_radians_quant = (int)(angle_radians * factor);
+    angle_radians_quant &= 511;
+    return (float)sin_table[angle_radians_quant] * max16_factor;
 }

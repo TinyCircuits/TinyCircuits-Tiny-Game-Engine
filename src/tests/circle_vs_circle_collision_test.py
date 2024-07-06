@@ -30,7 +30,7 @@ print("dir(Vector3):", dir(Vector3))
 print("dir(Rectangle):", dir(Rectangle))
 
 # engine_debug.debug_enable_all()
-engine.set_fps_limit(60)
+engine.fps_limit(60)
 engine_physics.set_physics_fps_limit(60)
 # engine_debug.debug_enable_setting(engine_debug.debug_setting_performance)
 
@@ -42,7 +42,7 @@ engine_draw.set_background(background)
 class Test(Physics2DNode):
     def __init__(self):
         super().__init__(self)
-    
+
     def collision(self, collision_contact):
         print(collision_contact.normal.x, collision_contact.normal.y)
 
@@ -103,7 +103,7 @@ engine.start()
 #         # self.transparent_color = engine_draw.black
 #         self.scale.x = 1
 #         self.scale.y = 1
-    
+
 #     def tick(self):
 #         global rot_speed
 #         global texture0
@@ -114,7 +114,7 @@ engine.start()
 #             rot_speed -= 0.0001
 #         if engine_io.is_bumper_left_pressed():
 #             rot_speed += 0.0001
-        
+
 #         if engine_io.is_a_pressed():
 #             self.scale.x += 0.01
 #             self.scale.y += 0.01
@@ -139,7 +139,7 @@ engine.start()
 #             else:
 #                 switched = False
 #                 self.texture_resource = texture0
-        
+
 #         if just_pressed == True and engine_io.is_menu_pressed() == False:
 #             just_pressed = False
 #         # self.rotation = (3*math.pi)/4

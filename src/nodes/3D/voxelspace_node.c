@@ -80,8 +80,7 @@ void voxelspace_node_class_draw(mp_obj_t voxelspace_node_base_obj, mp_obj_t came
     // in the future the camera could be made to look backwards
     // and upside down when the angles go out of range
     float view_angle = camera_rotation->x.value;
-    view_angle = engine_math_clamp(view_angle, -PI/2.0f, PI/2.0f);
-    view_angle = engine_math_map(view_angle, -PI/2.0f, PI/2.0f, -SCREEN_HEIGHT*2.0f, SCREEN_HEIGHT*2.0f);
+    view_angle = engine_math_map_clamp(view_angle, -PI/2.0f, PI/2.0f, -SCREEN_HEIGHT*2.0f, SCREEN_HEIGHT*2.0f);
 
     // Scales for making the terrain smaller or larger
     float inverse_x_scale = 1.0f / voxelspace_scale->x.value;
@@ -121,8 +120,8 @@ void voxelspace_node_class_draw(mp_obj_t voxelspace_node_base_obj, mp_obj_t came
         float dx = (pright_x - pleft_x) * SCREEN_WIDTH_INVERSE;
         float dy = (pright_y - pleft_y) * SCREEN_WIDTH_INVERSE;
 
-        pleft_x += camera_position->x.value;
-        pleft_y += camera_position->z.value;
+        pleft_x += camera_position->x.value * inverse_x_scale;
+        pleft_y += camera_position->z.value * inverse_z_scale;
 
         // Cumulative offset for roll skew as the screen width is traversed
         float skew_roll_offset = skew_roll_start_offset;
@@ -228,7 +227,7 @@ void voxelspace_node_class_draw(mp_obj_t voxelspace_node_base_obj, mp_obj_t came
 /*  --- doc ---
     NAME: get_abs_height
     ID: get_abs_height
-    DESC: Gets the absolute height at a position in the voxelspace node (takes position into account). If the position isn't inside the node at its current position and dimensions, returns None. 
+    DESC: Gets the absolute height at a position in the voxelspace node (takes position into account). If the position isn't inside the node at its current position and dimensions, returns None.
     PARAM:  [type=float]    [name=x]   [value=any]
     PARAM:  [type=float]    [name=y]   [value=any]
     RETURN: float or None
@@ -240,9 +239,13 @@ static mp_obj_t voxelspace_node_class_get_abs_height(mp_obj_t self, mp_obj_t x_o
     vector3_class_obj_t *voxelspace_scale = voxelspace->scale;
     texture_resource_class_obj_t *heightmap = voxelspace->heightmap_resource;
 
+    // Scales for making the terrain smaller or larger
+    float inverse_x_scale = 1.0f / voxelspace_scale->x.value;
+    float inverse_z_scale = 1.0f / voxelspace_scale->z.value;
+
     bool repeat = mp_obj_get_int(voxelspace->repeat);
-    float x = mp_obj_get_float(x_obj);
-    float z = mp_obj_get_float(z_obj);
+    float x = mp_obj_get_float(x_obj) * inverse_x_scale;
+    float z = mp_obj_get_float(z_obj) * inverse_z_scale;
 
     if(repeat == true){
         x = fmodf(fabsf(x), heightmap->width);
@@ -291,18 +294,18 @@ bool voxelspace_node_load_attr(engine_node_base_t *self_node_base, qstr attribut
             destination[1] = self_node_base;
             return true;
         break;
-        case MP_QSTR_destroy:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_obj);
+        case MP_QSTR_mark_destroy:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_mark_destroy_obj);
             destination[1] = self_node_base;
             return true;
         break;
-        case MP_QSTR_destroy_all:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_all_obj);
+        case MP_QSTR_mark_destroy_all:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_mark_destroy_all_obj);
             destination[1] = self_node_base;
             return true;
         break;
-        case MP_QSTR_destroy_children:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_children_obj);
+        case MP_QSTR_mark_destroy_children:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_mark_destroy_children_obj);
             destination[1] = self_node_base;
             return true;
         break;
@@ -495,9 +498,9 @@ static mp_attr_fun_t voxelspace_node_class_attr(mp_obj_t self_in, qstr attribute
     ATTR:   [type=function]                   [name={ref_link:add_child}]                       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_child}]                       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_child_count}]                 [value=function]
-    ATTR:   [type=function]                   [name={ref_link:node_base_destroy}]               [value=function]
-    ATTR:   [type=function]                   [name={ref_link:node_base_destroy_all}]           [value=function]
-    ATTR:   [type=function]                   [name={ref_link:node_base_destroy_children}]      [value=function]
+    ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy}]               [value=function]
+    ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy_all}]           [value=function]
+    ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy_children}]      [value=function]
     ATTR:   [type=function]                   [name={ref_link:remove_child}]                    [value=function]
     ATTR:   [type=function]                   [name={ref_link:set_layer}]                       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_layer}]                       [value=function]
@@ -538,8 +541,8 @@ mp_obj_t voxelspace_node_class_new(const mp_obj_type_t *type, size_t n_args, siz
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
     enum arg_ids {child_class, position, texture, heightmap, rotation, scale, repeat, flip, lod, curvature, thickness};
     bool inherited = false;
-    
-    // If there is one positional argument and it isn't the first 
+
+    // If there is one positional argument and it isn't the first
     // expected argument (as is expected when using positional
     // arguments) then define which way to parse the arguments
     if(n_args >= 1 && mp_obj_get_type(args[0]) != &vector3_class_type){

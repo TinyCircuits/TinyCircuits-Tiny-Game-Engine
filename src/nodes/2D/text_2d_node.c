@@ -17,6 +17,8 @@
 #include "utility/engine_time.h"
 #include "draw/engine_shader.h"
 
+#include <string.h>
+
 
 void text_2d_node_class_draw(mp_obj_t text_2d_node_base_obj, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("Text2DNode: Drawing");
@@ -96,8 +98,8 @@ void text_2d_node_class_draw(mp_obj_t text_2d_node_base_obj, mp_obj_t camera_nod
 
         float t = 1.0f;
 
-        text_shader->program[1] = (text_color->value.val >> 8) & 0b11111111;
-        text_shader->program[2] = (text_color->value.val >> 0) & 0b11111111;
+        text_shader->program[1] = (text_color->value >> 8) & 0b11111111;
+        text_shader->program[2] = (text_color->value >> 0) & 0b11111111;
 
         memcpy(text_shader->program+3, &t, sizeof(float));
     }
@@ -136,18 +138,18 @@ bool text_2d_node_load_attr(engine_node_base_t *self_node_base, qstr attribute, 
             destination[1] = self_node_base;
             return true;
         break;
-        case MP_QSTR_destroy:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_obj);
+        case MP_QSTR_mark_destroy:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_mark_destroy_obj);
             destination[1] = self_node_base;
             return true;
         break;
-        case MP_QSTR_destroy_all:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_all_obj);
+        case MP_QSTR_mark_destroy_all:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_mark_destroy_all_obj);
             destination[1] = self_node_base;
             return true;
         break;
-        case MP_QSTR_destroy_children:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_children_obj);
+        case MP_QSTR_mark_destroy_children:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_mark_destroy_children_obj);
             destination[1] = self_node_base;
             return true;
         break;
@@ -293,7 +295,7 @@ bool text_2d_node_store_attr(engine_node_base_t *self_node_base, qstr attribute,
             return true;
         break;
         case MP_QSTR_color:
-            self->color = destination[1];
+            self->color = engine_color_wrap(destination[1]);
             return true;
         break;
         default:
@@ -347,12 +349,13 @@ static mp_attr_fun_t text_2d_node_class_attr(mp_obj_t self_in, qstr attribute, m
     PARAM:  [type=float]                      [name=opacity]                                    [value=0 ~ 1.0]
     PARAM:  [type=float]                      [name=letter_spacing]                             [value=any]
     PARAM:  [type=float]                      [name=line_spacing]                               [value=any]
-    ATTR:   [type=function]                   [name={ref_link:add_child}]                       [value=function] 
+    PARAM:  [type={ref_link:Color}|int (RGB565)]   [name=color]                                 [value=color]
+    ATTR:   [type=function]                   [name={ref_link:add_child}]                       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_child}]                       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_child_count}]                 [value=function]
-    ATTR:   [type=function]                   [name={ref_link:node_base_destroy}]               [value=function]
-    ATTR:   [type=function]                   [name={ref_link:node_base_destroy_all}]           [value=function]
-    ATTR:   [type=function]                   [name={ref_link:node_base_destroy_children}]      [value=function]
+    ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy}]               [value=function]
+    ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy_all}]           [value=function]
+    ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy_children}]      [value=function]
     ATTR:   [type=function]                   [name={ref_link:remove_child}]                    [value=function]
     ATTR:   [type=function]                   [name={ref_link:set_layer}]                       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_layer}]                       [value=function]
@@ -366,7 +369,7 @@ static mp_attr_fun_t text_2d_node_class_attr(mp_obj_t self_in, qstr attribute, m
     ATTR:   [type=float]                      [name=opacity]                                    [value=0 ~ 1.0]
     ATTR:   [type=float]                      [name=letter_spacing]                             [value=any]
     ATTR:   [type=float]                      [name=line_spacing]                               [value=any]
-    ATTR:   [type={ref_link:Color}]           [name=color]                                      [value={ref_link:Color}]
+    ATTR:   [type={ref_link:Color}|int (RGB565)]   [name=color]                                 [value=color]
     OVRR:   [type=function]                   [name={ref_link:tick}]                            [value=function]
 */
 mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
@@ -388,7 +391,7 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
     enum arg_ids {child_class, position, font, text, rotation, scale, opacity, letter_spacing, line_spacing, color};
     bool inherited = false;
 
-    // If there is one positional argument and it isn't the first 
+    // If there is one positional argument and it isn't the first
     // expected argument (as is expected when using positional
     // arguments) then define which way to parse the arguments
     if(n_args >= 1 && mp_obj_get_type(args[0]) != &vector2_class_type){
@@ -431,7 +434,7 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
     text_2d_node->opacity = parsed_args[opacity].u_obj;
     text_2d_node->letter_spacing = parsed_args[letter_spacing].u_obj;
     text_2d_node->line_spacing = parsed_args[line_spacing].u_obj;
-    text_2d_node->color = parsed_args[color].u_obj;
+    text_2d_node->color = engine_color_wrap_opt(parsed_args[color].u_obj);
     text_2d_node->width = mp_obj_new_int(0);
     text_2d_node->height = mp_obj_new_int(0);
 

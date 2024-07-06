@@ -15,7 +15,7 @@
 #include "draw/engine_color.h"
 #include "resources/engine_font_resource.h"
 #include "engine_gui.h"
-#include "io/engine_io_common.h"
+#include "io/engine_io_module.h"
 #include "engine_collections.h"
 
 #include <string.h>
@@ -23,7 +23,7 @@
 
 void gui_bitmap_button_2d_node_class_draw(mp_obj_t button_node_base_obj, mp_obj_t camera_node){
     ENGINE_INFO_PRINTF("GUIBitmapButton2DNode: Drawing");
-    
+
     engine_node_base_t *button_node_base = button_node_base_obj;
     engine_gui_bitmap_button_2d_node_class_obj_t *button = button_node_base->node;
 
@@ -120,7 +120,7 @@ void gui_bitmap_button_2d_node_class_draw(mp_obj_t button_node_base_obj, mp_obj_
                      btn_x_scale,
                      btn_y_scale,
                     -button_rotation,
-                     transparent_color->value.val,
+                     transparent_color->value,
                      button_opacity,
                      shader);
 
@@ -133,8 +133,8 @@ void gui_bitmap_button_2d_node_class_draw(mp_obj_t button_node_base_obj, mp_obj_
 
             float t = 1.0f;
 
-            text_shader->program[1] = (text_color->value.val >> 8) & 0b11111111;
-            text_shader->program[2] = (text_color->value.val >> 0) & 0b11111111;
+            text_shader->program[1] = (text_color->value >> 8) & 0b11111111;
+            text_shader->program[2] = (text_color->value >> 0) & 0b11111111;
 
             memcpy(text_shader->program+3, &t, sizeof(float));
         }
@@ -164,6 +164,10 @@ mp_obj_t gui_bitmap_button_2d_node_class_del(mp_obj_t self_in){
 
     engine_node_base_t *node_base = self_in;
     engine_gui_bitmap_button_2d_node_class_obj_t *gui_button = node_base->node;
+
+    // If this node is focused but being deleted, tell the GUI engine
+    if(gui_button->focused) engine_gui_clear_focused();
+
     engine_collections_untrack_gui(gui_button->gui_list_node);
 
     node_base_del(self_in);
@@ -184,18 +188,18 @@ bool bitmap_button_2d_node_load_attr(engine_node_base_t *self_node_base, qstr at
             destination[1] = self_node_base;
             return true;
         break;
-        case MP_QSTR_destroy:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_obj);
+        case MP_QSTR_mark_destroy:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_mark_destroy_obj);
             destination[1] = self_node_base;
             return true;
         break;
-        case MP_QSTR_destroy_all:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_all_obj);
+        case MP_QSTR_mark_destroy_all:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_mark_destroy_all_obj);
             destination[1] = self_node_base;
             return true;
         break;
-        case MP_QSTR_destroy_children:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_destroy_children_obj);
+        case MP_QSTR_mark_destroy_children:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_mark_destroy_children_obj);
             destination[1] = self_node_base;
             return true;
         break;
@@ -276,7 +280,7 @@ bool bitmap_button_2d_node_load_attr(engine_node_base_t *self_node_base, qstr at
             destination[0] = self->transparent_color;
             return true;
         break;
-        
+
         case MP_QSTR_rotation:
             destination[0] = self->rotation;
             return true;
@@ -350,7 +354,7 @@ bool bitmap_button_2d_node_load_attr(engine_node_base_t *self_node_base, qstr at
             return true;
         break;
         case MP_QSTR_button:
-            destination[0] = mp_obj_new_int(self->button);
+            destination[0] = self->button ? MP_OBJ_FROM_PTR(self->button) : mp_const_none;
             return true;
         break;
         case MP_QSTR_width:
@@ -389,15 +393,15 @@ bool bitmap_button_2d_node_store_attr(engine_node_base_t *self_node_base, qstr a
         break;
 
         case MP_QSTR_text_color:
-            self->text_color = destination[1];
+            self->text_color = engine_color_wrap(destination[1]);
             return true;
         break;
         case MP_QSTR_focused_text_color:
-            self->focused_text_color = destination[1];
+            self->focused_text_color = engine_color_wrap(destination[1]);
             return true;
         break;
         case MP_QSTR_pressed_text_color:
-            self->pressed_text_color = destination[1];
+            self->pressed_text_color = engine_color_wrap(destination[1]);
             return true;
         break;
 
@@ -415,7 +419,7 @@ bool bitmap_button_2d_node_store_attr(engine_node_base_t *self_node_base, qstr a
         break;
 
         case MP_QSTR_transparent_color:
-            self->transparent_color = destination[1];
+            self->transparent_color = engine_color_wrap(destination[1]);
             return true;
         break;
 
@@ -462,7 +466,7 @@ bool bitmap_button_2d_node_store_attr(engine_node_base_t *self_node_base, qstr a
             self->on_just_unfocused_cb = destination[1];
             return true;
         break;
-        
+
         case MP_QSTR_on_pressed:
             self->on_pressed_cb = destination[1];
             return true;
@@ -486,7 +490,10 @@ bool bitmap_button_2d_node_store_attr(engine_node_base_t *self_node_base, qstr a
             return true;
         break;
         case MP_QSTR_button:
-            self->button = mp_obj_get_int(destination[1]);
+            if (!mp_obj_is_type(destination[1], &button_class_type)) {
+                mp_raise_msg(&mp_type_ValueError, MP_ERROR_TEXT("GUIBitmapButton2DNode: 'button' must be a Button object!"));
+            }
+            self->button = MP_OBJ_TO_PTR(destination[1]);
             return true;
         break;
         case MP_QSTR_width:
@@ -542,15 +549,15 @@ static mp_attr_fun_t gui_bitmap_button_2d_node_class_attr(mp_obj_t self_in, qstr
     PARAM:  [type={ref_link:FontResource}]    [name=font]                                       [value={ref_link:FontResource}]
     PARAM:  [type=string]                     [name=text]                                       [value=any]
 
-    PARAM:  [type={ref_link:Color}]           [name=text_color]                                 [value=any {ref_link:Color} that the base text color should blend to (works best with white text)]
-    PARAM:  [type={ref_link:Color}]           [name=focused_text_color]                         [value=any {ref_link:Color}]
-    PARAM:  [type={ref_link:Color}]           [name=pressed_text_color]                         [value=any {ref_link:Color}]
+    PARAM:  [type={ref_link:Color}|int (RGB565)]   [name=text_color]                            [value=any color that the base text color should blend to (works best with white text)]
+    PARAM:  [type={ref_link:Color}|int (RGB565)]   [name=focused_text_color]                    [value=any color]
+    PARAM:  [type={ref_link:Color}|int (RGB565)]   [name=pressed_text_color]                    [value=any color]
 
     PARAM:  [type={ref_link:TextureResource}] [name=bitmap]                                     [value=any {ref_link:TextureResource}]
     PARAM:  [type={ref_link:TextureResource}] [name=focused_bitmap]                             [value=any {ref_link:TextureResource}]
     PARAM:  [type={ref_link:TextureResource}] [name=pressed_bitmap]                             [value=any {ref_link:TextureResource}]
 
-    PARAM:  [type={ref_link:Color}]           [name=transparent_color]                          [value=any {ref_link:Color} (single color in all three bitmaps that should be drawn transparent (i.e. not drawn at all))]
+    PARAM:  [type={ref_link:Color}|int (RGB565)]   [name=transparent_color]                     [value=any color (single color in all three bitmaps that should be drawn transparent (i.e. not drawn at all))]
 
     PARAM:  [type=float]                      [name=rotation]                                   [value=any (radians)]
     PARAM:  [type={ref_link:Vector2}]         [name=scale]                                      [value={ref_link:Vector2}]
@@ -561,12 +568,12 @@ static mp_attr_fun_t gui_bitmap_button_2d_node_class_attr(mp_obj_t self_in, qstr
     PARAM:  [type=float]                      [name=line_spacing]                               [value=any]
 
 
-    ATTR:   [type=function]                   [name={ref_link:add_child}]                       [value=function] 
+    ATTR:   [type=function]                   [name={ref_link:add_child}]                       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_child}]                       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_child_count}]                 [value=function]
-    ATTR:   [type=function]                   [name={ref_link:node_base_destroy}]               [value=function]
-    ATTR:   [type=function]                   [name={ref_link:node_base_destroy_all}]           [value=function]
-    ATTR:   [type=function]                   [name={ref_link:node_base_destroy_children}]      [value=function]
+    ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy}]               [value=function]
+    ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy_all}]           [value=function]
+    ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy_children}]      [value=function]
     ATTR:   [type=function]                   [name={ref_link:remove_child}]                    [value=function]
     ATTR:   [type=function]                   [name={ref_link:set_layer}]                       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_layer}]                       [value=function]
@@ -585,15 +592,15 @@ static mp_attr_fun_t gui_bitmap_button_2d_node_class_attr(mp_obj_t self_in, qstr
     ATTR:   [type=float]                      [name=outline]                                    [value=any (how thick the outline should be, in px)]
     ATTR:   [type=float]                      [name=padding]                                    [value=any (amount of empty space between the text and outline, in px)]
 
-    ATTR:   [type={ref_link:Color}]           [name=text_color]                                 [value=any {ref_link:Color} that the base text color should blend to (works best with white text)]
-    ATTR:   [type={ref_link:Color}]           [name=focused_text_color]                         [value=any {ref_link:Color}]
-    ATTR:   [type={ref_link:Color}]           [name=pressed_text_color]                         [value=any {ref_link:Color}]
+    ATTR:   [type={ref_link:Color}|int (RGB565)]   [name=text_color]                            [value=any color that the base text color should blend to (works best with white text)]
+    ATTR:   [type={ref_link:Color}|int (RGB565)]   [name=focused_text_color]                    [value=any color]
+    ATTR:   [type={ref_link:Color}|int (RGB565)]   [name=pressed_text_color]                    [value=any color]
 
     ATTR:   [type={ref_link:TextureResource}] [name=bitmap]                                     [value=any {ref_link:TextureResource}]
     ATTR:   [type={ref_link:TextureResource}] [name=focused_bitmap]                             [value=any {ref_link:TextureResource}]
     ATTR:   [type={ref_link:TextureResource}] [name=pressed_bitmap]                             [value=any {ref_link:TextureResource}]
 
-    ATTR:   [type={ref_link:Color}]           [name=transparent_color]                          [value=any {ref_link:Color} (single color in all three bitmaps that should be drawn transparent (i.e. not drawn at all))]
+    ATTR:   [type={ref_link:Color}|int (RGB565)]   [name=transparent_color]                     [value=any color (single color in all three bitmaps that should be drawn transparent (i.e. not drawn at all))]
 
     ATTR:   [type=float]                      [name=rotation]                                   [value=any (radians)]
     ATTR:   [type={ref_link:Vector2}]         [name=scale]                                      [value={ref_link:Vector2}]
@@ -650,7 +657,7 @@ mp_obj_t gui_bitmap_button_2d_node_class_new(const mp_obj_type_t *type, size_t n
                   text_color,
                   focused_text_color,
                   pressed_text_color,
-                  
+
                   bitmap,
                   focused_bitmap,
                   pressed_bitmap,
@@ -658,13 +665,13 @@ mp_obj_t gui_bitmap_button_2d_node_class_new(const mp_obj_type_t *type, size_t n
                   transparent_color,
 
                   rotation, scale, text_scale, opacity,
-                  
+
                   letter_spacing,
                   line_spacing};
 
     bool inherited = false;
 
-    // If there is one positional argument and it isn't the first 
+    // If there is one positional argument and it isn't the first
     // expected argument (as is expected when using positional
     // arguments) then define which way to parse the arguments
     if(n_args >= 1 && mp_obj_get_type(args[0]) != &vector2_class_type){
@@ -693,7 +700,7 @@ mp_obj_t gui_bitmap_button_2d_node_class_new(const mp_obj_type_t *type, size_t n
     if(parsed_args[focused_bitmap].u_obj == MP_OBJ_NULL) parsed_args[focused_bitmap].u_obj = mp_const_none;
     if(parsed_args[pressed_bitmap].u_obj == MP_OBJ_NULL) parsed_args[pressed_bitmap].u_obj = mp_const_none;
 
-    if(parsed_args[transparent_color].u_obj == MP_OBJ_NULL) parsed_args[transparent_color].u_obj = color_class_new(&color_class_type, 1, 0, (mp_obj_t[]){mp_obj_new_int(ENGINE_NO_TRANSPARENCY_COLOR)});
+    if(parsed_args[transparent_color].u_obj == MP_OBJ_NULL) parsed_args[transparent_color].u_obj = MP_OBJ_NEW_SMALL_INT(ENGINE_NO_TRANSPARENCY_COLOR);
 
     if(parsed_args[rotation].u_obj == MP_OBJ_NULL) parsed_args[rotation].u_obj = mp_obj_new_float(0.0f);
     if(parsed_args[scale].u_obj == MP_OBJ_NULL) parsed_args[scale].u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)});
@@ -724,15 +731,15 @@ mp_obj_t gui_bitmap_button_2d_node_class_new(const mp_obj_type_t *type, size_t n
     gui_bitmap_button_2d_node->font_resource = parsed_args[font].u_obj;
     gui_bitmap_button_2d_node->text = parsed_args[text].u_obj;
 
-    gui_bitmap_button_2d_node->text_color = parsed_args[text_color].u_obj;
-    gui_bitmap_button_2d_node->focused_text_color = parsed_args[focused_text_color].u_obj;
-    gui_bitmap_button_2d_node->pressed_text_color = parsed_args[pressed_text_color].u_obj;
+    gui_bitmap_button_2d_node->text_color = engine_color_wrap_opt(parsed_args[text_color].u_obj);
+    gui_bitmap_button_2d_node->focused_text_color = engine_color_wrap_opt(parsed_args[focused_text_color].u_obj);
+    gui_bitmap_button_2d_node->pressed_text_color = engine_color_wrap_opt(parsed_args[pressed_text_color].u_obj);
 
     gui_bitmap_button_2d_node->bitmap_texture = parsed_args[bitmap].u_obj;
     gui_bitmap_button_2d_node->focused_bitmap_texture = parsed_args[focused_bitmap].u_obj;
     gui_bitmap_button_2d_node->pressed_bitmap_texture = parsed_args[pressed_bitmap].u_obj;
 
-    gui_bitmap_button_2d_node->transparent_color = parsed_args[transparent_color].u_obj;
+    gui_bitmap_button_2d_node->transparent_color = engine_color_wrap(parsed_args[transparent_color].u_obj);
 
     gui_bitmap_button_2d_node->rotation = parsed_args[rotation].u_obj;
     gui_bitmap_button_2d_node->scale = parsed_args[scale].u_obj;
@@ -745,7 +752,7 @@ mp_obj_t gui_bitmap_button_2d_node_class_new(const mp_obj_type_t *type, size_t n
     gui_bitmap_button_2d_node->focused = false;
     gui_bitmap_button_2d_node->pressed = false;
     gui_bitmap_button_2d_node->last_pressed = false;
-    gui_bitmap_button_2d_node->button = BUTTON_A;
+    gui_bitmap_button_2d_node->button = &BUTTON_A;
 
     if(inherited == true){
         // Get the Python class instance

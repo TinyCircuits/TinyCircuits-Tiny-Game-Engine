@@ -94,14 +94,14 @@ volatile float master_volume = 1.0f;
                 true                                                    // Start immediately
             );
 
-            // Filled amount will always be equal to or less than to 
+            // Filled amount will always be equal to or less than to
             // 0 the 'size' passed to 'fill_buffer'. In the case it was
             // filled with something, increment to the amount filled
             // further. In the case it is filled with nothing, that means
             // the last fill made us reach the end of the source data,
             // figure out if this channel should stop or loop. If loop,
             // run again right away to fill with more data after resetting
-            // 'source_byte_offset' 
+            // 'source_byte_offset'
             if(channel->buffers_ends[channel->filling_buffer_index] > 0){
                 channel->source_byte_offset += channel->buffers_ends[channel->filling_buffer_index];
             }else{
@@ -144,11 +144,7 @@ volatile float master_volume = 1.0f;
                 source->play_counter = 0;
             }else if(source->sample_rate == 22050 && source->play_counter == 1){
                 source->play_counter = 0;
-            }
-            // else if(source->sample_rate == 44100 && source->play_counter == 1){
-            //     source->play_counter = 0;
-            // }
-            else{
+            }else{
                 source->play_counter++;
                 return source->last_sample;
             }
@@ -167,18 +163,14 @@ volatile float master_volume = 1.0f;
                 uint8_t sample_byte = channel->buffers[buffer_index][buffer_byte_offset];       // Get sample as unsigned 8-bit value from 0 to 255
                 source->last_sample = (int8_t)(sample_byte - 128);                              // Center sample in preparation for scaling to -1.0 ~ 1.0. Subtract 128 so that 0 -> -128 and 255 -> 127
                 source->last_sample = source->last_sample / (float)INT8_MAX;                    // Scale from -128 ~ 127 to -1.0078 ~ 1.0 (will clamp later)
-                source->last_sample = source->last_sample * channel->gain * master_volume;      // Scale sample by channel gain and master volume (that can be 0.0 ~ 1.0 each)
-                source->last_sample = (engine_math_clamp(source->last_sample, -1.0f, 1.0f));    // Clamp volume scaled sample to -1.0 ~ 1.0
             }
             break;
             case 2:
-            {   
+            {
                 uint8_t sample_byte_lsb = channel->buffers[buffer_index][buffer_byte_offset];   // Get the right-most 8-bits as unsigned 8-bit (really is signed 16-bit byte, bits will still exist in same pattern)
                 uint8_t sample_byte_msb = channel->buffers[buffer_index][buffer_byte_offset+1]; // Get the left-most 8-bits as unsigned 8-bit (really is signed 16-bit byte, bits will still exist in same pattern)
                 source->last_sample = (int16_t)((sample_byte_msb << 8) + sample_byte_lsb);      // Combine bytes to make signed 16-bit value from -32768 ~ 32767
                 source->last_sample = source->last_sample / (float)INT16_MAX;                   // Scale from -32768 ~ 32767 to -1.000031 ~ 1.0 (will clamp later)
-                source->last_sample = source->last_sample * channel->gain * master_volume;      // Scale sample by channel gain and master volume (that can be 0.0 ~ 1.0 each)
-                source->last_sample = engine_math_clamp(source->last_sample, -1.0f, 1.0f);      // Clamp volume scaled sample to -1.0 ~ 1.0
             }
             break;
             default:
@@ -211,7 +203,7 @@ volatile float master_volume = 1.0f;
     void ENGINE_FAST_FUNCTION(repeating_audio_callback)(void){
         float total_sample = 0;
         bool play_sample = false;
-        
+
         for(uint8_t icx=0; icx<CHANNEL_COUNT; icx++){
             bool complete = false;
             audio_channel_class_obj_t *channel = channels[icx];
@@ -222,29 +214,29 @@ volatile float master_volume = 1.0f;
 
             // Playing at least one sample, switch flag
             play_sample = true;
+            float sample = 0.0f;
 
             if(mp_obj_is_type(channel->source, &wave_sound_resource_class_type)){
-                total_sample += get_wave_sample(channel, &complete);
+                sample = get_wave_sample(channel, &complete);
             }else if(mp_obj_is_type(channel->source, &tone_sound_resource_class_type)){
-                total_sample += get_tone_sample(channel);
+                sample = get_tone_sample(channel);
             }else if(mp_obj_is_type(channel->source, &rtttl_sound_resource_class_type)){
-                total_sample += get_rtttl_sample(channel, &complete);
+                sample = get_rtttl_sample(channel, &complete);
             }
+
+            total_sample += sample * channel->gain * master_volume;
 
             if(complete && channel->loop == false){
                 audio_channel_stop(channel);
             }
         }
-        
+
         if(play_sample){
             // Up to the user to make sure all playing channels do not add up and
-            // go out of -1.0 ~ 1.0 range. First clamp the total sample sum since
-            // very likely it could end of out of bounds, and then map to PWM levels
+            // go out of -1.0 ~ 1.0 range. Clamp the total sample sum since
+            // very likely it could end of out of bounds, and map to PWM levels
             // NOTE: Set PWM wrap to 512 levels so it will use values from 0 to 511
-            total_sample = engine_math_clamp(total_sample, -1.0f, 1.0f);
-            total_sample = engine_math_map(total_sample, -1.0f, 1.0f, 0.0f, 511.0f);
-
-            // total_sample = engine_math_map(sinf(millis() * 8.0f), -1.0f, 1.0f, 0.0f, 511.0f);
+            total_sample = engine_math_map_clamp(total_sample, -1.0f, 1.0f, 0.0f, 511.0f);
 
             // Actually set the wrap value to play this sample
             pwm_set_gpio_level(AUDIO_PWM_PIN, (uint32_t)(total_sample));
@@ -297,10 +289,6 @@ void engine_audio_setup(){
     #if defined(__unix__)
         // Nothing to do
     #elif defined(__arm__)
-        // if(add_repeating_timer_us((int64_t)((1.0/ENGINE_AUDIO_SAMPLE_RATE) * 1000000.0), repeating_audio_callback, NULL, &repeating_audio_timer) == false){
-        //     mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("AudioModule: No timer slots available, could not audio callback!"));
-        // }
-
         //generate the interrupt at the audio sample rate to set the PWM duty cycle
         audio_callback_pwm_pin_slice = pwm_gpio_to_slice_num(AUDIO_CALLBACK_PWM_PIN);
         pwm_clear_irq(audio_callback_pwm_pin_slice);
@@ -374,9 +362,9 @@ void engine_audio_play_on_channel(mp_obj_t sound_resource_obj, audio_channel_cla
     NAME: stop
     ID: audio_stop
     DESC: Stops playing audio on channel at index
-    PARAM: [type=int]       [name=channel_index]  [value=0 ~ 3]                                                                                                          
+    PARAM: [type=int]       [name=channel_index]  [value=0 ~ 3]
     RETURN: None
-*/ 
+*/
 static mp_obj_t engine_audio_stop(mp_obj_t channel_index_obj){
     uint8_t channel_index = mp_obj_get_int(channel_index_obj);
 
@@ -396,10 +384,10 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_audio_stop_obj, engine_audio_stop);
     ID: audio_play
     DESC: Starts playing an audio source on a given channel and looping or not. It is up to the user to change the gains of the returned channels so that the audio does not clip.
     PARAM: [type=object]    [name=sound_resource] [value={ref_link:WaveSoundResource} or {ref_link:ToneSoundResource}]
-    PARAM: [type=int]       [name=channel_index]  [value=0 ~ 3]                                                          
-    PARAM: [type=boolean]   [name=loop]           [value=True or False]                                                  
+    PARAM: [type=int]       [name=channel_index]  [value=0 ~ 3]
+    PARAM: [type=boolean]   [name=loop]           [value=True or False]
     RETURN: {ref_link:AudioChannel}
-*/ 
+*/
 static mp_obj_t engine_audio_play(mp_obj_t sound_resource_obj, mp_obj_t channel_index_obj, mp_obj_t loop_obj){
     // Should probably make sure this doesn't
     // interfere with DMA or interrupt: TODO
@@ -417,11 +405,14 @@ MP_DEFINE_CONST_FUN_OBJ_3(engine_audio_play_obj, engine_audio_play);
     NAME: set_volume
     ID: set_volume
     DESC: Sets the master volume clamped between 0.0 and 1.0. In the future, this will be persistent and stored/restored using a settings file (TODO)
-    PARAM: [type=float] [name=set_volume] [value=0.0 ~ 1.0]
+    PARAM: [type=float] [name=set_volume] [value=any]
     RETURN: None
-*/ 
+*/
 static mp_obj_t engine_audio_set_volume(mp_obj_t new_volume){
-    master_volume = engine_math_clamp(mp_obj_get_float(new_volume), 0.0f, 1.0f);
+    // Don't clamp so that users can clip their waveforms
+    // which adds more area under the curve and therefore
+    // is louder (sounds worse though)
+    master_volume = mp_obj_get_float(new_volume);
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(engine_audio_set_volume_obj, engine_audio_set_volume);
@@ -432,12 +423,11 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_audio_set_volume_obj, engine_audio_set_volume);
     ID: get_volume
     DESC: Returns the currently set master volume between 0.0 and 1.0
     RETURN: None
-*/ 
+*/
 static mp_obj_t engine_audio_get_volume(){
     return mp_obj_new_float(master_volume);
 }
 MP_DEFINE_CONST_FUN_OBJ_0(engine_audio_get_volume_obj, engine_audio_get_volume);
-
 
 
 static mp_obj_t engine_audio_module_init(){
@@ -453,10 +443,10 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_audio_module_init_obj, engine_audio_module_init
     DESC: Module for controlling/playing audio through four channels.
     ATTR: [type=object]     [name={ref_link:AudioChannel}]  [value=function]
     ATTR: [type=function]   [name={ref_link:audio_play}]    [value=function]
-    ATTR: [type=function]   [name={ref_link:audio_stop}]    [value=function] 
+    ATTR: [type=function]   [name={ref_link:audio_stop}]    [value=function]
     ATTR: [type=function]   [name={ref_link:set_volume}]    [value=function]
     ATTR: [type=function]   [name={ref_link:get_volume}]    [value=function]
-*/ 
+*/
 static const mp_rom_map_elem_t engine_audio_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_audio) },
     { MP_OBJ_NEW_QSTR(MP_QSTR___init__), (mp_obj_t)&engine_audio_module_init_obj },

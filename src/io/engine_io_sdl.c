@@ -1,40 +1,42 @@
 #include "engine_io_sdl.h"
-#include "engine_io_common.h"
+#include "engine_io_button_codes.h"
 #include <SDL2/SDL.h>
 
 static SDL_Event event;
 
-void engine_io_sdl_update_pressed_mask(){
+uint16_t sdl_pressed_buttons = 0;
+
+uint16_t engine_io_sdl_pressed_buttons(){
     // Poll queued SDL input events (mouse and keyboard but only keyboard used)
     while(SDL_PollEvent(&event)){
         if(event.type == SDL_KEYDOWN){
             switch(event.key.keysym.sym){
                 case SDLK_w:        // DPAD UP
-                    pressed_buttons |= BUTTON_DPAD_UP;
+                    sdl_pressed_buttons |= BUTTON_CODE_DPAD_UP;
                 break;
                 case SDLK_a:        // DPAD LEFT
-                    pressed_buttons |= BUTTON_DPAD_LEFT;
+                    sdl_pressed_buttons |= BUTTON_CODE_DPAD_LEFT;
                 break;
                 case SDLK_s:        // DPAD DOWN
-                    pressed_buttons |= BUTTON_DPAD_DOWN;
+                    sdl_pressed_buttons |= BUTTON_CODE_DPAD_DOWN;
                 break;
                 case SDLK_d:        // DPAD RIGHT
-                    pressed_buttons |= BUTTON_DPAD_RIGHT;
+                    sdl_pressed_buttons |= BUTTON_CODE_DPAD_RIGHT;
                 break;
                 case SDLK_PERIOD:   // A
-                    pressed_buttons |= BUTTON_A;
+                    sdl_pressed_buttons |= BUTTON_CODE_A;
                 break;
                 case SDLK_COMMA:    // B
-                    pressed_buttons |= BUTTON_B;
+                    sdl_pressed_buttons |= BUTTON_CODE_B;
                 break;
                 case SDLK_LSHIFT:   // BUMPER LEFT
-                    pressed_buttons |= BUTTON_BUMPER_LEFT;
+                    sdl_pressed_buttons |= BUTTON_CODE_BUMPER_LEFT;
                 break;
                 case SDLK_SPACE:    // BUMPER RIGHT
-                    pressed_buttons |= BUTTON_BUMPER_RIGHT;
+                    sdl_pressed_buttons |= BUTTON_CODE_BUMPER_RIGHT;
                 break;
                 case SDLK_RETURN:    // MENU
-                    pressed_buttons |= BUTTON_MENU;
+                    sdl_pressed_buttons |= BUTTON_CODE_MENU;
                 break;
             }
         }else if(event.type == SDL_KEYUP){
@@ -44,33 +46,34 @@ void engine_io_sdl_update_pressed_mask(){
 
             switch(event.key.keysym.sym){
                 case SDLK_w:        // DPAD UP
-                    pressed_buttons = pressed_buttons & ~(BUTTON_DPAD_UP);
+                    sdl_pressed_buttons &= ~BUTTON_CODE_DPAD_UP;
                 break;
                 case SDLK_a:        // DPAD LEFT
-                    pressed_buttons = pressed_buttons & ~(BUTTON_DPAD_LEFT);
+                    sdl_pressed_buttons &= ~BUTTON_CODE_DPAD_LEFT;
                 break;
                 case SDLK_s:        // DPAD DOWN
-                    pressed_buttons = pressed_buttons & ~(BUTTON_DPAD_DOWN);
+                    sdl_pressed_buttons &= ~BUTTON_CODE_DPAD_DOWN;
                 break;
                 case SDLK_d:        // DPAD RIGHT
-                    pressed_buttons = pressed_buttons & ~(BUTTON_DPAD_RIGHT);
+                    sdl_pressed_buttons &= ~BUTTON_CODE_DPAD_RIGHT;
                 break;
                 case SDLK_PERIOD:    // A
-                    pressed_buttons = pressed_buttons & ~(BUTTON_A);
+                    sdl_pressed_buttons &= ~BUTTON_CODE_A;
                 break;
                 case SDLK_COMMA:   // B
-                    pressed_buttons = pressed_buttons & ~(BUTTON_B);
+                    sdl_pressed_buttons &= ~BUTTON_CODE_B;
                 break;
                 case SDLK_LSHIFT:   // BUMPER LEFT
-                    pressed_buttons = pressed_buttons & ~(BUTTON_BUMPER_LEFT);
+                    sdl_pressed_buttons &= ~BUTTON_CODE_BUMPER_LEFT;
                 break;
                 case SDLK_SPACE:    // BUMPER RIGHT
-                    pressed_buttons = pressed_buttons & ~(BUTTON_BUMPER_RIGHT);
+                    sdl_pressed_buttons &= ~BUTTON_CODE_BUMPER_RIGHT;
                 break;
                 case SDLK_RETURN:    // MENU
-                    pressed_buttons = pressed_buttons & ~(BUTTON_MENU);
+                    sdl_pressed_buttons &= ~BUTTON_CODE_MENU;
                 break;
             }
         }
     }
+    return sdl_pressed_buttons;
 }

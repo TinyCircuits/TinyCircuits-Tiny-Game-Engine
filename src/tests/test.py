@@ -12,7 +12,7 @@ from engine_resources import TextureResource, WaveSoundResource, FontResource
 import math
 import gc
 
-engine.set_fps_limit(60)
+engine.fps_limit(60)
 
 
 line = Line2DNode(color=engine_draw.orange, start=Vector2(40, -15), end=Vector2(40, 15), thickness=1)
@@ -41,7 +41,7 @@ button0 = GUIButton2DNode(position=Vector2(-45,   0), font=font9, text="Button 0
 class MyCircle(Circle2DNode):
     def __init__(self):
         super().__init__(self)
-    
+
     def tick(self, dt):
         self.rotation += 0.005
 
@@ -71,27 +71,27 @@ text0.position = Vector2(0, -36)
 class MyCam(CameraNode):
     def __init__(self):
         super().__init__(self)
-    
+
     def tick(self, dt):
         print(engine.get_running_fps())
-        if engine_io.check_pressed(engine_io.A):
+        if engine_io.A.is_pressed:
             self.zoom -= 0.005
-        if engine_io.check_pressed(engine_io.B):
+        if engine_io.B.is_pressed:
             self.zoom += 0.005
-        
-        if engine_io.check_pressed(engine_io.DPAD_UP):
+
+        if engine_io.UP.is_pressed:
             self.position.y -= 0.25
-        if engine_io.check_pressed(engine_io.DPAD_DOWN):
+        if engine_io.DOWN.is_pressed:
             self.position.y += 0.25
-        
-        if engine_io.check_pressed(engine_io.DPAD_LEFT):
+
+        if engine_io.LEFT.is_pressed:
             self.position.x -= 0.25
-        if engine_io.check_pressed(engine_io.DPAD_RIGHT):
+        if engine_io.RIGHT.is_pressed:
             self.position.x += 0.25
-        
-        if engine_io.check_pressed(engine_io.BUMPER_LEFT):
+
+        if engine_io.LB.is_pressed:
             self.rotation.z += 0.005
-        if engine_io.check_pressed(engine_io.BUMPER_RIGHT):
+        if engine_io.RB.is_pressed:
             self.rotation.z -= 0.005
 
 

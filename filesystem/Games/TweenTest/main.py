@@ -7,7 +7,7 @@ from engine_nodes import Rectangle2DNode, CameraNode
 from engine_math import Vector2, Vector3
 
 cam = CameraNode()
-engine.set_fps_limit(60)
+engine.fps_limit(60)
 
 class MyRect(Rectangle2DNode):
     def __init__(self):

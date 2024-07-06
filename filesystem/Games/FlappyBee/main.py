@@ -14,7 +14,7 @@ import os
 font = FontResource("outrunner_outline.bmp")
 texture = TextureResource("bee.bmp")
 
-engine.set_fps_limit(60)
+engine.fps_limit(60)
 engine_physics.set_gravity(0, -0.02)
 
 collided = False
@@ -35,13 +35,13 @@ class Obstacle(EmptyNode):
         self.bot_physics.add_child(self.bot)
 
         self.random_size()
-    
+
     def tick(self, dt):
         if self.top_physics.position.x < -64 - self.top_physics.width/2:
             self.top_physics.position.x = 64 + self.top_physics.width/2
             self.bot_physics.position.x = 64 + self.top_physics.width/2
             self.random_size()
-    
+
     def random_size(self):
         opening_height = random.uniform(50, 110)
         total_height = 128-opening_height
@@ -57,11 +57,11 @@ class Obstacle(EmptyNode):
 
         self.top.height = self.top_physics.height
         self.bot.height = self.bot_physics.height
-    
+
     def set_x(self, x):
         self.top_physics.position.x = x
         self.bot_physics.position.x = x
-    
+
     def freeze(self):
         self.top_physics.velocity = Vector2(0, 0)
         self.bot_physics.velocity = Vector2(0, 0)
@@ -85,7 +85,7 @@ class Bee(PhysicsRectangle2DNode):
         self.bee.transparent_color = engine_draw.black
 
         self.add_child(self.bee)
-    
+
     def collision(self, contact):
         global youre_bad
         youre_bad.opacity = 1.0
@@ -110,7 +110,7 @@ while tick < 180:
 
     # Only execute code as fast as the engine ticks (due to FPS limit)
     if engine.tick():
-        if engine_io.check_pressed(engine_io.A):
+        if engine_io.A.is_pressed:
             bee.velocity.y -= 0.2
 
         if collided:
