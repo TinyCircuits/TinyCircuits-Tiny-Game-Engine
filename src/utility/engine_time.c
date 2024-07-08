@@ -55,7 +55,9 @@ uint32_t millis_internal(){
     #elif defined(__unix__)
         // https://stackoverflow.com/a/63140531
         // Slow? https://github.com/microsoft/WSL/issues/3697#issuecomment-457767554
-        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &tp);
+        // Use real clock time so that the time progresses also when sleeping.
+        // An alternative is CLOCK_PROCESS_CPUTIME_ID, which only measures CPU time of this process.
+        clock_gettime(CLOCK_REALTIME, &tp);
         return tp.tv_sec * 1000 + tp.tv_nsec / 1000000;
     #elif defined(__arm__)
         // https://forums.raspberrypi.com/viewtopic.php?p=1817771&sid=94dff9d898f94703c9600e5378c19561#p1817771

@@ -34,10 +34,9 @@
 // false to stop the engine after the current loop/tick ends
 bool is_engine_looping = false;
 bool fps_limit_disabled = true;
-float engine_fps_limit_period_ms = 16.6667f;
-uint32_t engine_fps_time_at_last_tick_ms = 0;
-uint32_t engine_fps_time_at_before_last_tick_ms = 0;
-float dt;
+float engine_fps_limit_period_ms = 1;  // limit disabled initially anyway
+uint32_t engine_fps_time_at_last_tick_ms = MILLIS_NULL;
+uint32_t engine_fps_time_at_before_last_tick_ms = MILLIS_NULL;
 
 
 float engine_get_fps_limit_ms(){
@@ -100,6 +99,9 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_disable_fps_limit_obj, engine_disable_fps_limit
 */
 static mp_obj_t engine_get_running_fps(){
     ENGINE_INFO_PRINTF("Engine: Getting FPS");
+    if(engine_fps_time_at_before_last_tick_ms == MILLIS_NULL){
+        return mp_obj_new_float(99999);
+    }
     float period = millis_diff(engine_fps_time_at_last_tick_ms, engine_fps_time_at_before_last_tick_ms) / 1000.0f;    // Seconds
     float fps = 1.0f / period;
 
@@ -150,6 +152,29 @@ static mp_obj_t engine_end(){
 MP_DEFINE_CONST_FUN_OBJ_0(engine_end_obj, engine_end);
 
 
+
+/* --- doc ---
+   NAME: time_to_next_tick
+   ID: engine_time_to_next_tick
+   DESC: Returns the time in millis until the next desired engine tick. If the FPS limit is disabled, returns 0. If the desired tick time has already passed, returns 0. This might be useful when creating an asynchronous main loop.
+   RETURN: int
+*/
+static mp_obj_t engine_mp_time_to_next_tick(){
+    int32_t time_to_next_tick;
+    if(fps_limit_disabled || engine_fps_time_at_last_tick_ms == MILLIS_NULL){
+        time_to_next_tick = 0;
+    }else{
+        int32_t dt_ms = millis_diff(millis(), engine_fps_time_at_last_tick_ms);
+        time_to_next_tick = (int32_t)(engine_fps_limit_period_ms + 0.5f) - dt_ms;
+        if(time_to_next_tick < 0){
+            time_to_next_tick = 0;
+        }
+    }
+    return mp_obj_new_int(time_to_next_tick);
+}
+MP_DEFINE_CONST_FUN_OBJ_0(engine_time_to_next_tick_obj, engine_mp_time_to_next_tick);
+
+
 bool engine_tick(){
     bool ticked = false;
 
@@ -157,16 +182,21 @@ bool engine_tick(){
     // correctly, just replicating what happens in modutime.c
     MP_THREAD_GIL_EXIT();
 
-    dt = millis_diff(millis(), engine_fps_time_at_last_tick_ms);
-    float dt_s = dt * 0.001f;
+    uint32_t now = millis();
+    float dt_ms;
+    if(engine_fps_time_at_last_tick_ms == MILLIS_NULL){
+        dt_ms = engine_fps_limit_period_ms;
+    }else{
+        dt_ms = (float)millis_diff(now, engine_fps_time_at_last_tick_ms);
+    }
 
     // Now that all the node callbacks were called and potentially moved
     // physics nodes around, step the physics engine another tick.
     engine_physics_tick();
 
-    if(fps_limit_disabled || dt >= engine_fps_limit_period_ms){
+    if(fps_limit_disabled || dt_ms >= engine_fps_limit_period_ms){
         engine_fps_time_at_before_last_tick_ms = engine_fps_time_at_last_tick_ms;
-        engine_fps_time_at_last_tick_ms = millis();
+        engine_fps_time_at_last_tick_ms = now;
 
         ENGINE_PERFORMANCE_STOP(ENGINE_PERF_TIMER_1, "Loop time");
         ENGINE_PERFORMANCE_START(ENGINE_PERF_TIMER_1);
@@ -177,10 +207,10 @@ bool engine_tick(){
         // Goes through all animation components.
         // Do this first in case a camera is being
         // tweened or anything like that
-        engine_animation_tick(dt);
+        engine_animation_tick(dt_ms);
 
         // Call every instanced node's callbacks
-        engine_invoke_all_node_callbacks(dt_s);
+        engine_invoke_all_node_callbacks(dt_ms * 0.001f);
 
         engine_gui_tick();
 
@@ -270,6 +300,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_module_init_obj, engine_module_init);
    ATTR: [type=function] [name={ref_link:fps_limit}]            [value=getter/setter function]
    ATTR: [type=function] [name={ref_link:disable_fps_limit}]    [value=function (fps limit is disabled by default, use {ref_link:fps_limit} to enable it)]
    ATTR: [type=function] [name={ref_link:get_running_fps}]      [value=function]
+   ATTR: [type=function] [name={ref_link:engine_time_to_next_tick}]    [value=function]
    ATTR: [type=function] [name={ref_link:engine_tick}]          [value=function]
    ATTR: [type=function] [name={ref_link:engine_start}]         [value=function]
    ATTR: [type=function] [name={ref_link:engine_end}]           [value=function]
@@ -281,6 +312,7 @@ static const mp_rom_map_elem_t engine_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_fps_limit), (mp_obj_t)&engine_fps_limit_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_disable_fps_limit), (mp_obj_t)&engine_disable_fps_limit_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_get_running_fps), (mp_obj_t)&engine_get_running_fps_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_time_to_next_tick), (mp_obj_t)&engine_time_to_next_tick_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_tick), (mp_obj_t)&engine_mp_tick_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_start), (mp_obj_t)&engine_start_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_end), (mp_obj_t)&engine_end_obj },

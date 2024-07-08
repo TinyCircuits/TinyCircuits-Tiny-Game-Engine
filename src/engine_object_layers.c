@@ -84,7 +84,8 @@ void engine_remove_object_from_layer(linked_list_node *object_list_node, uint16_
 // callback while others will also have a 'draw()' callback.
 //
 // Nodes with a draw callback will be rendered
-void engine_invoke_all_node_callbacks(float dt){
+// dt_s - delta time in seconds
+void engine_invoke_all_node_callbacks(float dt_s){
     linked_list_node *current_linked_list_node = NULL;
 
     for(uint16_t ilx=0; ilx<engine_object_layer_count; ilx++){
@@ -105,7 +106,7 @@ void engine_invoke_all_node_callbacks(float dt){
                     if(empty_node->tick_cb != mp_const_none){
                         exec[0] = empty_node->tick_cb;
                         exec[1] = node_base->attr_accessor;
-                        exec[2] = mp_obj_new_float(dt);
+                        exec[2] = mp_obj_new_float(dt_s);
                         mp_call_method_n_kw(1, 0, exec);
                     }
                 }
@@ -116,7 +117,7 @@ void engine_invoke_all_node_callbacks(float dt){
                     if(camera_node->tick_cb != mp_const_none){
                         exec[0] = camera_node->tick_cb;
                         exec[1] = node_base->attr_accessor;
-                        exec[2] = mp_obj_new_float(dt);
+                        exec[2] = mp_obj_new_float(dt_s);
                         mp_call_method_n_kw(1, 0, exec);
                     }
                 }
@@ -127,7 +128,7 @@ void engine_invoke_all_node_callbacks(float dt){
                     if(voxelspace_node->tick_cb != mp_const_none){
                         exec[0] = voxelspace_node->tick_cb;
                         exec[1] = node_base->attr_accessor;
-                        exec[2] = mp_obj_new_float(dt);
+                        exec[2] = mp_obj_new_float(dt_s);
                         mp_call_method_n_kw(1, 0, exec);
                     }
 
@@ -140,7 +141,7 @@ void engine_invoke_all_node_callbacks(float dt){
                     if(voxelspace_sprite_node->tick_cb != mp_const_none){
                         exec[0] = voxelspace_sprite_node->tick_cb;
                         exec[1] = node_base->attr_accessor;
-                        exec[2] = mp_obj_new_float(dt);
+                        exec[2] = mp_obj_new_float(dt_s);
                         mp_call_method_n_kw(1, 0, exec);
                     }
 
@@ -153,7 +154,7 @@ void engine_invoke_all_node_callbacks(float dt){
                     if(mesh_node->tick_cb != mp_const_none){
                         exec[0] = mesh_node->tick_cb;
                         exec[1] = node_base->attr_accessor;
-                        exec[2] = mp_obj_new_float(dt);
+                        exec[2] = mp_obj_new_float(dt_s);
                         mp_call_method_n_kw(1, 0, exec);
                     }
 
@@ -166,7 +167,7 @@ void engine_invoke_all_node_callbacks(float dt){
                     if(rectangle_2d_node->tick_cb != mp_const_none){
                         exec[0] = rectangle_2d_node->tick_cb;
                         exec[1] = node_base->attr_accessor;
-                        exec[2] = mp_obj_new_float(dt);
+                        exec[2] = mp_obj_new_float(dt_s);
                         mp_call_method_n_kw(1, 0, exec);
                     }
 
@@ -179,7 +180,7 @@ void engine_invoke_all_node_callbacks(float dt){
                     if(line_2d_node->tick_cb != mp_const_none){
                         exec[0] = line_2d_node->tick_cb;
                         exec[1] = node_base->attr_accessor;
-                        exec[2] = mp_obj_new_float(dt);
+                        exec[2] = mp_obj_new_float(dt_s);
                         mp_call_method_n_kw(1, 0, exec);
                     }
 
@@ -192,7 +193,7 @@ void engine_invoke_all_node_callbacks(float dt){
                     if(circle_2d_node->tick_cb != mp_const_none){
                         exec[0] = circle_2d_node->tick_cb;
                         exec[1] = node_base->attr_accessor;
-                        exec[2] = mp_obj_new_float(dt);
+                        exec[2] = mp_obj_new_float(dt_s);
                         mp_call_method_n_kw(1, 0, exec);
                     }
 
@@ -205,7 +206,7 @@ void engine_invoke_all_node_callbacks(float dt){
                     if(sprite_2d_node->tick_cb != mp_const_none){
                         exec[0] = sprite_2d_node->tick_cb;
                         exec[1] = node_base->attr_accessor;
-                        exec[2] = mp_obj_new_float(dt);
+                        exec[2] = mp_obj_new_float(dt_s);
                         mp_call_method_n_kw(1, 0, exec);
                     }
 
@@ -218,7 +219,7 @@ void engine_invoke_all_node_callbacks(float dt){
                     if(text_2d_node->tick_cb != mp_const_none){
                         exec[0] = text_2d_node->tick_cb;
                         exec[1] = node_base->attr_accessor;
-                        exec[2] = mp_obj_new_float(dt);
+                        exec[2] = mp_obj_new_float(dt_s);
                         mp_call_method_n_kw(1, 0, exec);
                     }
 
@@ -232,7 +233,7 @@ void engine_invoke_all_node_callbacks(float dt){
 
                     if(button_2d_node->tick_cb != mp_const_none){
                         exec[0] = button_2d_node->tick_cb;
-                        exec[2] = mp_obj_new_float(dt);
+                        exec[2] = mp_obj_new_float(dt_s);
                         mp_call_method_n_kw(1, 0, exec);
                     }
 
@@ -288,7 +289,7 @@ void engine_invoke_all_node_callbacks(float dt){
 
                     if(bitmap_button_2d_node->tick_cb != mp_const_none){
                         exec[0] = bitmap_button_2d_node->tick_cb;
-                        exec[2] = mp_obj_new_float(dt);
+                        exec[2] = mp_obj_new_float(dt_s);
                         mp_call_method_n_kw(1, 0, exec);
                     }
 
@@ -343,7 +344,7 @@ void engine_invoke_all_node_callbacks(float dt){
                     if(physics_node_base->tick_cb != mp_const_none){
                         exec[0] = physics_node_base->tick_cb;
                         exec[1] = node_base->attr_accessor;
-                        exec[2] = mp_obj_new_float(dt);
+                        exec[2] = mp_obj_new_float(dt_s);
                         mp_call_method_n_kw(1, 0, exec);
                     }
 
@@ -356,7 +357,7 @@ void engine_invoke_all_node_callbacks(float dt){
                     if(physics_node_base->tick_cb != mp_const_none){
                         exec[0] = physics_node_base->tick_cb;
                         exec[1] = node_base->attr_accessor;
-                        exec[2] = mp_obj_new_float(dt);
+                        exec[2] = mp_obj_new_float(dt_s);
                         mp_call_method_n_kw(1, 0, exec);
                     }
 
