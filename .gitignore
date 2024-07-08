@@ -3,4 +3,3 @@ filesystem/_launcher_state
 filesystem/_launcher_state__
 doc/build
 .vscode
-filesystem/micropython
