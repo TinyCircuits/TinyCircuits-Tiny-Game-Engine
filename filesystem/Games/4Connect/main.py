@@ -2,13 +2,12 @@ import engine_main
 import engine
 import engine_draw
 import engine_io
-import engine_debug
-import engine_physics
+import engine_audio
 import random
 import time
 from engine_math import Vector2, Vector3
 from engine_nodes import Rectangle2DNode, CameraNode, PhysicsRectangle2DNode, PhysicsCircle2DNode, Circle2DNode, Text2DNode, Sprite2DNode
-from engine_resources import FontResource, TextureResource
+from engine_resources import FontResource, TextureResource, WaveSoundResource
 from engine_animation import Tween, Delay, ONE_SHOT, EASE_SINE_IN
 
 from simpletextmenu import SimpleTextMenu
@@ -22,6 +21,9 @@ font = FontResource("../../assets/outrunner_outline.bmp")
 
 red_texture = TextureResource("red.bmp")
 yellow_texture = TextureResource("yellow.bmp")
+play1_sound = WaveSoundResource("play1.wav")
+play2_sound = WaveSoundResource("play2.wav")
+engine_audio.set_volume(0.5)
 
 # Display dimensions
 DISP_WIDTH = 128
@@ -58,7 +60,7 @@ class PieceNode(Sprite2DNode):
 
 tweens = []
 
-def tween_piece(piece, target, duration=1000, speed=1):
+def tween_piece(piece, target, duration=600, speed=1):
     tw = Tween()
     tw.start(piece, 'position', piece.position, target, duration, speed, ONE_SHOT, EASE_SINE_IN)
     tweens.append(tw)
@@ -118,6 +120,10 @@ class GridNode(Rectangle2DNode):
     def add_piece(self, col, row, player):
         x = col * CELL_WIDTH + COLSHIFT
         y = row * 17 + 32
+        if row == 5:
+            engine_audio.play(play1_sound, 0, False)
+        else:
+            engine_audio.play(play2_sound, 0, False)
         if player == 1:
             piece = self.draw_piece(Vector2(x, OFFSET), red_texture )
         else:
