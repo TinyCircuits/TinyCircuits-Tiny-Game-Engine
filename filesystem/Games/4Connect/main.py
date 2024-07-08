@@ -153,6 +153,7 @@ class Game(Rectangle2DNode):
         self.selected_difficulty = selected_difficulty
         self.ready_for_input = False
         self.elapsed_time = 0
+        self.ai_move_ready = False
 
     def setCurrentPlayer(self,player):
         self.current_player=player
@@ -197,11 +198,16 @@ class Game(Rectangle2DNode):
                 if self.make_move(self.selected_col, 1):
                     self.setCurrentPlayer(2)
                     self.grid_node.update_indicator()
+                    self.ai_move_ready = False
         elif self.current_player == 2:
             if not tweens: #wait until animation completes
-                if self.make_move(self.ai_move(), 2):
-                    self.setCurrentPlayer(1)
-                    self.grid_node.update_indicator()
+                if self.ai_move_ready:
+                    if self.make_move(self.ai_move(), 2):
+                        self.setCurrentPlayer(1)
+                        self.grid_node.update_indicator()
+                        self.ai_move_ready = False
+                else:
+                    self.ai_move_ready = True
 
     def show_winner(self, message):
         self.winner_message = message
