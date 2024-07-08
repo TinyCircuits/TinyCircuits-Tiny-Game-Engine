@@ -9,6 +9,7 @@ import time
 from engine_math import Vector2, Vector3
 from engine_nodes import Rectangle2DNode, CameraNode, PhysicsRectangle2DNode, PhysicsCircle2DNode, Circle2DNode, Text2DNode, Sprite2DNode
 from engine_resources import FontResource, TextureResource
+from engine_animation import Tween, Delay, ONE_SHOT, EASE_SINE_IN
 
 from simpletextmenu import SimpleTextMenu
 
@@ -38,31 +39,29 @@ COLSHIFT = 14
 
 HEADER_HEIGHT = GRID_ROWS * 2
 
-planned_ai_move = None
-ai_thinking = False
-
 def deepcopy_2d_list(original):
     return [row[:] for row in original]
 
-class PieceNode(PhysicsCircle2DNode):
+class PieceNode(Sprite2DNode):
     def __init__(self, position, texture):
         super().__init__(self)
         self.radius = CELL_WIDTH / 2
         self.position = position
-        self.bounciness= 0.1
-        self.gravity_scale=Vector2(0,2)
-        self.sprite = Sprite2DNode()
-        self.sprite.texture = texture
-        self.sprite.transparent_color = engine_draw.black
-        self.sprite.scale = Vector2(1, 1)
-        self.sprite.position = Vector2(0, 0)
-        self.add_child(self.sprite)
+        self.texture = texture
+        self.transparent_color = engine_draw.black
 
     def update(self, position=None, texture=None):
         if position:
             self.position = position
         if texture:
-            self.sprite.texture = texture
+            self.texture = texture
+
+tweens = []
+
+def tween_piece(piece, target, duration=1000, speed=1):
+    tw = Tween()
+    tw.start(piece, 'position', piece.position, target, duration, speed, ONE_SHOT, EASE_SINE_IN)
+    tweens.append(tw)
 
 pieces = []
 
@@ -85,7 +84,6 @@ class GridNode(Rectangle2DNode):
         self.rec.set_layer(3)
         self.add_child(self.rec)
         self.holes = []
-        self.floor = PhysicsRectangle2DNode(position=Vector2(DISP_WIDTH // 2,DISP_WIDTH-1.5),width=DISP_WIDTH, height=2, dynamic=False, solid=True, gravity_scale=Vector2(0,0))
 
 
     def tick(self, dt):
@@ -112,20 +110,19 @@ class GridNode(Rectangle2DNode):
     def draw_indicator(self, position, texture):
         if self.indicator:
             self.indicator.update(position, texture)
-            self.indicator.dynamic=False
         else:
             self.indicator = self.draw_piece(position, texture)
-            self.indicator.dynamic=False
 
         return self.indicator
 
     def add_piece(self, col, row, player):
         x = col * CELL_WIDTH + COLSHIFT
-        y = row * CELL_HEIGHT + HEADER_HEIGHT + OFFSET
+        y = row * 17 + 32
         if player == 1:
-            self.draw_piece(Vector2(x, OFFSET), red_texture )
+            piece = self.draw_piece(Vector2(x, OFFSET), red_texture )
         else:
-            self.draw_piece(Vector2(x, OFFSET), yellow_texture )
+            piece = self.draw_piece(Vector2(x, OFFSET), yellow_texture )
+        tween_piece(piece,Vector2(x, y))
 
         
 
@@ -148,18 +145,18 @@ class Game(Rectangle2DNode):
         self.winner_message = None
         self.winner_timer = 0
         self.selected_difficulty = selected_difficulty
-        self.last_move_time = None
+        self.ready_for_input = False
+        self.elapsed_time = 0
 
     def setCurrentPlayer(self,player):
         self.current_player=player
-
-    def enough_time_passed(self):
-        if self.last_move_time is None:
-            return True
-        return time.ticks_diff(time.ticks_ms(), self.last_move_time) >= 2500
     
     def tick(self, dt):
-        global planned_ai_move, ai_thinking
+        global tweens
+
+        for tween in tweens[:]:
+            if tween.finished:
+                tweens.remove(tween)
 
         if self.winner_message:
             self.winner_timer -= dt
@@ -172,6 +169,13 @@ class Game(Rectangle2DNode):
             return
         if self.check_win(2, self.grid):
             self.show_winner("AI Wins!")
+            return
+        
+        self.elapsed_time += dt
+        if not self.ready_for_input and self.elapsed_time >= 0.5:  # 0.5 seconds delay
+            self.ready_for_input = True
+        
+        if not self.ready_for_input:
             return
 
         if self.current_player == 1:
@@ -186,18 +190,12 @@ class Game(Rectangle2DNode):
             elif engine_io.A.is_just_pressed:
                 if self.make_move(self.selected_col, 1):
                     self.setCurrentPlayer(2)
-                    self.last_move_time = time.ticks_ms() 
                     self.grid_node.update_indicator()
         elif self.current_player == 2:
-            if self.enough_time_passed():
-                if not ai_thinking and planned_ai_move is not None:
-                    if self.make_move(planned_ai_move, 2):
-                        self.setCurrentPlayer(1)
-                        self.grid_node.update_indicator()
-                        planned_ai_move = None
-                        self.last_move_time = time.ticks_ms() 
-                elif not ai_thinking and planned_ai_move is None:
-                    self.ai_move()
+            if not tweens: #wait until animation completes
+                if self.make_move(self.ai_move(), 2):
+                    self.setCurrentPlayer(1)
+                    self.grid_node.update_indicator()
 
     def show_winner(self, message):
         self.winner_message = message
@@ -288,10 +286,6 @@ class Game(Rectangle2DNode):
         return score
 
     def ai_move(self):
-        global planned_ai_move, ai_thinking
-        ai_thinking = True
-
-        start_time = time.ticks_ms()
 
         grid_copy = deepcopy_2d_list(self.grid)
         filled_cells = sum(grid_copy[row][col] != 0 for row in range(GRID_ROWS) for col in range(GRID_COLS))
@@ -325,19 +319,8 @@ class Game(Rectangle2DNode):
                 elif score == best_score:
                     best_cols.append(col)
 
-        planned_ai_move = random.choice(best_cols) if best_cols else random.choice(self.valid_moves(grid_copy))
+        return random.choice(best_cols) if best_cols else random.choice(self.valid_moves(grid_copy))
 
-        # Calculate the elapsed time
-        elapsed_time = time.time() - start_time
-
-        # Calculate the elapsed time in milliseconds
-        elapsed_time = time.ticks_diff(time.ticks_ms(), start_time)
-
-        # Sleep for the remaining time to ensure a minimum of 1000 ms (1 second)
-        if elapsed_time < 1000:
-            time.sleep_ms(1000 - elapsed_time)
-
-        ai_thinking = False
 
     def valid_moves(self, grid):
         return [c for c in range(GRID_COLS) if grid[0][c] == 0]
