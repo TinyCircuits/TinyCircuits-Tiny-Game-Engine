@@ -1,20 +1,27 @@
 import engine_main
-
 import engine
 import engine_draw
 import engine_io
 import engine_debug
+import engine_physics
 import random
 import time
-from engine_math import Vector2,Vector3
-from engine_nodes import Rectangle2DNode, Text2DNode, CameraNode, Circle2DNode
-from engine_resources import FontResource
+from engine_math import Vector2, Vector3
+from engine_nodes import Rectangle2DNode, CameraNode, PhysicsRectangle2DNode, PhysicsCircle2DNode, Circle2DNode, Text2DNode, Sprite2DNode
+from engine_resources import FontResource, TextureResource
+from engine_animation import Tween, Delay, ONE_SHOT, EASE_SINE_IN
 
-engine.fps_limit(30)
+from simpletextmenu import SimpleTextMenu
 
-#engine_debug.enable_all()
+#engine.set_fps_limit(30)
+random.seed(time.ticks_ms())
 
-font = FontResource("outrunner_outline.bmp")
+# engine_debug.enable_all()
+
+font = FontResource("../../assets/outrunner_outline.bmp")
+
+red_texture = TextureResource("red.bmp")
+yellow_texture = TextureResource("yellow.bmp")
 
 # Display dimensions
 DISP_WIDTH = 128
@@ -25,11 +32,38 @@ GRID_COLS = 7
 GRID_ROWS = 6
 
 # Cell dimensions
-CELL_WIDTH = DISP_WIDTH / GRID_COLS
-CELL_HEIGHT = DISP_HEIGHT  / GRID_ROWS - 2
+CELL_WIDTH = 17
+CELL_HEIGHT = 17
 OFFSET = CELL_WIDTH / 2
+COLSHIFT = 14
 
 HEADER_HEIGHT = GRID_ROWS * 2
+
+def deepcopy_2d_list(original):
+    return [row[:] for row in original]
+
+class PieceNode(Sprite2DNode):
+    def __init__(self, position, texture):
+        super().__init__(self)
+        self.radius = CELL_WIDTH / 2
+        self.position = position
+        self.texture = texture
+        self.transparent_color = engine_draw.black
+
+    def update(self, position=None, texture=None):
+        if position:
+            self.position = position
+        if texture:
+            self.texture = texture
+
+tweens = []
+
+def tween_piece(piece, target, duration=1000, speed=1):
+    tw = Tween()
+    tw.start(piece, 'position', piece.position, target, duration, speed, ONE_SHOT, EASE_SINE_IN)
+    tweens.append(tw)
+
+pieces = []
 
 class GridNode(Rectangle2DNode):
     def __init__(self, grid):
@@ -40,11 +74,22 @@ class GridNode(Rectangle2DNode):
         self.position = Vector2(0, 0)
         self.color = engine_draw.black
         self.selected_col = 0
+        self.indicator = None
+        texture = TextureResource("connect4.bmp")
+        self.rec = Sprite2DNode()
+        self.rec.scale = Vector2(1,1)
+        self.rec.position = Vector2(DISP_WIDTH / 2 - 1, HEADER_HEIGHT / 2 + DISP_HEIGHT / 2 - 1)
+        self.rec.texture = texture
+        self.rec.transparent_color = engine_draw.black
+        self.rec.set_layer(3)
+        self.add_child(self.rec)
+        self.holes = []
+
 
     def tick(self, dt):
         global game
         if game.winner_message:
-            win_text = Text2DNode(position=Vector2(DISP_WIDTH//2, DISP_HEIGHT//2),
+            win_text = Text2DNode(position=Vector2(DISP_WIDTH/2, DISP_HEIGHT/2),
                         font=font,
                         text=game.winner_message,
                         rotation=0,
@@ -52,128 +97,145 @@ class GridNode(Rectangle2DNode):
                         opacity=1.0,
                         letter_spacing=1,
                         line_spacing=1)
+            win_text.set_layer(7)
             self.add_child(win_text)
             return
-        self.draw_grid()
 
-    def draw_piece(self, position, color, ringcolor):
-        piece = Circle2DNode()
-        piece.radius = CELL_WIDTH / 2 - 2
-        piece.position = position
-        piece.color = color
-        ring = Circle2DNode()
-        ring.radius = CELL_WIDTH / 2 - 4
-        ring.position = position
-        ring.outline = True
-        ring.color = ringcolor
-        self.add_child(ring)
+    def draw_piece(self, position, texture):
+        global pieces
+        piece = PieceNode(position, texture)
+        pieces.append(piece)
         return piece
 
-    def draw_grid(self):
-        global game
-        self.destroy_children()
-        rec = Rectangle2DNode()
-        rec.width = DISP_WIDTH + 1
-        rec.height = DISP_HEIGHT - HEADER_HEIGHT // 2
-        rec.position = Vector2(DISP_WIDTH / 2 - 1, HEADER_HEIGHT // 2 + DISP_HEIGHT / 2 - 1)
-        rec.color = engine_draw.blue
-        self.add_child(rec)
+    def draw_indicator(self, position, texture):
+        if self.indicator:
+            self.indicator.update(position, texture)
+        else:
+            self.indicator = self.draw_piece(position, texture)
 
-        for row in range(GRID_ROWS):
-            for col in range(GRID_COLS):
-                x = col * CELL_WIDTH + OFFSET
-                y = row * CELL_HEIGHT + HEADER_HEIGHT + OFFSET
-                hole = Circle2DNode()
-                hole.radius = CELL_WIDTH / 2 - 1
-                hole.position = Vector2(x, y)
-                hole.color = engine_draw.black
-                self.add_child(hole)
+        return self.indicator
 
-                if self.grid[row][col] == 1:
-                    piece = self.draw_piece(Vector2(x, y), engine_draw.red, engine_draw.maroon)
-                    self.add_child(piece)
-                elif self.grid[row][col] == 2:
-                    piece = self.draw_piece(Vector2(x, y), engine_draw.yellow, engine_draw.gold)
-                    self.add_child(piece)
+    def add_piece(self, col, row, player):
+        x = col * CELL_WIDTH + COLSHIFT
+        y = row * 17 + 32
+        if player == 1:
+            piece = self.draw_piece(Vector2(x, OFFSET), red_texture )
+        else:
+            piece = self.draw_piece(Vector2(x, OFFSET), yellow_texture )
+        tween_piece(piece,Vector2(x, y))
 
-                if col == self.selected_col:
-                    if (game.current_player == 1):
-                        indicator = self.draw_piece(Vector2(x, 0), engine_draw.red, engine_draw.maroon)
-                    else:
-                        indicator = self.draw_piece(Vector2(x, 0), engine_draw.lightgrey, engine_draw.darkgrey)
-                    self.add_child(indicator)
+        
+
+    def update_indicator(self):
+        if game.current_player == 1:
+            self.draw_indicator(Vector2(self.selected_col * CELL_WIDTH + COLSHIFT, OFFSET), red_texture )
+        else:
+            self.draw_indicator(Vector2(self.selected_col * CELL_WIDTH + COLSHIFT, OFFSET), yellow_texture )
 
 class Game(Rectangle2DNode):
-    def __init__(self, camera):
+    def __init__(self, camera, selected_difficulty):
         super().__init__(self)
         self.grid = [[0 for _ in range(GRID_COLS)] for _ in range(GRID_ROWS)]
         self.grid_node = GridNode(self.grid)
         self.add_child(self.grid_node)
         self.camera = camera
-        self.current_player = 1
+        self.current_player = random.choice([1, 2])
         self.selected_col = 3
         self.grid_node.selected_col = self.selected_col
         self.winner_message = None
         self.winner_timer = 0
+        self.selected_difficulty = selected_difficulty
+        self.ready_for_input = False
+        self.elapsed_time = 0
 
+    def setCurrentPlayer(self,player):
+        self.current_player=player
+    
     def tick(self, dt):
+        global tweens
+
+        for tween in tweens[:]:
+            if tween.finished:
+                tweens.remove(tween)
+
         if self.winner_message:
             self.winner_timer -= dt
             if self.winner_timer <= 0:
                 self.reset_game()
             return
 
-        if self.check_win(1):
+        if self.check_win(1, self.grid):
             self.show_winner("Player Wins!")
             return
-        if self.check_win(2):
+        if self.check_win(2, self.grid):
             self.show_winner("AI Wins!")
             return
+        
+        self.elapsed_time += dt
+        if not self.ready_for_input and self.elapsed_time >= 0.5:  # 0.5 seconds delay
+            self.ready_for_input = True
+        
+        if not self.ready_for_input:
+            return
+
         if self.current_player == 1:
             if engine_io.LEFT.is_just_pressed:
                 self.selected_col = max(0, self.selected_col - 1)
                 self.grid_node.selected_col = self.selected_col
+                self.grid_node.update_indicator()
             elif engine_io.RIGHT.is_just_pressed:
                 self.selected_col = min(GRID_COLS - 1, self.selected_col + 1)
                 self.grid_node.selected_col = self.selected_col
+                self.grid_node.update_indicator()
             elif engine_io.A.is_just_pressed:
                 if self.make_move(self.selected_col, 1):
-                    self.current_player = 2
+                    self.setCurrentPlayer(2)
+                    self.grid_node.update_indicator()
         elif self.current_player == 2:
-            self.ai_move()
-            self.current_player = 1
+            if not tweens: #wait until animation completes
+                if self.make_move(self.ai_move(), 2):
+                    self.setCurrentPlayer(1)
+                    self.grid_node.update_indicator()
 
     def show_winner(self, message):
         self.winner_message = message
         self.winner_timer = 3  # 3 seconds delay before resetting
 
     def reset_game(self):
+        global pieces
         self.grid = [[0 for _ in range(GRID_COLS)] for _ in range(GRID_ROWS)]
-        self.grid_node.grid = self.grid
-        self.grid_node.draw_grid()
+        self.grid_node = GridNode(self.grid)
+        pieces = []
         self.current_player = random.choice([1, 2])
         self.selected_col = 3
         self.grid_node.selected_col = self.selected_col
         self.winner_message = None
         self.winner_timer = 0
+        self.grid_node.update_indicator()
 
     def make_move(self, col, player):
         for row in reversed(range(GRID_ROWS)):
             if self.grid[row][col] == 0:
                 self.grid[row][col] = player
+                self.grid_node.add_piece(col, row, player)
                 return True
         return False
+    
+    def print_grid(self):
+        for row in self.grid:
+            print(' '.join(str(cell) for cell in row))
+        print()
 
-    def check_win(self, player):
+    def check_win(self, player, grid):
         for row in range(GRID_ROWS):
             for col in range(GRID_COLS):
-                if col + 3 < GRID_COLS and all(self.grid[row][col+i] == player for i in range(4)):
+                if col + 3 < GRID_COLS and all(grid[row][col + i] == player for i in range(4)):
                     return True
-                if row + 3 < GRID_ROWS and all(self.grid[row+i][col] == player for i in range(4)):
+                if row + 3 < GRID_ROWS and all(grid[row + i][col] == player for i in range(4)):
                     return True
-                if col + 3 < GRID_COLS and row + 3 < GRID_ROWS and all(self.grid[row+i][col+i] == player for i in range(4)):
+                if col + 3 < GRID_COLS and row + 3 < GRID_ROWS and all(grid[row + i][col + i] == player for i in range(4)):
                     return True
-                if col + 3 < GRID_COLS and row - 3 >= 0 and all(self.grid[row-i][col+i] == player for i in range(4)):
+                if col + 3 < GRID_COLS and row - 3 >= 0 and all(grid[row - i][col + i] == player for i in range(4)):
                     return True
         return False
 
@@ -224,55 +286,55 @@ class Game(Rectangle2DNode):
         return score
 
     def ai_move(self):
-        filled_cells = sum(self.grid[row][col] != 0 for row in range(GRID_ROWS) for col in range(GRID_COLS))
+
+        grid_copy = deepcopy_2d_list(self.grid)
+        filled_cells = sum(grid_copy[row][col] != 0 for row in range(GRID_ROWS) for col in range(GRID_COLS))
         # Depth settings based on difficulty level and game stage
         depth_settings = {
             0: (0, 0, 0),  # Very Easy: (Early, Mid, Late)
             1: (1, 1, 1),  # Easy: (Early, Mid, Late)
             2: (1, 2, 2),  # Medium: (Early, Mid, Late)
             3: (2, 3, 4),   # Hard: (Early, Mid, Late)
-            4: (3, 4, 4)   # Ultra
+            4: (4, 5, 5)   # Ultra
         }
-        difficulty_level=4
         # Select depth based on the number of filled cells
         if filled_cells < 5:
-            depth = depth_settings[difficulty_level][0]  # Early game depth
+            depth = depth_settings[self.selected_difficulty][0]  # Early game depth
         elif filled_cells < 10:
-            depth = depth_settings[difficulty_level][1]  # Mid game depth
+            depth = depth_settings[self.selected_difficulty][1]  # Mid game depth
         else:
-            depth = depth_settings[difficulty_level][2]  # Late game depth
+            depth = depth_settings[self.selected_difficulty][2]  # Late game depth
 
         best_score = float('-inf')
         best_cols = []
         for col in range(GRID_COLS):
-            row = self.get_next_open_row(self.grid, col)
+            row = self.get_next_open_row(grid_copy, col)
             if row is not None:
-                self.grid[row][col] = 2  # Temporarily make the move
-                score = self.minimax(self.grid, depth, False, float('-inf'), float('inf'))
-                self.grid[row][col] = 0  # Undo the move
-                print("Col "+str(col)+ " score: "+str(score))
+                grid_copy[row][col] = 2  # Temporarily make the move
+                score = self.minimax(grid_copy, depth, False, float('-inf'), float('inf'))
+                grid_copy[row][col] = 0  # Undo the move
                 if score > best_score:
                     best_score = score
                     best_cols = [col]  # Reset the list with the current column
                 elif score == best_score:
                     best_cols.append(col)
 
-        best_col = random.choice(best_cols) if best_cols else random.choice(self.valid_moves())
-        self.make_move(best_col, 2)
+        return random.choice(best_cols) if best_cols else random.choice(self.valid_moves(grid_copy))
 
-    def valid_moves(self):
-        return [c for c in range(GRID_COLS) if self.grid[0][c] == 0]
 
+    def valid_moves(self, grid):
+        return [c for c in range(GRID_COLS) if grid[0][c] == 0]
+    
     def get_next_open_row(self, grid, col):
         for r in range(GRID_ROWS-1, -1, -1):
             if grid[r][col] == 0:
                 return r
         return None
-
+    
     def minimax(self,grid, depth, isMaximizing, alpha, beta):
-        if depth == 0 or self.check_win(1) or self.check_win(2):
+        if depth == 0 or self.check_win(1,grid) or self.check_win(2,grid):
             return self.evaluate_board(grid)
-
+        
         if isMaximizing:
             maxEval = float('-inf')
             for col in range(GRID_COLS):
@@ -300,8 +362,19 @@ class Game(Rectangle2DNode):
                         break
             return minEval
 
+def start_game(selected_difficulty):
+    global game, menu, camera
+    camera = CameraNode()
+    camera.position = Vector3(DISP_WIDTH / 2, DISP_WIDTH / 2, 1)
+    game = Game(camera,selected_difficulty)
+    game.grid_node.update_indicator()
+    menu = None
+
+
 camera = CameraNode()
-camera.position = Vector3(DISP_WIDTH/2, DISP_WIDTH/2,1)
-game = Game(camera)
+camera.position = Vector3(DISP_WIDTH / 2, DISP_WIDTH / 2, 1)
+difficulty_levels = ["Very Easy", "Easy", "Medium", "Hard", "Ultra"]
+menu = SimpleTextMenu("Select\nDifficulty", difficulty_levels, start_game, font, DISP_WIDTH, DISP_HEIGHT, engine_draw.white, engine_draw.yellow )
+game = None
 
 engine.start()
