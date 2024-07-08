@@ -28,7 +28,6 @@ void circle_2d_node_class_draw(mp_obj_t circle_node_base_obj, mp_obj_t camera_no
     engine_node_base_t *camera_node_base = camera_node;
     engine_camera_node_class_obj_t *camera = camera_node_base->node;
 
-    vector3_class_obj_t *camera_position = camera->position;
     rectangle_class_obj_t *camera_viewport = camera->viewport;
     float camera_zoom = mp_obj_get_float(camera->zoom);
 
@@ -56,11 +55,8 @@ void circle_2d_node_class_draw(mp_obj_t circle_node_base_obj, mp_obj_t camera_no
         node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
         camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
 
-        circle_rotated_x -= camera_resolved_hierarchy_x;
-        circle_rotated_y -= camera_resolved_hierarchy_y;
-
-        // Scale transformation due to camera zoom
-        engine_math_scale_point(&circle_rotated_x, &circle_rotated_y, camera_position->x.value, camera_position->y.value, camera_zoom);
+        circle_rotated_x = (circle_rotated_x - camera_resolved_hierarchy_x) * camera_zoom;
+        circle_rotated_y = (circle_rotated_y - camera_resolved_hierarchy_y) * camera_zoom;
 
         // Rotate rectangle origin about the camera
         engine_math_rotate_point(&circle_rotated_x, &circle_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);

@@ -4,13 +4,16 @@ import engine
 from engine_nodes import GUIButton2DNode, GUIBitmapButton2DNode, CameraNode
 from engine_resources import FontResource, TextureResource
 from engine_math import Vector2
-import engine_draw
 import engine_io
-from engine_animation import Tween, ONE_SHOT, LOOP, PING_PONG, EASE_CIRC_IN_OUT, EASE_BOUNCE_IN, EASE_BOUNCE_OUT
+import math
 
 engine.fps_limit(120)
 
 font = FontResource("9pt-roboto-font.bmp")
+
+ZOOM_SPEED_GEOM = 1.02
+PAN_SPEED = 0.5
+ROTATE_SPEED = 0.0085
 
 class MyCam(CameraNode):
     def __init__(self):
@@ -25,24 +28,29 @@ class MyCam(CameraNode):
 
 
         if engine_io.B.is_pressed:
-            self.zoom -= 0.025
+            self.zoom /= ZOOM_SPEED_GEOM
         if engine_io.A.is_pressed:
-            self.zoom += 0.025
+            self.zoom *= ZOOM_SPEED_GEOM
 
+        vec_x = 0
+        vec_y = 0
         if engine_io.UP.is_pressed:
-            self.position.y -= 0.5
+            vec_y -= PAN_SPEED
         if engine_io.DOWN.is_pressed:
-            self.position.y += 0.5
-
+            vec_y += PAN_SPEED
         if engine_io.LEFT.is_pressed:
-            self.position.x -= 0.5
+            vec_x -= PAN_SPEED
         if engine_io.RIGHT.is_pressed:
-            self.position.x += 0.5
+            vec_x += PAN_SPEED
+        sin = math.sin(self.rotation.z)
+        cos = math.cos(self.rotation.z)
+        self.position.x += (vec_x * cos + vec_y * sin) / self.zoom
+        self.position.y += (-vec_x * sin + vec_y * cos) / self.zoom
 
         if engine_io.LB.is_pressed:
-            self.rotation.z += 0.0085
+            self.rotation.z += ROTATE_SPEED
         if engine_io.RB.is_pressed:
-            self.rotation.z -= 0.0085
+            self.rotation.z -= ROTATE_SPEED
 
 
 camera = MyCam()
@@ -67,9 +75,6 @@ class MyButton(GUIButton2DNode):
     def tick(self, dt):
         pass
 
-    def on_focused(self):
-        print("Focused", self.text)
-
     def on_just_focused(self):
         print("Just focused", self.text)
 
@@ -91,12 +96,12 @@ class MyButton(GUIButton2DNode):
 
 
 buttons = []
-for x in range(5):
-    for y in range(5):
+for x in range(10):
+    for y in range(10):
         button = MyButton()
-        button.position = Vector2(x*30, y*30)
+        button.position = Vector2(x*60, y*30)
         button.font = font
-        button.text = str(x) + str(y)
+        button.text = f"N({x}, {y})"
         button.rotation = 0
         button.scale = Vector2(1, 1)
         button.padding = 4
