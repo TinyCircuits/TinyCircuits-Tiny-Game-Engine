@@ -19,8 +19,8 @@
 
 #include "py/gc.h"
 
-uint16_t engine_object_layer_count = 8;
-linked_list engine_object_layers[8];
+uint16_t engine_object_layer_count = 128;
+linked_list engine_object_layers[128];
 
 
 void engine_objects_clear_all(){

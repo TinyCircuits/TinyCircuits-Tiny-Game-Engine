@@ -309,8 +309,8 @@ mp_obj_t node_base_remove_child(mp_obj_t self_parent_in, mp_obj_t child_in){
 /*  --- doc ---
     NAME: set_layer
     ID: set_layer
-    DESC: Sets the node to a different render layer. Draws layer 0 first and up to 7 last.
-    PARAM: [type=int] [name=layer] [value=0 ~ 7]                                                                                                        
+    DESC: Sets the node to a different render layer. Draws layer 0 first and up to 127 last.
+    PARAM: [type=int] [name=layer] [value=0 ~ 127]                                                                                                        
     RETURN: None
 */ 
 mp_obj_t node_base_set_layer(mp_obj_t self_in, mp_obj_t layer){
@@ -329,7 +329,7 @@ mp_obj_t node_base_set_layer(mp_obj_t self_in, mp_obj_t layer){
     NAME: get_layer
     ID: get_layer
     DESC: Gets the render layer the node is currently on                                                                                                     
-    RETURN: 0 ~ 7
+    RETURN: 0 ~ 127
 */ 
 mp_obj_t node_base_get_layer(mp_obj_t self_in){
     ENGINE_INFO_PRINTF("Node Base: Getting object layer...");
