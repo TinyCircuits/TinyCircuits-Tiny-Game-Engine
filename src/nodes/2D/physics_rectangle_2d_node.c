@@ -318,24 +318,10 @@ bool physics_rectangle_2d_store_attr(engine_node_base_t *self_node_base, qstr at
 
 
 static mp_attr_fun_t physics_rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
-    ENGINE_INFO_PRINTF("Accessing PhysicsCircle2DNode attr");
-
-    // Get `node_base` from class Python instance or native instance
-    engine_node_base_t *node_base = node_base_get(self_in, NULL);
-
-    // Try to see if the physics_node_base can handle the attr
-    bool attr_handled = physics_node_base_load_attr(node_base, attribute, destination);
-
-    // If the attr was just handled, and this was a store
-    // operation, mark as successful
-    if(attr_handled && destination[1] != MP_OBJ_NULL){
-        destination[0] = MP_OBJ_NULL;
-    }else{
-        // See if this physics node or node_base can handle the attr, if not,
-        // will check on the Python instance object if it is one
-        node_base_attr_handler(self_in, attribute, destination, physics_rectangle_2d_load_attr, physics_rectangle_2d_store_attr);
-    }
-
+    ENGINE_INFO_PRINTF("Accessing PhysicsRectangle2DNode attr");
+    node_base_attr_handler(self_in, attribute, destination,
+                          (attr_handler_func[]){physics_rectangle_2d_load_attr, node_base_load_attr, physics_node_base_load_attr},
+                          (attr_handler_func[]){physics_rectangle_2d_store_attr, node_base_store_attr, physics_node_base_store_attr}, 3);
     return mp_const_none;
 }
 

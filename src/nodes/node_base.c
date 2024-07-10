@@ -485,33 +485,46 @@ bool node_base_store_attr(engine_node_base_t *self_node_base, qstr attribute, mp
 }
 
 
-void node_base_attr_handler(mp_obj_t self, qstr attribute, mp_obj_t *destination,
-                            bool (*node_load_attr)(engine_node_base_t *node_base, qstr attribute, mp_obj_t *destination),
-                            bool (*node_store_attr)(engine_node_base_t *node_base, qstr attribute, mp_obj_t *destination)){
+void node_base_attr_handler(mp_obj_t self, qstr attr, mp_obj_t *dest,
+                            attr_handler_func load_functions[],
+                            attr_handler_func store_functions[],
+                            uint8_t attr_function_count){
 
     // Get the node base from either class
     // instance or native instance object
     bool is_obj_instance = false;
     engine_node_base_t *node_base = node_base_get(self, &is_obj_instance);
 
-    // Used for telling if custom load/store functions handled the attr
-    bool attr_handled = false;
+    // Pointer to function that we're going
+    // to call in the inner loop
+    attr_handler_func current_attr_function = NULL;
 
-    if(destination[0] == MP_OBJ_NULL){          // Load
-        attr_handled = node_load_attr(node_base, attribute, destination);                                   // Check if the attr can be found in the node's unique attrs
-        if(attr_handled == false) attr_handled = node_base_load_attr(node_base, attribute, destination);    // If not found in the node, search the common node_base attrs
-    }else if(destination[1] != MP_OBJ_NULL){    // Store
-        attr_handled = node_store_attr(node_base, attribute, destination);                                  // Check if the attr can be found in the node's unique attrs
-        if(attr_handled == false) attr_handled = node_base_store_attr(node_base, attribute, destination);   // If not found in the node, search the common node_base attrs
+    for(uint8_t i=0; i<attr_function_count; i++){
+        // Check if a load or store operation, set flag depending
+        bool is_store = false;
+        if(dest[0] == MP_OBJ_NULL){          // Load
+            current_attr_function = load_functions[i];
+            is_store = false;
+        }else if(dest[1] != MP_OBJ_NULL){    // Store
+            current_attr_function = store_functions[i];
+            is_store = true;
+        }
 
-        // If handled, mark as successful store
-        if(attr_handled) destination[0] = MP_OBJ_NULL;
+        // Try to use the attr function to handle the operation
+        bool attr_handled = current_attr_function(node_base, attr, dest);
+
+        // If handled, stop
+        if(attr_handled){
+            // If this was a store operation, mark it as a success
+            if(is_store) dest[0] = MP_OBJ_NULL;
+            return;
+        }
     }
 
     // If this is a Python class instance and the attr was NOT
     // handled by all the above, defer the attr to the instance attr
     // handler
-    if(is_obj_instance && attr_handled == false){
-        default_instance_attr_func(self, attribute, destination);
+    if(is_obj_instance){
+        node_base_use_default_attr_handler(self, attr, dest);
     }
 }

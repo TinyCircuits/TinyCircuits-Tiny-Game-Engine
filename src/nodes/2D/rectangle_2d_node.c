@@ -221,7 +221,9 @@ bool rectangle_2d_node_store_attr(engine_node_base_t *self_node_base, qstr attri
 
 static mp_attr_fun_t rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Rectangle2DNode attr");
-    node_base_attr_handler(self_in, attribute, destination, rectangle_2d_node_load_attr, rectangle_2d_node_store_attr);
+    node_base_attr_handler(self_in, attribute, destination,
+                          (attr_handler_func[]){node_base_load_attr, rectangle_2d_node_load_attr},
+                          (attr_handler_func[]){node_base_store_attr, rectangle_2d_node_store_attr}, 2);
     return mp_const_none;
 }
 

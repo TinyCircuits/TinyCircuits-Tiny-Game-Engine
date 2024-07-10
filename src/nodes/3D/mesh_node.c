@@ -177,7 +177,9 @@ bool mesh_store_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_
 
 static mp_attr_fun_t mesh_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing MeshNode attr");
-    node_base_attr_handler(self_in, attribute, destination, mesh_load_attr, mesh_store_attr);
+    node_base_attr_handler(self_in, attribute, destination,
+                          (attr_handler_func[]){node_base_load_attr, mesh_load_attr},
+                          (attr_handler_func[]){node_base_store_attr, mesh_store_attr}, 2);
     return mp_const_none;
 }
 

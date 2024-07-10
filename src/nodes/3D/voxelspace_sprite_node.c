@@ -419,8 +419,10 @@ bool voxelspace_sprite_node_store_attr(engine_node_base_t *self_node_base, qstr 
 
 
 static mp_attr_fun_t voxelspace_sprite_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
-    ENGINE_INFO_PRINTF("Accessing VoxelSpaceSpriteNode attr");
-    node_base_attr_handler(self_in, attribute, destination, voxelspace_sprite_node_load_attr, voxelspace_sprite_node_store_attr);
+    ENGINE_INFO_PRINTF("Accessing VoxelspaceNode attr");
+    node_base_attr_handler(self_in, attribute, destination,
+                          (attr_handler_func[]){node_base_load_attr, voxelspace_sprite_node_load_attr},
+                          (attr_handler_func[]){node_base_store_attr, voxelspace_sprite_node_store_attr}, 2);
     return mp_const_none;
 }
 

@@ -40,8 +40,10 @@ bool empty_node_store_attr(engine_node_base_t *self_node_base, qstr attribute, m
 
 
 static mp_attr_fun_t empty_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
-    ENGINE_INFO_PRINTF("Accessing GUIButton2DNode attr");
-    node_base_attr_handler(self_in, attribute, destination, empty_node_load_attr, empty_node_store_attr);
+    ENGINE_INFO_PRINTF("Accessing VoxelspaceNode attr");
+    node_base_attr_handler(self_in, attribute, destination,
+                          (attr_handler_func[]){node_base_load_attr, empty_node_load_attr},
+                          (attr_handler_func[]){node_base_store_attr, empty_node_store_attr}, 2);
     return mp_const_none;
 }
 
