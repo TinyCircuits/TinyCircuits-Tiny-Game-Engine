@@ -185,7 +185,6 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_io_battery_voltage_obj, engine_io_battery_volta
 */
 static mp_obj_t engine_io_battery_level(){
     #if defined(__arm__)
-        float battery_half_voltage = engine_io_raw_half_battery_voltage();
         // Map to the range we want to return.
         // Clamp since we only care showing between 0 and 100 for this function. Round to nearest int (hence +0.5).
         return mp_obj_new_int((uint16_t)engine_math_map_clamp(engine_io_raw_half_battery_voltage(), 1.65f, 2.1f, 0.5f, 100.5f));
