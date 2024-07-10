@@ -504,7 +504,8 @@ class ChessGame(Rectangle2DNode):
 
                             # Check for opening
                             self.opening_name = check_opening(self.moves)
-                            print(self.opening_name)
+                            if self.opening_name:
+                                print(self.opening_name)
 
                             # Evaluate board and update evaluation line
                             board_str = board_to_string(self.board)
@@ -517,6 +518,15 @@ class ChessGame(Rectangle2DNode):
                             engine_audio.play(move_sound, 0, False)
                             self.print_board_state()
                             self.last_move = ((col, row), (new_col, new_row))
+
+                            # Check for checkmate
+                            white_checkmate, black_checkmate = is_checkmate(self.board)
+                            if white_checkmate:
+                                self.winner_message = "Checkmate Lose!"
+                                return
+                            if black_checkmate:
+                                self.winner_message = "Checkmate Win!"
+                                return
             else:
                 selected_piece = self.board.get_piece_at_position((col, row))
                 if selected_piece and selected_piece.is_white == self.current_player_is_white:
@@ -628,6 +638,15 @@ class ChessGame(Rectangle2DNode):
             board_str = board_to_string(self.board)
             evaluation_score = evaluate_board(board_str)
             self.update_evaluation_line(evaluation_score)
+
+            # Check for checkmate
+            white_checkmate, black_checkmate = is_checkmate(self.board)
+            if white_checkmate:
+                self.winner_message = "Checkmate Lose!"
+                return
+            if black_checkmate:
+                self.winner_message = "Checkmate Win!"
+                return
 
 
     def algebraic_to_positions(self, move, is_white):
@@ -944,6 +963,15 @@ openings = {
 
 def evaluate_board(board_str):
     score = 0
+    board = string_to_board(board_str)
+    
+    # Check for checkmate
+    white_checkmate, black_checkmate = is_checkmate(board)
+    if white_checkmate:
+        return -CHECKMATE_THRESHOLD  # Black wins
+    if black_checkmate:
+        return CHECKMATE_THRESHOLD  # White wins
+
     rows = board_str.split("\n")
     for y, row in enumerate(rows):
         for x, char in enumerate(row):
@@ -951,12 +979,28 @@ def evaluate_board(board_str):
                 piece_value = piece_values[char.upper()]
                 # Flip the PST index for black pieces
                 if char.islower():
-                    pst_value = pst[char.upper()][(7-y) * 8 + (7-x)]
+                    pst_value = pst[char.upper()][(7 - y) * 8 + (7 - x)]
                     score -= piece_value + pst_value
                 else:
                     pst_value = pst[char.upper()][y * 8 + x]
                     score += piece_value + pst_value
     return score
+
+def is_checkmate(board):
+    white_checkmate = checkmate_for_color(board, True)
+    black_checkmate = checkmate_for_color(board, False)
+    return white_checkmate, black_checkmate
+
+def checkmate_for_color(board, is_white):
+    if not is_in_check(board, is_white):
+        return False
+    for piece in board.pieces:
+        if piece.is_white == is_white:
+            for move in piece.valid_moves(board):
+                board_copy_str = simulate_move(board_to_string(board), piece.grid_position, move)
+                if not leaves_king_in_check(board_copy_str, is_white):
+                    return False
+    return True
 
 def get_all_valid_moves(board, is_white):
     moves = []
