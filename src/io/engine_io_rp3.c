@@ -87,9 +87,7 @@ uint16_t engine_io_rp3_pressed_buttons(){
 
 
 void engine_io_rp3_rumble(float intensity){
-    intensity = engine_math_clamp(intensity, 0.0f, 1.0f);
-
-    if(engine_math_compare_floats(intensity, 0.0f)){
+    if(intensity <= EPSILON){
         pwm_set_gpio_level(GPIO_RUMBLE, 0);
     }else{
         pwm_set_gpio_level(GPIO_RUMBLE, (uint32_t)engine_math_map_clamp(intensity, 0.0f, 1.0f, 1400.0f, 2048.0f));
