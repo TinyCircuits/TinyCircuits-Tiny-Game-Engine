@@ -609,8 +609,8 @@ class ChessGame(Rectangle2DNode):
             self.board.piece_has_moved(piece)
 
             # Handle pawn promotion
-            if isinstance(self.selected_piece, Pawn) and (to_pos[1] == 0 or to_pos[1] == 7):
-                self.board.promote_pawn(self.selected_piece)
+            if isinstance(piece, Pawn) and (to_pos[1] == 0 or to_pos[1] == 7):
+                self.board.promote_pawn(piece)
 
             engine_audio.play(move_sound, 0, False)
             self.current_player_is_white = not self.current_player_is_white
@@ -762,7 +762,7 @@ def get_piece_char(piece):
 
 piece_values = {"P": 100, "N": 280, "B": 320, "R": 479, "Q": 929, "K": 60000}
 pst = {
-    'P': (   0,   0,   0,   0,   0,   0,   0,   0,
+    'P': (  829, 829, 829, 829,829, 829, 829, 829,
             78,  83,  86,  73, 102,  82,  85,  90,
              7,  29,  21,  44,  40,  31,  44,   7,
            -17,  16,  -2,  15,  14,   0,  15, -13,
