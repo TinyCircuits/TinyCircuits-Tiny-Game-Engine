@@ -68,7 +68,7 @@ bool physics_node_base_load_attr(engine_node_base_t *self_node_base, qstr attrib
 
     switch(attribute){
         case MP_QSTR_tick:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_layer_obj);
+            destination[0] = self->tick_cb;
             destination[1] = self_node_base->attr_accessor;
         break;
         case MP_QSTR_apply_impulse:
