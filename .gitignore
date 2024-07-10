@@ -1,5 +1,8 @@
 filesystem/last_crash.txt
 filesystem/_launcher_state
 filesystem/_launcher_state__
+filesystem/splash.py
+filesystem/splash
+
 doc/build
 .vscode
