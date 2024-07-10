@@ -262,31 +262,7 @@ bool line_2d_store_attr(engine_node_base_t *self_node_base, qstr attribute, mp_o
 
 static mp_attr_fun_t line_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Line2DNode attr");
-
-    // Get the node base from either class
-    // instance or native instance object
-    bool is_obj_instance = false;
-    engine_node_base_t *node_base = node_base_get(self_in, &is_obj_instance);
-
-    // Used for telling if custom load/store functions handled the attr
-    bool attr_handled = false;
-
-    if(destination[0] == MP_OBJ_NULL){          // Load
-        attr_handled = line_2d_load_attr(node_base, attribute, destination);
-    }else if(destination[1] != MP_OBJ_NULL){    // Store
-        attr_handled = line_2d_store_attr(node_base, attribute, destination);
-
-        // If handled, mark as successful store
-        if(attr_handled) destination[0] = MP_OBJ_NULL;
-    }
-
-    // If this is a Python class instance and the attr was NOT
-    // handled by the above, defer the attr to the instance attr
-    // handler
-    if(is_obj_instance && attr_handled == false){
-        node_base_use_default_attr_handler(self_in, attribute, destination);
-    }
-
+    node_base_attr_handler(self_in, attribute, destination, line_2d_load_attr, line_2d_store_attr);
     return mp_const_none;
 }
 

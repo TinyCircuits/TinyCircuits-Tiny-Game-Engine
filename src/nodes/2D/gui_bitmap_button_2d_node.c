@@ -179,60 +179,6 @@ bool bitmap_button_2d_node_load_attr(engine_node_base_t *self_node_base, qstr at
     engine_gui_bitmap_button_2d_node_class_obj_t *self = self_node_base->node;
 
     switch(attribute){
-        case MP_QSTR___del__:
-            destination[0] = MP_OBJ_FROM_PTR(&gui_bitmap_button_2d_node_class_del_obj);
-            destination[1] = self_node_base;
-            return true;
-        break;
-        case MP_QSTR_mark_destroy:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_mark_destroy_obj);
-            destination[1] = self_node_base;
-            return true;
-        break;
-        case MP_QSTR_mark_destroy_all:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_mark_destroy_all_obj);
-            destination[1] = self_node_base;
-            return true;
-        break;
-        case MP_QSTR_mark_destroy_children:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_mark_destroy_children_obj);
-            destination[1] = self_node_base;
-            return true;
-        break;
-        case MP_QSTR_add_child:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_add_child_obj);
-            destination[1] = self_node_base;
-            return true;
-        break;
-        case MP_QSTR_get_child:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_child_obj);
-            destination[1] = self_node_base;
-            return true;
-        break;
-        case MP_QSTR_get_child_count:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_child_count_obj);
-            destination[1] = self_node_base;
-            return true;
-        break;
-        case MP_QSTR_remove_child:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_remove_child_obj);
-            destination[1] = self_node_base;
-            return true;
-        break;
-        case MP_QSTR_set_layer:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_set_layer_obj);
-            destination[1] = self_node_base;
-            return true;
-        break;
-        case MP_QSTR_get_layer:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_layer_obj);
-            destination[1] = self_node_base;
-            return true;
-        break;
-        case MP_QSTR_node_base:
-            destination[0] = self_node_base;
-            return true;
-        break;
         case MP_QSTR_position:
             destination[0] = self->position;
             return true;
@@ -508,31 +454,7 @@ bool bitmap_button_2d_node_store_attr(engine_node_base_t *self_node_base, qstr a
 
 static mp_attr_fun_t gui_bitmap_button_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing GUIBitmapButton2DNode attr");
-
-    // Get the node base from either class
-    // instance or native instance object
-    bool is_obj_instance = false;
-    engine_node_base_t *node_base = node_base_get(self_in, &is_obj_instance);
-
-    // Used for telling if custom load/store functions handled the attr
-    bool attr_handled = false;
-
-    if(destination[0] == MP_OBJ_NULL){          // Load
-        attr_handled = bitmap_button_2d_node_load_attr(node_base, attribute, destination);
-    }else if(destination[1] != MP_OBJ_NULL){    // Store
-        attr_handled = bitmap_button_2d_node_store_attr(node_base, attribute, destination);
-
-        // If handled, mark as successful store
-        if(attr_handled) destination[0] = MP_OBJ_NULL;
-    }
-
-    // If this is a Python class instance and the attr was NOT
-    // handled by the above, defer the attr to the instance attr
-    // handler
-    if(is_obj_instance && attr_handled == false){
-        node_base_use_default_attr_handler(self_in, attribute, destination);
-    }
-
+    node_base_attr_handler(self_in, attribute, destination, bitmap_button_2d_node_load_attr, bitmap_button_2d_node_store_attr);
     return mp_const_none;
 }
 

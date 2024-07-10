@@ -235,6 +235,16 @@ bool physics_circle_2d_store_attr(engine_node_base_t *self_node_base, qstr attri
 
 
 static mp_attr_fun_t physics_circle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+    ENGINE_INFO_PRINTF("Accessing Line2DNode attr");
+
+    if(physics_node_base_load_attr(node_base, attribute, destination) == false){
+        node_base_attr_handler(self_in, attribute, destination, physics_circle_2d_load_attr, physics_circle_2d_store_attr);
+    }
+    return mp_const_none;
+}
+
+
+static mp_attr_fun_t physics_circle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing PhysicsCircle2DNode attr");
 
     // Get the node base from either class
