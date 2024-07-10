@@ -83,7 +83,7 @@ class SimpleTextMenu(Rectangle2DNode):
         #height_div_5 = disp_height // 5
         #array_of_ones = [[1 for _ in range(width_div_5)] for _ in range(height_div_5)]
         #self.backgroundborder = TilingRenderer(array_of_ones, bordertile, tile_rules)
-        #self.backgroundborder.set_layer(1)
+        #self.backgroundborder.layer = 1
         #self.add_child(self.backgroundborder)
         self.create_menu()
 
@@ -97,7 +97,7 @@ class SimpleTextMenu(Rectangle2DNode):
                                 letter_spacing=1,
                                 line_spacing=1)
         title_text.color = self.text_color
-        title_text.set_layer(2)
+        title_text.layer = 2
         self.add_child(title_text)
 
         for i, option in enumerate(self.options):
@@ -111,7 +111,7 @@ class SimpleTextMenu(Rectangle2DNode):
                                    letter_spacing=1,
                                    line_spacing=1)
             text_node.color = self.text_color if i != self.selected_option else self.selected_color
-            text_node.set_layer(2)
+            text_node.layer = 2
             self.add_child(text_node)
             self.text_nodes.append(text_node)
 

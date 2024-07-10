@@ -306,36 +306,10 @@ mp_obj_t node_base_remove_child(mp_obj_t self_parent_in, mp_obj_t child_in){
 }
 
 
-/*  --- doc ---
-    NAME: set_layer
-    ID: set_layer
-    DESC: Sets the node to a different render layer. Draws layer 0 first and up to 127 last.
-    PARAM: [type=int] [name=layer] [value=0 ~ 127]                                                                                                        
-    RETURN: None
-*/ 
-mp_obj_t node_base_set_layer(mp_obj_t self_in, mp_obj_t layer){
-    ENGINE_INFO_PRINTF("Node Base: Setting object to layer %d", mp_obj_get_int(layer));
-
-    engine_node_base_t *node_base = self_in;
+void node_base_set_layer(engine_node_base_t *node_base, uint16_t layer){
     engine_remove_object_from_layer(node_base->object_list_node, node_base->layer);
-    node_base->layer = mp_obj_get_int(layer);
+    node_base->layer = layer;
     node_base->object_list_node = engine_add_object_to_layer(node_base, node_base->layer);
-
-    return mp_const_none;
-}
-
-
-/*  --- doc ---
-    NAME: get_layer
-    ID: get_layer
-    DESC: Gets the render layer the node is currently on                                                                                                     
-    RETURN: 0 ~ 127
-*/ 
-mp_obj_t node_base_get_layer(mp_obj_t self_in){
-    ENGINE_INFO_PRINTF("Node Base: Getting object layer...");
-
-    engine_node_base_t *node_base = self_in;
-    return mp_obj_new_int(node_base->layer);
 }
 
 
@@ -431,14 +405,14 @@ void node_base_set_attr_handler_default(mp_obj_t node_instance){
 }
 
 
-void node_base_set_attr_handler(mp_obj_t node_instance, mp_attr_fun_t (*attr_handler_func)(mp_obj_t self_in, qstr attribute, mp_obj_t *destination)){
-    default_instance_attr_func = MP_OBJ_TYPE_GET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr);
-    MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr, attr_handler_func, 5);
+void node_base_use_default_attr_handler(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
+    default_instance_attr_func(self_in, attribute, destination);
 }
 
 
-void node_base_use_default_attr_handler(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
-    default_instance_attr_func(self_in, attribute, destination);
+void node_base_set_attr_handler(mp_obj_t node_instance, mp_attr_fun_t (*attr_handler_func)(mp_obj_t self_in, qstr attribute, mp_obj_t *destination)){
+    default_instance_attr_func = MP_OBJ_TYPE_GET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr);
+    MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr, attr_handler_func, 5);
 }
 
 
@@ -500,6 +474,13 @@ bool node_base_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp_
 
 // Return `true` if handled storing the attr from internal structure, `false` otherwise
 bool node_base_store_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_t *destination){
+    switch(attribute){
+        case MP_QSTR_layer:
+            node_base_set_layer(self_node_base, mp_obj_get_int(destination[1]));
+            return true;
+        break;
+    }
+
     return false;
 }
 
@@ -517,21 +498,20 @@ void node_base_attr_handler(mp_obj_t self, qstr attribute, mp_obj_t *destination
     bool attr_handled = false;
 
     if(destination[0] == MP_OBJ_NULL){          // Load
-        attr_handled = node_load_attr(node_base, attribute, destination);
+        attr_handled = node_load_attr(node_base, attribute, destination);                                   // Check if the attr can be found in the node's unique attrs
+        if(attr_handled == false) attr_handled = node_base_load_attr(node_base, attribute, destination);    // If not found in the node, search the common node_base attrs
     }else if(destination[1] != MP_OBJ_NULL){    // Store
-        attr_handled = node_store_attr(node_base, attribute, destination);
+        attr_handled = node_store_attr(node_base, attribute, destination);                                  // Check if the attr can be found in the node's unique attrs
+        if(attr_handled == false) attr_handled = node_base_store_attr(node_base, attribute, destination);   // If not found in the node, search the common node_base attrs
 
         // If handled, mark as successful store
         if(attr_handled) destination[0] = MP_OBJ_NULL;
     }
 
     // If this is a Python class instance and the attr was NOT
-    // handled by the above, defer the attr to the instance attr
+    // handled by all the above, defer the attr to the instance attr
     // handler
     if(is_obj_instance && attr_handled == false){
-        node_base_use_default_attr_handler(self, attribute, destination);
+        default_instance_attr_func(self, attribute, destination);
     }
-
-    return mp_const_none;
-
 }

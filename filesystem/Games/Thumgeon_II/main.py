@@ -49,7 +49,7 @@ class CursorSprite(Sprite2DNode):
         self.frame_count_x = 1
         self.frame_current_x = 0
         self.playing = False
-        self.set_layer(7)
+        self.layer = 7
         self.opacity = 0.0
         self.transparent_color = Color(0x07e0)
         self.width = 32
@@ -188,7 +188,7 @@ class Ghost(Sprite2DNode):
         self.texture = Monsters.monster_textures[4]
         self.frame_count_x = 2
         self.frame_current_x = 0
-        self.set_layer(7)
+        self.layer = 7
         Render.cam.add_child(self)
 
     def set_frame_count(self, c):
@@ -199,7 +199,7 @@ class MessageSprite(Text2DNode):
     def __init__(self):
         super().__init__(self)
         self.text = ""
-        self.set_layer(7)
+        self.layer = 7
         self.color = Color(0xFFFF)
         self.position = Vector2(0, -20)
         self.font = Resources.roboto_font
@@ -477,8 +477,8 @@ mp_text.font = Resources.roboto_font
 hp_text.text = "HP: "+str(player.maxhp)+" / "+str(player.maxhp)
 mp_text.text = "MP: "+str(player.maxmp)+" / "+str(player.maxmp)
 
-hp_text.set_layer(7)
-mp_text.set_layer(7)
+hp_text.layer = 7
+mp_text.layer = 7
 
 Render.cam.add_child(hp_text)
 Render.cam.add_child(mp_text)
@@ -649,11 +649,11 @@ while True:
             eqp.position = Vector2(-32, -4)
             drop.position = Vector2(-32, 4)
 
-            gp_text.set_layer(7)
-            wt_text.set_layer(7)
-            eqp.set_layer(7)
-            drop.set_layer(7)
-            runes_text.set_layer(7)
+            gp_text.layer = 7
+            wt_text.layer = 7
+            eqp.layer = 7
+            drop.layer = 7
+            runes_text.layer = 7
 
             inventory_renderer.add_child(gp_text)
             inventory_renderer.add_child(wt_text)
@@ -670,7 +670,7 @@ while True:
                 frame_spr.position.y = item_spr_offset.y
                 frame_spr.playing = False
                 frame_spr.transparent_color  = Color(0x07e0)
-                frame_spr.set_layer(6)
+                frame_spr.layer = 6
                 frame_spr.frame_count_x = 1
                 frame_spr.frame_current_x = 0
 
@@ -680,7 +680,7 @@ while True:
                 item_spr.position.y = item_spr_offset.y
                 item_spr.playing = False
                 item_spr.transparent_color  = Color(0x07e0)
-                item_spr.set_layer(7)
+                item_spr.layer = 7
                 item_spr.frame_count_x = i.frame_count
                 item_spr.frame_current_x = 0
                 item_spr_offset.x += 32

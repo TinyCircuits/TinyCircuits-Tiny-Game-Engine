@@ -223,7 +223,7 @@ class CardSprite(Sprite2DNode):
         self.in_hand = True
         self.played = False
         self.discarded = False
-        self.set_layer(4)
+        self.layer = 4
         self.modifiers = modifiers if modifiers else []
 
     def create_background(self):
@@ -259,7 +259,7 @@ class CardSprite(Sprite2DNode):
         sprite.frame_current_y = frame_y
         sprite.texture = cards_texture
         sprite.playing = False
-        sprite.set_layer(layer)
+        sprite.layer = layer
         sprite.transparent_color = Color(0x0400)
         sprite.opacity = opacity
 
@@ -513,7 +513,7 @@ class PokerGame(Rectangle2DNode):
         self.background.frame_count_y = 1
         self.background.texture = background
         self.background.playing = False
-        self.background.set_layer(0)
+        self.background.layer = 0
         self.add_child(self.background)
         self.volume = .25
         engine_audio.set_volume(self.volume)
@@ -529,30 +529,30 @@ class PokerGame(Rectangle2DNode):
         #self.overlay.frame_count_y = 1
         #self.overlay.texture = overlay
         #self.overlay.playing = False
-        #self.overlay.set_layer(7)
+        #self.overlay.layer = 7
         #self.overlay.opacity = 0.05
         #self.overlay.transparent_color = engine_draw.white
         #self.add_child(self.overlay)
 
         # Text nodes for displaying scores
         self.base_score_text = Text2DNode(Vector2(51, 24), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
-        self.base_score_text.set_layer(1)
+        self.base_score_text.layer = 1
         self.base_score_text.color = Color(0x04FF)
         self.mult_score_text = Text2DNode(Vector2(85, 24), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
-        self.mult_score_text.set_layer(1)
+        self.mult_score_text.layer = 1
         self.mult_score_text.color = Color(0xFAEA)
         self.round_text = Text2DNode(Vector2(110, 75), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
-        self.round_text.set_layer(1)
+        self.round_text.layer = 1
         self.hand_type_text = Text2DNode(Vector2(82, 37), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
-        self.hand_type_text.set_layer(1)
+        self.hand_type_text.layer = 1
         self.total_score_text = Text2DNode(Vector2(69, 10), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
-        self.total_score_text.set_layer(1)
+        self.total_score_text.layer = 1
         self.best_hand_text = Text2DNode(Vector2(44, 57), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
-        self.best_hand_text.set_layer(1)
+        self.best_hand_text.layer = 1
         self.remaining_hands_text = Text2DNode(Vector2(104, 59), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
-        self.remaining_hands_text.set_layer(1)
+        self.remaining_hands_text.layer = 1
         self.remaining_discard_text = Text2DNode(Vector2(118, 59), font, "", 0, Vector2(1, 1), 1.0, 0, 0)
-        self.remaining_discard_text.set_layer(1)
+        self.remaining_discard_text.layer = 1
 
         self.total_score_text.text = f"{self.score}/{self.target_score}"
         self.hand_type_text.text = f"Play/Discard 5 cards"
@@ -740,7 +740,7 @@ class PokerGame(Rectangle2DNode):
         if self.jokers and 0 <= self.current_card_index < len(self.jokers):
             joker_position = self.jokers[self.current_card_index].position
             self.hand_indicator.position = Vector2(joker_position.x, joker_position.y + 20)
-            self.hand_indicator.set_layer(6)
+            self.hand_indicator.layer = 6
 
     def update_selected_joker_rules(self):
         self.hand_type_text.text = self.jokers[self.current_card_index].print_rules()
@@ -759,7 +759,7 @@ class PokerGame(Rectangle2DNode):
         if not self.joker_selection and self.hand and 0 <= self.current_card_index < len(self.hand):
             card_position = self.hand[self.current_card_index].position
             self.hand_indicator.position = Vector2(card_position.x, card_position.y + 20)
-            self.hand_indicator.set_layer(6)
+            self.hand_indicator.layer = 6
 
     def update_selected_card_rules(self):
         if not self.joker_selection:
@@ -997,7 +997,7 @@ class PokerGame(Rectangle2DNode):
     def display_score_animation(self, score_text, start_position, end_position, color=Color(0x0400)):
         score_node = Text2DNode(start_position, font, score_text, 0, Vector2(1, 1), 1.0, 0, 0)
         score_node.color = color
-        score_node.set_layer(6)
+        score_node.layer = 6
         self.add_child(score_node)
         tween_card(score_node, end_position, duration=1200, speed=1)
         tween_opacity(score_node, 1.0, 0.0, duration=1200)
@@ -1005,7 +1005,7 @@ class PokerGame(Rectangle2DNode):
     def display_main_score_animation(self, score, start_position, end_scale, color):
         score_node = AnimatedText2DNode(start_position, font, 0, score, 1500)
         score_node.color = color
-        score_node.set_layer(6)
+        score_node.layer = 6
         self.add_child(score_node)
         duration= 1000 + end_scale * 500
         tween_scale(score_node, Vector2(1, 1), Vector2(end_scale, end_scale), duration)
@@ -1309,7 +1309,7 @@ introScr.frame_count_x = 1
 introScr.frame_count_y = 1
 introScr.texture = intro
 introScr.playing = False
-introScr.set_layer(7)
+introScr.layer = 7
 
 # Make a camera to render the scene
 camera = CameraNode()

@@ -51,7 +51,7 @@ class PowerIndicator(Rectangle2DNode):
         self.position.x = -64 + self.width/2 + 1
         self.outline = True
         self.color = engine_draw.blue
-        self.set_layer(1)
+        self.layer = 1
 
         self.bar = Rectangle2DNode()
         self.bar.width = self.width
@@ -59,7 +59,7 @@ class PowerIndicator(Rectangle2DNode):
         self.bar.position.y = 0
         self.bar.position.x = 1
         self.bar.color = engine_draw.green
-        self.bar.set_layer(0)
+        self.bar.layer = 0
 
         self.add_child(self.bar)
 

@@ -179,6 +179,11 @@ bool bitmap_button_2d_node_load_attr(engine_node_base_t *self_node_base, qstr at
     engine_gui_bitmap_button_2d_node_class_obj_t *self = self_node_base->node;
 
     switch(attribute){
+        case MP_QSTR___del__:
+            destination[0] = MP_OBJ_FROM_PTR(&gui_bitmap_button_2d_node_class_del_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
         case MP_QSTR_position:
             destination[0] = self->position;
             return true;

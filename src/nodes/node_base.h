@@ -65,14 +65,10 @@ static MP_DEFINE_CONST_FUN_OBJ_1(node_base_get_child_count_obj, node_base_get_ch
 mp_obj_t node_base_remove_child(mp_obj_t self_parent_in, mp_obj_t child_in);
 static MP_DEFINE_CONST_FUN_OBJ_2(node_base_remove_child_obj, node_base_remove_child);
 
-mp_obj_t node_base_set_layer(mp_obj_t self_in, mp_obj_t layer);
-
-mp_obj_t node_base_get_layer(mp_obj_t self_in);
-
-
 void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, bool *is_child_of_camera, mp_obj_t child_node_base);
 
 void node_base_set_attr_handler_default(mp_obj_t node_instance);
+void node_base_use_default_attr_handler(mp_obj_t self_in, qstr attribute, mp_obj_t *destination);
 
 // Store default Python class instance attr function
 // and override with custom intercept attr function

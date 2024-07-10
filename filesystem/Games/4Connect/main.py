@@ -83,7 +83,7 @@ class GridNode(Rectangle2DNode):
         self.rec.position = Vector2(DISP_WIDTH / 2 - 1, HEADER_HEIGHT / 2 + DISP_HEIGHT / 2 - 1)
         self.rec.texture = texture
         self.rec.transparent_color = engine_draw.black
-        self.rec.set_layer(3)
+        self.rec.layer = 3
         self.add_child(self.rec)
         self.holes = []
 
@@ -99,7 +99,7 @@ class GridNode(Rectangle2DNode):
                         opacity=1.0,
                         letter_spacing=1,
                         line_spacing=1)
-            win_text.set_layer(7)
+            win_text.layer = 7
             self.add_child(win_text)
             return
 

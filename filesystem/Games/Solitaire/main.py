@@ -38,11 +38,11 @@ class CardSprite(Sprite2DNode):
         if face_up:
             self.frame_current_x = self.original_frame_x
             self.frame_current_y = self.original_frame_y
-            self.set_layer(1)
+            self.layer = 1
         else:
             self.frame_current_x = 2
             self.frame_current_y = 4
-            self.set_layer(0)
+            self.layer = 0
         self.revealed = face_up
 
 # Define a class for the deck
@@ -129,16 +129,16 @@ class Column:
     def add_card(self, card):
         # Set all existing cards to layer 0
         for c in self.cards:
-            c.set_layer(0)
+            c.layer = 0
         tween_card(card, Vector2(self.position.x, self.position.y + len(self.cards) * 5))
-        card.set_layer(1)  # Set the new card to layer 1
+        card.layer = 1  # Set the new card to layer 1
         self.cards.append(card)
         self.show_placeholder()
 
     def add_cards(self, cards):
         for card in cards:
             tween_card(card, Vector2(self.position.x, self.position.y + len(self.cards) * 5))
-            card.set_layer(1)
+            card.layer = 1
             self.cards.append(card)
         self.show_placeholder()
 
@@ -176,8 +176,8 @@ class FoundationPile:
 
     def add_card(self, card):
         for c in self.cards:
-            c.set_layer(0)
-        card.set_layer(1)
+            c.layer = 0
+        card.layer = 1
         tween_card(card, self.position)
         self.cards.append(card)
         self.show_placeholder()
@@ -241,7 +241,7 @@ class SolitaireGame(Rectangle2DNode):
         self.hand_indicator.frame_current_x = 5
         self.hand_indicator.frame_current_y = 4
         self.hand_indicator.playing = False
-        self.hand_indicator.set_layer(2)
+        self.hand_indicator.layer = 2
         self.hand_indicator.transparent_color = Color(0x0400)
         self.add_child(self.hand_indicator)
 
@@ -472,7 +472,7 @@ class SolitaireGame(Rectangle2DNode):
             self.selected_card_origin = self.discard_pile
             self.indicator_moved = False
             for c in self.selected_cards:
-                c.set_layer(3)
+                c.layer = 3
             self.add_child(card)
 
     def select_from_column(self, column):
@@ -491,7 +491,7 @@ class SolitaireGame(Rectangle2DNode):
                 # Picking up cards from a selected column
                 self.selected_cards = column.remove_top_cards(self.selected_card_index)
                 for c in self.selected_cards:
-                    c.set_layer(3)
+                    c.layer = 3
                 self.selected_card_origin = column
                 self.indicator_moved = False
                 self.selected_column_index = -1  # Reset column selection after picking up cards

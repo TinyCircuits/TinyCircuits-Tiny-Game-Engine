@@ -293,7 +293,7 @@ class Player(Sprite2DNode):
         self.frame_count_x = 1
         self.frame_current_x = 0
         self.playing = False
-        self.set_layer(6)
+        self.layer = 6
         self.opacity = 1.2
         self.transparent_color = Color(0x07e0)
         self.runes = 0
@@ -320,7 +320,7 @@ class Player(Sprite2DNode):
         self.held_item_spr.frame_count_x = 2
         self.held_item_spr.playing = False
         self.held_item_spr.transparent_color  = Color(0x07e0)
-        self.held_item_spr.set_layer(6)
+        self.held_item_spr.layer = 6
         self.held_item_spr.scale = Vector2(0.7, 0.7)
         self.add_child(self.held_item_spr)
         
@@ -335,7 +335,7 @@ class Player(Sprite2DNode):
         self.held_item_spr.frame_count_x = item_frame_count[item.id]
         self.held_item_spr.playing = False
         self.held_item_spr.transparent_color  = Color(0x07e0)
-        self.held_item_spr.set_layer(6)
+        self.held_item_spr.layer = 6
     
     def add_inv_item(self, item):
         if(item_weights[item] + self.wt <= self.maxwt):

@@ -19,7 +19,7 @@ engine_physics.set_gravity(0, -0.02)
 
 collided = False
 youre_bad = Text2DNode(font=font, text="You're bad!", scale=Vector2(1.25, 1.25), opacity=0.0)
-youre_bad.set_layer(7)
+youre_bad.layer = 7
 
 
 class Obstacle(EmptyNode):

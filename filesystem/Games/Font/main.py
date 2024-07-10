@@ -10,7 +10,7 @@ class MessageSprite(Text2DNode):
     def __init__(self):
         super().__init__(self)
         self.text = "testing"
-        self.set_layer(7)
+        self.layer = 7
         self.position = Vector2(0, 0)
         self.font = roboto_font
         self.opacity = 1.0

@@ -53,7 +53,7 @@ class CursorSprite(Sprite2DNode):
         self.frame_count_x = 1
         self.frame_current_x = 0
         self.playing = False
-        self.set_layer(6)
+        self.layer = 6
         self.opacity = 0.0
         self.transparent_color = Color(0x07E0)
         self.width = 32
@@ -275,7 +275,7 @@ def MessageSprite(Text2DNode):
     def __init__(self):
         super().__init__(self)
         self.text = "testing"
-        self.set_layer(7)
+        self.layer = 7
         self.position = Vector2(0, 0)
         self.font = roboto_font
         self.opacity = 1.0
