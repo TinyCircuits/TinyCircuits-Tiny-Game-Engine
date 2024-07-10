@@ -53,7 +53,7 @@ class ChessPiece(Sprite2DNode):
 
 class King(ChessPiece):
     def __init__(self, grid_position, texture, is_white):
-        frame_x = 4
+        frame_x = 3
         frame_y = 1 if is_white else 0
         super().__init__(grid_position, texture, frame_x, frame_y, is_white)
         self.has_moved = False
@@ -89,7 +89,7 @@ class King(ChessPiece):
 
 class Queen(ChessPiece):
     def __init__(self, grid_position, texture, is_white):
-        frame_x = 3
+        frame_x = 4
         frame_y = 1 if is_white else 0
         super().__init__(grid_position, texture, frame_x, frame_y, is_white)
 
@@ -500,13 +500,15 @@ class ChessGame(Rectangle2DNode):
 
                             # Track and print move
                             self.moves.append(move_notation)
+                            print(self.moves)
 
                             # Check for opening
                             self.opening_name = check_opening(self.moves)
+                            print(self.opening_name)
 
                             # Evaluate board and update evaluation line
                             board_str = board_to_string(self.board)
-                            evaluation_score = evaluate_board(board_str, self.current_player_is_white)
+                            evaluation_score = evaluate_board(board_str)
                             self.update_evaluation_line(evaluation_score)
 
                             self.selected_piece = None
@@ -548,23 +550,27 @@ class ChessGame(Rectangle2DNode):
         board_str = board_to_string(self.board)
         
         # Check if the current moves match any opening
-        opening_move = None
-        if self.opening_name:
-            opening_moves = openings[self.opening_name]
-            if len(self.moves) < len(opening_moves):
-                opening_move = opening_moves[len(self.moves)]
+        matched_openings = [(name, moves) for name, moves in openings.items() if self.moves == moves[:len(self.moves)]]
+        
+        if matched_openings:
+            # Select a random opening from the matched openings
+            opening_name, opening_moves = random.choice(matched_openings)
+            opening_move = opening_moves[len(self.moves)]
+            print(opening_name)
+        else:
+            opening_move = None
 
         if opening_move:
             # Play the next move in the opening
-            from_pos, to_pos = self.algebraic_to_positions(opening_move, self.current_player_is_white)
+            piece_type, from_pos, to_pos = self.algebraic_to_positions(opening_move, self.current_player_is_white)
             if from_pos is None:
                 # If from_pos is not determined, find the piece based on the to_pos and type
-                piece = None
                 for p in self.board.pieces:
                     if p.is_white != self.current_player_is_white:
                         continue
+                    if piece_type and get_piece_notation(p) != piece_type:
+                        continue
                     if to_pos in p.valid_moves(self.board):
-                        piece = p
                         from_pos = p.grid_position
                         break
         else:
@@ -580,6 +586,8 @@ class ChessGame(Rectangle2DNode):
 
         # Track and print move
         self.moves.append(move_notation)
+        print(self.moves)
+
 
     def execute_move(self, from_pos, to_pos):
         piece = self.board.get_piece_at_position(from_pos)
@@ -618,7 +626,7 @@ class ChessGame(Rectangle2DNode):
 
             # Evaluate board and update evaluation line
             board_str = board_to_string(self.board)
-            evaluation_score = evaluate_board(board_str, self.current_player_is_white)
+            evaluation_score = evaluate_board(board_str)
             self.update_evaluation_line(evaluation_score)
 
 
@@ -626,37 +634,61 @@ class ChessGame(Rectangle2DNode):
         # Handle castling
         if move == 'O-O':
             # Kingside castling
-            return (4, 0 if is_white else 7), (6, 0 if is_white else 7)
+            return 'K', (4, 7 if is_white else 0), (6, 7 if is_white else 0)
         elif move == 'O-O-O':
             # Queenside castling
-            return (4, 0 if is_white else 7), (2, 0 if is_white else 7)
-        
-        # Determine the piece type and capture status
-        piece = None
+            return 'K', (4, 7 if is_white else 0), (2, 7 if is_white else 0)
+
+        piece_type = ''
         if move[0].isupper() and move[0] != 'x':
-            piece = move[0]
+            piece_type = move[0]
             move = move[1:]
-        
-        # Handle captures
-        if 'x' in move:
+
+        capture = 'x' in move
+        if capture:
             parts = move.split('x')
             if len(parts) != 2:
                 raise ValueError("Invalid move notation")
-            from_file = parts[0][0] if piece is None else ''
+            from_file = parts[0] if piece_type == '' else ''
             to_pos = parts[1]
         else:
             from_file = ''
             to_pos = move
 
-        # Convert positions
         to_pos = (ord(to_pos[0]) - ord('a'), 8 - int(to_pos[1]))
-        if from_file:
-            # For pawn captures
-            from_pos = (ord(from_file) - ord('a'), 8 - int(to_pos[1]) - 1) if is_white else (ord(from_file) - ord('a'), 8 - int(to_pos[1]) + 1)
-        else:
-            from_pos = None
+        from_pos = None
+        possible_pieces = []
 
-        return from_pos, to_pos
+        if piece_type == '':  # Handle pawn moves
+            for piece in self.board.pieces:
+                if isinstance(piece, Pawn) and piece.is_white == is_white:
+                    valid_moves = piece.valid_moves(self.board)
+                    if to_pos in valid_moves:
+                        if not from_file or piece.grid_position[0] == (ord(from_file) - ord('a')):
+                            possible_pieces.append(piece)
+        else:
+            for piece in self.board.pieces:
+                if piece.is_white == is_white and get_piece_notation(piece) == piece_type:
+                    valid_moves = piece.valid_moves(self.board)
+                    if to_pos in valid_moves:
+                        if not from_file or piece.grid_position[0] == (ord(from_file) - ord('a')):
+                            possible_pieces.append(piece)
+
+        if len(possible_pieces) == 1:
+            from_pos = possible_pieces[0].grid_position
+        elif len(possible_pieces) > 1:
+            for piece in possible_pieces:
+                if piece.grid_position[0] == (ord(from_file) - ord('a')):
+                    from_pos = piece.grid_position
+                    break
+            if from_pos is None:
+                raise ValueError("Ambiguous move notation")
+
+        return piece_type, from_pos, to_pos
+
+
+
+
 
 
 
@@ -819,157 +851,98 @@ def check_opening(moves):
     return None
 
 openings = {
-    "Ruy Lopez": [
-        "e4", "e5",
-        "Nf3", "Nc6",
-        "Bb5", "a6",
-        "Ba4", "Nf6",
-        "O-O", "Be7",
-        "Re1", "b5",
-        "Bb3", "d6",
-        "c3", "O-O"
-    ],
-    "Italian Game": [
-        "e4", "e5",
-        "Nf3", "Nc6",
-        "Bc4", "Bc5",
-        "c3", "Nf6",
-        "d3", "d6",
-        "O-O", "O-O",
-        "Re1", "a6",
-        "a4", "Ba7"
-    ],
-    "Sicilian Defense": [
-        "e4", "c5",
-        "Nf3", "d6",
-        "d4", "cxd4",
-        "Nxd4", "Nf6",
-        "Nc3", "a6",
-        "Be3", "e6",
-        "f3", "Be7",
-        "Qd2", "O-O"
-    ],
-    "French Defense": [
-        "e4", "e6",
-        "d4", "d5",
-        "Nc3", "Nf6",
-        "Bg5", "Be7",
-        "e5", "Nfd7",
-        "Bxe7", "Qxe7",
-        "f4", "O-O",
-        "Nf3", "c5"
-    ],
-    "Caro-Kann Defense": [
-        "e4", "c6",
-        "d4", "d5",
-        "Nc3", "dxe4",
-        "Nxe4", "Bf5",
-        "Ng3", "Bg6",
-        "h4", "h6",
-        "Nf3", "Nd7",
-        "h5", "Bh7",
-        "Bd3", "Bxd3"
-    ],
-    "Queen's Gambit": [
-        "d4", "d5",
-        "c4", "e6",
-        "Nc3", "Nf6",
-        "Bg5", "Be7",
-        "e3", "O-O",
-        "Nf3", "h6",
-        "Bh4", "b6"
-    ],
-    "Queen's Gambit Accepted": [
-        "d4", "d5",
-        "c4", "dxc4",
-        "Nf3", "Nf6",
-        "e3", "e6",
-        "Bxc4", "c5",
-        "O-O", "a6",
-        "dxc5", "Bxc5",
-        "Qe2", "b5"
-    ],
-    "King's Indian Defense": [
-        "d4", "Nf6",
-        "c4", "g6",
-        "Nc3", "Bg7",
-        "e4", "d6",
-        "Nf3", "O-O",
-        "Be2", "e5",
-        "O-O", "Nc6",
-        "d5", "Ne7"
-    ],
-    "Nimzo-Indian Defense": [
-        "d4", "Nf6",
-        "c4", "e6",
-        "Nc3", "Bb4",
-        "e3", "O-O",
-        "Bd3", "d5",
-        "Nf3", "c5",
-        "O-O", "Nc6",
-        "a3", "Bxc3"
-    ],
-    "Slav Defense": [
-        "d4", "d5",
-        "c4", "c6",
-        "Nf3", "Nf6",
-        "Nc3", "dxc4",
-        "a4", "Bf5",
-        "e3", "e6",
-        "Bxc4", "Bb4",
-        "O-O", "O-O"
-    ],
-    "English Opening": [
-        "c4", "e5",
-        "Nc3", "Nc6",
-        "g3", "g6",
-        "Bg2", "Bg7",
-        "d3", "d6",
-        "e4", "Be6",
-        "Nge2", "Qd7"
-    ],
-    "Reti Opening": [
-        "Nf3", "d5",
-        "c4", "c6",
-        "g3", "Nf6",
-        "Bg2", "Bf5",
-        "O-O", "e6",
-        "d3", "h6",
-        "Nc3", "Be7",
-        "Re1", "O-O"
-    ],
-    "London System": [
-        "d4", "d5",
-        "Nf3", "Nf6",
-        "Bf4", "e6",
-        "e3", "c5",
-        "c3", "Nc6",
-        "Nbd2", "Bd6",
-        "Bg3", "O-O",
-        "Bd3", "b6"
-    ],
-    "Scandinavian Defense": [
-        "e4", "d5",
-        "exd5", "Qxd5",
-        "Nc3", "Qa5",
-        "d4", "c6",
-        "Nf3", "Bg4",
-        "Be2", "e6",
-        "O-O", "Nd7",
-        "h3", "Bh5"
-    ],
-    "Pirc Defense": [
-        "e4", "d6",
-        "d4", "Nf6",
-        "Nc3", "g6",
-        "Be2", "Bg7",
-        "Be3", "O-O",
-        "Qd2", "c6",
-        "Bh6", "b5"
-    ]
+    "Ruy Lopez Main Line": ["e4", "e5", "Nf3", "Nc6", "Bb5", "a6", "Ba4", "Nf6", "O-O", "Be7", "Re1", "b5", "Bb3", "d6", "c3", "O-O"],
+    "Ruy Lopez Closed Ruy Lopez": ["e4", "e5", "Nf3", "Nc6", "Bb5", "a6", "Ba4", "Nf6", "O-O", "Be7", "Re1", "b5", "Bb3", "d6", "c3", "O-O", "h3", "Nb8", "d4", "Nbd7"],
+    "Ruy Lopez Open Ruy Lopez": ["e4", "e5", "Nf3", "Nc6", "Bb5", "a6", "Ba4", "Nf6", "O-O", "Be7", "Re1", "b5", "Bb3", "d6", "c3", "Na5", "Bc2", "c5"],
+    "Ruy Lopez Breyer Defense": ["e4", "e5", "Nf3", "Nc6", "Bb5", "a6", "Ba4", "Nf6", "O-O", "Be7", "Re1", "b5", "Bb3", "d6", "c3", "O-O", "h3", "Nb8", "d4", "Nbd7", "Nbd2", "Bb7"],
+    "Ruy Lopez Marshall Attack": ["e4", "e5", "Nf3", "Nc6", "Bb5", "a6", "Ba4", "Nf6", "O-O", "Be7", "Re1", "b5", "Bb3", "d6", "c3", "d5", "exd5", "Nxd5", "Nxe5", "Nxe5", "Rxe5", "c6"],
+    
+    "Italian Game Main Line": ["e4", "e5", "Nf3", "Nc6", "Bc4", "Bc5", "c3", "Nf6", "d3", "d6", "O-O", "O-O", "Re1", "a6", "a4", "Ba7"],
+    "Italian Game Evans Gambit": ["e4", "e5", "Nf3", "Nc6", "Bc4", "Bc5", "b4", "Bxb4", "c3", "Ba5"],
+    "Italian Game Giuoco Pianissimo": ["e4", "e5", "Nf3", "Nc6", "Bc4", "Bc5", "d3", "d6", "c3", "a6"],
+    "Italian Game Greco Attack": ["e4", "e5", "Nf3", "Nc6", "Bc4", "Bc5", "c3", "Nf6", "d4", "exd4", "cxd4", "Bb4+"],
+    "Italian Game Two Knights Defense": ["e4", "e5", "Nf3", "Nc6", "Bc4", "Nf6", "Ng5", "d5", "exd5", "Na5"],
+    
+    "Sicilian Defense Main Line": ["e4", "c5", "Nf3", "d6", "d4", "cxd4", "Nxd4", "Nf6", "Nc3", "a6", "Be3", "e6", "f3", "Be7", "Qd2", "O-O"],
+    "Sicilian Defense Najdorf": ["e4", "c5", "Nf3", "d6", "d4", "cxd4", "Nxd4", "Nf6", "Nc3", "a6", "Be3", "e5", "Nb3", "Be6"],
+    "Sicilian Defense Dragon": ["e4", "c5", "Nf3", "d6", "d4", "cxd4", "Nxd4", "Nf6", "Nc3", "g6", "Be3", "Bg7", "f3", "O-O", "Qd2", "Nc6"],
+    "Sicilian Defense Scheveningen": ["e4", "c5", "Nf3", "d6", "d4", "cxd4", "Nxd4", "Nf6", "Nc3", "a6", "Be3", "e6", "f3", "Be7"],
+    "Sicilian Defense Sveshnikov": ["e4", "c5", "Nf3", "d6", "d4", "cxd4", "Nxd4", "Nf6", "Nc3", "e5", "Ndb5", "d6", "Na3", "b5"],
+    
+    "French Defense Main Line": ["e4", "e6", "d4", "d5", "Nc3", "Nf6", "Bg5", "Be7", "e5", "Nfd7", "Bxe7", "Qxe7", "f4", "O-O", "Nf3", "c5"],
+    "French Defense Classical": ["e4", "e6", "d4", "d5", "Nc3", "Nf6", "Bg5", "dxe4", "Nxe4", "Be7"],
+    "French Defense Winawer": ["e4", "e6", "d4", "d5", "Nc3", "Bb4", "e5", "c5", "a3", "Bxc3+", "bxc3", "Ne7"],
+    "French Defense Tarrasch": ["e4", "e6", "d4", "d5", "Nd2", "Nf6", "e5", "Nfd7", "Bd3", "c5"],
+    "French Defense Advance": ["e4", "e6", "d4", "d5", "e5", "c5", "c3", "Nc6", "Nf3", "Qb6"],
+    
+    "Caro-Kann Defense Main Line": ["e4", "c6", "d4", "d5", "Nc3", "dxe4", "Nxe4", "Bf5", "Ng3", "Bg6", "h4", "h6", "Nf3", "Nd7", "h5", "Bh7", "Bd3", "Bxd3"],
+    "Caro-Kann Defense Advance": ["e4", "c6", "d4", "d5", "e5", "Bf5", "Nc3", "e6", "g4", "Bg6"],
+    "Caro-Kann Defense Classical": ["e4", "c6", "d4", "d5", "Nc3", "dxe4", "Nxe4", "Bf5", "Ng3", "Bg6", "h4", "h6", "Nf3", "Nd7"],
+    "Caro-Kann Defense Panov-Botvinnik Attack": ["e4", "c6", "d4", "d5", "exd5", "cxd5", "c4", "Nf6", "Nc3", "e6", "Nf3", "Bb4"],
+    "Caro-Kann Defense Two Knights": ["e4", "c6", "Nf3", "d5", "Nc3", "Bg4"],
+    
+    "Queen's Gambit Main Line": ["d4", "d5", "c4", "e6", "Nc3", "Nf6", "Bg5", "Be7", "e3", "O-O", "Nf3", "h6", "Bh4", "b6"],
+    "Queen's Gambit Accepted": ["d4", "d5", "c4", "dxc4", "Nf3", "Nf6", "e3", "e6", "Bxc4", "c5", "O-O", "a6", "dxc5", "Bxc5", "Qe2", "b5"],
+    "Queen's Gambit Declined": ["d4", "d5", "c4", "e6", "Nc3", "Nf6", "Bg5", "Be7"],
+    "Slav Defense": ["d4", "d5", "c4", "c6"],
+    "Chigorin Defense": ["d4", "d5", "c4", "Nc6"],
+    
+    "Queen's Gambit Accepted Classical": ["d4", "d5", "c4", "dxc4", "Nf3", "Nf6", "e3", "e6", "Bxc4", "c5", "O-O", "a6"],
+    "Queen's Gambit Accepted Modern": ["d4", "d5", "c4", "dxc4", "e4"],
+    "Queen's Gambit Accepted Alekhine": ["d4", "d5", "c4", "dxc4", "e4"],
+    "Queen's Gambit Accepted Lasker Defense": ["d4", "d5", "c4", "dxc4", "Nc3", "e6", "e4", "c5"],
+    
+    "King's Indian Defense Main Line": ["d4", "Nf6", "c4", "g6", "Nc3", "Bg7", "e4", "d6", "Nf3", "O-O", "Be2", "e5", "O-O", "Nc6", "d5", "Ne7"],
+    "King's Indian Defense Classical": ["d4", "Nf6", "c4", "g6", "Nc3", "Bg7", "e4", "d6", "Nf3", "O-O", "Be2", "Nc6", "d5", "Ne7"],
+    "King's Indian Defense Fianchetto": ["d4", "Nf6", "c4", "g6", "Nf3", "Bg7", "g3", "O-O", "Bg2", "d6"],
+    "King's Indian Defense Four Pawns Attack": ["d4", "Nf6", "c4", "g6", "e4", "d6", "f4"],
+    "King's Indian Defense Saemisch": ["d4", "Nf6", "c4", "g6", "Nc3", "Bg7", "f3"],
+    
+    "Nimzo-Indian Defense Main Line": ["d4", "Nf6", "c4", "e6", "Nc3", "Bb4", "e3", "O-O", "Bd3", "d5", "Nf3", "c5", "O-O", "Nc6", "a3", "Bxc3"],
+    "Nimzo-Indian Defense Rubinstein": ["d4", "Nf6", "c4", "e6", "Nc3", "Bb4", "e3", "O-O", "Bd3", "d5", "Nf3"],
+    "Nimzo-Indian Defense Classical": ["d4", "Nf6", "c4", "e6", "Nc3", "Bb4", "Qc2", "O-O", "a3", "Bxc3", "Qxc3", "d5"],
+    "Nimzo-Indian Defense Leningrad": ["d4", "Nf6", "c4", "e6", "Nc3", "Bb4", "Bg5", "h6", "Bh4", "c5"],
+    "Nimzo-Indian Defense Fischer Variation": ["d4", "Nf6", "c4", "e6", "Nc3", "Bb4", "Qc2", "O-O", "a3", "Bxc3", "Qxc3", "d5"],
+    
+    "Slav Defense Main Line": ["d4", "d5", "c4", "c6", "Nf3", "Nf6", "Nc3", "dxc4", "a4", "Bf5", "e3", "e6", "Bxc4", "Bb4", "O-O", "O-O"],
+    "Slav Defense Exchange": ["d4", "d5", "c4", "c6", "cxd5", "cxd5"],
+    "Slav Defense Chebanenko": ["d4", "d5", "c4", "c6", "Nf3", "a6"],
+    "Slav Defense Moran Defense": ["d4", "d5", "c4", "c6", "Nf3"],
+    "Slav Defense Schlechter": ["d4", "d5", "c4", "c6", "Nf3", "e6", "Nbd7"],
+    
+    "English Opening Main Line": ["c4", "e5", "Nc3", "Nc6", "g3", "g6", "Bg2", "Bg7", "d3", "d6", "e4", "Be6", "Nge2", "Qd7"],
+    "English Opening Symmetrical": ["c4", "c5", "g3", "g6"],
+    "English Opening Reversed Sicilian": ["c4", "e5", "Nf3", "Nc6"],
+    "English Opening Botvinnik": ["c4", "g3"],
+    "English Opening Four Knights": ["c4", "e5", "Nc3", "Nc6", "Nf3"],
+    
+    "Reti Opening Main Line": ["Nf3", "d5", "c4", "c6", "g3", "Nf6", "Bg2", "Bf5", "O-O", "e6", "d3", "h6", "Nc3", "Be7", "Re1", "O-O"],
+    "Reti Opening King's Indian Attack": ["Nf3", "d5", "g3", "Bg4", "d3", "Nd7", "Nbd2", "Ngf6"],
+    "Reti Opening Closed": ["Nf3", "c4", "c6", "d4"],
+    "Reti Opening English Variation": ["c4", "Nf6", "Nf3", "c5"],
+    "Reti Opening Catalan": ["Nf3", "d5", "g3", "e6", "Bg2"],
+    
+    "London System Main Line": ["d4", "d5", "Nf3", "Nf6", "Bf4", "e6", "e3", "c5", "c3", "Nc6", "Nbd2", "Bd6", "Bg3", "O-O", "Bd3", "b6"],
+    "London System Accelerated": ["d4", "Bf4"],
+    "London System Jobava": ["d4", "d5", "Nc3", "Nf6", "Bf4"],
+    "London System Barry Attack": ["d4", "Nf6", "Nc3", "e6", "Bf4"],
+    "London System Colle System": ["d4", "Nf3", "e6", "e3"],
+    
+    "Scandinavian Defense Main Line": ["e4", "d5", "exd5", "Qxd5", "Nc3", "Qa5", "d4", "c6", "Nf3", "Bg4", "Be2", "e6", "O-O", "Nd7", "h3", "Bh5"],
+    "Scandinavian Defense Modern": ["e4", "d5", "d4"],
+    "Scandinavian Defense Portuguese": ["e4", "d5", "Nf3"],
+    "Scandinavian Defense Classical": ["e4", "d5", "exd5", "Qxd5", "Nc3", "Qa5", "d4", "Nf6"],
+    "Scandinavian Defense Patzer": ["e4", "d5", "Qe2"],
+    
+    "Pirc Defense Main Line": ["e4", "d6", "d4", "Nf6", "Nc3", "g6", "Be2", "Bg7", "Be3", "O-O", "Qd2", "c6", "Bh6", "b5"],
+    "Pirc Defense Austrian Attack": ["e4", "d6", "d4", "Nf6", "Nc3", "g6", "f4"],
+    "Pirc Defense Classical": ["e4", "d6", "d4", "Nf6", "Nc3", "g6", "Nf3", "Bg7", "Be2", "O-O", "O-O", "c6"],
+    "Pirc Defense 150 Attack": ["e4", "d6", "d4", "Nf6", "Nc3", "g6", "Be3", "Bg7", "Qd2", "O-O", "O-O-O"],
+    "Pirc Defense Byrne": ["e4", "d6", "d4", "Nf6", "Nc3", "g6", "Bg5", "Bg7", "Qd2", "h6", "Be3"]
 }
 
-def evaluate_board(board_str, is_white):
+
+def evaluate_board(board_str):
     score = 0
     rows = board_str.split("\n")
     for y, row in enumerate(rows):
@@ -983,7 +956,7 @@ def evaluate_board(board_str, is_white):
                 else:
                     pst_value = pst[char.upper()][y * 8 + x]
                     score += piece_value + pst_value
-    return score if is_white else -score
+    return score
 
 def get_all_valid_moves(board, is_white):
     moves = []
@@ -998,7 +971,7 @@ def get_all_valid_moves(board, is_white):
 
 def minimax(board_str, depth, is_maximizing_player, alpha, beta):
     if depth == 0:
-        evaluation = evaluate_board(board_str, not is_maximizing_player)
+        evaluation = evaluate_board(board_str)
         return evaluation, None
 
     best_move = None
