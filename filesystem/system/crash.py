@@ -6,7 +6,7 @@ engine.fps_limit(60)
 
 font = FontResource("/assets/outrunner_outline.bmp")
 
-error_text = Text2DNode(font=font, text="ERROR: Something\nwent wrong\nwhen executing\nthe game...", line_spacing=1)
+error_text = Text2DNode(font=font, text="ERROR: Something\nwent wrong\nwhen executing\nprogram...", line_spacing=1)
 
 camera = CameraNode()
 

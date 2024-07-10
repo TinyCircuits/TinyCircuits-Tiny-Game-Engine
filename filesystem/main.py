@@ -9,7 +9,6 @@ from system.util import file_exists, dirname, thumby_reset
 
 try:
 
-    execfile("system/hw_init.py")
     run_on_boot = get_run_on_boot()
     # Allow running an app by command line.
     if not run_on_boot and len(sys.argv) >= 2:

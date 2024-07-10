@@ -5,6 +5,7 @@ from engine_resources import TextureResource
 from engine_animation import Tween, Delay, ONE_SHOT, EASE_ELAST_OUT
 from engine_math import Vector2
 import random
+import time
 
 engine.fps_limit(60)
 
@@ -46,20 +47,25 @@ def splash():
     R_sprite = Sprite2DNode(texture=R_texture, position=Vector2(52, -100), transparent_color = engine_draw.black)
     R_tween = Tween()
 
-    T_tween.start(T_sprite, "position", None, Vector2(-53, 0), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
-    h_tween.start(h_sprite, "position", None, Vector2(-44, 0), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
-    u_tween.start(u_sprite, "position", None, Vector2(-34, 2), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
-    m_tween.start(m_sprite, "position", None, Vector2(-24, 2), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
-    b_tween.start(b_sprite, "position", None, Vector2(-13, 0), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
-    y_tween.start(y_sprite, "position", None, Vector2(-4, 4), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
-    C_tween.start(C_sprite, "position", None, Vector2(10, 0), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
-    GO_tween.start(GO_sprite, "position", None, Vector2(21, 0), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
-    L_tween.start(L_sprite, "position", None, Vector2(31, 0), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
-    RO_tween.start(RO_sprite, "position", None, Vector2(41, 0), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
-    R_tween.start(R_sprite, "position", None, Vector2(52, -1), random.uniform(2000.0, 2400.0), 1.0, ONE_SHOT, EASE_ELAST_OUT)
+    time_min = 1800
+    time_max = 2200
+    T_tween.start(T_sprite, "position", None, Vector2(-53, 0), random.uniform(time_min, time_max), 1.0, ONE_SHOT, EASE_ELAST_OUT)
+    h_tween.start(h_sprite, "position", None, Vector2(-44, 0), random.uniform(time_min, time_max), 1.0, ONE_SHOT, EASE_ELAST_OUT)
+    u_tween.start(u_sprite, "position", None, Vector2(-34, 2), random.uniform(time_min, time_max), 1.0, ONE_SHOT, EASE_ELAST_OUT)
+    m_tween.start(m_sprite, "position", None, Vector2(-24, 2), random.uniform(time_min, time_max), 1.0, ONE_SHOT, EASE_ELAST_OUT)
+    b_tween.start(b_sprite, "position", None, Vector2(-13, 0), random.uniform(time_min, time_max), 1.0, ONE_SHOT, EASE_ELAST_OUT)
+    y_tween.start(y_sprite, "position", None, Vector2(-4, 4), random.uniform(time_min, time_max), 1.0, ONE_SHOT, EASE_ELAST_OUT)
+    C_tween.start(C_sprite, "position", None, Vector2(10, 0), random.uniform(time_min, time_max), 1.0, ONE_SHOT, EASE_ELAST_OUT)
+    GO_tween.start(GO_sprite, "position", None, Vector2(21, 0), random.uniform(time_min, time_max), 1.0, ONE_SHOT, EASE_ELAST_OUT)
+    L_tween.start(L_sprite, "position", None, Vector2(31, 0), random.uniform(time_min, time_max), 1.0, ONE_SHOT, EASE_ELAST_OUT)
+    RO_tween.start(RO_sprite, "position", None, Vector2(41, 0), random.uniform(time_min, time_max), 1.0, ONE_SHOT, EASE_ELAST_OUT)
+    R_tween.start(R_sprite, "position", None, Vector2(52, -1), random.uniform(time_min, time_max), 1.0, ONE_SHOT, EASE_ELAST_OUT)
 
-    while not T_tween.finished:
-        engine.tick()
+    t0 = time.ticks_ms()
+    while True:
+        if engine.tick():
+            if time.ticks_diff(time.ticks_ms(), t0) >= time_max:
+                break
 
     T_tween.pause()
     h_tween.pause()

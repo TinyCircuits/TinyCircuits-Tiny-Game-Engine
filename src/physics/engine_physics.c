@@ -54,12 +54,12 @@ void engine_physics_apply_impulses(float dt, float alpha){
             vector2_class_obj_t *physics_node_position = physics_node_base->position;
             vector2_class_obj_t *physics_node_gravity_scale = physics_node_base->gravity_scale;
 
-            // // Position correction
-            // physics_node_position->x.value += physics_node_base->total_position_correction_x;
-            // physics_node_position->y.value += physics_node_base->total_position_correction_y;
+            // Position correction
+            physics_node_position->x.value += physics_node_base->total_position_correction_x;
+            physics_node_position->y.value += physics_node_base->total_position_correction_y;
 
-            // physics_node_base->total_position_correction_x = 0.0f;
-            // physics_node_base->total_position_correction_y = 0.0f;
+            physics_node_base->total_position_correction_x = 0.0f;
+            physics_node_base->total_position_correction_y = 0.0f;
 
             // Gravity: https://github.com/RandyGaul/ImpulseEngine/blob/8d5f4d9113876f91a53cfb967879406e975263d1/Scene.cpp#L35-L42
             //          https://github.com/victorfisac/Physac/blob/29d9fc06860b54571a02402fff6fa8572d19bd12/src/physac.h#L1644-L1648
@@ -225,7 +225,7 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
         float separate_impulse_y = 0.0f;
 
         if(contact.collision_normal_penetration > slop){
-            float separate_impulse_j = -contact.collision_normal_penetration * 0.2f;
+            float separate_impulse_j = -contact.collision_normal_penetration * 0.03f;
 
             separate_impulse_x = separate_impulse_j * contact.collision_normal_x;
             separate_impulse_y = separate_impulse_j * contact.collision_normal_y;
@@ -233,14 +233,22 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
 
         // Apply impulses to linear/positional velocity
         if(physics_node_a_solid && physics_node_b_solid){
+            float correction_ratio = 0.7f * contact.collision_normal_penetration / inv_mass_sum;
+
             if(physics_node_a_dynamic){
-                physics_node_a_velocity->x.value -= (physics_node_base_a->inverse_mass * collision_impulse_x) + (separate_impulse_x);
-                physics_node_a_velocity->y.value -= (physics_node_base_a->inverse_mass * collision_impulse_y) + (separate_impulse_y);
+                physics_node_base_a->total_position_correction_x += contact.collision_normal_x * correction_ratio * physics_node_base_a->inverse_mass;
+                physics_node_base_a->total_position_correction_y += contact.collision_normal_y * correction_ratio * physics_node_base_a->inverse_mass;
+
+                physics_node_a_velocity->x.value -= physics_node_base_a->inverse_mass * (collision_impulse_x + separate_impulse_x);
+                physics_node_a_velocity->y.value -= physics_node_base_a->inverse_mass * (collision_impulse_y + separate_impulse_y);
             }
 
             if(physics_node_b_dynamic){
-                physics_node_b_velocity->x.value += (physics_node_base_b->inverse_mass * collision_impulse_x) + (separate_impulse_x);
-                physics_node_b_velocity->y.value += (physics_node_base_b->inverse_mass * collision_impulse_y) + (separate_impulse_y);
+                physics_node_base_b->total_position_correction_x -= contact.collision_normal_x * correction_ratio * physics_node_base_b->inverse_mass;
+                physics_node_base_b->total_position_correction_y -= contact.collision_normal_y * correction_ratio * physics_node_base_b->inverse_mass;
+
+                physics_node_b_velocity->x.value += physics_node_base_b->inverse_mass * (collision_impulse_x + separate_impulse_x);
+                physics_node_b_velocity->y.value += physics_node_base_b->inverse_mass * (collision_impulse_y + separate_impulse_y);
             }
         }
 
