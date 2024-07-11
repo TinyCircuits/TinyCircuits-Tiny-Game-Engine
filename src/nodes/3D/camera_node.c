@@ -225,12 +225,9 @@ static mp_attr_fun_t camera_node_class_attr(mp_obj_t self_in, qstr attribute, mp
     ATTR:  [type=function]                       [name={ref_link:add_child}]                        [value=function] 
     ATTR:  [type=function]                       [name={ref_link:get_child}]                        [value=function]
     ATTR:  [type=function]                       [name={ref_link:get_child_count}]                  [value=function]
-    ATTR:  [type=function]                       [name={ref_link:node_base_mark_destroy}]                [value=function]
-    ATTR:  [type=function]                       [name={ref_link:node_base_mark_destroy_all}]            [value=function]
-    ATTR:  [type=function]                       [name={ref_link:node_base_mark_destroy_children}]       [value=function]
-    ATTR:  [type=function]                       [name={ref_link:remove_child}]                     [value=function]
-    ATTR:  [type=function]                       [name={ref_link:set_layer}]                        [value=function]
-    ATTR:  [type=function]                       [name={ref_link:get_layer}]                        [value=function]
+    ATTR:  [type=function]                       [name={ref_link:node_base_mark_destroy}]           [value=function]
+    ATTR:  [type=function]                       [name={ref_link:node_base_mark_destroy_all}]       [value=function]
+    ATTR:  [type=function]                       [name={ref_link:node_base_mark_destroy_children}]  [value=function]
     ATTR:  [type=function]                       [name={ref_link:remove_child}]                     [value=function]
     ATTR:  [type=function]                       [name={ref_link:tick}]                             [value=function]
     ATTR:  [type={ref_link:Vector3}]             [name=position]                                    [value={ref_link:Vector3}]
@@ -239,6 +236,7 @@ static mp_attr_fun_t camera_node_class_attr(mp_obj_t self_in, qstr attribute, mp
     ATTR:  [type={ref_link:Rectangle}]           [name=viewport]                                    [value={ref_link:Rectangle} (not used currently, TODO)]
     ATTR:  [type=float]                          [name=fov]                                         [value=any (sets the field fo view for rendering some nodes, not all nodes use this)]
     ATTR:  [type=float]                          [name=view_distance]                               [value=any (sets the view distance for some nodes, not all nodes use this)]
+    ATTR:  [type=int]                            [name=layer]                                       [value=0 ~ 127]
     OVRR:  [type=function]                       [name={ref_link:tick}]                             [value=function]
 */
 mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){

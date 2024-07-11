@@ -422,12 +422,9 @@ static mp_attr_fun_t voxelspace_node_class_attr(mp_obj_t self_in, qstr attribute
     ATTR:   [type=function]                   [name={ref_link:add_child}]                       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_child}]                       [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_child_count}]                 [value=function]
-    ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy}]               [value=function]
-    ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy_all}]           [value=function]
-    ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy_children}]      [value=function]
-    ATTR:   [type=function]                   [name={ref_link:remove_child}]                    [value=function]
-    ATTR:   [type=function]                   [name={ref_link:set_layer}]                       [value=function]
-    ATTR:   [type=function]                   [name={ref_link:get_layer}]                       [value=function]
+    ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy}]          [value=function]
+    ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy_all}]      [value=function]
+    ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy_children}] [value=function]
     ATTR:   [type=function]                   [name={ref_link:remove_child}]                    [value=function]
     ATTR:   [type=function]                   [name={ref_link:tick}]                            [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_abs_height}]                  [value=function]
@@ -441,6 +438,7 @@ static mp_attr_fun_t voxelspace_node_class_attr(mp_obj_t self_in, qstr attribute
     ATTR:   [type=float]                      [name=lod]                                        [value=any (stand for Level Of Detail and affects the quality/number of samples as the view is rendered at further and further distances, default: 0.0085)]
     ATTR:   [type=float]                      [name=curvature]                                  [value=any (radians, defines how much the terrain curves as the render distance increases, default: 0.0)]
     ATTR:   [type=float]                      [name=thickness]                                  [value=any (defines how thick the terrain should look if you can see its sides, default: 128.0)]
+    ATTR:   [type=int]                        [name=layer]                                      [value=0 ~ 127]
     OVRR:   [type=function]                   [name={ref_link:tick}]                            [value=function]
 */
 mp_obj_t voxelspace_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
