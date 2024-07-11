@@ -279,6 +279,7 @@ static mp_attr_fun_t line_2d_node_class_attr(mp_obj_t self_in, qstr attribute, m
     PARAM:  [type={ref_link:Color}|int (RGB565)]    [name=color]                                        [value=color]
     PARAM:  [type=float]                            [name=opacity]                                      [value=0 ~ 1.0]
     PARAM:  [type=bool]                             [name=outline]                                      [value=True or False]
+    PARAM:  [type=int]                              [name=layer]                                        [value=0 ~ 127]
     ATTR:   [type=function]                         [name={ref_link:add_child}]                         [value=function]
     ATTR:   [type=function]                         [name={ref_link:get_child}]                         [value=function]
     ATTR:   [type=function]                         [name={ref_link:get_child_count}]                   [value=function]
@@ -300,17 +301,18 @@ static mp_attr_fun_t line_2d_node_class_attr(mp_obj_t self_in, qstr attribute, m
 mp_obj_t line_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Line2DNode");
 
-    static const mp_arg_t allowed_args[] = {
+    mp_arg_t allowed_args[] = {
         { MP_QSTR_child_class,  MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_start,        MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_end,          MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_thickness,    MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_color,        MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_opacity,      MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_outline,      MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_start,        MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(-5.0f)})} },
+        { MP_QSTR_end,          MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(5.0f)})} },
+        { MP_QSTR_thickness,    MP_ARG_OBJ, {.u_obj = mp_obj_new_float(1.0f)} },
+        { MP_QSTR_color,        MP_ARG_OBJ, {.u_obj = MP_OBJ_NEW_SMALL_INT(0xffff)} },
+        { MP_QSTR_opacity,      MP_ARG_OBJ, {.u_obj = mp_obj_new_float(1.0f)} },
+        { MP_QSTR_outline,      MP_ARG_OBJ, {.u_obj = mp_obj_new_bool(false)} },
+        { MP_QSTR_layer,        MP_ARG_INT, {.u_int = 0} }
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
-    enum arg_ids {child_class, start, end, thickness, color, opacity, outline};
+    enum arg_ids {child_class, start, end, thickness, color, opacity, outline, layer};
     bool inherited = false;
 
     // If there is one positional argument and it isn't the first
@@ -330,16 +332,9 @@ mp_obj_t line_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
         inherited = false;
     }
 
-    if(parsed_args[start].u_obj == MP_OBJ_NULL) parsed_args[start].u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(-5.0f)});
-    if(parsed_args[end].u_obj == MP_OBJ_NULL) parsed_args[end].u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(5.0f)});
-    if(parsed_args[thickness].u_obj == MP_OBJ_NULL) parsed_args[thickness].u_obj = mp_obj_new_float(1.0f);
-    if(parsed_args[color].u_obj == MP_OBJ_NULL) parsed_args[color].u_obj = MP_OBJ_NEW_SMALL_INT(0xffff);
-    if(parsed_args[opacity].u_obj == MP_OBJ_NULL) parsed_args[opacity].u_obj = mp_obj_new_float(1.0f);
-    if(parsed_args[outline].u_obj == MP_OBJ_NULL) parsed_args[outline].u_obj = mp_obj_new_bool(false);
-
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = mp_obj_malloc_with_finaliser(engine_node_base_t, &engine_line_2d_node_class_type);
-    node_base_init(node_base, &engine_line_2d_node_class_type, NODE_TYPE_LINE_2D);
+    node_base_init(node_base, &engine_line_2d_node_class_type, NODE_TYPE_LINE_2D, parsed_args[layer].u_int);
 
     engine_line_2d_node_class_obj_t *line_2d_node = m_malloc(sizeof(engine_line_2d_node_class_obj_t));
     node_base->node = line_2d_node;

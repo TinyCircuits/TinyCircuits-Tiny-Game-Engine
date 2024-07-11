@@ -26,7 +26,7 @@ typedef struct{
 }engine_node_base_t;
 
 
-void node_base_init(engine_node_base_t *node_base, const mp_obj_type_t *mp_type, uint8_t node_type);
+void node_base_init(engine_node_base_t *node_base, const mp_obj_type_t *mp_type, uint8_t node_type, uint8_t layer);
 bool node_base_is_visible(engine_node_base_t *node_base);
 void node_base_set_if_visible(engine_node_base_t *node_base, bool is_visible);
 bool node_base_is_disabled(engine_node_base_t *node_base);

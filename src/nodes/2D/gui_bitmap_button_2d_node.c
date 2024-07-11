@@ -491,6 +491,7 @@ static mp_attr_fun_t gui_bitmap_button_2d_node_class_attr(mp_obj_t self_in, qstr
 
     PARAM:  [type=float]                      [name=letter_spacing]                                 [value=any]
     PARAM:  [type=float]                      [name=line_spacing]                                   [value=any]
+    PARAM:  [type=int]                        [name=layer]                                          [value=0 ~ 127]
 
 
     ATTR:   [type=function]                   [name={ref_link:add_child}]                           [value=function]
@@ -550,29 +551,30 @@ static mp_attr_fun_t gui_bitmap_button_2d_node_class_attr(mp_obj_t self_in, qstr
 mp_obj_t gui_bitmap_button_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New GUIBitmapButton2DNode");
 
-    static const mp_arg_t allowed_args[] = {
-        { MP_QSTR_child_class,                  MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_position,                     MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_font,                         MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_text,                         MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+    mp_arg_t allowed_args[] = {
+        { MP_QSTR_child_class,          MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_position,             MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(0.0f)})} },
+        { MP_QSTR_font,                 MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_text,                 MP_ARG_OBJ, {.u_obj = mp_const_none} },
 
-        { MP_QSTR_text_color,                   MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_focused_text_color,           MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_pressed_text_color,           MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_text_color,           MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_focused_text_color,   MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_pressed_text_color,   MP_ARG_OBJ, {.u_obj = mp_const_none} },
 
-        { MP_QSTR_bitmap,                       MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_focused_bitmap,               MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_pressed_bitmap,               MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_bitmap,               MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_focused_bitmap,       MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_pressed_bitmap,       MP_ARG_OBJ, {.u_obj = mp_const_none} },
 
-        { MP_QSTR_transparent_color,    MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_transparent_color,    MP_ARG_OBJ, {.u_obj = MP_OBJ_NEW_SMALL_INT(ENGINE_NO_TRANSPARENCY_COLOR)} },
 
-        { MP_QSTR_rotation,                     MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_scale,                        MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_text_scale,                   MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_opacity,                      MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_rotation,             MP_ARG_OBJ, {.u_obj = mp_obj_new_float(0.0f)} },
+        { MP_QSTR_scale,                MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)})} },
+        { MP_QSTR_text_scale,           MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)})} },
+        { MP_QSTR_opacity,              MP_ARG_OBJ, {.u_obj = mp_obj_new_float(1.0f)} },
 
-        { MP_QSTR_letter_spacing,       MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_line_spacing,         MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} }
+        { MP_QSTR_letter_spacing,       MP_ARG_OBJ, {.u_obj = mp_obj_new_float(0.0f)} },
+        { MP_QSTR_line_spacing,         MP_ARG_OBJ, {.u_obj = mp_obj_new_float(0.0f)} },
+        { MP_QSTR_layer,                MP_ARG_INT, {.u_int = 0} }
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
     enum arg_ids {child_class, position, font, text,
@@ -590,7 +592,9 @@ mp_obj_t gui_bitmap_button_2d_node_class_new(const mp_obj_type_t *type, size_t n
                   rotation, scale, text_scale, opacity,
 
                   letter_spacing,
-                  line_spacing};
+                  line_spacing,
+                  
+                  layer};
 
     bool inherited = false;
 
@@ -611,31 +615,9 @@ mp_obj_t gui_bitmap_button_2d_node_class_new(const mp_obj_type_t *type, size_t n
         inherited = false;
     }
 
-    if(parsed_args[position].u_obj == MP_OBJ_NULL) parsed_args[position].u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(0.0f)});
-    if(parsed_args[font].u_obj == MP_OBJ_NULL) parsed_args[font].u_obj = mp_const_none;
-    if(parsed_args[text].u_obj == MP_OBJ_NULL) parsed_args[text].u_obj = mp_const_none;
-
-    if(parsed_args[text_color].u_obj == MP_OBJ_NULL) parsed_args[text_color].u_obj = mp_const_none;
-    if(parsed_args[focused_text_color].u_obj == MP_OBJ_NULL) parsed_args[focused_text_color].u_obj = mp_const_none;
-    if(parsed_args[pressed_text_color].u_obj == MP_OBJ_NULL) parsed_args[pressed_text_color].u_obj = mp_const_none;
-
-    if(parsed_args[bitmap].u_obj == MP_OBJ_NULL) parsed_args[bitmap].u_obj = mp_const_none;
-    if(parsed_args[focused_bitmap].u_obj == MP_OBJ_NULL) parsed_args[focused_bitmap].u_obj = mp_const_none;
-    if(parsed_args[pressed_bitmap].u_obj == MP_OBJ_NULL) parsed_args[pressed_bitmap].u_obj = mp_const_none;
-
-    if(parsed_args[transparent_color].u_obj == MP_OBJ_NULL) parsed_args[transparent_color].u_obj = MP_OBJ_NEW_SMALL_INT(ENGINE_NO_TRANSPARENCY_COLOR);
-
-    if(parsed_args[rotation].u_obj == MP_OBJ_NULL) parsed_args[rotation].u_obj = mp_obj_new_float(0.0f);
-    if(parsed_args[scale].u_obj == MP_OBJ_NULL) parsed_args[scale].u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)});
-    if(parsed_args[text_scale].u_obj == MP_OBJ_NULL) parsed_args[text_scale].u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)});
-    if(parsed_args[opacity].u_obj == MP_OBJ_NULL) parsed_args[opacity].u_obj = mp_obj_new_float(1.0f);
-
-    if(parsed_args[letter_spacing].u_obj == MP_OBJ_NULL) parsed_args[letter_spacing].u_obj = mp_obj_new_float(0.0f);
-    if(parsed_args[line_spacing].u_obj == MP_OBJ_NULL) parsed_args[line_spacing].u_obj = mp_obj_new_float(0.0f);
-
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = mp_obj_malloc_with_finaliser(engine_node_base_t, &engine_gui_bitmap_button_2d_node_class_type);
-    node_base_init(node_base, &engine_gui_bitmap_button_2d_node_class_type, NODE_TYPE_GUI_BITMAP_BUTTON_2D);
+    node_base_init(node_base, &engine_gui_bitmap_button_2d_node_class_type, NODE_TYPE_GUI_BITMAP_BUTTON_2D, parsed_args[layer].u_int);
     engine_gui_bitmap_button_2d_node_class_obj_t *gui_bitmap_button_2d_node = m_malloc(sizeof(engine_gui_bitmap_button_2d_node_class_obj_t));
     node_base->node = gui_bitmap_button_2d_node;
     node_base->attr_accessor = node_base;

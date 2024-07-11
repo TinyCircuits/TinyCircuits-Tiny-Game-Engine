@@ -54,6 +54,7 @@ static mp_attr_fun_t empty_node_class_attr(mp_obj_t self_in, qstr attribute, mp_
     DESC: Node that does nothing except expose overrides for user implementation
     PARAM: [type={ref_link:Vector3}]     [name=position]                                    [value={ref_link:Vector3}]
     PARAM: [type={ref_link:Vector3}]     [name=rotation]                                    [value={ref_link:Vector3}]
+    PARAM: [type=int]                    [name=layer]                                       [value=0 ~ 127]
     ATTR:  [type=function]               [name={ref_link:add_child}]                        [value=function] 
     ATTR:  [type=function]               [name={ref_link:get_child}]                        [value=function]
     ATTR:  [type=function]               [name={ref_link:get_child_count}]                  [value=function]
@@ -70,13 +71,14 @@ static mp_attr_fun_t empty_node_class_attr(mp_obj_t self_in, qstr attribute, mp_
 static mp_obj_t empty_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New EmptyNode");
 
-    static const mp_arg_t allowed_args[] = {
-        { MP_QSTR_child_class,                  MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_position,                     MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_rotation,                     MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+    mp_arg_t allowed_args[] = {
+        { MP_QSTR_child_class,  MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_position,     MP_ARG_OBJ, {.u_obj = vector3_class_new(&vector3_class_type, 3, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(0.0f), mp_obj_new_float(0.0f)})} },
+        { MP_QSTR_rotation,     MP_ARG_OBJ, {.u_obj = vector3_class_new(&vector3_class_type, 3, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(0.0f), mp_obj_new_float(0.0f)})} },
+        { MP_QSTR_layer,        MP_ARG_INT, {.u_int = 0} }
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
-    enum arg_ids {child_class, position, rotation};
+    enum arg_ids {child_class, position, rotation, layer};
 
     // bool inherited = false;
 
@@ -97,13 +99,9 @@ static mp_obj_t empty_node_class_new(const mp_obj_type_t *type, size_t n_args, s
         // inherited = false;
     }
 
-    if(parsed_args[position].u_obj == MP_OBJ_NULL) parsed_args[position].u_obj = vector3_class_new(&vector3_class_type, 3, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(0.0f), mp_obj_new_float(0.0f)});
-    if(parsed_args[rotation].u_obj == MP_OBJ_NULL) parsed_args[rotation].u_obj = vector3_class_new(&vector3_class_type, 3, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(0.0f), mp_obj_new_float(0.0f)});
-
-
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = mp_obj_malloc_with_finaliser(engine_node_base_t, &engine_empty_node_class_type);
-    node_base_init(node_base, &engine_empty_node_class_type, NODE_TYPE_EMPTY);
+    node_base_init(node_base, &engine_empty_node_class_type, NODE_TYPE_EMPTY, parsed_args[layer].u_int);
     engine_empty_node_class_obj_t *empty_node = m_malloc(sizeof(engine_empty_node_class_obj_t));
     node_base->node = empty_node;
     node_base->attr_accessor = node_base;

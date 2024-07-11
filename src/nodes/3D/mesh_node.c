@@ -190,6 +190,7 @@ static mp_attr_fun_t mesh_node_class_attr(mp_obj_t self_in, qstr attribute, mp_o
     DESC: Node that renders a list of vertices (without indices)
     PARAM: [type={ref_link:Vector3}]             [name=position]                                    [value={ref_link:Vector3}]
     PARAM: [type=list]                           [name=vertices]                                    [value=list of {ref_link:Vector3}]
+    PARAM:  [type=int]                           [name=layer]                                       [value=0 ~ 127]
     ATTR:  [type=function]                       [name={ref_link:add_child}]                        [value=function] 
     ATTR:  [type=function]                       [name={ref_link:get_child}]                        [value=function]
     ATTR:  [type=function]                       [name={ref_link:get_child_count}]                  [value=function]
@@ -204,19 +205,19 @@ static mp_attr_fun_t mesh_node_class_attr(mp_obj_t self_in, qstr attribute, mp_o
     OVRR:  [type=function]                       [name={ref_link:tick}]                             [value=function]
 */
 mp_obj_t mesh_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
-
+    ENGINE_INFO_PRINTF("New MeshNode");
+    
     // This node uses a depth buffer to be drawn correctly
     engine_display_check_depth_buffer_created();
 
-    ENGINE_INFO_PRINTF("New MeshNode");
-
-    static const mp_arg_t allowed_args[] = {
+    mp_arg_t allowed_args[] = {
         { MP_QSTR_child_class,  MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_position,     MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_vertices,     MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_position,     MP_ARG_OBJ, {.u_obj = vector3_class_new(&vector3_class_type, 3, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(0.0f), mp_obj_new_float(0.0f)})} },
+        { MP_QSTR_vertices,     MP_ARG_OBJ, {.u_obj = mp_obj_new_list(0, NULL)} },
+        { MP_QSTR_layer,        MP_ARG_INT, {.u_int = 0} }
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
-    enum arg_ids {child_class, position, vertices};
+    enum arg_ids {child_class, position, vertices, layer};
     bool inherited = false;
 
     // If there is one positional argument and it isn't the first 
@@ -236,12 +237,9 @@ mp_obj_t mesh_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_
         inherited = false;
     }
 
-    if(parsed_args[position].u_obj == MP_OBJ_NULL) parsed_args[position].u_obj = vector3_class_new(&vector3_class_type, 3, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(0.0f), mp_obj_new_float(0.0f)});
-    if(parsed_args[vertices].u_obj == MP_OBJ_NULL) parsed_args[vertices].u_obj = mp_obj_new_list(0, NULL);
-
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = mp_obj_malloc_with_finaliser(engine_node_base_t, &engine_mesh_node_class_type);
-    node_base_init(node_base, &engine_mesh_node_class_type, NODE_TYPE_MESH_3D);
+    node_base_init(node_base, &engine_mesh_node_class_type, NODE_TYPE_MESH_3D, parsed_args[layer].u_int);
 
     engine_mesh_node_class_obj_t *mesh_node = m_malloc(sizeof(engine_mesh_node_class_obj_t));
     node_base->node = mesh_node;

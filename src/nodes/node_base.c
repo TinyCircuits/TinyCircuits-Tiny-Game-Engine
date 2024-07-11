@@ -29,9 +29,9 @@
 void (*default_instance_attr_func)(mp_obj_t self_in, qstr attribute, mp_obj_t *destination) = NULL;
 
 
-void node_base_init(engine_node_base_t *node_base, const mp_obj_type_t *mp_type, uint8_t node_type){
+void node_base_init(engine_node_base_t *node_base, const mp_obj_type_t *mp_type, uint8_t node_type, uint8_t layer){
     node_base->base.type = mp_type;
-    node_base->layer = 0;
+    node_base->layer = layer;
     node_base->type = node_type;
     node_base->object_list_node = engine_add_object_to_layer(node_base, node_base->layer);
     node_base->deletable_list_node = NULL;

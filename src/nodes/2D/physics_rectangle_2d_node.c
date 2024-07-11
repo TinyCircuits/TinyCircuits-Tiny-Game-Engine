@@ -344,6 +344,7 @@ static mp_attr_fun_t physics_rectangle_2d_node_class_attr(mp_obj_t self_in, qstr
     PARAM: [type=boolean]                                [name=outline]                                     [value=True or False (default: False)]
     PARAM: [type={ref_link:Color}]                       [name=outline_color]                               [value={ref_link:Color}]
     PARAM: [type=int]                                    [name=collision_mask]                              [value=32-bit bitmask (nodes with the same true bits will collide, set to 1 by default)]
+    PARAM: [type=int]                                    [name=layer]                                       [value=0 ~ 127]
     ATTR:  [type=function]                               [name={ref_link:add_child}]                        [value=function]
     ATTR:  [type=function]                               [name={ref_link:get_child}]                        [value=function]
     ATTR:  [type=function]                               [name={ref_link:get_child_count}]                  [value=function]
@@ -379,26 +380,27 @@ static mp_attr_fun_t physics_rectangle_2d_node_class_attr(mp_obj_t self_in, qstr
 mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New PhysicsRectangle2DNode");
 
-    static const mp_arg_t allowed_args[] = {
+    mp_arg_t allowed_args[] = {
         { MP_QSTR_child_class,      MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_position,         MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_width,            MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_height,           MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_velocity,         MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_angular_velocity, MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_rotation,         MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_density,          MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_friction,         MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_bounciness,       MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_dynamic,          MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_solid,            MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_gravity_scale,    MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_outline,          MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_outline_color,    MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_collision_mask,   MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_position,         MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL)} },
+        { MP_QSTR_width,            MP_ARG_OBJ, {.u_obj = mp_obj_new_float(10.0f)} },
+        { MP_QSTR_height,           MP_ARG_OBJ, {.u_obj = mp_obj_new_float(10.0f)} },
+        { MP_QSTR_velocity,         MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL)} },
+        { MP_QSTR_angular_velocity, MP_ARG_OBJ, {.u_obj = mp_obj_new_float(0.0f)} },
+        { MP_QSTR_rotation,         MP_ARG_OBJ, {.u_obj = mp_obj_new_float(0.0)} },
+        { MP_QSTR_density,          MP_ARG_OBJ, {.u_obj = mp_obj_new_float(1.0f)} },
+        { MP_QSTR_friction,         MP_ARG_OBJ, {.u_obj = mp_obj_new_float(0.1f)} },
+        { MP_QSTR_bounciness,       MP_ARG_OBJ, {.u_obj = mp_obj_new_float(1.0f)} },
+        { MP_QSTR_dynamic,          MP_ARG_OBJ, {.u_obj = mp_obj_new_int(1)} },
+        { MP_QSTR_solid,            MP_ARG_OBJ, {.u_obj = mp_obj_new_int(1)} },
+        { MP_QSTR_gravity_scale,    MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)})} },
+        { MP_QSTR_outline,          MP_ARG_OBJ, {.u_obj = mp_obj_new_int(0)} },
+        { MP_QSTR_outline_color,    MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_collision_mask,   MP_ARG_OBJ, {.u_obj = mp_obj_new_int(1)} },
+        { MP_QSTR_layer,            MP_ARG_INT, {.u_int = 0} }
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
-    enum arg_ids {child_class, position, width, height, velocity, angular_velocity, rotation, density, friction, bounciness, dynamic, solid, gravity_scale, outline, outline_color, collision_mask};
+    enum arg_ids {child_class, position, width, height, velocity, angular_velocity, rotation, density, friction, bounciness, dynamic, solid, gravity_scale, outline, outline_color, collision_mask, layer};
     bool inherited = false;
 
     // If there is one positional argument and it isn't the first
@@ -418,25 +420,9 @@ mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n
         inherited = false;
     }
 
-    if(parsed_args[position].u_obj == MP_OBJ_NULL) parsed_args[position].u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL);
-    if(parsed_args[width].u_obj == MP_OBJ_NULL) parsed_args[width].u_obj = mp_obj_new_float(10.0f);
-    if(parsed_args[height].u_obj == MP_OBJ_NULL) parsed_args[height].u_obj = mp_obj_new_float(10.0f);
-    if(parsed_args[velocity].u_obj == MP_OBJ_NULL) parsed_args[velocity].u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL);
-    if(parsed_args[angular_velocity].u_obj == MP_OBJ_NULL) parsed_args[angular_velocity].u_obj = mp_obj_new_float(0.0f);
-    if(parsed_args[rotation].u_obj == MP_OBJ_NULL) parsed_args[rotation].u_obj = mp_obj_new_float(0.0);
-    if(parsed_args[density].u_obj == MP_OBJ_NULL) parsed_args[density].u_obj = mp_obj_new_float(1.0f);
-    if(parsed_args[friction].u_obj == MP_OBJ_NULL) parsed_args[friction].u_obj = mp_obj_new_float(0.1f);
-    if(parsed_args[bounciness].u_obj == MP_OBJ_NULL) parsed_args[bounciness].u_obj = mp_obj_new_float(1.0f);
-    if(parsed_args[dynamic].u_obj == MP_OBJ_NULL) parsed_args[dynamic].u_obj = mp_obj_new_int(1);
-    if(parsed_args[solid].u_obj == MP_OBJ_NULL) parsed_args[solid].u_obj = mp_obj_new_int(1);
-    if(parsed_args[gravity_scale].u_obj == MP_OBJ_NULL) parsed_args[gravity_scale].u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)});
-    if(parsed_args[outline].u_obj == MP_OBJ_NULL) parsed_args[outline].u_obj = mp_obj_new_int(0);
-    if(parsed_args[outline_color].u_obj == MP_OBJ_NULL) parsed_args[outline_color].u_obj = mp_const_none;
-    if(parsed_args[collision_mask].u_obj == MP_OBJ_NULL) parsed_args[collision_mask].u_obj = mp_obj_new_int(1);
-
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = mp_obj_malloc_with_finaliser(engine_node_base_t, &engine_physics_rectangle_2d_node_class_type);
-    node_base_init(node_base, &engine_physics_rectangle_2d_node_class_type, NODE_TYPE_PHYSICS_RECTANGLE_2D);
+    node_base_init(node_base, &engine_physics_rectangle_2d_node_class_type, NODE_TYPE_PHYSICS_RECTANGLE_2D, parsed_args[layer].u_int);
 
     // Another layer, all physics objects have some data in common,
     // create that plus the specific data structure for this collider
