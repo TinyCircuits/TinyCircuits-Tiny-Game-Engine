@@ -14,9 +14,8 @@ w1 = WaveSoundResource("random.wav")
 w2 = WaveSoundResource("random (1).wav")
 w3 = WaveSoundResource("random (2).wav")
 w4 = WaveSoundResource("random (3).wav")
-w5 = WaveSoundResource("rtttl_blasted.wav")
 
-wavs = [r, w0, w1, w2, w3, w4, w5]
+wavs = [r, w0, w1, w2, w3, w4]
 
 print("Done loading!")
 
@@ -38,5 +37,5 @@ while True:
             engine_audio.play(wavs[c], 0, False)
             c = c + 1
 
-            if c > 6:
+            if c > 5:
                 c = 0

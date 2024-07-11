@@ -128,63 +128,9 @@ bool rectangle_2d_node_load_attr(engine_node_base_t *self_node_base, qstr attrib
     engine_rectangle_2d_node_class_obj_t *self = self_node_base->node;
 
     switch(attribute){
-        case MP_QSTR___del__:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_del_obj);
-            destination[1] = self_node_base;
-            return true;
-        break;
-        case MP_QSTR_mark_destroy:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_mark_destroy_obj);
-            destination[1] = self_node_base;
-            return true;
-        break;
-        case MP_QSTR_mark_destroy_all:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_mark_destroy_all_obj);
-            destination[1] = self_node_base;
-            return true;
-        break;
-        case MP_QSTR_mark_destroy_children:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_mark_destroy_children_obj);
-            destination[1] = self_node_base;
-            return true;
-        break;
-        case MP_QSTR_add_child:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_add_child_obj);
-            destination[1] = self_node_base;
-            return true;
-        break;
-        case MP_QSTR_get_child_count:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_child_count_obj);
-            destination[1] = self_node_base;
-            return true;
-        break;
-        case MP_QSTR_get_child:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_child_obj);
-            destination[1] = self_node_base;
-            return true;
-        break;
-        case MP_QSTR_remove_child:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_remove_child_obj);
-            destination[1] = self_node_base;
-            return true;
-        break;
-        case MP_QSTR_set_layer:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_set_layer_obj);
-            destination[1] = self_node_base;
-            return true;
-        break;
-        case MP_QSTR_get_layer:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_layer_obj);
-            destination[1] = self_node_base;
-            return true;
-        break;
         case MP_QSTR_tick:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_layer_obj);
+            destination[0] = self->tick_cb;
             destination[1] = self_node_base->attr_accessor;
-            return true;
-        break;
-        case MP_QSTR_node_base:
-            destination[0] = self_node_base;
             return true;
         break;
         case MP_QSTR_position:
@@ -275,31 +221,9 @@ bool rectangle_2d_node_store_attr(engine_node_base_t *self_node_base, qstr attri
 
 static mp_attr_fun_t rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing Rectangle2DNode attr");
-
-    // Get the node base from either class
-    // instance or native instance object
-    bool is_obj_instance = false;
-    engine_node_base_t *node_base = node_base_get(self_in, &is_obj_instance);
-
-    // Used for telling if custom load/store functions handled the attr
-    bool attr_handled = false;
-
-    if(destination[0] == MP_OBJ_NULL){          // Load
-        attr_handled = rectangle_2d_node_load_attr(node_base, attribute, destination);
-    }else if(destination[1] != MP_OBJ_NULL){    // Store
-        attr_handled = rectangle_2d_node_store_attr(node_base, attribute, destination);
-
-        // If handled, mark as successful store
-        if(attr_handled) destination[0] = MP_OBJ_NULL;
-    }
-
-    // If this is a Python class instance and the attr was NOT
-    // handled by the above, defer the attr to the instance attr
-    // handler
-    if(is_obj_instance && attr_handled == false){
-        node_base_use_default_attr_handler(self_in, attribute, destination);
-    }
-
+    node_base_attr_handler(self_in, attribute, destination,
+                          (attr_handler_func[]){node_base_load_attr, rectangle_2d_node_load_attr},
+                          (attr_handler_func[]){node_base_store_attr, rectangle_2d_node_store_attr}, 2);
     return mp_const_none;
 }
 
@@ -308,51 +232,51 @@ static mp_attr_fun_t rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribu
     NAME: Rectangle2DNode
     ID: Rectangle2DNode
     DESC: Simple 2D rectangle node
-    PARAM:  [type={ref_link:Vector2}]         [name=position]                                   [value={ref_link:Vector2}]
-    PARAM:  [type=float]                      [name=width]                                      [value=any]
-    PARAM:  [type=float]                      [name=height]                                     [value=any]
-    PARAM:  [type={ref_link:Color}|int (RGB565)]   [name=color]                                 [value=color]
-    PARAM:  [type=float]                      [name=opacity]                                    [value=0 ~ 1.0]
-    PARAM:  [type=bool]                       [name=outline]                                    [value=True or False]
-    PARAM:  [type=float]                      [name=rotation]                                   [value=any (radians)]
-    PARAM:  [type={ref_link:Vector2}]         [name=scale]                                      [value={ref_link:Vector2}]
-    ATTR:   [type=function]                   [name={ref_link:add_child}]                       [value=function]
-    ATTR:   [type=function]                   [name={ref_link:get_child}]                       [value=function]
-    ATTR:   [type=function]                   [name={ref_link:get_child_count}]                 [value=function]
-    ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy}]               [value=function]
-    ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy_all}]           [value=function]
-    ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy_children}]      [value=function]
-    ATTR:   [type=function]                   [name={ref_link:remove_child}]                    [value=function]
-    ATTR:   [type=function]                   [name={ref_link:set_layer}]                       [value=function]
-    ATTR:   [type=function]                   [name={ref_link:get_layer}]                       [value=function]
-    ATTR:   [type=function]                   [name={ref_link:remove_child}]                    [value=function]
-    ATTR:   [type=function]                   [name={ref_link:tick}]                            [value=function]
-    ATTR:   [type={ref_link:Vector2}]         [name=position]                                   [value={ref_link:Vector2}]
-    ATTR:   [type=float]                      [name=width]                                      [value=any]
-    ATTR:   [type=float]                      [name=height]                                     [value=any]
-    ATTR:   [type={ref_link:Color}|int (RGB565)]   [name=color]                                 [value=color]
-    ATTR:   [type=float]                      [name=opacity]                                    [value=0 ~ 1.0]
-    ATTR:   [type=bool]                       [name=outline]                                    [value=True or False]
-    ATTR:   [type=float]                      [name=rotation]                                   [value=any (radians)]
-    ATTR:   [type={ref_link:Vector2}]         [name=scale]                                      [value={ref_link:Vector2}]
-    OVRR:   [type=function]                   [name={ref_link:tick}]                            [value=function]
+    PARAM:  [type={ref_link:Vector2}]               [name=position]                                     [value={ref_link:Vector2}]
+    PARAM:  [type=float]                            [name=width]                                        [value=any]
+    PARAM:  [type=float]                            [name=height]                                       [value=any]
+    PARAM:  [type={ref_link:Color}|int (RGB565)]    [name=color]                                        [value=color]
+    PARAM:  [type=float]                            [name=opacity]                                      [value=0 ~ 1.0]
+    PARAM:  [type=bool]                             [name=outline]                                      [value=True or False]
+    PARAM:  [type=float]                            [name=rotation]                                     [value=any (radians)]
+    PARAM:  [type={ref_link:Vector2}]               [name=scale]                                        [value={ref_link:Vector2}]
+    PARAM:  [type=int]                              [name=layer]                                        [value=0 ~ 127]
+    ATTR:   [type=function]                         [name={ref_link:add_child}]                         [value=function]
+    ATTR:   [type=function]                         [name={ref_link:get_child}]                         [value=function]
+    ATTR:   [type=function]                         [name={ref_link:get_child_count}]                   [value=function]
+    ATTR:   [type=function]                         [name={ref_link:node_base_mark_destroy}]            [value=function]
+    ATTR:   [type=function]                         [name={ref_link:node_base_mark_destroy_all}]        [value=function]
+    ATTR:   [type=function]                         [name={ref_link:node_base_mark_destroy_children}]   [value=function]
+    ATTR:   [type=function]                         [name={ref_link:remove_child}]                      [value=function]
+    ATTR:   [type=function]                         [name={ref_link:tick}]                              [value=function]
+    ATTR:   [type={ref_link:Vector2}]               [name=position]                                     [value={ref_link:Vector2}]
+    ATTR:   [type=float]                            [name=width]                                        [value=any]
+    ATTR:   [type=float]                            [name=height]                                       [value=any]
+    ATTR:   [type={ref_link:Color}|int (RGB565)]    [name=color]                                        [value=color]
+    ATTR:   [type=float]                            [name=opacity]                                      [value=0 ~ 1.0]
+    ATTR:   [type=bool]                             [name=outline]                                      [value=True or False]
+    ATTR:   [type=float]                            [name=rotation]                                     [value=any (radians)]
+    ATTR:   [type={ref_link:Vector2}]               [name=scale]                                        [value={ref_link:Vector2}]
+    ATTR:   [type=int]                              [name=layer]                                        [value=0 ~ 127]
+    OVRR:   [type=function]                         [name={ref_link:tick}]                              [value=function]
 */
 mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Rectangle2DNode");
 
-    static const mp_arg_t allowed_args[] = {
+    mp_arg_t allowed_args[] = {
         { MP_QSTR_child_class,  MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_position,     MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_width,        MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_height,       MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_color,        MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_opacity,      MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_outline,      MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_rotation,     MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_scale,        MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_position,     MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL)} },
+        { MP_QSTR_width,        MP_ARG_OBJ, {.u_obj = mp_obj_new_float(10.0f)} },
+        { MP_QSTR_height,       MP_ARG_OBJ, {.u_obj = mp_obj_new_float(10.0f)} },
+        { MP_QSTR_color,        MP_ARG_OBJ, {.u_obj = MP_OBJ_NEW_SMALL_INT(0xffff)} },
+        { MP_QSTR_opacity,      MP_ARG_OBJ, {.u_obj = mp_obj_new_float(1.0f)} },
+        { MP_QSTR_outline,      MP_ARG_OBJ, {.u_obj = mp_obj_new_bool(false)} },
+        { MP_QSTR_rotation,     MP_ARG_OBJ, {.u_obj = mp_obj_new_float(0.0f)} },
+        { MP_QSTR_scale,        MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)})} },
+        { MP_QSTR_layer,        MP_ARG_INT, {.u_int = 0} }
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
-    enum arg_ids {child_class, position, width, height, color, opacity, outline, rotation, scale};
+    enum arg_ids {child_class, position, width, height, color, opacity, outline, rotation, scale, layer};
     bool inherited = false;
 
     // If there is one positional argument and it isn't the first
@@ -372,18 +296,9 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
         inherited = false;
     }
 
-    if(parsed_args[position].u_obj == MP_OBJ_NULL) parsed_args[position].u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL);
-    if(parsed_args[width].u_obj == MP_OBJ_NULL) parsed_args[width].u_obj = mp_obj_new_float(10.0f);
-    if(parsed_args[height].u_obj == MP_OBJ_NULL) parsed_args[height].u_obj = mp_obj_new_float(10.0f);
-    if(parsed_args[color].u_obj == MP_OBJ_NULL) parsed_args[color].u_obj = MP_OBJ_NEW_SMALL_INT(0xffff);
-    if(parsed_args[opacity].u_obj == MP_OBJ_NULL) parsed_args[opacity].u_obj = mp_obj_new_float(1.0f);
-    if(parsed_args[outline].u_obj == MP_OBJ_NULL) parsed_args[outline].u_obj = mp_obj_new_bool(false);
-    if(parsed_args[rotation].u_obj == MP_OBJ_NULL) parsed_args[rotation].u_obj = mp_obj_new_float(0.0f);
-    if(parsed_args[scale].u_obj == MP_OBJ_NULL) parsed_args[scale].u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)});
-
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = mp_obj_malloc_with_finaliser(engine_node_base_t, &engine_rectangle_2d_node_class_type);
-    node_base_init(node_base, &engine_rectangle_2d_node_class_type, NODE_TYPE_RECTANGLE_2D);
+    node_base_init(node_base, &engine_rectangle_2d_node_class_type, NODE_TYPE_RECTANGLE_2D, parsed_args[layer].u_int);
     engine_rectangle_2d_node_class_obj_t *rectangle_2d_node = m_malloc(sizeof(engine_rectangle_2d_node_class_obj_t));
     node_base->node = rectangle_2d_node;
     node_base->attr_accessor = node_base;

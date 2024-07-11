@@ -184,55 +184,6 @@ bool bitmap_button_2d_node_load_attr(engine_node_base_t *self_node_base, qstr at
             destination[1] = self_node_base;
             return true;
         break;
-        case MP_QSTR_mark_destroy:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_mark_destroy_obj);
-            destination[1] = self_node_base;
-            return true;
-        break;
-        case MP_QSTR_mark_destroy_all:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_mark_destroy_all_obj);
-            destination[1] = self_node_base;
-            return true;
-        break;
-        case MP_QSTR_mark_destroy_children:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_mark_destroy_children_obj);
-            destination[1] = self_node_base;
-            return true;
-        break;
-        case MP_QSTR_add_child:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_add_child_obj);
-            destination[1] = self_node_base;
-            return true;
-        break;
-        case MP_QSTR_get_child:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_child_obj);
-            destination[1] = self_node_base;
-            return true;
-        break;
-        case MP_QSTR_get_child_count:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_child_count_obj);
-            destination[1] = self_node_base;
-            return true;
-        break;
-        case MP_QSTR_remove_child:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_remove_child_obj);
-            destination[1] = self_node_base;
-            return true;
-        break;
-        case MP_QSTR_set_layer:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_set_layer_obj);
-            destination[1] = self_node_base;
-            return true;
-        break;
-        case MP_QSTR_get_layer:
-            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_layer_obj);
-            destination[1] = self_node_base;
-            return true;
-        break;
-        case MP_QSTR_node_base:
-            destination[0] = self_node_base;
-            return true;
-        break;
         case MP_QSTR_position:
             destination[0] = self->position;
             return true;
@@ -508,31 +459,9 @@ bool bitmap_button_2d_node_store_attr(engine_node_base_t *self_node_base, qstr a
 
 static mp_attr_fun_t gui_bitmap_button_2d_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing GUIBitmapButton2DNode attr");
-
-    // Get the node base from either class
-    // instance or native instance object
-    bool is_obj_instance = false;
-    engine_node_base_t *node_base = node_base_get(self_in, &is_obj_instance);
-
-    // Used for telling if custom load/store functions handled the attr
-    bool attr_handled = false;
-
-    if(destination[0] == MP_OBJ_NULL){          // Load
-        attr_handled = bitmap_button_2d_node_load_attr(node_base, attribute, destination);
-    }else if(destination[1] != MP_OBJ_NULL){    // Store
-        attr_handled = bitmap_button_2d_node_store_attr(node_base, attribute, destination);
-
-        // If handled, mark as successful store
-        if(attr_handled) destination[0] = MP_OBJ_NULL;
-    }
-
-    // If this is a Python class instance and the attr was NOT
-    // handled by the above, defer the attr to the instance attr
-    // handler
-    if(is_obj_instance && attr_handled == false){
-        node_base_use_default_attr_handler(self_in, attribute, destination);
-    }
-
+    node_base_attr_handler(self_in, attribute, destination,
+                          (attr_handler_func[]){node_base_load_attr, bitmap_button_2d_node_load_attr},
+                          (attr_handler_func[]){node_base_store_attr, bitmap_button_2d_node_store_attr}, 2);
     return mp_const_none;
 }
 
@@ -541,111 +470,111 @@ static mp_attr_fun_t gui_bitmap_button_2d_node_class_attr(mp_obj_t self_in, qstr
     NAME: GUIBitmapButton2DNode
     ID: GUIBitmapButton2DNode
     DESC: Like Button2DNode but uses bitmaps instead of colors to draw a custom button
-    PARAM:  [type={ref_link:Vector2}]         [name=position]                                   [value={ref_link:Vector2}]
-    PARAM:  [type={ref_link:FontResource}]    [name=font]                                       [value={ref_link:FontResource}]
-    PARAM:  [type=string]                     [name=text]                                       [value=any]
+    PARAM:  [type={ref_link:Vector2}]         [name=position]                                       [value={ref_link:Vector2}]
+    PARAM:  [type={ref_link:FontResource}]    [name=font]                                           [value={ref_link:FontResource}]
+    PARAM:  [type=string]                     [name=text]                                           [value=any]
 
-    PARAM:  [type={ref_link:Color}|int (RGB565)]   [name=text_color]                            [value=any color that the base text color should blend to (works best with white text)]
-    PARAM:  [type={ref_link:Color}|int (RGB565)]   [name=focused_text_color]                    [value=any color]
-    PARAM:  [type={ref_link:Color}|int (RGB565)]   [name=pressed_text_color]                    [value=any color]
+    PARAM:  [type={ref_link:Color}|int (RGB565)]   [name=text_color]                                [value=any color that the base text color should blend to (works best with white text)]
+    PARAM:  [type={ref_link:Color}|int (RGB565)]   [name=focused_text_color]                        [value=any color]
+    PARAM:  [type={ref_link:Color}|int (RGB565)]   [name=pressed_text_color]                        [value=any color]
 
-    PARAM:  [type={ref_link:TextureResource}] [name=bitmap]                                     [value=any {ref_link:TextureResource}]
-    PARAM:  [type={ref_link:TextureResource}] [name=focused_bitmap]                             [value=any {ref_link:TextureResource}]
-    PARAM:  [type={ref_link:TextureResource}] [name=pressed_bitmap]                             [value=any {ref_link:TextureResource}]
+    PARAM:  [type={ref_link:TextureResource}] [name=bitmap]                                         [value=any {ref_link:TextureResource}]
+    PARAM:  [type={ref_link:TextureResource}] [name=focused_bitmap]                                 [value=any {ref_link:TextureResource}]
+    PARAM:  [type={ref_link:TextureResource}] [name=pressed_bitmap]                                 [value=any {ref_link:TextureResource}]
 
-    PARAM:  [type={ref_link:Color}|int (RGB565)]   [name=transparent_color]                     [value=any color (single color in all three bitmaps that should be drawn transparent (i.e. not drawn at all))]
+    PARAM:  [type={ref_link:Color}|int (RGB565)]   [name=transparent_color]                         [value=any color (single color in all three bitmaps that should be drawn transparent (i.e. not drawn at all))]
 
-    PARAM:  [type=float]                      [name=rotation]                                   [value=any (radians)]
-    PARAM:  [type={ref_link:Vector2}]         [name=scale]                                      [value={ref_link:Vector2}]
-    PARAM:  [type={ref_link:Vector2}]         [name=text_scale]                                 [value={ref_link:Vector2} (additional scale for the text that can be hand tweaked to fit the text inside the button bitmaps (might be automatic in the future: TODO))]
-    PARAM:  [type=float]                      [name=opacity]                                    [value=0 ~ 1.0]
+    PARAM:  [type=float]                      [name=rotation]                                       [value=any (radians)]
+    PARAM:  [type={ref_link:Vector2}]         [name=scale]                                          [value={ref_link:Vector2}]
+    PARAM:  [type={ref_link:Vector2}]         [name=text_scale]                                     [value={ref_link:Vector2} (additional scale for the text that can be hand tweaked to fit the text inside the button bitmaps (might be automatic in the future: TODO))]
+    PARAM:  [type=float]                      [name=opacity]                                        [value=0 ~ 1.0]
 
-    PARAM:  [type=float]                      [name=letter_spacing]                             [value=any]
-    PARAM:  [type=float]                      [name=line_spacing]                               [value=any]
+    PARAM:  [type=float]                      [name=letter_spacing]                                 [value=any]
+    PARAM:  [type=float]                      [name=line_spacing]                                   [value=any]
+    PARAM:  [type=int]                        [name=layer]                                          [value=0 ~ 127]
 
 
-    ATTR:   [type=function]                   [name={ref_link:add_child}]                       [value=function]
-    ATTR:   [type=function]                   [name={ref_link:get_child}]                       [value=function]
-    ATTR:   [type=function]                   [name={ref_link:get_child_count}]                 [value=function]
-    ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy}]               [value=function]
-    ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy_all}]           [value=function]
-    ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy_children}]      [value=function]
-    ATTR:   [type=function]                   [name={ref_link:remove_child}]                    [value=function]
-    ATTR:   [type=function]                   [name={ref_link:set_layer}]                       [value=function]
-    ATTR:   [type=function]                   [name={ref_link:get_layer}]                       [value=function]
-    ATTR:   [type=function]                   [name={ref_link:remove_child}]                    [value=function]
-    ATTR:   [type=function]                   [name={ref_link:tick}]                            [value=function]
-    ATTR:   [type=function]                   [name={ref_link:on_focused}]                      [value=function]
-    ATTR:   [type=function]                   [name={ref_link:on_just_focused}]                 [value=function]
-    ATTR:   [type=function]                   [name={ref_link:on_just_unfocused}]               [value=function]
-    ATTR:   [type=function]                   [name={ref_link:on_pressed}]                      [value=function]
-    ATTR:   [type=function]                   [name={ref_link:on_just_pressed}]                 [value=function]
-    ATTR:   [type=function]                   [name={ref_link:on_just_released}]                [value=function]
+    ATTR:   [type=function]                   [name={ref_link:add_child}]                           [value=function]
+    ATTR:   [type=function]                   [name={ref_link:get_child}]                           [value=function]
+    ATTR:   [type=function]                   [name={ref_link:get_child_count}]                     [value=function]
+    ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy}]              [value=function]
+    ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy_all}]          [value=function]
+    ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy_children}]     [value=function]
+    ATTR:   [type=function]                   [name={ref_link:remove_child}]                        [value=function]
+    ATTR:   [type=function]                   [name={ref_link:tick}]                                [value=function]
+    ATTR:   [type=function]                   [name={ref_link:on_focused}]                          [value=function]
+    ATTR:   [type=function]                   [name={ref_link:on_just_focused}]                     [value=function]
+    ATTR:   [type=function]                   [name={ref_link:on_just_unfocused}]                   [value=function]
+    ATTR:   [type=function]                   [name={ref_link:on_pressed}]                          [value=function]
+    ATTR:   [type=function]                   [name={ref_link:on_just_pressed}]                     [value=function]
+    ATTR:   [type=function]                   [name={ref_link:on_just_released}]                    [value=function]
 
-    ATTR:   [type={ref_link:Vector2}]         [name=position]                                   [value={ref_link:Vector2}]
-    ATTR:   [type={ref_link:FontResource}]    [name=font]                                       [value={ref_link:FontResource}]
-    ATTR:   [type=string]                     [name=text]                                       [value=any]
-    ATTR:   [type=float]                      [name=outline]                                    [value=any (how thick the outline should be, in px)]
-    ATTR:   [type=float]                      [name=padding]                                    [value=any (amount of empty space between the text and outline, in px)]
+    ATTR:   [type={ref_link:Vector2}]         [name=position]                                       [value={ref_link:Vector2}]
+    ATTR:   [type={ref_link:FontResource}]    [name=font]                                           [value={ref_link:FontResource}]
+    ATTR:   [type=string]                     [name=text]                                           [value=any]
+    ATTR:   [type=float]                      [name=outline]                                        [value=any (how thick the outline should be, in px)]
+    ATTR:   [type=float]                      [name=padding]                                        [value=any (amount of empty space between the text and outline, in px)]
 
-    ATTR:   [type={ref_link:Color}|int (RGB565)]   [name=text_color]                            [value=any color that the base text color should blend to (works best with white text)]
-    ATTR:   [type={ref_link:Color}|int (RGB565)]   [name=focused_text_color]                    [value=any color]
-    ATTR:   [type={ref_link:Color}|int (RGB565)]   [name=pressed_text_color]                    [value=any color]
+    ATTR:   [type={ref_link:Color}|int (RGB565)]   [name=text_color]                                [value=any color that the base text color should blend to (works best with white text)]
+    ATTR:   [type={ref_link:Color}|int (RGB565)]   [name=focused_text_color]                        [value=any color]
+    ATTR:   [type={ref_link:Color}|int (RGB565)]   [name=pressed_text_color]                        [value=any color]
 
-    ATTR:   [type={ref_link:TextureResource}] [name=bitmap]                                     [value=any {ref_link:TextureResource}]
-    ATTR:   [type={ref_link:TextureResource}] [name=focused_bitmap]                             [value=any {ref_link:TextureResource}]
-    ATTR:   [type={ref_link:TextureResource}] [name=pressed_bitmap]                             [value=any {ref_link:TextureResource}]
+    ATTR:   [type={ref_link:TextureResource}] [name=bitmap]                                         [value=any {ref_link:TextureResource}]
+    ATTR:   [type={ref_link:TextureResource}] [name=focused_bitmap]                                 [value=any {ref_link:TextureResource}]
+    ATTR:   [type={ref_link:TextureResource}] [name=pressed_bitmap]                                 [value=any {ref_link:TextureResource}]
 
-    ATTR:   [type={ref_link:Color}|int (RGB565)]   [name=transparent_color]                     [value=any color (single color in all three bitmaps that should be drawn transparent (i.e. not drawn at all))]
+    ATTR:   [type={ref_link:Color}|int (RGB565)]   [name=transparent_color]                         [value=any color (single color in all three bitmaps that should be drawn transparent (i.e. not drawn at all))]
 
-    ATTR:   [type=float]                      [name=rotation]                                   [value=any (radians)]
-    ATTR:   [type={ref_link:Vector2}]         [name=scale]                                      [value={ref_link:Vector2}]
-    ATTR:   [type={ref_link:Vector2}]         [name=text_scale]                                 [value={ref_link:Vector2} (additional scale for the text that can be hand tweaked to fit the text inside the button bitmaps (might be automatic in the future: TODO))]
-    ATTR:   [type=float]                      [name=opacity]                                    [value=0 ~ 1.0]
+    ATTR:   [type=float]                      [name=rotation]                                       [value=any (radians)]
+    ATTR:   [type={ref_link:Vector2}]         [name=scale]                                          [value={ref_link:Vector2}]
+    ATTR:   [type={ref_link:Vector2}]         [name=text_scale]                                     [value={ref_link:Vector2} (additional scale for the text that can be hand tweaked to fit the text inside the button bitmaps (might be automatic in the future: TODO))]
+    ATTR:   [type=float]                      [name=opacity]                                        [value=0 ~ 1.0]
 
-    ATTR:   [type=float]                      [name=letter_spacing]                             [value=any]
-    ATTR:   [type=float]                      [name=line_spacing]                               [value=any]
+    ATTR:   [type=float]                      [name=letter_spacing]                                 [value=any]
+    ATTR:   [type=float]                      [name=line_spacing]                                   [value=any]
 
-    ATTR:   [type=boolean]                    [name=focused]                                    [value=True or False (can be read to see if focused or set to focus it)]
-    ATTR:   [type=boolean]                    [name=pressed]                                    [value=True or False (can be read to see if pressed or set to press it)]
+    ATTR:   [type=boolean]                    [name=focused]                                        [value=True or False (can be read to see if focused or set to focus it)]
+    ATTR:   [type=boolean]                    [name=pressed]                                        [value=True or False (can be read to see if pressed or set to press it)]
 
-    ATTR:   [type=float]                      [name=width]                                      [value=any (total width of the button, read-only): NOT IMPLEMENTED YET: TODO]
-    ATTR:   [type=float]                      [name=height]                                     [value=any (total height of the button, read-only):  NOT IMPLEMENTED YET: TODO]
+    ATTR:   [type=float]                      [name=width]                                          [value=any (total width of the button, read-only): NOT IMPLEMENTED YET: TODO]
+    ATTR:   [type=float]                      [name=height]                                         [value=any (total height of the button, read-only):  NOT IMPLEMENTED YET: TODO]
+    ATTR:   [type=int]                        [name=layer]                                          [value=0 ~ 127]
 
-    OVRR:   [type=function]                   [name={ref_link:tick}]                            [value=function]
-    OVRR:   [type=function]                   [name={ref_link:on_focused}]                      [value=function]
-    OVRR:   [type=function]                   [name={ref_link:on_just_focused}]                 [value=function]
-    OVRR:   [type=function]                   [name={ref_link:on_just_unfocused}]               [value=function]
-    OVRR:   [type=function]                   [name={ref_link:on_pressed}]                      [value=function]
-    OVRR:   [type=function]                   [name={ref_link:on_just_pressed}]                 [value=function]
-    OVRR:   [type=function]                   [name={ref_link:on_just_released}]                [value=function]
+    OVRR:   [type=function]                   [name={ref_link:tick}]                                [value=function]
+    OVRR:   [type=function]                   [name={ref_link:on_focused}]                          [value=function]
+    OVRR:   [type=function]                   [name={ref_link:on_just_focused}]                     [value=function]
+    OVRR:   [type=function]                   [name={ref_link:on_just_unfocused}]                   [value=function]
+    OVRR:   [type=function]                   [name={ref_link:on_pressed}]                          [value=function]
+    OVRR:   [type=function]                   [name={ref_link:on_just_pressed}]                     [value=function]
+    OVRR:   [type=function]                   [name={ref_link:on_just_released}]                    [value=function]
 */
 mp_obj_t gui_bitmap_button_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New GUIBitmapButton2DNode");
 
-    static const mp_arg_t allowed_args[] = {
-        { MP_QSTR_child_class,                  MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_position,                     MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_font,                         MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_text,                         MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+    mp_arg_t allowed_args[] = {
+        { MP_QSTR_child_class,          MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_position,             MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(0.0f)})} },
+        { MP_QSTR_font,                 MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_text,                 MP_ARG_OBJ, {.u_obj = mp_const_none} },
 
-        { MP_QSTR_text_color,                   MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_focused_text_color,           MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_pressed_text_color,           MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_text_color,           MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_focused_text_color,   MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_pressed_text_color,   MP_ARG_OBJ, {.u_obj = mp_const_none} },
 
-        { MP_QSTR_bitmap,                       MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_focused_bitmap,               MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_pressed_bitmap,               MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_bitmap,               MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_focused_bitmap,       MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_pressed_bitmap,       MP_ARG_OBJ, {.u_obj = mp_const_none} },
 
-        { MP_QSTR_transparent_color,    MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_transparent_color,    MP_ARG_OBJ, {.u_obj = MP_OBJ_NEW_SMALL_INT(ENGINE_NO_TRANSPARENCY_COLOR)} },
 
-        { MP_QSTR_rotation,                     MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_scale,                        MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_text_scale,                   MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_opacity,                      MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_rotation,             MP_ARG_OBJ, {.u_obj = mp_obj_new_float(0.0f)} },
+        { MP_QSTR_scale,                MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)})} },
+        { MP_QSTR_text_scale,           MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)})} },
+        { MP_QSTR_opacity,              MP_ARG_OBJ, {.u_obj = mp_obj_new_float(1.0f)} },
 
-        { MP_QSTR_letter_spacing,       MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_line_spacing,         MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} }
+        { MP_QSTR_letter_spacing,       MP_ARG_OBJ, {.u_obj = mp_obj_new_float(0.0f)} },
+        { MP_QSTR_line_spacing,         MP_ARG_OBJ, {.u_obj = mp_obj_new_float(0.0f)} },
+        { MP_QSTR_layer,                MP_ARG_INT, {.u_int = 0} }
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
     enum arg_ids {child_class, position, font, text,
@@ -663,7 +592,9 @@ mp_obj_t gui_bitmap_button_2d_node_class_new(const mp_obj_type_t *type, size_t n
                   rotation, scale, text_scale, opacity,
 
                   letter_spacing,
-                  line_spacing};
+                  line_spacing,
+                  
+                  layer};
 
     bool inherited = false;
 
@@ -684,31 +615,9 @@ mp_obj_t gui_bitmap_button_2d_node_class_new(const mp_obj_type_t *type, size_t n
         inherited = false;
     }
 
-    if(parsed_args[position].u_obj == MP_OBJ_NULL) parsed_args[position].u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(0.0f)});
-    if(parsed_args[font].u_obj == MP_OBJ_NULL) parsed_args[font].u_obj = mp_const_none;
-    if(parsed_args[text].u_obj == MP_OBJ_NULL) parsed_args[text].u_obj = mp_const_none;
-
-    if(parsed_args[text_color].u_obj == MP_OBJ_NULL) parsed_args[text_color].u_obj = mp_const_none;
-    if(parsed_args[focused_text_color].u_obj == MP_OBJ_NULL) parsed_args[focused_text_color].u_obj = mp_const_none;
-    if(parsed_args[pressed_text_color].u_obj == MP_OBJ_NULL) parsed_args[pressed_text_color].u_obj = mp_const_none;
-
-    if(parsed_args[bitmap].u_obj == MP_OBJ_NULL) parsed_args[bitmap].u_obj = mp_const_none;
-    if(parsed_args[focused_bitmap].u_obj == MP_OBJ_NULL) parsed_args[focused_bitmap].u_obj = mp_const_none;
-    if(parsed_args[pressed_bitmap].u_obj == MP_OBJ_NULL) parsed_args[pressed_bitmap].u_obj = mp_const_none;
-
-    if(parsed_args[transparent_color].u_obj == MP_OBJ_NULL) parsed_args[transparent_color].u_obj = MP_OBJ_NEW_SMALL_INT(ENGINE_NO_TRANSPARENCY_COLOR);
-
-    if(parsed_args[rotation].u_obj == MP_OBJ_NULL) parsed_args[rotation].u_obj = mp_obj_new_float(0.0f);
-    if(parsed_args[scale].u_obj == MP_OBJ_NULL) parsed_args[scale].u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)});
-    if(parsed_args[text_scale].u_obj == MP_OBJ_NULL) parsed_args[text_scale].u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)});
-    if(parsed_args[opacity].u_obj == MP_OBJ_NULL) parsed_args[opacity].u_obj = mp_obj_new_float(1.0f);
-
-    if(parsed_args[letter_spacing].u_obj == MP_OBJ_NULL) parsed_args[letter_spacing].u_obj = mp_obj_new_float(0.0f);
-    if(parsed_args[line_spacing].u_obj == MP_OBJ_NULL) parsed_args[line_spacing].u_obj = mp_obj_new_float(0.0f);
-
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = mp_obj_malloc_with_finaliser(engine_node_base_t, &engine_gui_bitmap_button_2d_node_class_type);
-    node_base_init(node_base, &engine_gui_bitmap_button_2d_node_class_type, NODE_TYPE_GUI_BITMAP_BUTTON_2D);
+    node_base_init(node_base, &engine_gui_bitmap_button_2d_node_class_type, NODE_TYPE_GUI_BITMAP_BUTTON_2D, parsed_args[layer].u_int);
     engine_gui_bitmap_button_2d_node_class_obj_t *gui_bitmap_button_2d_node = m_malloc(sizeof(engine_gui_bitmap_button_2d_node_class_obj_t));
     node_base->node = gui_bitmap_button_2d_node;
     node_base->attr_accessor = node_base;

@@ -141,14 +141,14 @@ class LauncherTile(GUIBitmapButton2DNode):
         self.transparent_color = engine_draw.white
         self.scale.x = 0.35
         self.scale.y = 0.35
-        self.set_layer(2)
+        self.layer = 2
 
         self.title_text_node = Text2DNode(text=game_info.name, font=font, position=Vector2(0, -28), opacity=0.0, letter_spacing=1.0)
 
         self.icon_sprite = Sprite2DNode(texture=launcher_tile_mark_texture)
         self.icon_sprite.scale.x = 0.35
         self.icon_sprite.scale.y = 0.35
-        self.icon_sprite.set_layer(0)
+        self.icon_sprite.layer = 0
         if game_info.icon_path:
             texture = TextureResource(game_info.icon_path)
             self.icon_sprite.texture = texture

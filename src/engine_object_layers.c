@@ -19,8 +19,8 @@
 
 #include "py/gc.h"
 
-uint16_t engine_object_layer_count = 8;
-linked_list engine_object_layers[8];
+uint16_t engine_object_layer_count = 128;
+linked_list engine_object_layers[128];
 
 
 void engine_objects_clear_all(){
@@ -64,7 +64,7 @@ uint16_t engine_get_total_object_count(){
 
 
 // Add an object to the pool of all nodes in 'engine_object_layers' at some layer
-linked_list_node *engine_add_object_to_layer(void *obj, uint16_t layer_index){
+linked_list_node *engine_add_object_to_layer(void *obj, uint8_t layer_index){
     if(layer_index >= engine_object_layer_count){
         ENGINE_ERROR_PRINTF("Tried to add object to layer %d but the max layer index is %d. Resize the number of available draw layers at the cost of memory", layer_index, engine_object_layer_count-1);
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Tried to add object to layer index that is out of bounds! Resize the object layer count!"));
@@ -74,7 +74,7 @@ linked_list_node *engine_add_object_to_layer(void *obj, uint16_t layer_index){
 }
 
 
-void engine_remove_object_from_layer(linked_list_node *object_list_node, uint16_t layer_index){
+void engine_remove_object_from_layer(linked_list_node *object_list_node, uint8_t layer_index){
     linked_list_del_list_node(&engine_object_layers[layer_index], object_list_node);
 }
 
