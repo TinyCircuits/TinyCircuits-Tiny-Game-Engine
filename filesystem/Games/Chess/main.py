@@ -274,7 +274,7 @@ class ChessBoard(Rectangle2DNode):
     def draw_board(self):
         for row in range(8):
             for col in range(8):
-                square_color = Color(77/256,125/256,210/256) if (row + col) % 2 == 0 else Color(220/256,220/256,230/256)
+                square_color = Color(77/256,125/256,210/256) if (row + col) % 2 == 1 else Color(220/256,220/256,230/256)
                 square = Rectangle2DNode()
                 square.position = Vector2(col * CELL_WIDTH + OFFSET, row * CELL_HEIGHT + OFFSET)
                 square.width = CELL_WIDTH
@@ -389,6 +389,7 @@ class ChessGame(Rectangle2DNode):
 
         white_line_end_pos = Vector2(0, y_pos)
         black_line_end_pos = Vector2(0, y_pos)
+
 
         # Update the positions of the evaluation lines
         self.white_evaluation_line.end = white_line_end_pos
@@ -522,7 +523,7 @@ class ChessGame(Rectangle2DNode):
                             # Check for checkmate
                             white_checkmate, black_checkmate = is_checkmate(self.board)
                             if white_checkmate:
-                                self.winner_message = "Checkmate Lose!"
+                                self.winner_message = "Checkmate AI!"
                                 return
                             if black_checkmate:
                                 self.winner_message = "Checkmate Win!"
@@ -586,7 +587,8 @@ class ChessGame(Rectangle2DNode):
         else:
             # Use minimax if no opening is tracked or opening moves are exhausted
             _, best_move = minimax(board_str, depth=2, is_maximizing_player=False, alpha=float('-inf'), beta=float('inf'))
-            from_pos, to_pos = best_move
+            p, to_pos = best_move
+            from_pos = p.grid_position
 
         # Generate the move notation before the move is executed
         piece = self.board.get_piece_at_position(from_pos)
@@ -1013,9 +1015,10 @@ def get_all_valid_moves(board, is_white):
     moves.sort(key=lambda move: board.get_piece_at_position(move[1]) is not None, reverse=True)
     return moves
 
-def minimax(board_str, depth, is_maximizing_player, alpha, beta):
+def minimax(board_str, depth, is_maximizing_player, alpha, beta, indent=""):
     if depth == 0:
         evaluation = evaluate_board(board_str)
+        #print(f"{indent}Depth: {depth}, Evaluation: {evaluation}")
         return evaluation, None
 
     best_move = None
@@ -1025,30 +1028,49 @@ def minimax(board_str, depth, is_maximizing_player, alpha, beta):
 
     if is_maximizing_player:
         max_eval = float('-inf')
+        #print(f"{indent}Maximizing player at depth {depth}:")
         for piece, move in all_moves:
             board_copy_str = simulate_move(board_str, piece.grid_position, move)
             if not leaves_king_in_check(board_copy_str, is_white):
-                eval, _ = minimax(board_copy_str, depth - 1, False, alpha, beta)
+                eval, _ = minimax(board_copy_str, depth - 1, False, alpha, beta, indent + "    ")
+                #move_notation = generate_move_notation(piece, piece.grid_position, move, board)
+                #print(f"{indent}  Move: {move_notation}, Eval: {eval}")
                 if eval > max_eval:
                     max_eval = eval
-                    best_move = (piece.grid_position, move)
+                    best_move = (piece, move)
                 alpha = max(alpha, eval)
                 if beta <= alpha:
+                    #print(f"{indent}  Alpha-beta cutoff")
                     break
+        #if best_move:
+        #    best_move_notation = generate_move_notation(best_move[0], best_move[0].grid_position, best_move[1], board)
+        #else:
+        #    best_move_notation = "No valid move"
+        #print(f"{indent}Best move at depth {depth}: {best_move_notation}, Max eval: {max_eval}")
         return max_eval, best_move
     else:
         min_eval = float('inf')
+        #print(f"{indent}Minimizing player at depth {depth}:")
         for piece, move in all_moves:
             board_copy_str = simulate_move(board_str, piece.grid_position, move)
             if not leaves_king_in_check(board_copy_str, is_white):
-                eval, _ = minimax(board_copy_str, depth - 1, True, alpha, beta)
+                eval, _ = minimax(board_copy_str, depth - 1, True, alpha, beta, indent + "    ")
+                #move_notation = generate_move_notation(piece, piece.grid_position, move, board)
+                #print(f"{indent}  Move: {move_notation}, Eval: {eval}")
                 if eval < min_eval:
                     min_eval = eval
-                    best_move = (piece.grid_position, move)
+                    best_move = (piece, move)
                 beta = min(beta, eval)
                 if beta <= alpha:
+                    #print(f"{indent}  Alpha-beta cutoff")
                     break
+        #if best_move:
+        #    best_move_notation = generate_move_notation(best_move[0], best_move[0].grid_position, best_move[1], board)
+        #else:
+        #    best_move_notation = "No valid move"
+        #print(f"{indent}Best move at depth {depth}: {best_move_notation}, Min eval: {min_eval}")
         return min_eval, best_move
+
 
 def leaves_king_in_check(board_str, is_white):
     board = string_to_board(board_str)
