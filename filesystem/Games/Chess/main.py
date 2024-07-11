@@ -30,34 +30,16 @@ OFFSET = CELL_WIDTH / 2
 
 CHECKMATE_THRESHOLD = 100000
 
-class ChessPiece(Sprite2DNode):
-    def __init__(self, grid_position, texture, frame_x, frame_y, is_white):
-        super().__init__(self)
+class ChessPiece:
+    def __init__(self, grid_position, is_white):
         self.grid_position = grid_position
-        self.texture = texture
-        self.set_layer(5)
-        self.frame_count_x = 6
-        self.frame_count_y = 2
-        self.frame_current_x = frame_x
-        self.frame_current_y = frame_y
         self.is_white = is_white
-        self.playing = False
-        self.transparent_color = engine_draw.white
-        self.update_position()
-
-    def update_position(self):
-        self.position = Vector2(self.grid_position[0] * CELL_WIDTH + OFFSET, self.grid_position[1] * CELL_HEIGHT + OFFSET)
+        self.has_moved = False
 
     def valid_moves(self, board):
         return []
 
 class King(ChessPiece):
-    def __init__(self, grid_position, texture, is_white):
-        frame_x = 3
-        frame_y = 1 if is_white else 0
-        super().__init__(grid_position, texture, frame_x, frame_y, is_white)
-        self.has_moved = False
-
     def valid_moves(self, board):
         moves = []
         directions = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
@@ -88,11 +70,6 @@ class King(ChessPiece):
         return moves
 
 class Queen(ChessPiece):
-    def __init__(self, grid_position, texture, is_white):
-        frame_x = 4
-        frame_y = 1 if is_white else 0
-        super().__init__(grid_position, texture, frame_x, frame_y, is_white)
-
     def valid_moves(self, board):
         moves = []
         directions = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
@@ -111,12 +88,6 @@ class Queen(ChessPiece):
         return moves
 
 class Rook(ChessPiece):
-    def __init__(self, grid_position, texture, is_white):
-        frame_x = 0
-        frame_y = 1 if is_white else 0
-        super().__init__(grid_position, texture, frame_x, frame_y, is_white)
-        self.has_moved = False
-
     def valid_moves(self, board):
         moves = []
         directions = [(0, -1), (0, 1), (-1, 0), (1, 0)]
@@ -135,11 +106,6 @@ class Rook(ChessPiece):
         return moves
 
 class Bishop(ChessPiece):
-    def __init__(self, grid_position, texture, is_white):
-        frame_x = 2
-        frame_y = 1 if is_white else 0
-        super().__init__(grid_position, texture, frame_x, frame_y, is_white)
-
     def valid_moves(self, board):
         moves = []
         directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
@@ -158,11 +124,6 @@ class Bishop(ChessPiece):
         return moves
 
 class Knight(ChessPiece):
-    def __init__(self, grid_position, texture, is_white):
-        frame_x = 1
-        frame_y = 1 if is_white else 0
-        super().__init__(grid_position, texture, frame_x, frame_y, is_white)
-
     def valid_moves(self, board):
         moves = []
         knight_moves = [(-2, -1), (-1, -2), (1, -2), (2, -1), (2, 1), (1, 2), (-1, 2), (-2, 1)]
@@ -175,10 +136,8 @@ class Knight(ChessPiece):
         return moves
 
 class Pawn(ChessPiece):
-    def __init__(self, grid_position, texture, is_white):
-        frame_x = 5
-        frame_y = 1 if is_white else 0
-        super().__init__(grid_position, texture, frame_x, frame_y, is_white)
+    def __init__(self, grid_position, is_white):
+        super().__init__(grid_position, is_white)
         self.en_passant_target = False
 
     def valid_moves(self, board):
@@ -223,6 +182,7 @@ class ChessBoard(Rectangle2DNode):
         self.highlight_layer = Rectangle2DNode()
         self.add_child(self.highlight_layer)
         self.pieces = []
+        self.sprites = []
         self.squares = []
         self.set_layer(0)
         self.draw_board()
@@ -284,35 +244,57 @@ class ChessBoard(Rectangle2DNode):
                 self.squares.append(square)
                 self.add_child(square)
 
+    def render_pieces(self):
+        # Clear existing piece sprites
+        for sprite in self.sprites:
+            sprite.opacity=0
+        self.sprites = []
+            
+        
+        # Render piece sprites based on the current board state
+        for piece in self.pieces:
+            sprite = Sprite2DNode(texture=chess_texture)
+            sprite.position = Vector2(piece.grid_position[0] * CELL_WIDTH + OFFSET, piece.grid_position[1] * CELL_HEIGHT + OFFSET)
+            sprite.set_layer(5)
+            sprite.playing = False
+            sprite.frame_count_x = 6
+            sprite.frame_count_y = 2
+            sprite.frame_current_x = get_piece_frame_x(piece)
+            sprite.frame_current_y = 1 if piece.is_white else 0
+            sprite.transparent_color = engine_draw.white
+            self.add_child(sprite)
+            self.sprites.append(sprite)
+
     def add_piece(self, piece):
         self.pieces.append(piece)
-        self.add_child(piece)
 
     def setup_pieces(self, is_white):
         base_row = 7 if is_white else 0
         pawn_row = 6 if is_white else 1
 
         # Rooks
-        self.add_piece(Rook((0, base_row), chess_texture, is_white))
-        self.add_piece(Rook((7, base_row), chess_texture, is_white))
+        self.add_piece(Rook((0, base_row), is_white))
+        self.add_piece(Rook((7, base_row), is_white))
 
         # Knights
-        self.add_piece(Knight((1, base_row), chess_texture, is_white))
-        self.add_piece(Knight((6, base_row), chess_texture, is_white))
+        self.add_piece(Knight((1, base_row), is_white))
+        self.add_piece(Knight((6, base_row), is_white))
 
         # Bishops
-        self.add_piece(Bishop((2, base_row), chess_texture, is_white))
-        self.add_piece(Bishop((5, base_row), chess_texture, is_white))
+        self.add_piece(Bishop((2, base_row), is_white))
+        self.add_piece(Bishop((5, base_row), is_white))
 
         # Queens
-        self.add_piece(Queen((3, base_row), chess_texture, is_white))
+        self.add_piece(Queen((3, base_row), is_white))
 
         # Kings
-        self.add_piece(King((4, base_row), chess_texture, is_white))
+        self.add_piece(King((4, base_row), is_white))
 
         # Pawns
         for i in range(8):
-            self.add_piece(Pawn((i, pawn_row), chess_texture, is_white))
+            self.add_piece(Pawn((i, pawn_row), is_white))
+
+        self.render_pieces()  # Render the pieces after setting them up
 
     def highlight_square(self, grid_position):
         self.highlight_square_node.position = Vector2(grid_position[0] * CELL_WIDTH + OFFSET, grid_position[1] * CELL_HEIGHT + OFFSET)
@@ -330,9 +312,7 @@ class ChessBoard(Rectangle2DNode):
 
     def remove_piece(self, piece):
         if piece in self.pieces:
-            piece.opacity = 0
             self.pieces.remove(piece)
-            piece = None
 
     def piece_has_moved(self, piece):
         piece.has_moved = True
@@ -347,8 +327,54 @@ class ChessBoard(Rectangle2DNode):
         # Remove the pawn
         self.remove_piece(pawn)
         # Create a new queen at the same position
-        new_queen = Queen(pawn.grid_position, chess_texture, pawn.is_white)
+        new_queen = Queen(pawn.grid_position, pawn.is_white)
         self.add_piece(new_queen)
+
+
+class SimulatedChessBoard:
+    def __init__(self):
+        self.pieces = []
+
+    def add_piece(self, piece):
+        self.pieces.append(piece)
+
+    def remove_piece(self, piece):
+        if piece in self.pieces:
+            self.pieces.remove(piece)
+
+    def get_piece_at_position(self, position):
+        for piece in self.pieces:
+            if piece.grid_position == position:
+                return piece
+        return None
+
+    def piece_has_moved(self, piece):
+        piece.has_moved = True
+
+    def copy_from_board(self, board):
+        self.pieces = [piece.__class__(piece.grid_position, piece.is_white) for piece in board.pieces]
+        for piece, original_piece in zip(self.pieces, board.pieces):
+            piece.has_moved = original_piece.has_moved
+            if isinstance(piece, Pawn):
+                piece.en_passant_target = original_piece.en_passant_target
+
+    def make_move(self, from_pos, to_pos):
+        piece = self.get_piece_at_position(from_pos)
+        captured_piece = self.get_piece_at_position(to_pos)
+        if piece:
+            if captured_piece:
+                self.remove_piece(captured_piece)
+            piece.grid_position = to_pos
+            self.piece_has_moved(piece)
+        return piece, captured_piece
+
+    def undo_move(self, piece, captured_piece, from_pos, to_pos):
+        if piece:
+            piece.grid_position = from_pos
+            piece.has_moved = False #TODO: - should reset this to what it was
+        if captured_piece:
+            self.add_piece(captured_piece)
+
 
 class ChessGame(Rectangle2DNode):
     def __init__(self, camera):
@@ -390,7 +416,6 @@ class ChessGame(Rectangle2DNode):
         white_line_end_pos = Vector2(0, y_pos)
         black_line_end_pos = Vector2(0, y_pos)
 
-
         # Update the positions of the evaluation lines
         self.white_evaluation_line.end = white_line_end_pos
         self.black_evaluation_line.end = black_line_end_pos
@@ -399,7 +424,7 @@ class ChessGame(Rectangle2DNode):
         if self.winner_message:
             win_text = Text2DNode(position=Vector2(DISP_WIDTH/2, DISP_HEIGHT/2),
                         font=font,
-                        text=game.winner_message,
+                        text=self.winner_message,
                         rotation=0,
                         scale=Vector2(1, 1),
                         opacity=1.0,
@@ -444,109 +469,95 @@ class ChessGame(Rectangle2DNode):
             self.selected_grid_position = (new_col, new_row)
 
     def select_or_move_piece(self):
-            col, row = self.selected_grid_position
+        col, row = self.selected_grid_position
 
-            if self.selected_piece:
-                new_col, new_row = self.selected_grid_position
-                if (new_col, new_row) != self.selected_piece.grid_position:
-                    if (new_col, new_row) in self.selected_piece.valid_moves(self.board):
-                        original_position = self.selected_piece.grid_position
-                        captured_piece = self.board.get_piece_at_position((new_col, new_row))
-                        
-                        # Generate move notation before updating the board state
-                        move_notation = generate_move_notation(self.selected_piece, original_position, (new_col, new_row), self.board)
-                        
-                        if captured_piece and captured_piece.is_white != self.selected_piece.is_white:
-                            self.board.remove_piece(captured_piece)
-                        
-                        # Special handling for castling
-                        if isinstance(self.selected_piece, King):
-                            if new_col == 6 and not self.selected_piece.has_moved:  # Kingside castling
-                                rook = self.board.get_piece_at_position((7, row))
-                                rook.grid_position = (5, row)
-                                rook.update_position()
-                            elif new_col == 2 and not self.selected_piece.has_moved:  # Queenside castling
-                                rook = self.board.get_piece_at_position((0, row))
-                                rook.grid_position = (3, row)
-                                rook.update_position()
-                        
-                        # Special handling for en passant
-                        if isinstance(self.selected_piece, Pawn):
-                            if abs(new_row - self.selected_piece.grid_position[1]) == 2:
-                                self.selected_piece.en_passant_target = True
-                            else:
-                                self.selected_piece.en_passant_target = False
-                            # Check and remove en passant captured pawn
-                            if (new_col, new_row) != self.selected_piece.grid_position:
-                                if not captured_piece and abs(new_col - self.selected_piece.grid_position[0]) == 1:
-                                    captured_pawn = self.board.get_piece_at_position((new_col, row))
-                                    if captured_pawn and isinstance(captured_pawn, Pawn) and captured_pawn.en_passant_target:
-                                        self.board.remove_piece(captured_pawn)
-
-                        self.selected_piece.grid_position = (new_col, new_row)
-                        self.selected_piece.update_position()
-                        self.board.piece_has_moved(self.selected_piece)
-
-                        # Check for check
-                        if self.is_in_check(self.current_player_is_white):
-                            self.selected_piece.grid_position = original_position
-                            self.selected_piece.update_position()
-                            if captured_piece:
-                                captured_piece.opacity = 1
-                                self.board.add_piece(captured_piece)
+        if self.selected_piece:
+            new_col, new_row = self.selected_grid_position
+            if (new_col, new_row) != self.selected_piece.grid_position:
+                if (new_col, new_row) in self.selected_piece.valid_moves(self.board):
+                    original_position = self.selected_piece.grid_position
+                    captured_piece = self.board.get_piece_at_position((new_col, new_row))
+                    
+                    # Generate move notation before updating the board state
+                    move_notation = generate_move_notation(self.selected_piece, original_position, (new_col, new_row), self.board)
+                    
+                    if captured_piece and captured_piece.is_white != self.selected_piece.is_white:
+                        self.board.remove_piece(captured_piece)
+                    
+                    # Special handling for castling
+                    if isinstance(self.selected_piece, King):
+                        if new_col == 6 and not self.selected_piece.has_moved:  # Kingside castling
+                            rook = self.board.get_piece_at_position((7, row))
+                            rook.grid_position = (5, row)
+                            self.board.piece_has_moved(rook)
+                        elif new_col == 2 and not self.selected_piece.has_moved:  # Queenside castling
+                            rook = self.board.get_piece_at_position((0, row))
+                            rook.grid_position = (3, row)
+                            self.board.piece_has_moved(rook)
+                    
+                    # Special handling for en passant
+                    if isinstance(self.selected_piece, Pawn):
+                        if abs(new_row - self.selected_piece.grid_position[1]) == 2:
+                            self.selected_piece.en_passant_target = True
                         else:
-                            # Handle pawn promotion
-                            if isinstance(self.selected_piece, Pawn) and (new_row == 0 or new_row == 7):
-                                self.board.promote_pawn(self.selected_piece)
+                            self.selected_piece.en_passant_target = False
+                        # Check and remove en passant captured pawn
+                        if (new_col, new_row) != self.selected_piece.grid_position:
+                            if not captured_piece and abs(new_col - self.selected_piece.grid_position[0]) == 1:
+                                captured_pawn = self.board.get_piece_at_position((new_col, row))
+                                if captured_pawn and isinstance(captured_pawn, Pawn) and captured_pawn.en_passant_target:
+                                    self.board.remove_piece(captured_pawn)
 
-                            # Track and print move
-                            self.moves.append(move_notation)
-                            print(self.moves)
+                    self.selected_piece.grid_position = (new_col, new_row)
+                    self.board.piece_has_moved(self.selected_piece)
 
-                            # Check for opening
-                            self.opening_name = check_opening(self.moves)
-                            if self.opening_name:
-                                print(self.opening_name)
+                    # Check for check
+                    simulated_board = SimulatedChessBoard()
+                    simulated_board.copy_from_board(self.board)
+                    if is_in_check(simulated_board,self.current_player_is_white):
+                        self.selected_piece.grid_position = original_position
+                        self.board.piece_has_moved(self.selected_piece)
+                        if captured_piece:
+                            self.board.add_piece(captured_piece)
+                    else:
+                        # Handle pawn promotion
+                        if isinstance(self.selected_piece, Pawn) and (new_row == 0 or new_row == 7):
+                            self.board.promote_pawn(self.selected_piece)
 
-                            # Evaluate board and update evaluation line
-                            board_str = board_to_string(self.board)
-                            evaluation_score = evaluate_board(board_str)
-                            self.update_evaluation_line(evaluation_score)
+                        # Track and print move
+                        self.moves.append(move_notation)
+                        print(self.moves)
 
-                            self.selected_piece = None
-                            self.move_mode = False
-                            self.current_player_is_white = not self.current_player_is_white
-                            engine_audio.play(move_sound, 0, False)
-                            self.print_board_state()
-                            self.last_move = ((col, row), (new_col, new_row))
+                        # Check for opening
+                        self.opening_name = check_opening(self.moves)
+                        if self.opening_name:
+                            print(self.opening_name)
 
-                            # Check for checkmate
-                            white_checkmate, black_checkmate = is_checkmate(self.board)
-                            if white_checkmate:
-                                self.winner_message = "Checkmate AI!"
-                                return
-                            if black_checkmate:
-                                self.winner_message = "Checkmate Win!"
-                                return
-            else:
-                selected_piece = self.board.get_piece_at_position((col, row))
-                if selected_piece and selected_piece.is_white == self.current_player_is_white:
-                    self.selected_piece = selected_piece
-                    self.move_mode = True
+                        # Evaluate board and update evaluation line
+                        evaluation_score = evaluate_board(simulated_board)
+                        self.update_evaluation_line(evaluation_score)
 
-    def is_in_check(self, is_white):
-        king_position = None
-        for piece in self.board.pieces:
-            if isinstance(piece, King) and piece.is_white == is_white:
-                king_position = piece.grid_position
-                break
-        
-        for piece in self.board.pieces:
-            if piece.is_white != is_white:
-                if king_position in piece.valid_moves(self.board):
-                    return True
-        return False
-    
+                        self.selected_piece = None
+                        self.move_mode = False
+                        self.current_player_is_white = not self.current_player_is_white
+                        engine_audio.play(move_sound, 0, False)
+                        self.print_board_state()
+                        self.board.render_pieces()
+                        self.last_move = ((col, row), (new_col, new_row))
+
+                        # Check for checkmate
+                        white_checkmate, black_checkmate = is_checkmate(simulated_board)
+                        if white_checkmate:
+                            self.winner_message = "Checkmate AI!"
+                            return
+                        if black_checkmate:
+                            self.winner_message = "Checkmate Win!"
+                            return
+        else:
+            selected_piece = self.board.get_piece_at_position((col, row))
+            if selected_piece and selected_piece.is_white == self.current_player_is_white:
+                self.selected_piece = selected_piece
+                self.move_mode = True
 
     def deselect_piece(self):
         if self.selected_piece:
@@ -554,12 +565,10 @@ class ChessGame(Rectangle2DNode):
             self.move_mode = False
 
     def print_board_state(self):
-        ##print(board_to_string(self.board))
+        #print(board_to_string(self.board))
         return
-    
+
     def make_ai_move(self):
-        board_str = board_to_string(self.board)
-        
         # Check if the current moves match any opening
         matched_openings = [(name, moves) for name, moves in openings.items() if self.moves == moves[:len(self.moves)]]
         
@@ -585,8 +594,10 @@ class ChessGame(Rectangle2DNode):
                         from_pos = p.grid_position
                         break
         else:
+            simulated_board = SimulatedChessBoard()
+            simulated_board.copy_from_board(self.board)
             # Use minimax if no opening is tracked or opening moves are exhausted
-            _, best_move = minimax(board_str, depth=2, is_maximizing_player=False, alpha=float('-inf'), beta=float('inf'))
+            _, best_move = minimax(simulated_board, depth=2, is_maximizing_player=False, alpha=float('-inf'), beta=float('inf'))
             p, to_pos = best_move
             from_pos = p.grid_position
 
@@ -595,11 +606,11 @@ class ChessGame(Rectangle2DNode):
         move_notation = generate_move_notation(piece, from_pos, to_pos, self.board)
         
         self.execute_move(from_pos, to_pos)
+        self.board.render_pieces()
 
         # Track and print move
         self.moves.append(move_notation)
         print(self.moves)
-
 
     def execute_move(self, from_pos, to_pos):
         piece = self.board.get_piece_at_position(from_pos)
@@ -615,17 +626,14 @@ class ChessGame(Rectangle2DNode):
                     rook = self.board.get_piece_at_position((7, from_pos[1]))
                     if rook and isinstance(rook, Rook) and not rook.has_moved:
                         rook.grid_position = (5, from_pos[1])
-                        rook.update_position()
                         self.board.piece_has_moved(rook)
                 elif to_pos[0] == 2 and not piece.has_moved:  # Queenside castling
                     rook = self.board.get_piece_at_position((0, from_pos[1]))
                     if rook and isinstance(rook, Rook) and not rook.has_moved:
                         rook.grid_position = (3, from_pos[1])
-                        rook.update_position()
                         self.board.piece_has_moved(rook)
 
             piece.grid_position = to_pos
-            piece.update_position()
             self.board.piece_has_moved(piece)
 
             # Handle pawn promotion
@@ -636,20 +644,20 @@ class ChessGame(Rectangle2DNode):
             self.current_player_is_white = not self.current_player_is_white
             self.print_board_state()
 
+            simulated_board = SimulatedChessBoard()
+            simulated_board.copy_from_board(self.board)
             # Evaluate board and update evaluation line
-            board_str = board_to_string(self.board)
-            evaluation_score = evaluate_board(board_str)
+            evaluation_score = evaluate_board(simulated_board)
             self.update_evaluation_line(evaluation_score)
 
             # Check for checkmate
-            white_checkmate, black_checkmate = is_checkmate(self.board)
+            white_checkmate, black_checkmate = is_checkmate(simulated_board)
             if white_checkmate:
-                self.winner_message = "Checkmate Lose!"
+                self.winner_message = "Checkmate AI!"
                 return
             if black_checkmate:
                 self.winner_message = "Checkmate Win!"
                 return
-
 
     def algebraic_to_positions(self, move, is_white):
         # Handle castling
@@ -707,12 +715,6 @@ class ChessGame(Rectangle2DNode):
 
         return piece_type, from_pos, to_pos
 
-
-
-
-
-
-
 def generate_move_notation(piece, from_pos, to_pos, board):
     piece_notation = get_piece_notation(piece)
     target_piece = board.get_piece_at_position(to_pos)
@@ -734,7 +736,6 @@ def generate_move_notation(piece, from_pos, to_pos, board):
     
     return piece_notation + capture_notation + position_to_algebraic(to_pos)
 
-
 def position_to_algebraic(pos):
     return chr(pos[0] + ord('a')) + str(8 - pos[1])
 
@@ -746,39 +747,6 @@ def board_to_string(board):
         board_state[row][col] = piece_char
 
     return "\n".join(["".join(row) for row in board_state])
-
-def string_to_board(board_str):
-    board = ChessBoard()
-    rows = board_str.split("\n")
-    for row in range(8):
-        for col in range(8):
-            char = rows[row][col]
-            if char != '.':
-                piece = char_to_piece(char, (col, row))
-                if piece:
-                    piece.opacity = 0  # Ensure the piece is not rendered
-                    board.add_piece(piece)
-    return board
-
-def char_to_piece(char, grid_position):
-    if char in 'KQRBNP':
-        is_white = True
-    elif char in 'kqrbnp':
-        is_white = False
-    else:
-        return None
-    
-    piece_map = {
-        'K': King,
-        'Q': Queen,
-        'R': Rook,
-        'B': Bishop,
-        'N': Knight,
-        'P': Pawn
-    }
-
-    piece_type = piece_map[char.upper()]
-    return piece_type(grid_position, chess_texture, is_white)
 
 def get_piece_notation(piece):
     if isinstance(piece, King):
@@ -795,7 +763,6 @@ def get_piece_notation(piece):
         return ''
     return ''
 
-
 def get_piece_char(piece):
     piece_type = type(piece)
     if piece_type == King:
@@ -811,7 +778,6 @@ def get_piece_char(piece):
     elif piece_type == Pawn:
         return 'P' if piece.is_white else 'p'
     return '.'
-
 
 piece_values = {"P": 100, "N": 280, "B": 320, "R": 479, "Q": 929, "K": 60000}
 pst = {
@@ -929,7 +895,7 @@ openings = {
     "Slav Defense Exchange": ["d4", "d5", "c4", "c6", "cxd5", "cxd5"],
     "Slav Defense Chebanenko": ["d4", "d5", "c4", "c6", "Nf3", "a6"],
     "Slav Defense Moran Defense": ["d4", "d5", "c4", "c6", "Nf3"],
-    "Slav Defense Schlechter": ["d4", "d5", "c4", "c6", "Nf3", "e6", "Nbd7"],
+    "Slav Defense Schlechter": ["d4", "d5", "c4", "c6", "Nf3", "e6", "Nbd2"],
     
     "English Opening Main Line": ["c4", "e5", "Nc3", "Nc6", "g3", "g6", "Bg2", "Bg7", "d3", "d6", "e4", "Be6", "Nge2", "Qd7"],
     "English Opening Symmetrical": ["c4", "c5", "g3", "g6"],
@@ -962,11 +928,8 @@ openings = {
     "Pirc Defense Byrne": ["e4", "d6", "d4", "Nf6", "Nc3", "g6", "Bg5", "Bg7", "Qd2", "h6", "Be3"]
 }
 
-
-def evaluate_board(board_str):
+def evaluate_board(board):
     score = 0
-    board = string_to_board(board_str)
-    
     # Check for checkmate
     white_checkmate, black_checkmate = is_checkmate(board)
     if white_checkmate:
@@ -974,19 +937,28 @@ def evaluate_board(board_str):
     if black_checkmate:
         return CHECKMATE_THRESHOLD  # White wins
 
-    rows = board_str.split("\n")
-    for y, row in enumerate(rows):
-        for x, char in enumerate(row):
-            if char != '.':
-                piece_value = piece_values[char.upper()]
-                # Flip the PST index for black pieces
-                if char.islower():
-                    pst_value = pst[char.upper()][(7 - y) * 8 + (7 - x)]
-                    score -= piece_value + pst_value
-                else:
-                    pst_value = pst[char.upper()][y * 8 + x]
-                    score += piece_value + pst_value
+    for piece in board.pieces:
+        piece_value = piece_values[get_piece_char(piece).upper()]
+        if piece.is_white:
+            pst_value = pst[get_piece_char(piece).upper()][piece.grid_position[1] * 8 + piece.grid_position[0]]
+            score += piece_value + pst_value
+        else:
+            pst_value = pst[get_piece_char(piece).upper()][( 7 - piece.grid_position[1] )* 8 + ( 7 - piece.grid_position[0])]
+            score -= piece_value + pst_value
     return score
+
+def is_in_check(board, is_white):
+    king_position = None
+    for piece in board.pieces:
+        if isinstance(piece, King) and piece.is_white == is_white:
+            king_position = piece.grid_position
+            break
+    
+    for piece in board.pieces:
+        if piece.is_white != is_white:
+            if king_position in piece.valid_moves(board):
+                return True
+    return False
 
 def is_checkmate(board):
     white_checkmate = checkmate_for_color(board, True)
@@ -999,9 +971,13 @@ def checkmate_for_color(board, is_white):
     for piece in board.pieces:
         if piece.is_white == is_white:
             for move in piece.valid_moves(board):
-                board_copy_str = simulate_move(board_to_string(board), piece.grid_position, move)
-                if not leaves_king_in_check(board_copy_str, is_white):
+                from_pos = piece.grid_position
+                to_pos = move
+                moved_piece, captured_piece = board.make_move(from_pos, to_pos)
+                if not leaves_king_in_check(board, is_white):
+                    board.undo_move(moved_piece, captured_piece, from_pos, to_pos)
                     return False
+                board.undo_move(moved_piece, captured_piece, from_pos, to_pos)
     return True
 
 def get_all_valid_moves(board, is_white):
@@ -1015,65 +991,52 @@ def get_all_valid_moves(board, is_white):
     moves.sort(key=lambda move: board.get_piece_at_position(move[1]) is not None, reverse=True)
     return moves
 
-def minimax(board_str, depth, is_maximizing_player, alpha, beta, indent=""):
+def minimax(board, depth, is_maximizing_player, alpha, beta, indent=""):
     if depth == 0:
-        evaluation = evaluate_board(board_str)
-        #print(f"{indent}Depth: {depth}, Evaluation: {evaluation}")
+        evaluation = evaluate_board(board)
         return evaluation, None
 
     best_move = None
-    board = string_to_board(board_str)
     is_white = is_maximizing_player
     all_moves = get_all_valid_moves(board, is_white)
 
     if is_maximizing_player:
         max_eval = float('-inf')
-        #print(f"{indent}Maximizing player at depth {depth}:")
         for piece, move in all_moves:
-            board_copy_str = simulate_move(board_str, piece.grid_position, move)
-            if not leaves_king_in_check(board_copy_str, is_white):
-                eval, _ = minimax(board_copy_str, depth - 1, False, alpha, beta, indent + "    ")
-                #move_notation = generate_move_notation(piece, piece.grid_position, move, board)
-                #print(f"{indent}  Move: {move_notation}, Eval: {eval}")
+            from_pos = piece.grid_position
+            to_pos = move
+            moved_piece, captured_piece = board.make_move(from_pos, to_pos)
+            if not leaves_king_in_check(board, is_white):
+                eval, _ = minimax(board, depth - 1, False, alpha, beta, indent + "    ")
                 if eval > max_eval:
                     max_eval = eval
                     best_move = (piece, move)
                 alpha = max(alpha, eval)
                 if beta <= alpha:
-                    #print(f"{indent}  Alpha-beta cutoff")
+                    board.undo_move(moved_piece, captured_piece, from_pos, to_pos)
                     break
-        #if best_move:
-        #    best_move_notation = generate_move_notation(best_move[0], best_move[0].grid_position, best_move[1], board)
-        #else:
-        #    best_move_notation = "No valid move"
-        #print(f"{indent}Best move at depth {depth}: {best_move_notation}, Max eval: {max_eval}")
+            board.undo_move(moved_piece, captured_piece, from_pos, to_pos)
         return max_eval, best_move
     else:
         min_eval = float('inf')
-        #print(f"{indent}Minimizing player at depth {depth}:")
         for piece, move in all_moves:
-            board_copy_str = simulate_move(board_str, piece.grid_position, move)
-            if not leaves_king_in_check(board_copy_str, is_white):
-                eval, _ = minimax(board_copy_str, depth - 1, True, alpha, beta, indent + "    ")
-                #move_notation = generate_move_notation(piece, piece.grid_position, move, board)
-                #print(f"{indent}  Move: {move_notation}, Eval: {eval}")
+            from_pos = piece.grid_position
+            to_pos = move
+            moved_piece, captured_piece = board.make_move(from_pos, to_pos)
+            if not leaves_king_in_check(board, is_white):
+                eval, _ = minimax(board, depth - 1, True, alpha, beta, indent + "    ")
                 if eval < min_eval:
                     min_eval = eval
                     best_move = (piece, move)
                 beta = min(beta, eval)
                 if beta <= alpha:
-                    #print(f"{indent}  Alpha-beta cutoff")
+                    board.undo_move(moved_piece, captured_piece, from_pos, to_pos)
                     break
-        #if best_move:
-        #    best_move_notation = generate_move_notation(best_move[0], best_move[0].grid_position, best_move[1], board)
-        #else:
-        #    best_move_notation = "No valid move"
-        #print(f"{indent}Best move at depth {depth}: {best_move_notation}, Min eval: {min_eval}")
+            board.undo_move(moved_piece, captured_piece, from_pos, to_pos)
         return min_eval, best_move
 
 
-def leaves_king_in_check(board_str, is_white):
-    board = string_to_board(board_str)
+def leaves_king_in_check(board, is_white):
     return is_in_check(board, is_white)
 
 def is_in_check(board, is_white):
@@ -1089,21 +1052,20 @@ def is_in_check(board, is_white):
                 return True
     return False
 
-
-
-
-def simulate_move(board_str, from_pos, to_pos):
-    board = string_to_board(board_str)
-    piece = board.get_piece_at_position(from_pos)
-    if piece:
-        captured_piece = board.get_piece_at_position(to_pos)
-        if captured_piece:
-            board.remove_piece(captured_piece)
-        piece.grid_position = to_pos
-        piece.update_position()
-    new_board_str = board_to_string(board)
-    return new_board_str
-
+def get_piece_frame_x(piece):
+    if isinstance(piece, King):
+        return 3
+    elif isinstance(piece, Queen):
+        return 4
+    elif isinstance(piece, Rook):
+        return 0
+    elif isinstance(piece, Bishop):
+        return 2
+    elif isinstance(piece, Knight):
+        return 1
+    elif isinstance(piece, Pawn):
+        return 5
+    return 0
 
 def start_chess_game():
     global game, camera
