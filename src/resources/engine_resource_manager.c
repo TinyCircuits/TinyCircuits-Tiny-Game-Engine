@@ -14,11 +14,10 @@
     #include "hardware/flash.h"
     #include "hardware/sync.h"
     
-    #define MICROPY_HW_FLASH_STORAGE_BASE (PICO_FLASH_SIZE_BYTES - MICROPY_HW_FLASH_STORAGE_BYTES)
-    #define ENGINE_HW_FLASH_RESOURCE_SPACE_BASE MICROPY_HW_FLASH_STORAGE_BYTES
+    #define ENGINE_HW_FLASH_RESOURCE_SPACE_BASE 1 * 1024 * 1024
 
     // Intermediate buffer to hold data read from flash before
-    // programming it to a contigious area
+    // programming it to a contigious flash area
     uint8_t page_prog[FLASH_PAGE_SIZE];
     uint16_t page_prog_index = 0;
     uint32_t page_prog_count = 0;
@@ -92,6 +91,7 @@ mp_obj_t engine_resource_get_space_bytearray(uint32_t space_size, bool fast_spac
             // Need to disable interrupts when texture resources are created:
             // https://github.com/raspberrypi/pico-examples/issues/34#issuecomment-1369267917
             // otherwise hangs forever
+            
             uint32_t paused_interrupts = save_and_disable_interrupts();
             flash_range_erase(ENGINE_HW_FLASH_RESOURCE_SPACE_BASE+sectors_to_erase_offset, sectors_to_erase_size);
             restore_interrupts(paused_interrupts);
