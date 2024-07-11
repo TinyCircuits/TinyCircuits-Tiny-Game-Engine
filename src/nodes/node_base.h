@@ -14,7 +14,7 @@ typedef struct{
     mp_obj_base_t base;                     // All nodes get defined by what is placed in this
     linked_list_node *object_list_node;     // Pointer to where this node is stored in the layers of linked lists the engine tracks (used for easy linked list deletion)
     linked_list_node *deletable_list_node;  // Pointer to delete linked list node so that node can remove itself from the list if gc'ed before node clear step
-    uint16_t layer;                         // The layer index of the linked list the 'object_list_node' lives in (used for easy deletion)
+    uint8_t layer;                          // The layer index of the linked list the 'object_list_node' lives in (used for easy deletion)
     uint8_t meta_data;                      // Holds bits related to if this node is visible (not shown or shown but callbacks still called), disabled (callbacks not called but still shown), or just added
     uint8_t type;                           // The type of this node (see 'node_types.h')
     void *attr_accessor;                    // Used in conjunction with mp_get_attr

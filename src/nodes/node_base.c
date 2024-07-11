@@ -306,7 +306,7 @@ mp_obj_t node_base_remove_child(mp_obj_t self_parent_in, mp_obj_t child_in){
 }
 
 
-void node_base_set_layer(engine_node_base_t *node_base, uint16_t layer){
+void node_base_set_layer(engine_node_base_t *node_base, uint8_t layer){
     engine_remove_object_from_layer(node_base->object_list_node, node_base->layer);
     node_base->layer = layer;
     node_base->object_list_node = engine_add_object_to_layer(node_base, node_base->layer);
