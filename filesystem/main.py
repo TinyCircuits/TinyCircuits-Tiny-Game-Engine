@@ -25,7 +25,7 @@ try:
             os.chdir(ROOT_DIR)
     else:
         if not has_launcher_state():
-            execfile("system/splash.py")
+            execfile("system/show_splash.py")
         execfile("system/launcher.py")
     # Perform hard reset after the app finishes.
     thumby_reset(True)
