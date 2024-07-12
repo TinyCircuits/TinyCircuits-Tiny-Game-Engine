@@ -51,7 +51,16 @@ execute(['make', '-C', '../ports/rp2', '-j8', 'BOARD=THUMBY_COLOR', 'USER_C_MODU
 print("\n\nDone building rp2 port!\n")
 
 
-# ### Step 3: Assume that the port is plugged in and may be running a program, connect to it
+# ### Step 3: Make sure output binary isn't larger than 1 MiB
+#             as the flash is partitioned as FIRMWARE | SCRATCH | FILESYSTEM
+#             and only 1MiB is assumed for the max size of the binary
+#             (see resources/engine_resource_manager.c)
+output_bin_size = os.path.getsize("../ports/rp2/build-THUMBY_COLOR/firmware.bin")
+
+if output_bin_size >= 1 * 1024 * 1024:
+    raise Exception("ERROR: Output binary size is too large! It can only be upto 1Mib in size. See: https://github.com/TinyCircuits/TinyCircuits-Tiny-Game-Engine/issues/66")
+
+# ### Step 4: Assume that the port is plugged in and may be running a program, connect to it
 #             end program with ctrl-c, and put into BOOTLOADER mode for upload
 print("Looking for serial port to reset...")
 for port, desc, hwid in sorted(serial.tools.list_ports.comports()):
@@ -81,7 +90,7 @@ machine.bootloader()
         print("\nConnected and reset!\n")
 
 
-# ### Step 4: Find the BOOTSEL device and copy over the firmware
+# ### Step 5: Find the BOOTSEL device and copy over the firmware
 print("Finding drive letter... (may need to manually put into BOOTSEL mode)")
 mount = None
 done = False
