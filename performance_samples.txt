@@ -1151,3 +1151,19 @@ vox_node_perf_test.py, avg. FPS: 44.23928
 
 
  ----- 
+
+
+
+Fri Jul 12 15:20:14 2024 -0400 : 2ce7476e61b43cc8c226de748de68c5bef05f852
+Increased node layers to 0 ~ 127 instead of 0 ~ 7
+
+{
+line_node_perf_test.py, avg. FPS: 291.3096
+test_opacity_perf_test.py, avg. FPS: 127.0885
+test_perf_test.py, avg. FPS: 147.8089
+circle_node_perf_test.py, avg. FPS: 290.8418
+vox_node_perf_test.py, avg. FPS: 44.05459
+}
+
+
+ ----- 
