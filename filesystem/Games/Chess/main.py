@@ -49,25 +49,22 @@ class King(ChessPiece):
                 target_piece = board.get_piece_at_position(new_pos)
                 if not target_piece or target_piece.is_white != self.is_white:
                     moves.append(new_pos)
-        
-        # Castling
+
         if not self.has_moved:
             # Kingside castling
-            if isinstance(board.get_piece_at_position((7, self.grid_position[1])), Rook) and \
-               not board.get_piece_at_position((5, self.grid_position[1])) and \
-               not board.get_piece_at_position((6, self.grid_position[1])) and \
-               not board.get_piece_at_position((7, self.grid_position[1])).has_moved:
-                moves.append((6, self.grid_position[1]))
+            rook = board.get_piece_at_position((7, self.grid_position[1]))
+            if isinstance(rook, Rook) and not rook.has_moved:
+                if not any(board.get_piece_at_position((i, self.grid_position[1])) for i in range(5, 7)):
+                    moves.append((6, self.grid_position[1]))
 
             # Queenside castling
-            if isinstance(board.get_piece_at_position((0, self.grid_position[1])), Rook) and \
-               not board.get_piece_at_position((1, self.grid_position[1])) and \
-               not board.get_piece_at_position((2, self.grid_position[1])) and \
-               not board.get_piece_at_position((3, self.grid_position[1])) and \
-               not board.get_piece_at_position((0, self.grid_position[1])).has_moved:
-                moves.append((2, self.grid_position[1]))
+            rook = board.get_piece_at_position((0, self.grid_position[1]))
+            if isinstance(rook, Rook) and not rook.has_moved:
+                if not any(board.get_piece_at_position((i, self.grid_position[1])) for i in range(1, 4)):
+                    moves.append((2, self.grid_position[1]))
 
         return moves
+
 
 class Queen(ChessPiece):
     def valid_moves(self, board):
@@ -86,6 +83,7 @@ class Queen(ChessPiece):
                 else:
                     break
         return moves
+
 
 class Rook(ChessPiece):
     def valid_moves(self, board):
@@ -334,29 +332,35 @@ class ChessBoard(Rectangle2DNode):
 class SimulatedChessBoard:
     def __init__(self):
         self.pieces = []
+        self.piece_positions = {}  # Cache for piece positions
+        self.piece_scores = {}  # Cache for piece evaluation scores
 
     def add_piece(self, piece):
         self.pieces.append(piece)
+        self.piece_positions[piece.grid_position] = piece
+        self.update_piece_score(piece)
 
     def remove_piece(self, piece):
         if piece in self.pieces:
             self.pieces.remove(piece)
+            del self.piece_positions[piece.grid_position]
+            del self.piece_scores[piece]
 
     def get_piece_at_position(self, position):
-        for piece in self.pieces:
-            if piece.grid_position == position:
-                return piece
-        return None
+        return self.piece_positions.get(position, None)
 
     def piece_has_moved(self, piece):
         piece.has_moved = True
 
     def copy_from_board(self, board):
         self.pieces = [piece.__class__(piece.grid_position, piece.is_white) for piece in board.pieces]
+        self.piece_positions = {piece.grid_position: piece for piece in self.pieces}
+        self.piece_scores = {}
         for piece, original_piece in zip(self.pieces, board.pieces):
             piece.has_moved = original_piece.has_moved
             if isinstance(piece, Pawn):
                 piece.en_passant_target = original_piece.en_passant_target
+            self.update_piece_score(piece)
 
     def make_move(self, from_pos, to_pos):
         piece = self.get_piece_at_position(from_pos)
@@ -365,15 +369,33 @@ class SimulatedChessBoard:
             if captured_piece:
                 self.remove_piece(captured_piece)
             piece.grid_position = to_pos
+            self.piece_positions[to_pos] = piece
+            del self.piece_positions[from_pos]
+            self.update_piece_score(piece)
             self.piece_has_moved(piece)
         return piece, captured_piece
 
     def undo_move(self, piece, captured_piece, from_pos, to_pos):
         if piece:
             piece.grid_position = from_pos
-            piece.has_moved = False #TODO: - should reset this to what it was
+            piece.has_moved = False  # TODO: - should reset this to what it was
+            self.piece_positions[from_pos] = piece
+            del self.piece_positions[to_pos]
+            self.update_piece_score(piece)
         if captured_piece:
             self.add_piece(captured_piece)
+
+    def update_piece_score(self, piece):
+        piece_char = get_piece_char(piece)
+        piece_value = piece_values[piece_char.upper()]
+        pos_idx = piece.grid_position[1] * 8 + piece.grid_position[0]
+        if piece.is_white:
+            pst_value = pst[piece_char.upper()][pos_idx]
+            self.piece_scores[piece] = piece_value + pst_value
+        else:
+            pst_value = pst[piece_char.upper()][(7 - piece.grid_position[1]) * 8 + (7 - piece.grid_position[0])]
+            self.piece_scores[piece] = -(piece_value + pst_value)
+
 
 
 class ChessGame(Rectangle2DNode):
@@ -639,6 +661,7 @@ class ChessGame(Rectangle2DNode):
             # Handle pawn promotion
             if isinstance(piece, Pawn) and (to_pos[1] == 0 or to_pos[1] == 7):
                 self.board.promote_pawn(piece)
+
 
             engine_audio.play(move_sound, 0, False)
             self.current_player_is_white = not self.current_player_is_white
@@ -937,14 +960,9 @@ def evaluate_board(board):
     if black_checkmate:
         return CHECKMATE_THRESHOLD  # White wins
 
-    for piece in board.pieces:
-        piece_value = piece_values[get_piece_char(piece).upper()]
-        if piece.is_white:
-            pst_value = pst[get_piece_char(piece).upper()][piece.grid_position[1] * 8 + piece.grid_position[0]]
-            score += piece_value + pst_value
-        else:
-            pst_value = pst[get_piece_char(piece).upper()][( 7 - piece.grid_position[1] )* 8 + ( 7 - piece.grid_position[0])]
-            score -= piece_value + pst_value
+    for piece_score in board.piece_scores.values():
+        score += piece_score
+
     return score
 
 def is_in_check(board, is_white):
@@ -953,7 +971,7 @@ def is_in_check(board, is_white):
         if isinstance(piece, King) and piece.is_white == is_white:
             king_position = piece.grid_position
             break
-    
+
     for piece in board.pieces:
         if piece.is_white != is_white:
             if king_position in piece.valid_moves(board):
@@ -961,23 +979,22 @@ def is_in_check(board, is_white):
     return False
 
 def is_checkmate(board):
-    white_checkmate = checkmate_for_color(board, True)
-    black_checkmate = checkmate_for_color(board, False)
-    return white_checkmate, black_checkmate
+    return checkmate_for_color(board, True), checkmate_for_color(board, False)
 
 def checkmate_for_color(board, is_white):
     if not is_in_check(board, is_white):
         return False
     for piece in board.pieces:
         if piece.is_white == is_white:
-            for move in piece.valid_moves(board):
-                from_pos = piece.grid_position
-                to_pos = move
-                moved_piece, captured_piece = board.make_move(from_pos, to_pos)
-                if not leaves_king_in_check(board, is_white):
-                    board.undo_move(moved_piece, captured_piece, from_pos, to_pos)
+            original_position = piece.grid_position
+            valid_moves = piece.valid_moves(board)
+            for move in valid_moves:
+                captured_piece = board.get_piece_at_position(move)
+                board.make_move(original_position, move)
+                if not is_in_check(board, is_white):
+                    board.undo_move(piece, captured_piece, original_position, move)
                     return False
-                board.undo_move(moved_piece, captured_piece, from_pos, to_pos)
+                board.undo_move(piece, captured_piece, original_position, move)
     return True
 
 def get_all_valid_moves(board, is_white):
@@ -991,10 +1008,9 @@ def get_all_valid_moves(board, is_white):
     moves.sort(key=lambda move: board.get_piece_at_position(move[1]) is not None, reverse=True)
     return moves
 
-def minimax(board, depth, is_maximizing_player, alpha, beta, indent=""):
+def minimax(board, depth, is_maximizing_player, alpha, beta):
     if depth == 0:
-        evaluation = evaluate_board(board)
-        return evaluation, None
+        return evaluate_board(board), None
 
     best_move = None
     is_white = is_maximizing_player
@@ -1006,8 +1022,8 @@ def minimax(board, depth, is_maximizing_player, alpha, beta, indent=""):
             from_pos = piece.grid_position
             to_pos = move
             moved_piece, captured_piece = board.make_move(from_pos, to_pos)
-            if not leaves_king_in_check(board, is_white):
-                eval, _ = minimax(board, depth - 1, False, alpha, beta, indent + "    ")
+            if not is_in_check(board, is_white):
+                eval, _ = minimax(board, depth - 1, False, alpha, beta)
                 if eval > max_eval:
                     max_eval = eval
                     best_move = (piece, move)
@@ -1023,8 +1039,8 @@ def minimax(board, depth, is_maximizing_player, alpha, beta, indent=""):
             from_pos = piece.grid_position
             to_pos = move
             moved_piece, captured_piece = board.make_move(from_pos, to_pos)
-            if not leaves_king_in_check(board, is_white):
-                eval, _ = minimax(board, depth - 1, True, alpha, beta, indent + "    ")
+            if not is_in_check(board, is_white):
+                eval, _ = minimax(board, depth - 1, True, alpha, beta)
                 if eval < min_eval:
                     min_eval = eval
                     best_move = (piece, move)
@@ -1036,8 +1052,6 @@ def minimax(board, depth, is_maximizing_player, alpha, beta, indent=""):
         return min_eval, best_move
 
 
-def leaves_king_in_check(board, is_white):
-    return is_in_check(board, is_white)
 
 def is_in_check(board, is_white):
     king_position = None
