@@ -13,8 +13,16 @@
     #include "pico/stdlib.h"
     #include "hardware/flash.h"
     #include "hardware/sync.h"
-    
-    #define ENGINE_HW_FLASH_RESOURCE_SPACE_BASE 1 * 1024 * 1024
+
+    // Assuming the flash is partitioned such that the firmware
+    // binary starts at XIP_BASE or the beginning of flash,
+    // allow the firmware 1MiB of room.
+    // PARTITION: | FIRMWARE | SCRATCH | FILESYSTEM |
+    #define FLASH_RESOURCE_SPACE_BASE 1 * 1024 * 1024
+
+    // The room left over after the room for the firmware
+    // and the MicroPython filesystem is flash scratch
+    #define FLASH_RESOURCE_SPACE_SIZE PICO_FLASH_SIZE_BYTES - (MICROPY_HW_FLASH_STORAGE_BYTES + FLASH_RESOURCE_SPACE_BASE)
 
     // Intermediate buffer to hold data read from flash before
     // programming it to a contigious flash area
@@ -27,6 +35,9 @@
 #endif
 
 
+// These are used for tracking where we are storing
+// data and where the data is stored inside that
+// location
 uint8_t *current_storing_location = NULL;
 uint32_t index_in_storing_location = 0;
 bool storing_in_ram = false;
@@ -80,24 +91,23 @@ mp_obj_t engine_resource_get_space_bytearray(uint32_t space_size, bool fast_spac
             uint32_t sectors_to_erase_offset = already_erased_sectors_count*FLASH_SECTOR_SIZE;
             uint32_t sectors_to_erase_size   = additional_sectors_to_erase_count*FLASH_SECTOR_SIZE;
 
-            ENGINE_INFO_PRINTF("ResourceManager: calculated for erasing and programming flash:");
-            ENGINE_INFO_PRINTF("\trequired_pages_count:\t\t\t%lu", required_pages_count);
-            ENGINE_INFO_PRINTF("\talready_erased_sectors_count:\t\t%lu", already_erased_sectors_count);
-            ENGINE_INFO_PRINTF("\ttotal_erase_sector_count:\t\t%lu", total_erase_sector_count);
-            ENGINE_INFO_PRINTF("\tadditional_sectors_to_erase_count:\t%lu", additional_sectors_to_erase_count);
-            ENGINE_INFO_PRINTF("\tsectors_to_erase_offset:\t\t%lu", sectors_to_erase_offset);
-            ENGINE_INFO_PRINTF("\tsectors_to_erase_size:\t\t\t%lu", sectors_to_erase_size);
+            // Before erasing everything for the requested size,
+            // check if we're going to be erasing addresses out of
+            // bounds, stop everything if that is going to happen
+            // (will lose filesystem otherwise!)
+            if(FLASH_RESOURCE_SPACE_BASE+sectors_to_erase_offset+sectors_to_erase_size >= FLASH_RESOURCE_SPACE_BASE+FLASH_RESOURCE_SPACE_SIZE){
+                mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineResourceManager: ERROR: Scratch space is going to overflow! Too many assets loaded! Scratch space is %ld bytes"), FLASH_RESOURCE_SPACE_SIZE);
+            }
             
             // Need to disable interrupts when texture resources are created:
             // https://github.com/raspberrypi/pico-examples/issues/34#issuecomment-1369267917
             // otherwise hangs forever
-            
             uint32_t paused_interrupts = save_and_disable_interrupts();
-            flash_range_erase(ENGINE_HW_FLASH_RESOURCE_SPACE_BASE+sectors_to_erase_offset, sectors_to_erase_size);
+            flash_range_erase(FLASH_RESOURCE_SPACE_BASE+sectors_to_erase_offset, sectors_to_erase_size);
             restore_interrupts(paused_interrupts);
 
             // Stored in contiguous flash location
-            array->items = (uint8_t*)(XIP_BASE + ENGINE_HW_FLASH_RESOURCE_SPACE_BASE + (used_pages_count*FLASH_PAGE_SIZE));
+            array->items = (uint8_t*)(XIP_BASE + FLASH_RESOURCE_SPACE_BASE + (used_pages_count*FLASH_PAGE_SIZE));
 
             used_pages_count += required_pages_count;
         #endif
