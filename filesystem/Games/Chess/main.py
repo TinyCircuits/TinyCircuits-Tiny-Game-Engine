@@ -581,9 +581,9 @@ class ChessGame(Rectangle2DNode):
             # Update endgame flag
             self.update_endgame_flag()
             # Use minimax if no opening is tracked or opening moves are exhausted
-            depth = 2
+            depth = 4
             if self.endgame:
-                depth = 3
+                depth = 5
             eval_score, best_move = minimax(simulated_board, depth=depth, is_maximizing_player=False, alpha=float('-inf'), beta=float('inf'), endgame=self.endgame, cant_castle=self.ai_in_check_cant_castle)
             if eval_score > CHECKMATE_SCORE:
                 is_in_check = minimax_check(simulated_board, self.current_player_is_white)
@@ -658,10 +658,11 @@ class ChessGame(Rectangle2DNode):
         # Handle pawn promotion
         if isinstance(piece, Pawn) and (to_pos[1] == 0 or to_pos[1] == 7):
             self.board.promote_pawn(piece)
+            move_notation = f"{move_notation}=Q"
 
         # Track and print move
         self.moves.append(move_notation)
-        #print(generate_pgn_moves_list(self.moves))
+        print(generate_pgn_moves_list(self.moves))
 
         # Check for opening
         self.opening_name = check_opening(self.moves)
