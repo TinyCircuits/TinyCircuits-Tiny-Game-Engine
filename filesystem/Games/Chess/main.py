@@ -537,22 +537,18 @@ class ChessGame(Rectangle2DNode):
         elif engine_io.DOWN.is_just_pressed:
             self.move_cursor((0, 1))
         elif engine_io.A.is_just_pressed:
-            print(f"Move AI Turn: {ai_turn}")
             self.select_or_move_piece()
         elif engine_io.B.is_just_pressed:
             self.deselect_piece()
 
         # Process the AI move if the flag is set
         if ai_turn and self.process_ai_move:
-            print("AI going to make move")
-            print(f"Move AI Turn: {ai_turn}")
             self.process_ai_move = False  # Reset the flag
             self.make_ai_move()
             return
 
         # Set the flag if it's not the player's turn and no piece is selected
         if ai_turn and not self.selected_piece and not self.process_ai_move:
-            print("Preparing for AI move next turn")
             self.process_ai_move = True  # Set the flag
 
     def move_cursor(self, direction):
@@ -667,7 +663,6 @@ class ChessGame(Rectangle2DNode):
             self.make_move(piece, to_pos)
             
     def make_move(self, piece, to_pos):
-        print(f"Make Move current_player_is_white: {self.current_player_is_white}")
         from_pos = piece.grid_position
         captured_piece = self.board.get_piece_at_position(to_pos)
         original_position = piece.grid_position
