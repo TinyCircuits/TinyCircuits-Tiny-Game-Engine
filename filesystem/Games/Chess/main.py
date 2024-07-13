@@ -274,36 +274,6 @@ class ChessBoard(Rectangle2DNode):
         self.add_piece(Rook((0, base_row), is_white))
         self.add_piece(Rook((7, base_row), is_white))
 
-        if is_white:
-            # Knights
-            self.add_piece(Knight((1, base_row), is_white))
-            self.add_piece(Knight((6, base_row), is_white))
-
-            # Bishops
-            self.add_piece(Bishop((2, base_row), is_white))
-            self.add_piece(Bishop((5, base_row), is_white))
-
-            # Queens
-            self.add_piece(Queen((3, base_row), is_white))
-
-        # Kings
-        self.add_piece(King((4, base_row), is_white))
-
-        # Pawns
-        if not is_white:
-            for i in range(5,8,1):
-                self.add_piece(Pawn((i, pawn_row), is_white))
-
-        self.render_pieces()  # Render the pieces after setting them up
-
-    def setup_piecesf(self, is_white):
-        base_row = 7 if is_white else 0
-        pawn_row = 6 if is_white else 1
-
-        # Rooks
-        self.add_piece(Rook((0, base_row), is_white))
-        self.add_piece(Rook((7, base_row), is_white))
-
         # Knights
         self.add_piece(Knight((1, base_row), is_white))
         self.add_piece(Knight((6, base_row), is_white))
