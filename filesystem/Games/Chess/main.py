@@ -33,7 +33,6 @@ OFFSET = CELL_WIDTH / 2
 class ChessPiece:
     def __init__(self, grid_position, is_white):
         self.grid_position = grid_position
-        self.layer = 5
         self.is_white = is_white
         self.has_moved = False
 
@@ -265,7 +264,7 @@ class ChessBoard(Rectangle2DNode):
                 sprite.position = Vector2(piece.grid_position[0] * CELL_WIDTH + OFFSET, piece.grid_position[1] * CELL_HEIGHT + OFFSET)
             else:
                 sprite.position = Vector2((7 - piece.grid_position[0]) * CELL_WIDTH + OFFSET, (7 - piece.grid_position[1]) * CELL_HEIGHT + OFFSET)
-            sprite.set_layer(5)
+            sprite.layer = 5
             sprite.playing = False
             sprite.frame_count_x = 6
             sprite.frame_count_y = 2
