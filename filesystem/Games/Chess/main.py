@@ -169,7 +169,7 @@ class Pawn(ChessPiece):
         return moves
 
 class ChessBoard(Rectangle2DNode):
-    def __init__(self):
+    def __init__(self, player_is_white):
         super().__init__(self)
         self.width = DISP_WIDTH
         self.height = DISP_HEIGHT
@@ -183,6 +183,7 @@ class ChessBoard(Rectangle2DNode):
         self.sprites = []
         self.squares = []
         self.set_layer(0)
+        self.player_is_white = player_is_white
         self.draw_board()
         
         self.highlight_square_node = Rectangle2DNode()
@@ -219,10 +220,15 @@ class ChessBoard(Rectangle2DNode):
         self.ai_move_to_highlight_node.opacity = 0
 
     def highlight_ai_move(self, from_position, to_position):
-        self.ai_move_from_highlight_node.position = Vector2(from_position[0] * CELL_WIDTH + OFFSET, from_position[1] * CELL_HEIGHT + OFFSET)
+        if self.player_is_white:
+            from_pos = Vector2(from_position[0] * CELL_WIDTH + OFFSET, from_position[1] * CELL_HEIGHT + OFFSET)
+            to_pos = Vector2(to_position[0] * CELL_WIDTH + OFFSET, to_position[1] * CELL_HEIGHT + OFFSET)
+        else:
+            from_pos = Vector2((7 - from_position[0]) * CELL_WIDTH + OFFSET, (7 - from_position[1]) * CELL_HEIGHT + OFFSET)
+            to_pos = Vector2((7 - to_position[0]) * CELL_WIDTH + OFFSET, (7 - to_position[1]) * CELL_HEIGHT + OFFSET)
+        self.ai_move_from_highlight_node.position = from_pos
         self.ai_move_from_highlight_node.opacity = 1
-
-        self.ai_move_to_highlight_node.position = Vector2(to_position[0] * CELL_WIDTH + OFFSET, to_position[1] * CELL_HEIGHT + OFFSET)
+        self.ai_move_to_highlight_node.position = to_pos
         self.ai_move_to_highlight_node.opacity = 1
 
     def clear_ai_move_highlight(self):
@@ -232,7 +238,10 @@ class ChessBoard(Rectangle2DNode):
     def draw_board(self):
         for row in range(8):
             for col in range(8):
-                square_color = Color(77/256,125/256,210/256) if (row + col) % 2 == 1 else Color(220/256,220/256,230/256)
+                if self.player_is_white:
+                    square_color = Color(77/256, 125/256, 210/256) if (row + col) % 2 == 1 else Color(220/256, 220/256, 230/256)
+                else:
+                    square_color = Color(77/256, 125/256, 210/256) if (row + col) % 2 == 0 else Color(220/256, 220/256, 230/256)
                 square = Rectangle2DNode()
                 square.position = Vector2(col * CELL_WIDTH + OFFSET, row * CELL_HEIGHT + OFFSET)
                 square.width = CELL_WIDTH
@@ -245,14 +254,16 @@ class ChessBoard(Rectangle2DNode):
     def render_pieces(self):
         # Clear existing piece sprites
         for sprite in self.sprites:
-            sprite.opacity=0
+            sprite.opacity = 0
         self.sprites = []
-            
-        
+
         # Render piece sprites based on the current board state
         for piece in self.pieces:
             sprite = Sprite2DNode(texture=chess_texture)
-            sprite.position = Vector2(piece.grid_position[0] * CELL_WIDTH + OFFSET, piece.grid_position[1] * CELL_HEIGHT + OFFSET)
+            if self.player_is_white:
+                sprite.position = Vector2(piece.grid_position[0] * CELL_WIDTH + OFFSET, piece.grid_position[1] * CELL_HEIGHT + OFFSET)
+            else:
+                sprite.position = Vector2((7 - piece.grid_position[0]) * CELL_WIDTH + OFFSET, (7 - piece.grid_position[1]) * CELL_HEIGHT + OFFSET)
             sprite.set_layer(5)
             sprite.playing = False
             sprite.frame_count_x = 6
@@ -295,14 +306,22 @@ class ChessBoard(Rectangle2DNode):
         self.render_pieces()  # Render the pieces after setting them up
 
     def highlight_square(self, grid_position):
-        self.highlight_square_node.position = Vector2(grid_position[0] * CELL_WIDTH + OFFSET, grid_position[1] * CELL_HEIGHT + OFFSET)
+        if self.player_is_white:
+            position = Vector2(grid_position[0] * CELL_WIDTH + OFFSET, grid_position[1] * CELL_HEIGHT + OFFSET)
+        else:
+            position = Vector2((7 - grid_position[0]) * CELL_WIDTH + OFFSET, (7 - grid_position[1]) * CELL_HEIGHT + OFFSET)
+        self.highlight_square_node.position = position
         self.highlight_square_node.opacity = 1
 
     def clear_highlight(self):
         self.highlight_square_node.opacity = 0
 
     def select_square(self, grid_position):
-        self.selected_square_node.position = Vector2(grid_position[0] * CELL_WIDTH + OFFSET, grid_position[1] * CELL_HEIGHT + OFFSET)
+        if self.player_is_white:
+            position = Vector2(grid_position[0] * CELL_WIDTH + OFFSET, grid_position[1] * CELL_HEIGHT + OFFSET)
+        else:
+            position = Vector2((7 - grid_position[0]) * CELL_WIDTH + OFFSET, (7 - grid_position[1]) * CELL_HEIGHT + OFFSET)
+        self.selected_square_node.position = position
         self.selected_square_node.opacity = 1
 
     def deselect_square(self):
@@ -399,10 +418,10 @@ class SimulatedChessBoard:
 
 
 class ChessGame(Rectangle2DNode):
-    def __init__(self, camera):
+    def __init__(self, camera, player_is_white):
         super().__init__(self)
         self.camera = camera
-        self.board = ChessBoard()
+        self.board = ChessBoard(player_is_white)
         self.add_child(self.board)
         self.set_layer(0)
         self.current_player_is_white = True
@@ -410,7 +429,6 @@ class ChessGame(Rectangle2DNode):
         self.winner_message = None
         self.board.setup_pieces(is_white=False)  # Black pieces
         self.board.setup_pieces(is_white=True)   # White pieces
-        self.selected_grid_position = (4, 6)
         self.print_board_state()
         self.move_mode = False
         self.process_ai_move = False
@@ -419,6 +437,15 @@ class ChessGame(Rectangle2DNode):
         self.moves = []
         self.endgame = False
         self.ai_in_check_cant_castle = None
+        # Choose a random opening if the AI is white
+        self.ai_opening_moves = None
+        self.player_is_white = player_is_white
+        if self.player_is_white:
+            self.selected_grid_position = (4, 6)
+        else:
+            self.selected_grid_position = (7 - 4, 7 - 6)
+        if not self.player_is_white:
+            self.ai_opening_moves =random.choice(list(openings.values()))
 
         # Initialize evaluation lines
         self.white_evaluation_line = Line2DNode(start=Vector2(0, DISP_HEIGHT), end=Vector2(0, DISP_HEIGHT), thickness=2, color=engine_draw.white, opacity=1.0, outline=False)
@@ -446,14 +473,26 @@ class ChessGame(Rectangle2DNode):
         normalized_score = (clamped_score - min_score) / (max_score - min_score)
         y_pos = DISP_HEIGHT * (1 - normalized_score)  # Invert to match coordinate system
 
-        white_line_end_pos = Vector2(0, y_pos)
-        black_line_end_pos = Vector2(0, y_pos)
+        if self.player_is_white:
+            white_line_start_pos = Vector2(0, DISP_HEIGHT)
+            black_line_start_pos = Vector2(0, 0)
+            white_line_end_pos = Vector2(0, y_pos)
+            black_line_end_pos = Vector2(0, y_pos)
+        else:
+            white_line_start_pos = Vector2(0, 0)
+            black_line_start_pos = Vector2(0, DISP_HEIGHT)
+            white_line_end_pos = Vector2(0, DISP_HEIGHT - y_pos)
+            black_line_end_pos = Vector2(0, DISP_HEIGHT - y_pos)
 
         # Update the positions of the evaluation lines
+        self.white_evaluation_line.start = white_line_start_pos
         self.white_evaluation_line.end = white_line_end_pos
+        self.black_evaluation_line.start = black_line_start_pos
         self.black_evaluation_line.end = black_line_end_pos
 
     def tick(self, dt):
+        ai_turn = self.current_player_is_white != self.player_is_white
+
         if self.winner_message:
             win_text = Text2DNode(position=Vector2(DISP_WIDTH/2, DISP_HEIGHT/2),
                         font=font,
@@ -472,7 +511,7 @@ class ChessGame(Rectangle2DNode):
             self.board.highlight_square(self.selected_piece.grid_position)
         self.board.select_square(self.selected_grid_position)
 
-        if self.current_player_is_white and self.post_ai_check:
+        if not ai_turn and self.post_ai_check:
             simulated_board = SimulatedChessBoard()
             simulated_board.copy_from_board(self.board)
             is_in_check = minimax_check(simulated_board, self.current_player_is_white)
@@ -498,20 +537,27 @@ class ChessGame(Rectangle2DNode):
         elif engine_io.DOWN.is_just_pressed:
             self.move_cursor((0, 1))
         elif engine_io.A.is_just_pressed:
+            print(f"Move AI Turn: {ai_turn}")
             self.select_or_move_piece()
         elif engine_io.B.is_just_pressed:
             self.deselect_piece()
 
         # Process the AI move if the flag is set
-        if self.process_ai_move:
+        if ai_turn and self.process_ai_move:
+            print("AI going to make move")
+            print(f"Move AI Turn: {ai_turn}")
             self.process_ai_move = False  # Reset the flag
             self.make_ai_move()
+            return
 
         # Set the flag if it's not the player's turn and no piece is selected
-        if not self.current_player_is_white and not self.selected_piece and not self.process_ai_move:
+        if ai_turn and not self.selected_piece and not self.process_ai_move:
+            print("Preparing for AI move next turn")
             self.process_ai_move = True  # Set the flag
 
     def move_cursor(self, direction):
+        if not self.player_is_white:
+            direction=(direction[0]*-1,direction[1]*-1)
         new_col = self.selected_grid_position[0] + direction[0]
         new_row = self.selected_grid_position[1] + direction[1]
         if 0 <= new_col < 8 and 0 <= new_row < 8:
@@ -551,16 +597,21 @@ class ChessGame(Rectangle2DNode):
         return
 
     def make_ai_move(self):
-        # Check if the current moves match any opening
-        matched_openings = [(name, moves) for name, moves in openings.items() if self.moves == moves[:len(self.moves)]]
-        
-        if matched_openings:
-            # Select a random opening from the matched openings
-            opening_name, opening_moves = random.choice(matched_openings)
-            opening_move = opening_moves[len(self.moves)]
-            print(opening_name)
+        opening_move = None
+        if self.current_player_is_white and self.ai_opening_moves and len(self.moves) < 4:
+            # start with a book opening
+            opening_move_index = len(self.moves)
+            if opening_move_index < len(self.ai_opening_moves):
+                opening_move = self.ai_opening_moves[opening_move_index]
         else:
-            opening_move = None
+            # Check if the current moves match any opening
+            matched_openings = [(name, moves) for name, moves in openings.items() if self.moves == moves[:len(self.moves)]]
+            
+            if matched_openings:
+                # Select a random opening from the matched openings
+                opening_name, opening_moves = random.choice(matched_openings)
+                opening_move = opening_moves[len(self.moves)]
+                print(opening_name)
 
         if opening_move:
             # Play the next move in the opening
@@ -581,10 +632,10 @@ class ChessGame(Rectangle2DNode):
             # Update endgame flag
             self.update_endgame_flag()
             # Use minimax if no opening is tracked or opening moves are exhausted
-            depth = 4
+            depth = 2
             if self.endgame:
-                depth = 5
-            eval_score, best_move = minimax(simulated_board, depth=depth, is_maximizing_player=False, alpha=float('-inf'), beta=float('inf'), endgame=self.endgame, cant_castle=self.ai_in_check_cant_castle)
+                depth = 3
+            eval_score, best_move = minimax(simulated_board, depth=depth, is_white=not self.player_is_white, alpha=float('-inf'), beta=float('inf'), endgame=self.endgame, cant_castle=self.ai_in_check_cant_castle)
             if eval_score > CHECKMATE_SCORE:
                 is_in_check = minimax_check(simulated_board, self.current_player_is_white)
                 if is_in_check:
@@ -616,6 +667,7 @@ class ChessGame(Rectangle2DNode):
             self.make_move(piece, to_pos)
             
     def make_move(self, piece, to_pos):
+        print(f"Make Move current_player_is_white: {self.current_player_is_white}")
         from_pos = piece.grid_position
         captured_piece = self.board.get_piece_at_position(to_pos)
         original_position = piece.grid_position
@@ -877,15 +929,14 @@ CHECKMATE_SCORE = 40000
 STALEMATE_SCORE = 0
 
 def minimax_check(board, is_white):
-    eval_score, _ = minimax(board, depth=1, is_maximizing_player=not is_white, alpha=float('-inf'), beta=float('inf'))
+    eval_score, _ = minimax(board, depth=1, is_white=not is_white, alpha=float('-inf'), beta=float('inf'))
     return abs(eval_score) >= CHECKMATE_SCORE
 
-def minimax(board, depth, is_maximizing_player, alpha, beta, endgame=False, cant_castle=None):
+def minimax(board, depth, is_white, alpha, beta, endgame=False, cant_castle=None):
     if depth == 0:
         return evaluate_board(board, endgame), None
 
     best_move = None
-    is_white = is_maximizing_player
     all_moves = get_all_valid_moves(board, is_white)
 
     if not all_moves:
@@ -894,7 +945,7 @@ def minimax(board, depth, is_maximizing_player, alpha, beta, endgame=False, cant
             return eval_score, None
         return STALEMATE_SCORE, None
 
-    if is_maximizing_player:
+    if is_white:
         max_eval = float('-inf')
         for piece, move in all_moves:
             from_pos = piece.grid_position
@@ -946,7 +997,8 @@ def start_chess_game():
     global game, camera
     camera = CameraNode()
     camera.position = Vector3(DISP_WIDTH / 2, DISP_WIDTH / 2, 1)
-    game = ChessGame(camera)
+    player_is_white = random.choice([True, False])
+    game = ChessGame(camera, player_is_white)
 
 camera = CameraNode()
 camera.position = Vector3(DISP_WIDTH / 2, DISP_WIDTH / 2, 1)
