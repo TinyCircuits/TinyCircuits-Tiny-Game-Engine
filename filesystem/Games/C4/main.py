@@ -83,7 +83,7 @@ class GridNode(Rectangle2DNode):
         self.rec.position = Vector2(DISP_WIDTH / 2 - 1, HEADER_HEIGHT / 2 + DISP_HEIGHT / 2 - 1)
         self.rec.texture = texture
         self.rec.transparent_color = engine_draw.black
-        self.rec.set_layer(3)
+        self.rec.layer = 3
         self.add_child(self.rec)
         self.holes = []
         self.floor = PhysicsRectangle2DNode(position=Vector2(DISP_WIDTH // 2,DISP_WIDTH-1.5),width=DISP_WIDTH, height=2, dynamic=False, solid=True, gravity_scale=Vector2(0,0))
@@ -100,7 +100,7 @@ class GridNode(Rectangle2DNode):
                         opacity=1.0,
                         letter_spacing=1,
                         line_spacing=1)
-            win_text.set_layer(7)
+            win_text.layer = 7
             self.add_child(win_text)
             return
 
@@ -158,7 +158,7 @@ class Game(Rectangle2DNode):
                                       opacity=1.0,
                                       letter_spacing=1,
                                       line_spacing=1)
-        self.fps_counter.set_layer(7)
+        self.fps_counter.layer = 7
         self.add_child(self.fps_counter)
         self.frame_count = 0
         self.elapsed_time = 0

@@ -210,7 +210,8 @@ bool engine_tick(){
         engine_animation_tick(dt_ms);
 
         // Call every instanced node's callbacks
-        engine_invoke_all_node_callbacks(dt_ms * 0.001f);
+        engine_invoke_all_node_tick_callbacks(dt_ms * 0.001f);
+        engine_invoke_all_node_draw_callbacks();
 
         engine_gui_tick();
 

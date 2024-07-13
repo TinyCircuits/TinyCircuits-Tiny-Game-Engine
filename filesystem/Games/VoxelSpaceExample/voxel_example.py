@@ -49,7 +49,7 @@ vox1.scale.z = 0.75
 vox1.flip = False
 vox1.thickness = 100
 # vox1.repeat = True
-# vox1.set_layer(1)
+# vox1.layer = 1
 
 tree = VoxelSpaceSpriteNode(texture=tree_bmp, position=Vector3(0, 0, 0), scale=Vector3(1.0, 1.0, 1.0))
 tree.transparent_color = engine_draw.white
@@ -63,7 +63,7 @@ tree.texture_offset.y = tree_bmp.height/2
 tree.rotation = math.pi
 # tree.texture_offset.x = tree_bmp.width/2
 tree.fov_distort = False
-# # tree.set_layer(0)
+# # tree.layer = 0
 
 
 bmp = VoxelSpaceSpriteNode(texture=tc_bmp, position=Vector3(0, 0, 0), scale=Vector3(1.0, 1.0, 1.0))

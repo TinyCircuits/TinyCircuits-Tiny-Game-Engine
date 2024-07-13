@@ -33,6 +33,7 @@ OFFSET = CELL_WIDTH / 2
 class ChessPiece:
     def __init__(self, grid_position, is_white):
         self.grid_position = grid_position
+        self.layer = 5
         self.is_white = is_white
         self.has_moved = False
 
@@ -182,7 +183,7 @@ class ChessBoard(Rectangle2DNode):
         self.pieces = []
         self.sprites = []
         self.squares = []
-        self.set_layer(0)
+        self.layer = 0
         self.player_is_white = player_is_white
         self.draw_board()
         
@@ -190,7 +191,7 @@ class ChessBoard(Rectangle2DNode):
         self.highlight_square_node.width = CELL_WIDTH
         self.highlight_square_node.height = CELL_HEIGHT
         self.highlight_square_node.color = engine_draw.blue
-        self.highlight_square_node.set_layer(3)
+        self.highlight_square_node.layer = 3
         self.add_child(self.highlight_square_node)
         self.highlight_square_node.opacity = 0
 
@@ -198,7 +199,7 @@ class ChessBoard(Rectangle2DNode):
         self.selected_square_node.width = CELL_WIDTH
         self.selected_square_node.height = CELL_HEIGHT
         self.selected_square_node.color = engine_draw.yellow
-        self.selected_square_node.set_layer(2)
+        self.selected_square_node.layer = 2
         self.add_child(self.selected_square_node)
         self.selected_square_node.opacity = 0
 
@@ -207,7 +208,7 @@ class ChessBoard(Rectangle2DNode):
         self.ai_move_from_highlight_node.width = CELL_WIDTH
         self.ai_move_from_highlight_node.height = CELL_HEIGHT
         self.ai_move_from_highlight_node.color = engine_draw.red  # Change to desired highlight color
-        self.ai_move_from_highlight_node.set_layer(3)
+        self.ai_move_from_highlight_node.layer = 3
         self.add_child(self.ai_move_from_highlight_node)
         self.ai_move_from_highlight_node.opacity = 0
 
@@ -215,7 +216,7 @@ class ChessBoard(Rectangle2DNode):
         self.ai_move_to_highlight_node.width = CELL_WIDTH
         self.ai_move_to_highlight_node.height = CELL_HEIGHT
         self.ai_move_to_highlight_node.color = engine_draw.green  # Change to desired highlight color
-        self.ai_move_to_highlight_node.set_layer(3)
+        self.ai_move_to_highlight_node.layer = 3
         self.add_child(self.ai_move_to_highlight_node)
         self.ai_move_to_highlight_node.opacity = 0
 
@@ -247,7 +248,7 @@ class ChessBoard(Rectangle2DNode):
                 square.width = CELL_WIDTH
                 square.height = CELL_HEIGHT
                 square.color = square_color
-                square.set_layer(1)
+                square.layer = 1
                 self.squares.append(square)
                 self.add_child(square)
 
@@ -423,7 +424,7 @@ class ChessGame(Rectangle2DNode):
         self.camera = camera
         self.board = ChessBoard(player_is_white)
         self.add_child(self.board)
-        self.set_layer(0)
+        self.layer = 0
         self.current_player_is_white = True
         self.selected_piece = None
         self.winner_message = None
@@ -450,8 +451,8 @@ class ChessGame(Rectangle2DNode):
         # Initialize evaluation lines
         self.white_evaluation_line = Line2DNode(start=Vector2(0, DISP_HEIGHT), end=Vector2(0, DISP_HEIGHT), thickness=2, color=engine_draw.white, opacity=1.0, outline=False)
         self.black_evaluation_line = Line2DNode(start=Vector2(0, 0), end=Vector2(0, 0), thickness=2, color=engine_draw.black, opacity=1.0, outline=False)
-        self.white_evaluation_line.set_layer(6)
-        self.black_evaluation_line.set_layer(6)
+        self.white_evaluation_line.layer = 6
+        self.black_evaluation_line.layer = 6
         self.add_child(self.white_evaluation_line)
         self.add_child(self.black_evaluation_line)
 
@@ -502,7 +503,7 @@ class ChessGame(Rectangle2DNode):
                         opacity=1.0,
                         letter_spacing=1,
                         line_spacing=1)
-            win_text.set_layer(7)
+            win_text.layer = 7
             self.add_child(win_text)
             return
 

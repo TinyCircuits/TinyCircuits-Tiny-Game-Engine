@@ -24,7 +24,7 @@ class DrawTile(Sprite2DNode):
         #self.scale = Vector2(urandom.random(), urandom.random())
         self.id = 0
         self.monster = None
-        self.set_layer(1)
+        self.layer = 1
         self.tween = Tween()
         self.deco = None
     
@@ -33,7 +33,7 @@ class DrawTile(Sprite2DNode):
         if deco_id != Tiles.deco_ids["none"]:
             self.deco = Sprite2DNode()
             self.deco.texture = Tiles.deco_textures[deco_id]
-            self.deco.set_layer(layer)
+            self.deco.layer = layer
             self.deco.scale = Vector2(1, 1)
             self.deco.frame_count_x = Tiles.deco_frame_count[deco_id]
             self.deco.frame_current_x = 0
@@ -48,7 +48,7 @@ class DrawTile(Sprite2DNode):
         if item_id != Player.item_ids["none"]:
             self.deco = Sprite2DNode()
             self.deco.texture = Player.item_textures[item_id]
-            self.deco.set_layer(5)
+            self.deco.layer = 5
             self.deco.scale = Vector2(1, 1)
             self.deco.frame_count_x = Player.item_frame_count[item_id]
             self.deco.frame_current_x = 0
@@ -125,7 +125,7 @@ def load_renderer_monsters(tilemap, offset = Vector2(0,0)):
             m_sprite.texture = m.texture
             m_sprite.position = Vector2(0, 0)
             m_sprite.transparent_color = Color(0x07e0)
-            m_sprite.set_layer(5)
+            m_sprite.layer = 5
             m_sprite.opacity = 1.0
             m_sprite.hp = 10
             m_sprite.frame_count_x = m.frame_count_x
@@ -135,7 +135,7 @@ def load_renderer_monsters(tilemap, offset = Vector2(0,0)):
             textnode.text = str(m.hp)
             textnode.font = Resources.roboto_font
             textnode.opacity = 1.0
-            textnode.set_layer(7)
+            textnode.layer = 7
             textnode.position.y = -16
             
             m_sprite.destroy_children()
@@ -163,7 +163,7 @@ def load_renderer_tiles(tilemap, cx, cy):
             #renderer_tiles[y*6+x].reset_deco()
             renderer_tiles[y*6+x].id = tilemap.get_tile_id(int(cx+x), int(cy+y))
             renderer_tiles[y*6+x].texture = Tiles.tile_textures[renderer_tiles[y*6+x].id]
-            renderer_tiles[y*6+x].set_layer(1)
+            renderer_tiles[y*6+x].layer = 1
             #if((tilemap.get_tile_data1(int(cx+x), int(cy+y)) & (1 << 2)) != 0):
             #    renderer_tiles[y*6+x].add_item(tilemap.get_tile_data0(int(cx+x), int(cy+y)))
             #else:

@@ -19,8 +19,8 @@
 
 #include "py/gc.h"
 
-uint16_t engine_object_layer_count = 8;
-linked_list engine_object_layers[8];
+uint16_t engine_object_layer_count = 128;
+linked_list engine_object_layers[128];
 
 
 void engine_objects_clear_all(){
@@ -64,7 +64,7 @@ uint16_t engine_get_total_object_count(){
 
 
 // Add an object to the pool of all nodes in 'engine_object_layers' at some layer
-linked_list_node *engine_add_object_to_layer(void *obj, uint16_t layer_index){
+linked_list_node *engine_add_object_to_layer(void *obj, uint8_t layer_index){
     if(layer_index >= engine_object_layer_count){
         ENGINE_ERROR_PRINTF("Tried to add object to layer %d but the max layer index is %d. Resize the number of available draw layers at the cost of memory", layer_index, engine_object_layer_count-1);
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Tried to add object to layer index that is out of bounds! Resize the object layer count!"));
@@ -74,22 +74,19 @@ linked_list_node *engine_add_object_to_layer(void *obj, uint16_t layer_index){
 }
 
 
-void engine_remove_object_from_layer(linked_list_node *object_list_node, uint16_t layer_index){
+void engine_remove_object_from_layer(linked_list_node *object_list_node, uint8_t layer_index){
     linked_list_del_list_node(&engine_object_layers[layer_index], object_list_node);
 }
 
 
-// Go through all nodes and call their callbacks depending on the
+// Go through all nodes and call their tick callbacks depending on the
 // node type. For example, some nodes will only have a 'tick()'
-// callback while others will also have a 'draw()' callback.
-//
-// Nodes with a draw callback will be rendered
 // dt_s - delta time in seconds
-void engine_invoke_all_node_callbacks(float dt_s){
+void engine_invoke_all_node_tick_callbacks(float dt_s){
     linked_list_node *current_linked_list_node = NULL;
 
     for(uint16_t ilx=0; ilx<engine_object_layer_count; ilx++){
-        ENGINE_INFO_PRINTF("Starting on objects in layer %d/%d", ilx, engine_object_layer_count-1);
+        ENGINE_INFO_PRINTF("Starting ticking nodes in layer %d/%d", ilx, engine_object_layer_count-1);
 
         current_linked_list_node = engine_object_layers[ilx].start;
 
@@ -131,8 +128,6 @@ void engine_invoke_all_node_callbacks(float dt_s){
                         exec[2] = mp_obj_new_float(dt_s);
                         mp_call_method_n_kw(1, 0, exec);
                     }
-
-                    engine_camera_draw_for_each(voxelspace_node_class_draw, node_base);
                 }
                 break;
                 case NODE_TYPE_VOXELSPACE_SPRITE:
@@ -144,8 +139,6 @@ void engine_invoke_all_node_callbacks(float dt_s){
                         exec[2] = mp_obj_new_float(dt_s);
                         mp_call_method_n_kw(1, 0, exec);
                     }
-
-                    engine_camera_draw_for_each(voxelspace_sprite_node_class_draw, node_base);
                 }
                 break;
                 case NODE_TYPE_MESH_3D:
@@ -157,8 +150,6 @@ void engine_invoke_all_node_callbacks(float dt_s){
                         exec[2] = mp_obj_new_float(dt_s);
                         mp_call_method_n_kw(1, 0, exec);
                     }
-
-                    engine_camera_draw_for_each(mesh_node_class_draw, node_base);
                 }
                 break;
                 case NODE_TYPE_RECTANGLE_2D:
@@ -170,8 +161,6 @@ void engine_invoke_all_node_callbacks(float dt_s){
                         exec[2] = mp_obj_new_float(dt_s);
                         mp_call_method_n_kw(1, 0, exec);
                     }
-
-                    engine_camera_draw_for_each(rectangle_2d_node_class_draw, node_base);
                 }
                 break;
                 case NODE_TYPE_LINE_2D:
@@ -183,8 +172,6 @@ void engine_invoke_all_node_callbacks(float dt_s){
                         exec[2] = mp_obj_new_float(dt_s);
                         mp_call_method_n_kw(1, 0, exec);
                     }
-
-                    engine_camera_draw_for_each(line_2d_node_class_draw, node_base);
                 }
                 break;
                 case NODE_TYPE_CIRCLE_2D:
@@ -196,8 +183,6 @@ void engine_invoke_all_node_callbacks(float dt_s){
                         exec[2] = mp_obj_new_float(dt_s);
                         mp_call_method_n_kw(1, 0, exec);
                     }
-
-                    engine_camera_draw_for_each(circle_2d_node_class_draw, node_base);
                 }
                 break;
                 case NODE_TYPE_SPRITE_2D:
@@ -209,8 +194,6 @@ void engine_invoke_all_node_callbacks(float dt_s){
                         exec[2] = mp_obj_new_float(dt_s);
                         mp_call_method_n_kw(1, 0, exec);
                     }
-
-                    engine_camera_draw_for_each(sprite_2d_node_class_draw, node_base);
                 }
                 break;
                 case NODE_TYPE_TEXT_2D:
@@ -222,8 +205,6 @@ void engine_invoke_all_node_callbacks(float dt_s){
                         exec[2] = mp_obj_new_float(dt_s);
                         mp_call_method_n_kw(1, 0, exec);
                     }
-
-                    engine_camera_draw_for_each(text_2d_node_class_draw, node_base);
                 }
                 break;
                 case NODE_TYPE_GUI_BUTTON_2D:
@@ -266,9 +247,6 @@ void engine_invoke_all_node_callbacks(float dt_s){
                         exec[0] = button_2d_node->on_just_released_cb;
                         mp_call_method_n_kw(0, 0, exec);
                     }
-
-
-                    engine_camera_draw_for_each(gui_button_2d_node_class_draw, node_base);
 
                     // Save the state for tracking for callbacks
                     button_2d_node->last_pressed = button_2d_node->pressed;
@@ -323,9 +301,6 @@ void engine_invoke_all_node_callbacks(float dt_s){
                         mp_call_method_n_kw(0, 0, exec);
                     }
 
-
-                    engine_camera_draw_for_each(gui_bitmap_button_2d_node_class_draw, node_base);
-
                     // Save the state for tracking for callbacks
                     bitmap_button_2d_node->last_pressed = bitmap_button_2d_node->pressed;
                     bitmap_button_2d_node->last_focused = bitmap_button_2d_node->focused;
@@ -347,8 +322,6 @@ void engine_invoke_all_node_callbacks(float dt_s){
                         exec[2] = mp_obj_new_float(dt_s);
                         mp_call_method_n_kw(1, 0, exec);
                     }
-
-                    engine_camera_draw_for_each(physics_rectangle_2d_node_class_draw, node_base);
                 }
                 break;
                 case NODE_TYPE_PHYSICS_CIRCLE_2D:
@@ -360,7 +333,102 @@ void engine_invoke_all_node_callbacks(float dt_s){
                         exec[2] = mp_obj_new_float(dt_s);
                         mp_call_method_n_kw(1, 0, exec);
                     }
+                }
+                break;
+                default:
+                    ENGINE_ERROR_PRINTF("This node type doesn't do anything? %d", node_base->type);
+                break;
+            }
 
+            current_linked_list_node = current_linked_list_node->next;
+        }
+    }
+
+    ENGINE_INFO_PRINTF("##### GAME TICKS COMPLETE #####\n");
+}
+
+
+void engine_invoke_all_node_draw_callbacks(){
+    linked_list_node *current_linked_list_node = NULL;
+
+    for(uint16_t ilx=0; ilx<engine_object_layer_count; ilx++){
+        ENGINE_INFO_PRINTF("Starting drawing nodes in layer %d/%d", ilx, engine_object_layer_count-1);
+
+        current_linked_list_node = engine_object_layers[ilx].start;
+
+        while(current_linked_list_node != NULL){
+            // Get the base node that every node is stored under
+            engine_node_base_t *node_base = current_linked_list_node->object;
+
+            switch(node_base->type){
+                case NODE_TYPE_EMPTY:
+                {
+                    // Nothing but don't want to get to default case and error
+                }
+                break;
+                case NODE_TYPE_CAMERA:
+                {
+                    // Nothing but don't want to get to default case and error
+                }
+                break;
+                case NODE_TYPE_VOXELSPACE:
+                {
+                    engine_camera_draw_for_each(voxelspace_node_class_draw, node_base);
+                }
+                break;
+                case NODE_TYPE_VOXELSPACE_SPRITE:
+                {
+                    engine_camera_draw_for_each(voxelspace_sprite_node_class_draw, node_base);
+                }
+                break;
+                case NODE_TYPE_MESH_3D:
+                {
+                    engine_camera_draw_for_each(mesh_node_class_draw, node_base);
+                }
+                break;
+                case NODE_TYPE_RECTANGLE_2D:
+                {
+                    engine_camera_draw_for_each(rectangle_2d_node_class_draw, node_base);
+                }
+                break;
+                case NODE_TYPE_LINE_2D:
+                {
+                    engine_camera_draw_for_each(line_2d_node_class_draw, node_base);
+                }
+                break;
+                case NODE_TYPE_CIRCLE_2D:
+                {
+                    engine_camera_draw_for_each(circle_2d_node_class_draw, node_base);
+                }
+                break;
+                case NODE_TYPE_SPRITE_2D:
+                {
+                    engine_camera_draw_for_each(sprite_2d_node_class_draw, node_base);
+                }
+                break;
+                case NODE_TYPE_TEXT_2D:
+                {
+                    engine_camera_draw_for_each(text_2d_node_class_draw, node_base);
+                }
+                break;
+                case NODE_TYPE_GUI_BUTTON_2D:
+                {
+                    engine_camera_draw_for_each(gui_button_2d_node_class_draw, node_base);
+                }
+                break;
+                case NODE_TYPE_GUI_BITMAP_BUTTON_2D:
+                {
+                    engine_camera_draw_for_each(gui_bitmap_button_2d_node_class_draw, node_base);
+                }
+                break;
+                case NODE_TYPE_PHYSICS_RECTANGLE_2D:
+                {
+
+                    engine_camera_draw_for_each(physics_rectangle_2d_node_class_draw, node_base);
+                }
+                break;
+                case NODE_TYPE_PHYSICS_CIRCLE_2D:
+                {
                     engine_camera_draw_for_each(physics_circle_2d_node_class_draw, node_base);
                 }
                 break;
@@ -373,5 +441,5 @@ void engine_invoke_all_node_callbacks(float dt_s){
         }
     }
 
-    ENGINE_INFO_PRINTF("##### GAME CYCLE COMPLETE #####\n");
+    ENGINE_INFO_PRINTF("##### GAME DRAWING COMPLETE #####\n");
 }

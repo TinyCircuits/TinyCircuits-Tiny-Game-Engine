@@ -1138,3 +1138,32 @@ vox_node_perf_test.py, avg. FPS: 36.51595
 
 
 
+Tue Jul 9 16:04:36 2024 -0400 : 6453f90ddedc36bae0340755356dace19ad6ab15
+Increased node layers to 0 ~ 127 instead of 0 ~ 7
+
+{
+line_node_perf_test.py, avg. FPS: 292.6985
+test_opacity_perf_test.py, avg. FPS: 123.3255
+test_perf_test.py, avg. FPS: 142.5511
+circle_node_perf_test.py, avg. FPS: 292.2254
+vox_node_perf_test.py, avg. FPS: 44.23928
+}
+
+
+ ----- 
+
+
+
+Fri Jul 12 15:20:14 2024 -0400 : 2ce7476e61b43cc8c226de748de68c5bef05f852
+Reorder node tick and draw callbacks to two different loops so that user code cannot change camera or other parameters from one node callback to the next
+
+{
+line_node_perf_test.py, avg. FPS: 291.3096
+test_opacity_perf_test.py, avg. FPS: 127.0885
+test_perf_test.py, avg. FPS: 147.8089
+circle_node_perf_test.py, avg. FPS: 290.8418
+vox_node_perf_test.py, avg. FPS: 44.05459
+}
+
+
+ ----- 

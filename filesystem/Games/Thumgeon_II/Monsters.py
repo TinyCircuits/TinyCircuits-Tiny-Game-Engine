@@ -92,7 +92,7 @@ class Monster(Sprite2DNode):
         self.playing = False
         self.hp = urandom.randrange(monster_hp_range[self.id][0], monster_hp_range[self.id][1])
         self.textnode = None
-        self.set_layer(5)
+        self.layer = 5
         self.opacity = 0.0
         self.tween = Tween()
         self.stun = 0

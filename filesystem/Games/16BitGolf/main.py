@@ -306,16 +306,16 @@ class MovingCamera(CameraNode):
 camera = MovingCamera([])  # Initialize without renderers first
 
 renderer_fairway = TilingRenderer(fairway_map, grass_tile, tile_rules, global_width, global_height, camera)
-renderer_fairway.set_layer(2)
+renderer_fairway.layer = 2
 
 renderer_green = TilingRenderer(green_map, green_tile, tile_rules, global_width, global_height, camera)
-renderer_green.set_layer(3)
+renderer_green.layer = 3
 
 renderer_water = TilingRenderer(water_map, water_tile, tile_rules, global_width, global_height, camera)
-renderer_water.set_layer(4)
+renderer_water.layer = 4
 
 renderer_bunker = TilingRenderer(bunker_map, sand_tile, tile_rules, global_width, global_height, camera)
-renderer_bunker.set_layer(5)
+renderer_bunker.layer = 5
 
 # Now add the renderers to the camera
 camera.renderers = [renderer_fairway, renderer_green, renderer_water, renderer_bunker]
