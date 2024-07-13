@@ -11,6 +11,8 @@ from engine_resources import FontResource, TextureResource, WaveSoundResource
 from engine_animation import Tween, ONE_SHOT, EASE_SINE_IN
 from engine_draw import Color
 
+from chessengine import openings, piece_values, pstable
+
 random.seed(time.ticks_ms())
 
 font = FontResource("../../assets/outrunner_outline.bmp")
@@ -27,8 +29,6 @@ DISP_HEIGHT = 128
 CELL_WIDTH = 16
 CELL_HEIGHT = 16
 OFFSET = CELL_WIDTH / 2
-
-CHECKMATE_THRESHOLD = 100000
 
 class ChessPiece:
     def __init__(self, grid_position, is_white):
@@ -274,6 +274,36 @@ class ChessBoard(Rectangle2DNode):
         self.add_piece(Rook((0, base_row), is_white))
         self.add_piece(Rook((7, base_row), is_white))
 
+        if is_white:
+            # Knights
+            self.add_piece(Knight((1, base_row), is_white))
+            self.add_piece(Knight((6, base_row), is_white))
+
+            # Bishops
+            self.add_piece(Bishop((2, base_row), is_white))
+            self.add_piece(Bishop((5, base_row), is_white))
+
+            # Queens
+            self.add_piece(Queen((3, base_row), is_white))
+
+        # Kings
+        self.add_piece(King((4, base_row), is_white))
+
+        # Pawns
+        if not is_white:
+            for i in range(5,8,1):
+                self.add_piece(Pawn((i, pawn_row), is_white))
+
+        self.render_pieces()  # Render the pieces after setting them up
+
+    def setup_piecesf(self, is_white):
+        base_row = 7 if is_white else 0
+        pawn_row = 6 if is_white else 1
+
+        # Rooks
+        self.add_piece(Rook((0, base_row), is_white))
+        self.add_piece(Rook((7, base_row), is_white))
+
         # Knights
         self.add_piece(Knight((1, base_row), is_white))
         self.add_piece(Knight((6, base_row), is_white))
@@ -390,11 +420,11 @@ class SimulatedChessBoard:
         piece_value = piece_values[piece_char.upper()]
         pos_idx = piece.grid_position[1] * 8 + piece.grid_position[0]
         if piece.is_white:
-            pst_value = pst[piece_char.upper()][pos_idx]
-            self.piece_scores[piece] = piece_value + pst_value
+            pstable_value = pstable[piece_char.upper()][pos_idx]
+            self.piece_scores[piece] = piece_value + pstable_value
         else:
-            pst_value = pst[piece_char.upper()][(7 - piece.grid_position[1]) * 8 + (7 - piece.grid_position[0])]
-            self.piece_scores[piece] = -(piece_value + pst_value)
+            pstable_value = pstable[piece_char.upper()][(7 - piece.grid_position[1]) * 8 + (7 - piece.grid_position[0])]
+            self.piece_scores[piece] = -(piece_value + pstable_value)
 
 
 
@@ -414,8 +444,11 @@ class ChessGame(Rectangle2DNode):
         self.print_board_state()
         self.move_mode = False
         self.process_ai_move = False
+        self.post_ai_check = False
         self.last_move = None
         self.moves = []
+        self.endgame = False
+        self.ai_in_check_cant_castle = None
 
         # Initialize evaluation lines
         self.white_evaluation_line = Line2DNode(start=Vector2(0, DISP_HEIGHT), end=Vector2(0, DISP_HEIGHT), thickness=2, color=engine_draw.white, opacity=1.0, outline=False)
@@ -424,6 +457,14 @@ class ChessGame(Rectangle2DNode):
         self.black_evaluation_line.set_layer(6)
         self.add_child(self.white_evaluation_line)
         self.add_child(self.black_evaluation_line)
+
+    def update_endgame_flag(self):
+        white_material_value = sum(piece_values[get_piece_char(piece).upper()] for piece in self.board.pieces if piece.is_white and not isinstance(piece, King))
+        black_material_value = sum(piece_values[get_piece_char(piece).upper()] for piece in self.board.pieces if not piece.is_white and not isinstance(piece, King))
+        
+        endgame_threshold = 800  # Adjust this threshold based on testing and observations
+        self.endgame = white_material_value <= endgame_threshold and black_material_value > white_material_value
+
 
     def update_evaluation_line(self, evaluation_score):
         max_score = 1000
@@ -461,6 +502,23 @@ class ChessGame(Rectangle2DNode):
             self.board.highlight_square(self.selected_piece.grid_position)
         self.board.select_square(self.selected_grid_position)
 
+        if self.current_player_is_white and self.post_ai_check:
+            simulated_board = SimulatedChessBoard()
+            simulated_board.copy_from_board(self.board)
+            is_in_check = minimax_check(simulated_board, self.current_player_is_white)
+            all_moves = get_all_valid_moves(simulated_board, self.current_player_is_white)
+            can_move = False
+            for piece, move in all_moves:
+                if not self.move_puts_king_in_check(piece, move):
+                    can_move = True
+                    break
+            if not can_move:
+                if is_in_check:
+                    self.winner_message=("AI Wins")
+                else:
+                    self.winner_message=("Stalemate")
+            self.post_ai_check = False
+
         if engine_io.LEFT.is_just_pressed:
             self.move_cursor((-1, 0))
         elif engine_io.RIGHT.is_just_pressed:
@@ -484,102 +542,34 @@ class ChessGame(Rectangle2DNode):
             self.process_ai_move = True  # Set the flag
 
     def move_cursor(self, direction):
-        self.board.clear_ai_move_highlight()
         new_col = self.selected_grid_position[0] + direction[0]
         new_row = self.selected_grid_position[1] + direction[1]
         if 0 <= new_col < 8 and 0 <= new_row < 8:
             self.selected_grid_position = (new_col, new_row)
 
     def select_or_move_piece(self):
+        self.board.clear_ai_move_highlight()
         col, row = self.selected_grid_position
-
         if self.selected_piece:
             new_col, new_row = self.selected_grid_position
             if (new_col, new_row) != self.selected_piece.grid_position:
                 if (new_col, new_row) in self.selected_piece.valid_moves(self.board):
-                    original_position = self.selected_piece.grid_position
-                    captured_piece = self.board.get_piece_at_position((new_col, new_row))
-                    
-                    # Generate move notation before updating the board state
-                    move_notation = generate_move_notation(self.selected_piece, original_position, (new_col, new_row), self.board)
-                    
-                    if captured_piece and captured_piece.is_white != self.selected_piece.is_white:
-                        self.board.remove_piece(captured_piece)
-                    
-                    # Special handling for castling
-                    if isinstance(self.selected_piece, King):
-                        if new_col == 6 and not self.selected_piece.has_moved:  # Kingside castling
-                            rook = self.board.get_piece_at_position((7, row))
-                            rook.grid_position = (5, row)
-                            self.board.piece_has_moved(rook)
-                        elif new_col == 2 and not self.selected_piece.has_moved:  # Queenside castling
-                            rook = self.board.get_piece_at_position((0, row))
-                            rook.grid_position = (3, row)
-                            self.board.piece_has_moved(rook)
-                    
-                    # Special handling for en passant
-                    if isinstance(self.selected_piece, Pawn):
-                        if abs(new_row - self.selected_piece.grid_position[1]) == 2:
-                            self.selected_piece.en_passant_target = True
-                        else:
-                            self.selected_piece.en_passant_target = False
-                        # Check and remove en passant captured pawn
-                        if (new_col, new_row) != self.selected_piece.grid_position:
-                            if not captured_piece and abs(new_col - self.selected_piece.grid_position[0]) == 1:
-                                captured_pawn = self.board.get_piece_at_position((new_col, row))
-                                if captured_pawn and isinstance(captured_pawn, Pawn) and captured_pawn.en_passant_target:
-                                    self.board.remove_piece(captured_pawn)
-
-                    self.selected_piece.grid_position = (new_col, new_row)
-                    self.board.piece_has_moved(self.selected_piece)
-
-                    # Check for check
-                    simulated_board = SimulatedChessBoard()
-                    simulated_board.copy_from_board(self.board)
-                    if is_in_check(simulated_board,self.current_player_is_white):
-                        self.selected_piece.grid_position = original_position
-                        self.board.piece_has_moved(self.selected_piece)
-                        if captured_piece:
-                            self.board.add_piece(captured_piece)
-                    else:
-                        # Handle pawn promotion
-                        if isinstance(self.selected_piece, Pawn) and (new_row == 0 or new_row == 7):
-                            self.board.promote_pawn(self.selected_piece)
-
-                        # Track and print move
-                        self.moves.append(move_notation)
-                        print(self.moves)
-
-                        # Check for opening
-                        self.opening_name = check_opening(self.moves)
-                        if self.opening_name:
-                            print(self.opening_name)
-
-                        # Evaluate board and update evaluation line
-                        evaluation_score = evaluate_board(simulated_board)
-                        self.update_evaluation_line(evaluation_score)
-
-                        self.selected_piece = None
-                        self.move_mode = False
-                        self.current_player_is_white = not self.current_player_is_white
-                        engine_audio.play(move_sound, 0, False)
-                        self.print_board_state()
-                        self.board.render_pieces()
-                        self.last_move = ((col, row), (new_col, new_row))
-
-                        # Check for checkmate
-                        white_checkmate, black_checkmate = is_checkmate(simulated_board)
-                        if white_checkmate:
-                            self.winner_message = "Checkmate AI!"
-                            return
-                        if black_checkmate:
-                            self.winner_message = "Checkmate Win!"
-                            return
+                    if not self.move_puts_king_in_check(self.selected_piece, (new_col, new_row)):
+                        self.make_move(self.selected_piece, (new_col, new_row))
         else:
             selected_piece = self.board.get_piece_at_position((col, row))
             if selected_piece and selected_piece.is_white == self.current_player_is_white:
                 self.selected_piece = selected_piece
                 self.move_mode = True
+
+    def move_puts_king_in_check(self, piece, to_pos):
+        simulated_board = SimulatedChessBoard()
+        simulated_board.copy_from_board(self.board)
+        from_pos = piece.grid_position
+        moved_piece, captured_piece = simulated_board.make_move(from_pos, to_pos)
+        is_in_check = minimax_check(simulated_board, piece.is_white)
+        simulated_board.undo_move(moved_piece, captured_piece, from_pos, to_pos)
+        return is_in_check
 
     def deselect_piece(self):
         if self.selected_piece:
@@ -618,69 +608,111 @@ class ChessGame(Rectangle2DNode):
         else:
             simulated_board = SimulatedChessBoard()
             simulated_board.copy_from_board(self.board)
+            # Update endgame flag
+            self.update_endgame_flag()
             # Use minimax if no opening is tracked or opening moves are exhausted
-            _, best_move = minimax(simulated_board, depth=2, is_maximizing_player=False, alpha=float('-inf'), beta=float('inf'))
+            depth = 2
+            if self.endgame:
+                depth = 3
+            eval_score, best_move = minimax(simulated_board, depth=depth, is_maximizing_player=False, alpha=float('-inf'), beta=float('inf'), endgame=self.endgame, cant_castle=self.ai_in_check_cant_castle)
+            if eval_score > CHECKMATE_SCORE:
+                is_in_check = minimax_check(simulated_board, self.current_player_is_white)
+                if is_in_check:
+                    self.winner_message = "Player Wins"
+                else:
+                    self.winner_message = "Stalemate"
+                return
             p, to_pos = best_move
             from_pos = p.grid_position
 
-        # Generate the move notation before the move is executed
-        piece = self.board.get_piece_at_position(from_pos)
-        move_notation = generate_move_notation(piece, from_pos, to_pos, self.board)
-        
+        # Execute the AI move
         self.execute_move(from_pos, to_pos)
         self.board.render_pieces()
-
-        # Track and print move
-        self.moves.append(move_notation)
-        print(self.moves)
+        self.post_ai_check = True
 
     def execute_move(self, from_pos, to_pos):
         piece = self.board.get_piece_at_position(from_pos)
         if piece:
-            self.board.highlight_ai_move(from_pos, to_pos)
-            captured_piece = self.board.get_piece_at_position(to_pos)
-            if captured_piece and captured_piece.is_white != piece.is_white:
-                self.board.remove_piece(captured_piece)
-
-            # Special handling for castling
             if isinstance(piece, King):
-                if to_pos[0] == 6 and not piece.has_moved:  # Kingside castling
-                    rook = self.board.get_piece_at_position((7, from_pos[1]))
-                    if rook and isinstance(rook, Rook) and not rook.has_moved:
-                        rook.grid_position = (5, from_pos[1])
-                        self.board.piece_has_moved(rook)
-                elif to_pos[0] == 2 and not piece.has_moved:  # Queenside castling
-                    rook = self.board.get_piece_at_position((0, from_pos[1]))
-                    if rook and isinstance(rook, Rook) and not rook.has_moved:
-                        rook.grid_position = (3, from_pos[1])
-                        self.board.piece_has_moved(rook)
+                if to_pos[0] == 6 and not piece.has_moved or to_pos[0] == 2 and not piece.has_moved:  # castling
+                    simulated_board = SimulatedChessBoard()
+                    simulated_board.copy_from_board(self.board)
+                    is_in_check = minimax_check(simulated_board, self.current_player_is_white)
+                    if is_in_check:
+                        self.ai_in_check_cant_castle = (from_pos, to_pos)
+                        return
+            self.ai_in_check_cant_castle = None
+            self.board.highlight_ai_move(from_pos, to_pos)
+            self.make_move(piece, to_pos)
+            
+    def make_move(self, piece, to_pos):
+        from_pos = piece.grid_position
+        captured_piece = self.board.get_piece_at_position(to_pos)
+        original_position = piece.grid_position
 
-            piece.grid_position = to_pos
-            self.board.piece_has_moved(piece)
+        # Generate move notation before updating the board state
+        move_notation = generate_move_notation(piece, original_position, to_pos, self.board)
 
-            # Handle pawn promotion
-            if isinstance(piece, Pawn) and (to_pos[1] == 0 or to_pos[1] == 7):
-                self.board.promote_pawn(piece)
+        if captured_piece and captured_piece.is_white != piece.is_white:
+            self.board.remove_piece(captured_piece)
+
+        # Special handling for castling
+        if isinstance(piece, King):
+            if to_pos[0] == 6 and not piece.has_moved:  # Kingside castling
+                rook = self.board.get_piece_at_position((7, from_pos[1]))
+                if rook and isinstance(rook, Rook) and not rook.has_moved:
+                    rook.grid_position = (5, from_pos[1])
+                    self.board.piece_has_moved(rook)
+            elif to_pos[0] == 2 and not piece.has_moved:  # Queenside castling
+                rook = self.board.get_piece_at_position((0, from_pos[1]))
+                if rook and isinstance(rook, Rook) and not rook.has_moved:
+                    rook.grid_position = (3, from_pos[1])
+                    self.board.piece_has_moved(rook)
+
+        # Special handling for en passant
+        if isinstance(piece, Pawn):
+            if abs(to_pos[1] - piece.grid_position[1]) == 2:
+                piece.en_passant_target = True
+            else:
+                piece.en_passant_target = False
+            # Check and remove en passant captured pawn
+            if (to_pos[0], to_pos[1]) != piece.grid_position:
+                if not captured_piece and abs(to_pos[0] - piece.grid_position[0]) == 1:
+                    captured_pawn = self.board.get_piece_at_position((to_pos[0], from_pos[1]))
+                    if captured_pawn and isinstance(captured_pawn, Pawn) and captured_pawn.en_passant_target:
+                        self.board.remove_piece(captured_pawn)
+
+        piece.grid_position = to_pos
+        self.board.piece_has_moved(piece)
+
+        # Handle pawn promotion
+        if isinstance(piece, Pawn) and (to_pos[1] == 0 or to_pos[1] == 7):
+            self.board.promote_pawn(piece)
+
+        # Track and print move
+        self.moves.append(move_notation)
+        #print(generate_pgn_moves_list(self.moves))
+
+        # Check for opening
+        self.opening_name = check_opening(self.moves)
+        if self.opening_name:
+            print(self.opening_name)
+
+        # Evaluate board and update evaluation line
+        simulated_board = SimulatedChessBoard()
+        simulated_board.copy_from_board(self.board)
+        evaluation_score = evaluate_board(simulated_board)
+        self.update_evaluation_line(evaluation_score)
+
+        self.selected_piece = None
+        self.move_mode = False
+        self.current_player_is_white = not self.current_player_is_white
+        engine_audio.play(move_sound, 0, False)
+        self.print_board_state()
+        self.board.render_pieces()
+        self.last_move = (from_pos, to_pos)
 
 
-            engine_audio.play(move_sound, 0, False)
-            self.current_player_is_white = not self.current_player_is_white
-            self.print_board_state()
-
-            simulated_board = SimulatedChessBoard()
-            simulated_board.copy_from_board(self.board)
-            # Evaluate board and update evaluation line
-            evaluation_score = evaluate_board(simulated_board)
-            self.update_evaluation_line(evaluation_score)
-
-            # Check for checkmate
-            white_checkmate, black_checkmate = is_checkmate(simulated_board)
-            if white_checkmate:
-                self.winner_message = "Checkmate AI!"
-                return
-            if black_checkmate:
-                self.winner_message = "Checkmate Win!"
-                return
 
     def algebraic_to_positions(self, move, is_white):
         # Handle castling
@@ -742,22 +774,43 @@ def generate_move_notation(piece, from_pos, to_pos, board):
     piece_notation = get_piece_notation(piece)
     target_piece = board.get_piece_at_position(to_pos)
     capture_notation = 'x' if target_piece else ''
-    
+
     # Handle castling
     if isinstance(piece, King) and abs(to_pos[0] - from_pos[0]) == 2:
         if to_pos[0] == 6:
             return 'O-O'
         elif to_pos[0] == 2:
             return 'O-O-O'
-    
+
     # Handle pawn moves
     if isinstance(piece, Pawn):
         if capture_notation:
             return position_to_algebraic(from_pos)[0] + 'x' + position_to_algebraic(to_pos)
         else:
             return position_to_algebraic(to_pos)
-    
-    return piece_notation + capture_notation + position_to_algebraic(to_pos)
+
+    # Disambiguation
+    disambiguation = ''
+    for other_piece in board.pieces:
+        if other_piece != piece and type(other_piece) == type(piece) and other_piece.is_white == piece.is_white:
+            if to_pos in other_piece.valid_moves(board):
+                if from_pos[0] != other_piece.grid_position[0]:
+                    disambiguation = position_to_algebraic(from_pos)[0]
+                else:
+                    disambiguation = str(8 - from_pos[1])
+
+    return piece_notation + disambiguation + capture_notation + position_to_algebraic(to_pos)
+
+def generate_pgn_moves_list(moves):
+    pgn_moves = []
+    for i in range(0, len(moves), 2):
+        move_pair = str(i // 2 + 1) + '. ' + moves[i]
+        if i + 1 < len(moves):
+            move_pair += ' ' + moves[i + 1]
+        pgn_moves.append(move_pair)
+    return ' '.join(pgn_moves)
+
+
 
 def position_to_algebraic(pos):
     return chr(pos[0] + ord('a')) + str(8 - pos[1])
@@ -802,57 +855,6 @@ def get_piece_char(piece):
         return 'P' if piece.is_white else 'p'
     return '.'
 
-piece_values = {"P": 100, "N": 280, "B": 320, "R": 479, "Q": 929, "K": 60000}
-pst = {
-    'P': (  829, 829, 829, 829,829, 829, 829, 829,
-            78,  83,  86,  73, 102,  82,  85,  90,
-             7,  29,  21,  44,  40,  31,  44,   7,
-           -17,  16,  -2,  15,  14,   0,  15, -13,
-           -26,   3,  10,   9,   6,   1,   0, -23,
-           -22,   9,   5, -11, -10,  -2,   3, -19,
-           -31,   8,  -7, -37, -36, -14,   3, -31,
-             0,   0,   0,   0,   0,   0,   0,   0),
-    'N': ( -66, -53, -75, -75, -10, -55, -58, -70,
-            -3,  -6, 100, -36,   4,  62,  -4, -14,
-            10,  67,   1,  74,  73,  27,  62,  -2,
-            24,  24,  45,  37,  33,  41,  25,  17,
-            -1,   5,  31,  21,  22,  35,   2,   0,
-           -18,  10,  13,  22,  18,  15,  11, -14,
-           -23, -15,   2,   0,   2,   0, -23, -20,
-           -74, -23, -26, -24, -19, -35, -22, -69),
-    'B': ( -59, -78, -82, -76, -23,-107, -37, -50,
-           -11,  20,  35, -42, -39,  31,   2, -22,
-            -9,  39, -32,  41,  52, -10,  28, -14,
-            25,  17,  20,  34,  26,  25,  15,  10,
-            13,  10,  17,  23,  17,  16,   0,   7,
-            14,  25,  24,  15,   8,  25,  20,  15,
-            19,  20,  11,   6,   7,   6,  20,  16,
-            -7,   2, -15, -12, -14, -15, -10, -10),
-    'R': (  35,  29,  33,   4,  37,  33,  56,  50,
-            55,  29,  56,  67,  55,  62,  34,  60,
-            19,  35,  28,  33,  45,  27,  25,  15,
-             0,   5,  16,  13,  18,  -4,  -9,  -6,
-           -28, -35, -16, -21, -13, -29, -46, -30,
-           -42, -28, -42, -25, -25, -35, -26, -46,
-           -53, -38, -31, -26, -29, -43, -44, -53,
-           -30, -24, -18,   5,  -2, -18, -31, -32),
-    'Q': (   6,   1,  -8,-104,  69,  24,  88,  26,
-            14,  32,  60, -10,  20,  76,  57,  24,
-            -2,  43,  32,  60,  72,  63,  43,   2,
-             1, -16,  22,  17,  25,  20, -13,  -6,
-           -14, -15,  -2,  -5,  -1, -10, -20, -22,
-           -30,  -6, -13, -11, -16, -11, -16, -27,
-           -36, -18,   0, -19, -15, -15, -21, -38,
-           -39, -30, -31, -13, -31, -36, -34, -42),
-    'K': (   4,  54,  47, -99, -99,  60,  83, -62,
-           -32,  10,  55,  56,  56,  55,  10,   3,
-           -62,  12, -57,  44, -67,  28,  37, -31,
-           -55,  50,  11,  -4, -19,  13,   0, -49,
-           -55, -43, -52, -28, -51, -47,  -8, -50,
-           -47, -42, -43, -79, -64, -32, -29, -32,
-            -4,   3, -14, -50, -57, -18,  13,   4,
-            17,  30,  -3, -14,   6,  -1,  40,  18),
-}
 
 def check_opening(moves):
     for opening_name, opening_moves in openings.items():
@@ -860,142 +862,34 @@ def check_opening(moves):
             return opening_name
     return None
 
-openings = {
-    "Ruy Lopez Main Line": ["e4", "e5", "Nf3", "Nc6", "Bb5", "a6", "Ba4", "Nf6", "O-O", "Be7", "Re1", "b5", "Bb3", "d6", "c3", "O-O"],
-    "Ruy Lopez Closed Ruy Lopez": ["e4", "e5", "Nf3", "Nc6", "Bb5", "a6", "Ba4", "Nf6", "O-O", "Be7", "Re1", "b5", "Bb3", "d6", "c3", "O-O", "h3", "Nb8", "d4", "Nbd7"],
-    "Ruy Lopez Open Ruy Lopez": ["e4", "e5", "Nf3", "Nc6", "Bb5", "a6", "Ba4", "Nf6", "O-O", "Be7", "Re1", "b5", "Bb3", "d6", "c3", "Na5", "Bc2", "c5"],
-    "Ruy Lopez Breyer Defense": ["e4", "e5", "Nf3", "Nc6", "Bb5", "a6", "Ba4", "Nf6", "O-O", "Be7", "Re1", "b5", "Bb3", "d6", "c3", "O-O", "h3", "Nb8", "d4", "Nbd7", "Nbd2", "Bb7"],
-    "Ruy Lopez Marshall Attack": ["e4", "e5", "Nf3", "Nc6", "Bb5", "a6", "Ba4", "Nf6", "O-O", "Be7", "Re1", "b5", "Bb3", "d6", "c3", "d5", "exd5", "Nxd5", "Nxe5", "Nxe5", "Rxe5", "c6"],
-    
-    "Italian Game Main Line": ["e4", "e5", "Nf3", "Nc6", "Bc4", "Bc5", "c3", "Nf6", "d3", "d6", "O-O", "O-O", "Re1", "a6", "a4", "Ba7"],
-    "Italian Game Evans Gambit": ["e4", "e5", "Nf3", "Nc6", "Bc4", "Bc5", "b4", "Bxb4", "c3", "Ba5"],
-    "Italian Game Giuoco Pianissimo": ["e4", "e5", "Nf3", "Nc6", "Bc4", "Bc5", "d3", "d6", "c3", "a6"],
-    "Italian Game Greco Attack": ["e4", "e5", "Nf3", "Nc6", "Bc4", "Bc5", "c3", "Nf6", "d4", "exd4", "cxd4", "Bb4+"],
-    "Italian Game Two Knights Defense": ["e4", "e5", "Nf3", "Nc6", "Bc4", "Nf6", "Ng5", "d5", "exd5", "Na5"],
-    
-    "Sicilian Defense Main Line": ["e4", "c5", "Nf3", "d6", "d4", "cxd4", "Nxd4", "Nf6", "Nc3", "a6", "Be3", "e6", "f3", "Be7", "Qd2", "O-O"],
-    "Sicilian Defense Najdorf": ["e4", "c5", "Nf3", "d6", "d4", "cxd4", "Nxd4", "Nf6", "Nc3", "a6", "Be3", "e5", "Nb3", "Be6"],
-    "Sicilian Defense Dragon": ["e4", "c5", "Nf3", "d6", "d4", "cxd4", "Nxd4", "Nf6", "Nc3", "g6", "Be3", "Bg7", "f3", "O-O", "Qd2", "Nc6"],
-    "Sicilian Defense Scheveningen": ["e4", "c5", "Nf3", "d6", "d4", "cxd4", "Nxd4", "Nf6", "Nc3", "a6", "Be3", "e6", "f3", "Be7"],
-    "Sicilian Defense Sveshnikov": ["e4", "c5", "Nf3", "d6", "d4", "cxd4", "Nxd4", "Nf6", "Nc3", "e5", "Ndb5", "d6", "Na3", "b5"],
-    
-    "French Defense Main Line": ["e4", "e6", "d4", "d5", "Nc3", "Nf6", "Bg5", "Be7", "e5", "Nfd7", "Bxe7", "Qxe7", "f4", "O-O", "Nf3", "c5"],
-    "French Defense Classical": ["e4", "e6", "d4", "d5", "Nc3", "Nf6", "Bg5", "dxe4", "Nxe4", "Be7"],
-    "French Defense Winawer": ["e4", "e6", "d4", "d5", "Nc3", "Bb4", "e5", "c5", "a3", "Bxc3+", "bxc3", "Ne7"],
-    "French Defense Tarrasch": ["e4", "e6", "d4", "d5", "Nd2", "Nf6", "e5", "Nfd7", "Bd3", "c5"],
-    "French Defense Advance": ["e4", "e6", "d4", "d5", "e5", "c5", "c3", "Nc6", "Nf3", "Qb6"],
-    
-    "Caro-Kann Defense Main Line": ["e4", "c6", "d4", "d5", "Nc3", "dxe4", "Nxe4", "Bf5", "Ng3", "Bg6", "h4", "h6", "Nf3", "Nd7", "h5", "Bh7", "Bd3", "Bxd3"],
-    "Caro-Kann Defense Advance": ["e4", "c6", "d4", "d5", "e5", "Bf5", "Nc3", "e6", "g4", "Bg6"],
-    "Caro-Kann Defense Classical": ["e4", "c6", "d4", "d5", "Nc3", "dxe4", "Nxe4", "Bf5", "Ng3", "Bg6", "h4", "h6", "Nf3", "Nd7"],
-    "Caro-Kann Defense Panov-Botvinnik Attack": ["e4", "c6", "d4", "d5", "exd5", "cxd5", "c4", "Nf6", "Nc3", "e6", "Nf3", "Bb4"],
-    "Caro-Kann Defense Two Knights": ["e4", "c6", "Nf3", "d5", "Nc3", "Bg4"],
-    
-    "Queen's Gambit Main Line": ["d4", "d5", "c4", "e6", "Nc3", "Nf6", "Bg5", "Be7", "e3", "O-O", "Nf3", "h6", "Bh4", "b6"],
-    "Queen's Gambit Accepted": ["d4", "d5", "c4", "dxc4", "Nf3", "Nf6", "e3", "e6", "Bxc4", "c5", "O-O", "a6", "dxc5", "Bxc5", "Qe2", "b5"],
-    "Queen's Gambit Declined": ["d4", "d5", "c4", "e6", "Nc3", "Nf6", "Bg5", "Be7"],
-    "Slav Defense": ["d4", "d5", "c4", "c6"],
-    "Chigorin Defense": ["d4", "d5", "c4", "Nc6"],
-    
-    "Queen's Gambit Accepted Classical": ["d4", "d5", "c4", "dxc4", "Nf3", "Nf6", "e3", "e6", "Bxc4", "c5", "O-O", "a6"],
-    "Queen's Gambit Accepted Modern": ["d4", "d5", "c4", "dxc4", "e4"],
-    "Queen's Gambit Accepted Alekhine": ["d4", "d5", "c4", "dxc4", "e4"],
-    "Queen's Gambit Accepted Lasker Defense": ["d4", "d5", "c4", "dxc4", "Nc3", "e6", "e4", "c5"],
-    
-    "King's Indian Defense Main Line": ["d4", "Nf6", "c4", "g6", "Nc3", "Bg7", "e4", "d6", "Nf3", "O-O", "Be2", "e5", "O-O", "Nc6", "d5", "Ne7"],
-    "King's Indian Defense Classical": ["d4", "Nf6", "c4", "g6", "Nc3", "Bg7", "e4", "d6", "Nf3", "O-O", "Be2", "Nc6", "d5", "Ne7"],
-    "King's Indian Defense Fianchetto": ["d4", "Nf6", "c4", "g6", "Nf3", "Bg7", "g3", "O-O", "Bg2", "d6"],
-    "King's Indian Defense Four Pawns Attack": ["d4", "Nf6", "c4", "g6", "e4", "d6", "f4"],
-    "King's Indian Defense Saemisch": ["d4", "Nf6", "c4", "g6", "Nc3", "Bg7", "f3"],
-    
-    "Nimzo-Indian Defense Main Line": ["d4", "Nf6", "c4", "e6", "Nc3", "Bb4", "e3", "O-O", "Bd3", "d5", "Nf3", "c5", "O-O", "Nc6", "a3", "Bxc3"],
-    "Nimzo-Indian Defense Rubinstein": ["d4", "Nf6", "c4", "e6", "Nc3", "Bb4", "e3", "O-O", "Bd3", "d5", "Nf3"],
-    "Nimzo-Indian Defense Classical": ["d4", "Nf6", "c4", "e6", "Nc3", "Bb4", "Qc2", "O-O", "a3", "Bxc3", "Qxc3", "d5"],
-    "Nimzo-Indian Defense Leningrad": ["d4", "Nf6", "c4", "e6", "Nc3", "Bb4", "Bg5", "h6", "Bh4", "c5"],
-    "Nimzo-Indian Defense Fischer Variation": ["d4", "Nf6", "c4", "e6", "Nc3", "Bb4", "Qc2", "O-O", "a3", "Bxc3", "Qxc3", "d5"],
-    
-    "Slav Defense Main Line": ["d4", "d5", "c4", "c6", "Nf3", "Nf6", "Nc3", "dxc4", "a4", "Bf5", "e3", "e6", "Bxc4", "Bb4", "O-O", "O-O"],
-    "Slav Defense Exchange": ["d4", "d5", "c4", "c6", "cxd5", "cxd5"],
-    "Slav Defense Chebanenko": ["d4", "d5", "c4", "c6", "Nf3", "a6"],
-    "Slav Defense Moran Defense": ["d4", "d5", "c4", "c6", "Nf3"],
-    "Slav Defense Schlechter": ["d4", "d5", "c4", "c6", "Nf3", "e6", "Nbd2"],
-    
-    "English Opening Main Line": ["c4", "e5", "Nc3", "Nc6", "g3", "g6", "Bg2", "Bg7", "d3", "d6", "e4", "Be6", "Nge2", "Qd7"],
-    "English Opening Symmetrical": ["c4", "c5", "g3", "g6"],
-    "English Opening Reversed Sicilian": ["c4", "e5", "Nf3", "Nc6"],
-    "English Opening Botvinnik": ["c4", "g3"],
-    "English Opening Four Knights": ["c4", "e5", "Nc3", "Nc6", "Nf3"],
-    
-    "Reti Opening Main Line": ["Nf3", "d5", "c4", "c6", "g3", "Nf6", "Bg2", "Bf5", "O-O", "e6", "d3", "h6", "Nc3", "Be7", "Re1", "O-O"],
-    "Reti Opening King's Indian Attack": ["Nf3", "d5", "g3", "Bg4", "d3", "Nd7", "Nbd2", "Ngf6"],
-    "Reti Opening Closed": ["Nf3", "c4", "c6", "d4"],
-    "Reti Opening English Variation": ["c4", "Nf6", "Nf3", "c5"],
-    "Reti Opening Catalan": ["Nf3", "d5", "g3", "e6", "Bg2"],
-    
-    "London System Main Line": ["d4", "d5", "Nf3", "Nf6", "Bf4", "e6", "e3", "c5", "c3", "Nc6", "Nbd2", "Bd6", "Bg3", "O-O", "Bd3", "b6"],
-    "London System Accelerated": ["d4", "Bf4"],
-    "London System Jobava": ["d4", "d5", "Nc3", "Nf6", "Bf4"],
-    "London System Barry Attack": ["d4", "Nf6", "Nc3", "e6", "Bf4"],
-    "London System Colle System": ["d4", "Nf3", "e6", "e3"],
-    
-    "Scandinavian Defense Main Line": ["e4", "d5", "exd5", "Qxd5", "Nc3", "Qa5", "d4", "c6", "Nf3", "Bg4", "Be2", "e6", "O-O", "Nd7", "h3", "Bh5"],
-    "Scandinavian Defense Modern": ["e4", "d5", "d4"],
-    "Scandinavian Defense Portuguese": ["e4", "d5", "Nf3"],
-    "Scandinavian Defense Classical": ["e4", "d5", "exd5", "Qxd5", "Nc3", "Qa5", "d4", "Nf6"],
-    "Scandinavian Defense Patzer": ["e4", "d5", "Qe2"],
-    
-    "Pirc Defense Main Line": ["e4", "d6", "d4", "Nf6", "Nc3", "g6", "Be2", "Bg7", "Be3", "O-O", "Qd2", "c6", "Bh6", "b5"],
-    "Pirc Defense Austrian Attack": ["e4", "d6", "d4", "Nf6", "Nc3", "g6", "f4"],
-    "Pirc Defense Classical": ["e4", "d6", "d4", "Nf6", "Nc3", "g6", "Nf3", "Bg7", "Be2", "O-O", "O-O", "c6"],
-    "Pirc Defense 150 Attack": ["e4", "d6", "d4", "Nf6", "Nc3", "g6", "Be3", "Bg7", "Qd2", "O-O", "O-O-O"],
-    "Pirc Defense Byrne": ["e4", "d6", "d4", "Nf6", "Nc3", "g6", "Bg5", "Bg7", "Qd2", "h6", "Be3"]
-}
 
-def evaluate_board(board):
+def evaluate_board(board, endgame=False):
     score = 0
-    # Check for checkmate
-    white_checkmate, black_checkmate = is_checkmate(board)
-    if white_checkmate:
-        return -CHECKMATE_THRESHOLD  # Black wins
-    if black_checkmate:
-        return CHECKMATE_THRESHOLD  # White wins
-
     for piece_score in board.piece_scores.values():
         score += piece_score
+    
+    if endgame:
+        # Add endgame-specific heuristics
+        score += king_proximity_score(board, True)
 
     return score
 
-def is_in_check(board, is_white):
-    king_position = None
+def king_proximity_score(board, is_white):
+    opponent_king = None
     for piece in board.pieces:
-        if isinstance(piece, King) and piece.is_white == is_white:
-            king_position = piece.grid_position
+        if isinstance(piece, King) and piece.is_white != is_white:
+            opponent_king = piece
             break
-
-    for piece in board.pieces:
-        if piece.is_white != is_white:
-            if king_position in piece.valid_moves(board):
-                return True
-    return False
-
-def is_checkmate(board):
-    return checkmate_for_color(board, True), checkmate_for_color(board, False)
-
-def checkmate_for_color(board, is_white):
-    if not is_in_check(board, is_white):
-        return False
+    if not opponent_king:
+        return 0
+    
+    score = 0
     for piece in board.pieces:
         if piece.is_white == is_white:
-            original_position = piece.grid_position
-            valid_moves = piece.valid_moves(board)
-            for move in valid_moves:
-                captured_piece = board.get_piece_at_position(move)
-                board.make_move(original_position, move)
-                if not is_in_check(board, is_white):
-                    board.undo_move(piece, captured_piece, original_position, move)
-                    return False
-                board.undo_move(piece, captured_piece, original_position, move)
-    return True
+            distance = abs(piece.grid_position[0] - opponent_king.grid_position[0]) + abs(piece.grid_position[1] - opponent_king.grid_position[1])
+            score -= distance  # Closer pieces get higher scores (negative distance)
+    
+    return score
 
 def get_all_valid_moves(board, is_white):
     moves = []
@@ -1008,13 +902,26 @@ def get_all_valid_moves(board, is_white):
     moves.sort(key=lambda move: board.get_piece_at_position(move[1]) is not None, reverse=True)
     return moves
 
-def minimax(board, depth, is_maximizing_player, alpha, beta):
+CHECKMATE_SCORE = 40000
+STALEMATE_SCORE = 0
+
+def minimax_check(board, is_white):
+    eval_score, _ = minimax(board, depth=1, is_maximizing_player=not is_white, alpha=float('-inf'), beta=float('inf'))
+    return abs(eval_score) >= CHECKMATE_SCORE
+
+def minimax(board, depth, is_maximizing_player, alpha, beta, endgame=False, cant_castle=None):
     if depth == 0:
-        return evaluate_board(board), None
+        return evaluate_board(board, endgame), None
 
     best_move = None
     is_white = is_maximizing_player
     all_moves = get_all_valid_moves(board, is_white)
+
+    if not all_moves:
+        eval_score = evaluate_board(board)
+        if abs(eval_score) >= CHECKMATE_SCORE:
+            return eval_score, None
+        return STALEMATE_SCORE, None
 
     if is_maximizing_player:
         max_eval = float('-inf')
@@ -1022,49 +929,32 @@ def minimax(board, depth, is_maximizing_player, alpha, beta):
             from_pos = piece.grid_position
             to_pos = move
             moved_piece, captured_piece = board.make_move(from_pos, to_pos)
-            if not is_in_check(board, is_white):
-                eval, _ = minimax(board, depth - 1, False, alpha, beta)
-                if eval > max_eval:
-                    max_eval = eval
-                    best_move = (piece, move)
-                alpha = max(alpha, eval)
-                if beta <= alpha:
-                    board.undo_move(moved_piece, captured_piece, from_pos, to_pos)
-                    break
+            eval, _ = minimax(board, depth - 1, False, alpha, beta, endgame)
             board.undo_move(moved_piece, captured_piece, from_pos, to_pos)
+            if eval > max_eval:
+                max_eval = eval
+                best_move = (piece, move)
+            alpha = max(alpha, eval)
+            if beta <= alpha:
+                break
         return max_eval, best_move
     else:
         min_eval = float('inf')
         for piece, move in all_moves:
             from_pos = piece.grid_position
             to_pos = move
+            if (from_pos, to_pos) == cant_castle:
+                continue
             moved_piece, captured_piece = board.make_move(from_pos, to_pos)
-            if not is_in_check(board, is_white):
-                eval, _ = minimax(board, depth - 1, True, alpha, beta)
-                if eval < min_eval:
-                    min_eval = eval
-                    best_move = (piece, move)
-                beta = min(beta, eval)
-                if beta <= alpha:
-                    board.undo_move(moved_piece, captured_piece, from_pos, to_pos)
-                    break
+            eval, _ = minimax(board, depth - 1, True, alpha, beta, endgame)
             board.undo_move(moved_piece, captured_piece, from_pos, to_pos)
+            if eval < min_eval:
+                min_eval = eval
+                best_move = (piece, move)
+            beta = min(beta, eval)
+            if beta <= alpha:
+                break
         return min_eval, best_move
-
-
-
-def is_in_check(board, is_white):
-    king_position = None
-    for piece in board.pieces:
-        if isinstance(piece, King) and piece.is_white == is_white:
-            king_position = piece.grid_position
-            break
-    
-    for piece in board.pieces:
-        if piece.is_white != is_white:
-            if king_position in piece.valid_moves(board):
-                return True
-    return False
 
 def get_piece_frame_x(piece):
     if isinstance(piece, King):
