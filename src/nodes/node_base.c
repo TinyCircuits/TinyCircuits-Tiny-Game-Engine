@@ -252,17 +252,21 @@ mp_obj_t node_base_get_child(mp_obj_t self_parent_in, mp_obj_t index_obj){
 
     uint16_t current_index = 0;
     linked_list_node *current_child_node = parent_node_base->children_node_bases.start;
-    while(current_index < child_index){
-        current_index++;
 
-        if(current_child_node->next == NULL){
-            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: Tried to access a child node out of bounds!"));
+    while(true){
+        if(current_child_node == NULL){
+            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: Child node doesn't exist at that index!"));
         }
 
+        if(current_index == child_index){
+            return current_child_node->object;
+        }
+
+        current_index++;
         current_child_node = current_child_node->next;
     }
 
-    return current_child_node->object;
+    return mp_const_none;
 }
 
 
