@@ -72,6 +72,10 @@ static mp_obj_t engine_main_module_init(){
         // Always recreate the framebuffers after soft reset
         engine_display_init_framebuffers();
 
+        // Setup IO every time, otherwise rumble motor will not
+        // work after soft resets
+        engine_io_setup();
+
         // On subsequent resets, anything allocated m_tracked_buffers
         // will need to be restored since they are erased in soft resets
 
