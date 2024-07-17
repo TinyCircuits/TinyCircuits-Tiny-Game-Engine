@@ -38,6 +38,16 @@ class ChessPiece:
 
     def valid_moves(self, board):
         return []
+    
+    def safe_moves(self, board):
+        valid_moves = self.valid_moves(board)
+        safe_moves = []
+        for move in valid_moves:
+            board.make_move(self.grid_position, move)
+            if not board.is_in_check(self.is_white):
+                safe_moves.append(move)
+            board.undo_move()
+        return safe_moves
 
 class King(ChessPiece):
     def valid_moves(self, board):
@@ -392,7 +402,7 @@ class SimulatedChessBoard:
 
                 if to_pos[1] == 0 or to_pos[1] == 7:
                     promotion = piece
-                    self.promote_pawn(piece)
+                    piece = self.promote_pawn(piece)
 
             if castling_rook_from and castling_rook_to:
                 rook = self.get_piece_at_position(castling_rook_from)
@@ -490,6 +500,50 @@ class SimulatedChessBoard:
         # Create a new queen at the same position
         new_queen = Queen(pawn.grid_position, pawn.is_white)
         self.add_piece(new_queen)
+        return new_queen
+
+    def is_in_check(self, is_white):
+        king_position = None
+        for piece in self.pieces:
+            if isinstance(piece, King) and piece.is_white == is_white:
+                king_position = piece.grid_position
+                break
+
+        if king_position is None:
+            return False
+
+        for piece in self.pieces:
+            if piece.is_white != is_white:
+                if king_position in piece.valid_moves(self):
+                    return True
+
+        return False
+
+    def get_all_safe_moves(self, is_white, sort=False):
+        safe_moves = []
+        for piece in self.pieces:
+            if piece.is_white == is_white:
+                for move in piece.safe_moves(self):
+                    safe_moves.append((piece, move))
+        if sort:
+            safe_moves.sort(key=lambda move: self.get_piece_at_position(move[1]) is not None, reverse=True)
+        return safe_moves
+    
+    def check_for_checkmate_or_stalemate(self, current_player_is_white):
+        is_checkmate = True
+        is_stalemate = True
+
+        for piece in self.pieces:
+            if piece.is_white == current_player_is_white:
+                if piece.safe_moves(self):
+                    is_checkmate = False
+                    is_stalemate = False
+                    break
+        
+        if self.is_in_check(current_player_is_white):
+            is_stalemate = False
+
+        return is_checkmate,is_stalemate
 
 
 
@@ -588,6 +642,16 @@ class ChessGame(Rectangle2DNode):
             self.chessboard.highlight_square(self.selected_piece.grid_position)
         self.chessboard.select_square(self.selected_grid_position)
 
+        if not ai_turn and self.post_ai_check:
+            # Check for checkmate or stalemate after making a move
+            is_checkmate, is_stalemate = self.chessboard.board.check_for_checkmate_or_stalemate(self.current_player_is_white)
+            if is_checkmate:
+                self.winner_message = ("Black wins" if self.current_player_is_white else "White wins")
+                return
+            elif is_stalemate:
+                self.winner_message = "Stalemate!"
+                return
+
         if engine_io.LEFT.is_just_pressed:
             self.move_cursor((-1, 0))
         elif engine_io.RIGHT.is_just_pressed:
@@ -625,8 +689,13 @@ class ChessGame(Rectangle2DNode):
         if self.selected_piece:
             new_col, new_row = self.selected_grid_position
             if (new_col, new_row) != self.selected_piece.grid_position:
-                if (new_col, new_row) in self.selected_piece.valid_moves(self.chessboard.board):
+                if (new_col, new_row) in self.selected_piece.safe_moves(self.chessboard.board):
                     self.make_move(self.selected_piece, (new_col, new_row))
+                    is_checkmate, is_stalemate = self.chessboard.board.check_for_checkmate_or_stalemate(self.current_player_is_white)
+                    if is_checkmate:
+                        self.winner_message = ("Black wins" if self.current_player_is_white else "White wins")
+                    elif is_stalemate:
+                        self.winner_message = "Stalemate!"
         else:
             selected_piece = self.chessboard.board.get_piece_at_position((col, row))
             if selected_piece and selected_piece.is_white == self.current_player_is_white:
@@ -683,6 +752,8 @@ class ChessGame(Rectangle2DNode):
                 depth = 3
                                 
             eval_score, best_move = minimax(simulated_board, depth=depth, is_white=not self.player_is_white, alpha=float('-inf'), beta=float('inf'), endgame=self.endgame, cant_castle=self.ai_in_check_cant_castle)
+            if not best_move:
+                return
             p, to_pos = best_move
             from_pos = p.grid_position
 
@@ -725,9 +796,6 @@ class ChessGame(Rectangle2DNode):
         engine_audio.play(move_sound, 0, False)
         self.print_board_state()
         self.chessboard.render_pieces()
-        self.last_move = (from_pos, to_pos)
-
-
 
     def algebraic_to_positions(self, move, is_white):
         # Handle castling
@@ -924,32 +992,26 @@ def king_proximity_score(board, is_white):
     
     return score
 
-def get_all_valid_moves(board, is_white):
-    moves = []
-    for piece in board.pieces:
-        if piece.is_white == is_white:
-            valid_moves = piece.valid_moves(board)
-            for move in valid_moves:
-                moves.append((piece, move))
-    # Sort moves to prioritize captures
-    moves.sort(key=lambda move: board.get_piece_at_position(move[1]) is not None, reverse=True)
-    return moves
-
 CHECKMATE_SCORE = 40000
 STALEMATE_SCORE = 0
 
 def minimax(board, depth, is_white, alpha, beta, endgame=False, cant_castle=None):
     if depth == 0:
         return evaluate_board(board, endgame), None
+    
+    is_checkmate, is_stalemate = board.check_for_checkmate_or_stalemate(is_white)
+    if is_checkmate:
+        print("is_checkmate")
+        if is_white:
+            return -1 * CHECKMATE_SCORE, None
+        else:
+            return CHECKMATE_SCORE, None
+    elif is_stalemate:
+        print("is_stalemate")
+        return STALEMATE_SCORE, None
 
     best_move = None
-    all_moves = get_all_valid_moves(board, is_white)
-
-    if not all_moves:
-        eval_score = evaluate_board(board)
-        if abs(eval_score) >= CHECKMATE_SCORE:
-            return eval_score, None
-        return STALEMATE_SCORE, None
+    all_moves = board.get_all_safe_moves(is_white, sort=True)
 
     if is_white:
         max_eval = float('-inf')
