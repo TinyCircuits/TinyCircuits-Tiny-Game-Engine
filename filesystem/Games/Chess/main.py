@@ -30,6 +30,23 @@ CELL_WIDTH = 16
 CELL_HEIGHT = 16
 OFFSET = CELL_WIDTH / 2
 
+# Global dictionary to track timing
+timing_data = {}
+
+def log_time(start, description):
+    duration = time.ticks_ms() - start
+    if description not in timing_data:
+        timing_data[description] = {'total_time': 0, 'call_count': 0}
+    timing_data[description]['total_time'] += duration/1000
+    timing_data[description]['call_count'] += 1
+
+def print_timing_data():
+    for description, data in timing_data.items():
+        total_time = data['total_time']
+        call_count = data['call_count']
+        avg_time = total_time / call_count if call_count > 0 else 0
+        print(f'{description}: total_time = {total_time:.4f} sec, call_count = {call_count}, avg_time = {avg_time:.4f} sec')
+
 class ChessPiece:
     def __init__(self, grid_position, is_white): 
         self.grid_position = grid_position
@@ -40,6 +57,7 @@ class ChessPiece:
         return []
     
     def safe_moves(self, board):
+        start_time = time.ticks_ms()
         valid_moves = self.valid_moves(board)
         safe_moves = []
         for move in valid_moves:
@@ -47,10 +65,12 @@ class ChessPiece:
             if not board.is_in_check(self.is_white):
                 safe_moves.append(move)
             board.undo_move()
+        log_time(start_time, f'safe_moves for {type(self).__name__}')
         return safe_moves
 
 class King(ChessPiece):
     def valid_moves(self, board):
+        start_time = time.ticks_ms()
         moves = []
         directions = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
         for direction in directions:
@@ -73,11 +93,12 @@ class King(ChessPiece):
                 if not any(board.get_piece_at_position((i, self.grid_position[1])) for i in range(1, 4)):
                     moves.append((2, self.grid_position[1]))
 
+        log_time(start_time, f'valid_moves for King')
         return moves
-
 
 class Queen(ChessPiece):
     def valid_moves(self, board):
+        start_time = time.ticks_ms()
         moves = []
         directions = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
         for direction in directions:
@@ -92,11 +113,12 @@ class Queen(ChessPiece):
                     moves.append(new_pos)
                 else:
                     break
+        log_time(start_time, f'valid_moves for Queen')
         return moves
-
 
 class Rook(ChessPiece):
     def valid_moves(self, board):
+        start_time = time.ticks_ms()
         moves = []
         directions = [(0, -1), (0, 1), (-1, 0), (1, 0)]
         for direction in directions:
@@ -111,10 +133,12 @@ class Rook(ChessPiece):
                     moves.append(new_pos)
                 else:
                     break
+        log_time(start_time, f'valid_moves for Rook')
         return moves
 
 class Bishop(ChessPiece):
     def valid_moves(self, board):
+        start_time = time.ticks_ms()
         moves = []
         directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
         for direction in directions:
@@ -129,10 +153,12 @@ class Bishop(ChessPiece):
                     moves.append(new_pos)
                 else:
                     break
+        log_time(start_time, f'valid_moves for Bishop')
         return moves
 
 class Knight(ChessPiece):
     def valid_moves(self, board):
+        start_time = time.ticks_ms()
         moves = []
         knight_moves = [(-2, -1), (-1, -2), (1, -2), (2, -1), (2, 1), (1, 2), (-1, 2), (-2, 1)]
         for move in knight_moves:
@@ -141,6 +167,7 @@ class Knight(ChessPiece):
                 target_piece = board.get_piece_at_position(new_pos)
                 if not target_piece or target_piece.is_white != self.is_white:
                     moves.append(new_pos)
+        log_time(start_time, f'valid_moves for Knight')
         return moves
 
 class Pawn(ChessPiece):
@@ -149,6 +176,7 @@ class Pawn(ChessPiece):
         self.en_passant_target = False
 
     def valid_moves(self, board):
+        start_time = time.ticks_ms()
         moves = []
         direction = -1 if self.is_white else 1
         start_row = 6 if self.is_white else 1
@@ -177,7 +205,7 @@ class Pawn(ChessPiece):
                     adjacent_piece = board.get_piece_at_position(adjacent_pos)
                     if isinstance(adjacent_piece, Pawn) and adjacent_piece.en_passant_target and adjacent_piece.is_white != self.is_white:
                         moves.append(capture_pos)
-
+        log_time(start_time, f'valid_moves for Pawn')
         return moves
 
 class ChessBoard(Rectangle2DNode):
@@ -342,6 +370,8 @@ class SimulatedChessBoard:
         self.piece_positions = {}  # Cache for piece positions
         self.piece_scores = {}  # Cache for piece evaluation scores
         self.move_history = []
+        self.white_attacks = [[False for _ in range(8)] for _ in range(8)]
+        self.black_attacks = [[False for _ in range(8)] for _ in range(8)]
 
     def add_piece(self, piece):
         self.pieces.append(piece)
@@ -421,6 +451,9 @@ class SimulatedChessBoard:
             self.update_piece_score(piece)
             self.piece_has_moved(piece)
 
+            # Update attack map after move
+            self.update_attack_map()
+
             # Cache move details
             self.move_history.append({
                 'piece': piece,
@@ -474,6 +507,9 @@ class SimulatedChessBoard:
         piece.has_moved = False
         self.update_piece_score(piece)
 
+        # Update attack map after undo move
+        self.update_attack_map()
+
     def update_piece_score(self, piece):
         piece_char = get_piece_char(piece)
         piece_value = piece_values[piece_char.upper()]
@@ -503,6 +539,7 @@ class SimulatedChessBoard:
         return new_queen
 
     def is_in_check(self, is_white):
+        start_time = time.ticks_ms()
         king_position = None
         for piece in self.pieces:
             if isinstance(piece, King) and piece.is_white == is_white:
@@ -512,14 +549,16 @@ class SimulatedChessBoard:
         if king_position is None:
             return False
 
-        for piece in self.pieces:
-            if piece.is_white != is_white:
-                if king_position in piece.valid_moves(self):
-                    return True
+        if is_white:
+            in_check = self.black_attacks[king_position[1]][king_position[0]]
+        else:
+            in_check = self.white_attacks[king_position[1]][king_position[0]]
 
-        return False
+        log_time(start_time, f'is_in_check for {"white" if is_white else "black"}')
+        return in_check
 
     def get_all_safe_moves(self, is_white, sort=False):
+        start_time = time.ticks_ms()
         safe_moves = []
         for piece in self.pieces:
             if piece.is_white == is_white:
@@ -527,26 +566,106 @@ class SimulatedChessBoard:
                     safe_moves.append((piece, move))
         if sort:
             safe_moves.sort(key=lambda move: self.get_piece_at_position(move[1]) is not None, reverse=True)
+        log_time(start_time, f'get_all_safe_moves for {"white" if is_white else "black"}')
         return safe_moves
     
     def check_for_checkmate_or_stalemate(self, current_player_is_white):
-        is_checkmate = True
-        is_stalemate = True
-
+        start_time = time.ticks_ms()
+        is_in_check = self.is_in_check(current_player_is_white)
         for piece in self.pieces:
             if piece.is_white == current_player_is_white:
                 if piece.safe_moves(self):
-                    is_checkmate = False
-                    is_stalemate = False
+                    log_time(start_time, 'check_for_checkmate_or_stalemate')
+                    return False, False  # Neither checkmate nor stalemate
+
+        if is_in_check:
+            log_time(start_time, 'check_for_checkmate_or_stalemate')
+            return True, False  # Checkmate
+        else:
+            log_time(start_time, 'check_for_checkmate_or_stalemate')
+            return False, True  # Stalemate
+    
+    def update_attack_map(self):
+        # Reset the attack maps
+        self.white_attacks = [[False for _ in range(8)] for _ in range(8)]
+        self.black_attacks = [[False for _ in range(8)] for _ in range(8)]
+
+        for piece in self.pieces:
+            if isinstance(piece, Rook):
+                self.update_rook_attacks(piece)
+            elif isinstance(piece, Bishop):
+                self.update_bishop_attacks(piece)
+            elif isinstance(piece, Queen):
+                self.update_queen_attacks(piece)
+            elif isinstance(piece, Knight):
+                self.update_knight_attacks(piece)
+            elif isinstance(piece, Pawn):
+                self.update_pawn_attacks(piece)
+            elif isinstance(piece, King):
+                self.update_king_attacks(piece)
+
+    def update_rook_attacks(self, piece):
+        directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+        for direction in directions:
+            for i in range(1, 8):
+                new_pos = (piece.grid_position[0] + direction[0] * i, piece.grid_position[1] + direction[1] * i)
+                if not (0 <= new_pos[0] < 8 and 0 <= new_pos[1] < 8):
                     break
-        
-        if self.is_in_check(current_player_is_white):
-            is_stalemate = False
+                if piece.is_white:
+                    self.white_attacks[new_pos[1]][new_pos[0]] = True
+                else:
+                    self.black_attacks[new_pos[1]][new_pos[0]] = True
+                if self.get_piece_at_position(new_pos):
+                    break
 
-        return is_checkmate,is_stalemate
+    def update_bishop_attacks(self, piece):
+        directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
+        for direction in directions:
+            for i in range(1, 8):
+                new_pos = (piece.grid_position[0] + direction[0] * i, piece.grid_position[1] + direction[1] * i)
+                if not (0 <= new_pos[0] < 8 and 0 <= new_pos[1] < 8):
+                    break
+                if piece.is_white:
+                    self.white_attacks[new_pos[1]][new_pos[0]] = True
+                else:
+                    self.black_attacks[new_pos[1]][new_pos[0]] = True
+                if self.get_piece_at_position(new_pos):
+                    break
 
+    def update_queen_attacks(self, piece):
+        self.update_rook_attacks(piece)
+        self.update_bishop_attacks(piece)
 
+    def update_knight_attacks(self, piece):
+        knight_moves = [(-2, -1), (-1, -2), (1, -2), (2, -1), (2, 1), (1, 2), (-1, 2), (-2, 1)]
+        for move in knight_moves:
+            new_pos = (piece.grid_position[0] + move[0], piece.grid_position[1] + move[1])
+            if 0 <= new_pos[0] < 8 and 0 <= new_pos[1] < 8:
+                if piece.is_white:
+                    self.white_attacks[new_pos[1]][new_pos[0]] = True
+                else:
+                    self.black_attacks[new_pos[1]][new_pos[0]] = True
 
+    def update_pawn_attacks(self, piece):
+        direction = -1 if piece.is_white else 1
+        capture_moves = [(piece.grid_position[0] - 1, piece.grid_position[1] + direction), 
+                         (piece.grid_position[0] + 1, piece.grid_position[1] + direction)]
+        for capture_pos in capture_moves:
+            if 0 <= capture_pos[0] < 8 and 0 <= capture_pos[1] < 8:
+                if piece.is_white:
+                    self.white_attacks[capture_pos[1]][capture_pos[0]] = True
+                else:
+                    self.black_attacks[capture_pos[1]][capture_pos[0]] = True
+
+    def update_king_attacks(self, piece):
+        directions = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+        for direction in directions:
+            new_pos = (piece.grid_position[0] + direction[0], piece.grid_position[1] + direction[1])
+            if 0 <= new_pos[0] < 8 and 0 <= new_pos[1] < 8:
+                if piece.is_white:
+                    self.white_attacks[new_pos[1]][new_pos[0]] = True
+                else:
+                    self.black_attacks[new_pos[1]][new_pos[0]] = True
 
 class ChessGame(Rectangle2DNode):
     def __init__(self, camera, player_is_white):
@@ -712,6 +831,7 @@ class ChessGame(Rectangle2DNode):
         return
 
     def make_ai_move(self):
+        start_time = time.ticks_ms()
         opening_move = None
         if self.current_player_is_white and self.ai_opening_moves and len(self.moves) < 4:
             # start with a book opening
@@ -761,6 +881,8 @@ class ChessGame(Rectangle2DNode):
         self.execute_move(from_pos, to_pos)
         self.chessboard.render_pieces()
         self.post_ai_check = True
+        log_time(start_time, 'make_ai_move')
+        print_timing_data()
 
     def execute_move(self, from_pos, to_pos):
         piece = self.chessboard.board.get_piece_at_position(from_pos)
@@ -996,18 +1118,24 @@ CHECKMATE_SCORE = 40000
 STALEMATE_SCORE = 0
 
 def minimax(board, depth, is_white, alpha, beta, endgame=False, cant_castle=None):
+    start_time = time.ticks_ms()
     if depth == 0:
-        return evaluate_board(board, endgame), None
+        score = evaluate_board(board, endgame)
+        log_time(start_time, f'minimax depth {depth}')
+        return score, None
     
     is_checkmate, is_stalemate = board.check_for_checkmate_or_stalemate(is_white)
     if is_checkmate:
         print("is_checkmate")
         if is_white:
-            return -1 * CHECKMATE_SCORE, None
+            score = -1 * CHECKMATE_SCORE
         else:
-            return CHECKMATE_SCORE, None
+            score = CHECKMATE_SCORE
+        log_time(start_time, f'minimax depth {depth}')
+        return score, None
     elif is_stalemate:
         print("is_stalemate")
+        log_time(start_time, f'minimax depth {depth}')
         return STALEMATE_SCORE, None
 
     best_move = None
@@ -1029,6 +1157,7 @@ def minimax(board, depth, is_white, alpha, beta, endgame=False, cant_castle=None
             alpha = max(alpha, eval)
             if beta <= alpha:
                 break
+        log_time(start_time, f'minimax depth {depth}')
         return max_eval, best_move
     else:
         min_eval = float('inf')
@@ -1046,6 +1175,7 @@ def minimax(board, depth, is_white, alpha, beta, endgame=False, cant_castle=None
             beta = min(beta, eval)
             if beta <= alpha:
                 break
+        log_time(start_time, f'minimax depth {depth}')
         return min_eval, best_move
 
 def get_piece_frame_x(piece):
