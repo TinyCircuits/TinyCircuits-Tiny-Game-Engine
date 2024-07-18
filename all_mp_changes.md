@@ -65,10 +65,11 @@ To build the firmware: `make -j8 BOARD=THUMBY_COLOR USER_C_MODULES=../../TinyCir
 # Edit `ports/rp2/CMakeLists.txt`
 1. Starting at line 167 or inside `set(PICO_SDK_COMPONENTS` (do this otherwise will get missing header errors during compile)
     1. Comment out: `# hardware_rtc`
-    2. Add `hardware_sync_spin_lock`
-    3. Add `pico_platform_compiler`
-    4. Add `pico_platform_sections`
-    5. Add `pico_platform_panic`
+    2. Add `hardware_exception`
+    3. Add `hardware_sync_spin_lock`
+    4. Add `pico_platform_compiler`
+    5. Add `pico_platform_sections`
+    6. Add `pico_platform_panic`
 2. Starting at line 210 (after the above edits) or starting at `pico_set_float_implementation(${MICROPY_TARGET} micropython)` comment out everything to do with software float (not sure if this is exactly correct, but these sources do not exist anymore and we want the FPU to be used, not software implementation)
 
 # Edit `ports/rp2/mphalport.h`

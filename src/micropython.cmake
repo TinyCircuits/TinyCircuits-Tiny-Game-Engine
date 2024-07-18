@@ -8,6 +8,9 @@ target_sources(usermod_engine INTERFACE
     ${ENGINE_MOD_DIR}/engine_main.c
     ${ENGINE_MOD_DIR}/engine.c
     ${ENGINE_MOD_DIR}/engine_collections.c
+    ${ENGINE_MOD_DIR}/fault/engine_fault.c
+    ${ENGINE_MOD_DIR}/fault/engine_fault_rp3.c
+    ${ENGINE_MOD_DIR}/fault/engine_fault_report.c
     ${ENGINE_MOD_DIR}/math/engine_math.c
     ${ENGINE_MOD_DIR}/draw/engine_draw_module.c
     ${ENGINE_MOD_DIR}/draw/engine_color.c

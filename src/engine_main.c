@@ -13,6 +13,7 @@
 #include "physics/engine_physics.h"
 #include "animation/engine_animation_module.h"
 #include "engine_gui.h"
+#include "fault/engine_fault.h"
 #include "py/mpstate.h"
 
 #if defined(__arm__)
@@ -96,6 +97,10 @@ static mp_obj_t engine_main_module_init(){
     engine_display_init();
     engine_display_init_framebuffers();
     engine_display_send();
+
+    // Setup fault handlers after screen is setup since
+    // we need the screen to output the fault
+    engine_fault_handling_register();
 
     // Needs to be setup before hand since dynamicly inits array
     engine_audio_setup();

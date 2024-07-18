@@ -16,8 +16,11 @@ typedef struct{
     uint16_t glyph_x_offsets[ENGINE_FONT_MAX_CHAR_COUNT];
 
     mp_obj_t glyph_widths_bytearray_ref;
+    mp_obj_t glyph_offsets_bytearray_ref;
     uint8_t glyph_height;
 }font_resource_class_obj_t;
+
+extern font_resource_class_obj_t font;
 
 extern const mp_obj_type_t font_resource_class_type;
 
