@@ -16,13 +16,14 @@
 extern uint16_t *active_screen_buffer;
 
 
-void engine_fault_report(uint32_t pc){
-    ENGINE_PRINTF("HARD_FAULT ERROR: PC=%ld\n", pc);
+void engine_fault_report(uint32_t lr, uint32_t pc){
+    // https://wbk.one/%2Farticle%2F6%2Fdebugging-arm-without-a-debugger-3-printing-stack-trace#:~:text=pc%20(program%20counter)
+    ENGINE_PRINTF("HARD_FAULT ERROR: LR=%ld, PC=%ld\n", lr, pc);
 
     engine_draw_fill_color(0b0000000000011111, active_screen_buffer);
 
-    char message[75] = { 0 };
-    int len = snprintf(message, 75, "ERROR: HARD_FAULT\nPC: %x\nRESTART DEVICE\n\n:(", (int)pc);
+    char message[100] = { 0 };
+    int len = snprintf(message, 75, "ERROR: HARD_FAULT\nLR: %x\nPC: %x\nRESTART DEVICE\n\n:(", (int)lr, (int)pc);
 
     mp_obj_str_t text = {
         .base.type = &mp_type_str,

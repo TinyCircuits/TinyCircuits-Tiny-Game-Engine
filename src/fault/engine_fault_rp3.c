@@ -11,6 +11,7 @@
 // https://github.com/Memotech-Bill/PicoBB/blob/master/src/pico/stack_trap.c
 // https://forums.raspberrypi.com/viewtopic.php?p=1896381#p1896381
 // https://www.reddit.com/r/arm/comments/142y3ro/exception_handling_in_arm_cortex_m4/
+// https://wbk.one/%2Farticle%2F6%2Fdebugging-arm-without-a-debugger-3-printing-stack-trace
 static void __attribute__((naked)) engine_fault_get_stack_rp3(void){
     __asm volatile
     (
@@ -30,8 +31,11 @@ static void __attribute__((naked)) engine_fault_get_stack_rp3(void){
 void engine_fault_handle_rp3(uint32_t *pul_fault_stack_address){
     // pg. 32: arm_cortex_m33_trm_100230_0100_07_en.pdf
     // Get PC and make digits into char buffer and print it
-    uint32_t pc = pul_fault_stack_address[6];
-    engine_fault_report(pc);
+
+    // https://wbk.one/%2Farticle%2F6%2Fdebugging-arm-without-a-debugger-3-printing-stack-trace#:~:text=pc%20(program%20counter)
+    uint32_t lr = pul_fault_stack_address[5];   // <- address to return when the current function returns
+    uint32_t pc = pul_fault_stack_address[6];   // <- address of the entry point of the function plus 16 bytes
+    engine_fault_report(lr, pc);
 
     // Loop forever
     for(;;);

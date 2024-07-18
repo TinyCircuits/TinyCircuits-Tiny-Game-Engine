@@ -11,7 +11,7 @@
 
 // https://stackoverflow.com/a/2436368
 void engine_fault_handle_unix(int signal, siginfo_t *si, void *arg){
-    engine_fault_report(0);
+    engine_fault_report(0, 0);
 
     // Loop forever
     for(;;);
