@@ -97,8 +97,17 @@ mp_obj_t wave_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
     self->extra_data = engine_resource_get_space_bytearray(self->total_data_size, false);
     engine_resource_start_storing(self->extra_data, false);
 
-    for(uint32_t i=0; i<self->total_data_size; i++){
-        engine_resource_store_u8(engine_file_get_u8(0));
+    uint8_t temp_buffer[512];
+    uint32_t remaining_amount_to_read = self->total_data_size;
+
+    while(remaining_amount_to_read != 0){
+        uint16_t amount_to_read = MIN(512, remaining_amount_to_read);
+        uint16_t read_amount = engine_file_read(0, temp_buffer, amount_to_read);
+        remaining_amount_to_read -= read_amount;
+
+        for(uint16_t i=0; i<read_amount; i++){
+            engine_resource_store_u8(temp_buffer[i]);
+        }
     }
 
     // Stop storing so that any pending non completely filled pages are written
