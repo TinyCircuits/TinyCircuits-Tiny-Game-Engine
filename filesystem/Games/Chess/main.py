@@ -435,7 +435,6 @@ class SimulatedChessBoard:
                     en_passant_capture = self.piece_positions.get((to_pos[0], from_pos[1]))
                     if en_passant_capture and isinstance(en_passant_capture, Pawn) and en_passant_capture.en_passant_target:
                         captured_piece = en_passant_capture
-                        self.remove_piece(en_passant_capture)
 
                 if to_pos[1] == 0 or to_pos[1] == 7:
                     promotion = piece
@@ -509,7 +508,11 @@ class SimulatedChessBoard:
 
         piece.grid_position = from_pos
         self.piece_positions[from_pos] = piece
-        del self.piece_positions[to_pos]
+        try:
+            del self.piece_positions[to_pos]
+        except KeyError:
+            print(self.move_history)
+            pass
 
         # Restore the captured piece if there was one
         if captured_piece:
@@ -676,7 +679,6 @@ class ChessGame(Rectangle2DNode):
         self.last_move = None
         self.moves = []
         self.endgame = False
-        self.ai_in_check_cant_castle = None
         # Choose a random opening if the AI is white
         self.ai_opening_moves = None
         if self.player_is_white:
@@ -761,13 +763,13 @@ class ChessGame(Rectangle2DNode):
                 self.winner_message = "Stalemate!"
                 return
 
-        if engine_io.LEFT.is_just_pressed:
+        if engine_io.LEFT.is_pressed_autorepeat:
             self.move_cursor((-1, 0))
-        elif engine_io.RIGHT.is_just_pressed:
+        elif engine_io.RIGHT.is_pressed_autorepeat:
             self.move_cursor((1, 0))
-        elif engine_io.UP.is_just_pressed:
+        elif engine_io.UP.is_pressed_autorepeat:
             self.move_cursor((0, -1))
-        elif engine_io.DOWN.is_just_pressed:
+        elif engine_io.DOWN.is_pressed_autorepeat:
             self.move_cursor((0, 1))
         elif engine_io.A.is_just_pressed:
             self.select_or_move_piece()
@@ -864,7 +866,7 @@ class ChessGame(Rectangle2DNode):
             if self.endgame:
                 depth = 3
                                 
-            eval_score, best_move = minimax(simulated_board, depth=depth, is_white=not self.player_is_white, alpha=float('-inf'), beta=float('inf'), endgame=self.endgame, cant_castle=self.ai_in_check_cant_castle)
+            eval_score, best_move = minimax(simulated_board, depth=depth, is_white=not self.player_is_white, alpha=float('-inf'), beta=float('inf'), endgame=self.endgame)
             if not best_move:
                 return
             p, to_pos = best_move
@@ -1088,44 +1090,15 @@ def evaluate_board(board, endgame=False):
     score = 0
     for piece_score in board.piece_scores.values():
         score += piece_score
-    
-    if endgame:
-        # Add endgame-specific heuristics
-        score += king_proximity_score(board, True)
-
     return score
 
-def king_proximity_score(board, is_white):
-    opponent_king = None
-    for piece in board.pieces:
-        if isinstance(piece, King) and piece.is_white != is_white:
-            opponent_king = piece
-            break
-    if not opponent_king:
-        return 0
-    
-    score = 0
-    for piece in board.pieces:
-        if piece.is_white == is_white:
-            distance = abs(piece.grid_position[0] - opponent_king.grid_position[0]) + abs(piece.grid_position[1] - opponent_king.grid_position[1])
-            score -= distance  # Closer pieces get higher scores (negative distance)
-    
-    return score
-
-CHECKMATE_SCORE = 40000
+CHECKMATE_SCORE = 100000
 STALEMATE_SCORE = 0
 
 def minimax(board, depth, is_white, alpha, beta, endgame=False, cant_castle=None):
     if depth == 0:
         score = evaluate_board(board, endgame)
         return score, None
-
-    is_checkmate, is_stalemate = board.check_for_checkmate_or_stalemate(is_white)
-    if is_checkmate:
-        score = -CHECKMATE_SCORE if is_white else CHECKMATE_SCORE
-        return score, None
-    elif is_stalemate:
-        return STALEMATE_SCORE, None
 
     best_move = None
     all_valid_moves = board.get_all_valid_moves(is_white, sort=True)
@@ -1136,7 +1109,6 @@ def minimax(board, depth, is_white, alpha, beta, endgame=False, cant_castle=None
             from_pos = piece.grid_position
             to_pos = move
             if isinstance(piece, King) and abs(from_pos[0] - to_pos[0]) > 1:
-                # Check if the king is in check before castling
                 if board.is_in_check(is_white):
                     continue
             board.make_move(from_pos, to_pos)
@@ -1156,12 +1128,10 @@ def minimax(board, depth, is_white, alpha, beta, endgame=False, cant_castle=None
             from_pos = piece.grid_position
             to_pos = move
             if isinstance(piece, King) and abs(from_pos[0] - to_pos[0]) > 1:
-                # Check if the king is in check before castling
                 if board.is_in_check(not is_white):
                     continue
             board.make_move(from_pos, to_pos)
             eval, _ = minimax(board, depth - 1, True, alpha, beta, endgame)
-
             if eval < min_eval:
                 if not board.is_in_check(not is_white):
                     min_eval = eval
@@ -1171,9 +1141,6 @@ def minimax(board, depth, is_white, alpha, beta, endgame=False, cant_castle=None
             if beta <= alpha:
                 break
         return min_eval, best_move
-
-
-
 
 def get_piece_frame_x(piece):
     if isinstance(piece, King):
