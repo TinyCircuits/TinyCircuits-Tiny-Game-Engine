@@ -67,37 +67,86 @@ mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, si
     self->width = bitmap_width;
     self->height = bitmap_height;
 
+    // https://en.wikipedia.org/wiki/BMP_file_format#:~:text=optional%20color%20list.-,Pixel%20storage,-%5Bedit%5D
+    // Due to the format and padding to multiples of 4
+    // in bitmaps, an arrow drawn pointing up in a 7 x 7
+    // bitmap will be stored as (- is padding):
+    //
+    // X X X . X X X -
+    // X X X . X X X -
+    // X X X . X X X -
+    // X X X . X X X -
+    // X . X . X . X -
+    // X X . . . X X -
+    // X X X . X X X -
+    //
+    // This means, when using the serial storing API
+    // below, we need grab chunks of bitmap data from
+    // end to start, and store pixels going as:
+    // 1. Start at at the bottom-left of the above diagram adn store that pixel
+    // 2. Move to the right and store those pixels
+    // 3. After moving to the right and reaching the end of the padding, go up a row and back to the start on the left
+
+    // This is the real width of the bitmap pixel data array, needed for calculating offsets
+    uint16_t padded_bitmap_width = (uint16_t)(ceilf((float)bitmap_width / 2.0f) * 2.0f);
+
+    // Get space for texture in SRAM/FLASH and start storing API
     self->data = engine_resource_get_space_bytearray(bitmap_data_size, self->in_ram);
-    
     engine_resource_start_storing(self->data, self->in_ram);
 
-    uint16_t bitmap_pixel_src_x = 0;
-    uint16_t bitmap_pixel_src_y = bitmap_height-1;
+    uint8_t temp_row_pixels_buffer[256];
 
-    engine_file_seek(0, bitmap_pixel_data_offset, MP_SEEK_SET);
+    // Fetch pixel data from filesystem row by row from end to start
+    for(int32_t y=bitmap_height-1; y>=0 ; y--){
+        // Seek to start of bitmap pixel row at current y
+        // and store how many bytes we'll need to fetch
+        // for this row
+        uint32_t offset = y * padded_bitmap_width + 0;
+        engine_file_seek(0, bitmap_pixel_data_offset + (offset*2) + 0, MP_SEEK_SET);
+        uint16_t remaining_width = bitmap_width * 2;
 
-    // https://en.wikipedia.org/wiki/BMP_file_format#:~:text=optional%20color%20list.-,Pixel%20storage,-%5Bedit%5D
-    // Need to know how many pixels of padding there are in each
-    // row so that the pixel data can be extracted correctly
-    // (working with pixels here whereas it is padded in bytes)
-    uint16_t padded_multiple_4_width = (uint16_t)(ceilf((float)bitmap_width / 2.0f) * 2.0f);
+        while(remaining_width != 0){
+            // Read up to 256 bytes of pixel data at a time
+            uint16_t amount_to_read = MIN(256, remaining_width);
 
-    for(uint32_t bitmap_pixel_dest_index=0; bitmap_pixel_dest_index<bitmap_width*bitmap_height; bitmap_pixel_dest_index++){
-        
-        // Each row has padded bytes to make each row a multiple
-        // of 4, use that width for calculating the index
-        uint32_t bitmap_pixel_src_index = bitmap_pixel_src_y * padded_multiple_4_width + bitmap_pixel_src_x;
-        engine_resource_store_u16(engine_file_seek_get_u16(0, bitmap_pixel_data_offset + (bitmap_pixel_src_index*2)));
+            uint16_t read_amount = engine_file_read(0, temp_row_pixels_buffer, amount_to_read);
+            remaining_width -= read_amount;
 
-        bitmap_pixel_src_x++;
-        if(bitmap_pixel_src_x >= bitmap_width){
-            bitmap_pixel_src_x = 0;
-            bitmap_pixel_src_y--;
+            for(uint16_t i=0; i<read_amount/2; i++){
+                engine_resource_store_u16(((uint16_t*)temp_row_pixels_buffer)[i]);
+            }
         }
     }
 
     engine_resource_stop_storing();
     engine_file_close(0);
+
+    
+
+    // engine_file_seek(0, bitmap_pixel_data_offset, MP_SEEK_SET);
+
+    // // 
+    // // Need to know how many pixels of padding there are in each
+    // // row so that the pixel data can be extracted correctly
+    // // (working with pixels here whereas it is padded in bytes)
+    // uint16_t padded_multiple_4_width = 
+
+    // for(uint32_t bitmap_pixel_dest_index=0; bitmap_pixel_dest_index<bitmap_width*bitmap_height; bitmap_pixel_dest_index++){
+        
+    //     // Each row has padded bytes to make each row a multiple
+    //     // of 4, use that width for calculating the index
+    //     uint32_t bitmap_pixel_src_index = bitmap_pixel_src_y * padded_multiple_4_width + bitmap_pixel_src_x;
+    //     engine_resource_store_u16(engine_file_seek_get_u16(0, bitmap_pixel_data_offset + (bitmap_pixel_src_index*2)));
+
+    //     bitmap_pixel_src_x++;
+    //     if(bitmap_pixel_src_x >= bitmap_width){
+    //         bitmap_pixel_src_x = 0;
+    //         bitmap_pixel_src_y--;
+    //     }
+    // }
+
+    // engine_resource_stop_storing();
+    // engine_file_close(0);
     
     return MP_OBJ_FROM_PTR(self);
 }

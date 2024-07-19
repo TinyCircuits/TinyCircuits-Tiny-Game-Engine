@@ -9,10 +9,13 @@ import time
 
 cam = CameraNode()
 
+# 6219ms
 time_before = time.ticks_ms()
 wave = WaveSoundResource("15s_chirp.wav")
 print("Load duration:", time.ticks_ms() - time_before, "ms")
 
+# 4665ms
+# 3714ms
 time_before = time.ticks_ms()
 texture = TextureResource("large.bmp")
 print("Load duration:", time.ticks_ms() - time_before, "ms")

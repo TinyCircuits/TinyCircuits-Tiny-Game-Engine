@@ -298,7 +298,7 @@ void engine_audio_setup(){
         irq_set_enabled(PWM_IRQ_WRAP_0, true);
         pwm_config audio_callback_pwm_pin_config = pwm_get_default_config();
         pwm_config_set_clkdiv_int(&audio_callback_pwm_pin_config, 1);
-        pwm_config_set_wrap(&audio_callback_pwm_pin_config, ((125.0f * 1000.0f * 1000.0f) / ENGINE_AUDIO_SAMPLE_RATE) - 1);
+        pwm_config_set_wrap(&audio_callback_pwm_pin_config, (uint16_t)((150.0f * 1000.0f * 1000.0f) / ENGINE_AUDIO_SAMPLE_RATE) - 1);
         pwm_init(audio_callback_pwm_pin_slice, &audio_callback_pwm_pin_config, true);
     #endif
 }
