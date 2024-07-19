@@ -799,12 +799,15 @@ class ChessGame(Rectangle2DNode):
             new_col, new_row = self.selected_grid_position
             if (new_col, new_row) != self.selected_piece.grid_position:
                 if (new_col, new_row) in self.selected_piece.safe_moves(self.chessboard.board):
-                    self.make_move(self.selected_piece, (new_col, new_row))
-                    is_checkmate, is_stalemate = self.chessboard.board.check_for_checkmate_or_stalemate(self.current_player_is_white)
-                    if is_checkmate:
-                        self.winner_message = ("Black wins" if self.current_player_is_white else "White wins")
-                    elif is_stalemate:
-                        self.winner_message = "Stalemate!"
+                    if isinstance(self.selected_piece, King) and abs(new_col - self.selected_piece.grid_position[0]) > 1:
+                        if self.chessboard.board.is_in_check(self.current_player_is_white):
+                            return  # Cannot castle out of check
+                        self.make_move(self.selected_piece, (new_col, new_row))
+                        is_checkmate, is_stalemate = self.chessboard.board.check_for_checkmate_or_stalemate(self.current_player_is_white)
+                        if is_checkmate:
+                            self.winner_message = ("Black wins" if self.current_player_is_white else "White wins")
+                        elif is_stalemate:
+                            self.winner_message = "Stalemate!"
         else:
             selected_piece = self.chessboard.board.piece_positions.get((col, row))
             if selected_piece and selected_piece.is_white == self.current_player_is_white:
