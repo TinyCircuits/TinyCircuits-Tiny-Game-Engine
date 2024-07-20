@@ -19,7 +19,9 @@ font = FontResource("../../assets/outrunner_outline.bmp")
 
 chess_texture = TextureResource("chess.bmp")
 move_sound = WaveSoundResource("move.wav")
-engine_audio.set_volume(0.25)
+take_sound = WaveSoundResource("take.wav")
+pawn_sound = WaveSoundResource("pawn.wav")
+engine_audio.set_volume(0.5)
 
 # Display dimensions
 DISP_WIDTH = 128
@@ -29,6 +31,8 @@ DISP_HEIGHT = 128
 CELL_WIDTH = 16
 CELL_HEIGHT = 16
 OFFSET = CELL_WIDTH / 2
+
+MAX_DEPTH=2
 
 # Global dictionary to track timing
 timing_data = {}
@@ -510,8 +514,7 @@ class SimulatedChessBoard:
         self.piece_positions[from_pos] = piece
         try:
             del self.piece_positions[to_pos]
-        except KeyError:
-            print(self.move_history)
+        except:
             pass
 
         # Restore the captured piece if there was one
@@ -862,11 +865,11 @@ class ChessGame(Rectangle2DNode):
             # Update endgame flag
             self.update_endgame_flag()
             # Use minimax if no opening is tracked or opening moves are exhausted
-            depth = 2
+            global MAX_DEPTH
             if self.endgame:
-                depth = 3
+                MAX_DEPTH = 3
                                 
-            eval_score, best_move = minimax(simulated_board, depth=depth, is_white=not self.player_is_white, alpha=float('-inf'), beta=float('inf'), endgame=self.endgame)
+            eval_score, best_move = minimax(simulated_board, depth=MAX_DEPTH, is_white=not self.player_is_white, alpha=float('-inf'), beta=float('inf'))
             if not best_move:
                 return
             p, to_pos = best_move
@@ -891,6 +894,15 @@ class ChessGame(Rectangle2DNode):
         # Generate move notation before updating the board state
         move_notation = generate_move_notation(piece, piece.grid_position, to_pos, self.chessboard.board)
 
+        # Determine the move type and play the appropriate sound
+        captured_piece = self.chessboard.board.piece_positions.get(to_pos)
+        if captured_piece:
+            engine_audio.play(take_sound, 0, False)
+        elif isinstance(piece, Pawn):
+            engine_audio.play(pawn_sound, 0, False)
+        else:
+            engine_audio.play(move_sound, 0, False)
+
         # Make the move
         self.chessboard.board.make_move(from_pos, to_pos)
 
@@ -910,7 +922,7 @@ class ChessGame(Rectangle2DNode):
         self.selected_piece = None
         self.move_mode = False
         self.current_player_is_white = not self.current_player_is_white
-        engine_audio.play(move_sound, 0, False)
+
         self.print_board_state()
         self.chessboard.render_pieces()
 
@@ -1040,7 +1052,7 @@ def board_to_string(board, player_is_white):
         board_str += " +---------------+\n"
         for i in range(8):
             row = 7-i  # Print from the bottom (1) to top (8)
-            board_str += f"{i+1}|{' '.join(board_state[row])}|{i+1}\n"
+            board_str += f"{i+1}|{' '.join(board_state[row][::-1])}|{i+1}\n"
         board_str += " +---------------+\n"
         board_str += "  h g f e d c b a"
     
@@ -1092,52 +1104,62 @@ def evaluate_board(board, endgame=False):
         score += piece_score
     return score
 
-CHECKMATE_SCORE = 100000
+CHECKMATE_SCORE = 60000
 STALEMATE_SCORE = 0
 
-def minimax(board, depth, is_white, alpha, beta, endgame=False, cant_castle=None):
+def minimax(board, depth, is_white, alpha, beta):
+    safety=False
+    if depth == MAX_DEPTH:
+        if board.is_in_check(is_white):
+            safety=True
     if depth == 0:
-        score = evaluate_board(board, endgame)
-        return score, None
+        return evaluate_board(board), None
 
     best_move = None
-    all_valid_moves = board.get_all_valid_moves(is_white, sort=True)
+    if safety:
+        all_moves = board.get_all_safe_moves(is_white, sort=True)
+    else:
+        all_moves = board.get_all_valid_moves(is_white, sort=True)
+
+    if not all_moves:
+        eval_score = evaluate_board(board)
+        if abs(eval_score) >= CHECKMATE_SCORE:
+            return eval_score, None
+        return STALEMATE_SCORE, None
 
     if is_white:
-        max_eval = float("-inf")
-        for piece, move in all_valid_moves:
+        max_eval = float('-inf')
+        for piece, move in all_moves:
             from_pos = piece.grid_position
             to_pos = move
             if isinstance(piece, King) and abs(from_pos[0] - to_pos[0]) > 1:
                 if board.is_in_check(is_white):
                     continue
             board.make_move(from_pos, to_pos)
-            eval, _ = minimax(board, depth - 1, False, alpha, beta, endgame)
-            if eval > max_eval:
-                if not board.is_in_check(is_white):
-                    max_eval = eval
-                    best_move = (piece, move)
-                    alpha = max(alpha, eval)
+            eval, _ = minimax(board, depth - 1, False, alpha, beta)
             board.undo_move()
+            if eval > max_eval:
+                max_eval = eval
+                best_move = (piece, move)
+            alpha = max(alpha, eval)
             if beta <= alpha:
                 break
         return max_eval, best_move
     else:
-        min_eval = float("inf")
-        for piece, move in all_valid_moves:
+        min_eval = float('inf')
+        for piece, move in all_moves:
             from_pos = piece.grid_position
             to_pos = move
             if isinstance(piece, King) and abs(from_pos[0] - to_pos[0]) > 1:
-                if board.is_in_check(not is_white):
+                if board.is_in_check(is_white):
                     continue
             board.make_move(from_pos, to_pos)
-            eval, _ = minimax(board, depth - 1, True, alpha, beta, endgame)
-            if eval < min_eval:
-                if not board.is_in_check(not is_white):
-                    min_eval = eval
-                    best_move = (piece, move)
-                    beta = min(beta, eval)
+            eval, _ = minimax(board, depth - 1, True, alpha, beta)
             board.undo_move()
+            if eval < min_eval:
+                min_eval = eval
+                best_move = (piece, move)
+            beta = min(beta, eval)
             if beta <= alpha:
                 break
         return min_eval, best_move
