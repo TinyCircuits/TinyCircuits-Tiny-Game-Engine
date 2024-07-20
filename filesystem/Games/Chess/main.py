@@ -76,6 +76,14 @@ class ChessPiece:
             board.undo_move()
         #log_time(start_time, f'safe_moves for {type(self).__name__}')
         return safe_moves
+    
+    def __str__(self):
+        color = "White" if self.is_white else "Black"
+        return f"{color} piece at {self.grid_position}, has moved: {self.has_moved}"
+
+    def __repr__(self):
+        return f"{type(self).__name__}(grid_position={self.grid_position}, is_white={self.is_white}, has_moved={self.has_moved})"
+
 
 class King(ChessPiece):
     def valid_moves(self, board):
@@ -410,8 +418,15 @@ class SimulatedChessBoard:
                 piece.en_passant_target = original_piece.en_passant_target
             self.update_piece_score(piece)
 
+    def reset_en_passant_status(self):
+        for piece in self.pieces:
+            if isinstance(piece, Pawn):
+                piece.en_passant_target = False
+
     def make_move(self, from_pos, to_pos):
         piece = self.piece_positions.get(from_pos)
+        if not piece:
+            return
         captured_piece = self.piece_positions.get(to_pos)
         en_passant_capture = None
         castling_rook_from = None
@@ -473,7 +488,7 @@ class SimulatedChessBoard:
                 'promotion': promotion,
                 'has_moved_before': has_moved_before
             })
-
+            self.reset_en_passant_status()
         return piece, captured_piece
 
     def undo_move(self):
@@ -527,6 +542,10 @@ class SimulatedChessBoard:
 
         piece.has_moved = has_moved_before
         self.update_piece_score(piece)
+
+        # Restore the en passant status for the pawn that moved two squares
+        if isinstance(piece, Pawn) and abs(to_pos[1] - from_pos[1]) == 2:
+            piece.en_passant_target = True
 
     def update_piece_score(self, piece):
         piece_char = get_piece_char(piece)
@@ -650,11 +669,18 @@ class SimulatedChessBoard:
 
         for piece in self.pieces:
             if piece.is_white == current_player_is_white:
-                if piece.safe_moves(self):
+                safe_moves = piece.safe_moves(self)
+                if safe_moves:
                     is_checkmate = False
                     is_stalemate = False
                     break
         
+        #double check
+        if is_checkmate:
+            if self.get_all_safe_moves(current_player_is_white):
+                is_checkmate = False
+                is_stalemate = False
+
         if self.is_in_check(current_player_is_white):
             is_stalemate = False
         else:
@@ -860,8 +886,6 @@ class ChessGame(Rectangle2DNode):
                         from_pos = p.grid_position
                         break
         else:
-            simulated_board = SimulatedChessBoard()
-            simulated_board.copy_from_board(self.chessboard.board)
             # Update endgame flag
             self.update_endgame_flag()
             # Use minimax if no opening is tracked or opening moves are exhausted
@@ -869,7 +893,7 @@ class ChessGame(Rectangle2DNode):
             if self.endgame:
                 MAX_DEPTH = 3
                                 
-            eval_score, best_move = minimax(simulated_board, depth=MAX_DEPTH, is_white=not self.player_is_white, alpha=float('-inf'), beta=float('inf'))
+            eval_score, best_move = minimax(self.chessboard.board, depth=MAX_DEPTH, is_white=not self.player_is_white, alpha=float('-inf'), beta=float('inf'))
             if not best_move:
                 return
             p, to_pos = best_move
