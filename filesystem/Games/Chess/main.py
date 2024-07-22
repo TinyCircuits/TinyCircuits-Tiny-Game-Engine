@@ -18,8 +18,11 @@ random.seed(time.ticks_ms())
 font = FontResource("../../assets/outrunner_outline.bmp")
 
 chess_texture = TextureResource("chess.bmp")
+board_texture = TextureResource("board.bmp")
 move_sound = WaveSoundResource("move.wav")
-engine_audio.set_volume(0.25)
+take_sound = WaveSoundResource("take.wav")
+pawn_sound = WaveSoundResource("pawn.wav")
+engine_audio.set_volume(0.5)
 
 # Display dimensions
 DISP_WIDTH = 128
@@ -29,6 +32,8 @@ DISP_HEIGHT = 128
 CELL_WIDTH = 16
 CELL_HEIGHT = 16
 OFFSET = CELL_WIDTH / 2
+
+MAX_DEPTH=2
 
 # Global dictionary to track timing
 timing_data = {}
@@ -72,6 +77,14 @@ class ChessPiece:
             board.undo_move()
         #log_time(start_time, f'safe_moves for {type(self).__name__}')
         return safe_moves
+    
+    def __str__(self):
+        color = "White" if self.is_white else "Black"
+        return f"{color} piece at {self.grid_position}, has moved: {self.has_moved}"
+
+    def __repr__(self):
+        return f"{type(self).__name__}(grid_position={self.grid_position}, is_white={self.is_white}, has_moved={self.has_moved})"
+
 
 class King(ChessPiece):
     def valid_moves(self, board):
@@ -283,15 +296,13 @@ class ChessBoard(Rectangle2DNode):
     def draw_board(self):
         for row in range(8):
             for col in range(8):
-                if self.player_is_white:
-                    square_color = Color(77/256, 125/256, 210/256) if (row + col) % 2 == 1 else Color(220/256, 220/256, 230/256)
-                else:
-                    square_color = Color(77/256, 125/256, 210/256) if (row + col) % 2 == 0 else Color(220/256, 220/256, 230/256)
-                square = Rectangle2DNode()
+                square = Sprite2DNode(texture=board_texture)
                 square.position = Vector2(col * CELL_WIDTH + OFFSET, row * CELL_HEIGHT + OFFSET)
-                square.width = CELL_WIDTH
-                square.height = CELL_HEIGHT
-                square.color = square_color
+                square.playing = False
+                square.frame_count_x = 2
+                square.frame_count_y = 1
+                square.frame_current_x = (row + col + 1) % 2
+                square.frame_current_y = 1
                 square.layer = 1
                 self.squares.append(square)
                 self.add_child(square)
@@ -406,8 +417,15 @@ class SimulatedChessBoard:
                 piece.en_passant_target = original_piece.en_passant_target
             self.update_piece_score(piece)
 
+    def reset_en_passant_status(self):
+        for piece in self.pieces:
+            if isinstance(piece, Pawn):
+                piece.en_passant_target = False
+
     def make_move(self, from_pos, to_pos):
         piece = self.piece_positions.get(from_pos)
+        if not piece:
+            return
         captured_piece = self.piece_positions.get(to_pos)
         en_passant_capture = None
         castling_rook_from = None
@@ -469,7 +487,7 @@ class SimulatedChessBoard:
                 'promotion': promotion,
                 'has_moved_before': has_moved_before
             })
-
+            self.reset_en_passant_status()
         return piece, captured_piece
 
     def undo_move(self):
@@ -510,8 +528,7 @@ class SimulatedChessBoard:
         self.piece_positions[from_pos] = piece
         try:
             del self.piece_positions[to_pos]
-        except KeyError:
-            print(self.move_history)
+        except:
             pass
 
         # Restore the captured piece if there was one
@@ -524,6 +541,10 @@ class SimulatedChessBoard:
 
         piece.has_moved = has_moved_before
         self.update_piece_score(piece)
+
+        # Restore the en passant status for the pawn that moved two squares
+        if isinstance(piece, Pawn) and abs(to_pos[1] - from_pos[1]) == 2:
+            piece.en_passant_target = True
 
     def update_piece_score(self, piece):
         piece_char = get_piece_char(piece)
@@ -647,11 +668,18 @@ class SimulatedChessBoard:
 
         for piece in self.pieces:
             if piece.is_white == current_player_is_white:
-                if piece.safe_moves(self):
+                safe_moves = piece.safe_moves(self)
+                if safe_moves:
                     is_checkmate = False
                     is_stalemate = False
                     break
         
+        #double check
+        if is_checkmate:
+            if self.get_all_safe_moves(current_player_is_white):
+                is_checkmate = False
+                is_stalemate = False
+
         if self.is_in_check(current_player_is_white):
             is_stalemate = False
         else:
@@ -701,7 +729,7 @@ class ChessGame(Rectangle2DNode):
         black_material_value = sum(piece_values[get_piece_char(piece).upper()] for piece in self.chessboard.board.pieces if not piece.is_white and not isinstance(piece, King))
         
         endgame_threshold = 800  # Adjust this threshold based on testing and observations
-        self.endgame = white_material_value <= endgame_threshold and black_material_value > white_material_value
+        self.endgame = white_material_value <= endgame_threshold or black_material_value <= endgame_threshold
 
 
     def update_evaluation_line(self, evaluation_score):
@@ -840,8 +868,11 @@ class ChessGame(Rectangle2DNode):
             if matched_openings:
                 # Select a random opening from the matched openings
                 opening_name, opening_moves = random.choice(matched_openings)
-                opening_move = opening_moves[len(self.moves)]
-                print(opening_name)
+                try:
+                    opening_move = opening_moves[len(self.moves)]
+                    print(opening_name)
+                except:
+                    opening_move = None
 
         if opening_move:
             # Play the next move in the opening
@@ -857,16 +888,14 @@ class ChessGame(Rectangle2DNode):
                         from_pos = p.grid_position
                         break
         else:
-            simulated_board = SimulatedChessBoard()
-            simulated_board.copy_from_board(self.chessboard.board)
             # Update endgame flag
             self.update_endgame_flag()
             # Use minimax if no opening is tracked or opening moves are exhausted
-            depth = 2
+            global MAX_DEPTH
             if self.endgame:
-                depth = 3
+                MAX_DEPTH = 3
                                 
-            eval_score, best_move = minimax(simulated_board, depth=depth, is_white=not self.player_is_white, alpha=float('-inf'), beta=float('inf'), endgame=self.endgame)
+            eval_score, best_move = minimax(self.chessboard.board, depth=MAX_DEPTH, is_white=not self.player_is_white, alpha=float('-inf'), beta=float('inf'))
             if not best_move:
                 return
             p, to_pos = best_move
@@ -891,6 +920,15 @@ class ChessGame(Rectangle2DNode):
         # Generate move notation before updating the board state
         move_notation = generate_move_notation(piece, piece.grid_position, to_pos, self.chessboard.board)
 
+        # Determine the move type and play the appropriate sound
+        captured_piece = self.chessboard.board.piece_positions.get(to_pos)
+        if captured_piece:
+            engine_audio.play(take_sound, 0, False)
+        elif isinstance(piece, Pawn):
+            engine_audio.play(pawn_sound, 0, False)
+        else:
+            engine_audio.play(move_sound, 0, False)
+
         # Make the move
         self.chessboard.board.make_move(from_pos, to_pos)
 
@@ -910,7 +948,7 @@ class ChessGame(Rectangle2DNode):
         self.selected_piece = None
         self.move_mode = False
         self.current_player_is_white = not self.current_player_is_white
-        engine_audio.play(move_sound, 0, False)
+
         self.print_board_state()
         self.chessboard.render_pieces()
 
@@ -1040,7 +1078,7 @@ def board_to_string(board, player_is_white):
         board_str += " +---------------+\n"
         for i in range(8):
             row = 7-i  # Print from the bottom (1) to top (8)
-            board_str += f"{i+1}|{' '.join(board_state[row])}|{i+1}\n"
+            board_str += f"{i+1}|{' '.join(board_state[row][::-1])}|{i+1}\n"
         board_str += " +---------------+\n"
         board_str += "  h g f e d c b a"
     
@@ -1092,52 +1130,62 @@ def evaluate_board(board, endgame=False):
         score += piece_score
     return score
 
-CHECKMATE_SCORE = 100000
+CHECKMATE_SCORE = 60000
 STALEMATE_SCORE = 0
 
-def minimax(board, depth, is_white, alpha, beta, endgame=False, cant_castle=None):
+def minimax(board, depth, is_white, alpha, beta):
+    safety=False
+    if depth == MAX_DEPTH:
+        if board.is_in_check(is_white):
+            safety=True
     if depth == 0:
-        score = evaluate_board(board, endgame)
-        return score, None
+        return evaluate_board(board), None
 
     best_move = None
-    all_valid_moves = board.get_all_valid_moves(is_white, sort=True)
+    if safety:
+        all_moves = board.get_all_safe_moves(is_white, sort=True)
+    else:
+        all_moves = board.get_all_valid_moves(is_white, sort=True)
+
+    if not all_moves:
+        eval_score = evaluate_board(board)
+        if abs(eval_score) >= CHECKMATE_SCORE:
+            return eval_score, None
+        return STALEMATE_SCORE, None
 
     if is_white:
-        max_eval = float("-inf")
-        for piece, move in all_valid_moves:
+        max_eval = float('-inf')
+        for piece, move in all_moves:
             from_pos = piece.grid_position
             to_pos = move
             if isinstance(piece, King) and abs(from_pos[0] - to_pos[0]) > 1:
                 if board.is_in_check(is_white):
                     continue
             board.make_move(from_pos, to_pos)
-            eval, _ = minimax(board, depth - 1, False, alpha, beta, endgame)
-            if eval > max_eval:
-                if not board.is_in_check(is_white):
-                    max_eval = eval
-                    best_move = (piece, move)
-                    alpha = max(alpha, eval)
+            eval, _ = minimax(board, depth - 1, False, alpha, beta)
             board.undo_move()
+            if eval > max_eval:
+                max_eval = eval
+                best_move = (piece, move)
+            alpha = max(alpha, eval)
             if beta <= alpha:
                 break
         return max_eval, best_move
     else:
-        min_eval = float("inf")
-        for piece, move in all_valid_moves:
+        min_eval = float('inf')
+        for piece, move in all_moves:
             from_pos = piece.grid_position
             to_pos = move
             if isinstance(piece, King) and abs(from_pos[0] - to_pos[0]) > 1:
-                if board.is_in_check(not is_white):
+                if board.is_in_check(is_white):
                     continue
             board.make_move(from_pos, to_pos)
-            eval, _ = minimax(board, depth - 1, True, alpha, beta, endgame)
-            if eval < min_eval:
-                if not board.is_in_check(not is_white):
-                    min_eval = eval
-                    best_move = (piece, move)
-                    beta = min(beta, eval)
+            eval, _ = minimax(board, depth - 1, True, alpha, beta)
             board.undo_move()
+            if eval < min_eval:
+                min_eval = eval
+                best_move = (piece, move)
+            beta = min(beta, eval)
             if beta <= alpha:
                 break
         return min_eval, best_move
