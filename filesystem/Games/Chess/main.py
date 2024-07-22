@@ -730,7 +730,7 @@ class ChessGame(Rectangle2DNode):
         black_material_value = sum(piece_values[get_piece_char(piece).upper()] for piece in self.chessboard.board.pieces if not piece.is_white and not isinstance(piece, King))
         
         endgame_threshold = 800  # Adjust this threshold based on testing and observations
-        self.endgame = white_material_value <= endgame_threshold and black_material_value > white_material_value
+        self.endgame = white_material_value <= endgame_threshold or black_material_value <= endgame_threshold
 
 
     def update_evaluation_line(self, evaluation_score):
@@ -869,8 +869,11 @@ class ChessGame(Rectangle2DNode):
             if matched_openings:
                 # Select a random opening from the matched openings
                 opening_name, opening_moves = random.choice(matched_openings)
-                opening_move = opening_moves[len(self.moves)]
-                print(opening_name)
+                try:
+                    opening_move = opening_moves[len(self.moves)]
+                    print(opening_name)
+                except:
+                    opening_move = None
 
         if opening_move:
             # Play the next move in the opening
