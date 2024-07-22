@@ -18,6 +18,7 @@ random.seed(time.ticks_ms())
 font = FontResource("../../assets/outrunner_outline.bmp")
 
 chess_texture = TextureResource("chess.bmp")
+board_texture = TextureResource("board.bmp")
 move_sound = WaveSoundResource("move.wav")
 take_sound = WaveSoundResource("take.wav")
 pawn_sound = WaveSoundResource("pawn.wav")
@@ -295,15 +296,13 @@ class ChessBoard(Rectangle2DNode):
     def draw_board(self):
         for row in range(8):
             for col in range(8):
-                if self.player_is_white:
-                    square_color = Color(77/256, 125/256, 210/256) if (row + col) % 2 == 1 else Color(220/256, 220/256, 230/256)
-                else:
-                    square_color = Color(77/256, 125/256, 210/256) if (row + col) % 2 == 0 else Color(220/256, 220/256, 230/256)
-                square = Rectangle2DNode()
+                square = Sprite2DNode(texture=board_texture)
                 square.position = Vector2(col * CELL_WIDTH + OFFSET, row * CELL_HEIGHT + OFFSET)
-                square.width = CELL_WIDTH
-                square.height = CELL_HEIGHT
-                square.color = square_color
+                square.playing = False
+                square.frame_count_x = 2
+                square.frame_count_y = 1
+                square.frame_current_x = (row + col + 1) % 2
+                square.frame_current_y = 1
                 square.layer = 1
                 self.squares.append(square)
                 self.add_child(square)
