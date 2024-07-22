@@ -17,6 +17,7 @@ typedef struct sound_resource_base_class_obj_t{
     uint32_t total_sample_count;                                    // Value used by playback engine to know if it reached the end of the sound       
     uint32_t total_data_size;
     uint32_t sample_rate;                                           // Value used by playback engine to know how often to fetch new samples
+    uint8_t play_counter_max;                                       // How many times the 22050Hz interrupt needs to be called before getting the next sample
     uint8_t play_counter;                                           // Based on the playback sample rate of the engine and the source, this tracks when the next sample from the source should be played
     float last_sample;                                              // Keep the last sample to return it for times when it is not time to return a new sample
     uint16_t bytes_per_sample;                                      // Value used by playback engine to know how many bytes are in a sample

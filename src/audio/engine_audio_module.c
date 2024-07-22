@@ -138,11 +138,9 @@ volatile float master_volume = 1.0f;
     float ENGINE_FAST_FUNCTION(get_wave_sample)(audio_channel_class_obj_t *channel, bool *complete){
         sound_resource_base_class_obj_t *source = channel->source;
 
-        // Depending on engine_playback sample rate
+        // Keep returning current sample until time to get next one
         if(source->play_counter != 0){
-            if(source->sample_rate == 11025 && source->play_counter == 2){
-                source->play_counter = 0;
-            }else if(source->sample_rate == 22050 && source->play_counter == 1){
+            if(source->play_counter == source->play_counter_max){
                 source->play_counter = 0;
             }else{
                 source->play_counter++;

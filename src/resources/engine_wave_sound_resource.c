@@ -1,5 +1,6 @@
 #include "engine_wave_sound_resource.h"
 #include "audio/engine_audio_channel.h"
+#include "audio/engine_audio_module.h"
 #include "debug/debug_print.h"
 #include "resources/engine_resource_manager.h"
 #include <stdlib.h>
@@ -25,6 +26,7 @@ mp_obj_t wave_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
     self->base.type = &wave_sound_resource_class_type;
     self->get_data = &wave_sound_resource_fill_destination;
     self->channel = NULL;
+    self->play_counter_max = 0;
     self->play_counter = 0;
     self->last_sample = 0.0f;
 
@@ -69,6 +71,8 @@ mp_obj_t wave_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
     // the bytes that each sample needs (gets bits per sample and divides
     // by size of a byte)
     self->sample_rate = engine_file_seek_get_u32(0, 24);
+    self->play_counter_max = (1.0f/(float)self->sample_rate) / (1.0f/(float)ENGINE_AUDIO_SAMPLE_RATE);
+
     self->bytes_per_sample = engine_file_seek_get_u16(0, 34) / 8;
 
     // Check for data marker
@@ -143,7 +147,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(wave_sound_resource_class_del_obj, wave_sound_resource
 /*  --- doc ---
     NAME: WaveSoundResource
     ID: WaveSoundResource
-    DESC: Holds audio data from a .wav file. `.wav` files can be 8 or 16-bit PCM and only 22050Hz or 11025Hz sample rate
+    DESC: Holds audio data from a .wav file. `.wav` files can be 8 or 16-bit PCM and only samples rates equal to or less than 22050Hz. Recommended sample rates are: 22050Hz, 11025Hz, 5512Hz, 2756Hz, and 1378Hz
     PARAM:  [type=string]       [name=filepath] [value=string]
     ATTR:   [type=bytearray]    [name=data]     [value=value of bytearray containing the audio samples]                                                                                                                                                                
 */ 
