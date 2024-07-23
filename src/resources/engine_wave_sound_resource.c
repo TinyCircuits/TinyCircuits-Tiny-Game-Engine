@@ -71,7 +71,7 @@ mp_obj_t wave_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
     // the bytes that each sample needs (gets bits per sample and divides
     // by size of a byte)
     self->sample_rate = engine_file_seek_get_u32(0, 24);
-    self->play_counter_max = (1.0f/(float)self->sample_rate) / (1.0f/(float)ENGINE_AUDIO_SAMPLE_RATE);
+    self->play_counter_max = (uint8_t)((1.0f/(float)self->sample_rate) / (1.0f/(float)ENGINE_AUDIO_SAMPLE_RATE));
 
     self->bytes_per_sample = engine_file_seek_get_u16(0, 34) / 8;
 
