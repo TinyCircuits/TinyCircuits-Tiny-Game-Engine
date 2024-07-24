@@ -78,6 +78,10 @@ int engine_rtc_get_datetime(struct tm *rtc){
         if(status == BM8563_ERROR_NOTTY){
             return ENGINE_RTC_I2C_ERROR;
         }
+    #elif defined(__unix__)
+        time_t t = time(NULL);
+        struct tm *lt = localtime(&t);
+        memmove(rtc, lt, sizeof(struct tm));
     #endif
 
     return ENGINE_RTC_OK;
@@ -92,6 +96,8 @@ int engine_rtc_set_datetime(struct tm *rtc){
         if(status == BM8563_ERROR_NOTTY){
             return ENGINE_RTC_I2C_ERROR;
         }
+    #elif defined(__unix__)
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineTime: ERROR: Setting time on UNIX port is not supported"));
     #endif
 
     return ENGINE_RTC_OK;
