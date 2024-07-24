@@ -74,6 +74,10 @@ target_sources(usermod_engine INTERFACE
     ${ENGINE_MOD_DIR}/animation/engine_animation_delay.c
     ${ENGINE_MOD_DIR}/save/engine_save_module.c
     ${ENGINE_MOD_DIR}/save/engine_save.c
+    ${ENGINE_MOD_DIR}/time/engine_rtc.c
+    ${ENGINE_MOD_DIR}/time/engine_time_module.c
+
+    ${ENGINE_MOD_DIR}/../lib/bm8563/bm8563.c
 )
 
 # Add the current directory as an include directory.

@@ -8,6 +8,7 @@
 #include "resources/engine_resource_manager.h"
 #include "audio/engine_audio_module.h"
 #include "io/engine_io_module.h"
+#include "time/engine_rtc.h"
 #include "display/engine_display.h"
 #include "display/engine_display_common.h"
 #include "physics/engine_physics.h"
@@ -109,6 +110,7 @@ static mp_obj_t engine_main_module_init(){
     engine_io_setup();
     engine_physics_init();
     engine_animation_init();
+    engine_rtc_init();
 
     #if defined(__arm__)
         adc_init();
