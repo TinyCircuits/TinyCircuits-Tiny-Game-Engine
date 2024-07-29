@@ -415,8 +415,17 @@ static void texture_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj
             case MP_QSTR_bit_depth:
                 destination[0] = mp_obj_new_int(self->bit_depth);
             break;
-            case MP_QSTR_format:
-                destination[0] = mp_obj_new_int(self->format);
+            case MP_QSTR_red_mask:
+                destination[0] = mp_obj_new_int(self->red_mask);
+            break;
+            case MP_QSTR_green_mask:
+                destination[0] = mp_obj_new_int(self->green_mask);
+            break;
+            case MP_QSTR_blue_mask:
+                destination[0] = mp_obj_new_int(self->blue_mask);
+            break;
+            case MP_QSTR_alpha_mask:
+                destination[0] = mp_obj_new_int(self->alpha_mask);
             break;
             case MP_QSTR_colors:
                 destination[0] = self->colors;
@@ -452,8 +461,17 @@ static void texture_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj
             case MP_QSTR_bit_depth:
                 mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("TextureResource: ERROR: Bit depth of a texture cannot be set!"));
             break;
-            case MP_QSTR_format:
-                mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("TextureResource: ERROR: Format of a texture cannot be set!"));
+            case MP_QSTR_red_mask:
+                destination[0] = mp_obj_new_int(self->red_mask);
+            break;
+            case MP_QSTR_green_mask:
+                destination[0] = mp_obj_new_int(self->green_mask);
+            break;
+            case MP_QSTR_blue_mask:
+                destination[0] = mp_obj_new_int(self->blue_mask);
+            break;
+            case MP_QSTR_alpha_mask:
+                destination[0] = mp_obj_new_int(self->alpha_mask);
             break;
             default:
                 return; // Fail

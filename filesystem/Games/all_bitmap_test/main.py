@@ -22,3 +22,5 @@ tex_32bit_argb_8888 = TextureResource("32bit_argb_8888.bmp")
 
 tex_16bit_rgb_565_no_bf_image_size = TextureResource("16bit_rgb_565_no_bf_image_size.bmp")
 tex_4bit_redbrick_no_clr_used = TextureResource("REDBRICK.BMP")
+
+tex_16bit_xrgb_4444 = TextureResource("X4R4G4B4.bmp")
