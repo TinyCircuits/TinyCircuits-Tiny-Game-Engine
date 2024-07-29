@@ -131,8 +131,8 @@ void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, int32_t 
     float dim_half = (dim / 2.0f);
 
     // The top-left of the bitmap destination
-    int32_t top_left_x = (int32_t)(center_x - dim_half);
-    int32_t top_left_y = (int32_t)(center_y - dim_half);
+    int32_t top_left_x = (int32_t)floorf(center_x - dim_half);
+    int32_t top_left_y = (int32_t)floorf(center_y - dim_half);
 
     // If the top-left is above the viewport but
     // the bitmap may eventually showup, clip the
@@ -277,8 +277,8 @@ void engine_draw_blit_depth(uint16_t *pixels, float center_x, float center_y, in
     float dim_half = (dim / 2.0f);
 
     // The top-left of the bitmap destination
-    int32_t top_left_x = (int32_t)(center_x - dim_half);
-    int32_t top_left_y = (int32_t)(center_y - dim_half);
+    int32_t top_left_x = (int32_t)floorf(center_x - dim_half);
+    int32_t top_left_y = (int32_t)floorf(center_y - dim_half);
 
     // If the top-left is above the viewport but
     // the bitmap may eventually showup, clip the
@@ -425,8 +425,8 @@ void engine_draw_rect(uint16_t color, float center_x, float center_y, int32_t wi
     float dim_half = (dim / 2.0f);
 
     // The top-left of the bitmap destination
-    int32_t top_left_x = (int32_t)(center_x - dim_half);
-    int32_t top_left_y = (int32_t)(center_y - dim_half);
+    int32_t top_left_x = (int32_t)floorf(center_x - dim_half);
+    int32_t top_left_y = (int32_t)floorf(center_y - dim_half);
 
     // If the top-left is above the viewport but
     // the bitmap may eventually showup, clip the
