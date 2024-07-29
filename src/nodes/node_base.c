@@ -317,6 +317,178 @@ void node_base_set_layer(engine_node_base_t *node_base, uint8_t layer){
 }
 
 
+void node_base_inherit_2d(mp_obj_t child_node_base, engine_inheritable_2d_t *inheritable){
+    engine_node_base_t *node_base = child_node_base;
+
+    // Init structure
+    mp_obj_t child_position = mp_load_attr(node_base->attr_accessor, MP_QSTR_position);
+    mp_obj_t child_rotation = engine_mp_load_attr_maybe(node_base->attr_accessor, MP_QSTR_rotation);
+    mp_obj_t child_scale =    engine_mp_load_attr_maybe(node_base->attr_accessor, MP_QSTR_scale);
+
+    // Setup initial position (no nodes have 1D position)
+    if(mp_obj_is_type(child_position, &vector3_class_type)){
+        inheritable->px = ((vector3_class_obj_t*)child_position)->x.value;
+        inheritable->py = ((vector3_class_obj_t*)child_position)->y.value;
+    }else if(mp_obj_is_type(child_position, &vector2_class_type)){
+        inheritable->px = ((vector2_class_obj_t*)child_position)->x.value;
+        inheritable->py = ((vector2_class_obj_t*)child_position)->y.value;
+    }else{
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: Error: Do not know how to set initial inherit 2D position for this `position `object type!"));
+    }
+
+    // Setup initial rotation (no nodes have 2D rotation)
+    if(child_rotation == MP_OBJ_NULL){
+        inheritable->rotation = 0.0f;
+    }else if(mp_obj_is_type(child_rotation, &vector3_class_type)){
+        inheritable->rotation = ((vector3_class_obj_t*)child_rotation)->z.value;
+    }else if(mp_obj_is_float(child_rotation)){
+        inheritable->rotation = (float)mp_obj_get_float(child_rotation);
+    }else{
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: Error: Do not know how to set initial inherit 2D rotation for this `rotation `object type!"));
+    }
+
+    // Setup initial scale (some nodes, like circles, have 1D scale)
+    if(child_scale == MP_OBJ_NULL){
+        inheritable->sx = 0.0f;
+        inheritable->sy = 0.0f;
+    }else if(mp_obj_is_type(child_scale, &vector3_class_type)){
+        inheritable->sx = ((vector3_class_obj_t*)child_scale)->x.value;
+        inheritable->sy = ((vector3_class_obj_t*)child_scale)->y.value;
+    }else if(mp_obj_is_type(child_scale, &vector2_class_type)){
+        inheritable->sx = ((vector2_class_obj_t*)child_scale)->x.value;
+        inheritable->sy = ((vector2_class_obj_t*)child_scale)->y.value;
+    }else if(mp_obj_is_float(child_scale)){
+        float scale = mp_obj_get_float(child_scale);
+        inheritable->sx = scale;
+        inheritable->sy = scale;
+    }else if(mp_obj_is_int(child_scale)){
+        float scale = (float)mp_obj_get_int(child_scale);
+        inheritable->sx = scale;
+        inheritable->sy = scale;
+    }else{
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: Error: Do not know how to set initial inherit 2D scale for this `scale `object type!"));
+    }
+
+    // Setup initial opacity and `is camera child`
+    // flag (most nodes use single float for opacity,
+    // except for things like physics and voxelspace)
+    mp_obj_t child_opacity_obj = engine_mp_load_attr_maybe(node_base->attr_accessor, MP_QSTR_opacity);
+    inheritable->opacity = 1.0f;
+    if(child_opacity_obj != MP_OBJ_NULL){
+        inheritable->opacity = mp_obj_get_float(child_opacity_obj);
+    }
+    
+    inheritable->is_camera_child = false;
+
+    // Before doing anything else, check if this child
+    // even has a parent (still needed to ensure struct
+    // is initialzed)
+    if(node_base->parent_node_base == NULL){
+        return;
+    }
+
+    // Start the traversal upwards until we get to a NULL parent
+    engine_node_base_t *current_node_base = node_base;
+
+    while(true){
+        engine_node_base_t *parent_node_base = current_node_base->parent_node_base;
+
+        // Stop traversal only if the parent of
+        // the current traversal node is NULL
+        if(parent_node_base == NULL){
+            break;
+        }
+
+        // Get this to stop translations for camera
+        // children due to camera transformation
+        if(parent_node_base->type == NODE_TYPE_CAMERA){
+            inheritable->is_camera_child = true;
+
+            // Do not care about the rest of the
+            // transformations the camera might
+            // have due to its parents
+            break;
+        }
+
+        // Get parent attributes that will affect child
+        mp_obj_t parent_position = mp_load_attr(parent_node_base->attr_accessor, MP_QSTR_position);
+        mp_obj_t parent_rotation = engine_mp_load_attr_maybe(parent_node_base->attr_accessor, MP_QSTR_rotation);
+        mp_obj_t parent_scale = engine_mp_load_attr_maybe(parent_node_base->attr_accessor, MP_QSTR_scale);
+        mp_obj_t parent_opacity_obj = engine_mp_load_attr_maybe(parent_node_base->attr_accessor, MP_QSTR_opacity);
+        float parent_opacity = 1.0f;
+        
+        if(parent_opacity_obj != MP_OBJ_NULL){
+            parent_opacity= mp_obj_get_float(child_opacity_obj);
+        }
+
+        // Setup temps that are re-used in multiple ways
+        float temp_parent_pos_x = 0.0f;
+        float temp_parent_pos_y = 0.0f;
+        float temp_parent_rot = 0.0f;
+        float temp_parent_scale_x = 0.0f;
+        float temp_parent_scale_y = 0.0f;
+
+        // Decode parent position (use projection of 3D position
+        // for respective 2D position that child will rotate around)
+        if(mp_obj_is_type(parent_position, &vector3_class_type)){
+            temp_parent_pos_x = ((vector3_class_obj_t*)parent_position)->x.value;
+            temp_parent_pos_y = ((vector3_class_obj_t*)parent_position)->y.value;
+        }else if(mp_obj_is_type(parent_position, &vector2_class_type)){
+            temp_parent_pos_x = ((vector2_class_obj_t*)parent_position)->x.value;
+            temp_parent_pos_y = ((vector2_class_obj_t*)parent_position)->y.value;
+        }else{
+            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: Error: Do not know how to get inherited 2D position for this `position `object type!"));
+        }
+
+        // Decode parent rotation (use z-axis rotation of 3D node
+        // for rotation around parent for 2D child node)
+        if(parent_rotation == MP_OBJ_NULL){
+            temp_parent_rot = 0.0f;
+        }else if(mp_obj_is_type(parent_rotation, &vector3_class_type)){
+            temp_parent_rot = ((vector3_class_obj_t*)parent_rotation)->z.value;
+        }else if(mp_obj_is_float(parent_rotation)){
+            temp_parent_rot = mp_obj_get_float(parent_rotation);
+        }else{
+            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: Error: Do not know how to get inherited 2D rotation for this `rotation `object type!"));
+        }
+
+        // Decode parent scale (use xy of 3D for 2D scale)
+        if(mp_obj_is_type(parent_scale, &vector3_class_type)){
+            temp_parent_scale_x = ((vector3_class_obj_t*)parent_scale)->x.value;
+            temp_parent_scale_y = ((vector3_class_obj_t*)parent_scale)->y.value;
+        }else if(mp_obj_is_type(parent_scale, &vector2_class_type)){
+            temp_parent_scale_x = ((vector2_class_obj_t*)parent_scale)->x.value;
+            temp_parent_scale_y = ((vector2_class_obj_t*)parent_scale)->y.value;
+        }else if(mp_obj_is_float(parent_scale)){
+            float scale = mp_obj_get_float(parent_scale);
+            temp_parent_scale_x = scale;
+            temp_parent_scale_y = scale;
+        }else if(mp_obj_is_int(parent_scale)){
+            float scale = (float)mp_obj_get_int(parent_scale);
+            temp_parent_scale_x = scale;
+            temp_parent_scale_y = scale;
+        }else{
+            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: Error: Do not know how to get inherited 2D scale for this `scale `object type!"));
+        }
+
+        // Scale transformation due to parent scale
+        engine_math_scale_point(&inheritable->px, &inheritable->py, 0, 0, temp_parent_scale_x, temp_parent_scale_y);
+
+        inheritable->px += temp_parent_pos_x;
+        inheritable->py += temp_parent_pos_y;
+        inheritable->rotation += temp_parent_rot;
+        inheritable->sx *= temp_parent_scale_x;
+        inheritable->sy *= temp_parent_scale_y;
+        inheritable->opacity *= parent_opacity;
+
+        // Rotate child around parent
+        engine_math_rotate_point(&inheritable->px, &inheritable->py, temp_parent_pos_x, temp_parent_pos_y, temp_parent_rot);
+
+        current_node_base = current_node_base->parent_node_base;
+    }
+}
+
+
 void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, bool *is_child_of_camera, mp_obj_t child_node_base_in){
     engine_node_base_t *child_node_base = child_node_base_in;
     if(is_child_of_camera != NULL) *is_child_of_camera = false;

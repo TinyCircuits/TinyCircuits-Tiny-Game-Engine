@@ -26,6 +26,21 @@ typedef struct{
 }engine_node_base_t;
 
 
+// Common data that 2D nodes inherit
+typedef struct{
+    float px;
+    float py;
+
+    float rotation;
+
+    float sx;
+    float sy;
+
+    float opacity;
+    bool is_camera_child;
+}engine_inheritable_2d_t;
+
+
 void node_base_init(engine_node_base_t *node_base, const mp_obj_type_t *mp_type, uint8_t node_type, uint8_t layer);
 bool node_base_is_visible(engine_node_base_t *node_base);
 void node_base_set_if_visible(engine_node_base_t *node_base, bool is_visible);
@@ -64,6 +79,9 @@ static MP_DEFINE_CONST_FUN_OBJ_1(node_base_get_child_count_obj, node_base_get_ch
 
 mp_obj_t node_base_remove_child(mp_obj_t self_parent_in, mp_obj_t child_in);
 static MP_DEFINE_CONST_FUN_OBJ_2(node_base_remove_child_obj, node_base_remove_child);
+
+// Fills 'inheritable' with data from parents and child
+void node_base_inherit_2d(mp_obj_t child_node_base, engine_inheritable_2d_t *inheritable);
 
 void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, bool *is_child_of_camera, mp_obj_t child_node_base);
 

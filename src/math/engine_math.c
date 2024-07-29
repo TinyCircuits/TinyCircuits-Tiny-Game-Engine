@@ -208,9 +208,9 @@ void engine_math_rotate_point(float *px, float *py, float cx, float cy, float an
 // https://math.stackexchange.com/a/5808
 // https://math.stackexchange.com/a/234631
 // https://stackoverflow.com/a/49135089
-void engine_math_scale_point(float *px, float *py, float cx, float cy, float scale){
-    *px = scale * (*px-cx) + cx;
-    *py = scale * (*py-cy) + cy;
+void engine_math_scale_point(float *px, float *py, float cx, float cy, float sx, float sy){
+    *px = sx * (*px-cx) + cx;
+    *py = sy * (*py-cy) + cy;
 }
 
 

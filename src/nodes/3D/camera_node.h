@@ -28,4 +28,7 @@ void engine_camera_draw_for_each_obj(mp_obj_t dest[2]);
 
 void engine_camera_draw_for_each(void (*draw_cb)(mp_obj_t, mp_obj_t), engine_node_base_t *node_base);
 
+// Scale passed position and rotation due to camera zoom and rotation
+void engine_camera_transform_2d(mp_obj_t camera_node, float *px, float *py, float *rotation);
+
 #endif  // CAMERA_NODE_H

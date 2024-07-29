@@ -369,6 +369,30 @@ void engine_camera_draw_for_each(void (*draw_cb)(mp_obj_t, mp_obj_t), engine_nod
 }
 
 
+void engine_camera_transform_2d(mp_obj_t camera_node, float *px, float *py, float *rotation){
+    engine_node_base_t *camera_node_base = camera_node;
+    engine_camera_node_class_obj_t *camera = camera_node_base->node;
+
+    vector3_class_obj_t *camera_position = camera->position;
+    float camera_zoom = mp_obj_get_float(camera->zoom);
+
+    engine_inheritable_2d_t camera_inherited;
+    node_base_inherit_2d(camera_node, &camera_inherited);
+    camera_inherited.rotation = -camera_inherited.rotation;
+
+    *px -= camera_inherited.px;
+    *py -= camera_inherited.py;
+
+    // Scale transformation due to camera zoom
+    engine_math_scale_point(px, py, camera_position->x.value, camera_position->y.value, camera_zoom, camera_zoom);
+
+    // Rotate node origin about the camera
+    engine_math_rotate_point(px, py, 0, 0, camera_inherited.rotation);
+
+    *rotation += camera_inherited.rotation;
+}
+
+
 // Class attributes
 static const mp_rom_map_elem_t camera_node_class_locals_dict_table[] = {
 
