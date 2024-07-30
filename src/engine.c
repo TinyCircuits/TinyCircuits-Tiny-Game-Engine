@@ -212,6 +212,7 @@ bool engine_tick(){
 
         // Call every instanced node's callbacks
         engine_invoke_all_node_tick_callbacks(dt_ms * 0.001f);
+        engine_objects_clear_deletable();                       // Remove any nodes marked for deletion before rendering
         engine_invoke_all_node_draw_callbacks();
 
         engine_gui_tick();
@@ -224,8 +225,6 @@ bool engine_tick(){
 
         ticked = true;
     }
-
-    engine_objects_clear_deletable();
 
     // Not sure why this is needed exactly for handling ctrl-c
     // correctly, just replicating what happens in modutime.c
