@@ -43,34 +43,18 @@ void physics_circle_2d_node_class_draw(mp_obj_t circle_node_base_obj, mp_obj_t c
         color = outline_color->value;
     }
 
-    float circle_resolved_hierarchy_x = 0.0f;
-    float circle_resolved_hierarchy_y = 0.0f;
-    float circle_resolved_hierarchy_rotation = 0.0f;
-    bool circle_is_child_of_camera = false;
-    node_base_get_child_absolute_xy(&circle_resolved_hierarchy_x, &circle_resolved_hierarchy_y, &circle_resolved_hierarchy_rotation, &circle_is_child_of_camera, circle_node_base);
+    // Get inherited properties
+    engine_inheritable_2d_t inherited;
+    node_base_inherit_2d(circle_node_base, &inherited);
 
-    // Store the non-rotated x and y for a second
-    float circle_rotated_x = circle_resolved_hierarchy_x;
-    float circle_rotated_y = circle_resolved_hierarchy_y;
-    float circle_rotation = circle_resolved_hierarchy_rotation;
-
-    if(circle_is_child_of_camera == false){
-        float camera_resolved_hierarchy_x = 0.0f;
-        float camera_resolved_hierarchy_y = 0.0f;
-        float camera_resolved_hierarchy_rotation = 0.0f;
-        node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
-        camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
-
-        circle_rotated_x = (circle_rotated_x - camera_resolved_hierarchy_x) * camera_zoom;
-        circle_rotated_y = (circle_rotated_y - camera_resolved_hierarchy_y) * camera_zoom;
-
-        // Rotate rectangle origin about the camera
-        engine_math_rotate_point(&circle_rotated_x, &circle_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
-
-        circle_rotation += camera_resolved_hierarchy_rotation;
+    if(inherited.is_camera_child == false){
+        engine_camera_transform_2d(camera_node, &inherited.px, &inherited.py, &inherited.rotation);
     }else{
         camera_zoom = 1.0f;
     }
+
+    inherited.px += camera_viewport->width/2;
+    inherited.py += camera_viewport->height/2;
 
     // The final circle radius to draw the circle at is a combination of
     // the set radius, times the set scale, times the set camera zoom.
@@ -78,12 +62,9 @@ void physics_circle_2d_node_class_draw(mp_obj_t circle_node_base_obj, mp_obj_t c
     // since in that case zoom shouldn't have an effect
     circle_radius = (circle_radius*camera_zoom);
 
-    circle_rotated_x += camera_viewport->width/2;
-    circle_rotated_y += camera_viewport->height/2;
-
     engine_shader_t *shader = engine_get_builtin_shader(EMPTY_SHADER);
 
-    engine_draw_outline_circle(color, floorf(circle_rotated_x), floorf(circle_rotated_y), circle_radius, 1.0f, shader);
+    engine_draw_outline_circle(color, floorf(inherited.px), floorf(inherited.py), circle_radius, 1.0f, shader);
 }
 
 

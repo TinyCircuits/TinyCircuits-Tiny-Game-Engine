@@ -30,50 +30,32 @@ void circle_2d_node_class_draw(mp_obj_t circle_node_base_obj, mp_obj_t camera_no
 
     rectangle_class_obj_t *camera_viewport = camera->viewport;
     float camera_zoom = mp_obj_get_float(camera->zoom);
+    float camera_opacity = mp_obj_get_float(camera->opacity);
 
-    float circle_scale =  mp_obj_get_float(circle_2d_node->scale);
     float circle_radius =  mp_obj_get_float(circle_2d_node->radius);
     bool circle_outlined = mp_obj_get_int(circle_2d_node->outline);
 
     color_class_obj_t *circle_color = circle_2d_node->color;
 
-    float circle_resolved_hierarchy_x = 0.0f;
-    float circle_resolved_hierarchy_y = 0.0f;
-    float circle_resolved_hierarchy_rotation = 0.0f;
-    bool circle_is_child_of_camera = false;
-    node_base_get_child_absolute_xy(&circle_resolved_hierarchy_x, &circle_resolved_hierarchy_y, &circle_resolved_hierarchy_rotation, &circle_is_child_of_camera, circle_node_base);
+    // Get inherited properties
+    engine_inheritable_2d_t inherited;
+    node_base_inherit_2d(circle_node_base, &inherited);
 
-    // Store the non-rotated x and y for a second
-    float circle_rotated_x = circle_resolved_hierarchy_x;
-    float circle_rotated_y = circle_resolved_hierarchy_y;
-    float circle_rotation = circle_resolved_hierarchy_rotation;
-
-    if(circle_is_child_of_camera == false){
-        float camera_resolved_hierarchy_x = 0.0f;
-        float camera_resolved_hierarchy_y = 0.0f;
-        float camera_resolved_hierarchy_rotation = 0.0f;
-        node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
-        camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
-
-        circle_rotated_x = (circle_rotated_x - camera_resolved_hierarchy_x) * camera_zoom;
-        circle_rotated_y = (circle_rotated_y - camera_resolved_hierarchy_y) * camera_zoom;
-
-        // Rotate rectangle origin about the camera
-        engine_math_rotate_point(&circle_rotated_x, &circle_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
-
-        circle_rotation += camera_resolved_hierarchy_rotation;
+    if(inherited.is_camera_child == false){
+        engine_camera_transform_2d(camera_node, &inherited.px, &inherited.py, &inherited.rotation);
     }else{
         camera_zoom = 1.0f;
     }
+
+    inherited.px += camera_viewport->width/2;
+    inherited.py += camera_viewport->height/2;
 
     // The final circle radius to draw the circle at is a combination of
     // the set radius, times the set scale, times the set camera zoom.
     // Do this after determining if a child of a camera at any point
     // since in that case zoom shouldn't have an effect
-    circle_radius = (circle_radius*circle_scale*camera_zoom);
-
-    circle_rotated_x += camera_viewport->width/2;
-    circle_rotated_y += camera_viewport->height/2;
+    circle_radius = (circle_radius*inherited.sx*camera_zoom);
+    circle_opacity = inherited.opacity*camera_opacity;
 
     // Decide which shader to use per-pixel
     engine_shader_t *shader = NULL;
@@ -84,9 +66,9 @@ void circle_2d_node_class_draw(mp_obj_t circle_node_base_obj, mp_obj_t camera_no
     }
 
     if(circle_outlined == false){
-        engine_draw_filled_circle(circle_color->value, floorf(circle_rotated_x), floorf(circle_rotated_y), circle_radius, circle_opacity, shader);
+        engine_draw_filled_circle(circle_color->value, floorf(inherited.px), floorf(inherited.py), circle_radius, circle_opacity, shader);
     }else{
-        engine_draw_outline_circle(circle_color->value, floorf(circle_rotated_x), floorf(circle_rotated_y), circle_radius, circle_opacity, shader);
+        engine_draw_outline_circle(circle_color->value, floorf(inherited.px), floorf(inherited.py), circle_radius, circle_opacity, shader);
     }
 }
 

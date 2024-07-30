@@ -59,6 +59,7 @@ void sprite_2d_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t camera_no
 
     rectangle_class_obj_t *camera_viewport = camera->viewport;
     float camera_zoom = mp_obj_get_float(camera->zoom);
+    float camera_opacity = mp_obj_get_float(camera->opacity);
 
     uint16_t sprite_frame_count_x = mp_obj_get_int(sprite_2d_node->frame_count_x);
     uint16_t sprite_frame_count_y = mp_obj_get_int(sprite_2d_node->frame_count_y);
@@ -79,37 +80,20 @@ void sprite_2d_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t camera_no
     uint32_t sprite_frame_abs_y = sprite_frame_height*sprite_frame_current_y;
     uint32_t sprite_frame_fb_start_index = sprite_frame_abs_y * spritesheet_width + sprite_frame_abs_x;
 
-    float sprite_resolved_hierarchy_x = 0.0f;
-    float sprite_resolved_hierarchy_y = 0.0f;
-    float sprite_resolved_hierarchy_rotation = 0.0f;
-    bool sprite_is_child_of_camera = false;
-    node_base_get_child_absolute_xy(&sprite_resolved_hierarchy_x, &sprite_resolved_hierarchy_y, &sprite_resolved_hierarchy_rotation, &sprite_is_child_of_camera, sprite_node_base);
+    // Get inherited properties
+    engine_inheritable_2d_t inherited;
+    node_base_inherit_2d(sprite_node_base, &inherited);
 
-    // Store the non-rotated x and y for a second
-    float sprite_rotated_x = sprite_resolved_hierarchy_x;
-    float sprite_rotated_y = sprite_resolved_hierarchy_y;
-    float sprite_rotation = sprite_resolved_hierarchy_rotation;
-
-    if(sprite_is_child_of_camera == false){
-        float camera_resolved_hierarchy_x = 0.0f;
-        float camera_resolved_hierarchy_y = 0.0f;
-        float camera_resolved_hierarchy_rotation = 0.0f;
-        node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
-        camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
-
-        sprite_rotated_x = (sprite_rotated_x - camera_resolved_hierarchy_x) * camera_zoom;
-        sprite_rotated_y = (sprite_rotated_y - camera_resolved_hierarchy_y) * camera_zoom;
-
-        // Rotate rectangle origin about the camera
-        engine_math_rotate_point(&sprite_rotated_x, &sprite_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
-
-        sprite_rotation += camera_resolved_hierarchy_rotation;
+    if(inherited.is_camera_child == false){
+        engine_camera_transform_2d(camera_node, &inherited.px, &inherited.py, &inherited.rotation);
     }else{
         camera_zoom = 1.0f;
     }
 
-    sprite_rotated_x += camera_viewport->width/2;
-    sprite_rotated_y += camera_viewport->height/2;
+    inherited.px += camera_viewport->width/2;
+    inherited.py += camera_viewport->height/2;
+
+    sprite_opacity = inherited.opacity*camera_opacity;
 
     // Decide which shader to use per-pixel
     engine_shader_t *shader = NULL;
@@ -120,12 +104,12 @@ void sprite_2d_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t camera_no
     }
 
     engine_draw_blit(sprite_pixel_data+sprite_frame_fb_start_index,
-                     floorf(sprite_rotated_x), floorf(sprite_rotated_y),
+                     floorf(inherited.px), floorf(inherited.py),
                      sprite_frame_width, sprite_frame_height,
                      spritesheet_width,
                      sprite_scale->x.value*camera_zoom,
                      sprite_scale->y.value*camera_zoom,
-                    -sprite_rotation,
+                    -inherited.rotation,
                      transparent_color->value,
                      sprite_opacity,
                      shader);

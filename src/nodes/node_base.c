@@ -349,8 +349,8 @@ void node_base_inherit_2d(mp_obj_t child_node_base, engine_inheritable_2d_t *inh
 
     // Setup initial scale (some nodes, like circles, have 1D scale)
     if(child_scale == MP_OBJ_NULL){
-        inheritable->sx = 0.0f;
-        inheritable->sy = 0.0f;
+        inheritable->sx = 1.0f;
+        inheritable->sy = 1.0f;
     }else if(mp_obj_is_type(child_scale, &vector3_class_type)){
         inheritable->sx = ((vector3_class_obj_t*)child_scale)->x.value;
         inheritable->sy = ((vector3_class_obj_t*)child_scale)->y.value;
@@ -418,7 +418,7 @@ void node_base_inherit_2d(mp_obj_t child_node_base, engine_inheritable_2d_t *inh
         float parent_opacity = 1.0f;
         
         if(parent_opacity_obj != MP_OBJ_NULL){
-            parent_opacity= mp_obj_get_float(child_opacity_obj);
+            parent_opacity = mp_obj_get_float(child_opacity_obj);
         }
 
         // Setup temps that are re-used in multiple ways
@@ -453,7 +453,10 @@ void node_base_inherit_2d(mp_obj_t child_node_base, engine_inheritable_2d_t *inh
         }
 
         // Decode parent scale (use xy of 3D for 2D scale)
-        if(mp_obj_is_type(parent_scale, &vector3_class_type)){
+        if(parent_scale == MP_OBJ_NULL){
+            temp_parent_scale_x = 1.0f;
+            temp_parent_scale_y = 1.0f;
+        }else if(mp_obj_is_type(parent_scale, &vector3_class_type)){
             temp_parent_scale_x = ((vector3_class_obj_t*)parent_scale)->x.value;
             temp_parent_scale_y = ((vector3_class_obj_t*)parent_scale)->y.value;
         }else if(mp_obj_is_type(parent_scale, &vector2_class_type)){

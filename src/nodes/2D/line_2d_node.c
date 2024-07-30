@@ -37,52 +37,40 @@ void line_2d_node_class_draw(mp_obj_t line_node_base_obj, mp_obj_t camera_node){
 
     // The line is drawn as a rectangle since we have a nice algorithm for doing that:
     float line_length = engine_math_distance_between(line_start->x.value, line_start->y.value, line_end->x.value, line_end->y.value);
+    float line_rotation = engine_math_angle_between(line_start->x.value, line_start->y.value, line_end->x.value, line_end->y.value) + HALF_PI;
 
     // Grab camera
     rectangle_class_obj_t *camera_viewport = camera->viewport;
     float camera_zoom = mp_obj_get_float(camera->zoom);
+    float camera_opacity = mp_obj_get_float(camera->opacity);
 
-    // Get line transformation if it is a child
-    float line_resolved_hierarchy_x = 0.0f;
-    float line_resolved_hierarchy_y = 0.0f;
-    float line_resolved_hierarchy_rotation = 0.0f;
-    bool line_is_child_of_camera = false;
-    node_base_get_child_absolute_xy(&line_resolved_hierarchy_x, &line_resolved_hierarchy_y, &line_resolved_hierarchy_rotation, &line_is_child_of_camera, line_node_base);
+    // Get inherited properties
+    engine_inheritable_2d_t inherited;
+    node_base_inherit_2d(line_node_base, &inherited);
+    inherited.rotation += line_rotation;
 
-    // Store the non-rotated x and y for a second
-    float line_rotated_x = line_resolved_hierarchy_x;
-    float line_rotated_y = line_resolved_hierarchy_y;
-    float line_rotation = line_resolved_hierarchy_rotation;
-
-    if(line_is_child_of_camera == false){
-        float camera_resolved_hierarchy_x = 0.0f;
-        float camera_resolved_hierarchy_y = 0.0f;
-        float camera_resolved_hierarchy_rotation = 0.0f;
-        node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
-        camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
-
-        line_rotated_x = (line_rotated_x - camera_resolved_hierarchy_x) * camera_zoom;
-        line_rotated_y = (line_rotated_y - camera_resolved_hierarchy_y) * camera_zoom;
-
-        // Rotate rectangle origin about the camera
-        engine_math_rotate_point(&line_rotated_x, &line_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
-
-        line_rotation += camera_resolved_hierarchy_rotation;
+    if(inherited.is_camera_child == false){
+        engine_camera_transform_2d(camera_node, &inherited.px, &inherited.py, &inherited.rotation);
     }else{
         camera_zoom = 1.0f;
     }
 
-    // Scale by camera
-    line_thickness = line_thickness*camera_zoom;
-    line_length = line_length*camera_zoom;
+    inherited.px += camera_viewport->width/2;
+    inherited.py += camera_viewport->height/2;
 
-    // Stop line from disappearing when it gets too thin
-    if(line_thickness < 1.0f){
-        line_thickness = 1.0f;
-    }
+    line_opacity = inherited.opacity*camera_opacity;
 
-    line_rotated_x += camera_viewport->width/2;
-    line_rotated_y += camera_viewport->height/2;
+    float line_x_scale = inherited.sx*camera_zoom;
+    float line_y_scale = inherited.sy*camera_zoom;
+
+    // // Scale by camera
+    // line_thickness = line_thickness * camera_zoom;
+    // line_length = line_length * camera_zoom;
+
+    // // Stop line from disappearing when it gets too thin
+    // if(line_thickness < 1.0f){
+    //     line_thickness = 1.0f;
+    // }
 
     // Decide which shader to use per-pixel
     engine_shader_t *shader = NULL;
@@ -94,10 +82,10 @@ void line_2d_node_class_draw(mp_obj_t line_node_base_obj, mp_obj_t camera_node){
 
     if(line_outlined == false){
         engine_draw_rect(line_color->value,
-                         floorf(line_rotated_x), floorf(line_rotated_y),
+                         floorf(inherited.px), floorf(inherited.py),
                          (int32_t)line_thickness, (int32_t)line_length,
-                         1.0f, 1.0f,
-                        -line_rotation,
+                         line_x_scale, line_y_scale,
+                        -inherited.rotation,
                          line_opacity,
                          shader);
     }else{
@@ -106,23 +94,23 @@ void line_2d_node_class_draw(mp_obj_t line_node_base_obj, mp_obj_t camera_node){
 
         // Calculate the coordinates of the 4 corners of the line, not rotated
         // NOTE: positive y is down
-        float tlx = floorf(line_rotated_x - line_half_width);
-        float tly = floorf(line_rotated_y - line_half_height);
+        float tlx = floorf(inherited.px - line_half_width);
+        float tly = floorf(inherited.py - line_half_height);
 
-        float trx = floorf(line_rotated_x + line_half_width);
-        float try = floorf(line_rotated_y - line_half_height);
+        float trx = floorf(inherited.px + line_half_width);
+        float try = floorf(inherited.py - line_half_height);
 
-        float brx = floorf(line_rotated_x + line_half_width);
-        float bry = floorf(line_rotated_y + line_half_height);
+        float brx = floorf(inherited.px + line_half_width);
+        float bry = floorf(inherited.py + line_half_height);
 
-        float blx = floorf(line_rotated_x - line_half_width);
-        float bly = floorf(line_rotated_y + line_half_height);
+        float blx = floorf(inherited.px - line_half_width);
+        float bly = floorf(inherited.py + line_half_height);
 
         // Rotate the points and then draw lines between them
-        engine_math_rotate_point(&tlx, &tly, line_rotated_x, line_rotated_y, line_rotation);
-        engine_math_rotate_point(&trx, &try, line_rotated_x, line_rotated_y, line_rotation);
-        engine_math_rotate_point(&brx, &bry, line_rotated_x, line_rotated_y, line_rotation);
-        engine_math_rotate_point(&blx, &bly, line_rotated_x, line_rotated_y, line_rotation);
+        engine_math_rotate_point(&tlx, &tly, inherited.px, inherited.py, inherited.py);
+        engine_math_rotate_point(&trx, &try, inherited.px, inherited.py, inherited.py);
+        engine_math_rotate_point(&brx, &bry, inherited.px, inherited.py, inherited.py);
+        engine_math_rotate_point(&blx, &bly, inherited.px, inherited.py, inherited.py);
 
         engine_draw_line(line_color->value, tlx, tly, trx, try, camera_node, line_opacity, shader);
         engine_draw_line(line_color->value, trx, try, brx, bry, camera_node, line_opacity, shader);

@@ -38,41 +38,25 @@ void rectangle_2d_node_class_draw(mp_obj_t rectangle_node_base_obj, mp_obj_t cam
 
     rectangle_class_obj_t *camera_viewport = camera->viewport;
     float camera_zoom = mp_obj_get_float(camera->zoom);
+    float camera_opacity = mp_obj_get_float(camera->opacity);
 
-    float rectangle_resolved_hierarchy_x = 0.0f;
-    float rectangle_resolved_hierarchy_y = 0.0f;
-    float rectangle_resolved_hierarchy_rotation = 0.0f;
-    bool rectangle_is_child_of_camera = false;
-    node_base_get_child_absolute_xy(&rectangle_resolved_hierarchy_x, &rectangle_resolved_hierarchy_y, &rectangle_resolved_hierarchy_rotation, &rectangle_is_child_of_camera, rectangle_node_base);
+    // Get inherited properties
+    engine_inheritable_2d_t inherited;
+    node_base_inherit_2d(rectangle_node_base, &inherited);
 
-    // Store the non-rotated x and y for a second
-    float rectangle_rotated_x = rectangle_resolved_hierarchy_x;
-    float rectangle_rotated_y = rectangle_resolved_hierarchy_y;
-    float rectangle_rotation = rectangle_resolved_hierarchy_rotation;
-
-    if(rectangle_is_child_of_camera == false){
-        float camera_resolved_hierarchy_x = 0.0f;
-        float camera_resolved_hierarchy_y = 0.0f;
-        float camera_resolved_hierarchy_rotation = 0.0f;
-        node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
-        camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
-
-        rectangle_rotated_x = (rectangle_rotated_x - camera_resolved_hierarchy_x) * camera_zoom;
-        rectangle_rotated_y = (rectangle_rotated_y - camera_resolved_hierarchy_y) * camera_zoom;
-
-        // Rotate rectangle origin about the camera
-        engine_math_rotate_point(&rectangle_rotated_x, &rectangle_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
-
-        rectangle_rotation += camera_resolved_hierarchy_rotation;
+    if(inherited.is_camera_child == false){
+        engine_camera_transform_2d(camera_node, &inherited.px, &inherited.py, &inherited.rotation);
     }else{
         camera_zoom = 1.0f;
     }
 
-    rectangle_width = rectangle_width*camera_zoom;
-    rectangle_height = rectangle_height*camera_zoom;
+    inherited.px += camera_viewport->width/2;
+    inherited.py += camera_viewport->height/2;
 
-    rectangle_rotated_x += camera_viewport->width/2;
-    rectangle_rotated_y += camera_viewport->height/2;
+    rectangle_width = rectangle_width*inherited.sx*camera_zoom;
+    rectangle_height = rectangle_height*inherited.sy*camera_zoom;
+
+    rectangle_opacity = inherited.opacity * camera_opacity;
 
     // Decide which shader to use per-pixel
     engine_shader_t *shader = NULL;
@@ -84,7 +68,7 @@ void rectangle_2d_node_class_draw(mp_obj_t rectangle_node_base_obj, mp_obj_t cam
 
     if(rectangle_outlined == false){
         engine_draw_rect(rectangle_color->value,
-                         floorf(rectangle_rotated_x), floorf(rectangle_rotated_y),
+                         floorf(inherited.px), floorf(inherited.py),
                          (int32_t)rectangle_width, (int32_t)rectangle_height,
                          rectangle_scale->x.value*camera_zoom, rectangle_scale->y.value*camera_zoom,
                          -rectangle_rotation,
@@ -96,23 +80,23 @@ void rectangle_2d_node_class_draw(mp_obj_t rectangle_node_base_obj, mp_obj_t cam
 
         // Calculate the coordinates of the 4 corners of the rectangle, not rotated
         // NOTE: positive y is down
-        float tlx = floorf(rectangle_rotated_x - rectangle_half_width);
-        float tly = floorf(rectangle_rotated_y - rectangle_half_height);
+        float tlx = floorf(inherited.px - rectangle_half_width);
+        float tly = floorf(inherited.py - rectangle_half_height);
 
-        float trx = floorf(rectangle_rotated_x + rectangle_half_width);
-        float try = floorf(rectangle_rotated_y - rectangle_half_height);
+        float trx = floorf(inherited.px + rectangle_half_width);
+        float try = floorf(inherited.py - rectangle_half_height);
 
-        float brx = floorf(rectangle_rotated_x + rectangle_half_width);
-        float bry = floorf(rectangle_rotated_y + rectangle_half_height);
+        float brx = floorf(inherited.px + rectangle_half_width);
+        float bry = floorf(inherited.py + rectangle_half_height);
 
-        float blx = floorf(rectangle_rotated_x - rectangle_half_width);
-        float bly = floorf(rectangle_rotated_y + rectangle_half_height);
+        float blx = floorf(inherited.px - rectangle_half_width);
+        float bly = floorf(inherited.py + rectangle_half_height);
 
         // Rotate the points and then draw lines between them
-        engine_math_rotate_point(&tlx, &tly, rectangle_rotated_x, rectangle_rotated_y, rectangle_rotation);
-        engine_math_rotate_point(&trx, &try, rectangle_rotated_x, rectangle_rotated_y, rectangle_rotation);
-        engine_math_rotate_point(&brx, &bry, rectangle_rotated_x, rectangle_rotated_y, rectangle_rotation);
-        engine_math_rotate_point(&blx, &bly, rectangle_rotated_x, rectangle_rotated_y, rectangle_rotation);
+        engine_math_rotate_point(&tlx, &tly, inherited.px, rectangle_rotated_y, rectangle_rotation);
+        engine_math_rotate_point(&trx, &try, inherited.px, rectangle_rotated_y, rectangle_rotation);
+        engine_math_rotate_point(&brx, &bry, inherited.px, rectangle_rotated_y, rectangle_rotation);
+        engine_math_rotate_point(&blx, &bly, inherited.px, rectangle_rotated_y, rectangle_rotation);
 
         engine_draw_line(rectangle_color->value, tlx, tly, trx, try, camera_node, rectangle_opacity, shader);
         engine_draw_line(rectangle_color->value, trx, try, brx, bry, camera_node, rectangle_opacity, shader);

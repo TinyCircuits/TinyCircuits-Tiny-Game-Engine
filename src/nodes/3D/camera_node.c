@@ -157,6 +157,10 @@ bool camera_node_load_attr(engine_node_base_t *self_node_base, qstr attribute, m
             destination[0] = self->view_distance;
             return true;
         break;
+        case MP_QSTR_opacity:
+            destination[0] = self->opacity;
+            return true;
+        break;
         default:
             return false; // Fail
     }
@@ -197,6 +201,10 @@ bool camera_node_store_attr(engine_node_base_t *self_node_base, qstr attribute, 
             self->view_distance = destination[1];
             return true;
         break;
+        case MP_QSTR_opacity:
+            self->opacity = destination[1];
+            return true;
+        break;
         default:
             return false; // Fail
     }
@@ -222,6 +230,7 @@ static mp_attr_fun_t camera_node_class_attr(mp_obj_t self_in, qstr attribute, mp
     PARAM: [type={ref_link:Vector3}]             [name=rotation]                                    [value={ref_link:Vector3}]
     PARAM: [type=float]                          [name=fov]                                         [value=any (sets the field fo view for rendering some nodes, not all nodes use this)]
     PARAM: [type=float]                          [name=view_distance]                               [value=any (sets the view distance for some nodes, not all nodes use this)]
+    PARAM: [type=float]                          [name=opacity]                                     [value=0.0 ~ 1.0 (this opacity is applied to all nodes rendered by this camera)]
     PARAM: [type=int]                            [name=layer]                                       [value=0 ~ 127]
     ATTR:  [type=function]                       [name={ref_link:add_child}]                        [value=function] 
     ATTR:  [type=function]                       [name={ref_link:get_child}]                        [value=function]
@@ -237,6 +246,7 @@ static mp_attr_fun_t camera_node_class_attr(mp_obj_t self_in, qstr attribute, mp
     ATTR:  [type={ref_link:Rectangle}]           [name=viewport]                                    [value={ref_link:Rectangle} (not used currently, TODO)]
     ATTR:  [type=float]                          [name=fov]                                         [value=any (sets the field fo view for rendering some nodes, not all nodes use this)]
     ATTR:  [type=float]                          [name=view_distance]                               [value=any (sets the view distance for some nodes, not all nodes use this)]
+    ATTR:  [type=float]                          [name=opacity]                                     [value=0.0 ~ 1.0 (this opacity is applied to all nodes rendered by this camera)]
     ATTR:  [type=int]                            [name=layer]                                       [value=0 ~ 127]
     OVRR:  [type=function]                       [name={ref_link:tick}]                             [value=function]
 */
@@ -251,10 +261,11 @@ mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t 
         { MP_QSTR_viewport,         MP_ARG_OBJ, {.u_obj = rectangle_class_new(&rectangle_class_type, 4, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(0.0f), mp_obj_new_float((float)SCREEN_WIDTH), mp_obj_new_float((float)SCREEN_HEIGHT)})} },
         { MP_QSTR_fov,              MP_ARG_OBJ, {.u_obj = mp_obj_new_float(PI/2.0f)} },
         { MP_QSTR_view_distance,    MP_ARG_OBJ, {.u_obj = mp_obj_new_float(256.0f)} },
+        { MP_QSTR_opacity,          MP_ARG_INT, {.u_obj = mp_obj_new_float(1.0f)} },
         { MP_QSTR_layer,            MP_ARG_INT, {.u_int = 0} }
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
-    enum arg_ids {child_class, position, rotation, zoom, viewport, fov, view_distance, layer};
+    enum arg_ids {child_class, position, rotation, zoom, viewport, fov, view_distance, opacity, layer};
     bool inherited = false;
 
     // If there is one positional argument and it isn't the first 
@@ -292,6 +303,7 @@ mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t 
     camera_node->rotation = parsed_args[rotation].u_obj;
     camera_node->fov = parsed_args[fov].u_obj;
     camera_node->view_distance = parsed_args[view_distance].u_obj;
+    camera_node->opacity = parsed_args[opacity].u_obj;
     
     if(inherited == true){  // Inherited (use existing object)
         // Get the Python class instance
@@ -373,7 +385,7 @@ void engine_camera_transform_2d(mp_obj_t camera_node, float *px, float *py, floa
     engine_node_base_t *camera_node_base = camera_node;
     engine_camera_node_class_obj_t *camera = camera_node_base->node;
 
-    vector3_class_obj_t *camera_position = camera->position;
+    // vector3_class_obj_t *camera_position = camera->position;
     float camera_zoom = mp_obj_get_float(camera->zoom);
 
     engine_inheritable_2d_t camera_inherited;
@@ -384,7 +396,7 @@ void engine_camera_transform_2d(mp_obj_t camera_node, float *px, float *py, floa
     *py -= camera_inherited.py;
 
     // Scale transformation due to camera zoom
-    engine_math_scale_point(px, py, camera_position->x.value, camera_position->y.value, camera_zoom, camera_zoom);
+    engine_math_scale_point(px, py, 0, 0, camera_zoom, camera_zoom);
 
     // Rotate node origin about the camera
     engine_math_rotate_point(px, py, 0, 0, camera_inherited.rotation);

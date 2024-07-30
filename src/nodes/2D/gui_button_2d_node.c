@@ -40,48 +40,30 @@ void gui_button_2d_node_class_draw(mp_obj_t button_node_base_obj, mp_obj_t camer
 
         rectangle_class_obj_t *camera_viewport = camera->viewport;
         float camera_zoom = mp_obj_get_float(camera->zoom);
+        float camera_opacity = mp_obj_get_float(camera->opacity);
 
-        float button_resolved_hierarchy_x = 0.0f;
-        float button_resolved_hierarchy_y = 0.0f;
-        float button_resolved_hierarchy_rotation = 0.0f;
-        bool button_is_child_of_camera = false;
+        // Get inherited properties
+        engine_inheritable_2d_t inherited;
+        node_base_inherit_2d(button_node_base, &inherited);
 
-        node_base_get_child_absolute_xy(&button_resolved_hierarchy_x, &button_resolved_hierarchy_y, &button_resolved_hierarchy_rotation, &button_is_child_of_camera, button_node_base);
-
-        // Store the non-rotated x and y for a second
-        float button_rotated_x = button_resolved_hierarchy_x;
-        float button_rotated_y = button_resolved_hierarchy_y;
-        float button_rotation = button_resolved_hierarchy_rotation;
-
-        if(button_is_child_of_camera == false){
-            float camera_resolved_hierarchy_x = 0.0f;
-            float camera_resolved_hierarchy_y = 0.0f;
-            float camera_resolved_hierarchy_rotation = 0.0f;
-            node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
-            camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
-
-            button_rotated_x = (button_rotated_x - camera_resolved_hierarchy_x) * camera_zoom;
-            button_rotated_y = (button_rotated_y - camera_resolved_hierarchy_y) * camera_zoom;
-
-            // Rotate rectangle origin about the camera
-            engine_math_rotate_point(&button_rotated_x, &button_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
-
-            button_rotation += camera_resolved_hierarchy_rotation;
+        if(inherited.is_camera_child == false){
+            engine_camera_transform_2d(camera_node, &inherited.px, &inherited.py, &inherited.rotation);
         }else{
             camera_zoom = 1.0f;
         }
 
-        button_rotated_x += camera_viewport->width/2;
-        button_rotated_y += camera_viewport->height/2;
+        inherited.px += camera_viewport->width/2;
+        inherited.py += camera_viewport->height/2;
+
+        button_opacity = inherited.opacity*camera_opacity;
 
         font_resource_class_obj_t *font = button->font_resource;
-        vector2_class_obj_t *button_scale = button->scale;
 
         float text_letter_spacing = mp_obj_get_float(button->letter_spacing);
         float text_line_spacing = mp_obj_get_float(button->line_spacing);
 
-        float x_scale = button_scale->x.value*camera_zoom;
-        float y_scale = button_scale->y.value*camera_zoom;
+        float x_scale = inherited.sx*camera_zoom;
+        float y_scale = inherited.sy*camera_zoom;
 
         // Decide which shader to use per-pixel
         engine_shader_t *shader = NULL;
@@ -106,18 +88,18 @@ void gui_button_2d_node_class_draw(mp_obj_t button_node_base_obj, mp_obj_t camer
         }
 
         engine_draw_rect(outline_color->value,
-                         floorf(button_rotated_x), floorf(button_rotated_y),
+                         floorf(inherited.px), floorf(inherited.py),
                          (int32_t)button->width_outline, (int32_t)button->height_outline,
                          x_scale, y_scale,
-                        -button_rotation,
+                        -inherited.rotation,
                          button_opacity,
                          shader);
 
         engine_draw_rect(background_color->value,
-                         floorf(button_rotated_x), floorf(button_rotated_y),
+                         floorf(inherited.px), floorf(inherited.py),
                          (int32_t)button->width_padded, (int32_t)button->height_padded,
                          x_scale, y_scale,
-                        -button_rotation,
+                        -inherited.rotation,
                          button_opacity,
                          shader);
 
@@ -138,12 +120,12 @@ void gui_button_2d_node_class_draw(mp_obj_t button_node_base_obj, mp_obj_t camer
         }
 
         engine_draw_text(font, button->text,
-                         floorf(button_rotated_x), floorf(button_rotated_y),
+                         floorf(inherited.px), floorf(inherited.py),
                          button->width, button->height,
                          text_letter_spacing,
                          text_line_spacing,
                          x_scale, y_scale,
-                         button_rotation,
+                         inherited.rotation,
                          button_opacity,
                          text_shader);
     }

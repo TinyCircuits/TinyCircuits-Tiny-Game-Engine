@@ -16,6 +16,7 @@ typedef struct{
     mp_obj_t viewport;              // Rectangle: position, width and height in screen buffer
     mp_obj_t fov;                   // Only applies to certain nodes, like voxelspace (units are radians in that case)
     mp_obj_t view_distance;         // Only applies to certain nodes, like voxelspace (units are pixels in that case)
+    mp_obj_t opacity;               // Opacity to apply to all nodes rendered by this camera
     mp_obj_t tick_cb;
     linked_list_node *camera_list_node;
 }engine_camera_node_class_obj_t;
