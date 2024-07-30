@@ -17,6 +17,14 @@ bool empty_node_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp
             destination[1] = self_node_base->attr_accessor;
             return true;
         break;
+        case MP_QSTR_position:
+            destination[0] = self->position;
+            return true;
+        break;
+        case MP_QSTR_rotation:
+            destination[0] = self->rotation;
+            return true;
+        break;
         default:
             return false; // Fail
     }
@@ -31,6 +39,14 @@ bool empty_node_store_attr(engine_node_base_t *self_node_base, qstr attribute, m
     switch(attribute){
         case MP_QSTR_tick:
             self->tick_cb = destination[1];
+            return true;
+        break;
+        case MP_QSTR_position:
+            self->position = destination[1];
+            return true;
+        break;
+        case MP_QSTR_rotation:
+            self->rotation = destination[1];
             return true;
         break;
         default:
