@@ -6,3 +6,4 @@ filesystem/splash
 
 doc/build
 .vscode
+**/desktop.ini
