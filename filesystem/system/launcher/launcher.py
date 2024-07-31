@@ -6,9 +6,12 @@ import engine_io
 
 from engine_resources import TextureResource, FontResource
 from engine_nodes import Sprite2DNode, CameraNode, GUIBitmapButton2DNode, Text2DNode
+from engine_math import Vector2
 
 from system.launcher.launcher_screen_icon import LauncherScreenIcon
 from system.launcher.launcher_header import LauncherHeader
+from system.launcher.launcher_dynamic_background import LauncherDynamicBackground
+from system.launcher.launcher_direction_icon import LauncherDirectionIcon
 
 engine.fps_limit(60)
 
@@ -17,34 +20,26 @@ camera = CameraNode()
 font = FontResource("system/assets/outrunner_outline.bmp")
 
 background_tex = TextureResource("system/launcher/assets/launcher-background.bmp")
-header_island_tex = TextureResource("system/launcher/assets/launcher-header-island.bmp")
 
-games_header_tex = TextureResource("system/launcher/assets/launcher-games-header.bmp")
-settings_header_tex = TextureResource("system/launcher/assets/launcher-settings-header.bmp")
-credits_header_tex = TextureResource("system/launcher/assets/launcher-credits-header.bmp")
-
-# header_island_spr = Sprite2DNode(texture=header_island_tex, transparent_color=engine_draw.white)
-# header_island_spr.position.y = -51
-
-# games_header_spr = Sprite2DNode(texture=games_header_tex, transparent_color=engine_draw.white)
-# games_header_spr.position.y = -57
-
-# settings_header_spr = Sprite2DNode(texture=settings_header_tex, transparent_color=engine_draw.white)
-# settings_header_spr.position.y = -57
-
-# credits_header_spr = Sprite2DNode(texture=credits_header_tex, transparent_color=engine_draw.white)
-# credits_header_spr.position.y = -57
 
 screen_icon = LauncherScreenIcon()
 header = LauncherHeader()
+dynamic_background = LauncherDynamicBackground()
 
 engine_draw.set_background(background_tex)
 
+LB = LauncherDirectionIcon("LB", font, engine_io.LB, Vector2(-55, -46))
+RB = LauncherDirectionIcon("RB", font, engine_io.RB, Vector2( 55, -46))
 
 while True:
     if engine.tick():
-        if engine_io.A.is_just_pressed:
+        if engine_io.RB.is_pressed_autorepeat:
             screen_icon.inc()
+            header.inc()
+        elif engine_io.LB.is_pressed_autorepeat:
+            screen_icon.inc()
+            header.inc()
+
 
 
 # engine.start()

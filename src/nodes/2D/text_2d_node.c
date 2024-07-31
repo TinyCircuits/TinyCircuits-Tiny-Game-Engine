@@ -87,9 +87,7 @@ void text_2d_node_class_draw(mp_obj_t text_2d_node_base_obj, mp_obj_t camera_nod
     // Decide which shader to use per-pixel
     engine_shader_t *text_shader = NULL;
 
-    if(text_color == mp_const_none){
-        text_shader = engine_get_builtin_shader(EMPTY_SHADER);
-    }else{
+    if(text_color != mp_const_none){
         text_shader = engine_get_builtin_shader(BLEND_OPACITY_SHADER);
 
         float t = 1.0f;
@@ -98,6 +96,10 @@ void text_2d_node_class_draw(mp_obj_t text_2d_node_base_obj, mp_obj_t camera_nod
         text_shader->program[2] = (text_color->value >> 0) & 0b11111111;
 
         memcpy(text_shader->program+3, &t, sizeof(float));
+    }else if(text_opacity < 1.0f){
+        text_shader = engine_get_builtin_shader(OPACITY_SHADER);   
+    }else{
+        text_shader = engine_get_builtin_shader(EMPTY_SHADER);
     }
 
     engine_draw_text(text_2d_node->font_resource, text_2d_node->text, text_rotated_x, text_rotated_y, text_box_width, text_box_height, text_letter_spacing, text_line_spacing, text_scale->x.value*camera_zoom, text_scale->y.value*camera_zoom, text_rotation, text_opacity, text_shader);
