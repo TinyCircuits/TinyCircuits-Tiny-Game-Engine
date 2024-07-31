@@ -12,7 +12,7 @@ import gc
 from micropython import mem_info
 from collections import deque
 from os import listdir, remove
-from time import time
+from time import ticks_ms
 
 
 fillcheat = False #if True, pressing RB will fill the grid with whatever is defined in fillpattern
@@ -71,7 +71,7 @@ history = deque([], 100) #maxlen=100 - could be increased, only uses a few perce
 score = 0
 moves = 0
 undos = 0
-starttime = time()
+starttime = ticks_ms()/1000
 
 
 def loadgame():
@@ -83,12 +83,12 @@ def loadgame():
     score = savedata[2]
     moves = savedata[3]
     undos = savedata[4]
-    starttime = time()-savedata[5]
+    starttime = ticks_ms()/1000-savedata[5]
 
 
 def savegame():
     with open("2048save.json", "w") as savefile:
-        savefile.write(json.dumps([getgrid(), win, score, moves, undos, time()-starttime]))
+        savefile.write(json.dumps([getgrid(), win, score, moves, undos, ticks_ms()/1000-starttime]))
 
 
 class Tile(Sprite2DNode):
@@ -193,7 +193,7 @@ undosprite = UndoSprite()
 
 
 def playtime():
-    t = int(time() - starttime)
+    t = int(ticks_ms()/1000 - starttime)
     return f"{t//60//60:>02}:{t//60%60:>02}:{t%60:>02}"
 
 
@@ -377,7 +377,7 @@ class Menu(EmptyNode):
         score = 0
         moves = 0
         undos = 0
-        starttime = time()
+        starttime = ticks_ms()/1000
         addtile()
         addtile()
         self.hide()
