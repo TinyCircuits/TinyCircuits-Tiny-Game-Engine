@@ -51,9 +51,9 @@ class LauncherHeader(EmptyNode):
 
         # Create little page index indicators
         self.page_indicators = []
-        self.page_indicators.append(Rectangle2DNode(position=Vector2(-5-4, 119), width=7, height=3, opacity=0.5, layer=2))
-        self.page_indicators.append(Rectangle2DNode(position=Vector2(0,    119), width=7, height=3, opacity=0.15, layer=2))
-        self.page_indicators.append(Rectangle2DNode(position=Vector2(5+4,  119), width=7, height=3, opacity=0.15, layer=2))
+        self.page_indicators.append(Rectangle2DNode(position=Vector2(-5-4, 12), width=7, height=3, opacity=0.5, layer=2))
+        self.page_indicators.append(Rectangle2DNode(position=Vector2(0,    12), width=7, height=3, opacity=0.15, layer=2))
+        self.page_indicators.append(Rectangle2DNode(position=Vector2(5+4,  12), width=7, height=3, opacity=0.15, layer=2))
         self.add_child(self.page_indicators[0])
         self.add_child(self.page_indicators[1])
         self.add_child(self.page_indicators[2])

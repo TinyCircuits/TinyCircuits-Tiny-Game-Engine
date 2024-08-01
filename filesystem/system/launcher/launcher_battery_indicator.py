@@ -18,8 +18,8 @@ class LauncherBatteryIndicator(Sprite2DNode):
         self.playing=False
         self.layer=2
 
-        self.position.x = -59
-        self.position.y = 60
+        self.position.x = 39
+        self.position.y = -45
         self.update_indicator()
     
     def update_indicator(self):

@@ -14,6 +14,8 @@ from system.launcher.launcher_header import LauncherHeader
 from system.launcher.launcher_dynamic_background import LauncherDynamicBackground
 from system.launcher.launcher_battery_indicator import LauncherBatteryIndicator
 from system.launcher.launcher_games_screen import LauncherGamesScreen
+from system.launcher.launcher_credits_screen import LauncherCreditsScreen
+from system.launcher.launcher_settings_screen import LauncherSettingsScreen
 
 engine.fps_limit(60)
 
@@ -27,29 +29,56 @@ header = LauncherHeader(font)
 dynamic_background = LauncherDynamicBackground()
 battery = LauncherBatteryIndicator()
 
-camera = CameraNode(zoom = 0.5)
-camera.add_child(screen_icon)
-camera.add_child(header)
-camera.add_child(dynamic_background)
-camera.add_child(battery)
-camera_tween = Tween()
+class LauncherCamera(CameraNode):
+    def __init__(self):
+        super().__init__(self)
+        self.add_child(screen_icon)
+        self.add_child(header)
+        self.add_child(dynamic_background)
+        self.add_child(battery)
+        self.camera_tween = Tween()
+        self.index = 0
+    
+    def switch(self, dir):
+        if self.camera_tween.finished == False:
+            return
 
-games_screen = LauncherGamesScreen(font)
+        self.index += dir
+
+        if(self.index >= 3):
+            self.index = 0
+        elif(self.index < 0):
+            self.index = 2
+
+        self.camera_tween.start(self.position, "x", self.position.x, self.index*128.0, 250, 1.0, ONE_SHOT, EASE_SINE_OUT)
+
+    def goto_x(self, x):
+        self.camera_tween.start(self.position, "x", self.position.x, x, 250, 1.0, ONE_SHOT, EASE_SINE_OUT)
+    
+    def goto_y(self, y):
+        self.camera_tween.start(self.position, "y", self.position.y, y, 250, 1.0, ONE_SHOT, EASE_SINE_OUT)
+
+
+camera = LauncherCamera()
+
+games_screen = LauncherGamesScreen(font, camera)
+credits_screen = LauncherCreditsScreen(font)
+settings_screen = LauncherSettingsScreen(font)
 
 # Toggle the gui elements and do not let the user toggle back out of it.
-engine_io.gui_focused(True)
-engine_io.gui_toggle_button(None)
+# engine_io.gui_focused(True)
+# engine_io.gui_toggle_button(None)
 
 while True:
     if engine.tick():
         if engine_io.RB.is_pressed_autorepeat:
             screen_icon.switch(1)
             header.switch(1)
-            camera_tween.start(camera.position, "x", camera.position.x, camera.position.x+128, 250, 1.0, ONE_SHOT, EASE_SINE_OUT)
+            camera.switch(1)
         elif engine_io.LB.is_pressed_autorepeat:
             screen_icon.switch(-1)
             header.switch(-1)
-            camera_tween.start(camera.position, "x", camera.position.x, camera.position.x-128, 250, 1.0, ONE_SHOT, EASE_SINE_OUT)
+            camera.switch(-1)
 
 
 

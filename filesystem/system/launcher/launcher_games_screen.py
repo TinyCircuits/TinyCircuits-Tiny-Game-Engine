@@ -2,12 +2,16 @@ import os
 from system.root_dir import ROOT_DIR
 from system.util import is_file, is_dir, basename
 
-from engine_nodes import EmptyNode, Rectangle2DNode, Text2DNode, GUIBitmapButton2DNode, GUIButton2DNode
+from engine_nodes import EmptyNode, Rectangle2DNode, Text2DNode, GUIBitmapButton2DNode
 from engine_draw import Color
+import engine_draw
 from engine_math import Vector2
+from engine_resources import TextureResource
+
 
 title_font = None
 category_background_color = Color(0.157, 0.137, 0.263)
+q_mark = TextureResource("system/launcher/assets/launcher-tile-qmark.bmp")
 
 # Represents all the information needed for displaying
 # a game in the launcher and playing it
@@ -23,23 +27,36 @@ class GameInfo():
         return f"{self.directory} {{main={self.main_path}, icon={self.icon_path}}}"
 
 
-class GameLauncherTile(GUIButton2DNode):
-    def __init__(self, game_info, focused=False):
+class GameLauncherTile(GUIBitmapButton2DNode):
+    def __init__(self, game_info, focused, launcher_camera):
         super().__init__(self)
-
+        self.launcher_camera = launcher_camera
         self.focused = focused
         self.initial_focused = focused
         self.game_info = game_info
         self.font = title_font
         self.text = ""
+        self.scale.x = 0.6
+        self.scale.y = 0.6
 
-        self.title_text_node = Text2DNode(text=game_info.name, font=title_font, position=Vector2(0, 28), opacity=1.0, letter_spacing=1.0)
+        if game_info.icon_path == None:
+            self.bitmap = q_mark
+            self.transparent_color = engine_draw.white
+        else:
+            pass
+            # self.bitmap = TextureResource(game_info.icon_path)
+
+        self.title_text_node = Text2DNode(text=game_info.name, font=title_font, position=Vector2(0, 26), opacity=1.0, letter_spacing=1.0)
         self.add_child(self.title_text_node)
     
     def tick(self, dt):
         if self.position.x < -64 or self.position.x > 64:
             self.opacity = 0.0
             self.title_text_node.opacity = 0.0
+        
+    def on_just_focused(self):
+        pass
+        # self.launcher_camera.goto(self.position)
 
 
 # Represents a category of games. Games can be organized
@@ -47,9 +64,10 @@ class GameLauncherTile(GUIButton2DNode):
 # which will result in a categories `Games` and `SpecialGames`
 # on the launcher screen
 class GameCategory(EmptyNode):
-    def __init__(self):
+    def __init__(self, launcher_camera):
         super().__init__(self)
         self.name = None
+        self.launcher_camera = launcher_camera
         self.game_infos = []
         self.tiles = []
 
@@ -79,7 +97,7 @@ class GameCategory(EmptyNode):
     def create_tiles(self):
         pos_x = 0
         for info in self.game_infos:
-            tile = GameLauncherTile(info, False)
+            tile = GameLauncherTile(info, False, self.launcher_camera)
             self.add_child(tile)
             tile.position.x = pos_x
             self.tiles.append(tile)
@@ -114,8 +132,8 @@ def check_and_get_game_info(directory_path, directory_contents):
         # Parse each line of the manifest
         for line in manifest_lines:
             if   "name"    in line: game_info.name      = line[line.find("=")+1:].strip()
-            elif "main"    in line: game_info.main_path = line[line.find("=")+1:].strip()
-            elif "icon"    in line: game_info.icon_path = line[line.find("=")+1:].strip()
+            elif "main"    in line: game_info.main_path = f"{directory_path}/{line[line.find("=")+1:].strip()}"
+            elif "icon"    in line: game_info.icon_path = f"{directory_path}/{line[line.find("=")+1:].strip()}"
             elif "legacy"  in line:
                 extracted = line[line.find("=")+1:].strip()
                 if "True" in extracted or "true" in extracted or "1" in extracted:
@@ -143,9 +161,10 @@ def find_all_games(game_infos, directory_path):
     
 
 class LauncherGamesScreen():
-    def __init__(self, font):
+    def __init__(self, font, launcher_camera):
         global title_font
         title_font = font
+        self.launcher_camera = launcher_camera
         self.categories = []
         self._get_categories_and_fill()
     
@@ -172,11 +191,11 @@ class LauncherGamesScreen():
             # It did not belong, create a new category and add
             # the game info to it
             if found == False:
-                category = GameCategory()
+                category = GameCategory(self.launcher_camera)
                 category.update_name(game_category_name)
                 category.game_infos.append(info)
 
-                category.position.y += len(self.categories) * (75)
+                category.position.y += len(self.categories) * (80)
                 self.categories.append(category)
         
         for category in self.categories:
