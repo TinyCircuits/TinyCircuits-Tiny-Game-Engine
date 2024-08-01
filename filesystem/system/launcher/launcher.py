@@ -5,7 +5,7 @@ import engine_draw
 import engine_io
 
 from engine_resources import TextureResource, FontResource
-from engine_nodes import Sprite2DNode, CameraNode, GUIBitmapButton2DNode, Text2DNode
+from engine_nodes import Sprite2DNode, CameraNode, GUIButton2DNode, Text2DNode
 from engine_math import Vector2
 from engine_animation import Tween, ONE_SHOT, EASE_BACK_OUT, EASE_SINE_OUT
 
@@ -27,7 +27,7 @@ header = LauncherHeader(font)
 dynamic_background = LauncherDynamicBackground()
 battery = LauncherBatteryIndicator()
 
-camera = CameraNode()
+camera = CameraNode(zoom = 0.5)
 camera.add_child(screen_icon)
 camera.add_child(header)
 camera.add_child(dynamic_background)

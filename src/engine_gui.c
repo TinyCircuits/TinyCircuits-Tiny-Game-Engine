@@ -17,12 +17,8 @@ bool gui_focused = false;
 bool gui_wrapping_enabled = true;
 
 
-vector2_class_obj_t *resolve_gui_node_position(engine_node_base_t *gui_node_base){
-    if(mp_obj_is_type(focused_gui_node_base, &engine_gui_bitmap_button_2d_node_class_type)){
-        return ((engine_gui_bitmap_button_2d_node_class_obj_t*)gui_node_base->node)->position;
-    }else{
-        return ((engine_gui_button_2d_node_class_obj_t*)gui_node_base->node)->position;
-    }
+void resolve_gui_node_position(engine_node_base_t *gui_node_base, float *x, float *y){
+    node_base_get_child_absolute_xy(x, y, NULL, NULL, gui_node_base);
 }
 
 
@@ -138,7 +134,9 @@ void engine_gui_select_closest(float dir_x, float dir_y, bool allow_wrap){
     float dir_len_sqr = engine_math_vector_length_sqr(dir_x, dir_y);
 
     // Get the position of the currently focused GUI node
-    vector2_class_obj_t *focused_gui_position = resolve_gui_node_position(focused_gui_node_base);
+    float focused_gui_position_x = 0.0f;
+    float focused_gui_position_y = 0.0f;
+    resolve_gui_node_position(focused_gui_node_base, &focused_gui_position_x, &focused_gui_position_y);
 
     // Setup for looping through all GUI nodes and finding closest
     linked_list *gui_list = engine_collections_get_gui_list();
@@ -167,11 +165,13 @@ void engine_gui_select_closest(float dir_x, float dir_y, bool allow_wrap){
         }
 
         // Get the position of the current GUI node
-        vector2_class_obj_t *searching_gui_position = resolve_gui_node_position(searching_gui_node_base);
+        float searching_gui_position_x = 0.0f;
+        float searching_gui_position_y = 0.0f;
+        resolve_gui_node_position(searching_gui_node_base, &searching_gui_position_x, &searching_gui_position_y);
 
         // Find the position of the current node relative to the focused node, as a vector.
-        float rel_pos_x = searching_gui_position->x.value - focused_gui_position->x.value;
-        float rel_pos_y = searching_gui_position->y.value - focused_gui_position->y.value;
+        float rel_pos_x = searching_gui_position_x - focused_gui_position_x;
+        float rel_pos_y = searching_gui_position_y - focused_gui_position_y;
         float rel_pos_len_sqr = engine_math_vector_length_sqr(rel_pos_x, rel_pos_y);
 
         float dir_dot_rel = engine_math_dot_product(dir_x, dir_y, rel_pos_x, rel_pos_y);
@@ -250,15 +250,17 @@ void engine_gui_select_closest(float dir_x, float dir_y, bool allow_wrap){
                 continue;
             }
             engine_node_base_t *searching_gui_node_base = current_gui_list_node->object;
-            vector2_class_obj_t *searching_gui_position = resolve_gui_node_position(searching_gui_node_base);
+            float searching_gui_position_x = 0.0f;
+            float searching_gui_position_y = 0.0f;
+            resolve_gui_node_position(searching_gui_node_base, &searching_gui_position_x, &searching_gui_position_y);
 
             // If the node we're looking at is disabled, do not try to focus it
             if(resolve_gui_node_is_disabled(searching_gui_node_base)){
                 continue;
             }
 
-            float rel_pos_x = searching_gui_position->x.value - focused_gui_position->x.value;
-            float rel_pos_y = searching_gui_position->y.value - focused_gui_position->y.value;
+            float rel_pos_x = searching_gui_position_x - focused_gui_position_x;
+            float rel_pos_y = searching_gui_position_y - focused_gui_position_y;
             float rel_pos_len_sqr = engine_math_vector_length_sqr(rel_pos_x, rel_pos_y);
             float dir_dot_rel = engine_math_dot_product(dir_x, dir_y, rel_pos_x, rel_pos_y);
             // Only analyse nodes "behind" the focused node.
@@ -299,16 +301,20 @@ void engine_gui_clear_focused(){
         linked_list_node *current_gui_list_node = gui_list->start;
 
         // Get the position of the currently focused GUI node
-        vector2_class_obj_t *focused_gui_position = resolve_gui_node_position(focused_gui_node_base);
+        float focused_gui_position_x = 0.0f;
+        float focused_gui_position_y = 0.0f;
+        resolve_gui_node_position(focused_gui_node_base, &focused_gui_position_x, &focused_gui_position_y);
 
         engine_node_base_t *closest_gui_node_base = NULL;
         float shortest_distance = FLT_MAX;
 
         while(current_gui_list_node != NULL){
             engine_node_base_t *searching_gui_node_base = current_gui_list_node->object;
-            vector2_class_obj_t *searching_gui_position = resolve_gui_node_position(searching_gui_node_base);
+            float searching_gui_position_x = 0.0f;
+            float searching_gui_position_y = 0.0f;
+            resolve_gui_node_position(searching_gui_node_base, &searching_gui_position_x, &searching_gui_position_y);
 
-            float distance = engine_math_distance_between(focused_gui_position->x.value, focused_gui_position->y.value, searching_gui_position->x.value, searching_gui_position->y.value);
+            float distance = engine_math_distance_between(focused_gui_position_x, focused_gui_position_y, searching_gui_position_x, searching_gui_position_y);
 
             // If the distance is closer than the last one
             // we compared to, set it as the closest. Make
