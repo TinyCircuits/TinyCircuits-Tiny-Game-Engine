@@ -16,6 +16,9 @@ bool gui_focused = false;
 // Whether wrapping around when navigating GUI elements is enabled.
 bool gui_wrapping_enabled = true;
 
+// Whether passing inputs to game is enabled
+bool gui_passing_enabled = false;
+
 
 void resolve_gui_node_position(engine_node_base_t *gui_node_base, float *x, float *y){
     node_base_get_child_absolute_xy(x, y, NULL, NULL, gui_node_base);
@@ -121,6 +124,15 @@ void engine_gui_set_wrapping(bool enabled){
 
 bool engine_gui_get_wrapping(){
     return gui_wrapping_enabled;
+}
+
+
+void engine_gui_set_passing(bool enabled){
+    gui_passing_enabled = enabled;
+}
+
+bool engine_gui_get_passing(){
+    return gui_passing_enabled;
 }
 
 

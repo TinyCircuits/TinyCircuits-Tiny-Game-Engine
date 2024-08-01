@@ -108,6 +108,23 @@ MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_io_gui_wrapping_obj, 0, 1, engine_io_
 
 
 /*  --- doc ---
+    NAME: gui_passing
+    ID: gui_passing
+    DESC: Get or set whether the GUI layer blocks or passes inputs to the game: Default: False
+    PARAM: [type=bool (optional)]   [name=passing_enabled]  [value=bool]
+    RETURN: bool or None
+*/
+static mp_obj_t engine_io_gui_passing(size_t n_args, const mp_obj_t *args){
+    if (n_args == 1) {
+        engine_gui_set_passing(mp_obj_get_int(args[0]));
+        return mp_const_none;
+    }
+    return mp_obj_new_bool(engine_gui_get_passing());
+}
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_io_gui_passing_obj, 0, 1, engine_io_gui_passing);
+
+
+/*  --- doc ---
     NAME: focused_node
     ID: focused_node
     DESC: Get the currently focused node.
@@ -249,6 +266,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(buttons_reset_params_all_obj, engine_io_reset_all_butt
     ATTR: [type=function]            [name={ref_link:gui_focused}]              [value=getter/setter function]
     ATTR: [type=function]            [name={ref_link:gui_focused_toggle}]       [value=function]
     ATTR: [type=function]            [name={ref_link:gui_wrapping}]             [value=getter/setter function]
+    ATTR: [type=function]            [name={ref_link:gui_passing}]              [value=getter/setter function]
     ATTR: [type=function]            [name={ref_link:battery_voltage}]          [value=function]
     ATTR: [type=function]            [name={ref_link:battery_level}]            [value=function]
     ATTR: [type=function]            [name={ref_link:is_charging}]              [value=function]
@@ -275,6 +293,7 @@ static const mp_rom_map_elem_t engine_io_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_gui_focused), MP_ROM_PTR(&engine_io_gui_focused_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_gui_focused_toggle), MP_ROM_PTR(&engine_io_gui_focused_toggle_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_gui_wrapping), MP_ROM_PTR(&engine_io_gui_wrapping_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_gui_passing), MP_ROM_PTR(&engine_io_gui_passing_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_battery_voltage), MP_ROM_PTR(&engine_io_battery_voltage_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_battery_level), MP_ROM_PTR(&engine_io_battery_level_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_is_charging), MP_ROM_PTR(&engine_io_is_charging_obj) },

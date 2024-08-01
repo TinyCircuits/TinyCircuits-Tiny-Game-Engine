@@ -1,12 +1,14 @@
 import os
 from system.root_dir import ROOT_DIR
-from system.util import is_file, is_dir, basename
+from system.util import is_file, is_dir, basename, thumby_reset
+from system.run_on_boot import set_run_on_boot
 
 from engine_nodes import EmptyNode, Rectangle2DNode, Text2DNode, GUIBitmapButton2DNode
 from engine_draw import Color
 import engine_draw
 from engine_math import Vector2
 from engine_resources import TextureResource
+from engine_animation import Tween, ONE_SHOT, EASE_BACK_OUT, EASE_SINE_OUT
 
 
 title_font = None
@@ -28,9 +30,9 @@ class GameInfo():
 
 
 class GameLauncherTile(GUIBitmapButton2DNode):
-    def __init__(self, game_info, focused, launcher_camera):
+    def __init__(self, game_info, focused, on_tile_focused_cb):
         super().__init__(self)
-        self.launcher_camera = launcher_camera
+        self.on_tile_focused_cb = on_tile_focused_cb
         self.focused = focused
         self.initial_focused = focused
         self.game_info = game_info
@@ -43,20 +45,29 @@ class GameLauncherTile(GUIBitmapButton2DNode):
             self.bitmap = q_mark
             self.transparent_color = engine_draw.white
         else:
-            pass
-            # self.bitmap = TextureResource(game_info.icon_path)
+            self.bitmap = TextureResource(game_info.icon_path)
 
         self.title_text_node = Text2DNode(text=game_info.name, font=title_font, position=Vector2(0, 26), opacity=1.0, letter_spacing=1.0)
         self.add_child(self.title_text_node)
+        self.tween = Tween()
     
     def tick(self, dt):
         if self.position.x < -64 or self.position.x > 64:
             self.opacity = 0.0
             self.title_text_node.opacity = 0.0
+        else:
+            self.opacity = 1.0
+            self.title_text_node.opacity = 1.0
+    
+    def goto_x(self, x):
+        self.tween.start(self.position, "x", self.position.x, x, 250, 1.0, ONE_SHOT, EASE_SINE_OUT)
         
     def on_just_focused(self):
-        pass
-        # self.launcher_camera.goto(self.position)
+        self.on_tile_focused_cb(self)
+    
+    def on_just_pressed(self):
+        set_run_on_boot(self.game_info.main_path)
+        thumby_reset(False)
 
 
 # Represents a category of games. Games can be organized
@@ -64,10 +75,9 @@ class GameLauncherTile(GUIBitmapButton2DNode):
 # which will result in a categories `Games` and `SpecialGames`
 # on the launcher screen
 class GameCategory(EmptyNode):
-    def __init__(self, launcher_camera):
+    def __init__(self):
         super().__init__(self)
         self.name = None
-        self.launcher_camera = launcher_camera
         self.game_infos = []
         self.tiles = []
 
@@ -85,6 +95,8 @@ class GameCategory(EmptyNode):
         # Add row bg and text as children to this category node
         self.add_child(self.background_rect)
         self.add_child(self.title_text)
+
+        self.last_focused_tile_x = 0
     
     def update_name(self, name):
         self.name = name
@@ -94,10 +106,20 @@ class GameCategory(EmptyNode):
         self.title_background_rect.width = self.title_text.width+2
         self.title_background_rect.height = self.title_text.height+2
     
+    def on_tile_focused_cb(self, new_focused_tile):
+        if new_focused_tile.position.x > self.last_focused_tile_x+1:
+            for tile in self.tiles:
+                tile.goto_x(tile.position.x-100)
+        elif new_focused_tile.position.x < self.last_focused_tile_x-1:
+            for tile in self.tiles:
+                tile.goto_x(tile.position.x+100)
+        
+        self.last_focused_tile_x = new_focused_tile.position.x
+
     def create_tiles(self):
         pos_x = 0
         for info in self.game_infos:
-            tile = GameLauncherTile(info, False, self.launcher_camera)
+            tile = GameLauncherTile(info, False, self.on_tile_focused_cb)
             self.add_child(tile)
             tile.position.x = pos_x
             self.tiles.append(tile)
@@ -161,16 +183,15 @@ def find_all_games(game_infos, directory_path):
     
 
 class LauncherGamesScreen():
-    def __init__(self, font, launcher_camera):
+    def __init__(self, font):
         global title_font
         title_font = font
-        self.launcher_camera = launcher_camera
         self.categories = []
         self._get_categories_and_fill()
     
     def _get_categories_and_fill(self):
         game_infos = []
-        find_all_games(game_infos, f"{ROOT_DIR}/Games")
+        find_all_games(game_infos, "Games")
         
         for info in game_infos:
             # Extract the game `category` which is the folder
@@ -191,7 +212,7 @@ class LauncherGamesScreen():
             # It did not belong, create a new category and add
             # the game info to it
             if found == False:
-                category = GameCategory(self.launcher_camera)
+                category = GameCategory()
                 category.update_name(game_category_name)
                 category.game_infos.append(info)
 

@@ -61,13 +61,15 @@ class LauncherCamera(CameraNode):
 
 camera = LauncherCamera()
 
-games_screen = LauncherGamesScreen(font, camera)
+games_screen = LauncherGamesScreen(font)
 credits_screen = LauncherCreditsScreen(font)
 settings_screen = LauncherSettingsScreen(font)
 
 # Toggle the gui elements and do not let the user toggle back out of it.
-# engine_io.gui_focused(True)
-# engine_io.gui_toggle_button(None)
+engine_io.gui_focused(True)
+engine_io.gui_toggle_button(None)
+engine_io.gui_wrapping(False)
+engine_io.gui_passing(True)
 
 while True:
     if engine.tick():
