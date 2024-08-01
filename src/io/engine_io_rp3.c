@@ -19,6 +19,7 @@
 #define GPIO_BUTTON_BUMPER_RIGHT    22
 #define GPIO_BUTTON_MENU            26
 #define GPIO_RUMBLE                 5
+#define GPIO_CHARGE_STAT            24
 
 
 void engine_io_rp3_setup(){
@@ -54,7 +55,9 @@ void engine_io_rp3_setup(){
     gpio_set_dir(GPIO_BUTTON_BUMPER_LEFT, GPIO_IN);
     gpio_set_dir(GPIO_BUTTON_BUMPER_RIGHT, GPIO_IN);
     gpio_set_dir(GPIO_BUTTON_MENU, GPIO_IN);
-    // gpio_set_dir(GPIO_RUMBLE, GPIO_OUT);
+
+    gpio_set_dir(GPIO_CHARGE_STAT, GPIO_IN);
+    gpio_pull_up(GPIO_CHARGE_STAT);
 
     uint rumple_pwm_pin_slice = pwm_gpio_to_slice_num(GPIO_RUMBLE);
     gpio_set_function(GPIO_RUMBLE, GPIO_FUNC_PWM);
@@ -92,4 +95,11 @@ void engine_io_rp3_rumble(float intensity){
     }else{
         pwm_set_gpio_level(GPIO_RUMBLE, (uint32_t)engine_math_map_clamp(intensity, 0.0f, 1.0f, 1400.0f, 2048.0f));
     }
+}
+
+
+bool engine_io_rp3_is_charging(){
+    // Charge status line from LiIon charger IC is set
+    // pulled HIGH by default and is pulled LOW by IC
+    return gpio_get(GPIO_CHARGE_STAT);
 }

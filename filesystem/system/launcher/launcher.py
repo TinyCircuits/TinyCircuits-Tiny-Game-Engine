@@ -7,38 +7,49 @@ import engine_io
 from engine_resources import TextureResource, FontResource
 from engine_nodes import Sprite2DNode, CameraNode, GUIBitmapButton2DNode, Text2DNode
 from engine_math import Vector2
+from engine_animation import Tween, ONE_SHOT, EASE_BACK_OUT, EASE_SINE_OUT
 
 from system.launcher.launcher_screen_icon import LauncherScreenIcon
 from system.launcher.launcher_header import LauncherHeader
 from system.launcher.launcher_dynamic_background import LauncherDynamicBackground
-from system.launcher.launcher_direction_icon import LauncherDirectionIcon
+from system.launcher.launcher_battery_indicator import LauncherBatteryIndicator
+from system.launcher.launcher_games_screen import LauncherGamesScreen
 
 engine.fps_limit(60)
-
-camera = CameraNode()
 
 font = FontResource("system/assets/outrunner_outline.bmp")
 
 background_tex = TextureResource("system/launcher/assets/launcher-background.bmp")
-
-
-screen_icon = LauncherScreenIcon()
-header = LauncherHeader()
-dynamic_background = LauncherDynamicBackground()
-
 engine_draw.set_background(background_tex)
 
-LB = LauncherDirectionIcon("LB", font, engine_io.LB, Vector2(-55, -46))
-RB = LauncherDirectionIcon("RB", font, engine_io.RB, Vector2( 55, -46))
+screen_icon = LauncherScreenIcon()
+header = LauncherHeader(font)
+dynamic_background = LauncherDynamicBackground()
+battery = LauncherBatteryIndicator()
+
+camera = CameraNode()
+camera.add_child(screen_icon)
+camera.add_child(header)
+camera.add_child(dynamic_background)
+camera.add_child(battery)
+camera_tween = Tween()
+
+games_screen = LauncherGamesScreen(font)
+
+# Toggle the gui elements and do not let the user toggle back out of it.
+engine_io.gui_focused(True)
+engine_io.gui_toggle_button(None)
 
 while True:
     if engine.tick():
         if engine_io.RB.is_pressed_autorepeat:
-            screen_icon.inc()
-            header.inc()
+            screen_icon.switch(1)
+            header.switch(1)
+            camera_tween.start(camera.position, "x", camera.position.x, camera.position.x+128, 250, 1.0, ONE_SHOT, EASE_SINE_OUT)
         elif engine_io.LB.is_pressed_autorepeat:
-            screen_icon.inc()
-            header.inc()
+            screen_icon.switch(-1)
+            header.switch(-1)
+            camera_tween.start(camera.position, "x", camera.position.x, camera.position.x-128, 250, 1.0, ONE_SHOT, EASE_SINE_OUT)
 
 
 
@@ -139,24 +150,7 @@ while True:
 # launcher_tile_mark_texture = TextureResource("/system/launcher/assets/launcher-tile-mark.bmp")
 
 
-# class BatteryIndicator(Sprite2DNode):
-#     def __init__(self):
-#         super().__init__(self)
-#         self.text_node = Text2DNode(text=self._battery_text(), font=font)
-#         self.position.x = 46
-#         self.position.y = -58
-#         self.add_child(self.text_node)
-#         self.time = 0
 
-#     def tick(self, dt):
-#         self.time += dt
-#         # Update the text every second.
-#         if self.time >= 1:
-#             self.time = 0
-#             self.text_node.text = self._battery_text()
-
-#     def _battery_text(self):
-#         return f"{engine_io.battery_level()}%"
 
 # battery = BatteryIndicator()
 

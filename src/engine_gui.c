@@ -26,6 +26,15 @@ vector2_class_obj_t *resolve_gui_node_position(engine_node_base_t *gui_node_base
 }
 
 
+bool resolve_gui_node_is_disabled(engine_node_base_t *gui_node_base){
+    if(mp_obj_is_type(focused_gui_node_base, &engine_gui_bitmap_button_2d_node_class_type)){
+        return (bool)mp_obj_get_int(((engine_gui_bitmap_button_2d_node_class_obj_t*)gui_node_base->node)->disabled);
+    }else{
+        return (bool)mp_obj_get_int(((engine_gui_button_2d_node_class_obj_t*)gui_node_base->node)->disabled);
+    }
+}
+
+
 void engine_gui_reset(){
     focused_gui_node_base = NULL;
     gui_focused = false;
@@ -152,6 +161,11 @@ void engine_gui_select_closest(float dir_x, float dir_y, bool allow_wrap){
         // Get the node base of the currently looping through node
         engine_node_base_t *searching_gui_node_base = current_gui_list_node->object;
 
+        // If the node we're looking at is disabled, do not try to focus it
+        if(resolve_gui_node_is_disabled(searching_gui_node_base)){
+            continue;
+        }
+
         // Get the position of the current GUI node
         vector2_class_obj_t *searching_gui_position = resolve_gui_node_position(searching_gui_node_base);
 
@@ -237,6 +251,12 @@ void engine_gui_select_closest(float dir_x, float dir_y, bool allow_wrap){
             }
             engine_node_base_t *searching_gui_node_base = current_gui_list_node->object;
             vector2_class_obj_t *searching_gui_position = resolve_gui_node_position(searching_gui_node_base);
+
+            // If the node we're looking at is disabled, do not try to focus it
+            if(resolve_gui_node_is_disabled(searching_gui_node_base)){
+                continue;
+            }
+
             float rel_pos_x = searching_gui_position->x.value - focused_gui_position->x.value;
             float rel_pos_y = searching_gui_position->y.value - focused_gui_position->y.value;
             float rel_pos_len_sqr = engine_math_vector_length_sqr(rel_pos_x, rel_pos_y);
