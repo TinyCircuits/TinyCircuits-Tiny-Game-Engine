@@ -389,6 +389,7 @@ void engine_gui_tick(){
     }else if(button_is_pressed_autorepeat(&BUTTON_DPAD_DOWN)){
         dir_y = 1.0f;
     }
+    
     if(dir_x || dir_y){
         bool allow_wrap = false;
         if(gui_wrapping_enabled){

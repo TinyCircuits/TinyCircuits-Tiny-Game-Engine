@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "main.py", line 39, in <module>
+  File "/home/devy/Desktop/mp-thumby/TinyCircuits-Tiny-Game-Engine/filesystem/Games/Chess/main.py", line 19, in <module>
+OSError: [Errno 2] ENOENT
