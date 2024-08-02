@@ -18,6 +18,8 @@ try:
         dir = dirname(run_on_boot)
         sys.path.append(f"{ROOT_DIR}/{dir}")
         os.chdir(dir)
+        import engine_save
+        engine_save._init_saves_dir(f"/Saves/{dir}")
         try:
             with hold_launcher_state():
                 execfile(f"{ROOT_DIR}/{run_on_boot}")
@@ -33,6 +35,6 @@ try:
 except Exception as ex:
     sys.print_exception(ex)
     # Catch any exception, including one originating from a system file.
-    with open("last_crash.txt", "w") as f:
+    with open(f"{ROOT_DIR}/last_crash.txt", "w") as f:
         sys.print_exception(ex, f)
     execfile("system/crash.py")
