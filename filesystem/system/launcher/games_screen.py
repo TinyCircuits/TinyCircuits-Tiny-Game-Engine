@@ -137,8 +137,9 @@ class GameLauncherTile(GUIBitmapButton2DNode):
 # which will result in a categories `Games` and `SpecialGames`
 # on the launcher screen
 class GameCategory(EmptyNode):
-    def __init__(self):
+    def __init__(self, shift_categories):
         super().__init__(self)
+        self.shift_categories = shift_categories
         self.name = None
         self.game_infos = []
         self.tiles = []
@@ -157,6 +158,12 @@ class GameCategory(EmptyNode):
         # Add row bg and text as children to this category node
         self.add_child(self.background_rect)
         self.add_child(self.title_text)
+
+        self.tween = Tween()
+        self.tween.after = self.after_tween_cb
+    
+    def goto_y(self, y):
+        self.tween.start(self.position, "y", self.position.y, y, 100, 1.0, ONE_SHOT, EASE_SINE_OUT)
     
     def update_name(self, name):
         self.name = name
@@ -172,8 +179,6 @@ class GameCategory(EmptyNode):
         new_tile_position = new_focused_tile.position
         new_tile_global_position = new_focused_tile.global_position
 
-        print(new_tile_global_position)
-
         if new_tile_position.x > 0:
             engine_io.gui_focused(False)    # Turn OFF GUI layer focus so you can't interrupt the tween
             for tile in self.tiles:
@@ -182,16 +187,23 @@ class GameCategory(EmptyNode):
             engine_io.gui_focused(False)    # Turn OFF GUI layer focus so you can't interrupt the tween
             for tile in self.tiles:
                 tile.goto_x(tile.position.x+100)
+        elif new_tile_global_position.y > 0:
+            engine_io.gui_focused(False)    # Turn OFF GUI layer focus so you can't interrupt the tween
+            self.shift_categories(-80)
+        elif new_tile_global_position.y < 0:
+            engine_io.gui_focused(False)    # Turn OFF GUI layer focus so you can't interrupt the tween
+            self.shift_categories(80)
     
     # Custom callback that's passed down to tiles to
     # be called after they all get shifted (tweened)
-    def on_tiles_moved_cb(self, tween):
+    # or after camera y changes
+    def after_tween_cb(self, tween):
         engine_io.gui_focused(True)         # Turn ON GUI layer focus after tweens
 
     def create_tiles(self):
         pos_x = 0
         for info in self.game_infos:
-            tile = GameLauncherTile(info, False, self.on_tile_focused_cb, self.on_tiles_moved_cb)
+            tile = GameLauncherTile(info, False, self.on_tile_focused_cb, self.after_tween_cb)
             self.add_child(tile)
             tile.position.x = pos_x
             self.tiles.append(tile)
@@ -207,6 +219,10 @@ class GamesScreen():
         title_font = font
         self.categories = []
         self._get_categories_and_fill()
+
+    def shift_categories(self, offset):
+        for category in self.categories:
+            category.goto_y(category.position.y+offset)
     
     def _get_categories_and_fill(self):
         game_infos = []
@@ -231,7 +247,7 @@ class GamesScreen():
             # It did not belong, create a new category and add
             # the game info to it
             if found == False:
-                category = GameCategory()
+                category = GameCategory(self.shift_categories)
                 category.update_name(game_category_name)
                 category.game_infos.append(info)
 

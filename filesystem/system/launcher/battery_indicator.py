@@ -6,7 +6,6 @@ import engine_draw
 import engine_io
 import math
 
-rect_color = Color(0.631, 0.604, 0.796)
 battery_tex = TextureResource("system/launcher/assets/battery.bmp")
 
 class BatteryIndicator(Sprite2DNode):

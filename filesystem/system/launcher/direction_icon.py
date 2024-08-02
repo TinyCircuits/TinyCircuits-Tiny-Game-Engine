@@ -9,6 +9,7 @@ class DirectionIcon(Text2DNode):
         self.font = font
         self.button = button
         self.position = position
+        self.layer = 3
     
     def tick(self, dt):
         if self.button.is_pressed:

@@ -19,14 +19,14 @@ class Header(EmptyNode):
         super().__init__(self)
 
         # Create sprites and position the,
-        self.header_island_spr = Sprite2DNode(texture=header_island_tex, transparent_color=engine_draw.white, opacity=0.65)
+        self.header_island_spr = Sprite2DNode(texture=header_island_tex, transparent_color=engine_draw.white, opacity=0.65, layer=3)
 
         self.LB = DirectionIcon("LB", font, engine_io.LB, Vector2(-54, 1))
         self.RB = DirectionIcon("RB", font, engine_io.RB, Vector2( 54, 1))
 
-        self.games_header_spr = Sprite2DNode(texture=games_header_tex, transparent_color=engine_draw.white)
-        self.settings_header_spr = Sprite2DNode(texture=settings_header_tex, transparent_color=engine_draw.white, position=Vector2(0, -36))
-        self.credits_header_spr = Sprite2DNode(texture=credits_header_tex, transparent_color=engine_draw.white, position=Vector2(0, -36))
+        self.games_header_spr = Sprite2DNode(texture=games_header_tex, transparent_color=engine_draw.white, layer=3)
+        self.settings_header_spr = Sprite2DNode(texture=settings_header_tex, transparent_color=engine_draw.white, position=Vector2(0, -36), layer=3)
+        self.credits_header_spr = Sprite2DNode(texture=credits_header_tex, transparent_color=engine_draw.white, position=Vector2(0, -36), layer=3)
 
         self.position.y = -57
 

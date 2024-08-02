@@ -20,7 +20,7 @@ from system.launcher.custom_camera import CustomCamera
 
 # Speed up the processor to draw the launcher at a 
 # higher speed and set an FPS limit
-engine.freq(225 * 1000 * 1000)
+engine.freq(250 * 1000 * 1000)
 engine.fps_limit(60)
 
 # Load some resources and set background 
@@ -35,11 +35,6 @@ header = Header(font)
 dynamic_background = DynamicBackground()
 battery = BatteryIndicator()
 
-# Create instances of the custom launcher screens
-games_screen = GamesScreen(font)
-credits_screen = CreditsScreen(font)
-settings_screen = SettingsScreen(font)
-
 # Create instance of custom camera and add static
 # elements as children so they don't move
 camera = CustomCamera()
@@ -47,6 +42,11 @@ camera.add_child(screen_icon)
 camera.add_child(header)
 camera.add_child(dynamic_background)
 camera.add_child(battery)
+
+# Create instances of the custom launcher screens
+games_screen = GamesScreen(font)
+credits_screen = CreditsScreen(font)
+settings_screen = SettingsScreen(font)
 
 # Focus GUI layer by default, do not let user change
 # focus manually, no navigation wrapping, and pass
@@ -63,7 +63,9 @@ while True:
             screen_icon.switch(1)
             header.switch(1)
             camera.switch(1)
+            camera.goto_y(0.0)
         elif engine_io.LB.is_pressed_autorepeat:
             screen_icon.switch(-1)
             header.switch(-1)
             camera.switch(-1)
+            camera.goto_y(0.0)

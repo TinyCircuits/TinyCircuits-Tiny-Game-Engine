@@ -69,6 +69,9 @@ static mp_obj_t engine_main_module_init(){
     // Always reset the processor core clock speed
     engine_set_freq(150 * 1000 * 1000);
 
+    // Always reset screen background fills
+    engine_display_reset_fills();
+
     if(is_engine_initialized == true){
         // Always do a engine reset on import since there are
         // cases when we can't catch the end of the script

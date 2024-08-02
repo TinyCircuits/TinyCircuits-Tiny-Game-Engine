@@ -27,9 +27,13 @@ void engine_display_set_fill_color(uint16_t color){
     engine_fill_color = color;
 }
 
-
 void engine_display_set_fill_background(uint16_t *data){
     engine_fill_background = data;
+}
+
+void engine_display_reset_fills(){
+    engine_fill_color = 0x0000;
+    engine_fill_background = NULL;
 }
 
 
