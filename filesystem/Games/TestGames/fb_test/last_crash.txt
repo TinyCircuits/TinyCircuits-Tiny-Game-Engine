@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "main.py", line 39, in <module>
+  File "/home/devy/Desktop/mp-thumby/TinyCircuits-Tiny-Game-Engine/filesystem/Games/TestGames/fb_test/main.py", line 12, in <module>
+AttributeError: 'function' object has no attribute 'fill'

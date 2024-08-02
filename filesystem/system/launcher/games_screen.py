@@ -2,8 +2,9 @@ import os
 from system.root_dir import ROOT_DIR
 from system.util import is_file, is_dir, basename, thumby_reset
 from system.run_on_boot import set_run_on_boot
+from system.launcher.direction_icon import DirectionIcon
 
-from engine_nodes import EmptyNode, Rectangle2DNode, Text2DNode, GUIBitmapButton2DNode
+from engine_nodes import EmptyNode, Rectangle2DNode, Text2DNode, GUIBitmapButton2DNode, Sprite2DNode
 from engine_draw import Color
 import engine_draw
 import engine_io
@@ -11,10 +12,13 @@ from engine_math import Vector2
 from engine_resources import TextureResource
 from engine_animation import Tween, ONE_SHOT, EASE_BACK_OUT, EASE_SINE_OUT
 
+import math
 
-title_font = None                                                           # Font from main launcher.py file
-category_background_color = Color(0.157, 0.137, 0.263)                      # Background color for category rows
-q_mark = TextureResource("system/launcher/assets/launcher-tile-qmark.bmp")  # Default icon for games that don't have one
+
+title_font = None                                                               # Font from main launcher.py file
+category_background_color = Color(0.157, 0.137, 0.263)                          # Background color for category rows
+q_mark_icon = TextureResource("system/launcher/assets/launcher-tile-qmark.bmp") # Default icon for games that don't have one
+arrow_direction_icon = TextureResource("system/launcher/assets/arrow.bmp")      # Direction icon for category rows
 
 
 # Given contents of a directory, check if the contents
@@ -101,14 +105,16 @@ class GameLauncherTile(GUIBitmapButton2DNode):
 
         # Load the default icon for the custom one, if it exists
         if game_info.icon_path == None:
-            self.bitmap = q_mark
+            self.bitmap = q_mark_icon
             self.transparent_color = engine_draw.white
         else:
             self.bitmap = TextureResource(game_info.icon_path)
 
+        # Create title for this tile
         self.title_text_node = Text2DNode(text=game_info.name, font=title_font, position=Vector2(0, 26), opacity=1.0, letter_spacing=1.0)
         self.add_child(self.title_text_node)
 
+        # Setup tween for this tile for when rows are horizontally shifted
         self.tween = Tween()
         self.tween.after = self.on_tiles_moved_cb
     
@@ -143,6 +149,12 @@ class GameCategory(EmptyNode):
         self.name = None
         self.game_infos = []
         self.tiles = []
+
+        # Setup row left/right direction icons
+        self.right_direction_icon = DirectionIcon(Sprite2DNode(texture=arrow_direction_icon, rotation=-math.pi/2, transparent_color=engine_draw.white, opacity=0.8, layer=4), engine_io.RIGHT, Vector2(54, 0))
+        self.left_direction_icon = DirectionIcon(Sprite2DNode(texture=arrow_direction_icon, rotation=math.pi/2, transparent_color=engine_draw.white, opacity=0.8, layer=4), engine_io.LEFT, Vector2(-54, 0))
+        self.add_child(self.right_direction_icon)
+        self.add_child(self.left_direction_icon)
 
         # Setup row background
         self.background_rect = Rectangle2DNode(width=128, height=58, color=category_background_color, opacity=0.35)
@@ -182,11 +194,11 @@ class GameCategory(EmptyNode):
         if new_tile_position.x > 0:
             engine_io.gui_focused(False)    # Turn OFF GUI layer focus so you can't interrupt the tween
             for tile in self.tiles:
-                tile.goto_x(tile.position.x-100)
+                tile.goto_x(tile.position.x-80)
         elif new_tile_position.x < 0:
             engine_io.gui_focused(False)    # Turn OFF GUI layer focus so you can't interrupt the tween
             for tile in self.tiles:
-                tile.goto_x(tile.position.x+100)
+                tile.goto_x(tile.position.x+80)
         elif new_tile_global_position.y > 0:
             engine_io.gui_focused(False)    # Turn OFF GUI layer focus so you can't interrupt the tween
             self.shift_categories(-80)
@@ -207,7 +219,13 @@ class GameCategory(EmptyNode):
             self.add_child(tile)
             tile.position.x = pos_x
             self.tiles.append(tile)
-            pos_x += 100
+            pos_x += 80
+        
+        # Don't show left/right arrows if only one game in category/row
+        if(len(self.game_infos) == 1):
+            self.right_direction_icon.opacity = 0.0
+            self.left_direction_icon.opacity = 0.0
+
 
     def __repr__(self):
         return f"name={self.name} [len={len(self.game_infos)}]"
@@ -257,3 +275,18 @@ class GamesScreen():
         # Have each category spawn its tiles
         for category in self.categories:
             category.create_tiles()
+    
+    # Do not want other page UI navigation inputs
+    # to switch to this page when not focused,
+    # disable all tile launcher UIs if not
+    def tell_page(self, page):
+        are_tiles_disabled = False
+
+        if page == 0:
+            are_tiles_disabled = False
+        else:
+            are_tiles_disabled = True
+        
+        for category in self.categories:
+            for tile in category.tiles:
+                tile.disabled = are_tiles_disabled

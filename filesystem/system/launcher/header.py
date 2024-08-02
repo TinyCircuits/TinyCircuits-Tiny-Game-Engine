@@ -1,6 +1,6 @@
 import engine_draw
 from engine_draw import Color
-from engine_nodes import Sprite2DNode, EmptyNode, Rectangle2DNode
+from engine_nodes import Sprite2DNode, EmptyNode, Rectangle2DNode, Text2DNode
 from engine_math import Vector2
 from engine_resources import TextureResource, FontResource
 from engine_animation import Tween, ONE_SHOT, EASE_BACK_OUT, EASE_SINE_OUT
@@ -21,8 +21,8 @@ class Header(EmptyNode):
         # Create sprites and position the,
         self.header_island_spr = Sprite2DNode(texture=header_island_tex, transparent_color=engine_draw.white, opacity=0.65, layer=3)
 
-        self.LB = DirectionIcon("LB", font, engine_io.LB, Vector2(-54, 1))
-        self.RB = DirectionIcon("RB", font, engine_io.RB, Vector2( 54, 1))
+        self.LB = DirectionIcon(Text2DNode(text="LB", font=font, layer=3), engine_io.LB, Vector2(-54, 1))
+        self.RB = DirectionIcon(Text2DNode(text="RB", font=font, layer=3), engine_io.RB, Vector2(54, 1))
 
         self.games_header_spr = Sprite2DNode(texture=games_header_tex, transparent_color=engine_draw.white, layer=3)
         self.settings_header_spr = Sprite2DNode(texture=settings_header_tex, transparent_color=engine_draw.white, position=Vector2(0, -36), layer=3)
@@ -45,7 +45,7 @@ class Header(EmptyNode):
         self.headers.append(self.credits_header_spr)
 
         # Create an index into the headers list and create tween objects
-        self.index = 0
+        self.last_page_index = 0
         self.tween_0 = Tween()
         self.tween_1 = Tween()
 
@@ -58,22 +58,18 @@ class Header(EmptyNode):
         self.add_child(self.page_indicators[1])
         self.add_child(self.page_indicators[2])
     
-    def switch(self, dir):
+    def to_page(self, page_index):
         if self.tween_0.finished == False or self.tween_1.finished == False:
-            return
+            return False
 
-        self.tween_0.start(self.headers[self.index].position, "y", 0.0, -36.0, 250, 1.0, ONE_SHOT, EASE_SINE_OUT)
-        self.page_indicators[self.index].opacity = 0.15
+        self.tween_0.start(self.headers[self.last_page_index].position, "y", 0.0, -36.0, 250, 1.0, ONE_SHOT, EASE_SINE_OUT)
+        self.page_indicators[self.last_page_index].opacity = 0.15
 
-        self.index += dir
+        self.tween_1.start(self.headers[page_index].position, "y", -36.0, 0.0, 250, 1.0, ONE_SHOT, EASE_SINE_OUT)
+        self.page_indicators[page_index].opacity = 0.5
 
-        if(self.index >= 3):
-            self.index = 0
-        elif(self.index < 0):
-            self.index = 2
+        self.last_page_index = page_index
 
-        self.tween_1.start(self.headers[self.index].position, "y", -36.0, 0.0, 250, 1.0, ONE_SHOT, EASE_SINE_OUT)
-        self.page_indicators[self.index].opacity = 0.5
-
+        return True
 
 

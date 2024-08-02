@@ -37,6 +37,8 @@ bool resolve_gui_node_is_disabled(engine_node_base_t *gui_node_base){
 void engine_gui_reset(){
     focused_gui_node_base = NULL;
     gui_focused = false;
+    gui_wrapping_enabled = true;
+    gui_passing_enabled = false;
     engine_io_reset_gui_toggle_button();
 }
 
@@ -173,6 +175,7 @@ void engine_gui_select_closest(float dir_x, float dir_y, bool allow_wrap){
 
         // If the node we're looking at is disabled, do not try to focus it
         if(resolve_gui_node_is_disabled(searching_gui_node_base)){
+            current_gui_list_node = current_gui_list_node->next;
             continue;
         }
 
@@ -268,6 +271,7 @@ void engine_gui_select_closest(float dir_x, float dir_y, bool allow_wrap){
 
             // If the node we're looking at is disabled, do not try to focus it
             if(resolve_gui_node_is_disabled(searching_gui_node_base)){
+                current_gui_list_node = current_gui_list_node->next;
                 continue;
             }
 
@@ -400,6 +404,12 @@ void engine_gui_tick(){
                 pressed_buttons & ~prev_pressed_buttons) != 0;
         }
         engine_gui_select_closest(dir_x, dir_y, allow_wrap);
+    }
+
+    // Before checking if the focused node should be pressed,
+    // make sure it is not disabled, if it is, to not check
+    if(resolve_gui_node_is_disabled(focused_gui_node_base)){
+        return;
     }
 
     // Check if the focused/highlighted node should respond

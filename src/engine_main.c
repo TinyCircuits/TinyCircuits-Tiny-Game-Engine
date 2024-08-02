@@ -42,8 +42,11 @@ void engine_main_raise_if_not_initialized(){
 void engine_main_reset(){
     ENGINE_PRINTF("EngineMain: Resetting engine...\n");
 
-    // Set back to default
-    engine_display_set_fill_color(0x0000);
+    // Always reset the processor core clock speed
+    engine_set_freq(150 * 1000 * 1000);
+
+    // Always reset screen background fills
+    engine_display_reset_fills();
 
     // Reset contigious flash space manager
     engine_audio_stop_all();
@@ -66,12 +69,6 @@ void engine_main_reset(){
 
 
 static mp_obj_t engine_main_module_init(){
-    // Always reset the processor core clock speed
-    engine_set_freq(150 * 1000 * 1000);
-
-    // Always reset screen background fills
-    engine_display_reset_fills();
-
     if(is_engine_initialized == true){
         // Always do a engine reset on import since there are
         // cases when we can't catch the end of the script

@@ -56,16 +56,36 @@ engine_io.gui_toggle_button(None)
 engine_io.gui_wrapping(False)
 engine_io.gui_passing(True)
 
+# Launcher page index
+page = 0
+
 # Main launcher loop
 while True:
     if engine.tick():
+        page_switched = False
+        new_page = 0
+
+        # Increment page in a direction
         if engine_io.RB.is_pressed_autorepeat:
-            screen_icon.switch(1)
-            header.switch(1)
-            camera.switch(1)
-            camera.goto_y(0.0)
+            new_page = page + 1
+            page_switched = True
         elif engine_io.LB.is_pressed_autorepeat:
-            screen_icon.switch(-1)
-            header.switch(-1)
-            camera.switch(-1)
-            camera.goto_y(0.0)
+            new_page = page - 1
+            page_switched = True
+        
+        # Loop page of at either end
+        if new_page >= 3:
+            new_page = 0
+        elif new_page < 0:
+            new_page = 2
+        
+        # If the page was switched, and all animations
+        # are complete, store the page index
+        if page_switched == True and screen_icon.tween.finished and header.tween_0.finished and header.tween_1.finished and camera.tween.finished:
+            screen_icon.to_page(new_page)
+            header.to_page(new_page)
+            camera.to_page(new_page)
+
+            games_screen.tell_page(new_page)
+
+            page = new_page
