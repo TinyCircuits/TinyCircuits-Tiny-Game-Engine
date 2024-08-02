@@ -169,11 +169,16 @@ class GameCategory(EmptyNode):
     # Custom callback that's passed down to tiles to
     # be called when they get focused (shifts all tiles)
     def on_tile_focused_cb(self, new_focused_tile):
-        if new_focused_tile.position.x > 0:
+        new_tile_position = new_focused_tile.position
+        new_tile_global_position = new_focused_tile.global_position
+
+        print(new_tile_global_position)
+
+        if new_tile_position.x > 0:
             engine_io.gui_focused(False)    # Turn OFF GUI layer focus so you can't interrupt the tween
             for tile in self.tiles:
                 tile.goto_x(tile.position.x-100)
-        elif new_focused_tile.position.x < 0:
+        elif new_tile_position.x < 0:
             engine_io.gui_focused(False)    # Turn OFF GUI layer focus so you can't interrupt the tween
             for tile in self.tiles:
                 tile.goto_x(tile.position.x+100)

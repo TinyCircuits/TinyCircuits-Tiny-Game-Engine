@@ -25,6 +25,10 @@ bool empty_node_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp
             destination[0] = self->rotation;
             return true;
         break;
+        case MP_QSTR_global_position:
+            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("ERROR: `global_position` is not supported on this node yet!"));
+            return true;
+        break;
         default:
             return false; // Fail
     }
@@ -49,6 +53,10 @@ bool empty_node_store_attr(engine_node_base_t *self_node_base, qstr attribute, m
             self->rotation = destination[1];
             return true;
         break;
+        case MP_QSTR_global_position:
+            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("ERROR: `global_position` is not supported on this node yet!"));
+            return true;
+        break;
         default:
             return false; // Fail
     }
@@ -58,8 +66,8 @@ bool empty_node_store_attr(engine_node_base_t *self_node_base, qstr attribute, m
 static mp_attr_fun_t empty_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing VoxelspaceNode attr");
     node_base_attr_handler(self_in, attribute, destination,
-                          (attr_handler_func[]){node_base_load_attr, empty_node_load_attr},
-                          (attr_handler_func[]){node_base_store_attr, empty_node_store_attr}, 2);
+                          (attr_handler_func[]){empty_node_load_attr, node_base_load_attr},
+                          (attr_handler_func[]){empty_node_store_attr, node_base_store_attr}, 2);
     return mp_const_none;
 }
 

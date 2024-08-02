@@ -282,6 +282,7 @@ static mp_attr_fun_t text_2d_node_class_attr(mp_obj_t self_in, qstr attribute, m
     ATTR:   [type=float]                            [name=width]                                        [value=any (read-only)]
     ATTR:   [type=float]                            [name=height]                                       [value=any (read-only)]
     ATTR:   [type={ref_link:Vector2}]               [name=position]                                     [value={ref_link:Vector2}]
+    ATTR:   [type={ref_link:Vector2}]               [name=global_position]                              [value={ref_link:Vector2} (read-only)]
     ATTR:   [type={ref_link:FontResource}]          [name=font]                                         [value={ref_link:FontResource}]
     ATTR:   [type=string]                           [name=text]                                         [value=any]
     ATTR:   [type=float]                            [name=rotation]                                     [value=any (radians)]

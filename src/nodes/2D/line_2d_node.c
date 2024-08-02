@@ -291,6 +291,7 @@ static mp_attr_fun_t line_2d_node_class_attr(mp_obj_t self_in, qstr attribute, m
     ATTR:   [type={ref_link:Vector2}]               [name=start]                                        [value={ref_link:Vector2}]
     ATTR:   [type={ref_link:Vector2}]               [name=end]                                          [value={ref_link:Vector2}]
     ATTR:   [type={ref_link:Vector2}]               [name=position]                                     [value={ref_link:Vector2}]
+    ATTR:   [type={ref_link:Vector2}]               [name=global_position]                              [value={ref_link:Vector2} (read-only)]
     ATTR:   [type=float]                            [name=thickness]                                    [value=any]
     ATTR:   [type={ref_link:Color}|int (RGB565)]    [name=color]                                        [value=color]
     ATTR:   [type=float]                            [name=opacity]                                      [value=0 ~ 1.0]

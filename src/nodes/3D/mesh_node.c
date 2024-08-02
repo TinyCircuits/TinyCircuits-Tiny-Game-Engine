@@ -145,6 +145,10 @@ bool mesh_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_t
             destination[0] = self->vertices;
             return true;
         break;
+        case MP_QSTR_global_position:
+            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("ERROR: `global_position` is not supported on this node yet!"));
+            return true;
+        break;
         default:
             return false; // Fail
     }
@@ -169,6 +173,10 @@ bool mesh_store_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_
             self->vertices = destination[1];
             return true;
         break;
+        case MP_QSTR_global_position:
+            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("ERROR: `global_position` is not supported on this node yet!"));
+            return true;
+        break;
         default:
             return false; // Fail
     }
@@ -178,8 +186,8 @@ bool mesh_store_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_
 static mp_attr_fun_t mesh_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing MeshNode attr");
     node_base_attr_handler(self_in, attribute, destination,
-                          (attr_handler_func[]){node_base_load_attr, mesh_load_attr},
-                          (attr_handler_func[]){node_base_store_attr, mesh_store_attr}, 2);
+                          (attr_handler_func[]){mesh_load_attr, node_base_load_attr},
+                          (attr_handler_func[]){mesh_store_attr, node_base_store_attr}, 2);
     return mp_const_none;
 }
 

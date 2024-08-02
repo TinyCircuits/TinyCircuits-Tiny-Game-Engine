@@ -590,6 +590,7 @@ static mp_attr_fun_t gui_button_2d_node_class_attr(mp_obj_t self_in, qstr attrib
     ATTR:   [type=function]                         [name={ref_link:on_just_released}]                  [value=function]
 
     ATTR:   [type={ref_link:Vector2}]               [name=position]                                     [value={ref_link:Vector2}]
+    ATTR:   [type={ref_link:Vector2}]               [name=global_position]                              [value={ref_link:Vector2} (read-only)]
     ATTR:   [type={ref_link:FontResource}]          [name=font]                                         [value={ref_link:FontResource}]
     ATTR:   [type=string]                           [name=text]                                         [value=any]
     ATTR:   [type=float]                            [name=outline]                                      [value=any (how thick the outline should be, in px)]
