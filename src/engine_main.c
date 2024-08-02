@@ -3,6 +3,7 @@
 #include "py/runtime.h"
 #include "py/gc.h"
 #include "engine_main.h"
+#include "engine.h"
 
 #include "engine_object_layers.h"
 #include "resources/engine_resource_manager.h"
@@ -65,6 +66,9 @@ void engine_main_reset(){
 
 
 static mp_obj_t engine_main_module_init(){
+    // Always reset the processor core clock speed
+    engine_set_freq(150 * 1000 * 1000);
+
     if(is_engine_initialized == true){
         // Always do a engine reset on import since there are
         // cases when we can't catch the end of the script

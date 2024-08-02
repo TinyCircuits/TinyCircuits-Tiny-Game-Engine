@@ -19,7 +19,7 @@ from system.launcher.credits_screen import CreditsScreen
 from system.launcher.settings_screen import SettingsScreen
 from system.launcher.custom_camera import CustomCamera
 
-
+engine.freq(225 * 1000 * 1000)
 engine.fps_limit(60)
 
 font = FontResource("system/assets/outrunner_outline.bmp")
