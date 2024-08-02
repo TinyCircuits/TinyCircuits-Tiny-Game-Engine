@@ -5,7 +5,7 @@ from engine_math import Vector2
 from engine_resources import TextureResource, FontResource
 from engine_animation import Tween, ONE_SHOT, EASE_BACK_OUT, EASE_SINE_OUT
 import engine_io
-from system.launcher.launcher_direction_icon import LauncherDirectionIcon
+from system.launcher.direction_icon import DirectionIcon
 
 rect_color = Color(0.631, 0.604, 0.796)
 
@@ -14,15 +14,15 @@ games_header_tex = TextureResource("system/launcher/assets/launcher-games-header
 settings_header_tex = TextureResource("system/launcher/assets/launcher-settings-header.bmp")
 credits_header_tex = TextureResource("system/launcher/assets/launcher-credits-header.bmp")
 
-class LauncherHeader(EmptyNode):
+class Header(EmptyNode):
     def __init__(self, font):
         super().__init__(self)
 
         # Create sprites and position the,
         self.header_island_spr = Sprite2DNode(texture=header_island_tex, transparent_color=engine_draw.white, opacity=0.65)
 
-        self.LB = LauncherDirectionIcon("LB", font, engine_io.LB, Vector2(-54, 1))
-        self.RB = LauncherDirectionIcon("RB", font, engine_io.RB, Vector2( 54, 1))
+        self.LB = DirectionIcon("LB", font, engine_io.LB, Vector2(-54, 1))
+        self.RB = DirectionIcon("RB", font, engine_io.RB, Vector2( 54, 1))
 
         self.games_header_spr = Sprite2DNode(texture=games_header_tex, transparent_color=engine_draw.white)
         self.settings_header_spr = Sprite2DNode(texture=settings_header_tex, transparent_color=engine_draw.white, position=Vector2(0, -36))

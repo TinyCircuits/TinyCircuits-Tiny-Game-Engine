@@ -6,7 +6,7 @@ import math
 
 rect_color = Color(0.631, 0.604, 0.796)
 
-class LauncherFadeRectangle(Rectangle2DNode):
+class FadeRectangle(Rectangle2DNode):
     def __init__(self):
         super().__init__(self)
         self.width = 21
@@ -25,7 +25,7 @@ class LauncherFadeRectangle(Rectangle2DNode):
         self.time += dt
 
 
-class LauncherDynamicBackground(EmptyNode):
+class DynamicBackground(EmptyNode):
     def __init__(self):
         super().__init__(self)
 
@@ -34,7 +34,7 @@ class LauncherDynamicBackground(EmptyNode):
         start_x = -30*2
 
         for i in range(5):
-            rect = LauncherFadeRectangle()
+            rect = FadeRectangle()
             rect.position.x = start_x+30*i
             self.rectangles.append(rect)
             self.add_child(rect)
@@ -42,7 +42,7 @@ class LauncherDynamicBackground(EmptyNode):
         start_x = -45
 
         for i in range(4):
-            rect = LauncherFadeRectangle()
+            rect = FadeRectangle()
             rect.position.x = start_x+30*i
             rect.position.y = 13
             self.rectangles.append(rect)
@@ -51,7 +51,7 @@ class LauncherDynamicBackground(EmptyNode):
         start_x = -30
 
         for i in range(3):
-            rect = LauncherFadeRectangle()
+            rect = FadeRectangle()
             rect.position.x = start_x+30*i
             rect.position.y = 26
             self.rectangles.append(rect)

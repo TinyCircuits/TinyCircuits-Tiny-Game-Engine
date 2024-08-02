@@ -10,7 +10,7 @@ thumby_color_icon_tex = TextureResource("system/launcher/assets/launcher-screen-
 gear_icon_tex = TextureResource("system/launcher/assets/launcher-screen-gear-icon.bmp")
 credits_icon_tex = TextureResource("system/launcher/assets/launcher-screen-credits-icon.bmp")
 
-class LauncherScreenIcon(EmptyNode):
+class ScreenIcon(EmptyNode):
     def __init__(self):
         super().__init__(self)
 

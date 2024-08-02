@@ -9,7 +9,7 @@ import math
 rect_color = Color(0.631, 0.604, 0.796)
 battery_tex = TextureResource("system/launcher/assets/battery.bmp")
 
-class LauncherBatteryIndicator(Sprite2DNode):
+class BatteryIndicator(Sprite2DNode):
     def __init__(self):
         super().__init__(self)
         self.texture = battery_tex

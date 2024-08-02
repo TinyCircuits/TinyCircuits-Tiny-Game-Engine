@@ -182,7 +182,7 @@ def find_all_games(game_infos, directory_path):
             find_all_games(game_infos, path)
     
 
-class LauncherGamesScreen():
+class GamesScreen():
     def __init__(self, font):
         global title_font
         title_font = font

@@ -9,13 +9,16 @@ from engine_nodes import Sprite2DNode, CameraNode, GUIButton2DNode, Text2DNode
 from engine_math import Vector2
 from engine_animation import Tween, ONE_SHOT, EASE_BACK_OUT, EASE_SINE_OUT
 
-from system.launcher.launcher_screen_icon import LauncherScreenIcon
-from system.launcher.launcher_header import LauncherHeader
-from system.launcher.launcher_dynamic_background import LauncherDynamicBackground
-from system.launcher.launcher_battery_indicator import LauncherBatteryIndicator
-from system.launcher.launcher_games_screen import LauncherGamesScreen
-from system.launcher.launcher_credits_screen import LauncherCreditsScreen
-from system.launcher.launcher_settings_screen import LauncherSettingsScreen
+
+from system.launcher.screen_icon import ScreenIcon
+from system.launcher.header import Header
+from system.launcher.dynamic_background import DynamicBackground
+from system.launcher.battery_indicator import BatteryIndicator
+from system.launcher.games_screen import GamesScreen
+from system.launcher.credits_screen import CreditsScreen
+from system.launcher.settings_screen import SettingsScreen
+from system.launcher.custom_camera import CustomCamera
+
 
 engine.fps_limit(60)
 
@@ -24,46 +27,22 @@ font = FontResource("system/assets/outrunner_outline.bmp")
 background_tex = TextureResource("system/launcher/assets/launcher-background.bmp")
 engine_draw.set_background(background_tex)
 
-screen_icon = LauncherScreenIcon()
-header = LauncherHeader(font)
-dynamic_background = LauncherDynamicBackground()
-battery = LauncherBatteryIndicator()
-
-class LauncherCamera(CameraNode):
-    def __init__(self):
-        super().__init__(self)
-        self.add_child(screen_icon)
-        self.add_child(header)
-        self.add_child(dynamic_background)
-        self.add_child(battery)
-        self.camera_tween = Tween()
-        self.index = 0
-    
-    def switch(self, dir):
-        if self.camera_tween.finished == False:
-            return
-
-        self.index += dir
-
-        if(self.index >= 3):
-            self.index = 0
-        elif(self.index < 0):
-            self.index = 2
-
-        self.camera_tween.start(self.position, "x", self.position.x, self.index*128.0, 250, 1.0, ONE_SHOT, EASE_SINE_OUT)
-
-    def goto_x(self, x):
-        self.camera_tween.start(self.position, "x", self.position.x, x, 250, 1.0, ONE_SHOT, EASE_SINE_OUT)
-    
-    def goto_y(self, y):
-        self.camera_tween.start(self.position, "y", self.position.y, y, 250, 1.0, ONE_SHOT, EASE_SINE_OUT)
+screen_icon = ScreenIcon()
+header = Header(font)
+dynamic_background = DynamicBackground()
+battery = BatteryIndicator()
 
 
-camera = LauncherCamera()
+camera = CustomCamera()
+camera.add_child(screen_icon)
+camera.add_child(header)
+camera.add_child(dynamic_background)
+camera.add_child(battery)
 
-games_screen = LauncherGamesScreen(font)
-credits_screen = LauncherCreditsScreen(font)
-settings_screen = LauncherSettingsScreen(font)
+
+games_screen = GamesScreen(font)
+credits_screen = CreditsScreen(font)
+settings_screen = SettingsScreen(font)
 
 # Toggle the gui elements and do not let the user toggle back out of it.
 engine_io.gui_focused(True)
