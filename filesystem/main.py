@@ -33,6 +33,6 @@ try:
 except Exception as ex:
     sys.print_exception(ex)
     # Catch any exception, including one originating from a system file.
-    with open("last_crash.txt", "w") as f:
+    with open(f"{ROOT_DIR}/last_crash.txt", "w") as f:
         sys.print_exception(ex, f)
     execfile("system/crash.py")
