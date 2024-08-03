@@ -24,7 +24,7 @@ try:
     if run_on_boot == None:
         execfile("system/splash/show_splash.py")   # TODO: don't show this on launcher reset
         execfile("system/launcher/launcher.py")
-    
+
     # Finally, if there is something to launch, launch it
     if run_on_boot != None:
         # Get the path to the directory containing the file
@@ -46,7 +46,7 @@ try:
 except Exception as ex:
     # If an exception is raised from execution of a system or game file,
     # catch it, print, write to file, and then show the 'crash' screen
-    crash_file = open("last_crash.txt", "w")
+    crash_file = open(f"{ROOT_DIR}/last_crash.txt", "w")
     sys.print_exception(ex)             # To console
     sys.print_exception(ex, crash_file) # To file
     crash_file.close()
