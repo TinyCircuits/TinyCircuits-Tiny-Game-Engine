@@ -6,6 +6,7 @@ import sys
 from system.root_dir import ROOT_DIR
 from system.run_on_boot import get_run_on_boot
 from system.util import file_exists, dirname, thumby_reset
+from system.launcher_state import has_launcher_state, hold_launcher_state
 
 # Catch exceptions from game or system file execution
 try:
@@ -14,19 +15,24 @@ try:
     # (set in a file so that device can hard reset to clear memory)
     run_on_boot = get_run_on_boot()
 
-    # If there's nothing to launch by the launcher, use 2nd argument
+    # If there's nothing to launch, use 2nd argument
     # (if we have one) to launch a game (convenient on UNIX)
-    if run_on_boot == None and len(sys.argv) >= 2:
+    if run_on_boot is None and len(sys.argv) >= 2:
         run_on_boot = sys.argv[1]
+
+    # If there's nothing to launch right away and there's
+    # no launcher state file (indicating the launcher
+    # has not launched before), show the splash
+    if run_on_boot is None and not has_launcher_state():
+        execfile("system/splash/show_splash.py")
 
     # If nothing to launch from `_run_on_boot` and there weren't any
     # passed arguments, run the intro splash and then the launcher
-    if run_on_boot == None:
-        execfile("system/splash/show_splash.py")   # TODO: don't show this on launcher reset
+    if run_on_boot is None:
         execfile("system/launcher/launcher.py")
 
     # Finally, if there is something to launch, launch it
-    if run_on_boot != None:
+    if run_on_boot is not None:
         # Get the path to the directory containing the file
         dir = dirname(run_on_boot)
 
@@ -35,8 +41,14 @@ try:
         sys.path.append(f"{ROOT_DIR}/{dir}")
         os.chdir(dir)
 
-        # Launch the `_run_on_boot` file
-        execfile(f"{ROOT_DIR}/{run_on_boot}")
+        # Launch the `_run_on_boot` file while holding
+        # the launcher state so that the state file is
+        # deleted on exception
+        try:
+            with hold_launcher_state():
+                execfile(f"{ROOT_DIR}/{run_on_boot}")
+        finally:
+            os.chdir(ROOT_DIR)
 
         # Change back to the root directory after
         # the game ends and reset the device (hard)

@@ -3,6 +3,7 @@ from system.root_dir import ROOT_DIR
 from system.util import is_file, is_dir, basename, thumby_reset
 from system.run_on_boot import set_run_on_boot
 from system.launcher.direction_icon import DirectionIcon
+from system.launcher_state import set_launcher_state
 
 from engine_nodes import EmptyNode, Rectangle2DNode, Text2DNode, GUIBitmapButton2DNode, Sprite2DNode
 from engine_draw import Color
@@ -144,6 +145,9 @@ class GameLauncherTile(GUIBitmapButton2DNode):
         self.on_tile_focused_cb(self)
     
     def on_just_pressed(self):
+        # Save launcher state so splash doesn't show (TODO: save something)
+        set_launcher_state("")
+
         # Launch the game if this tile is pressed
         set_run_on_boot(self.game_info.main_path)
         thumby_reset(False)

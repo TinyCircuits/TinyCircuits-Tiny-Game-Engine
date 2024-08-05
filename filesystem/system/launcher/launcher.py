@@ -9,6 +9,8 @@ from engine_nodes import Sprite2DNode, CameraNode, GUIButton2DNode, Text2DNode
 from engine_math import Vector2
 from engine_animation import Tween, ONE_SHOT, EASE_BACK_OUT, EASE_SINE_OUT
 
+from system.launcher_state import get_launcher_state
+
 from system.launcher.screen_icon import ScreenIcon
 from system.launcher.header import Header
 from system.launcher.dynamic_background import DynamicBackground
@@ -54,6 +56,9 @@ settings_screen = SettingsScreen(font)
 engine_io.gui_focused(True)
 engine_io.gui_wrapping(False)
 engine_io.gui_passing(True)
+
+# Get launcher state (TODO: do something with it)
+launcher_state = get_launcher_state()
 
 # Launcher page index
 page = 0
