@@ -1,0 +1,94 @@
+{
+    "name": "Extra 1",
+    "prefix": "X1",
+    "levels": [
+        [
+            "GGCC",
+            "RCGR",
+            "GRGG",
+            3
+        ],
+        [
+            "  B ",
+            " BC ",
+            " PC ",
+            " BP ",
+            " PB ",
+            " BP ",
+            "BPCB",
+            2
+        ],
+        [
+            "   C  ",
+            "   B  ",
+            "   C  ",
+            "   C  ",
+            " CCR  ",
+            "RRBCB ",
+            2
+        ],
+        [
+            "  Y ",
+            "  R ",
+            "  G ",
+            "  Y ",
+            " YG ",
+            "RRY ",
+            "YYG ",
+            2
+        ],
+        [
+            "   C  ",
+            "  CP  ",
+            " CPGP ",
+            " GGCP ",
+            "CPPCC ",
+            2
+        ],
+        [
+            "   G",
+            " GGY",
+            " GGC",
+            "GRCR",
+            "YRCY",
+            3
+        ],
+        [
+            "  G   ",
+            "  R   ",
+            "  P   ",
+            "  RP  ",
+            "  PGP ",
+            "  RPGP",
+            2
+        ],
+        [
+            "YRY ",
+            "BGB ",
+            "BGB ",
+            "RBR ",
+            "YGY ",
+            "BYY ",
+            2
+        ],
+        [
+            "PP  ",
+            "YY  ",
+            "CP  ",
+            "PP  ",
+            "GGPP",
+            "CPYY",
+            "CGPP",
+            3
+        ],
+        [
+            "   C",
+            "  GG",
+            " GCR",
+            "GCRC",
+            "CRCR",
+            "RGRG",
+            2
+        ]
+    ]
+}
