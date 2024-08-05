@@ -162,10 +162,12 @@ class GameCategory(EmptyNode):
         self.tiles = []
 
         # Setup row left/right direction icons
-        self.right_direction_icon = DirectionIcon(Sprite2DNode(texture=arrow_direction_icon, rotation=-math.pi/2, transparent_color=engine_draw.white, opacity=0.8, layer=4), engine_io.RIGHT, Vector2(54, 0))
-        self.left_direction_icon = DirectionIcon(Sprite2DNode(texture=arrow_direction_icon, rotation=math.pi/2, transparent_color=engine_draw.white, opacity=0.8, layer=4), engine_io.LEFT, Vector2(-54, 0))
+        self.right_direction_icon = DirectionIcon(Sprite2DNode(texture=arrow_direction_icon, rotation=-math.pi/2, transparent_color=engine_draw.white, layer=4), engine_io.RIGHT, Vector2(54, 0))
+        self.left_direction_icon = DirectionIcon(Sprite2DNode(texture=arrow_direction_icon, rotation=math.pi/2, transparent_color=engine_draw.white, layer=4), engine_io.LEFT, Vector2(-54, 0))
         self.add_child(self.right_direction_icon)
         self.add_child(self.left_direction_icon)
+
+        self.left_direction_icon.disabled = True
 
         # Setup row background
         self.background_rect = Rectangle2DNode(width=128, height=58, color=category_background_color, opacity=0.35)
@@ -184,6 +186,8 @@ class GameCategory(EmptyNode):
 
         self.tween = Tween()
         self.tween.after = self.after_tween_cb
+
+        self.index = 0
     
     def goto_y(self, y):
         self.tween.start(self.position, "y", self.position.y, y, 100, 1.0, ONE_SHOT, EASE_SINE_OUT)
@@ -203,10 +207,12 @@ class GameCategory(EmptyNode):
         new_tile_global_position = new_focused_tile.global_position
 
         if new_tile_position.x > 0:
+            self.index += 1
             engine_io.gui_focused(False)    # Turn OFF GUI layer focus so you can't interrupt the tween
             for tile in self.tiles:
                 tile.goto_x(tile.position.x-80)
         elif new_tile_position.x < 0:
+            self.index -= 1
             engine_io.gui_focused(False)    # Turn OFF GUI layer focus so you can't interrupt the tween
             for tile in self.tiles:
                 tile.goto_x(tile.position.x+80)
@@ -216,6 +222,16 @@ class GameCategory(EmptyNode):
         elif new_tile_global_position.y < 0:
             engine_io.gui_focused(False)    # Turn OFF GUI layer focus so you can't interrupt the tween
             self.shift_categories(80)
+        
+        # Based on the index, hide the left or right direction arrows
+        # so that the user knows they reached the end of the row
+        if self.index == 0:
+            self.left_direction_icon.disabled = True
+        elif self.index == len(self.tiles)-1:
+            self.right_direction_icon.disabled = True
+        else:
+            self.left_direction_icon.disabled = False
+            self.right_direction_icon.disabled = False
     
     # Custom callback that's passed down to tiles to
     # be called after they all get shifted (tweened)
@@ -236,7 +252,6 @@ class GameCategory(EmptyNode):
         if(len(self.game_infos) == 1):
             self.right_direction_icon.opacity = 0.0
             self.left_direction_icon.opacity = 0.0
-
 
     def __repr__(self):
         return f"name={self.name} [len={len(self.game_infos)}]"

@@ -9,9 +9,14 @@ class DirectionIcon(EmptyNode):
         self.node = node
         self.button = button
         self.add_child(self.node)
+
+        self.disabled = False
     
     def tick(self, dt):
-        if self.button.is_pressed:
-            self.node.opacity = 0.65
+        if not self.disabled:
+            if self.button.is_pressed:
+                self.node.opacity = 0.65
+            else:
+                self.node.opacity = 1.0
         else:
-            self.node.opacity = 1.0
+            self.node.opacity = 0.0
