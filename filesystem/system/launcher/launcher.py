@@ -52,7 +52,6 @@ settings_screen = SettingsScreen(font)
 # focus manually, no navigation wrapping, and pass
 # inputs through GUI layer (normally consumes everything)
 engine_io.gui_focused(True)
-engine_io.gui_toggle_button(None)
 engine_io.gui_wrapping(False)
 engine_io.gui_passing(True)
 

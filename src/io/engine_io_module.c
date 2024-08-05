@@ -13,9 +13,6 @@
 #endif
 
 
-button_class_obj_t* gui_toggle_button = &BUTTON_MENU;
-
-
 void engine_io_setup(){
     #ifdef __unix__
         // Nothing to do
@@ -27,16 +24,6 @@ void engine_io_setup(){
 
 void engine_io_tick(){
     buttons_update_state();
-}
-
-
-button_class_obj_t* engine_io_get_gui_toggle_button(){
-    return gui_toggle_button;
-}
-
-
-void engine_io_reset_gui_toggle_button(){
-    gui_toggle_button = &BUTTON_MENU;
 }
 
 
@@ -139,28 +126,6 @@ static mp_obj_t engine_io_focused_node(){
     }
 }
 MP_DEFINE_CONST_FUN_OBJ_0(engine_io_focused_node_obj, engine_io_focused_node);
-
-
-/*  --- doc ---
-    NAME: gui_toggle_button
-    ID: gui_toggle_button
-    DESC: Get or set the button that toggles GUI focus mode. None to disable.
-    PARAM: [type=int|None (optional)]   [name=button]  [value=enum/int (e.g. 'engine_io.A')]
-    RETURN: int
-*/
-static mp_obj_t engine_io_gui_toggle_button(size_t n_args, const mp_obj_t *args){
-    if (n_args == 1) {
-        if (args[0] == mp_const_none) {
-            gui_toggle_button = NULL;
-        } else if (mp_obj_is_type(args[0], &button_class_type)) {
-            gui_toggle_button = MP_OBJ_TO_PTR(args[0]);
-        } else {
-            mp_raise_TypeError(MP_ERROR_TEXT("Expected Button or None"));
-        }
-    }
-    return MP_OBJ_FROM_PTR(gui_toggle_button);
-}
-MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_io_gui_toggle_button_obj, 0, 1, engine_io_gui_toggle_button);
 
 
 #if defined(__arm__)
@@ -271,7 +236,6 @@ MP_DEFINE_CONST_FUN_OBJ_0(buttons_reset_params_all_obj, engine_io_reset_all_butt
     ATTR: [type=function]            [name={ref_link:battery_level}]            [value=function]
     ATTR: [type=function]            [name={ref_link:is_charging}]              [value=function]
     ATTR: [type=function]            [name={ref_link:focused_node}]             [value=function]
-    ATTR: [type=function]            [name={ref_link:gui_toggle_button}]        [value=setter/setter function]
     ATTR: [type=type]                [name={ref_link:Button}]                   [value=the Button class]
     ATTR: [type={ref_link:Button}]   [name=UP]                                  [value=the button object]
     ATTR: [type={ref_link:Button}]   [name=DOWN]                                [value=the button object]
@@ -298,7 +262,6 @@ static const mp_rom_map_elem_t engine_io_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_battery_level), MP_ROM_PTR(&engine_io_battery_level_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_is_charging), MP_ROM_PTR(&engine_io_is_charging_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_focused_node), MP_ROM_PTR(&engine_io_focused_node_obj) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_gui_toggle_button), MP_ROM_PTR(&engine_io_gui_toggle_button_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Button), MP_ROM_PTR(&button_class_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_UP), MP_ROM_PTR(&BUTTON_DPAD_UP) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_DOWN), MP_ROM_PTR(&BUTTON_DPAD_DOWN) },

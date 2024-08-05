@@ -1283,7 +1283,6 @@ class PokerGame(Rectangle2DNode):
         engine_audio.play(shuffle_sound, 0, False)
 
 
-engine_io.gui_toggle_button(None)
 # Make an instance of our game
 game = PokerGame(Vector2(0, 0), 256, 256)
 

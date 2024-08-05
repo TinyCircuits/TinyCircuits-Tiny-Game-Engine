@@ -6,7 +6,6 @@ from engine_draw import Color
 import engine_io
 
 engine.fps_limit(15)
-engine_io.gui_toggle_button(None)
 
 font = FontResource("/assets/outrunner_outline.bmp")
 

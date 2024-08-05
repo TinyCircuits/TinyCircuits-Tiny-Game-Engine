@@ -39,7 +39,6 @@ void engine_gui_reset(){
     gui_focused = false;
     gui_wrapping_enabled = true;
     gui_passing_enabled = false;
-    engine_io_reset_gui_toggle_button();
 }
 
 
@@ -356,25 +355,6 @@ void engine_gui_clear_focused(){
 
 
 void engine_gui_tick(){
-    // Every tick, see if the button to toggle GUI focus was pressed.
-    // If the GUI toggle button is 0 that means None was set for the
-    // toggle button and that we should not automaticaly switch focus
-    button_class_obj_t* gui_toggle_button = engine_io_get_gui_toggle_button();
-    if(gui_toggle_button != NULL && button_is_just_pressed(gui_toggle_button)){
-        engine_gui_toggle_focus();
-
-        // If unfocus GUI entirely, make sure the focused node gets unfocused
-        if(focused_gui_node_base != NULL && gui_focused == false){
-            if(mp_obj_is_type(focused_gui_node_base, &engine_gui_bitmap_button_2d_node_class_type)){
-                ((engine_gui_bitmap_button_2d_node_class_obj_t*)focused_gui_node_base->node)->focused = false;
-            }else{
-                ((engine_gui_button_2d_node_class_obj_t*)focused_gui_node_base->node)->focused = false;
-            }
-
-            focused_gui_node_base = NULL;
-        }
-    }
-
     // Only run the GUI selection logic when the
     // gui is focused due to the io module
     if(gui_focused == false){
