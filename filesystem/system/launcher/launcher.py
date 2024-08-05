@@ -22,8 +22,8 @@ from system.launcher.custom_camera import CustomCamera
 
 # Speed up the processor to draw the launcher at a 
 # higher speed and set an FPS limit
-engine.freq(250 * 1000 * 1000)
-engine.fps_limit(60)
+# engine.freq(250 * 1000 * 1000)
+# engine.fps_limit(60)
 
 # Load some resources and set background 
 font = FontResource("system/assets/outrunner_outline.bmp")

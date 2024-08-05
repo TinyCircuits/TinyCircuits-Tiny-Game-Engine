@@ -43,7 +43,7 @@ void engine_main_reset(){
     ENGINE_PRINTF("EngineMain: Resetting engine...\n");
 
     // Always reset the processor core clock speed
-    engine_set_freq(150 * 1000 * 1000);
+    // engine_set_freq(150 * 1000 * 1000);
 
     // Always reset screen background fills
     engine_display_reset_fills();

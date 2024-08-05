@@ -59,7 +59,7 @@ float engine_get_fps_limit_ms(){
 
 void engine_set_freq(uint32_t hz){
     #if defined(__arm__)
-        if (!set_sys_clock_khz(hz / 1000, false)) {
+        if(!set_sys_clock_khz(hz / 1000, false)){
             mp_raise_ValueError(MP_ERROR_TEXT("cannot change frequency"));
         }
         engine_audio_adjust_playback_with_freq(hz);
