@@ -35,6 +35,7 @@ typedef struct{
     mp_obj_t disabled;
 
     mp_obj_t tick_cb;
+    mp_obj_t on_before_focused_cb;
     mp_obj_t on_focused_cb;
     mp_obj_t on_just_focused_cb;
     mp_obj_t on_just_unfocused_cb;

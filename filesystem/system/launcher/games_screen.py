@@ -118,6 +118,17 @@ class GameLauncherTile(GUIBitmapButton2DNode):
         self.tween = Tween()
         self.tween.after = self.on_tiles_moved_cb
     
+    # Only allow traversing up and down tiles in different rows
+    # if they are centered in the y axis (needed for when getting
+    # to the end of a row it the nav system tries to jump down)
+    def on_before_focused(self):
+        global_position_x = int(math.floor(self.global_position.x))
+        global_position_y = int(math.floor(self.global_position.y))
+        if (global_position_x > 0 or global_position_x < 0) and (global_position_y != 0):
+            return False
+        else:
+            return True
+
     def tick(self, dt):
         if self.position.x < -64 or self.position.x > 64:
             self.opacity = 0.0

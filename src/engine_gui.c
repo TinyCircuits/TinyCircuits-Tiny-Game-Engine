@@ -26,10 +26,32 @@ void resolve_gui_node_position(engine_node_base_t *gui_node_base, float *x, floa
 
 
 bool resolve_gui_node_is_disabled(engine_node_base_t *gui_node_base){
-    if(mp_obj_is_type(focused_gui_node_base, &engine_gui_bitmap_button_2d_node_class_type)){
+    if(mp_obj_is_type(gui_node_base, &engine_gui_bitmap_button_2d_node_class_type)){
         return (bool)mp_obj_get_int(((engine_gui_bitmap_button_2d_node_class_obj_t*)gui_node_base->node)->disabled);
     }else{
         return (bool)mp_obj_get_int(((engine_gui_button_2d_node_class_obj_t*)gui_node_base->node)->disabled);
+    }
+}
+
+
+bool resolve_gui_node_before_focused(engine_node_base_t *gui_node_base){
+    mp_obj_t exec[2];
+    exec[1] = gui_node_base->attr_accessor;
+
+    if(mp_obj_is_type(gui_node_base, &engine_gui_bitmap_button_2d_node_class_type)){
+        exec[0] = ((engine_gui_bitmap_button_2d_node_class_obj_t*)gui_node_base->node)->on_before_focused_cb;
+    }else{
+        exec[0] = ((engine_gui_button_2d_node_class_obj_t*)gui_node_base->node)->on_before_focused_cb;
+    }
+
+    mp_obj_t result = mp_call_method_n_kw(0, 0, exec);
+
+    // Check that the result is bool and if it is false, do not focus
+    // this and search for a different button to focus
+    if(mp_obj_is_bool(result) == true){
+        return mp_obj_get_int(result);
+    }else{
+        mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineGUI: ERROR: `on_before_focused` should return bool, got %s"), mp_obj_get_type_str(result));
     }
 }
 
@@ -75,6 +97,7 @@ void engine_gui_focus_node(engine_node_base_t *gui_node_base){
 bool engine_gui_toggle_focus(){
     return engine_gui_set_focused(!gui_focused);
 }
+
 
 bool engine_gui_set_focused(bool focus_gui){
     if(focus_gui != gui_focused){
@@ -178,6 +201,13 @@ void engine_gui_select_closest(float dir_x, float dir_y, bool allow_wrap){
             continue;
         }
 
+        // If the button we're looking at focusing doesn't allow it,
+        // skip and keep looking for other buttons that do
+        if(!resolve_gui_node_before_focused(searching_gui_node_base)){
+            current_gui_list_node = current_gui_list_node->next;
+            continue;
+        }
+
         // Get the position of the current GUI node
         float searching_gui_position_x = 0.0f;
         float searching_gui_position_y = 0.0f;
@@ -254,7 +284,7 @@ void engine_gui_select_closest(float dir_x, float dir_y, bool allow_wrap){
 
     if(allow_wrap && closest_gui_node_base == NULL){
         // Nothing found in the specified direction, so try wrapping around. This is a rare case, so redoing some calculations
-        // from before is fine. We don't optimise this case as much as the more common case above.
+        // from before is fine. We don't optimize this case as much as the more common case above.
 
         current_gui_list_node = gui_list->start;
         while(current_gui_list_node != NULL){
@@ -278,7 +308,7 @@ void engine_gui_select_closest(float dir_x, float dir_y, bool allow_wrap){
             float rel_pos_y = searching_gui_position_y - focused_gui_position_y;
             float rel_pos_len_sqr = engine_math_vector_length_sqr(rel_pos_x, rel_pos_y);
             float dir_dot_rel = engine_math_dot_product(dir_x, dir_y, rel_pos_x, rel_pos_y);
-            // Only analyse nodes "behind" the focused node.
+            // Only analyze nodes "behind" the focused node.
             if (dir_dot_rel <= 0.0f){
                 float cos_theta_sqr = dir_dot_rel * dir_dot_rel / (dir_len_sqr * rel_pos_len_sqr);
                 // Accept only nodes within the 90 degree cone behind the focused node, so cos(theta) <= cos(135deg) = -sqrt(2)/2,
