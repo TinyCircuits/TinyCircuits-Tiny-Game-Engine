@@ -60,7 +60,7 @@ class ScreenIcon(EmptyNode):
         self.gear_spr.rotation += increment
     
     def to_page(self, page_index):
-        if self.tween.finished == False:
+        if not self.tween.finished:
             return False
         
         self.tween.start(self.rotation, "z", self.rotation.z, page_index*self.angle_inc, 250, 1.0, ONE_SHOT, EASE_SINE_OUT)

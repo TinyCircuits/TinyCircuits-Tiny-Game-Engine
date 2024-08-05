@@ -8,7 +8,7 @@ class CustomCamera(CameraNode):
         self.tween = Tween()
     
     def to_page(self, page_index):
-        if self.tween.finished == False:
+        if not self.tween.finished:
             return False
 
         self.goto_x(page_index*128.0)

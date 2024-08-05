@@ -59,7 +59,7 @@ class Header(EmptyNode):
         self.add_child(self.page_indicators[2])
     
     def to_page(self, page_index):
-        if self.tween_0.finished == False or self.tween_1.finished == False:
+        if not self.tween_0.finished or not self.tween_1.finished:
             return False
 
         self.tween_0.start(self.headers[self.last_page_index].position, "y", 0.0, -36.0, 250, 1.0, ONE_SHOT, EASE_SINE_OUT)

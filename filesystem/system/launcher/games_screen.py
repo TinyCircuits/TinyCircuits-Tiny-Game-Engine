@@ -104,7 +104,7 @@ class GameLauncherTile(GUIBitmapButton2DNode):
         self.scale.y = 0.6
 
         # Load the default icon for the custom one, if it exists
-        if game_info.icon_path == None:
+        if game_info.icon_path is None:
             self.bitmap = q_mark_icon
             self.transparent_color = engine_draw.white
         else:
@@ -264,7 +264,7 @@ class GamesScreen():
             
             # It did not belong, create a new category and add
             # the game info to it
-            if found == False:
+            if not found:
                 category = GameCategory(self.shift_categories)
                 category.update_name(game_category_name)
                 category.game_infos.append(info)
