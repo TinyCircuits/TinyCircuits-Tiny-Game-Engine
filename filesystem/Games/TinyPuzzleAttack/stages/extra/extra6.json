@@ -1,0 +1,101 @@
+{
+    "name": "Extra 6",
+    "prefix": "X6",
+    "levels": [
+        [
+            "  BYY ",
+            "  RBB ",
+            "RRBCCY",
+            "BYYCBY",
+            4
+        ],
+        [
+            "  C   ",
+            "  R   ",
+            "  G   ",
+            "  CR  ",
+            "  CGR ",
+            "  YCR ",
+            " RGYG ",
+            "CCYGGR",
+            3
+        ],
+        [
+            " RY ",
+            " BR ",
+            " YR ",
+            " GG ",
+            "BRB ",
+            "YGRY",
+            3
+        ],
+        [
+            " GC ",
+            " YY ",
+            " CY ",
+            " RR ",
+            "YGG ",
+            "GRGY",
+            "CGYC",
+            4
+        ],
+        [
+            " C R",
+            " YRY",
+            " BYB",
+            " CRC",
+            "YBYY",
+            4
+        ],
+        [
+            " PR ",
+            " GR ",
+            "RCP ",
+            "GPC ",
+            "GCP ",
+            4
+        ],
+        [
+            " C C  ",
+            " PCP  ",
+            " YPY  ",
+            " YBB  ",
+            " PBB  ",
+            " YPY  ",
+            " CBC  ",
+            "PPBYP ",
+            4
+        ],
+        [
+            " P  ",
+            " B  ",
+            " GB ",
+            "GCC ",
+            "RRC ",
+            "CRR ",
+            "PCGB",
+            "PRRC",
+            4
+        ],
+        [
+            " C  ",
+            " B P",
+            " G B",
+            " R G",
+            " RPR",
+            " BCB",
+            " GBP",
+            " RBR",
+            " GRG",
+            " CGR",
+            4
+        ],
+        [
+            "  Y R ",
+            " YGRC ",
+            "YGRCY ",
+            "YGRCY ",
+            4
+        ]
+    ]
+}
