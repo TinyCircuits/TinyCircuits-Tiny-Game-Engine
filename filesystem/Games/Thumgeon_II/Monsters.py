@@ -96,7 +96,7 @@ class Monster(Sprite2DNode):
         self.opacity = 0.0
         self.tween = Tween()
         self.stun = 0
-        
+
     def set_monster(self, id):
         print("Setting monster to id " + str(id))
         self.time = 0
@@ -109,7 +109,7 @@ class Monster(Sprite2DNode):
         self.frame_current_x = 0
         self.frame_count_y = 1
         self.frame_current_y = 0
-    
+
     def tick(self, dt):
         #print("Monster dt is " + str(dt))
         #print(self.id)

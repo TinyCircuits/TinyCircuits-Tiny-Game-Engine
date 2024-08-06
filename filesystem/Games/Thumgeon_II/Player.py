@@ -241,8 +241,8 @@ dmg_values = {
 }
 
 item_range = {
-    item_ids["none"]: 0,
-    item_ids["apple"]: 0,
+    item_ids["none"]: 1,
+    item_ids["apple"]: 1,
     item_ids["bomb"]: 1,
     item_ids["red_book"]: 2,
     item_ids["blue_book"]: 2,
@@ -283,7 +283,7 @@ class Inventory:
         self.wt = 0
         self.max_wt = MAX_WEIGHT
         self.items = [None]
-        
+
 s_and_s_factor= 0.90
 
 class Player(Sprite2DNode):
@@ -300,9 +300,9 @@ class Player(Sprite2DNode):
         self.width = 32
         self.height = 32
         self.inventory = []
-        
+
         Render.cam.add_child(self)
-        
+
         self.wt = 0
         self.maxwt = MAX_WT
         self.hp = MAX_HP
@@ -311,11 +311,11 @@ class Player(Sprite2DNode):
         self.maxmp = MAX_MP
         self.gp = 0
         self.held_item = Item(item_ids["bow"])
-        
+
         self.time = 0
-        
+
         self.look_ang = 0.0
-        
+
         self.held_item_spr = Sprite2DNode()
         self.held_item_spr.frame_count_x = 2
         self.held_item_spr.playing = False
@@ -323,7 +323,7 @@ class Player(Sprite2DNode):
         self.held_item_spr.layer = 6
         self.held_item_spr.scale = Vector2(0.7, 0.7)
         self.add_child(self.held_item_spr)
-        
+
     def set_held_item(self, item):
         self.held_item = item
         if(self.held_item_spr is None):
@@ -332,11 +332,12 @@ class Player(Sprite2DNode):
             self.held_item_spr.playing = False
             self.held_item_spr.scale = Vector2(0.7, 0.7)
             self.add_child(self.held_item_spr)
+        self.held_item_spr.opacity = 1.0
         self.held_item_spr.frame_count_x = item_frame_count[item.id]
         self.held_item_spr.playing = False
         self.held_item_spr.transparent_color  = Color(0x07e0)
         self.held_item_spr.layer = 6
-    
+
     def add_inv_item(self, item):
         if(item_weights[item] + self.wt <= self.maxwt):
             self.inventory.append(Item(item))
@@ -344,11 +345,11 @@ class Player(Sprite2DNode):
             return True
         else:
             return False
-    
+
     def tick(self, dt):
         self.time += dt
-        
-        
+
+
         self.scale.x = 1.0
         if(self.held_item is not None):
             self.held_item_spr.texture = self.held_item.texture
@@ -357,7 +358,7 @@ class Player(Sprite2DNode):
                 self.scale.x = -1.0
                 self.held_item_spr.position = Vector2(-8, 0)
             self.held_item_spr.rotation = self.look_ang
-        
+
         sint = math.sin(4*self.time)
         self.scale.x *= (s_and_s_factor + ((1-s_and_s_factor)/2)*(1-sint))
-        self.scale.y *= (s_and_s_factor + ((1-s_and_s_factor)/2)*sint)    
+        self.scale.y *= (s_and_s_factor + ((1-s_and_s_factor)/2)*sint)

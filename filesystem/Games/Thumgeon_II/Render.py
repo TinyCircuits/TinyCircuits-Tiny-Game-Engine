@@ -27,7 +27,7 @@ class DrawTile(Sprite2DNode):
         self.layer = 1
         self.tween = Tween()
         self.deco = None
-    
+
     @micropython.native
     def add_deco(self, deco_id, layer = 7):
         if deco_id != Tiles.deco_ids["none"]:
@@ -43,7 +43,8 @@ class DrawTile(Sprite2DNode):
             #self.deco.rotation = 0.0
             #deco_sprite.opacity = 0.7
             self.add_child(self.deco)
-            
+
+    @micropython.native
     def add_item(self, item_id):
         if item_id != Player.item_ids["none"]:
             self.deco = Sprite2DNode()
@@ -58,23 +59,36 @@ class DrawTile(Sprite2DNode):
             #self.deco.rotation = 0.0
             #deco_sprite.opacity = 0.7
             self.add_child(self.deco)
-            
+
+    @micropython.native
     def set_monster(self, m):
         if m.id >= 0:
             self.monster = m
             self.add_child(m)
-            
+
+    @micropython.native
     def reset_monster(self):
         if(self.monster is not None):
             #self.remove_child(self.monster)
-            self.monster.destroy()
+            for n in range(self.get_child_count()):
+                self.get_child(n).opacity = 0.0
+            self.mark_destroy_children()
+            self.monster.opacity = 0.0
+            self.monster.mark_destroy()
             self.monster = None
-    
+
     @micropython.native
     def reset_deco(self):
+        if(self.deco is not None):
+            self.deco.opacity = 0.0
+        if(self.monster is not None):
+            self.monster.opacity = 0.0
+        #self.opacity = 0.0
+        for n in range(self.get_child_count()):
+            self.get_child(n).opacity = 0.0
+        self.mark_destroy_children()
         self.deco = None
         self.monster = None
-        self.destroy_children()
 
 renderer_tiles = [None] * 6 * 6
 
@@ -94,6 +108,7 @@ anim_snap = 600
 renderer_x = 0
 renderer_y = 0
 
+@micropython.native
 def tile_animate_action(x, y, after = None, frame=None):
     print(renderer_tiles[y*6+x].deco)
     if renderer_tiles[y*6+x].deco is not None:
@@ -106,7 +121,8 @@ def tile_animate_action(x, y, after = None, frame=None):
         start = ((urandom.random() + 0.3)) * math.pi/8
         if(urandom.random() < 0.5):
             start = -start
-        anim_tween.start(renderer_tiles[y*6+x].deco, "rotation", start, 0.0, anim_snap, 1.0, ONE_SHOT, EASE_ELAST_OUT)
+        if(renderer_tiles[y*6+x].deco is not None):
+            anim_tween.start(renderer_tiles[y*6+x].deco, "rotation", start, 0.0, anim_snap, 1.0, ONE_SHOT, EASE_ELAST_OUT)
         anim_tween.after = after
 
 #@micropython.native
@@ -130,21 +146,23 @@ def load_renderer_monsters(tilemap, offset = Vector2(0,0)):
             m_sprite.hp = 10
             m_sprite.frame_count_x = m.frame_count_x
             m_sprite.frame_current_x = m.frame_current_x
-            
+
             textnode = Text2DNode()
             textnode.text = str(m.hp)
             textnode.font = Resources.roboto_font
             textnode.opacity = 1.0
             textnode.layer = 7
             textnode.position.y = -16
-            
-            m_sprite.destroy_children()
+            # for n in range(m_sprite.get_child_count()):
+            #     m_sprite.get_child(n).opacity = 0.0
+            # m_sprite.mark_destroy_children()
             m_sprite.add_child(textnode)
             m_sprite.textnote = textnode
             #m_sprite.tick = m.tick
             #print("Loading monster at "+str(mx)+", "+str(my))
             renderer_tiles[my*6+mx].set_monster(m_sprite)
 
+#@micropython.native
 def load_renderer_deco(tilemap, cx, cy):
     for y in range(0, 6):
         for x in range(0, 6):
@@ -155,7 +173,7 @@ def load_renderer_deco(tilemap, cx, cy):
             else:
                 renderer_tiles[y*6+x].add_deco(tilemap.get_tile_data0(int(cx+x), int(cy+y)), 4 if ((tilemap.get_tile_data1(int(cx+x), int(cy+y)) & 0x2) != 0) else 6)
 
-@micropython.native
+#@micropython.native
 def load_renderer_tiles(tilemap, cx, cy):
     cam.position = Vector3(64,64,1)
     for y in range(0, 6):

@@ -1,6 +1,6 @@
 import os
 from system.root_dir import ROOT_DIR
-from system.util import is_file, is_dir, basename, thumby_reset
+from system.util import is_file, is_dir, basename, thumby_reset, file_exists
 from system.run_on_boot import set_run_on_boot
 from system.launcher.direction_icon import DirectionIcon
 from system.launcher_state import set_launcher_state
@@ -36,6 +36,10 @@ def check_and_get_game_info(directory_path, directory_contents):
     # Mark as legacy by default if inside path that
     # contains keyword `Legacy` (usually in /Games/Legacy)
     game_info.legacy = "Legacy" in directory_path
+
+    # Look for default icon in folder
+    if "icon.bmp" in directory_contents:
+        game_info.icon_path = f"{directory_path}/icon.bmp"
     
     # Complete `game_info` as fully as possible if `manifest.ini` exists
     if "manifest.ini" in directory_contents:

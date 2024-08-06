@@ -10,7 +10,7 @@ from engine_draw import Color
 from engine_nodes import Rectangle2DNode, CameraNode, Sprite2DNode, PhysicsRectangle2DNode, EmptyNode, Text2DNode
 from engine_resources import TextureResource, FontResource, NoiseResource
 from engine_math import Vector2, Vector3
-from engine_animation import Tween, Delay, ONE_SHOT, LOOP, PING_PONG, EASE_ELAST_OUT, EASE_ELAST_IN_OUT, EASE_BOUNCE_IN_OUT, EASE_SINE_IN, EASE_QUAD_IN
+from engine_animation import Tween, Delay, ONE_SHOT, LOOP, PING_PONG, EASE_ELAST_OUT, EASE_ELAST_IN_OUT, EASE_BOUNCE_IN_OUT, EASE_SINE_IN, EASE_QUAD_IN, EASE_LINEAR
 import engine_debug
 import math
 import os
@@ -108,25 +108,21 @@ player_y = Render.renderer_y + 2
 monster_turn = False
 
 def reset_camera_right(self):
-    Render.renderer_x -= 1
     Render.load_renderer_tiles(current_tilemap, player_x-2, player_y-2)
     Render.load_renderer_deco(current_tilemap, player_x-2, player_y-2)
     Render.load_renderer_monsters(current_tilemap)
 
 def reset_camera_left(self):
-    Render.renderer_x += 1
     Render.load_renderer_tiles(current_tilemap, player_x-2, player_y-2)
     Render.load_renderer_deco(current_tilemap, player_x-2, player_y-2)
     Render.load_renderer_monsters(current_tilemap)
 
 def reset_camera_down(self):
-    Render.renderer_y += 1
     Render.load_renderer_tiles(current_tilemap, player_x-2, player_y-2)
     Render.load_renderer_deco(current_tilemap, player_x-2, player_y-2)
     Render.load_renderer_monsters(current_tilemap)
 
 def reset_camera_up(self):
-    Render.renderer_y -= 1
     Render.load_renderer_tiles(current_tilemap, player_x-2, player_y-2)
     Render.load_renderer_deco(current_tilemap, player_x-2, player_y-2)
     Render.load_renderer_monsters(current_tilemap)
@@ -137,12 +133,14 @@ def move_tiles_right():
     Render.load_renderer_tiles(current_tilemap, player_x-2, player_y-2)
     Render.load_renderer_deco(current_tilemap, player_x-2, player_y-2)
     Render.load_renderer_monsters(current_tilemap, Vector2(1, 0))
+    Render.renderer_x -= 1
     Render.camera_tween.start(Render.cam, "position", Vector3(32 + Render.camera_offset.x, Render.camera_offset.y, 0), Vector3(Render.camera_offset.x, Render.camera_offset.y, 0), tween_snap, 1.0, ONE_SHOT, EASE_QUAD_IN)
     Render.camera_tween.after = reset_camera_right
 
 def move_tiles_left():
     global player_x
     player_x += 1
+    Render.renderer_x += 1
     Render.camera_tween.start(Render.cam, "position", Vector3(Render.camera_offset.x, Render.camera_offset.y, 0), Vector3(32 + Render.camera_offset.x, Render.camera_offset.y, 0), tween_snap, 1.0, ONE_SHOT, EASE_QUAD_IN)
     Render.camera_tween.after = reset_camera_left
 
@@ -152,12 +150,14 @@ def move_tiles_down():
     Render.load_renderer_tiles(current_tilemap, player_x-2, player_y-2)
     Render.load_renderer_deco(current_tilemap, player_x-2, player_y-2)
     Render.load_renderer_monsters(current_tilemap, Vector2(0, 1))
+    Render.renderer_y -= 1
     Render.camera_tween.start(Render.cam, "position", Vector3(Render.camera_offset.x, 32 + Render.camera_offset.y, 0), Vector3(Render.camera_offset.x, Render.camera_offset.y, 0), tween_snap, 1.0, ONE_SHOT, EASE_QUAD_IN)
     Render.camera_tween.after = reset_camera_up
 
 def move_tiles_up():
     global player_y
     player_y += 1
+    Render.renderer_y += 1
     Render.camera_tween.start(Render.cam, "position", Vector3(Render.camera_offset.x, Render.camera_offset.y, 0), Vector3(Render.camera_offset.x, 32 + Render.camera_offset.y, 0), tween_snap, 1.0, ONE_SHOT, EASE_QUAD_IN)
     Render.camera_tween.after = reset_camera_down
 
@@ -261,6 +261,17 @@ def update_monsters():
 inventory_item_sel = 0
 eqp_drop = 0
 
+hitmarker_text = Text2DNode()
+hitmarker_text.font = Resources.roboto_font
+hitmarker_text.text = ""
+hitmarker_text.opacity = 0.0
+hitmarker_text.position = Vector2(0, 0)
+hitmarker_text.color = engine_draw.red
+Render.cam.add_child(hitmarker_text)
+
+hitmarker_tween = Tween()
+hitmarker_opacity_tween = Tween()
+
 def tile_action(x, y):
     global current_tilemap
     global dungeon_tiles
@@ -287,6 +298,7 @@ def tile_action(x, y):
 
             if(player.held_item == item):
                         player.held_item = None
+                        player.held_item_spr.opacity = 0.0
                         player.remove_child(player.held_item_spr)
                         player.held_item_spr = None
             deco_redraw = True
@@ -350,9 +362,20 @@ def tile_action(x, y):
                     dy += 1
                 if(dy > 1):
                     break
+        elif(player.held_item is not None and selection_pos.x == 0 and selection_pos.y == 0):
+            print("Using item on self!")
+            held_item = player.held_item.id
+            player.hp += Player.hp_values[held_item]
+            if(player.hp > player.maxhp):
+                player.hp = player.maxhp
+            player.inventory.remove(player.held_item)
+            player.held_item = None
+            player.held_item_spr.opacity = 0.0
+            player.remove_child(player.held_item_spr)
+            player.held_item_spr = None
         else:
             for m in current_tilemap.monster_list:
-                if(held_item is not None and m.position.x == x and m.position.y == y):
+                if(player.held_item is not None and m.position.x == x and m.position.y == y):
                     print("Attacking monster with hp " + str(m.hp))
                     held_item = player.held_item.id
                     dmg = Player.dmg_values[held_item]
@@ -360,6 +383,14 @@ def tile_action(x, y):
                         dmg += urandom.randrange(3)
                         m.hp -= dmg
                         current_msg.text = "Hit "+str(dmg) + "pts"
+                        hitmarker_text.text = str(dmg)
+                        hitmarker_text.position = Vector2(32*selection_pos.x + 8, 32*selection_pos.y)
+                        hitmarker_text.opacity = 1.0
+                        hitmarker_text.layer = 7
+                        #m.add_child(hitmarker_text)
+                        hitmarker_tween.start(hitmarker_text, "position", Vector2(32*selection_pos.x + 8, 32*selection_pos.y), Vector2(32*selection_pos.x + 8, 32*selection_pos.y-24), 300, 1.0, ONE_SHOT, EASE_LINEAR)
+                        #hitmarker_tween.start(hitmarker_text, "position", Vector2(64+8, 64), Vector2(64+8, 64-24), 300, 1.0, ONE_SHOT, EASE_QUAD_IN)
+                        hitmarker_opacity_tween.start(hitmarker_text, "opacity", 1.0, 0.0, 800, 1.0, ONE_SHOT, EASE_QUAD_IN)
                     if(m.hp <= 0):
                         current_tilemap.monster_list.remove(m)
                     deco_redraw = True
@@ -549,6 +580,7 @@ while True:
                             player.set_held_item(player.inventory[inventory_item_sel])
                         else:
                             player.held_item = None
+                            player.held_item_spr.opacity = 0.0
                             player.remove_child(player.held_item_spr)
                             player.held_item_spr = None
                 else:
@@ -596,8 +628,10 @@ while True:
         hp_text.text = "HP: "+str(player.hp) + " / " + str(player.maxhp)
         mp_text.text = "MP: "+str(player.mp) + " / " + str(player.maxmp)
 
+        for n in range(0, inventory_renderer.get_child_count()):
+            inventory_renderer.get_child(n).opacity = 0.0
         inventory_renderer.sprlist.clear()
-        inventory_renderer.destroy_children()
+        inventory_renderer.mark_destroy_children()
 
         if(control_mode == mode_inventory):
             if(action_dir == 0):
@@ -617,7 +651,7 @@ while True:
 
             eqp = Text2DNode()
             drop = Text2DNode()
-            if(player.inventory[inventory_item_sel] == player.held_item):
+            if(inventory_item_sel < len(player.inventory) and player.inventory[inventory_item_sel] == player.held_item):
                 if(eqp_drop == 0):
                     eqp.text = ">unequip"
                     drop.text = "drop"
