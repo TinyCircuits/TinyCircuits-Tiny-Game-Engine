@@ -9,17 +9,43 @@ from engine_nodes import EmptyNode, Rectangle2DNode, Text2DNode, GUIBitmapButton
 from engine_draw import Color
 import engine_draw
 import engine_io
+import engine
 from engine_math import Vector2
 from engine_resources import TextureResource
 from engine_animation import Tween, ONE_SHOT, EASE_BACK_OUT, EASE_SINE_OUT
 
 import math
+import time
 
 
 title_font = None                                                               # Font from main launcher.py file
 category_background_color = Color(0.157, 0.137, 0.263)                          # Background color for category rows
 q_mark_icon = TextureResource("system/launcher/assets/launcher-tile-qmark.bmp") # Default icon for games that don't have one
 arrow_direction_icon = TextureResource("system/launcher/assets/arrow.bmp")      # Direction icon for category rows
+
+
+# Show a loading bar while icons for games are loading
+total_game_count = 0    # Count of all the found games on the system (before loading icons)
+full_screen_rect = Rectangle2DNode(color=engine_draw.black, width=128, height=128, layer=5, opacity=0.0)
+loading_bar_rect = Rectangle2DNode(color=engine_draw.white, height=12, layer=6, opacity=0.0)
+loading_bar_width_increment = 0
+
+def setup_loading_bar(game_count):
+    global loading_bar_width_increment
+    full_screen_rect.opacity = 1.0
+    loading_bar_rect.opacity = 1.0
+    loading_bar_width_increment = 64.0/total_game_count
+
+def increment_loading_bar():
+    loading_bar_rect.width += loading_bar_width_increment
+    engine.tick()
+    time.sleep(0.01)
+
+def end_loading_bar():
+    full_screen_rect.opacity = 0.0
+    loading_bar_rect.opacity = 0.0
+    full_screen_rect.mark_destroy()
+    loading_bar_rect.mark_destroy()
 
 
 # Given contents of a directory, check if the contents
@@ -32,6 +58,9 @@ def check_and_get_game_info(directory_path, directory_contents):
     
     # This is a game, create default info object
     game_info = GameInfo(directory_path)
+
+    global total_game_count
+    total_game_count += 1
 
     # Mark as legacy by default if inside path that
     # contains keyword `Legacy` (usually in /Games/Legacy)
@@ -258,6 +287,8 @@ class GameCategory(EmptyNode):
             tile.position.x = pos_x
             self.tiles.append(tile)
             pos_x += 80
+
+            increment_loading_bar()
         
         # Don't show left/right arrows if only one game in category/row
         if(len(self.game_infos) == 1):
@@ -308,10 +339,15 @@ class GamesScreen():
 
                 category.position.y += len(self.categories) * (80)
                 self.categories.append(category)
-        
+
+        global total_game_count
+        setup_loading_bar(total_game_count)
+
         # Have each category spawn its tiles
         for category in self.categories:
             category.create_tiles()
+        
+        end_loading_bar()
     
     # Do not want other page UI navigation inputs
     # to switch to this page when not focused,
