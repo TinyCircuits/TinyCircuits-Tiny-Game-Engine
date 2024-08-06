@@ -1,0 +1,91 @@
+{
+    "name": "Stage 5",
+    "prefix": "5",
+    "levels": [
+        [
+            "   P  ",
+            "   G  ",
+            "   G  ",
+            "   R  ",
+            "   R  ",
+            "   G  ",
+            "   R  ",
+            "   G  ",
+            " PPGPP",
+            2
+        ],
+        [
+            "  PP",
+            " RGP",
+            " RBR",
+            "BBGG",
+            3
+        ],
+        [
+            "  P   ",
+            "  YP  ",
+            "  BY  ",
+            "  BC  ",
+            "  CB  ",
+            "  PCYY",
+            3
+        ],
+        [
+            " RRC",
+            " RYP",
+            " YPP",
+            " PCC",
+            " YPP",
+            3
+        ],
+        [
+            "BBCCBB",
+            "PGRYGP",
+            "PRGGYP",
+            "CRCCYC",
+            "PBGGBP",
+            5
+        ],
+        [
+            "B B B ",
+            "Y R Y ",
+            "P R P ",
+            "Y G Y ",
+            "P G G ",
+            "YBRBY ",
+            3
+        ],
+        [
+            "  B ",
+            "  G ",
+            "R B ",
+            "GRG ",
+            "RGBG",
+            3
+        ],
+        [
+            "  Y ",
+            " GG ",
+            " RB ",
+            " RY ",
+            "YBG ",
+            "GBR ",
+            3
+        ],
+        [
+            " B  ",
+            " P  ",
+            "PC  ",
+            "YY  ",
+            "CBP ",
+            "YCB ",
+            3
+        ],
+        [
+            "  YCY ",
+            "CCYCCY",
+            "YPPYPC",
+            3
+        ]
+    ]
+}
