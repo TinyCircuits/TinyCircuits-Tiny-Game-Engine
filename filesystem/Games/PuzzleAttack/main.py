@@ -31,7 +31,7 @@ sfxNav = WaveSoundResource("sfx/nav.wav")
 sfxCursor = WaveSoundResource("sfx/cursor.wav")
 sfxPops = [WaveSoundResource("sfx/pop"+str(i+1)+".wav") for i in range(8)]
 
-texLogo = TextureResource("logo.bmp")
+texLogo = TextureResource("icon.bmp")
 texBG = TextureResource("bg.bmp")
 texBlocks = TextureResource("blocks.bmp")
 texCursor = TextureResource("cursor.bmp")

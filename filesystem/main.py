@@ -26,8 +26,7 @@ try:
     if run_on_boot is None and not has_launcher_state():
         execfile("system/splash/show_splash.py")
 
-    # If nothing to launch from `_run_on_boot` and there weren't any
-    # passed arguments, run the intro splash and then the launcher
+    # If nothing to launch from `_run_on_boot` show launcher
     if run_on_boot is None:
         execfile("system/launcher/launcher.py")
 
