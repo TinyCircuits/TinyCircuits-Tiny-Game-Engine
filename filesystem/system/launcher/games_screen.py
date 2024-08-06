@@ -105,8 +105,6 @@ class GameLauncherTile(GUIBitmapButton2DNode):
         self.game_info = game_info
         self.font = title_font
         self.text = ""
-        self.scale.x = 0.6
-        self.scale.y = 0.6
 
         # Load the default icon for the custom one, if it exists
         if game_info.icon_path is None:
@@ -114,6 +112,11 @@ class GameLauncherTile(GUIBitmapButton2DNode):
             self.transparent_color = engine_draw.white
         else:
             self.bitmap = TextureResource(game_info.icon_path)
+
+        # Make sure bitmap icon ends up at 38 pixels tall
+        scale = 38.0 / self.bitmap.height
+        self.scale.x = scale
+        self.scale.y = scale
 
         # Create title for this tile
         self.title_text_node = Text2DNode(text=game_info.name, font=title_font, position=Vector2(0, 26), opacity=1.0, letter_spacing=1.0)
