@@ -18,7 +18,7 @@ random.seed(time.ticks_ms())
 
 # engine_debug.enable_all()
 
-font = FontResource("../../assets/outrunner_outline.bmp")
+font = FontResource("/system/assets/outrunner_outline.bmp")
 
 red_texture = TextureResource("red.bmp")
 yellow_texture = TextureResource("yellow.bmp")
