@@ -28,6 +28,7 @@ monster_ids = {
     "slime": 7,
     "tempest": 8,
     "snakedragon": 9,
+    "litbomb": 10,
 }
 
 monster_hp_range = {
@@ -40,6 +41,7 @@ monster_hp_range = {
     monster_ids["slime"]: (3, 7),
     monster_ids["tempest"]: (7, 10),
     monster_ids["snakedragon"]: (32, 40),
+    monster_ids["litbomb"]: (-1)
 }
 
 monster_dmg_range = {
@@ -52,6 +54,7 @@ monster_dmg_range = {
     monster_ids["slime"]: (2, 5),
     monster_ids["tempest"]: (4, 7),
     monster_ids["snakedragon"]: (12, 16),
+    monster_ids["litbomb"]: (12, 16),
 }
 
 monster_textures = {
@@ -63,7 +66,8 @@ monster_textures = {
        monster_ids["scorpion"]: scorpion_texture,
        monster_ids["slime"]: slime_texture,
        monster_ids["tempest"]: tempest_texture,
-       monster_ids["snakedragon"]: snakedragon_texture
+       monster_ids["snakedragon"]: snakedragon_texture,
+       monster_ids["litbomb"]: Resources.bomb_texture,
 }
 
 monster_frame_count = {
@@ -76,6 +80,7 @@ monster_frame_count = {
        monster_ids["slime"]: 1,
        monster_ids["tempest"]: 1,
        monster_ids["snakedragon"]: 1,
+       monster_ids["litbomb"]: 3,
 }
 
 s_and_s_factor= 0.85
@@ -85,17 +90,18 @@ class Monster(Sprite2DNode):
         super().__init__(self)
         self.id = id
         self.texture = monster_textures[self.id]
-        self.position = Vector2(3, 3)
+        self.position = Vector2(4, 4)
         self.time = 0
         self.frame_count_x = monster_frame_count[self.id]
         self.frame_current_x = 0
         self.playing = False
         self.hp = urandom.randrange(monster_hp_range[self.id][0], monster_hp_range[self.id][1])
-        self.textnode = None
+        self.hp_textnode = None
+        self.stun_textnode = None
         self.layer = 5
         self.opacity = 0.0
         self.tween = Tween()
-        self.stun = 0
+        self.stun = 5
 
     def set_monster(self, id):
         print("Setting monster to id " + str(id))
@@ -111,12 +117,12 @@ class Monster(Sprite2DNode):
         self.frame_current_y = 0
 
     def tick(self, dt):
-        #print("Monster dt is " + str(dt))
-        #print(self.id)
         self.time += dt
         sint = math.sin(4*self.time)
         self.scale = Vector2(s_and_s_factor + ((1-s_and_s_factor)/2)*(1-sint), s_and_s_factor + ((1-s_and_s_factor)/2)*sint)
-        #self.textnode.text = str(self.hp)
-        if(self.textnode is not None):
-            self.textnode.text = str(self.hp)
-        pass
+        if(self.hp_textnode is not None):
+            self.hp_textnode.text = str(self.hp)
+        if(self.id == monster_ids["litbomb"]):
+            self.frame_current_x=1;
+        if(self.stun == 0 and self.id == monster_ids["litbomb"]):
+            self.frame_current_x=2;

@@ -1,6 +1,6 @@
 import machine
 #__freq = machine.freq()
-# machine.freq(250000000)
+machine.freq(250000000)
 
 import os
 # os.chdir("/Games/Tagged")
@@ -26,8 +26,6 @@ from engine_resources import TextureResource, FontResource, NoiseResource
 from engine_math import Vector2, Vector3
 from engine_animation import Tween, Delay, ONE_SHOT, LOOP, PING_PONG, EASE_ELAST_OUT, EASE_ELAST_IN_OUT, EASE_BOUNCE_IN_OUT, EASE_SINE_IN, EASE_QUAD_IN
 
-import engine_debug
-
 #engine_debug.enable_all()
 
 #machine.freq(__freq)
@@ -38,34 +36,13 @@ engine.fps_limit(50)
 
 #runner_texture = TextureResource("test_runner_frames_2_16bit.bmp")
 
-cam = CameraNode()
-engine_physics.set_gravity(0.0, -0.1)
 
-#player_hitbox = PhysicsRectangle2DNode()
-
-GROUND_ACCEL = 0.2 * 3/2
-GROUND_DECEL = 1.2 * 3/2
-GROUND_MAX = 2.6 * 3/2
-SLIDE_DECEL = 0.02
-
-AIR_ACCEL = 0.06 * 3/2
-AIR_DECEL = 0.03 * 3/2
-AIR_MAX = 3.5 * 3/2
-
-JUMP_VEL = -2.5
-SLIDE_BOOST = 0.6 * 3/2
-
-WALL_FRICTION = 0.1
-VELOCITY_EPSILON = 0.1
-AI_REACTION_FRAMES = 4
-
-'''
 # S-room
-flag_positions = (Vector2(0,48), Vector2(-52,-24), Vector2(52,-24))
-room_p1_spawn = Vector2(0, 16)
-room_p2_spawn = Vector2(0, -48)
-room_color_pair = (engine_draw.darkgreen, engine_draw.green)
-room_box_data = (
+s_room_flag_positions = (Vector2(0,48), Vector2(-52,-24), Vector2(52,-24))
+s_room_p1_spawn = Vector2(0, 16)
+s_room_p2_spawn = Vector2(0, -48)
+s_room_color_pair = (engine_draw.darkgreen, engine_draw.green)
+s_room_box_data = (
     (-64, -64, 2*math.sqrt(2)*24, math.sqrt(2)*24, math.pi/4),
     (64, -64, 2*math.sqrt(2)*24, math.sqrt(2)*24, -math.pi/4),
     (64, 64, 2*math.sqrt(2)*24, math.sqrt(2)*24, math.pi/4),
@@ -87,14 +64,14 @@ room_box_data = (
     (64, 0, math.sqrt(2)*16, math.sqrt(2)*16, math.pi/4),
     (-64, 0, math.sqrt(2)*16, math.sqrt(2)*16, -math.pi/4),
 )
-'''
+
 
 # Y-room
-flag_positions = (Vector2(56, 40), Vector2(-56, 40), Vector2(0, 16))
-room_p1_spawn = Vector2(-56, -32)
-room_p2_spawn = Vector2(56, -32)
-room_color_pair = (engine_draw.purple, engine_draw.violet)
-room_box_data = (
+y_room_flag_positions = (Vector2(56, 40), Vector2(-56, 40), Vector2(0, 16))
+y_room_p1_spawn = Vector2(-56, -32)
+y_room_p2_spawn = Vector2(56, -32)
+y_room_color_pair = (engine_draw.purple, engine_draw.violet)
+y_room_box_data = (
     # Bottom corner squares
 
     (56, 56, 16, 16, 0),#engine_draw.set_background_color(engine_draw.darkgreen)
@@ -125,13 +102,13 @@ room_box_data = (
 
 )
 
-'''
+
 # Springboard room
-flag_positions = (Vector2(-48,48), Vector2(48,-48),)
-room_p1_spawn = Vector2(0, -16)
-room_p2_spawn = Vector2(0, 48)
-room_color_pair = (engine_draw.darkcyan, engine_draw.cyan)
-room_box_data = (
+springboard_room_flag_positions = (Vector2(-48,48), Vector2(48,-48),)
+springboard_room_p1_spawn = Vector2(0, -16)
+springboard_room_p2_spawn = Vector2(0, 48)
+springboard_room_color_pair = (engine_draw.darkcyan, engine_draw.cyan)
+springboard_room_box_data = (
     # Top, bottom, and walls
     (0, 64+8, 192, 16, 0),
     (0, -64-8, 192, 16, 0),
@@ -157,14 +134,14 @@ room_box_data = (
     #(-28, 56, 16, 16, 0),
     #(28, -56, 16, 16, 0),60
 )
-'''
-'''
-flag_positions = (Vector2(-48,-24), Vector2(52,-52), Vector2(0,32), )
+
+
+thebox_room_flag_positions = (Vector2(-48,-24), Vector2(52,-52), Vector2(0,32), )
 # The Box
-room_p1_spawn = Vector2(0, -56)
-room_p2_spawn = Vector2(0, 0)
-room_color_pair = (engine_draw.darkgrey, engine_draw.lightgrey)
-room_box_data = (
+thebox_room_p1_spawn = Vector2(0, -56)
+thebox_room_p2_spawn = Vector2(0, 0)
+thebox_room_color_pair = (engine_draw.darkgrey, engine_draw.lightgrey)
+thebox_room_box_data = (
     # Top, bottom, and walls
     (0, 64+8, 192, 16, 0),
     (0, -64-8, 192, 16, 0),
@@ -190,21 +167,194 @@ room_box_data = (
     (60, -36, 8, 8, 0),
 
     # Top chamber
-    (4, -44, 56, 8, 0),
+    # (4, -44, 56, 8, 0),
 
     # Bottom chamber
     (-16, 44, 16, 8, 0),
     (24, 44, 16, 8, 0),
 
 )
-'''
+
+
+class LevelSelector(Rectangle2DNode):
+    def __init__(self):
+        super().__init__(self)
+        self.width = 129
+        self.height = 12
+        self.outline = True
+        self.layer = 7
+        self.tween = Tween()
+        self.selection = 0
+
+    def tick(self, dt):
+        if(engine_io.DOWN.is_just_pressed and self.selection < 3):
+            self.selection += 1
+            self.tween.start(self, "position", self.position, Vector2(0, 16 * self.selection), 150, 1.0, ONE_SHOT, EASE_QUAD_IN)
+        if(engine_io.UP.is_just_pressed and self.selection > 0):
+            self.selection -= 1
+            self.tween.start(self, "position", self.position, Vector2(0, 16 * self.selection), 150, 1.0, ONE_SHOT, EASE_QUAD_IN)
+        if(self.selection == 0):
+            engine_draw.set_background_color(s_room_color_pair[0])
+        elif(self.selection == 1):
+            engine_draw.set_background_color(y_room_color_pair[0])
+        elif(self.selection == 2):
+            engine_draw.set_background_color(springboard_room_color_pair[0])
+        elif(self.selection == 3):
+            engine_draw.set_background_color(thebox_room_color_pair[0])
+        pass
+
+font = FontResource("outrunner_outline.bmp")
+font2 = FontResource("9pt-roboto-font.bmp")
+
+cam = CameraNode()
+cam.position = Vector3(0, 0, 1)
+engine_physics.set_gravity(0.0, -0.1)
+
+selector = LevelSelector()
+
+splash_text = Text2DNode()
+splash_text.layer = 7
+splash_text.font = font
+splash_text.text = "TAGGED"
+splash_text.position = Vector2(0, -32)
+
+s_room_text = Text2DNode()
+s_room_text.layer = 7
+s_room_text.font = font
+s_room_text.text = "S-room"
+s_room_text.position = Vector2(0, 0)
+
+y_room_text = Text2DNode()
+y_room_text.layer = 7
+y_room_text.font = font
+y_room_text.text = "Y-room"
+y_room_text.position = Vector2(0, 16)
+
+springboards_room_text = Text2DNode()
+springboards_room_text.layer = 7
+springboards_room_text.font = font
+springboards_room_text.text = "Springboards"
+springboards_room_text.position = Vector2(0, 32)
+
+thebox_room_text = Text2DNode()
+thebox_room_text.layer = 7
+thebox_room_text.font = font
+thebox_room_text.text = "The Box"
+thebox_room_text.position = Vector2(0, 48)
+
+two_player_text = Text2DNode()
+two_player_text.layer = 7
+two_player_text.font = font
+two_player_text.text = "2PLAYER >>"
+two_player_text.position = Vector2(24, -58)
+
+text_crossout = Rectangle2DNode()
+text_crossout.layer = 7
+text_crossout.outline = True
+text_crossout.width = 64
+text_crossout.height = 1
+text_crossout.position = Vector2(24, -58)
+
+under_construction_text = Text2DNode()
+under_construction_text.layer = 7
+under_construction_text.font = font2
+under_construction_text.text = "Under construction"
+under_construction_text.position = Vector2(20, -50)
+
+
+cam.add_child(splash_text)
+cam.add_child(s_room_text)
+cam.add_child(y_room_text)
+cam.add_child(springboards_room_text)
+cam.add_child(thebox_room_text)
+cam.add_child(two_player_text)
+cam.add_child(under_construction_text)
+cam.add_child(selector)
+
+flag_positions = None
+room_p1_spawn = Vector2(-32, 0)
+room_p2_spawn = Vector2(32, 0)
+room_color_pair = (engine_draw.black, engine_draw.white)
+room_box_data = None
+
+while(not engine_io.A.is_just_pressed and not engine_io.B.is_just_pressed):
+    engine.tick()
+
+if(selector.selection == 0):
+    # Load S-room
+    flag_positions = s_room_flag_positions
+    room_p1_spawn = s_room_p1_spawn
+    room_p2_spawn = s_room_p2_spawn
+    room_color_pair = s_room_color_pair
+    room_box_data = s_room_box_data
+elif(selector.selection == 1):
+    # Load Y-room
+    flag_positions = y_room_flag_positions
+    room_p1_spawn = y_room_p1_spawn
+    room_p2_spawn = y_room_p2_spawn
+    room_color_pair = y_room_color_pair
+    room_box_data = y_room_box_data
+elif(selector.selection == 2):
+    # Load Springboards
+    flag_positions = springboard_room_flag_positions
+    room_p1_spawn = springboard_room_p1_spawn
+    room_p2_spawn = springboard_room_p2_spawn
+    room_color_pair = springboard_room_color_pair
+    room_box_data = springboard_room_box_data
+elif(selector.selection == 3):
+    # Load The Box
+    flag_positions = thebox_room_flag_positions
+    room_p1_spawn = thebox_room_p1_spawn
+    room_p2_spawn = thebox_room_p2_spawn
+    room_color_pair = thebox_room_color_pair
+    room_box_data = thebox_room_box_data
+    pass
+
+splash_text.opacity = 0.0
+s_room_text.opacity = 0.0
+y_room_text.opacity = 0.0
+springboards_room_text.opacity = 0.0
+thebox_room_text.opacity = 0.0
+two_player_text.opacity = 0.0
+under_construction_text.opacity = 0.0
+text_crossout.opacity = 0.0
+selector.opacity = 0.0
+
+splash_text.mark_destroy_all()
+s_room_text.mark_destroy_all()
+y_room_text.mark_destroy_all()
+springboards_room_text.mark_destroy_all()
+thebox_room_text.mark_destroy_all()
+two_player_text.mark_destroy_all()
+under_construction_text.mark_destroy_all()
+text_crossout.mark_destroy_all()
+selector.mark_destroy_all()
+
+#player_hitbox = PhysicsRectangle2DNode()
+
+GROUND_ACCEL = 0.2 * 3/2
+GROUND_DECEL = 1.2 * 3/2
+GROUND_MAX = 2.6 * 3/2
+SLIDE_DECEL = 0.02
+
+AIR_ACCEL = 0.06 * 3/2
+AIR_DECEL = 0.03 * 3/2
+AIR_MAX = 3.5 * 3/2
+
+JUMP_VEL = -2.5
+SLIDE_BOOST = 0.6 * 3/2
+
+WALL_FRICTION = 0.1
+VELOCITY_EPSILON = 0.1
+AI_REACTION_FRAMES = 4
+
 engine_draw.set_background_color(room_color_pair[0])
 
 room_physics_boxes = []
 room_draw_boxes = []
 room_outline_boxes = []
 
-@micropython.native
+#@micropython.native
 def load_boxes(boxes):
     global room_physics_boxes
     room_physics_boxes.clear()
@@ -226,21 +376,12 @@ def load_boxes(boxes):
         draw_box.height = box.height
         draw_box.position = Vector2(0, 0)
         draw_box.outline = False
-        # draw_box.color = engine_draw.green
         draw_box.color = room_color_pair[1]
         draw_box.layer = 2
-        #outline_box = Rectangle2DNode()
-        #outline_box.width = box.width
-        #outline_box.height = box.height
-        #outline_box.position = Vector2(0, 0)
-        #outline_box.outline = True
-        #outline_box.color = engine_draw.olive
-        #outline_box.layer = 1
-        #draw_box.outline = True
-        #box.add_child(outline_box)
-        box.add_child(draw_box)
+        
         room_draw_boxes.append(draw_box)
-        #room_outline_boxes.append(outline_box)
+        
+        box.add_child(draw_box)
         room_physics_boxes.append(box)
 
 
@@ -294,11 +435,11 @@ class PlayerHitbox(PhysicsRectangle2DNode):
         if(self.on_ground):
             self.roll_rotation = 0
             if(self.crouching):
-                print("Player crouching")
+                #print("Player crouching")
                 self.player_spr.frame_current_y = 2
                 self.player_spr.frame_current_x = 2 if abs(self.velocity.x) < VELOCITY_EPSILON else 3
             else:
-                print("Player standing upright")
+                #print("Player standing upright")
                 self.player_spr.frame_current_y = 0
         else:
             if(not self.rolling):
@@ -307,27 +448,27 @@ class PlayerHitbox(PhysicsRectangle2DNode):
                 self.dynamic = True
                 self.player_spr.playing = True
                 if(self.hanging):
-                    print("Player hanging")
+                    #print("Player hanging")
                     self.dynamic = False
                     self.player_spr.frame_current_x = 3
                     self.player_spr.frame_current_y = 1
                     self.player_spr.scale.x = 1.0 if self.wall_dir == 1 else -1.0
                     self.velocity.y = 0
                 elif(self.wall_dir == 0):
-                    print("Player jump frames")
+                    #print("Player jump frames")
                     self.player_spr.playing = False
                     if(self.velocity.y < JUMP_VEL / 2):
                         self.player_spr.frame_current_x = 0
                     elif(self.velocity.y > 0):
                         self.player_spr.frame_current_x = 1
                 elif(self.velocity.y > 0):
-                    print("Player wall sliding")
+                    #print("Player wall sliding")
                     self.player_spr.playing = False
                     self.player_spr.frame_current_x = 2
                     self.player_spr.scale.x = 1.0 if self.wall_dir == 1 else -1.0
                     self.velocity.y *= (1-WALL_FRICTION) if self.velocity.y > 0 else 1
             else:
-                print("Player rolling")
+                #print("Player rolling")
                 self.player_spr.frame_current_y = 2
                 self.playing = True
 
@@ -510,7 +651,7 @@ class PlayerHitbox(PhysicsRectangle2DNode):
                 self.wall_dir = -1
                 #self.velocity.x = 0.0
         else:
-            print("Other type contact")
+            #print("Other type contact")
             pass
         pass
 
@@ -594,7 +735,7 @@ def set_player_colors(c, c2):
             newtexture.data[i+1] = int(c2 >> 8) & 0xFF
     return newtexture
 
-WAYPOINT_COUNT = 32
+WAYPOINT_COUNT = 16
 
 ai_waypoints = [None] * WAYPOINT_COUNT
 waypoint_idx = 0
@@ -733,6 +874,7 @@ class AISight(PhysicsRectangle2DNode):
         self.adjust_from_to(self.player.position, player_box.position)
         self.dist2 = self.height
         self.hit = False
+
     @micropython.native
     def on_collide(self, contact):
         #print("Line-of-sight hit")
@@ -748,9 +890,6 @@ class AISight(PhysicsRectangle2DNode):
         pass
 
 ai_reacting = 0
-
-font = FontResource("outrunner_outline.bmp")
-
 class Countdown(Text2DNode):
     def __init__(self):
         super().__init__(self)
@@ -762,6 +901,7 @@ class Countdown(Text2DNode):
         self.top = 15.0
         self.position = Vector2(-20, -24)
         self.running = False
+        self.color = engine_draw.black
     def restart(self, top):
         self.start = utime.ticks_us()
         self.top = top
@@ -787,6 +927,7 @@ class FxText(Text2DNode):
         self.position = Vector2(0, -24)
         self.text = " "
         self.layer = 7
+        self.color = engine_draw.black
     def animate(self, text):
         self.text = text
         self.pos_tween.start(self, "position", Vector2(0, -24), Vector2(0, -12), 500, 1.0, ONE_SHOT, EASE_QUAD_IN)
@@ -816,6 +957,7 @@ def end_game(text):
     end_text.text = text
     end_text.opacity = 1.
     end_text.layer = 7
+    end_text.color = engine_draw.black
 
 
 class Flag(PhysicsCircle2DNode):
@@ -881,7 +1023,7 @@ def ai_input(player):
     if(not ai_awake):
         return
     if(not player.sees):
-        print("Following trail")
+        #print("Following trail")
         if(AI_TARGET is None):
             AI_TARGET = get_closest_waypoint(ai_waypoints, player.position)
 
