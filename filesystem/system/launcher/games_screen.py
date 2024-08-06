@@ -15,7 +15,6 @@ from engine_resources import TextureResource
 from engine_animation import Tween, ONE_SHOT, EASE_BACK_OUT, EASE_SINE_OUT
 
 import math
-import time
 
 
 title_font = None                                                               # Font from main launcher.py file
@@ -39,7 +38,6 @@ def setup_loading_bar(game_count):
 def increment_loading_bar():
     loading_bar_rect.width += loading_bar_width_increment
     engine.tick()
-    time.sleep(0.01)
 
 def end_loading_bar():
     full_screen_rect.opacity = 0.0
