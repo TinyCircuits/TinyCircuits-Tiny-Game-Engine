@@ -509,6 +509,13 @@ bool button_2d_node_store_attr(engine_node_base_t *self_node_base, qstr attribut
 
 
 /*  --- doc ---
+    NAME: on_before_focused
+    ID: on_before_focused
+    DESC: Called just before the GUI button is focused. Return True to allow the button to be focused, and False otherwise
+    PARAM:  [type=object]         [name=button]     [value=object (reference to the button that was pressed)]
+    RETURN: True or False
+*/
+/*  --- doc ---
     NAME: on_focused
     ID: on_focused
     DESC: Called every tick when the GUI button is focused
