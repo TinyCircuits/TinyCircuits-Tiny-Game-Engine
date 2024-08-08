@@ -27,7 +27,7 @@ void text_2d_node_class_draw(mp_obj_t text_2d_node_base_obj, mp_obj_t camera_nod
     engine_text_2d_node_class_obj_t *text_2d_node = text_2d_node_base->node;
 
     // Very first thing is to early out if the text is not set
-    if(text_2d_node->text == mp_const_none || text_2d_node->font_resource == mp_const_none){
+    if(text_2d_node->text == mp_const_none){
         return;
     }
 
@@ -102,7 +102,13 @@ void text_2d_node_class_draw(mp_obj_t text_2d_node_base_obj, mp_obj_t camera_nod
         text_shader = engine_get_builtin_shader(EMPTY_SHADER);
     }
 
-    engine_draw_text(text_2d_node->font_resource, text_2d_node->text, text_rotated_x, text_rotated_y, text_box_width, text_box_height, text_letter_spacing, text_line_spacing, text_scale->x.value*camera_zoom, text_scale->y.value*camera_zoom, text_rotation, text_opacity, text_shader);
+    font_resource_class_obj_t *text_font = text_2d_node->font_resource;
+
+    if(text_font == mp_const_none){
+        text_font = &font;
+    }
+
+    engine_draw_text(text_font, text_2d_node->text, text_rotated_x, text_rotated_y, text_box_width, text_box_height, text_letter_spacing, text_line_spacing, text_scale->x.value*camera_zoom, text_scale->y.value*camera_zoom, text_rotation, text_opacity, text_shader);
 }
 
 
