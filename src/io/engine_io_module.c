@@ -224,6 +224,28 @@ MP_DEFINE_CONST_FUN_OBJ_0(buttons_reset_params_all_obj, engine_io_reset_all_butt
 
 
 /*  --- doc ---
+    NAME: indicator
+    ID: indicator
+    DESC: Disables front LED indicator
+    PARAM:  [type=boolean | optional]   [name=off]  [value=True or False]
+    RETURN: None
+*/
+static mp_obj_t engine_io_indicator(size_t n_args, const mp_obj_t *args){
+    #if defined(__arm__)
+        bool off = true;
+
+        if(n_args == 1 && mp_obj_is_bool(args[0])){
+            off = mp_obj_get_int(args[0]);
+        }
+
+        engine_io_rp3_set_indicator(off);
+    #endif
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_io_indicator_obj, 0, 1, engine_io_indicator);
+
+
+/*  --- doc ---
     NAME: engine_io
     ID: engine_io
     DESC: Module for checking button presses
@@ -235,6 +257,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(buttons_reset_params_all_obj, engine_io_reset_all_butt
     ATTR: [type=function]            [name={ref_link:battery_voltage}]          [value=function]
     ATTR: [type=function]            [name={ref_link:battery_level}]            [value=function]
     ATTR: [type=function]            [name={ref_link:is_charging}]              [value=function]
+    ATTR: [type=function]            [name={ref_link:indicator}]                [value=function]
     ATTR: [type=function]            [name={ref_link:focused_node}]             [value=function]
     ATTR: [type=type]                [name={ref_link:Button}]                   [value=the Button class]
     ATTR: [type={ref_link:Button}]   [name=UP]                                  [value=the button object]
@@ -261,6 +284,7 @@ static const mp_rom_map_elem_t engine_io_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_battery_voltage), MP_ROM_PTR(&engine_io_battery_voltage_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_battery_level), MP_ROM_PTR(&engine_io_battery_level_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_is_charging), MP_ROM_PTR(&engine_io_is_charging_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_indicator), MP_ROM_PTR(&engine_io_indicator_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_focused_node), MP_ROM_PTR(&engine_io_focused_node_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Button), MP_ROM_PTR(&button_class_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_UP), MP_ROM_PTR(&BUTTON_DPAD_UP) },
