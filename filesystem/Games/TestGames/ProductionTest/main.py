@@ -71,9 +71,10 @@ def test_buttons():
 
             if (button.pressed_before is False and pressed_now_count == 0):
                 button.text_node.text = "[X] " + button.name
-                pressed_now_count += 1
                 pressed_total_count += 1
                 button.pressed_before = True
+            
+            pressed_now_count += 1
     
     if any_pressed:
        engine_audio.play(tone, 0, False)
