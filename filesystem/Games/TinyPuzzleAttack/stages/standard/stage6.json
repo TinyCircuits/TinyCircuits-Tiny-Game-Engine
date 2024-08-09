@@ -1,0 +1,100 @@
+{
+    "name": "Stage 6",
+    "prefix": "6",
+    "levels": [
+        [
+            "CG  ",
+            "CB  ",
+            "BR  ",
+            "GCRR",
+            "GBGG",
+            3
+        ],
+        [
+            " GP   ",
+            "RBP   ",
+            "BCB   ",
+            "PBP   ",
+            "BGCG  ",
+            "BRRP  ",
+            "PPCP  ",
+            3
+        ],
+        [
+            "   B",
+            "  BR",
+            " YBR",
+            " GRB",
+            "YGBR",
+            "GYBY",
+            4
+        ],
+        [
+            "P   ",
+            "YY  ",
+            "RP  ",
+            "RY  ",
+            "CC  ",
+            "RRY ",
+            "CPYY",
+            4
+        ],
+        [
+            "CP  ",
+            "RG  ",
+            "RR  ",
+            "GG  ",
+            "CP  ",
+            "RCCP",
+            4
+        ],
+        [
+            "   C",
+            "   B",
+            "B  Y",
+            "C BY",
+            "CYPC",
+            "PPCB",
+            "CBBY",
+            3
+        ],
+        [
+            "Y   ",
+            "PY  ",
+            "RR  ",
+            "YYP ",
+            "RPRR",
+            4
+        ],
+        [
+            "   R  ",
+            " GGB  ",
+            " RRG  ",
+            " CRB  ",
+            " RCCBR",
+            4
+        ],
+        [
+            " G  ",
+            " P  ",
+            " C  ",
+            "PB  ",
+            "YBY ",
+            "BPG ",
+            "YPG ",
+            "PCP ",
+            "PCP ",
+            4
+        ],
+        [
+            "  B ",
+            " BY ",
+            " GCY",
+            " RYC",
+            " RCR",
+            "CCRB",
+            "GRGC",
+            4
+        ]
+    ]
+}

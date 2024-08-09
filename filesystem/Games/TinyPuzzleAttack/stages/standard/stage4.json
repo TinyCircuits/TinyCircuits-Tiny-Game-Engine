@@ -1,0 +1,92 @@
+{
+    "name": "Stage 4",
+    "prefix": "4",
+    "levels": [
+        [
+            " R  ",
+            " Y  ",
+            " R  ",
+            "BRR ",
+            "YYB ",
+            "RBR ",
+            2
+        ],
+        [
+            " YY ",
+            " BP ",
+            " YB ",
+            "BPP ",
+            2
+        ],
+        [
+            " Y  ",
+            " B  ",
+            " B  ",
+            " G  ",
+            " GGY",
+            " BYY",
+            3
+        ],
+        [
+            "  RR  ",
+            "  GCC ",
+            "  GRGC",
+            2
+        ],
+        [
+            "   C  ",
+            "  CP  ",
+            "  GP  ",
+            "  CG  ",
+            "  PG  ",
+            "CCGP  ",
+            3
+        ],
+        [
+            "GBC   ",
+            "PRY   ",
+            "YYP   ",
+            "PRC   ",
+            "PGGRB ",
+            "BRBBG ",
+            "CCGRG ",
+            "CCPRP ",
+            "GGBBG ",
+            1
+        ],
+        [
+            "  G   ",
+            "  Y   ",
+            "  Y   ",
+            "YYC   ",
+            "GYGGCC",
+            2
+        ],
+        [
+            " Y  ",
+            " YB ",
+            " RRY",
+            " BRB",
+            3
+        ],
+        [
+            " R  ",
+            " YR ",
+            " RY ",
+            " CC ",
+            " YG ",
+            "CGG ",
+            3
+        ],
+        [
+            "   Y",
+            "   Y",
+            "   R",
+            "  RY",
+            " RGC",
+            "GGYY",
+            "CYYC",
+            3
+        ]
+    ]
+}

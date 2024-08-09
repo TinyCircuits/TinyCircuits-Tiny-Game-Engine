@@ -1,0 +1,105 @@
+{
+    "name": "Extra 4",
+    "prefix": "X4",
+    "levels": [
+        [
+            "  Y ",
+            "  RY",
+            " YRP",
+            " CYY",
+            " CRP",
+            " RYY",
+            "YCRP",
+            3
+        ],
+        [
+            " PC   ",
+            " CPC  ",
+            " GCPC ",
+            "BGBBGC",
+            4
+        ],
+        [
+            "   RR ",
+            "   RR ",
+            " RRPY ",
+            " PRYP ",
+            " RYPPR",
+            4
+        ],
+        [
+            "Y   ",
+            "C   ",
+            "YGY ",
+            "CCG ",
+            "YCCG",
+            4
+        ],
+        [
+            "  BP  ",
+            "  RC  ",
+            " RRC  ",
+            " CCG  ",
+            " PGP  ",
+            " RGP  ",
+            "BBRCPP",
+            3
+        ],
+        [
+            "Y PY G",
+            "YBGY B",
+            "CPBPPG",
+            "GCPYYG",
+            "CYYPPY",
+            "BBPBBG",
+            "YGBGYP",
+            "PGPBGY",
+            "YPYBBP",
+            "PYBGGP",
+            1
+        ],
+        [
+            "  C ",
+            "  G ",
+            "Y BB",
+            "RCYY",
+            "RGPY",
+            "YGBP",
+            "RYPC",
+            3
+        ],
+        [
+            "   B  ",
+            "   G  ",
+            "  YPG ",
+            "  GYP ",
+            " GYPP ",
+            "PPBGBB",
+            3
+        ],
+        [
+            "   B  ",
+            "   B  ",
+            "   Y  ",
+            "   B  ",
+            "   Y  ",
+            "   R  ",
+            "   RG ",
+            "  RGR ",
+            " YYRYY",
+            " BBYGB",
+            4
+        ],
+        [
+            "  Y ",
+            " YB ",
+            "CCG ",
+            "RPR ",
+            "RBG ",
+            "BGB ",
+            "RRCY",
+            "PRPP",
+            4
+        ]
+    ]
+}
