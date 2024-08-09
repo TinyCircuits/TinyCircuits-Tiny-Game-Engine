@@ -43,7 +43,6 @@ def printmem(reason=None, heap=False):
 
 #import engine_debug
 #engine_debug.enable_all()
-engine_io.gui_toggle_button(None) #disable menu button - this game uses a custom menu implementation
 
 boardtex = TextureResource("background-full.bmp", True) #assets
 tiletex = TextureResource("tiles.bmp", True)

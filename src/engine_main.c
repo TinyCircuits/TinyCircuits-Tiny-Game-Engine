@@ -3,6 +3,7 @@
 #include "py/runtime.h"
 #include "py/gc.h"
 #include "engine_main.h"
+#include "engine.h"
 
 #include "engine_object_layers.h"
 #include "resources/engine_resource_manager.h"
@@ -41,8 +42,11 @@ void engine_main_raise_if_not_initialized(){
 void engine_main_reset(){
     ENGINE_PRINTF("EngineMain: Resetting engine...\n");
 
-    // Set back to default
-    engine_display_set_fill_color(0x0000);
+    // Always reset the processor core clock speed
+    // engine_set_freq(150 * 1000 * 1000);
+
+    // Always reset screen background fills
+    engine_display_reset_fills();
 
     // Reset contigious flash space manager
     engine_audio_stop_all();

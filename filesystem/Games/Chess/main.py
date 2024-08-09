@@ -16,7 +16,7 @@ from chessengine import openings, piece_values, pstable
 
 random.seed(time.ticks_ms())
 
-font = FontResource("../../assets/outrunner_outline.bmp")
+font = FontResource("/system/assets/outrunner_outline.bmp")
 
 chess_texture = TextureResource("chess.bmp")
 board_texture = TextureResource("board.bmp")

@@ -26,6 +26,18 @@
 #include "engine_main.h"
 
 
+#if defined(__arm__)
+    #include "hardware/clocks.h"
+    #include "hardware/pll.h"
+    #include "hardware/structs/rosc.h"
+    #include "hardware/structs/scb.h"
+    #include "hardware/structs/syscfg.h"
+    #include "hardware/watchdog.h"
+    #include "hardware/xosc.h"
+    #include "py/mphal.h"
+#endif
+
+
 // ### MODULE ###
 
 // Module functions
@@ -42,6 +54,16 @@ uint32_t engine_fps_time_at_before_last_tick_ms = MILLIS_NULL;
 
 float engine_get_fps_limit_ms(){
     return engine_fps_limit_period_ms;
+}
+
+
+void engine_set_freq(uint32_t hz){
+    #if defined(__arm__)
+        if(!set_sys_clock_khz(hz / 1000, false)){
+            mp_raise_ValueError(MP_ERROR_TEXT("cannot change frequency"));
+        }
+        engine_audio_adjust_playback_with_freq(hz);
+    #endif
 }
 
 
@@ -286,6 +308,26 @@ static mp_obj_t engine_start(){
 MP_DEFINE_CONST_FUN_OBJ_0(engine_start_obj, engine_start);
 
 
+/* --- doc ---
+   NAME: freq
+   ID: engine_freq
+   DESC: Gets or sets the processor frequency (use this in place of machine.freq(Hz))
+   PARAM: [type=int] [name=hz] [value=any positive integer | optional]
+   RETURN: None or int
+*/
+static mp_obj_t engine_freq(size_t n_args, const mp_obj_t *args){
+    if(n_args == 1){
+        engine_set_freq(mp_obj_get_int(args[0]));
+    }else{
+        #if defined(__arm__)
+            return mp_obj_new_int(mp_hal_get_cpu_freq());
+        #endif
+    }
+
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_freq_obj, 0, 1, engine_freq);
+
 
 static mp_obj_t engine_module_init(){
     engine_main_raise_if_not_initialized();
@@ -306,6 +348,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_module_init_obj, engine_module_init);
    ATTR: [type=function] [name={ref_link:engine_start}]         [value=function]
    ATTR: [type=function] [name={ref_link:engine_end}]           [value=function]
    ATTR: [type=function] [name={ref_link:engine_reset}]         [value=function]
+   ATTR: [type=function] [name={ref_link:engine_freq}]          [value=function]
 */
 static const mp_rom_map_elem_t engine_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine) },
@@ -318,6 +361,7 @@ static const mp_rom_map_elem_t engine_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_start), (mp_obj_t)&engine_start_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_end), (mp_obj_t)&engine_end_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_reset), (mp_obj_t)&engine_reset_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_freq), (mp_obj_t)&engine_freq_obj },
 };
 
 // Module init

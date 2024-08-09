@@ -30,6 +30,7 @@ MP_REGISTER_ROOT_POINTER(mp_obj_t front_fb);
 
 void engine_display_set_fill_color(uint16_t color);
 void engine_display_set_fill_background(uint16_t *data);
+void engine_display_reset_fills();
 
 uint16_t *engine_display_get_background();
 uint16_t engine_display_get_color();

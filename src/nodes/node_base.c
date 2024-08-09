@@ -471,6 +471,18 @@ bool node_base_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp_
             destination[0] = self_node_base;
             return true;
         break;
+        case MP_QSTR_global_position:
+        {
+            float x = 0.0f;
+            float y = 0.0f;
+
+            node_base_get_child_absolute_xy(&x, &y, NULL, NULL, self_node_base);
+
+            destination[0] = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(x), mp_obj_new_float(y)});
+
+            return true;
+        }
+        break;
     }
 
     return false;
@@ -482,6 +494,9 @@ bool node_base_store_attr(engine_node_base_t *self_node_base, qstr attribute, mp
         case MP_QSTR_layer:
             node_base_set_layer(self_node_base, mp_obj_get_int(destination[1]));
             return true;
+        break;
+        case MP_QSTR_global_position:
+            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: ERROR: Setting the global position of a node is not supported yet!"));
         break;
     }
 

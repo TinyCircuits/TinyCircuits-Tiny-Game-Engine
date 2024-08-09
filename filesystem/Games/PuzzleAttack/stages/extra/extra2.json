@@ -1,0 +1,103 @@
+{
+    "name": "Extra 2",
+    "prefix": "X2",
+    "levels": [
+        [
+            "  P ",
+            "  B ",
+            "  P ",
+            "  B ",
+            "  PP",
+            "  GG",
+            " PBP",
+            " GPG",
+            " GPG",
+            3
+        ],
+        [
+            "   G  ",
+            "  GC  ",
+            "  CRC ",
+            " GYRR ",
+            " RYYRR",
+            3
+        ],
+        [
+            "CYC ",
+            "PYP ",
+            "PBP ",
+            "CPB ",
+            "PYB ",
+            3
+        ],
+        [
+            "   B  ",
+            "   C  ",
+            " B G  ",
+            " BPG  ",
+            " CRPRR",
+            " PCRGG",
+            " GGRCC",
+            3
+        ],
+        [
+            "    C ",
+            "    P ",
+            " BB P ",
+            " PPBY ",
+            " CGPPY",
+            " GGCPY",
+            3
+        ],
+        [
+            "YCYY C",
+            "YGPCCP",
+            "PPRCRR",
+            "PGPGGC",
+            "CGCPPG",
+            "GPPGGC",
+            "PGGPPC",
+            "GCCPYG",
+            "GPPCPP",
+            "YGGPPG",
+            "GPPCCG",
+            1
+        ],
+        [
+            "  B ",
+            "  CC",
+            "  GC",
+            " CGP",
+            " RRG",
+            "RPPB",
+            "BBCB",
+            3
+        ],
+        [
+            "  B ",
+            "  P ",
+            "  Y ",
+            "B Y ",
+            "RBR ",
+            "YPB ",
+            "RPYP",
+            4
+        ],
+        [
+            "P YYC ",
+            "R BBG ",
+            "RBYGB ",
+            "YYGCC ",
+            "RPPBY ",
+            3
+        ],
+        [
+            "  C ",
+            " CYY",
+            " YBC",
+            "BBPG",
+            "GPGP",
+            3
+        ]
+    ]
+}
