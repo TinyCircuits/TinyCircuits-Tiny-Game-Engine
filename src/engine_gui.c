@@ -398,6 +398,7 @@ void engine_gui_tick(){
     }else if(button_is_pressed_autorepeat(&BUTTON_DPAD_RIGHT)){
         dir_x = 1.0f;
     }
+    
     if(button_is_pressed_autorepeat(&BUTTON_DPAD_UP)){
         dir_y = -1.0f;
     }else if(button_is_pressed_autorepeat(&BUTTON_DPAD_DOWN)){
