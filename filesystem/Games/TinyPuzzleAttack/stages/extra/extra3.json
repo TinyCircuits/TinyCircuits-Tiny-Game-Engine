@@ -1,0 +1,104 @@
+{
+    "name": "Extra 3",
+    "prefix": "X3",
+    "levels": [
+        [
+            "  B   ",
+            "  B   ",
+            " BPB  ",
+            "BCCPB ",
+            "CBBCY ",
+            "CCYCC ",
+            "PPYPP ",
+            "CCPCC ",
+            3
+        ],
+        [
+            " C  ",
+            " R  ",
+            " GC ",
+            " GG ",
+            " BB ",
+            " GB ",
+            "RGRC",
+            2
+        ],
+        [
+            "     G",
+            "     R",
+            "B  P R",
+            "Y YPYP",
+            "PYPYPY",
+            "YBBGGR",
+            3
+        ],
+        [
+            "  C   ",
+            "  B   ",
+            "  R   ",
+            "  PC  ",
+            " PBRC ",
+            "PRRBRR",
+            3
+        ],
+        [
+            "  G ",
+            "  C ",
+            " YYG",
+            " BYB",
+            " YCB",
+            "GGYC",
+            3
+        ],
+        [
+            "   B  ",
+            "   R  ",
+            "   C  ",
+            "   B  ",
+            " CCB  ",
+            "CRBR  ",
+            "RPPRBB",
+            "PCCBCR",
+            3
+        ],
+        [
+            "   YY ",
+            "  CGR ",
+            "PYPBB ",
+            "RRYCG ",
+            "RRGBG ",
+            "CCYPCY",
+            "RRPRCR",
+            3
+        ],
+        [
+            "  CGG ",
+            " PBBR ",
+            " PBPR ",
+            " BPRP ",
+            " PBCCG",
+            3
+        ],
+        [
+            "   Y",
+            "   C",
+            "G  C",
+            "YCGY",
+            "YGCC",
+            "CCGY",
+            "YGRR",
+            "GRCC",
+            2
+        ],
+        [
+            "GG  ",
+            "BRB ",
+            "PGR ",
+            "GPY ",
+            "PGP ",
+            "PBY ",
+            "RGY ",
+            3
+        ]
+    ]
+}

@@ -15,6 +15,8 @@ engine_node_base_t *engine_gui_get_focused();
 void engine_gui_clear_focused();
 void engine_gui_set_wrapping(bool enabled);
 bool engine_gui_get_wrapping();
+void engine_gui_set_passing(bool enabled);
+bool engine_gui_get_passing();
 void engine_gui_tick();
 
 #endif  // ENGINE_GUI_H

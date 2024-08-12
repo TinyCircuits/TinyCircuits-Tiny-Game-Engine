@@ -1,0 +1,45 @@
+{
+    "name": "Custom Test",
+    "prefix": "C",
+    "levels": [
+        [
+            "Y   ",
+            "C   ",
+            "YGY ",
+            "CCG ",
+            "YCCG",
+            4
+        ],
+        [
+            "  BP  ",
+            "  RC  ",
+            " RRC  ",
+            " CCG  ",
+            " PGP  ",
+            " RGP  ",
+            "BBRCPP",
+            3
+        ],
+        [
+            "  C ",
+            "  G ",
+            "Y BB",
+            "RCYY",
+            "RGPY",
+            "YGBP",
+            "RYPC",
+            3
+        ],
+        [
+            "  Y ",
+            " YB ",
+            "CCG ",
+            "RPR ",
+            "RBG ",
+            "BGB ",
+            "RRCY",
+            "PRPP",
+            4
+        ]
+    ]
+}

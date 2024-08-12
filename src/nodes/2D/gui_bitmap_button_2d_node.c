@@ -260,6 +260,11 @@ bool bitmap_button_2d_node_load_attr(engine_node_base_t *self_node_base, qstr at
             return true;
         break;
 
+        case MP_QSTR_on_before_focused:
+            destination[0] = self->on_before_focused_cb;
+            destination[1] = self_node_base->attr_accessor;
+            return true;
+        break;
         case MP_QSTR_on_focused:
             destination[0] = self->on_focused_cb;
             destination[1] = self_node_base->attr_accessor;
@@ -294,6 +299,10 @@ bool bitmap_button_2d_node_load_attr(engine_node_base_t *self_node_base, qstr at
 
         case MP_QSTR_focused:
             destination[0] = mp_obj_new_bool(self->focused);
+            return true;
+        break;
+        case MP_QSTR_disabled:
+            destination[0] = self->disabled;
             return true;
         break;
         case MP_QSTR_pressed:
@@ -401,6 +410,10 @@ bool bitmap_button_2d_node_store_attr(engine_node_base_t *self_node_base, qstr a
             return true;
         break;
 
+        case MP_QSTR_on_before_focused:
+            self->on_before_focused_cb = destination[1];
+            return true;
+        break;
         case MP_QSTR_on_focused:
             self->on_focused_cb = destination[1];
             return true;
@@ -430,6 +443,10 @@ bool bitmap_button_2d_node_store_attr(engine_node_base_t *self_node_base, qstr a
         case MP_QSTR_focused:
             self->focused = mp_obj_get_int(destination[1]);
             if(self->focused == true) engine_gui_focus_node(self_node_base);
+            return true;
+        break;
+        case MP_QSTR_disabled:
+            self->disabled = destination[1];
             return true;
         break;
         case MP_QSTR_pressed:
@@ -491,6 +508,7 @@ static mp_attr_fun_t gui_bitmap_button_2d_node_class_attr(mp_obj_t self_in, qstr
 
     PARAM:  [type=float]                      [name=letter_spacing]                                 [value=any]
     PARAM:  [type=float]                      [name=line_spacing]                                   [value=any]
+    PARAM:  [type=bool]                       [name=disabled]                                       [value=True or False (when True, element will not be focused by default navigation system)]
     PARAM:  [type=int]                        [name=layer]                                          [value=0 ~ 127]
 
 
@@ -502,6 +520,7 @@ static mp_attr_fun_t gui_bitmap_button_2d_node_class_attr(mp_obj_t self_in, qstr
     ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy_children}]     [value=function]
     ATTR:   [type=function]                   [name={ref_link:remove_child}]                        [value=function]
     ATTR:   [type=function]                   [name={ref_link:tick}]                                [value=function]
+    ATTR:   [type=function]                   [name={ref_link:on_before_focused}]                   [value=function]
     ATTR:   [type=function]                   [name={ref_link:on_focused}]                          [value=function]
     ATTR:   [type=function]                   [name={ref_link:on_just_focused}]                     [value=function]
     ATTR:   [type=function]                   [name={ref_link:on_just_unfocused}]                   [value=function]
@@ -510,6 +529,7 @@ static mp_attr_fun_t gui_bitmap_button_2d_node_class_attr(mp_obj_t self_in, qstr
     ATTR:   [type=function]                   [name={ref_link:on_just_released}]                    [value=function]
 
     ATTR:   [type={ref_link:Vector2}]         [name=position]                                       [value={ref_link:Vector2}]
+    ATTR:   [type={ref_link:Vector2}]         [name=global_position]                                [value={ref_link:Vector2} (read-only)]
     ATTR:   [type={ref_link:FontResource}]    [name=font]                                           [value={ref_link:FontResource}]
     ATTR:   [type=string]                     [name=text]                                           [value=any]
     ATTR:   [type=float]                      [name=outline]                                        [value=any (how thick the outline should be, in px)]
@@ -532,6 +552,7 @@ static mp_attr_fun_t gui_bitmap_button_2d_node_class_attr(mp_obj_t self_in, qstr
 
     ATTR:   [type=float]                      [name=letter_spacing]                                 [value=any]
     ATTR:   [type=float]                      [name=line_spacing]                                   [value=any]
+    ATTR:   [type=bool]                       [name=disabled]                                       [value=True or False (when True, element will not be focused by default navigation system)]
 
     ATTR:   [type=boolean]                    [name=focused]                                        [value=True or False (can be read to see if focused or set to focus it)]
     ATTR:   [type=boolean]                    [name=pressed]                                        [value=True or False (can be read to see if pressed or set to press it)]
@@ -574,7 +595,8 @@ mp_obj_t gui_bitmap_button_2d_node_class_new(const mp_obj_type_t *type, size_t n
 
         { MP_QSTR_letter_spacing,       MP_ARG_OBJ, {.u_obj = mp_obj_new_float(0.0f)} },
         { MP_QSTR_line_spacing,         MP_ARG_OBJ, {.u_obj = mp_obj_new_float(0.0f)} },
-        { MP_QSTR_layer,                MP_ARG_INT, {.u_int = 0} }
+        { MP_QSTR_layer,                MP_ARG_INT, {.u_int = 0} },
+        { MP_QSTR_disabled,             MP_ARG_OBJ, {.u_obj = mp_obj_new_bool(false)} }
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
     enum arg_ids {child_class, position, font, text,
@@ -594,7 +616,8 @@ mp_obj_t gui_bitmap_button_2d_node_class_new(const mp_obj_type_t *type, size_t n
                   letter_spacing,
                   line_spacing,
                   
-                  layer};
+                  layer,
+                  disabled};
 
     bool inherited = false;
 
@@ -625,6 +648,7 @@ mp_obj_t gui_bitmap_button_2d_node_class_new(const mp_obj_type_t *type, size_t n
     gui_bitmap_button_2d_node->gui_list_node = engine_collections_track_gui(node_base);
 
     gui_bitmap_button_2d_node->tick_cb = mp_const_none;
+    gui_bitmap_button_2d_node->on_before_focused_cb = mp_const_none;
     gui_bitmap_button_2d_node->on_focused_cb = mp_const_none;
     gui_bitmap_button_2d_node->on_just_focused_cb = mp_const_none;
     gui_bitmap_button_2d_node->on_just_unfocused_cb = mp_const_none;
@@ -653,6 +677,7 @@ mp_obj_t gui_bitmap_button_2d_node_class_new(const mp_obj_type_t *type, size_t n
 
     gui_bitmap_button_2d_node->letter_spacing = parsed_args[letter_spacing].u_obj;
     gui_bitmap_button_2d_node->line_spacing = parsed_args[line_spacing].u_obj;
+    gui_bitmap_button_2d_node->disabled = parsed_args[disabled].u_obj;
 
     gui_bitmap_button_2d_node->focused = false;
     gui_bitmap_button_2d_node->pressed = false;
@@ -675,6 +700,13 @@ mp_obj_t gui_bitmap_button_2d_node_class_new(const mp_obj_type_t *type, size_t n
             gui_bitmap_button_2d_node->tick_cb = mp_const_none;
         }else{                                                  // Likely found method (could be attribute)
             gui_bitmap_button_2d_node->tick_cb = dest[0];
+        }
+
+        mp_load_method_maybe(node_instance, MP_QSTR_on_before_focused, dest);
+        if(dest[0] == MP_OBJ_NULL && dest[1] == MP_OBJ_NULL){   // Did not find method (set to default)
+            gui_bitmap_button_2d_node->on_before_focused_cb = mp_const_none;
+        }else{                                                  // Likely found method (could be attribute)
+            gui_bitmap_button_2d_node->on_before_focused_cb = dest[0];
         }
 
         mp_load_method_maybe(node_instance, MP_QSTR_on_focused, dest);
