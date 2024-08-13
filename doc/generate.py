@@ -4,6 +4,8 @@ import glob
 import codecs
 from generate_common import get_attr_or_param_name_type_value, get_docstring_properties, header_marker, name_marker, id_marker, desc_marker, return_marker, attr_marker, param_marker, ovrr_marker
 
+# URL to the repository containing documented source files
+SRC_URL = "https://github.com/TinyCircuits/TinyCircuits-Tiny-Game-Engine"
 
 def create_fragment_html_file(path, name, id, desc, ret, attrs, params, ovrrs):
     file = open('build/' + id + '.html', 'w')
@@ -73,7 +75,7 @@ def create_fragment_html_file(path, name, id, desc, ret, attrs, params, ovrrs):
             file.write("<h>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>" + name + "</code> [value: " + value + ", type: " + type + "]" + "</h><br>")
     
 
-    file.write("<br><h> file: " + path[3:] + "</h>")
+    file.write("<br><h> file: <a href=\"" + SRC_URL + "/tree/main/ " + path[3:] + "\">" + path[3:] + "</a></h>")
 
     # End HTML file
     file.write("</body>")
