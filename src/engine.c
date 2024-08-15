@@ -217,15 +217,15 @@ bool engine_tick(){
     // physics nodes around, step the physics engine another tick.
     engine_physics_tick();
 
-    // Update/grab which buttons are pressed before calling all node callbacks
-    engine_io_tick();
-
     if(fps_limit_disabled || dt_ms >= engine_fps_limit_period_ms){
         engine_fps_time_at_before_last_tick_ms = engine_fps_time_at_last_tick_ms;
         engine_fps_time_at_last_tick_ms = now;
 
         ENGINE_PERFORMANCE_STOP(ENGINE_PERF_TIMER_1, "Loop time");
         ENGINE_PERFORMANCE_START(ENGINE_PERF_TIMER_1);
+
+        // Update/grab which buttons are pressed before calling all node callbacks
+        engine_io_tick();
 
         // Goes through all animation components.
         // Do this first in case a camera is being
