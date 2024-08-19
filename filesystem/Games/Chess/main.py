@@ -900,7 +900,7 @@ class ChessGame(Rectangle2DNode):
                 MAX_DEPTH = 3
      
             if hasattr(machine, 'freq'):
-                machine.freq(300 * 1000 * 1000)
+                machine.freq(250 * 1000 * 1000)
 
             eval_score, best_move = minimax(self.chessboard.board, depth=MAX_DEPTH, is_white=not self.player_is_white, alpha=float('-inf'), beta=float('inf'))
 

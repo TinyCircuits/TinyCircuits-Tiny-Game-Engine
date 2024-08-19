@@ -300,7 +300,7 @@ class Game(Rectangle2DNode):
 
     def ai_move(self):
         if hasattr(machine, 'freq'):
-            machine.freq(300 * 1000 * 1000)
+            machine.freq(250 * 1000 * 1000)
         grid_copy = deepcopy_2d_list(self.grid)
         filled_cells = sum(grid_copy[row][col] != 0 for row in range(GRID_ROWS) for col in range(GRID_COLS))
         # Depth settings based on difficulty level and game stage
