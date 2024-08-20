@@ -19,23 +19,84 @@
 #include <stdlib.h>
 
 
+#define SAVES_DIR_LENGTH_MAX 256
+char saves_dir[SAVES_DIR_LENGTH_MAX] = {0};
+size_t saves_dir_len = 0;
+
+
+/* --- doc ---
+   NAME: _init_saves_dir
+   ID: engine_save__init_saves_dir
+   DESC: Initializes the saves directory location for the current run (does not create the directory yet). Apps should never call it - it is called by the app loader. The saves API will only work if this was called first. It cannot be called again before machine is reset.
+   PARAM:   [type=str]  [name=dir]   [value=e.g. "Saves/Games/MyGame"]
+   RETURN: None
+*/
+static mp_obj_t engine_save__init_saves_dir(mp_obj_t dir){
+    if(!mp_obj_is_str(dir)){
+        mp_raise_TypeError(MP_ERROR_TEXT("EngineSave: ERROR: dir is not a string"));
+    }
+    if(saves_dir_len){
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineSave: ERROR: _init_saves_dir was already called"));
+    }
+    GET_STR_DATA_LEN(dir, dir_str, dir_str_len);
+    if(!dir_str_len){
+        mp_raise_ValueError(MP_ERROR_TEXT("EngineSave: ERROR: dir is empty string"));
+    }
+    if(dir_str[dir_str_len - 1] == '/'){
+        mp_raise_ValueError(MP_ERROR_TEXT("EngineSave: ERROR: do not include the trailing slash"));
+    }
+    if(dir_str_len > SAVES_DIR_LENGTH_MAX){
+        mp_raise_ValueError(MP_ERROR_TEXT("EngineSave: ERROR: dir name is too long"));
+    }
+    memcpy(saves_dir, dir_str, dir_str_len);
+    saves_dir_len = dir_str_len;
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_1(engine_save__init_saves_dir_obj, engine_save__init_saves_dir);
+
+
+void ensure_inited(){
+    if(!saves_dir_len){
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineSave: ERROR: _init_saves_dir was never called"));
+    }
+}
+
+
+/*  --- doc ---
+    NAME: saves_dir
+    ID: engine_save_saves_dir
+    DESC: Returns the current saves directory path, and creates it if it doesn't exist. Returns None if the saves directory was never set and saving is not supported.
+    RETURN: str or None
+*/
+static mp_obj_t engine_save_saves_dir(){
+    if(!saves_dir_len){
+        return mp_const_none;
+    }
+    mp_obj_t saves_dir_obj = mp_obj_new_str(saves_dir, saves_dir_len);
+    engine_file_makedirs(saves_dir_obj);
+    return saves_dir_obj;
+}
+MP_DEFINE_CONST_FUN_OBJ_0(engine_save_saves_dir_obj, engine_save_saves_dir);
+
+
 /* --- doc ---
    NAME: set_location
    ID: engine_save_set_location
-   DESC: Sets the current file location that entries will be saved to (required that this is done before trying to save, load, or delete entries)
+   DESC: Sets the current file location that entries will be saved to (required that this is done before trying to save, load, or delete entries).
    PARAM:   [type=str]  [name=filepath]   [value=str]
    RETURN: None
 */
 static mp_obj_t engine_save_set_location(mp_obj_t location){
     ENGINE_INFO_PRINTF("EngineSave: Setting location");
-
-    if(mp_obj_is_str(location) == false){
-        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineSave: ERROR: location path is not a string"));
+    ensure_inited();
+    if(!mp_obj_is_str(location)){
+        mp_raise_TypeError(MP_ERROR_TEXT("EngineSave: ERROR: location path is not a string"));
     }
-
     GET_STR_DATA_LEN(location, str, str_len);
+    if(str[0] == '/' || str[0] == '.' || strstr((char*)str, "..")){
+        mp_raise_ValueError(MP_ERROR_TEXT("EngineSave: ERROR: location path is invalid (must be relative)"));
+    }
     engine_saving_set_file_location(str, str_len);
-
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(engine_save_set_location_obj, engine_save_set_location);
@@ -49,6 +110,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_save_set_location_obj, engine_save_set_location
 */
 static mp_obj_t engine_save_delete_location(){
     ENGINE_INFO_PRINTF("EngineSave: Deleting save location!");
+    ensure_inited();
     engine_saving_del_set_location();
     return mp_const_none;
 }
@@ -65,6 +127,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_save_delete_location_obj, engine_save_delete_lo
 */
 static mp_obj_t engine_save(mp_obj_t entry_name_obj, mp_obj_t obj){
     ENGINE_INFO_PRINTF("EngineSave: Saving");
+    ensure_inited();
 
     GET_STR_DATA_LEN(entry_name_obj, entry_name, entry_name_len);
 
@@ -88,6 +151,8 @@ MP_DEFINE_CONST_FUN_OBJ_2(engine_save_obj, engine_save);
    RETURN: str, bytearray, int, float, {ref_link:Vector2}, {ref_link:Vector3}, {ref_link:Color}, or None
 */
 static mp_obj_t engine_save_load(size_t n_args, const mp_obj_t *args){
+    ensure_inited();
+
     mp_obj_t entry_name_obj = args[0];
     mp_obj_t default_value_obj = mp_const_none;
 
@@ -120,10 +185,12 @@ MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_save_load_obj, 1, 2, engine_save_load
    RETURN: None
 */
 static mp_obj_t engine_save_delete(mp_obj_t entry_name_obj){
+    ensure_inited();
+
     GET_STR_DATA_LEN(entry_name_obj, entry_name, entry_name_len);
 
     if(entry_name_len == 0){
-        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineSave: ERROR: Tried to delete entry with empty/zero length name"));
+        mp_raise_ValueError(MP_ERROR_TEXT("EngineSave: ERROR: Tried to delete entry with empty/zero length name"));
     }
 
     engine_saving_delete_entry(entry_name, entry_name_len);
@@ -136,13 +203,15 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_save_delete_obj, engine_save_delete);
 static mp_obj_t engine_save_module_init(){
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_0(engine_save_module_init_obj, engine_save_module_init);    
+MP_DEFINE_CONST_FUN_OBJ_0(engine_save_module_init_obj, engine_save_module_init);
 
 
 /* --- doc ---
    NAME: engine_save
    ID: engine_save
    DESC: Module for saving and loading data
+   ATTR:   [type=function]    [name={ref_link:engine_save__init_saves_dir}]      [value=function]
+   ATTR:   [type=function]    [name={ref_link:engine_save_saves_dir}]            [value=function]
    ATTR:   [type=function]    [name={ref_link:engine_save_set_location}]        [value=function]
    ATTR:   [type=function]    [name={ref_link:engine_save_delete_location}]     [value=function]
    ATTR:   [type=function]    [name={ref_link:engine_save_save}]                [value=function]
@@ -151,12 +220,14 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_save_module_init_obj, engine_save_module_init);
 */
 static const mp_rom_map_elem_t engine_save_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_save) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR___init__), (mp_obj_t)&engine_save_module_init_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_save), (mp_obj_t)&engine_save_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_load), (mp_obj_t)&engine_save_load_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_delete), (mp_obj_t)&engine_save_delete_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_delete_location), (mp_obj_t)&engine_save_delete_location_obj },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_set_location), (mp_obj_t)&engine_save_set_location_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR___init__), MP_ROM_PTR(&engine_save_module_init_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR__init_saves_dir), MP_ROM_PTR(&engine_save__init_saves_dir_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_saves_dir), MP_ROM_PTR(&engine_save_saves_dir_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_save), MP_ROM_PTR(&engine_save_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_load), MP_ROM_PTR(&engine_save_load_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_delete), MP_ROM_PTR(&engine_save_delete_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_delete_location), MP_ROM_PTR(&engine_save_delete_location_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_set_location), MP_ROM_PTR(&engine_save_set_location_obj) },
 };
 
 // Module init

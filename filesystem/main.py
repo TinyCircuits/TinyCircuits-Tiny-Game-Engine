@@ -39,6 +39,8 @@ try:
         # and change to the game directory (so that opening files in the game dir works)
         sys.path.append(f"{ROOT_DIR}/{dir}")
         os.chdir(dir)
+        import engine_save
+        engine_save._init_saves_dir(f"/Saves/{dir}")
 
         # Launch the `_run_on_boot` file while holding
         # the launcher state so that the state file is

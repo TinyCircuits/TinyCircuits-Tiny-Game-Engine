@@ -1,5 +1,6 @@
 #include "engine_save.h"
 
+#include "engine_save_module.h"
 #include "utility/engine_mp.h"
 #include "math/engine_math.h"
 #include "utility/engine_file.h"
@@ -25,7 +26,7 @@
       offset_end ~ bucket_end |Variable         |          Buckets: Bucket offsets are seek positions to starts of buckets in this part of the data. Each bucket consists of type,offset,data_length,key_length,key pairs
 */
 
-#define SAVE_LOCATION_LENGTH_MAX 256
+#define SAVE_LOCATION_LENGTH_MAX 384
 #define BUFFER_LENGTH_MAX 256
 
 #define TABLE_THUMBY_CLR_SCREEN_LEN 4
@@ -377,30 +378,25 @@ bool engine_saving_seek_copy_to_entry_in_file(uint8_t from_file_index, uint8_t t
 
 
 void engine_saving_set_file_location(const byte *location, size_t location_len){
-    // Cannot be larger than this since `temp-` takes up 5 characters
-    if(location_len > SAVE_LOCATION_LENGTH_MAX-5){
+    // The save file is "{saves_dir}/{location}".
+    // Cannot be longer than this since `_temp` takes up 5 characters
+    if(saves_dir_len + 1 + location_len > SAVE_LOCATION_LENGTH_MAX - 5){
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineSave: ERROR: location path too long (max length: 250)"));
     }
 
-    // Set these equal to each other, for now
-    current_location.len = location_len;
-    temporary_location.len = location_len;
+    ENGINE_FORCE_PRINTF("%s %d %s %d",saves_dir,saves_dir_len,location,location_len);
 
-    // Copy base files name to current and temporary file names
-    memcpy((byte*)current_location.data, location, current_location.len);
-    memcpy((byte*)temporary_location.data, location, current_location.len);
+    current_location.len = saves_dir_len + 1 + location_len;
+    memcpy((byte*)current_location.data, saves_dir, saves_dir_len);
+    ((byte*)current_location.data)[saves_dir_len] = '/';
+    memcpy((byte*)current_location.data + saves_dir_len + 1, location, location_len);
 
-    // Append `-temp` to end of temporary filename and increase length to account for it
-    memcpy((byte*)temporary_location.data + temporary_location.len, "-temp", 5);
-    temporary_location.len += 5;
+    // Set the temporary location to "{saves_len}/{location}_temp".
+    temporary_location.len = current_location.len + 5;
+    memcpy((byte*)temporary_location.data, current_location.data, current_location.len);
+    memcpy((byte*)temporary_location.data + current_location.len, "_temp", 5);
 
-    // If the file we are going to read from does not exist already,
-    // create it and write the initial table and special data to it
-    if(engine_file_exists(&current_location) == false){
-        engine_file_open_create_write(0, &current_location);
-        engine_saving_save_meta_table(0, SAVE_VERSION);
-        engine_file_close(0);
-    }else{
+    if(engine_file_exists(&current_location)){
         // Looks likes the file already exists, check that it has the
         // unique sting at the start or error if it does not
         engine_file_open_read(0, &current_location);
@@ -410,6 +406,13 @@ void engine_saving_set_file_location(const byte *location, size_t location_len){
             mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineSave: ERROR: file at location is not a save file!"));
         }
 
+        engine_file_close(0);
+    }else{
+        // The file we are going to read from does not exist already.
+        // Create it and write the initial table and special data to it
+        engine_file_makedirs(engine_file_dirname(&current_location));
+        engine_file_open_create_write(0, &current_location);
+        engine_saving_save_meta_table(0, SAVE_VERSION);
         engine_file_close(0);
     }
 }
