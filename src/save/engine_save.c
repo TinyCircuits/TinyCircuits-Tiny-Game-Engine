@@ -19,10 +19,10 @@
 /*                      #### ENGINE SAVE FORMAT ####
 
             indices (size)    |      data       |                                                 desc.
-      0  ~ 15 (16 bytes)      |THUMBY_CLR_SAVE\n|    Unique string: 16 bytes indicating this is a Thumby Color save file (newline for humans to read)
-      16 ~ 17 (2  bytes)      |UINT_16          |          Version: 2 bytes indicating the version of this save file (can be changed in the firmware if needed)
-      18 ~ 19 (2  bytes)      |UINT_16          | Key/offset count: 2 bytes key count for when string keys are hashed and reduced to an index into the subsequent offset table. Higher key count means more flash taken up (256*4=1000) but less searching during collisions and vice versa
-      20 ~ offset_end         |UINT_32 array    |   Bucket offsets: Depending on previous 2 bytes, if key_count=128 and offset_size=4 bytes (always true) then 128*4=512 bytes of offset bytes
+      0 ~ 3   (4 bytes)       |THSV             |    Unique string: 4 bytes indicating this is a Thumby Color save file
+      4 ~ 5   (2  bytes)      |UINT_16          |          Version: 2 bytes indicating the version of this save file (can be changed in the firmware if needed)
+      6 ~ 7   (2  bytes)      |UINT_16          | Key/offset count: 2 bytes key count for when string keys are hashed and reduced to an index into the subsequent offset table. Higher key count means more flash taken up (256*4=1000) but less searching during collisions and vice versa
+      8 ~ offset_end          |UINT_32 array    |   Bucket offsets: Depending on previous 2 bytes, if key_count=128 and offset_size=4 bytes (always true) then 128*4=512 bytes of offset bytes
       offset_end ~ bucket_end |Variable         |          Buckets: Bucket offsets are seek positions to starts of buckets in this part of the data. Each bucket consists of type,offset,data_length,key_length,key pairs
 */
 
@@ -116,7 +116,7 @@ uint32_t engine_saving_get_entry_data_len(mp_obj_t entry){
     }else if(mp_obj_is_type(entry, &vector3_class_type)){
         return 4 + 4 + 4;
     }else if(mp_obj_is_type(entry, &color_class_type)){
-        return 4 + 4 + 4;
+        return 2;
     }else if(mp_obj_is_type(entry, &mp_type_bytearray)){
         return ((mp_obj_array_t*)entry)->len;
     }else{
@@ -383,8 +383,6 @@ void engine_saving_set_file_location(const byte *location, size_t location_len){
     if(saves_dir_len + 1 + location_len > SAVE_LOCATION_LENGTH_MAX - 5){
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineSave: ERROR: location path too long (max length: 250)"));
     }
-
-    ENGINE_FORCE_PRINTF("%s %d %s %d",saves_dir,saves_dir_len,location,location_len);
 
     current_location.len = saves_dir_len + 1 + location_len;
     memcpy((byte*)current_location.data, saves_dir, saves_dir_len);
