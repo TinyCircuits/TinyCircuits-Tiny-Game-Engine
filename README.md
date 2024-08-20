@@ -51,4 +51,4 @@ Make sure to check that the copied structures in src/utility/engine_mp.h are sti
 2. Upload a firmware and all files that should be included to Thumby Color
 3. Connect Thumby Color to computer with picotool installed in BOOTSEL mode (turn off, press and hold down DPAD direction, turn back on)
 4. Run: `sudo ./picotool save -r 0x10000000 0x11000000 thumby_color_dev_kit_full_image_08_20_2024.bin` (saves from `XIP_BASE` to `16MiB`s after to bin file)
-5. Run: `sudo ./picotool uf2 convert thumby_color_dev_kit_full_image_08_20_2024.bin`
+5. Run: `sudo ./picotool uf2 convert thumby_color_dev_kit_full_image_08_20_2024.bin thumby_color_dev_kit_full_image_08_20_2024.uf2`
