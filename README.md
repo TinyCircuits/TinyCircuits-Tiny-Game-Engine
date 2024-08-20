@@ -45,3 +45,10 @@ Use `(cd ../../ports/unix && make clean)` to make clean if needed
 
 # Updating MicroPython version
 Make sure to check that the copied structures in src/utility/engine_mp.h are still the same in the version of MicroPython you're updating to. Some structures are not exposed so they had to be copied to where the engine can use them.
+
+# How UF2s are made
+1. Download and compile https://github.com/raspberrypi/picotool (requires pico-sdk be installed in default known location or pass `-DPICO_SDK_PATH=` to `cmake`)
+2. Upload a firmware and all files that should be included to Thumby Color
+3. Connect Thumby Color to computer with picotool installed in BOOTSEL mode (turn off, press and hold down DPAD direction, turn back on)
+4. Run: `sudo ./picotool save -r 0x10000000 0x11000000 thumby_color_dev_kit_full_image_08_20_2024.bin` (saves from `XIP_BASE` to `16MiB`s after to bin file)
+5. Run: `sudo ./picotool uf2 convert thumby_color_dev_kit_full_image_08_20_2024.bin`

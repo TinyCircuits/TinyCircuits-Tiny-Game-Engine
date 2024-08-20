@@ -11,8 +11,8 @@ from constants import (
 	DISABLE_MUSIC,
 )
 
-POS_X = -1
-POS_Y = -1
+POS_X = 0
+POS_Y = 0
 LOGO_FRAMES = 8
 LOGO_DURATION = 4 if DISABLE_MUSIC else 5
 INTRO_FRAMES = 4
