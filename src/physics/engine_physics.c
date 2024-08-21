@@ -336,7 +336,7 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
 
         // Call A callback
         if(physics_node_base_a->on_collide_cb != mp_const_none){
-            collision_contact_data[4] = node_base_b;
+            collision_contact_data[4] = node_base_b->attr_accessor;
             exec[0] = physics_node_base_a->on_collide_cb;
             exec[1] = node_base_a->attr_accessor;
             exec[2] = collision_contact_2d_class_new(&collision_contact_2d_class_type, 5, 0, collision_contact_data);
@@ -345,7 +345,7 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
 
         // Call B callback
         if(physics_node_base_b->on_collide_cb != mp_const_none){
-            collision_contact_data[4] = node_base_a;
+            collision_contact_data[4] = node_base_a->attr_accessor;
             exec[0] = physics_node_base_b->on_collide_cb;
             exec[1] = node_base_b->attr_accessor;
             exec[2] = collision_contact_2d_class_new(&collision_contact_2d_class_type, 5, 0, collision_contact_data);
