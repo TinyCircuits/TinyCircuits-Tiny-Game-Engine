@@ -75,7 +75,7 @@ def create_fragment_html_file(path, name, id, desc, ret, attrs, params, ovrrs):
             file.write("<h>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>" + name + "</code> [value: " + value + ", type: " + type + "]" + "</h><br>")
     
 
-    file.write("<br><h> file: <a href=\"" + SRC_URL + "/tree/main/ " + path[3:] + "\">" + path[3:] + "</a></h>")
+    file.write("<br><h> file: <a href=\"" + SRC_URL + "/tree/main/" + path[3:] + "\">" + path[3:] + "</a></h>")
 
     # End HTML file
     file.write("</body>")
