@@ -1,6 +1,6 @@
 import os
 from system.root_dir import ROOT_DIR
-from system.util import is_file, is_dir, basename, thumby_reset, file_exists
+from system.util import is_file, is_dir, basename, file_exists
 from system.run_on_boot import set_run_on_boot
 from system.launcher.direction_icon import DirectionIcon
 from system.launcher_state import set_launcher_state
@@ -50,8 +50,14 @@ def end_loading_bar():
 # signify that the directory is a game directory and
 # return GameInfo
 def check_and_get_game_info(directory_path, directory_contents):
-    # Game directories need to contain of the following
-    if "manifest.ini" not in directory_contents and "main.py" not in directory_contents:
+    dir_name = directory_path[directory_path.rfind("/")+1:]
+    legacy_main_file = f"{dir_name}.py"
+
+    # Game directories need to contain one of the following conditions:
+    #   * A manifest file or
+    #   * A main.py or
+    #   * A .py file with the same name as its containing folder (Thumby legacy compatibility)
+    if "manifest.ini" not in directory_contents and "main.py" not in directory_contents and legacy_main_file not in directory_contents:
         return False
     
     # This is a game, create default info object
@@ -60,9 +66,10 @@ def check_and_get_game_info(directory_path, directory_contents):
     global total_game_count
     total_game_count += 1
 
-    # Mark as legacy by default if inside path that
-    # contains keyword `Legacy` (usually in /Games/Legacy)
-    game_info.legacy = "Legacy" in directory_path
+    # Set main file to execute to Python file that has the same
+    # name as its containing folder (Thumby legacy condition)
+    if legacy_main_file in directory_contents:
+        game_info.main_path = f"{directory_path}/{legacy_main_file}"
 
     # Look for default icon in folder
     if "icon.bmp" in directory_contents:
@@ -80,10 +87,6 @@ def check_and_get_game_info(directory_path, directory_contents):
             if   "name"    in line: game_info.name      = line[line.find("=")+1:].strip()
             elif "main"    in line: game_info.main_path = f"{directory_path}/{line[line.find("=")+1:].strip()}"
             elif "icon"    in line: game_info.icon_path = f"{directory_path}/{line[line.find("=")+1:].strip()}"
-            elif "legacy"  in line:
-                extracted = line[line.find("=")+1:].strip()
-                if "True" in extracted or "true" in extracted or "1" in extracted:
-                    game_info.legacy = True
     
     return game_info
 
@@ -114,7 +117,6 @@ class GameInfo():
         self.name = basename(directory)         # Assume no name given for game in manifest by default, use directory for name
         self.main_path = f"{directory}/main.py" # Assume no main file given in manifest by default, use default `main.py`
         self.icon_path = None                   # Assume no icon given from manifest
-        self.legacy = False                     # Assume not a legacy original Thumby game
     
     def __repr__(self):
         return f"{self.directory} {{main={self.main_path}, icon={self.icon_path}}}"
@@ -184,7 +186,7 @@ class GameLauncherTile(GUIBitmapButton2DNode):
 
         # Launch the game if this tile is pressed
         set_run_on_boot(self.game_info.main_path)
-        thumby_reset(False)
+        engine.reset()
 
 
 # Represents a category of games. Games can be organized

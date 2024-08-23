@@ -1,0 +1,1 @@
+This folder contains modified Thumby original library code/modules only.

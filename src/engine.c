@@ -137,20 +137,45 @@ static mp_obj_t engine_get_running_fps(){
 MP_DEFINE_CONST_FUN_OBJ_0(engine_get_running_fps_obj, engine_get_running_fps);
 
 
-// Mostly used internally when engine.stop() is called
-// but exposed anyway to MicroPython
 /* --- doc ---
    NAME: reset
    ID: engine_reset
-   DESC: Resets internal state of engine (TODO: make sure all state is cleared, run when games end or go back to REPL or launcher)
+   DESC: machine.reset() but works across all platforms.
+   PARAM: [type=bool]   [name=hard_reset]   [value=True or False]
    RETURN: None
 */
-static mp_obj_t engine_reset(){
-    fps_limit_disabled = true;
-    engine_main_reset();
+static mp_obj_t engine_reset(size_t n_args, const mp_obj_t *args){
+    // Set default reset as not a hard reset and see if any arguments set it
+    bool hard_reset = false;
+
+    if(n_args == 1){
+        if(mp_obj_is_bool(args[0])){
+            hard_reset = mp_obj_get_int(args[0]);
+        }else{
+            mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("Engine: ERROR: Expected `int` got %s"), mp_obj_get_type_str(args[0]));
+        }
+    }
+
+    // Do the reset depending on the platform
+    #if defined(__EMSCRIPTEN__)
+        exit(EXIT_SUCCESS);
+        (void)hard_reset;
+    #elif defined(__unix__)
+        exit(EXIT_SUCCESS);
+        (void)hard_reset;
+    #else
+        mp_obj_t machine_module = mp_import_name(MP_QSTR_machine, mp_const_none, MP_OBJ_NEW_SMALL_INT(0));
+
+        if(hard_reset){
+            mp_call_function_0(mp_load_attr(machine_module, MP_QSTR_reset));
+        }else{
+            mp_call_function_0(mp_load_attr(machine_module, MP_QSTR_soft_reset));
+        }
+    #endif
+
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_0(engine_reset_obj, engine_reset);
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_reset_obj, 0, 1, engine_reset);
 
 
 /* --- doc ---
