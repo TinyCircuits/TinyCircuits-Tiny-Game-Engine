@@ -95,15 +95,19 @@ mp_obj_t engine_resource_get_space_bytearray(uint32_t space_size, bool fast_spac
             // check if we're going to be erasing addresses out of
             // bounds, stop everything if that is going to happen
             // (will lose filesystem otherwise!)
-            if(FLASH_RESOURCE_SPACE_BASE+sectors_to_erase_offset+sectors_to_erase_size >= FLASH_RESOURCE_SPACE_BASE+FLASH_RESOURCE_SPACE_SIZE){
-                mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineResourceManager: ERROR: Scratch space is going to overflow! Too many assets loaded! Scratch space is %ld bytes"), FLASH_RESOURCE_SPACE_SIZE);
+            const uint32_t erase_size = sectors_to_erase_size;
+            const uint32_t erase_start = FLASH_RESOURCE_SPACE_BASE + sectors_to_erase_offset;
+            const uint32_t erase_end = erase_start + erase_size;
+
+            if(erase_end > FLASH_RESOURCE_SPACE_BASE+FLASH_RESOURCE_SPACE_SIZE){
+                mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineResourceManager: ERROR: Scratch space is going to overflow! Too many assets loaded! Scratch space is %ld bytes but the asset requires erasing %ld bytes from %ld to %ld"), FLASH_RESOURCE_SPACE_SIZE, erase_size, erase_start, erase_end);
             }
             
             // Need to disable interrupts when texture resources are created:
             // https://github.com/raspberrypi/pico-examples/issues/34#issuecomment-1369267917
             // otherwise hangs forever
             uint32_t paused_interrupts = save_and_disable_interrupts();
-            flash_range_erase(FLASH_RESOURCE_SPACE_BASE+sectors_to_erase_offset, sectors_to_erase_size);
+            flash_range_erase(erase_start, erase_size);
             restore_interrupts(paused_interrupts);
 
             // Stored in contiguous flash location
