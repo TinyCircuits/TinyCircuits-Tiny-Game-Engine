@@ -4,10 +4,11 @@ import engine
 
 import os
 import sys
-from system.root_dir import ROOT_DIR
 from system.run_on_boot import get_run_on_boot
 from system.util import file_exists, dirname
 from system.launcher_state import has_launcher_state, hold_launcher_state
+
+ROOT_DIR = engine.root_dir()
 
 # Catch exceptions from game or system file execution
 try:

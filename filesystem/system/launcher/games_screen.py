@@ -1,5 +1,4 @@
 import os
-from system.root_dir import ROOT_DIR
 from system.util import is_file, is_dir, basename, file_exists
 from system.run_on_boot import set_run_on_boot
 from system.launcher.direction_icon import DirectionIcon
@@ -16,6 +15,7 @@ from engine_animation import Tween, ONE_SHOT, EASE_BACK_OUT, EASE_SINE_OUT
 
 import math
 
+ROOT_DIR = engine.root_dir()
 
 title_font = None                                                               # Font from main launcher.py file
 category_background_color = Color(0.157, 0.137, 0.263)                          # Background color for category rows

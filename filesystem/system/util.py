@@ -3,8 +3,6 @@ import errno
 import machine
 import sys
 
-from system.root_dir import ROOT_DIR
-
 
 def file_exists(path):
     try:

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 
 #include "engine_object_layers.h"
 #include "display/engine_display.h"
@@ -354,6 +355,12 @@ static mp_obj_t engine_freq(size_t n_args, const mp_obj_t *args){
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_freq_obj, 0, 1, engine_freq);
 
 
+static mp_obj_t engine_root_dir(){
+    return mp_obj_new_str(filesystem_root, strlen(filesystem_root));
+}
+MP_DEFINE_CONST_FUN_OBJ_0(engine_root_dir_obj, engine_root_dir);
+
+
 static mp_obj_t engine_module_init(){
     engine_main_raise_if_not_initialized();
     return mp_const_none;
@@ -387,6 +394,7 @@ static const mp_rom_map_elem_t engine_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_end), (mp_obj_t)&engine_end_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_reset), (mp_obj_t)&engine_reset_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_freq), (mp_obj_t)&engine_freq_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_root_dir), (mp_obj_t)&engine_root_dir_obj },
 };
 
 // Module init
