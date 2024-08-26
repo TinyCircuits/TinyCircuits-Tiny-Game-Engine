@@ -9,6 +9,7 @@
 #include "resources/engine_resource_manager.h"
 #include "audio/engine_audio_module.h"
 #include "io/engine_io_module.h"
+#include "save/engine_save_module.h"
 #include "time/engine_rtc.h"
 #include "display/engine_display.h"
 #include "display/engine_display_common.h"
@@ -47,6 +48,7 @@ void engine_main_reset(){
 
     // Always reset screen background fills
     engine_display_reset_fills();
+    engine_save_module_reset();
 
     // Reset contigious flash space manager
     engine_audio_stop_all();

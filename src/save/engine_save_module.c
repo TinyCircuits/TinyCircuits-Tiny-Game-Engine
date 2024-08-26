@@ -24,6 +24,11 @@ char saves_dir[SAVES_DIR_LENGTH_MAX] = {0};
 size_t saves_dir_len = 0;
 
 
+void engine_save_module_reset(){
+    saves_dir_len = 0;
+}
+
+
 /* --- doc ---
    NAME: _init_saves_dir
    ID: engine_save__init_saves_dir
