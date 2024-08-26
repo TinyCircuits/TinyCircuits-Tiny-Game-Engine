@@ -15,7 +15,7 @@ These instructions assume that you are cloning MicroPython from the TinyCircuits
 8. `cd` to engine file system to build and run MicroPython and the engine
    1. `cd`: `cd ../../TinyCircuits-Tiny-Game-Engine/filesystem`
    2. build: `(cd ../../ports/unix && make -j8 USER_C_MODULES=../../TinyCircuits-Tiny-Game-Engine DEBUG=1)`
-   3. run: `../micropython_loop ../../ports/unix/build-standard/micropython -X heapsize=512000 main.py`
+   3. run: `../micropython_loop ../../ports/unix/build-standard/micropython -X heapsize=532480 main.py`
 
 Use `(cd ../../ports/unix && make clean)` to make clean if needed
 
@@ -39,7 +39,7 @@ These instructions assume that you are cloning MicroPython from the official Mic
    1. Change line 1784 to `default="longlong"` (don't know where this tool is used and how to pass it a different value, will just set it for now)
 10. `cd` to filesystem root: `cd micropython/TinyCircuits-Tiny-Game-Engine/filesystem`
 11. Build MicroPython UNIX port: `(cd ../../ports/unix && make -j8 USER_C_MODULES=../../TinyCircuits-Tiny-Game-Engine DEBUG=1)`
-12. Run MicroPython port: `../micropython_loop ../../ports/unix/build-standard/micropython -X heapsize=512000 main.py`
+12. Run MicroPython port: `../micropython_loop ../../ports/unix/build-standard/micropython -X heapsize=532480 main.py`
 
 Use `(cd ../../ports/unix && make clean)` to make clean if needed
 
