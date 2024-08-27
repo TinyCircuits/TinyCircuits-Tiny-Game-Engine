@@ -186,7 +186,11 @@ class GameLauncherTile(GUIBitmapButton2DNode):
 
         # Launch the game if this tile is pressed
         set_run_on_boot(self.game_info.main_path)
-        engine.reset(False)
+        
+        # Do a soft reset when a game launches because we
+        # can trust the launcher and we dont want the device
+        # to disconnect (need game REPL output)
+        engine.reset(True)
 
 
 # Represents a category of games. Games can be organized

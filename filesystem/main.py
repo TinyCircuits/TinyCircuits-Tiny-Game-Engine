@@ -60,7 +60,7 @@ try:
         # Change back to the root directory after
         # the game ends and reset the device (hard)
         os.chdir(ROOT_DIR)
-        engine.reset(True)
+        engine.reset()
 
 except Exception as ex:
     # If an exception is raised from execution of a system or game file,

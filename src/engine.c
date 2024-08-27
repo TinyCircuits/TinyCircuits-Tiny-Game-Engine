@@ -141,17 +141,17 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_get_running_fps_obj, engine_get_running_fps);
 /* --- doc ---
    NAME: reset
    ID: engine_reset
-   DESC: machine.reset() but works across all platforms.
-   PARAM: [type=bool]   [name=hard_reset]   [value=True or False]
+   DESC: machine.reset() but works across all platforms. Performs a complete hard reset of the device by default.
+   PARAM: [type=bool]   [name=soft_reset]   [value=True or False (default: False)]
    RETURN: None
 */
 static mp_obj_t engine_reset(size_t n_args, const mp_obj_t *args){
-    // Set default reset as not a hard reset and see if any arguments set it
-    bool hard_reset = false;
+    // Set default reset as not a soft reset and see if any arguments set it
+    bool soft_reset = false;
 
     if(n_args == 1){
         if(mp_obj_is_bool(args[0])){
-            hard_reset = mp_obj_get_int(args[0]);
+            soft_reset = mp_obj_get_int(args[0]);
         }else{
             mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("Engine: ERROR: Expected `int` got %s"), mp_obj_get_type_str(args[0]));
         }
@@ -159,18 +159,18 @@ static mp_obj_t engine_reset(size_t n_args, const mp_obj_t *args){
 
     // Do the reset depending on the platform
     #if defined(__EMSCRIPTEN__)
-        exit(EXIT_SUCCESS);
-        (void)hard_reset;
+        exit(93);
+        (void)soft_reset;
     #elif defined(__unix__)
-        exit(EXIT_SUCCESS);
-        (void)hard_reset;
+        exit(93);
+        (void)soft_reset;
     #else
         mp_obj_t machine_module = mp_import_name(MP_QSTR_machine, mp_const_none, MP_OBJ_NEW_SMALL_INT(0));
 
-        if(hard_reset){
-            mp_call_function_0(mp_load_attr(machine_module, MP_QSTR_reset));
-        }else{
+        if(soft_reset){
             mp_call_function_0(mp_load_attr(machine_module, MP_QSTR_soft_reset));
+        }else{
+            mp_call_function_0(mp_load_attr(machine_module, MP_QSTR_reset));
         }
     #endif
 
