@@ -54,7 +54,6 @@ void engine_main_reset(){
 
     // Always reset screen background fills
     engine_display_reset_fills();
-    engine_save_module_reset();
 
     // Reset contigious flash space manager
     engine_audio_stop_all();

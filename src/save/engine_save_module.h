@@ -6,6 +6,4 @@
 extern char saves_dir[];
 extern size_t saves_dir_len;
 
-void engine_save_module_reset();
-
 #endif
