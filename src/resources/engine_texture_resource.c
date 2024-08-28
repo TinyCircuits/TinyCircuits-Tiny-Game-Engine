@@ -1,24 +1,52 @@
 #include "engine_texture_resource.h"
 #include "debug/debug_print.h"
 #include "resources/engine_resource_manager.h"
+#include "draw/engine_color.h"
 #include <stdlib.h>
 #include <math.h>
 
 
-mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
-    ENGINE_INFO_PRINTF("New TextureResource");
-    mp_arg_check_num(n_args, n_kw, 1, 2, false);
+void create_blank_from_params(texture_resource_class_obj_t *self, mp_obj_t width, mp_obj_t height, mp_obj_t color){
+    uint16_t blank_width = mp_obj_get_int(width);
+    uint16_t blank_height = mp_obj_get_int(height);
+    uint32_t blank_pixel_count = blank_width * blank_height;
+    uint16_t blank_color = 0xffff;
 
-    texture_resource_class_obj_t *self = mp_obj_malloc_with_finaliser(texture_resource_class_obj_t, &texture_resource_class_type);
-    self->base.type = &texture_resource_class_type;
+    // Figure out the color to fill it with
+    if(color != mp_const_none){
+        // ALready know it's one of these, figure out which
+        if(mp_obj_is_type(color, &const_color_class_type) || mp_obj_is_type(color, &color_class_type)){
+            blank_color = ((color_class_obj_t*)color)->value;
+        }else{
+            blank_color = mp_obj_get_int(color);
+        }
+    }
 
+    // Create MicroPython bytearray
+    mp_obj_array_t *array = m_new_obj(mp_obj_array_t);
+    array->base.type = &mp_type_bytearray;
+    array->typecode = BYTEARRAY_TYPECODE;
+    array->free = 0;
+    array->len = blank_pixel_count * 2;
+    array->items = m_new(byte, array->len);
+
+    // Fill the bytearray with initial color
+    uint16_t *pixels = array->items;
+
+    for(uint16_t ipx=0; ipx<blank_pixel_count; ipx++){
+        pixels[ipx] = blank_color;
+    }
+
+    self->width = blank_width;
+    self->height = blank_height;
+    self->data = array;
+}
+
+
+void create_from_file(texture_resource_class_obj_t *self, mp_obj_t filepath, mp_obj_t in_ram){
     // Set flag indicating if file data is to be stored in
     // ram or not (faster if stored in ram, up to programmer)
-    if(n_args == 2){
-        self->in_ram = mp_obj_get_int(args[1]);
-    }else{
-        self->in_ram = false;
-    }
+    self->in_ram = mp_obj_get_int(in_ram);
 
     // Always loaded into ram on unix port
     #if defined(__unix__)
@@ -26,7 +54,7 @@ mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, si
     #endif
 
     // BMP parsing: https://en.wikipedia.org/wiki/BMP_file_format
-    engine_file_open_read(0, args[0]);
+    engine_file_open_read(0, filepath);
 
     uint16_t bitmap_id = engine_file_seek_get_u16(0, 0);
     uint32_t bitmap_file_size = engine_file_seek_get_u32(0, 2);
@@ -46,7 +74,7 @@ mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, si
     // way since pixel data rows are padded
     uint32_t bitmap_data_size = bitmap_file_size - bitmap_pixel_data_offset;
 
-    ENGINE_INFO_PRINTF("TextureResource: BMP parameters parsed from '%s':", mp_obj_str_get_str(args[0]));
+    ENGINE_INFO_PRINTF("TextureResource: BMP parameters parsed from '%s':", mp_obj_str_get_str(filepath));
     ENGINE_INFO_PRINTF("\tbitmap_id:\t\t\t%d", bitmap_id);
     ENGINE_INFO_PRINTF("\bitmap_file_size:\t\t\t%d", bitmap_file_size);
     ENGINE_INFO_PRINTF("\tbitmap_pixel_data_offset:\t%lu", bitmap_pixel_data_offset);
@@ -120,6 +148,51 @@ mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, si
 
     engine_resource_stop_storing();
     engine_file_close(0);
+}
+
+
+mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
+    ENGINE_INFO_PRINTF("New TextureResource");
+
+    texture_resource_class_obj_t *self = mp_obj_malloc_with_finaliser(texture_resource_class_obj_t, &texture_resource_class_type);
+    self->base.type = &texture_resource_class_type;
+
+    switch(n_args){
+        case 1: // File path
+        {
+            if(mp_obj_is_str(args[0]) == false){
+                mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("TextureResource: ERROR: Expected file path `str`, got: %s"), mp_obj_get_type_str(args[0]));
+            }
+
+            // If not specified, not in ram by default
+            create_from_file(self, args[0], mp_const_false);
+        }
+        break;
+        case 2: // `file_path` and `in_ram` or `width` and `height`
+        {
+            if(mp_obj_is_str(args[0]) && mp_obj_is_bool(args[1])){
+                create_from_file(self, args[0], args[1]);
+            }else if(mp_obj_is_int(args[0]) && mp_obj_is_int(args[1])){
+                create_blank_from_params(self, args[0], args[1], mp_const_none);
+            }else{
+                mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("TextureResource: ERROR: Expected file path `str` and in_ram `bool` or width `int` and height `int`, got: %s %s"), mp_obj_get_type_str(args[0]), mp_obj_get_type_str(args[1]));
+            }
+        }
+        break;
+        case 3: // `width`, `height`, and `color`
+        {
+            if(mp_obj_is_int(args[0]) && mp_obj_is_int(args[1]) && (mp_obj_is_int(args[2]) || mp_obj_is_type(args[2], &const_color_class_type) || mp_obj_is_type(args[2], &color_class_type))){
+                create_blank_from_params(self, args[0], args[1], args[2]);
+            }else{
+                mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("TextureResource: ERROR: Expected width `int`, height `int`, and `int` | `const_color` | `color` got: %s %s %s"), mp_obj_get_type_str(args[0]), mp_obj_get_type_str(args[1]), mp_obj_get_type_str(args[2]));
+            }
+        }
+        break;
+        default:
+        {
+            mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("TextureResource: ERROR: Expected 1 ~ 3 arguments, got: %d"), n_args);
+        }
+    }
     
     return MP_OBJ_FROM_PTR(self);
 }
@@ -127,7 +200,7 @@ mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, si
 
 // Class methods
 static mp_obj_t texture_resource_class_del(mp_obj_t self_in){
-    ENGINE_INFO_PRINTF("TextureResource: Deleted (freeing texture data)");
+    ENGINE_INFO_PRINTF("TextureResource: Deleted");
 
     return mp_const_none;
 }
@@ -143,9 +216,9 @@ uint16_t texture_resource_get_pixel(texture_resource_class_obj_t *texture, uint3
 /*  --- doc ---
     NAME: TextureResource
     ID: TextureResource
-    DESC: Object that holds information about bitmaps. The file needs to be a 16-bit RGB565 .bmp file
-    PARAM:  [type=string]       [name=filepath]  [value=string]
-    PARAM:  [type=boolean]      [name=in_ram]    [value=True of False (False by default)]
+    DESC: Object that holds pixel information. If a file path is specifed, the file needs to be a 16-bit RGB565 .bmp file. If at least a width and height are specified instead, a blank white texture is created in RAM but an initial color can also be passed.
+    PARAM:  [type=string | int]     [name=filepath | width]     [value=string | 0 ~ 65535]
+    PARAM:  [type=bool | int]       [name=in_ram   | height]    [value=True or False | 0 ~ 65535]
     ATTR:   [type=float]        [name=width]     [value=any (read-only)]
     ATTR:   [type=float]        [name=height]    [value=any (read-only)]
     ATTR:   [type=bytearray]    [name=data]      [value=RGB565 bytearray (note, if in_ram is False, then writing to this is not a valid operation)]

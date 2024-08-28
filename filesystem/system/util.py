@@ -3,8 +3,6 @@ import errno
 import machine
 import sys
 
-from system.root_dir import ROOT_DIR
-
 
 def file_exists(path):
     try:
@@ -65,16 +63,3 @@ def basename(path):
 def dirname(path):
     index = path.rfind("/")
     return "/" if index < 0 else path[:index]
-
-
-IS_THUMBY = "TinyCircuits Thumby Color" in sys.implementation._machine
-
-
-def thumby_reset(hard):
-    if IS_THUMBY:
-        if hard:
-            machine.reset()
-        else:
-            machine.soft_reset()
-    else:
-        sys.exit(93)

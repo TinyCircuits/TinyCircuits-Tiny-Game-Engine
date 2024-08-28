@@ -3,8 +3,8 @@ from engine_nodes import Sprite2DNode
 from engine_math import Vector2
 
 COOLDOWN_RESTART = 1.5 # after game ends, ignore inputs for duration
-POS_X = -1
-POS_Y = -1
+POS_X = 0
+POS_Y = 0
 
 
 class GameOver(Sprite2DNode):

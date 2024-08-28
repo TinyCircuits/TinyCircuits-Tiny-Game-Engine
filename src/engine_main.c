@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <unistd.h>
+
 #include "py/obj.h"
 #include "py/runtime.h"
 #include "py/gc.h"
@@ -9,6 +11,7 @@
 #include "resources/engine_resource_manager.h"
 #include "audio/engine_audio_module.h"
 #include "io/engine_io_module.h"
+#include "save/engine_save_module.h"
 #include "time/engine_rtc.h"
 #include "display/engine_display.h"
 #include "display/engine_display_common.h"
@@ -25,6 +28,14 @@
 #define BATTERY_ADC_GPIO_PIN 29
 #define BATTERY_ADC_PORT 3
 
+
+#if defined(__unix__)
+    char filesystem_root[1024];
+#else
+    char filesystem_root[2];
+#endif
+
+
 bool is_engine_initialized = false;
 
 
@@ -34,10 +45,6 @@ void engine_main_raise_if_not_initialized(){
     }
 }
 
-#if defined(__unix__)
-    #include <unistd.h>
-    char filesystem_root[1024];
-#endif
 
 void engine_main_reset(){
     ENGINE_PRINTF("EngineMain: Resetting engine...\n");
@@ -92,11 +99,16 @@ static mp_obj_t engine_main_module_init(){
     ENGINE_PRINTF("Engine init!\n");
 
     #if defined(__unix__)
-        if (getcwd(filesystem_root, sizeof(filesystem_root)) == NULL){
+        if(getcwd(filesystem_root, sizeof(filesystem_root)) == NULL){
             filesystem_root[0] = '\0';
         }
-        ENGINE_PRINTF("Filesystem root: %s\n", filesystem_root);
+        
+    #else
+        filesystem_root[0] = '/';
+        filesystem_root[1] = '\0';
     #endif
+
+    ENGINE_PRINTF("Filesystem root: %s\n", filesystem_root);
 
     // Init display first
     engine_display_init();

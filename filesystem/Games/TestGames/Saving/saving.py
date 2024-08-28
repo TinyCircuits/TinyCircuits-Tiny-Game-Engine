@@ -7,6 +7,7 @@ from engine_nodes import CameraNode
 
 engine_save.set_location("save.data")
 
+print("\nSaving...")
 engine_save.save("test0", "Hi there 1131!!!!")
 engine_save.save("test1", "YoYo")
 engine_save.save("test2", "Hello")
@@ -18,7 +19,7 @@ engine_save.save("test6", Vector3(0.3, 0.4, 0.5))
 engine_save.save("test7", Color(0.9, 0.8, 0.7))
 engine_save.save("test8", bytearray([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]))
 
-
+print("\nLoading...")
 print(engine_save.load("test0", "default"))
 print(engine_save.load("test1", "default"))
 print(engine_save.load("test2", "default"))

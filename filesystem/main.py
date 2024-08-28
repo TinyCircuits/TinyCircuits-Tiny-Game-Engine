@@ -1,15 +1,21 @@
 # main.py: This is the first file to run when the system boots up
 import engine_main
+import engine
 
 import os
 import sys
-from system.root_dir import ROOT_DIR
 from system.run_on_boot import get_run_on_boot
-from system.util import file_exists, dirname, thumby_reset
+from system.util import file_exists, dirname
 from system.launcher_state import has_launcher_state, hold_launcher_state
+
+ROOT_DIR = engine.root_dir()
 
 # Catch exceptions from game or system file execution
 try:
+    # Always append path for Thumby Legacy files so
+    # that the legacy modules can be imported
+    sys.path.append(f"{ROOT_DIR}/lib")
+
     # Get the last game that was set to launch from `_run_on_boot`
     # file (ex: `Games/MyGame/main.py` if last selected in launcher)
     # (set in a file so that device can hard reset to clear memory)
@@ -39,6 +45,8 @@ try:
         # and change to the game directory (so that opening files in the game dir works)
         sys.path.append(f"{ROOT_DIR}/{dir}")
         os.chdir(dir)
+        import engine_save
+        engine_save._init_saves_dir(f"/Saves/{dir}")
 
         # Launch the `_run_on_boot` file while holding
         # the launcher state so that the state file is
@@ -52,7 +60,7 @@ try:
         # Change back to the root directory after
         # the game ends and reset the device (hard)
         os.chdir(ROOT_DIR)
-        thumby_reset(True)
+        engine.reset()
 
 except Exception as ex:
     # If an exception is raised from execution of a system or game file,

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 
 #include "engine_object_layers.h"
 #include "display/engine_display.h"
@@ -137,20 +138,45 @@ static mp_obj_t engine_get_running_fps(){
 MP_DEFINE_CONST_FUN_OBJ_0(engine_get_running_fps_obj, engine_get_running_fps);
 
 
-// Mostly used internally when engine.stop() is called
-// but exposed anyway to MicroPython
 /* --- doc ---
    NAME: reset
    ID: engine_reset
-   DESC: Resets internal state of engine (TODO: make sure all state is cleared, run when games end or go back to REPL or launcher)
+   DESC: machine.reset() but works across all platforms. Performs a complete hard reset of the device by default.
+   PARAM: [type=bool]   [name=soft_reset]   [value=True or False (default: False)]
    RETURN: None
 */
-static mp_obj_t engine_reset(){
-    fps_limit_disabled = true;
-    engine_main_reset();
+static mp_obj_t engine_reset(size_t n_args, const mp_obj_t *args){
+    // Set default reset as not a soft reset and see if any arguments set it
+    bool soft_reset = false;
+
+    if(n_args == 1){
+        if(mp_obj_is_bool(args[0])){
+            soft_reset = mp_obj_get_int(args[0]);
+        }else{
+            mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("Engine: ERROR: Expected `int` got %s"), mp_obj_get_type_str(args[0]));
+        }
+    }
+
+    // Do the reset depending on the platform
+    #if defined(__EMSCRIPTEN__)
+        exit(93);
+        (void)soft_reset;
+    #elif defined(__unix__)
+        exit(93);
+        (void)soft_reset;
+    #else
+        mp_obj_t machine_module = mp_import_name(MP_QSTR_machine, mp_const_none, MP_OBJ_NEW_SMALL_INT(0));
+
+        if(soft_reset){
+            mp_call_function_0(mp_load_attr(machine_module, MP_QSTR_soft_reset));
+        }else{
+            mp_call_function_0(mp_load_attr(machine_module, MP_QSTR_reset));
+        }
+    #endif
+
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_0(engine_reset_obj, engine_reset);
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_reset_obj, 0, 1, engine_reset);
 
 
 /* --- doc ---
@@ -329,6 +355,12 @@ static mp_obj_t engine_freq(size_t n_args, const mp_obj_t *args){
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_freq_obj, 0, 1, engine_freq);
 
 
+static mp_obj_t engine_root_dir(){
+    return mp_obj_new_str(filesystem_root, strlen(filesystem_root));
+}
+MP_DEFINE_CONST_FUN_OBJ_0(engine_root_dir_obj, engine_root_dir);
+
+
 static mp_obj_t engine_module_init(){
     engine_main_raise_if_not_initialized();
     return mp_const_none;
@@ -362,6 +394,7 @@ static const mp_rom_map_elem_t engine_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_end), (mp_obj_t)&engine_end_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_reset), (mp_obj_t)&engine_reset_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_freq), (mp_obj_t)&engine_freq_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_root_dir), (mp_obj_t)&engine_root_dir_obj },
 };
 
 // Module init

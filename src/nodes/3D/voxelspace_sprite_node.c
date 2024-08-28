@@ -506,7 +506,7 @@ mp_obj_t voxelspace_sprite_node_class_new(const mp_obj_type_t *type, size_t n_ar
     // If there is one positional argument and it isn't the first
     // expected argument (as is expected when using positional
     // arguments) then define which way to parse the arguments
-    if(n_args >= 1 && mp_obj_get_type(args[0]) != &vector2_class_type){
+    if(n_args >= 1 && mp_obj_get_type(args[0]) != &vector3_class_type){
         // Using positional arguments but the type of the first one isn't
         // as expected. Must be the child class
         mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args), allowed_args, parsed_args);

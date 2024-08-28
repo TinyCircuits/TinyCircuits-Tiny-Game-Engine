@@ -673,7 +673,6 @@ class PokerGame(Rectangle2DNode):
                 self.game_over_time = time.ticks_ms()  
             elif time.ticks_ms() - self.game_over_time >= 5000:
                 engine.end()
-                import engine_main
             return
 
         if self.hand_display_time and time.ticks_diff(time.ticks_ms(), self.hand_display_time) >= 2000:

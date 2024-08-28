@@ -24,22 +24,33 @@ class ContainerNode(EmptyNode):
 light_root_node = ContainerNode(Vector2(0,0))
 light_textures = []
 light_nodes = []
+light_coords = []
 light_index = 0
 x = 0
+light_coords.append(Vector2(x,0))
+x -= 128 + 1
 for file in [
-        "light100.bmp",
         "light80.bmp",
         "light60.bmp",
         "light40.bmp",
         "light20.bmp",
-        "light0.bmp",
         ]:
     tex = TextureResource(file)
     light_textures.append(tex)
-    node = Sprite2DNode(Vector2(x,0),tex,engine_draw.white)
-    light_nodes.append(node)
-    light_root_node.add_child(node)
-    x += 128 + 1
+    light_coords.append(Vector2(x,0))
+    for row in range(4):
+        for col in range(4):
+            cx = 32*col + x - 48
+            cy = 32*row - 48
+            node = Sprite2DNode(Vector2(cx,cy),tex,engine_draw.white)
+            light_nodes.append(node)
+            light_root_node.add_child(node)
+    x -= 128 + 1
+node = Rectangle2DNode(Vector2(x,0),128,128,engine_draw.black,1,False)
+light_nodes.append(node)
+light_root_node.add_child(node)
+light_coords.append(Vector2(x,0))
+x -= 128 + 1
 
 cursor_tex = TextureResource("cursor.bmp")
 palette_root_node = ContainerNode(Vector2(0,256))
@@ -86,12 +97,12 @@ while True:
             if (engine_io.RB.is_just_pressed or engine_io.RIGHT.is_just_pressed) and light_index > 0:
                 light_index -= 1
                 update_tween = True
-            if (engine_io.LB.is_just_pressed or engine_io.LEFT.is_just_pressed) and light_index < len(light_nodes)-1:
+            if (engine_io.LB.is_just_pressed or engine_io.LEFT.is_just_pressed) and light_index < len(light_coords)-1:
                 light_index += 1
                 update_tween = True
             if update_tween:
                 update_tween = False
-                pos = light_nodes[light_index].position
+                pos = light_coords[light_index]
                 light_tween.start(light_root_node, "position", light_root_node.position, Vector2(-pos.x-1,-pos.y-1), 250, ONE_SHOT, EASE_ELAST_IN_OUT)
             
             

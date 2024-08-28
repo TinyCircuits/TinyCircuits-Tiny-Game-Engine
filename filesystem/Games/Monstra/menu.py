@@ -23,8 +23,8 @@ ICON_POS_Y = 5
 ICON_FRAMES = 5 # frame 0 is ghost; frames 1-4 are enemy "defeated" animation
 # Margin above arrow
 ARROW_MARGIN = 3
-POS_X = -1
-POS_Y = -1
+POS_X = 0
+POS_Y = 0
 
 CAMPFIRE_POS_X = 0
 CAMPFIRE_POS_Y = 41
