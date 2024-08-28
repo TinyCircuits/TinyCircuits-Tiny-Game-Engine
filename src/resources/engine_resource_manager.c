@@ -71,18 +71,18 @@ mp_obj_t engine_resource_get_space_bytearray(uint32_t space_size, bool fast_spac
             // How many flash pages will be needed to fit 'space_size' data? 
             // Pages are 256 bytes and data must be written in that page size:
             // https://www.raspberrypi.com/documentation/pico-sdk/hardware.html#rpip8ee511575881aa0f3936
-            uint32_t required_pages_count = (uint32_t)ceil(((float)space_size)/FLASH_PAGE_SIZE);
+            uint32_t required_pages_count = (uint32_t)ceilf(((float)space_size)/FLASH_PAGE_SIZE);
 
             // Based on how many pages have been used so far, how many sectors have
             // already been erased? This will be used to find the base offset of sectors
             // to erase if the extra pages end up in new sectors. Sectors are 4096 bytes
             // and must be erased in that sector size:
             // https://www.raspberrypi.com/documentation/pico-sdk/hardware.html#rpip8ee511575881aa0f3936
-            uint32_t already_erased_sectors_count = (uint32_t)ceil(((float)(used_pages_count*FLASH_PAGE_SIZE))/FLASH_SECTOR_SIZE);
+            uint32_t already_erased_sectors_count = (uint32_t)ceilf(((float)(used_pages_count*FLASH_PAGE_SIZE))/FLASH_SECTOR_SIZE);
 
             // Based on how many pages have been used and how many more are going to be used,
             // how many sectors should be erased
-            uint32_t total_erase_sector_count = (uint32_t)ceil(((float)((required_pages_count+used_pages_count)*FLASH_PAGE_SIZE))/FLASH_SECTOR_SIZE);
+            uint32_t total_erase_sector_count = (uint32_t)ceilf(((float)((required_pages_count+used_pages_count)*FLASH_PAGE_SIZE))/FLASH_SECTOR_SIZE);
 
             uint32_t additional_sectors_to_erase_count = total_erase_sector_count - already_erased_sectors_count;
 
