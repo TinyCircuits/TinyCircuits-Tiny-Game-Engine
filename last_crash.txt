@@ -1,3 +1,0 @@
-Traceback (most recent call last):
-  File "filesystem/main.py", line 33, in <module>
-OSError: [Errno 2] ENOENT
