@@ -3,7 +3,7 @@
 	url = https://github.com/recp/cglm.git
 [submodule "lib/FastNoiseLite"]
 	path = lib/FastNoiseLite
-	url = https://github.com/Auburn/FastNoiseLite.git
+	url = https://github.com/TinyCircuits/FastNoiseLite.git
 [submodule "lib/bm8563"]
 	path = lib/bm8563
 	url = https://github.com/tuupola/bm8563
