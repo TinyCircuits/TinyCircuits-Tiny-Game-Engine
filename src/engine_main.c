@@ -19,6 +19,7 @@
 #include "animation/engine_animation_module.h"
 #include "engine_gui.h"
 #include "fault/engine_fault.h"
+#include "link/engine_link_module.h"
 #include "py/mpstate.h"
 
 #if defined(__arm__)
@@ -54,6 +55,8 @@ void engine_main_reset(){
 
     // Always reset screen background fills
     engine_display_reset_fills();
+    
+    engine_link_module_reset();
 
     // Reset contigious flash space manager
     engine_audio_stop_all();
