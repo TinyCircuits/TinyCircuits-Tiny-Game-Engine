@@ -3,6 +3,34 @@
 #include "debug/debug_print.h"
 
 
+#if defined(__EMSCRIPTEN__)
+    // https://stackoverflow.com/questions/822323/how-to-generate-a-random-int-in-c
+    #include <time.h>
+    #include <stdlib.h>
+#elif defined(__unix__)
+
+#elif defined(__arm__)
+    // https://datasheets.raspberrypi.com/pico/raspberry-pi-pico-c-sdk.pdf#page=357
+    // https://github.com/raspberrypi/pico-examples/blob/175b382597cbd9d437643b024c8dd5ea18f69a7e/system/rand/rand.c#L28
+    #include "pico/stdlib.h"
+    #include "pico/rand.h"
+#endif
+
+
+// If `max` is set to 10, will return numbers including 0..10
+uint32_t engine_math_rand_int(uint32_t max){
+    uint32_t result = 0;
+
+    #if defined(__EMSCRIPTEN__) || defined(__unix__)
+        result = 0;
+    #elif defined(__arm__)
+        result = get_rand_32() % (max+1);
+    #endif
+
+    return result;
+}
+
+
 float engine_math_dot_product(float x0, float y0, float x1, float y1){
     return x0*x1 + y0*y1;
 }

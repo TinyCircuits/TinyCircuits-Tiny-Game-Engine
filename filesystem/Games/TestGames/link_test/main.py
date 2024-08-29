@@ -18,6 +18,11 @@ while True:
     elif engine_io.RB.is_just_pressed:
         engine_link.stop()
     
+    if engine_io.UP.is_pressed:
+        camera.position.y -= 0.5
+    elif engine_io.DOWN.is_pressed:
+        camera.position.y += 0.5
+    
     if engine_link.connected():
         text_node.text = "connected"
     else:
