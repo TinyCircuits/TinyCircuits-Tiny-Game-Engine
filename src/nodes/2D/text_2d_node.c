@@ -116,7 +116,7 @@ void text_2d_node_class_draw(mp_obj_t text_2d_node_base_obj, mp_obj_t camera_nod
 // `not native` == instance of a Python class that inherits this built-in type (`Text2DNode`)
 static void text_2d_node_class_calculate_dimensions(engine_text_2d_node_class_obj_t *text_2d_node){
     // Get the text and early out if none set
-    if(text_2d_node->text == mp_const_none || text_2d_node->font_resource == mp_const_none){
+    if(text_2d_node->text == mp_const_none){
         text_2d_node->width = mp_obj_new_int(0);
         text_2d_node->height = mp_obj_new_int(0);
         return;
@@ -124,7 +124,13 @@ static void text_2d_node_class_calculate_dimensions(engine_text_2d_node_class_ob
 
     float text_box_width = 0.0f;
     float text_box_height = 0.0f;
-    font_resource_get_box_dimensions(text_2d_node->font_resource, text_2d_node->text, &text_box_width, &text_box_height, mp_obj_get_float(text_2d_node->letter_spacing), mp_obj_get_float(text_2d_node->line_spacing));
+
+    font_resource_class_obj_t *text_font = text_2d_node->font_resource;
+    if(text_font == mp_const_none){
+        text_font = &font;
+    }
+
+    font_resource_get_box_dimensions(text_font, text_2d_node->text, &text_box_width, &text_box_height, mp_obj_get_float(text_2d_node->letter_spacing), mp_obj_get_float(text_2d_node->line_spacing));
 
     text_2d_node->width = mp_obj_new_int((uint32_t)text_box_width);
     text_2d_node->height = mp_obj_new_int((uint32_t)text_box_height);

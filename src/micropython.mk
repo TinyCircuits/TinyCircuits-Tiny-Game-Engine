@@ -71,6 +71,8 @@ SRC_USERMOD += $(ENGINE_MOD_DIR)/save/engine_save_module.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/save/engine_save.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/time/engine_rtc.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/time/engine_time_module.c
+SRC_USERMOD += $(ENGINE_MOD_DIR)/time/engine_link_module.c
+SRC_USERMOD += $(ENGINE_MOD_DIR)/time/engine_link_rp3.c
 
 SRC_USERMOD += $(ENGINE_MOD_DIR)/../lib/bm8563/bm8563.c
 

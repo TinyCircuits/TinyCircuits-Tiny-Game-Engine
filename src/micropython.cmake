@@ -76,6 +76,8 @@ target_sources(usermod_engine INTERFACE
     ${ENGINE_MOD_DIR}/save/engine_save.c
     ${ENGINE_MOD_DIR}/time/engine_rtc.c
     ${ENGINE_MOD_DIR}/time/engine_time_module.c
+    ${ENGINE_MOD_DIR}/link/engine_link_module.c
+    ${ENGINE_MOD_DIR}/link/engine_link_rp3.c
 
     ${ENGINE_MOD_DIR}/../lib/bm8563/bm8563.c
 )
@@ -83,6 +85,7 @@ target_sources(usermod_engine INTERFACE
 # Add the current directory as an include directory.
 target_include_directories(usermod_engine INTERFACE
     ${ENGINE_MOD_DIR}
+    ${ENGINE_MOD_DIR}/../../lib/tinyusb/src
 )
 
 # target_link_libraries(usermod_engine INTERFACE -llfs2)

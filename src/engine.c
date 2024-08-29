@@ -12,6 +12,7 @@
 #include "audio/engine_audio_module.h"
 #include "math/engine_math.h"
 #include "utility/engine_defines.h"
+#include "link/engine_link_module.h"
 
 #include "draw/engine_display_draw.h"
 
@@ -225,6 +226,9 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_time_to_next_tick_obj, engine_mp_time_to_next_t
 
 
 bool engine_tick(){
+    // Run this as often as possible
+    engine_link_module_task();
+
     bool ticked = false;
 
     // Not sure why this is needed exactly for handling ctrl-c
