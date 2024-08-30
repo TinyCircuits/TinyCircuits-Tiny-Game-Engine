@@ -127,6 +127,27 @@ static mp_obj_t engine_link_module_set_disconnected_cb(mp_obj_t disconnected_cb)
 MP_DEFINE_CONST_FUN_OBJ_1(engine_link_module_set_disconnected_cb_obj, engine_link_module_set_disconnected_cb);
 
 
+static mp_obj_t engine_link_module_send(mp_obj_t to_send){
+    uint8_t buffer[16];
+    engine_link_send(buffer, 16);
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_1(engine_link_module_send_obj, engine_link_module_send);
+
+
+static mp_obj_t engine_link_module_recv(mp_obj_t to_send){
+    engine_link_recv();
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_1(engine_link_module_recv_obj, engine_link_module_recv);
+
+
+static mp_obj_t engine_link_module_available(){
+    return mp_obj_new_int(engine_link_available());
+}
+MP_DEFINE_CONST_FUN_OBJ_0(engine_link_module_available_obj, engine_link_module_available);
+
+
 /*  --- doc ---
     NAME: engine_link
     ID: engine_link
@@ -139,6 +160,9 @@ static const mp_rom_map_elem_t engine_link_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_stop), (mp_obj_t)&engine_link_module_stop_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_set_connected_cb), (mp_obj_t)&engine_link_module_set_connected_cb_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_set_disconnected_cb), (mp_obj_t)&engine_link_module_set_disconnected_cb_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_send), (mp_obj_t)&engine_link_module_send_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_recv), (mp_obj_t)&engine_link_module_recv_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_available), (mp_obj_t)&engine_link_module_available_obj },
 };
 
 // Module init
