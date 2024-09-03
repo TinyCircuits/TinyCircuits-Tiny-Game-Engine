@@ -12,63 +12,28 @@
 #include "py/mphal.h"
 #include "py/stream.h"
 #include "py/ringbuf.h"
+#include "py/misc.h"
+
+#include "shared/readline/readline.h"
 
 #include "io/engine_io_rp3.h"
 #include "math/engine_math.h"
 
 
+// Mimic ports/rp2/mphalport.c ring buffer for device for host
+static uint8_t stdin_host_ringbuf_array[512];
+ringbuf_t stdin_host_ringbuf = { stdin_host_ringbuf_array, sizeof(stdin_host_ringbuf_array) };
+
+
+void ringbuf_clear(ringbuf_t *ringbuf){
+    while(ringbuf_avail(ringbuf) > 0){
+        ringbuf_get(ringbuf);
+    }
+}
+
+
 bool started = false;   // Is discovery started (if so, will flip between device/host when not connected)
 bool is_host = false;   // Are we acting as a USB host
-
-// // `engine_link.start()` has been called and we're connected as a device
-// // to a host, replace the device driver `xfer_cb` with a custom one to
-// // intercept MicroPython from consuming the data before us
-// // src/class/cdc/cdc_device.c
-// bool custom_device_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes){
-//     engine_io_rp3_rumble(1.0f);
-//     return true;
-// }
-
-
-// // src/class/cdc/cdc_host.c
-// bool custom_host_xfer_cb(uint8_t daddr, uint8_t ep_addr, xfer_result_t event, uint32_t xferred_bytes){
-//     engine_io_rp3_rumble(1.0f);
-//     return true;
-// }
-
-
-
-// static usbh_class_driver_t custom_usbh_class_driver = {
-//     .name       = "CDC",
-//     .init       = cdch_init,
-//     .deinit     = cdch_deinit,
-//     .open       = cdch_open,
-//     .set_config = cdch_set_config,
-//     .xfer_cb    = cdch_xfer_cb,
-//     .close      = cdch_close
-// };
-
-
-// tu_static usbd_class_driver_t custom_usbd_driver = {
-//     .name             = "CDC",
-//     .init             = cdcd_init,
-//     .deinit           = cdcd_deinit,
-//     .reset            = cdcd_reset,
-//     .open             = cdcd_open,
-//     .control_xfer_cb  = cdcd_control_xfer_cb,
-//     .xfer_cb          = cdcd_xfer_cb,
-//     .sof              = NULL
-// };
-
-
-// usbh_class_driver_t const* usbh_app_driver_get_cb(uint8_t* driver_count){
-//     return &custom_usbh_class_driver;
-// }
-
-
-// usbd_class_driver_t const* usbd_app_driver_get_cb(uint8_t* driver_count){
-//     return &custom_usbd_driver;
-// }
 
 
 // Related to clipping between being a device or host during
@@ -95,6 +60,17 @@ void tuh_mount_cb(uint8_t daddr){
 void tuh_cdc_mount_cb(uint8_t idx){
     mounted_device_cdc_daddr = idx;
     engine_io_rp3_set_indicator(true);
+}
+
+
+// Mimic shared/tinyusb/mp_usbd_cdc.c device handling
+// of CDC data into a ringbuffer but for host
+void tuh_cdc_rx_cb(uint8_t idx){
+    for(uint32_t bytes_avail=tuh_cdc_read_available(idx); bytes_avail>0; --bytes_avail) {
+        uint8_t data = 0;
+        tuh_cdc_read(idx, &data, 1);
+        ringbuf_put(&stdin_host_ringbuf, data);
+    }
 }
 
 
@@ -132,11 +108,6 @@ void engine_link_switch_to_host(){
 // devices and to run the tusb host task (MicroPython calls the device
 // task when device is inited)
 void engine_link_task(){
-    // If not started, do not perform discovery or host task
-    if(started == false){
-        return;
-    }
-
     // If we're acting as a host, run the tusb host task
     if(is_host){
         tuh_task();
@@ -144,7 +115,7 @@ void engine_link_task(){
 
     // If we're connected or something is connected to us,
     // do not run the device/host flipping code after this
-    if(engine_link_connected()){
+    if(started == false || engine_link_connected()){
         return;
     }
 
@@ -170,36 +141,30 @@ void engine_link_task(){
 
 // Start USB/link discovery
 void engine_link_start(){
+    mp_hal_set_interrupt_char(-1);
     started = true;
 }
 
 
 // Stop USB/link discovery and go back to being a USB device
 void engine_link_stop(){
+    mp_hal_set_interrupt_char(CHAR_CTRL_C);
     started = false;
     engine_link_switch_to_device();
 }
 
 
-// void engine_link_on_just_connected(){
-//     if(is_host){
+void engine_link_on_just_connected(){
 
-//     }else{
-//         custom_usbd_driver.xfer_cb = custom_device_xfer_cb;
-//     }
-// }
+}
 
 
-// void engine_link_on_just_disconnected(){
-//     if(is_host){
-
-//     }else{
-//         custom_usbd_driver.xfer_cb = cdcd_xfer_cb;
-//     }
-// }
+void engine_link_on_just_disconnected(){
+    engine_link_stop();
+}
 
 
-void engine_link_send(const void *buffer, uint32_t bufsize){
+void engine_link_send(const uint8_t *send_buffer, uint32_t count, uint32_t offset){
     // Don't try to send if not connected to anything
     if(!engine_link_connected()){
         return;
@@ -207,25 +172,55 @@ void engine_link_send(const void *buffer, uint32_t bufsize){
 
     // Send
     if(is_host){
-        tuh_cdc_write(mounted_device_cdc_daddr, buffer, bufsize);
+        tuh_cdc_write(mounted_device_cdc_daddr, send_buffer+offset, count);
         tuh_cdc_write_flush(mounted_device_cdc_daddr);
     }else{
-        tud_cdc_write(buffer, bufsize);
+        tud_cdc_write(send_buffer+offset, count);
         tud_cdc_write_flush();
     }
 }
 
 
-void engine_link_recv(){
+void engine_link_read_into(uint8_t *buffer, uint32_t count, uint32_t offset){
+    ringbuf_t *ringbuf = NULL;
 
+    if(is_host){
+        ringbuf = &stdin_host_ringbuf;
+    }else{
+        ringbuf = &stdin_ringbuf;
+    }
+
+    for(uint32_t i=0; i<count; i++){
+        buffer[offset+i] = ringbuf_get(ringbuf);
+    }
 }
 
 
 uint32_t engine_link_available(){
     if(is_host){
-        return tuh_cdc_read_available(mounted_device_cdc_daddr);
+        return ringbuf_avail(&stdin_host_ringbuf);
     }else{
         // ports/rp2/mphalport.h is included through py/mphal.h -> <mphalport.h>
         return ringbuf_avail(&stdin_ringbuf);
+    }
+}
+
+
+void engine_link_clear_send(){
+    if(is_host){
+        tuh_cdc_write_clear(mounted_device_cdc_daddr);
+    }else{
+        tud_cdc_write_clear();
+    }
+}
+
+
+void engine_link_clear_read(){
+    if(is_host){
+        tuh_cdc_read_clear(mounted_device_cdc_daddr);
+        ringbuf_clear(&stdin_host_ringbuf);
+    }else{
+        tud_cdc_read_flush();
+        ringbuf_clear(&stdin_ringbuf);
     }
 }
