@@ -9,6 +9,9 @@ void engine_link_task();
 void engine_link_start();
 void engine_link_stop();
 
+void engine_link_on_just_connected();
+void engine_link_on_just_disconnected();
+
 void engine_link_send(const void *buffer, uint32_t bufsize);
 void engine_link_recv();
 uint32_t engine_link_available();

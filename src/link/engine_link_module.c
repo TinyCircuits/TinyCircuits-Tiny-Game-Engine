@@ -41,10 +41,12 @@ void engine_link_module_task(){
     // if connected or disconnected (tusb mount cbs can be weird)
     bool connected = engine_link_connected();
 
-    if(link_connected_cb != mp_const_none && was_connected == true && connected == false){           // Was connected now we aren't, disconnected
+    if(link_disconnected_cb != mp_const_none && was_connected == true && connected == false){     // Was connected now we aren't, disconnected
         mp_call_function_0(link_disconnected_cb);
-    }else if(link_disconnected_cb != mp_const_none && was_connected == false && connected == true){  // Was disconnected now we aren't, connected
+        // engine_link_on_just_disconnected();
+    }else if(link_connected_cb != mp_const_none && was_connected == false && connected == true){  // Was disconnected now we aren't, connected
         mp_call_function_0(link_connected_cb);
+        // engine_link_on_just_connected();
     }
 
     was_connected = connected;

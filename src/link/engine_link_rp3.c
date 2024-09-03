@@ -1,11 +1,74 @@
 #include "engine_link_rp3.h"
+
 #include "tusb.h"
+#include "host/usbh_pvt.h"
+#include "host/usbh_pvt.h"
+#include "device/usbd_pvt.h"
+#include "device/usbd_pvt.h"
+#include "class/cdc/cdc_host.h"
+#include "class/cdc/cdc_device.h"
+
+#include "py/runtime.h"
+#include "py/mphal.h"
+#include "py/stream.h"
+#include "py/ringbuf.h"
+
 #include "io/engine_io_rp3.h"
 #include "math/engine_math.h"
 
 
 bool started = false;   // Is discovery started (if so, will flip between device/host when not connected)
 bool is_host = false;   // Are we acting as a USB host
+
+// // `engine_link.start()` has been called and we're connected as a device
+// // to a host, replace the device driver `xfer_cb` with a custom one to
+// // intercept MicroPython from consuming the data before us
+// // src/class/cdc/cdc_device.c
+// bool custom_device_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes){
+//     engine_io_rp3_rumble(1.0f);
+//     return true;
+// }
+
+
+// // src/class/cdc/cdc_host.c
+// bool custom_host_xfer_cb(uint8_t daddr, uint8_t ep_addr, xfer_result_t event, uint32_t xferred_bytes){
+//     engine_io_rp3_rumble(1.0f);
+//     return true;
+// }
+
+
+
+// static usbh_class_driver_t custom_usbh_class_driver = {
+//     .name       = "CDC",
+//     .init       = cdch_init,
+//     .deinit     = cdch_deinit,
+//     .open       = cdch_open,
+//     .set_config = cdch_set_config,
+//     .xfer_cb    = cdch_xfer_cb,
+//     .close      = cdch_close
+// };
+
+
+// tu_static usbd_class_driver_t custom_usbd_driver = {
+//     .name             = "CDC",
+//     .init             = cdcd_init,
+//     .deinit           = cdcd_deinit,
+//     .reset            = cdcd_reset,
+//     .open             = cdcd_open,
+//     .control_xfer_cb  = cdcd_control_xfer_cb,
+//     .xfer_cb          = cdcd_xfer_cb,
+//     .sof              = NULL
+// };
+
+
+// usbh_class_driver_t const* usbh_app_driver_get_cb(uint8_t* driver_count){
+//     return &custom_usbh_class_driver;
+// }
+
+
+// usbd_class_driver_t const* usbd_app_driver_get_cb(uint8_t* driver_count){
+//     return &custom_usbd_driver;
+// }
 
 
 // Related to clipping between being a device or host during
@@ -26,32 +89,12 @@ void tuh_mount_cb(uint8_t daddr){
     mounted_device_daddr = daddr;
 }
 
-bool toggled = false;
 
-// void tud_event_hook_cb(uint8_t rhport, uint32_t eventid, bool in_isr){
-//     if(toggled){
-//         toggled = false;
-//     }else{
-//         toggled = true;
-//     }
-
-//     engine_io_rp3_set_indicator(toggled);
-// }
-
-
+// When a CDC device connects to us, track that,
+// only time we can get its device index
 void tuh_cdc_mount_cb(uint8_t idx){
     mounted_device_cdc_daddr = idx;
     engine_io_rp3_set_indicator(true);
-}
-
-
-void tud_cdc_rx_cb(uint8_t itf){
-    engine_io_rp3_rumble(1.0f);
-}
-
-
-void tuh_cdc_rx_cb(uint8_t itf){
-    engine_io_rp3_rumble(1.0f);
 }
 
 
@@ -89,10 +132,6 @@ void engine_link_switch_to_host(){
 // devices and to run the tusb host task (MicroPython calls the device
 // task when device is inited)
 void engine_link_task(){
-    // if(tuh_cdc_mounted(mounted_device_daddr)){
-    //     engine_io_rp3_set_indicator(true);
-    // }
-
     // If not started, do not perform discovery or host task
     if(started == false){
         return;
@@ -142,6 +181,24 @@ void engine_link_stop(){
 }
 
 
+// void engine_link_on_just_connected(){
+//     if(is_host){
+
+//     }else{
+//         custom_usbd_driver.xfer_cb = custom_device_xfer_cb;
+//     }
+// }
+
+
+// void engine_link_on_just_disconnected(){
+//     if(is_host){
+
+//     }else{
+//         custom_usbd_driver.xfer_cb = cdcd_xfer_cb;
+//     }
+// }
+
+
 void engine_link_send(const void *buffer, uint32_t bufsize){
     // Don't try to send if not connected to anything
     if(!engine_link_connected()){
@@ -168,6 +225,7 @@ uint32_t engine_link_available(){
     if(is_host){
         return tuh_cdc_read_available(mounted_device_cdc_daddr);
     }else{
-        return tud_cdc_available();
+        // ports/rp2/mphalport.h is included through py/mphal.h -> <mphalport.h>
+        return ringbuf_avail(&stdin_ringbuf);
     }
 }
