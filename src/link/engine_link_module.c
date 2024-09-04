@@ -330,7 +330,18 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_link_module_clear_read_obj, engine_link_module_
 /*  --- doc ---
     NAME: engine_link
     ID: engine_link
-    DESC: Module sending data from one Thumby Color to another
+    DESC: Module for sending data from one Thumby Color to another
+    ATTR: [type=function]   [name={ref_link:engine_link_connected}]             [value=function] 
+    ATTR: [type=function]   [name={ref_link:engine_link_start}]                 [value=function]
+    ATTR: [type=function]   [name={ref_link:engine_link_stop}]                  [value=function]
+    ATTR: [type=function]   [name={ref_link:engine_link_set_connected_cb}]      [value=function]
+    ATTR: [type=function]   [name={ref_link:engine_link_set_disconnected_cb}]   [value=function]
+    ATTR: [type=function]   [name={ref_link:engine_link_send}]                  [value=function]
+    ATTR: [type=function]   [name={ref_link:engine_link_read}]                  [value=function]
+    ATTR: [type=function]   [name={ref_link:engine_link_read_into}]             [value=function]
+    ATTR: [type=function]   [name={ref_link:engine_link_available}]             [value=function]
+    ATTR: [type=function]   [name={ref_link:engine_link_clear_send}]            [value=function]
+    ATTR: [type=function]   [name={ref_link:engine_link_clear_send}]            [value=function]
 */ 
 static const mp_rom_map_elem_t engine_link_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_link) },
