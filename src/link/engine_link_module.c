@@ -3,6 +3,7 @@
 #include "py/runtime.h"
 #include "py/builtin.h"
 #include "py/objarray.h"
+#include "py/binary.h"
 #include "math/engine_math.h"
 
 /* 
@@ -24,7 +25,7 @@
 #if defined(__EMSCRIPTEN__)
 
 #elif defined(__unix__)
-
+    #include "engine_link_unix.h"
 #elif defined(__arm__)
     #include "engine_link_rp3.h"
 #endif
@@ -143,12 +144,11 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_link_module_set_disconnected_cb_obj, engine_lin
     RETURN: numbers of bytes sent (int)
 */ 
 static mp_obj_t engine_link_module_send(size_t n_args, const mp_obj_t *args){
-    if(n_args == 0 || n_args > 3){
+    if(n_args > 3){
         mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineLink: ERROR: Expected 1 ~ 3 arguments, got %d`"), n_args);
     }
 
     mp_obj_array_t *send_buffer = NULL;
-    uint32_t length = 0;
     uint32_t count = 0;
     uint32_t offset = 0;
 
@@ -157,7 +157,6 @@ static mp_obj_t engine_link_module_send(size_t n_args, const mp_obj_t *args){
         mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineLink: ERROR: First argument is expected to be a `bytearray`, got `%s`"), mp_obj_get_type_str(args[0]));
     }else{
         send_buffer = args[0];
-        length = send_buffer->len;
     }
 
     // count
@@ -169,7 +168,7 @@ static mp_obj_t engine_link_module_send(size_t n_args, const mp_obj_t *args){
         }
     }else{
         // If count not passed, send entire buffer
-        count = length;
+        count = send_buffer->len;
     }
 
     // offset
@@ -182,26 +181,17 @@ static mp_obj_t engine_link_module_send(size_t n_args, const mp_obj_t *args){
     }
     
     // Check that offset is less than the length of the buffer overall
-    if(offset >= length){
-        mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineLink: ERROR: Offset is %d which is larger than or equal to the size of the send buffer %d"), offset, length);
+    if(offset >= send_buffer->len){
+        mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineLink: ERROR: Offset is %d which is larger than or equal to the size of the send buffer %d"), offset, send_buffer->len);
     }
 
-    // Figure out which of the three is smallest
-    length = min3(length, send_buffer_length, send_buffer_length-offset);
-    engine_link_send((uint8_t*)send_buffer->items, length, offset);
+    // Figure out which of the three is smallest and send
+    count = min3(count, send_buffer->len, send_buffer->len-offset);
+    engine_link_send((uint8_t*)send_buffer->items, count, offset);
 
-    // mp_obj_array_t *array = m_new_obj(mp_obj_array_t);
-    // array->base.type = &mp_type_bytearray;
-    // array->typecode = BYTEARRAY_TYPECODE;
-    // array->free = 0;
-    // array->len = space_size;
-
-    // mp_obj_array_t *send_buffer = args[0];
-    
-    // uint32_t count = min3(mp_obj_get_int(args[1]), send_buffer->len, )
-    return mp_const_none;
+    return mp_obj_new_int(count);
 }
-MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_link_module_send_obj, engine_link_module_send);
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_link_module_send_obj, 1, 3, engine_link_module_send);
 
 
 /*  --- doc ---
@@ -211,9 +201,30 @@ MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_link_module_send_obj, engine_link_mod
     PARAM:  [type=int]       [name=count]       [value=int (optional)]
     RETURN: None if no bytes to read otherwise `bytearray`
 */ 
-static mp_obj_t engine_link_module_read(mp_obj_t count){
-    engine_link_read();
-    return mp_const_none;
+static mp_obj_t engine_link_module_read(mp_obj_t count_obj){
+    // Decode passed count and see what's ready to read
+    uint32_t count = mp_obj_get_int(count_obj);
+    uint32_t available = engine_link_available();
+
+    // Return none if nothing available to read or count 0
+    if(available == 0 || count == 0){
+        return mp_const_none;
+    }
+
+    // See which is smallest
+    uint32_t length = min(count, available);
+
+    // Create new bytearray since we have at least one byte
+    mp_obj_array_t *array = m_new_obj(mp_obj_array_t);
+    array->base.type = &mp_type_bytearray;
+    array->typecode = BYTEARRAY_TYPECODE;
+    array->free = 0;
+    array->len = length;
+    array->items = m_new(byte, array->len);
+
+    // Read and return array
+    engine_link_read_into((uint8_t*)array->items, length, 0);
+    return array;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(engine_link_module_read_obj, engine_link_module_read);
 
@@ -227,11 +238,55 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_link_module_read_obj, engine_link_module_read);
     PARAM:  [type=int]       [name=offset]      [value=int (optional)]
     RETURN: Number of bytes read into `buffer` (int)
 */ 
-static mp_obj_t engine_link_module_read_into(mp_obj_t buffer, mp_obj_t count, mp_obj_t offset){
-    engine_link_read_into();
-    return mp_const_none;
+static mp_obj_t engine_link_module_read_into(size_t n_args, const mp_obj_t *args){
+    if(n_args > 3){
+        mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineLink: ERROR: Expected 1 ~ 3 arguments, got %d`"), n_args);
+    }
+
+    mp_obj_array_t *read_buffer = NULL;
+    uint32_t count = 0;
+    uint32_t offset = 0;
+
+    // bytearray
+    if(mp_obj_is_type(args[0], &mp_type_bytearray) == false){
+        mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineLink: ERROR: First argument is expected to be a `bytearray`, got `%s`"), mp_obj_get_type_str(args[0]));
+    }else{
+        read_buffer = args[0];
+    }
+
+    // count
+    if(n_args >= 2){
+        if(mp_obj_is_int(args[1]) == false){
+            mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineLink: ERROR: Second argument is expected to be an `int`, got `%s`"), mp_obj_get_type_str(args[1]));
+        }else{
+            count = mp_obj_get_int(args[1]);
+        }
+    }else{
+        // If count not passed, read all available
+        count = engine_link_available();
+    }
+
+    // offset
+    if(n_args == 3){
+        if(mp_obj_is_int(args[2]) == false){
+            mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineLink: ERROR: Third argument is expected to be an `int`, got `%s`"), mp_obj_get_type_str(args[2]));
+        }else{
+            offset = mp_obj_get_int(args[2]);
+        }
+    }
+    
+    // Check that offset is less than the length of the buffer overall
+    if(offset >= read_buffer->len){
+        mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineLink: ERROR: Offset is %d which is larger than or equal to the size of the read buffer %d"), offset, read_buffer->len);
+    }
+
+    // Figure out which of the three is smallest and read
+    count = min3(count, read_buffer->len, read_buffer->len-offset);
+    engine_link_read_into((uint8_t*)read_buffer->items, count, offset);
+
+    return mp_obj_new_int(count);
 }
-MP_DEFINE_CONST_FUN_OBJ_1(engine_link_module_read_into_obj, engine_link_module_read_into);
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_link_module_read_into_obj, 1, 3, engine_link_module_read_into);
 
 
 /*  --- doc ---

@@ -219,6 +219,7 @@ uint16_t texture_resource_get_pixel(texture_resource_class_obj_t *texture, uint3
     DESC: Object that holds pixel information. If a file path is specifed, the file needs to be a 16-bit RGB565 .bmp file. If at least a width and height are specified instead, a blank white texture is created in RAM but an initial color can also be passed.
     PARAM:  [type=string | int]     [name=filepath | width]     [value=string | 0 ~ 65535]
     PARAM:  [type=bool | int]       [name=in_ram   | height]    [value=True or False | 0 ~ 65535]
+    PARAM:  [type=int]              [name=color]                [value=int 16-bit RGB565 (optional)]
     ATTR:   [type=float]        [name=width]     [value=any (read-only)]
     ATTR:   [type=float]        [name=height]    [value=any (read-only)]
     ATTR:   [type=bytearray]    [name=data]      [value=RGB565 bytearray (note, if in_ram is False, then writing to this is not a valid operation)]
