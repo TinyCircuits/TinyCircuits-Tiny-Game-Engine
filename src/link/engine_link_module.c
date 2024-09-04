@@ -109,7 +109,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_link_module_stop_obj, engine_link_module_stop);
 /*  --- doc ---
     NAME: set_connected_cb
     ID: engine_link_set_connected_cb
-    DESC: Provided a function, this function will be called when the device disconnects from another device
+    DESC: Provided a function, this function will be called when the device connects to another device
     PARAM:  [type=function] [name=connected_cb] [value=function]
     RETURN: None
 */ 
@@ -293,7 +293,7 @@ MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_link_module_read_into_obj, 1, 3, engi
     NAME: available
     ID: engine_link_available
     DESC: Returns the number of bytes available to read from the internal 512 byte buffer. If after 512 bytes more data is sent to the full internal buffer, those extra bytes overwrite previous bytes (ringbuffer).
-    RETURN: Number of bytes available to read
+    RETURN: Number of bytes available to read (int)
 */
 static mp_obj_t engine_link_module_available(){
     return mp_obj_new_int(engine_link_available());
@@ -341,7 +341,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_link_module_clear_read_obj, engine_link_module_
     ATTR: [type=function]   [name={ref_link:engine_link_read_into}]             [value=function]
     ATTR: [type=function]   [name={ref_link:engine_link_available}]             [value=function]
     ATTR: [type=function]   [name={ref_link:engine_link_clear_send}]            [value=function]
-    ATTR: [type=function]   [name={ref_link:engine_link_clear_send}]            [value=function]
+    ATTR: [type=function]   [name={ref_link:engine_link_clear_read}]            [value=function]
 */ 
 static const mp_rom_map_elem_t engine_link_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_link) },
