@@ -340,6 +340,10 @@ bool voxelspace_sprite_node_load_attr(engine_node_base_t *self_node_base, qstr a
             destination[0] = self->texture_offset;
             return true;
         break;
+        case MP_QSTR_global_position:
+            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("ERROR: `global_position` is not supported on this node yet!"));
+            return true;
+        break;
         default:
             return false; // Fail
     }
@@ -412,6 +416,10 @@ bool voxelspace_sprite_node_store_attr(engine_node_base_t *self_node_base, qstr 
             self->texture_offset = destination[1];
             return true;
         break;
+        case MP_QSTR_global_position:
+            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("ERROR: `global_position` is not supported on this node yet!"));
+            return true;
+        break;
         default:
             return false; // Fail
     }
@@ -421,8 +429,8 @@ bool voxelspace_sprite_node_store_attr(engine_node_base_t *self_node_base, qstr 
 static mp_attr_fun_t voxelspace_sprite_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing VoxelspaceNode attr");
     node_base_attr_handler(self_in, attribute, destination,
-                          (attr_handler_func[]){node_base_load_attr, voxelspace_sprite_node_load_attr},
-                          (attr_handler_func[]){node_base_store_attr, voxelspace_sprite_node_store_attr}, 2);
+                          (attr_handler_func[]){voxelspace_sprite_node_load_attr, node_base_load_attr},
+                          (attr_handler_func[]){voxelspace_sprite_node_store_attr, node_base_store_attr}, 2);
     return mp_const_none;
 }
 
@@ -498,7 +506,7 @@ mp_obj_t voxelspace_sprite_node_class_new(const mp_obj_type_t *type, size_t n_ar
     // If there is one positional argument and it isn't the first
     // expected argument (as is expected when using positional
     // arguments) then define which way to parse the arguments
-    if(n_args >= 1 && mp_obj_get_type(args[0]) != &vector2_class_type){
+    if(n_args >= 1 && mp_obj_get_type(args[0]) != &vector3_class_type){
         // Using positional arguments but the type of the first one isn't
         // as expected. Must be the child class
         mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args), allowed_args, parsed_args);

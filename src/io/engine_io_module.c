@@ -13,9 +13,6 @@
 #endif
 
 
-button_class_obj_t* gui_toggle_button = &BUTTON_MENU;
-
-
 void engine_io_setup(){
     #ifdef __unix__
         // Nothing to do
@@ -27,16 +24,6 @@ void engine_io_setup(){
 
 void engine_io_tick(){
     buttons_update_state();
-}
-
-
-button_class_obj_t* engine_io_get_gui_toggle_button(){
-    return gui_toggle_button;
-}
-
-
-void engine_io_reset_gui_toggle_button(){
-    gui_toggle_button = &BUTTON_MENU;
 }
 
 
@@ -108,6 +95,23 @@ MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_io_gui_wrapping_obj, 0, 1, engine_io_
 
 
 /*  --- doc ---
+    NAME: gui_passing
+    ID: gui_passing
+    DESC: Get or set whether the GUI layer blocks or passes inputs to the game: Default: False
+    PARAM: [type=bool (optional)]   [name=passing_enabled]  [value=bool]
+    RETURN: bool or None
+*/
+static mp_obj_t engine_io_gui_passing(size_t n_args, const mp_obj_t *args){
+    if (n_args == 1) {
+        engine_gui_set_passing(mp_obj_get_int(args[0]));
+        return mp_const_none;
+    }
+    return mp_obj_new_bool(engine_gui_get_passing());
+}
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_io_gui_passing_obj, 0, 1, engine_io_gui_passing);
+
+
+/*  --- doc ---
     NAME: focused_node
     ID: focused_node
     DESC: Get the currently focused node.
@@ -124,28 +128,6 @@ static mp_obj_t engine_io_focused_node(){
 MP_DEFINE_CONST_FUN_OBJ_0(engine_io_focused_node_obj, engine_io_focused_node);
 
 
-/*  --- doc ---
-    NAME: gui_toggle_button
-    ID: gui_toggle_button
-    DESC: Get or set the button that toggles GUI focus mode. None to disable.
-    PARAM: [type=int|None (optional)]   [name=button]  [value=enum/int (e.g. 'engine_io.A')]
-    RETURN: int
-*/
-static mp_obj_t engine_io_gui_toggle_button(size_t n_args, const mp_obj_t *args){
-    if (n_args == 1) {
-        if (args[0] == mp_const_none) {
-            gui_toggle_button = NULL;
-        } else if (mp_obj_is_type(args[0], &button_class_type)) {
-            gui_toggle_button = MP_OBJ_TO_PTR(args[0]);
-        } else {
-            mp_raise_TypeError(MP_ERROR_TEXT("Expected Button or None"));
-        }
-    }
-    return MP_OBJ_FROM_PTR(gui_toggle_button);
-}
-MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_io_gui_toggle_button_obj, 0, 1, engine_io_gui_toggle_button);
-
-
 #if defined(__arm__)
 static float engine_io_raw_half_battery_voltage(){
     // Read the 12-bit sample with ADC max ref voltage of 3.3V
@@ -154,9 +136,10 @@ static float engine_io_raw_half_battery_voltage(){
     // The input voltage we're measuring is before the LDO. The measured voltage
     // is dropped to below max readable reference voltage of 3.3V through 1/(1+1)
     // voltage divider (cutting it in half):
-    // 5/2    = 2.5V    <- CHARGING
-    // 4.2/2  = 2.1V    <- MAX
-    // 3.3/2 = 1.65V    <- MIN
+    // 5/2                                  = 2.5V     <- CHARGING
+    // (5-0.435)/2 (NSR0230P2T5G @ 120mA)   = ~2.28V   <- CHARGING MORE REALISTIC
+    // 4.2/2                                = 2.1V     <- MAX
+    // 3.3/2                                = 1.65V    <- MIN
     return battery_voltage_12_bit * ADC_CONV_FACTOR;
 }
 #endif
@@ -180,16 +163,14 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_io_battery_voltage_obj, engine_io_battery_volta
 /*  --- doc ---
     NAME: battery_level
     ID: battery_level
-    DESC: Get the battery level percentage as an int between 0 and 100. This is obviously approximate.
+    DESC: Get the battery level percentage as a float between 0.0 and 1.0. This is obviously approximate.
     RETURN: int
 */
 static mp_obj_t engine_io_battery_level(){
     #if defined(__arm__)
-        // Map to the range we want to return.
-        // Clamp since we only care showing between 0 and 100 for this function. Round to nearest int (hence +0.5).
-        return mp_obj_new_int((uint16_t)engine_math_map_clamp(engine_io_raw_half_battery_voltage(), 1.65f, 2.1f, 0.5f, 100.5f));
+        return mp_obj_new_float(engine_math_map_clamp(engine_io_raw_half_battery_voltage(), 1.65f, 2.1f, 0.0f, 1.0f));
     #endif
-    return mp_obj_new_int(100);
+    return mp_obj_new_float(1.0f);
 }
 MP_DEFINE_CONST_FUN_OBJ_0(engine_io_battery_level_obj, engine_io_battery_level);
 
@@ -202,7 +183,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_io_battery_level_obj, engine_io_battery_level);
 */
 static mp_obj_t engine_io_is_charging(){
     #if defined(__arm__)
-        return mp_obj_new_bool(engine_io_raw_half_battery_voltage() >= 2.4f);
+        return mp_obj_new_bool(engine_io_raw_half_battery_voltage() >= 2.1f);
     #endif
     return mp_const_true;
 }
@@ -243,6 +224,28 @@ MP_DEFINE_CONST_FUN_OBJ_0(buttons_reset_params_all_obj, engine_io_reset_all_butt
 
 
 /*  --- doc ---
+    NAME: indicator
+    ID: indicator
+    DESC: Disables front LED indicator
+    PARAM:  [type=boolean | optional]   [name=off]  [value=True or False]
+    RETURN: None
+*/
+static mp_obj_t engine_io_indicator(size_t n_args, const mp_obj_t *args){
+    #if defined(__arm__)
+        bool off = true;
+
+        if(n_args == 1 && mp_obj_is_bool(args[0])){
+            off = mp_obj_get_int(args[0]);
+        }
+
+        engine_io_rp3_set_indicator(off);
+    #endif
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_io_indicator_obj, 0, 1, engine_io_indicator);
+
+
+/*  --- doc ---
     NAME: engine_io
     ID: engine_io
     DESC: Module for checking button presses
@@ -250,11 +253,12 @@ MP_DEFINE_CONST_FUN_OBJ_0(buttons_reset_params_all_obj, engine_io_reset_all_butt
     ATTR: [type=function]            [name={ref_link:gui_focused}]              [value=getter/setter function]
     ATTR: [type=function]            [name={ref_link:gui_focused_toggle}]       [value=function]
     ATTR: [type=function]            [name={ref_link:gui_wrapping}]             [value=getter/setter function]
+    ATTR: [type=function]            [name={ref_link:gui_passing}]              [value=getter/setter function]
     ATTR: [type=function]            [name={ref_link:battery_voltage}]          [value=function]
     ATTR: [type=function]            [name={ref_link:battery_level}]            [value=function]
     ATTR: [type=function]            [name={ref_link:is_charging}]              [value=function]
+    ATTR: [type=function]            [name={ref_link:indicator}]                [value=function]
     ATTR: [type=function]            [name={ref_link:focused_node}]             [value=function]
-    ATTR: [type=function]            [name={ref_link:gui_toggle_button}]        [value=setter/setter function]
     ATTR: [type=type]                [name={ref_link:Button}]                   [value=the Button class]
     ATTR: [type={ref_link:Button}]   [name=UP]                                  [value=the button object]
     ATTR: [type={ref_link:Button}]   [name=DOWN]                                [value=the button object]
@@ -276,11 +280,12 @@ static const mp_rom_map_elem_t engine_io_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_gui_focused), MP_ROM_PTR(&engine_io_gui_focused_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_gui_focused_toggle), MP_ROM_PTR(&engine_io_gui_focused_toggle_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_gui_wrapping), MP_ROM_PTR(&engine_io_gui_wrapping_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_gui_passing), MP_ROM_PTR(&engine_io_gui_passing_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_battery_voltage), MP_ROM_PTR(&engine_io_battery_voltage_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_battery_level), MP_ROM_PTR(&engine_io_battery_level_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_is_charging), MP_ROM_PTR(&engine_io_is_charging_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_indicator), MP_ROM_PTR(&engine_io_indicator_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_focused_node), MP_ROM_PTR(&engine_io_focused_node_obj) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_gui_toggle_button), MP_ROM_PTR(&engine_io_gui_toggle_button_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_Button), MP_ROM_PTR(&button_class_type) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_UP), MP_ROM_PTR(&BUTTON_DPAD_UP) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_DOWN), MP_ROM_PTR(&BUTTON_DPAD_DOWN) },

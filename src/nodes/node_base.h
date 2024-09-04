@@ -75,11 +75,6 @@ void node_base_use_default_attr_handler(mp_obj_t self_in, qstr attribute, mp_obj
 // so that certain callbacks/code can run (see py/objtype.c:mp_obj_instance_attr(...))
 void node_base_set_attr_handler(mp_obj_t node_instance, mp_attr_fun_t (*default_instance_attr_func)(mp_obj_t self_in, qstr attribute, mp_obj_t *destination));
 
-// void node_base_attr_handler(mp_obj_t self, qstr attribute, mp_obj_t *destination,
-//                             bool (*node_load_attr)(engine_node_base_t *node_base, qstr attribute, mp_obj_t *destination),
-//                             bool (*node_store_attr)(engine_node_base_t *node_base, qstr attribute, mp_obj_t *destination));
-
-
 typedef bool (*attr_handler_func)(engine_node_base_t *node_base, qstr attr, mp_obj_t *dest);
 
 bool node_base_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_t *destination);

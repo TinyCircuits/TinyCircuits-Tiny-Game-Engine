@@ -52,7 +52,7 @@ void line_2d_node_class_draw(mp_obj_t line_node_base_obj, mp_obj_t camera_node){
     // Store the non-rotated x and y for a second
     float line_rotated_x = line_resolved_hierarchy_x;
     float line_rotated_y = line_resolved_hierarchy_y;
-    float line_rotation = line_resolved_hierarchy_rotation;
+    float line_rotation = line_resolved_hierarchy_rotation - engine_math_angle_between(line_start->x.value, line_start->y.value, line_end->x.value, line_end->y.value) - HALF_PI;
 
     if(line_is_child_of_camera == false){
         float camera_resolved_hierarchy_x = 0.0f;
@@ -101,8 +101,8 @@ void line_2d_node_class_draw(mp_obj_t line_node_base_obj, mp_obj_t camera_node){
                          line_opacity,
                          shader);
     }else{
-        float line_half_width = line_thickness/2;
-        float line_half_height = line_length/2;
+        float line_half_width = line_thickness/2.0f;
+        float line_half_height = line_length/2.0f;
 
         // Calculate the coordinates of the 4 corners of the line, not rotated
         // NOTE: positive y is down
@@ -291,6 +291,7 @@ static mp_attr_fun_t line_2d_node_class_attr(mp_obj_t self_in, qstr attribute, m
     ATTR:   [type={ref_link:Vector2}]               [name=start]                                        [value={ref_link:Vector2}]
     ATTR:   [type={ref_link:Vector2}]               [name=end]                                          [value={ref_link:Vector2}]
     ATTR:   [type={ref_link:Vector2}]               [name=position]                                     [value={ref_link:Vector2}]
+    ATTR:   [type={ref_link:Vector2}]               [name=global_position]                              [value={ref_link:Vector2} (read-only)]
     ATTR:   [type=float]                            [name=thickness]                                    [value=any]
     ATTR:   [type={ref_link:Color}|int (RGB565)]    [name=color]                                        [value=color]
     ATTR:   [type=float]                            [name=opacity]                                      [value=0 ~ 1.0]

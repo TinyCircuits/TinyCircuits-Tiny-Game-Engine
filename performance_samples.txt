@@ -1167,3 +1167,35 @@ vox_node_perf_test.py, avg. FPS: 44.05459
 
 
  ----- 
+
+
+
+Fri Aug 16 16:05:15 2024 -0400 : 20ee7d1093d005a70934906fd5ec4f17b9a1163e
+Get rp2 port compiling with rp2350, but it is slower
+
+{
+line_node_perf_test.py, avg. FPS: 291.3097
+test_opacity_perf_test.py, avg. FPS: 112.1412
+test_perf_test.py, avg. FPS: 133.5825
+circle_node_perf_test.py, avg. FPS: 291.1191
+vox_node_perf_test.py, avg. FPS: 44.23397
+}
+
+
+ ----- 
+
+
+
+Wed Aug 28 14:49:47 2024 -0400 : 264cbfd5c1b00ec1bf0ef45185debe0a0933961f
+Use floting point ceilf in resource manager, update to newest SDK and mp dev past 1.23.0. Introduced slowdown... don't know why
+
+{
+line_node_perf_test.py, avg. FPS: 291.5874
+test_opacity_perf_test.py, avg. FPS: 115.3352
+test_perf_test.py, avg. FPS: 138.106
+circle_node_perf_test.py, avg. FPS: 291.121
+vox_node_perf_test.py, avg. FPS: 44.04103
+}
+
+
+ ----- 

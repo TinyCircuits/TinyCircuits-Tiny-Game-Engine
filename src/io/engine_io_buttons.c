@@ -15,7 +15,7 @@
 #define BUTTON_DEFAULT_LONG_PRESS_TIME          400
 #define BUTTON_DEFAULT_DOUBLE_PRESS_TIME        300
 #define BUTTON_DEFAULT_AUTOREPEAT_DELAY_TIME    400
-#define BUTTON_DEFAULT_AUTOREPEAT_INTERVAL_TIME 100
+#define BUTTON_DEFAULT_AUTOREPEAT_INTERVAL_TIME 200
 
 #define NEW_BUTTON(btn_name, btn_code) { \
     {&button_class_type}, \
@@ -275,40 +275,40 @@ static void button_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destin
             // Press state:
             // Make all the buttons act as if released and release if the GUI is focused.
             case MP_QSTR_press_time:
-                destination[0] = mp_obj_new_int(engine_gui_is_gui_focused() ? 0 : button_press_time(self));
+                destination[0] = mp_obj_new_int((engine_gui_is_gui_focused() && !engine_gui_get_passing()) ? 0 : button_press_time(self));
             break;
             case MP_QSTR_is_pressed:
-                destination[0] = mp_obj_new_bool(!engine_gui_is_gui_focused() && button_is_pressed(self));
+                destination[0] = mp_obj_new_bool((!engine_gui_is_gui_focused() || engine_gui_get_passing()) && button_is_pressed(self));
             break;
             case MP_QSTR_is_just_pressed:
-                destination[0] = mp_obj_new_bool(!engine_gui_is_gui_focused() && button_is_just_pressed(self));
+                destination[0] = mp_obj_new_bool((!engine_gui_is_gui_focused() || engine_gui_get_passing()) && button_is_just_pressed(self));
             break;
             case MP_QSTR_is_just_released:
-                destination[0] = mp_obj_new_bool(!engine_gui_is_gui_focused() && button_is_just_released(self));
+                destination[0] = mp_obj_new_bool((!engine_gui_is_gui_focused() || engine_gui_get_passing()) && button_is_just_released(self));
             break;
             case MP_QSTR_is_long_pressed:
-                destination[0] = mp_obj_new_bool(!engine_gui_is_gui_focused() && button_is_long_pressed(self));
+                destination[0] = mp_obj_new_bool((!engine_gui_is_gui_focused() || engine_gui_get_passing()) && button_is_long_pressed(self));
             break;
             case MP_QSTR_is_just_long_pressed:
-                destination[0] = mp_obj_new_bool(!engine_gui_is_gui_focused() && button_is_just_long_pressed(self));
+                destination[0] = mp_obj_new_bool((!engine_gui_is_gui_focused() || engine_gui_get_passing()) && button_is_just_long_pressed(self));
             break;
             case MP_QSTR_is_just_short_released:
-                destination[0] = mp_obj_new_bool(!engine_gui_is_gui_focused() && button_is_just_short_released(self));
+                destination[0] = mp_obj_new_bool((!engine_gui_is_gui_focused() || engine_gui_get_passing()) && button_is_just_short_released(self));
             break;
             case MP_QSTR_is_just_long_released:
-                destination[0] = mp_obj_new_bool(!engine_gui_is_gui_focused() && button_is_just_long_released(self));
+                destination[0] = mp_obj_new_bool((!engine_gui_is_gui_focused() || engine_gui_get_passing()) && button_is_just_long_released(self));
             break;
             case MP_QSTR_is_just_double_pressed:
-                destination[0] = mp_obj_new_bool(!engine_gui_is_gui_focused() && button_is_just_double_pressed(self));
+                destination[0] = mp_obj_new_bool((!engine_gui_is_gui_focused() || engine_gui_get_passing()) && button_is_just_double_pressed(self));
             break;
             case MP_QSTR_is_double_pressed:
-                destination[0] = mp_obj_new_bool(!engine_gui_is_gui_focused() && button_is_double_pressed(self));
+                destination[0] = mp_obj_new_bool((!engine_gui_is_gui_focused() || engine_gui_get_passing()) && button_is_double_pressed(self));
             break;
             case MP_QSTR_is_just_double_released:
-                destination[0] = mp_obj_new_bool(!engine_gui_is_gui_focused() && button_is_just_double_released(self));
+                destination[0] = mp_obj_new_bool((!engine_gui_is_gui_focused() || engine_gui_get_passing()) && button_is_just_double_released(self));
             break;
             case MP_QSTR_is_pressed_autorepeat:
-                destination[0] = mp_obj_new_bool(!engine_gui_is_gui_focused() && button_is_pressed_autorepeat(self));
+                destination[0] = mp_obj_new_bool((!engine_gui_is_gui_focused() || engine_gui_get_passing()) && button_is_pressed_autorepeat(self));
             break;
             default:
                 destination[1] = MP_OBJ_SENTINEL; // Continue in locals_dict.

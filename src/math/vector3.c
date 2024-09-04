@@ -58,7 +58,7 @@ mp_obj_t vector3_class_normalized(mp_obj_t self_in){
 
     float normalized_x = self->x.value;
     float normalized_y = self->y.value;
-    float normalized_z = self->y.value;
+    float normalized_z = self->z.value;
 
     engine_math_3d_normalize(&normalized_x, &normalized_y, &normalized_z);
 

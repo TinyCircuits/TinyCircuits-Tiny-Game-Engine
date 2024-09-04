@@ -1,5 +1,7 @@
-from system.root_dir import ROOT_DIR
+import engine
 from system.util import read_and_delete
+
+ROOT_DIR = engine.root_dir()
 
 RUN_ON_BOOT_FILE = f"{ROOT_DIR}/_run_on_boot"
 

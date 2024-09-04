@@ -1,6 +1,9 @@
+import engine
+
 import os
-from system.root_dir import ROOT_DIR
 from system.util import file_exists, read_and_delete, delete_file
+
+ROOT_DIR = engine.root_dir()
 
 LAUNCHER_STATE_FILE = f"{ROOT_DIR}/_launcher_state"
 LAUNCHER_STATE_HELD_FILE = f"{LAUNCHER_STATE_FILE}__"

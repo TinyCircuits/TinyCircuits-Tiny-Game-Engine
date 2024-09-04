@@ -24,6 +24,8 @@
 #define min3(a,b,c)         min(min(a, b), c)
 #define max3(a,b,c)         max(max(a, b), c)
 
+uint32_t engine_math_rand_int(uint32_t max);
+
 float engine_math_dot_product(float x0, float y0, float x1, float y1);
 
 float engine_math_cross_product_v_v(float x0, float y0, float x1, float y1);
