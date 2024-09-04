@@ -6,18 +6,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define RED_565_MASK  0b1111100000000000
-#define RED_1555_MASK 0b0111110000000000
-
-#define GREEN_565_MASK  0b0000011111100000
-#define GREEN_1555_MASK 0b0000001111100000
-
-#define BLUE_565_MASK  0b0000000000011111
-#define BLUE_1555_MASK 0b0000000000011111
-
-#define ALPHA_1555_MASK 0b1000000000000000
-#define ALPHA_8888_MASK 0b11111111000000000000000000000000
-
 enum bitmap_compression{
 	BI_RGB,
 	BI_RLE8,
@@ -29,22 +17,6 @@ enum bitmap_compression{
 	BI_CMYK,
 	BI_CMYKRLE8,
 	BI_CMYKRLE4,
-};
-
-
-enum bitmap_formats{
-    FMT_1BPP_PAL,
-    FMT_4BPP_PAL,
-    FMT_8BPP_PAL,
-
-    FMT_16BPP_RGB565,
-    FMT_16BPP_XRGB_1555,
-    FMT_16BPP_ARGB_1555,
-
-    FMT_24BPP_RGB888,
-
-    FMT_32BPP_XRGB8888,
-    FMT_32BPP_ARGB8888
 };
 
 
@@ -92,7 +64,10 @@ typedef struct bmih_v3_t{
 #pragma pack(pop)
 
 
-void bitmap_get_header_and_info(bmfh_t *header, bmih_v1_t *info_v1, bmih_v2_t *info_v2, bmih_v3_t *info_v3){
+uint8_t bitmap_get_header_and_info(bmfh_t *header, bmih_v1_t *info_v1, bmih_v2_t *info_v2, bmih_v3_t *info_v3){
+    // Start assuming we have a BMP with header version 1
+    uint8_t version = 1;
+    
     // Read header: https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmapfileheader
     engine_file_read(0, header, 14);
 
@@ -104,10 +79,12 @@ void bitmap_get_header_and_info(bmfh_t *header, bmih_v1_t *info_v1, bmih_v2_t *i
 
     if(info_v1->bi_size > read_info_len){
         read_info_len += engine_file_read(0, info_v2, sizeof(bmih_v2_t));
+        version = 2;
     }
 
     if(info_v1->bi_size > read_info_len){
         read_info_len += engine_file_read(0, info_v3, sizeof(bmih_v3_t));
+        version = 3;
     }
 
     // Check that this is a bitmap and is using correct uncompressed formats
@@ -118,13 +95,12 @@ void bitmap_get_header_and_info(bmfh_t *header, bmih_v1_t *info_v1, bmih_v2_t *i
     if(info_v1->bi_compression != BI_RGB && info_v1->bi_compression != BI_BITFIELDS){
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("TextureResource: Bitmap uses compression, only raw RGB is supported!"));
     }
+
+    return version;
 }
 
 
-void bitmap_get_and_fill_color_table(uint16_t *color_table, uint32_t color_table_offset, uint16_t color_count){
-    // Seek to color table and create a temporary
-    // buffer for the 24-bit color bytes
-    engine_file_seek(0, color_table_offset, MP_SEEK_SET);
+void bitmap_get_and_fill_color_table(uint16_t *color_table, uint16_t color_count){
     // https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-rgbquad
     // Color table in file is in bgr format (not rgb)
     uint8_t bgr[4];
@@ -143,89 +119,6 @@ void bitmap_get_and_fill_color_table(uint16_t *color_table, uint32_t color_table
         ENGINE_PRINTF("%d,%d,%d->%d,%d,%d  ", bgr[2], bgr[1], bgr[0], (rgb565 >> 11) & 0b00011111, (rgb565 >> 5) & 0b00111111, (rgb565 >> 0) & 0b00011111);
     }
     ENGINE_PRINTF("\n");
-}
-
-
-void bitmap_handle_1bpp(texture_resource_class_obj_t *texture, uint8_t *data, uint32_t data_len){
-    ENGINE_PRINTF("\t format: \t\t\tFMT_1BPP_PAL\n");
-    texture->format = FMT_1BPP_PAL;
-}
-
-
-void bitmap_handle_4bpp(texture_resource_class_obj_t *texture, uint8_t *data, uint32_t data_len){
-    ENGINE_PRINTF("\t format: \t\t\tFMT_4BPP_PAL\n");
-    texture->format = FMT_4BPP_PAL;
-}
-
-
-void bitmap_handle_8bpp(texture_resource_class_obj_t *texture, uint8_t *data, uint32_t data_len){
-    ENGINE_PRINTF("\t format: \t\t\tFMT_8BPP_PAL\n");
-    texture->format = FMT_8BPP_PAL;
-}
-
-
-void bitmap_handle_16bpp_rgb565(texture_resource_class_obj_t *texture, uint8_t *data, uint32_t data_len){
-    ENGINE_PRINTF("\t format: \t\t\tFMT_16BPP_RGB565\n");
-    texture->format = FMT_16BPP_RGB565;
-}
-
-
-void bitmap_handle_16bpp_xrgb1555(texture_resource_class_obj_t *texture, uint8_t *data, uint32_t data_len){
-    ENGINE_PRINTF("\t format: \t\t\tFMT_16BPP_XRGB_1555\n");
-    texture->format = FMT_16BPP_XRGB_1555;
-}
-
-
-void bitmap_handle_16bpp_argb1555(texture_resource_class_obj_t *texture, uint8_t *data, uint32_t data_len){
-    ENGINE_PRINTF("\t format: \t\t\tFMT_16BPP_ARGB_1555\n");
-    texture->format = FMT_16BPP_ARGB_1555;
-}
-
-
-void bitmap_handle_24bpp_rgb888(texture_resource_class_obj_t *texture, uint8_t *data, uint32_t data_len){
-    ENGINE_PRINTF("\t format: \t\t\tFMT_24BPP_RGB888\n");
-    texture->format = FMT_24BPP_RGB888;
-}
-
-
-void bitmap_handle_32bpp_xrgb8888(texture_resource_class_obj_t *texture, uint8_t *data, uint32_t data_len){
-    ENGINE_PRINTF("\t format: \t\t\tFMT_32BPP_XRGB8888\n");
-    texture->format = FMT_32BPP_XRGB8888;
-}
-
-
-void bitmap_handle_32bpp_argb8888(texture_resource_class_obj_t *texture, uint8_t *data, uint32_t data_len){
-    ENGINE_PRINTF("\t format: \t\t\tFMT_32BPP_ARGB8888\n");
-    texture->format = FMT_32BPP_ARGB8888;
-}
-
-
-void bitmap_decipher_format(texture_resource_class_obj_t *texture, uint16_t color_count, bmih_v1_t *info_v1, bmih_v2_t *info_v2, bmih_v3_t *info_v3, uint8_t *data, uint32_t data_len){
-    if(info_v1->bi_bit_count == 1){
-        bitmap_handle_1bpp(texture, data, data_len);
-    }else if(info_v1->bi_bit_count == 4){
-        bitmap_handle_4bpp(texture, data, data_len);
-    }else if(info_v1->bi_bit_count == 8){
-        bitmap_handle_8bpp(texture, data, data_len);
-    }else if(info_v1->bi_bit_count == 16){
-        if(info_v2->bi_red_mask == RED_565_MASK && info_v2->bi_green_mask == GREEN_565_MASK && info_v2->bi_blue_mask == BLUE_565_MASK && info_v3->bi_alpha_mask == 0){
-            bitmap_handle_16bpp_rgb565(texture, data, data_len);
-        }else if(info_v2->bi_red_mask == RED_1555_MASK && info_v2->bi_green_mask == GREEN_1555_MASK && info_v2->bi_blue_mask == BLUE_1555_MASK && info_v3->bi_alpha_mask == 0){
-            bitmap_handle_16bpp_xrgb1555(texture, data, data_len);
-        }else if(info_v2->bi_red_mask == RED_1555_MASK && info_v2->bi_green_mask == GREEN_1555_MASK && info_v2->bi_blue_mask == BLUE_1555_MASK && info_v3->bi_alpha_mask == ALPHA_1555_MASK){
-            bitmap_handle_16bpp_argb1555(texture, data, data_len);
-        }else{
-            bitmap_handle_16bpp_rgb565(texture, data, data_len);    // If none of the above, must be a v1 header and we'll assume 565 (not sure if best default)
-        }
-    }else if(info_v1->bi_bit_count == 24){
-        bitmap_handle_24bpp_rgb888(texture, data, data_len);
-    }else if(info_v1->bi_bit_count == 32){
-        if(info_v3->bi_alpha_mask == 0){
-            bitmap_handle_32bpp_xrgb8888(texture, data, data_len);
-        }else if(info_v3->bi_alpha_mask == ALPHA_8888_MASK){
-            bitmap_handle_32bpp_argb8888(texture, data, data_len);
-        }
-    }
 }
 
 
@@ -266,6 +159,36 @@ void create_blank_from_params(texture_resource_class_obj_t *self, mp_obj_t width
 }
 
 
+void copy_1bit_to_8bit_table(texture_resource_class_obj_t *self){
+
+}
+
+
+void copy_4bit_to_8bit_table(texture_resource_class_obj_t *self){
+
+}
+
+
+void copy_8bit_to_8bit_table(texture_resource_class_obj_t *self){
+
+}
+
+
+void copy_16bit_to_16bit_pixels(texture_resource_class_obj_t *self){
+
+}
+
+
+void copy_24bit_to_16bit_pixels(texture_resource_class_obj_t *self){
+
+}
+
+
+void copy_32bit_to_16bit_pixels(texture_resource_class_obj_t *self){
+
+}
+
+
 void create_from_file(texture_resource_class_obj_t *self, mp_obj_t filepath, mp_obj_t in_ram){
     // Set flag indicating if file data is to be stored in
     // ram or not (faster if stored in ram, up to programmer)
@@ -279,7 +202,7 @@ void create_from_file(texture_resource_class_obj_t *self, mp_obj_t filepath, mp_
     // BMP parsing: https://en.wikipedia.org/wiki/BMP_file_format
     // https://learn.microsoft.com/en-us/windows/win32/gdi/bitmap-storage
     // Variable names are from https://github.com/WerWolv/ImHex patterns
-    engine_file_open_read(0, args[0]);
+    engine_file_open_read(0, filepath);
     engine_file_seek(0, 0, MP_SEEK_SET);
 
     // Basic information we need about the bitmap
@@ -287,23 +210,34 @@ void create_from_file(texture_resource_class_obj_t *self, mp_obj_t filepath, mp_
     bmih_v1_t info_v1;
     bmih_v2_t info_v2;
     bmih_v3_t info_v3;
-    bitmap_get_header_and_info(&header, &info_v1, &info_v2, &info_v3);
+    uint8_t version = bitmap_get_header_and_info(&header, &info_v1, &info_v2, &info_v3);
 
-    uint32_t color_table_offset = 0;        // Offset to start of color table
+    uint32_t data_offset = sizeof(bmfh_t) + info_v1.bi_size;    // Offset to start of color table or pixel data after 14 bytes `bmfh` section and variable `bmih` section
+
     uint32_t color_table_size_in_file = 0;  // Number of bytes the color table is using in the file
     uint16_t color_count = 0;               // Number of 16-bit colors we will need (need to calculate this, not all bitmaps have the clr_used field filled out)
     uint16_t color_table_size = 0;          // Number of bytes needed to store all the 16-bit colors
 
-    info_v1.bi_size_image = header.bf_size - header.bf_off_bits;                                    // Not all exporters fill out `bi_size_image`, calculate it instead
+    info_v1.bi_size_image = header.bf_size - header.bf_off_bits;                            // Not all exporters fill out `bi_size_image`, calculate it instead
     if(info_v1.bi_bit_count < 16){
-        color_table_offset = sizeof(bmfh_t) + info_v1.bi_size;                                      // Color table is after 14 bytes `bmfh` section and variable `bmih` section
-        color_table_size_in_file = header.bf_size - (color_table_offset + info_v1.bi_size_image);   // If indexed bitmap, calculate size of file color dex table (consists of u32s)
-        color_count = color_table_size_in_file / 4;                                                 // Number of colors in color table (might not use all available, so calculate it)
-        color_table_size = color_count * 2;                                                         // How many bytes we need to store enough bytes for 16-bit versions of these colors
-    }  
+        color_table_size_in_file = header.bf_size - (data_offset + info_v1.bi_size_image);  // If indexed bitmap, calculate size of file color index table (consists of u32s)
+        color_count = color_table_size_in_file / 4;                                         // Number of colors in color table (might not use all available, so calculate it)
+        color_table_size = color_count * 2;                                                 // How many bytes we need to store for 16-bit versions of these colors
+    }
+
+    if(version >= 2){
+        self->red_mask = info_v2.bi_red_mask;
+        self->green_mask = info_v2.bi_green_mask;
+        self->blue_mask = info_v2.bi_blue_mask;
+    }
+
+    if(version >= 3){
+        self->alpha_mask = info_v3.bi_alpha_mask;
+    }
 
     // Print information
-    ENGINE_PRINTF("TextureResource: BMP parameters parsed from '%s':\n", mp_obj_str_get_str(args[0]));
+    ENGINE_PRINTF("TextureResource: BMP parameters parsed from '%s':\n", mp_obj_str_get_str(filepath));
+    ENGINE_PRINTF("\t min version: \t\t\t%d\n", version);
     ENGINE_PRINTF("\t bf_size: \t\t\t%d\n", header.bf_size);
     ENGINE_PRINTF("\t bf_off_bits: \t\t\t%lu\n", header.bf_off_bits);
     ENGINE_PRINTF("\t bi_size: \t\t\t%lu\n", info_v1.bi_size);
@@ -311,10 +245,19 @@ void create_from_file(texture_resource_class_obj_t *self, mp_obj_t filepath, mp_
     ENGINE_PRINTF("\t bi_height: \t\t\t%lu\n", info_v1.bi_height);
     ENGINE_PRINTF("\t bi_bit_count: \t\t\t%lu\n", info_v1.bi_bit_count);
     ENGINE_PRINTF("\t bi_size_image: \t\t%lu\n", info_v1.bi_size_image);
-    ENGINE_PRINTF("\t color_table_offset: \t\t%lu\n", color_table_offset);
+
+    ENGINE_PRINTF("\t bi_red_mask: \t\t\t"); print_binary(info_v2.bi_red_mask, 32); ENGINE_PRINTF("\n");
+    ENGINE_PRINTF("\t bi_green_mask: \t\t"); print_binary(info_v2.bi_green_mask, 32); ENGINE_PRINTF("\n");
+    ENGINE_PRINTF("\t bi_blue_mask: \t\t\t"); print_binary(info_v2.bi_blue_mask, 32); ENGINE_PRINTF("\n");
+    ENGINE_PRINTF("\t bi_alpha_mask: \t\t"); print_binary(info_v3.bi_alpha_mask, 32); ENGINE_PRINTF("\n");
+
+    ENGINE_PRINTF("\t data_offset: \t\t\t%lu\n", data_offset);
     ENGINE_PRINTF("\t color_table_size_in_file: \t%lu\n", color_table_size_in_file);
     ENGINE_PRINTF("\t color_count: \t\t\t%lu\n", color_count);
     ENGINE_PRINTF("\t color_table_size: \t\t%lu\n", color_table_size);
+
+    // Seek to color table or pixel data (might be the same as bf_off_bits in some cases)
+    engine_file_seek(0, data_offset, MP_SEEK_SET);
 
     // For bit-depths below 16 bits, the colors are stored
     // in a color table. The color table is 24-bits in the
@@ -322,10 +265,17 @@ void create_from_file(texture_resource_class_obj_t *self, mp_obj_t filepath, mp_
     // copying to the screen buffer is faster
     if(info_v1.bi_bit_count < 16){
         mp_obj_array_t *colors = engine_resource_get_space_bytearray(color_table_size, true);
-        bitmap_get_and_fill_color_table((uint16_t*)colors->items, color_table_offset, color_count);
+        bitmap_get_and_fill_color_table((uint16_t*)colors->items, color_count);
         self->colors = colors;
+        self->has_alpha = false;        // Less than 16-bits does not have alpha (although it may be possible)
     }else{
         self->colors = mp_const_none;   // No color table for higher than 8 bit-depths
+
+        // Check if this does have alpha which means the
+        // pixel data will be 5658 instead of just 565
+        if(self->alpha_mask != 0){
+            self->has_alpha = true;
+        }
     }
 
     // Now that we know the bitmap information, fill out some
@@ -333,11 +283,36 @@ void create_from_file(texture_resource_class_obj_t *self, mp_obj_t filepath, mp_
     self->width = info_v1.bi_width;
     self->height = info_v1.bi_height;
     self->bit_depth = info_v1.bi_bit_count;
-    mp_obj_array_t *data = engine_resource_get_space_bytearray(info_v1.bi_size_image, self->in_ram);
 
-    // After getting the color table, should be at pixel data
-    bitmap_decipher_format(self, color_count, &info_v1, &info_v2, &info_v3, data->items, data->len);
-    self->data = data;
+    uint32_t pixel_count = self->width * self->height;
+    
+    // If contains alpha, 5658=16+8=24=3 bytes per pixel
+    // If does not contain alpha, 565=16=2 bytes per pixel
+    if(self->bit_depth >= 16){
+        if(self->has_alpha){
+            self->data  = engine_resource_get_space_bytearray(pixel_count*3, self->in_ram);
+        }else{
+            self->data  = engine_resource_get_space_bytearray(pixel_count*2, self->in_ram);
+        }
+    }
+
+
+    // Only depending on the bit depth, need to copy
+    // pixel related data to texture pixel data differently.
+    if(self->bit_depth == 1){
+        self->data = engine_resource_get_space_bytearray(pixel_count / 8, self->in_ram);
+        copy_1bit_to_8bit_table(self);
+    }else if(self->bit_depth == 4){
+        copy_4bit_to_8bit_table(self);
+    }else if(self->bit_depth == 8){
+        copy_8bit_to_8bit_table(self);
+    }else if(self->bit_depth == 16){
+        copy_16bit_to_16bit_pixels(self);
+    }else if(self->bit_depth == 24){
+        copy_24bit_to_16bit_pixels(self);
+    }else if(self->bit_depth == 32){
+        copy_32bit_to_16bit_pixels(self);
+    }
 
     engine_file_close(0);
 
@@ -501,6 +476,9 @@ static void texture_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj
             case MP_QSTR_alpha_mask:
                 destination[0] = mp_obj_new_int(self->alpha_mask);
             break;
+            case MP_QSTR_has_alpha:
+                destination[0] = mp_obj_new_bool(self->has_alpha);
+            break;
             case MP_QSTR_colors:
                 destination[0] = self->colors;
             break;
@@ -547,6 +525,9 @@ static void texture_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj
             case MP_QSTR_alpha_mask:
                 destination[0] = mp_obj_new_int(self->alpha_mask);
             break;
+            case MP_QSTR_has_alpha:
+                mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("TextureResource: ERROR: `has_alpha` cannot be set!"));
+            break;
             default:
                 return; // Fail
         }
@@ -559,18 +540,7 @@ static void texture_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj
 
 // Class attributes
 static const mp_rom_map_elem_t texture_resource_class_locals_dict_table[] = {
-    { MP_OBJ_NEW_QSTR(MP_QSTR_FMT_1BPP_PAL), MP_ROM_INT(FMT_1BPP_PAL) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_FMT_4BPP_PAL), MP_ROM_INT(FMT_4BPP_PAL) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_FMT_8BPP_PAL), MP_ROM_INT(FMT_8BPP_PAL) },
-
-    { MP_OBJ_NEW_QSTR(MP_QSTR_FMT_16BPP_RGB565), MP_ROM_INT(FMT_16BPP_RGB565) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_FMT_16BPP_XRGB_555), MP_ROM_INT(FMT_16BPP_XRGB_1555) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_FMT_16BPP_ARGB_555), MP_ROM_INT(FMT_16BPP_ARGB_1555) },
-
-    { MP_OBJ_NEW_QSTR(MP_QSTR_FMT_24BPP_RGB888), MP_ROM_INT(FMT_24BPP_RGB888) },
-
-    { MP_OBJ_NEW_QSTR(MP_QSTR_FMT_32BPP_XRGB8888), MP_ROM_INT(FMT_32BPP_XRGB8888) },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_FMT_32BPP_ARGB8888), MP_ROM_INT(FMT_32BPP_ARGB8888) },
+    
 };
 static MP_DEFINE_CONST_DICT(texture_resource_class_locals_dict, texture_resource_class_locals_dict_table);
 

@@ -2,11 +2,14 @@
 #define DEBUG_PRINT_H
 
 #include <stdint.h>
+#include <stdio.h>
 
 #include "py/runtime.h"
 #include "py/builtin.h"
 #include "py/mpprint.h"
 #include "../utility/engine_time.h"
+
+void print_binary(uint32_t number, uint32_t bit_count);
 
 // These are used for exposing constants the user can use tn enable specific prints
 #define DEBUG_SETTING_INFO          0

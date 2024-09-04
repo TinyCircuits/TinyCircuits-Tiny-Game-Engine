@@ -9,10 +9,14 @@ typedef struct{
     uint16_t width;
     uint16_t height;
     uint8_t bit_depth;
-    uint8_t red_mask;
-    uint8_t green_mask;
-    uint8_t blue_mask;
-    uint8_t alpha_mask;
+
+    uint32_t red_mask;
+    uint32_t green_mask;
+    uint32_t blue_mask;
+    uint32_t alpha_mask;
+
+    bool has_alpha;
+
     mp_obj_t colors;
     mp_obj_t data;
     bool in_ram;

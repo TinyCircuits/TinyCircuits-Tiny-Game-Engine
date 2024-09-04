@@ -78,7 +78,11 @@ mesh = MeshNode()
 noise = NoiseResource()
 
 
+quad_count = 0
+
+
 def add_quad(v1, v2, v3, v4):
+    quad_count += 1
     mesh.vertices.append(v1)
     mesh.vertices.append(v2)
     mesh.vertices.append(v3)
@@ -142,6 +146,7 @@ for x in range(16):
                              Vector3(gx,      gy-size, gz))
 
 
+print(quad_count)
 
 
 # mesh.vertices.append(Vector3(-5, -5, 1))
