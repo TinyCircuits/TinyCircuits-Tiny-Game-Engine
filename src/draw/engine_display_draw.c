@@ -202,7 +202,8 @@ void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, int32_t 
                     uint16_t src_color = pixels[src_offset];
 
                     if(src_color != transparent_color || src_color == ENGINE_NO_TRANSPARENCY_COLOR){
-                        active_screen_buffer[dest_offset] = shader->execute(active_screen_buffer[dest_offset], src_color, alpha, shader);
+                        // active_screen_buffer[dest_offset] = shader->execute(active_screen_buffer[dest_offset], src_color, alpha, shader);
+                        active_screen_buffer[dest_offset] = shader->execute(texture_resource_get_pixel(), src_color, alpha, shader);
                     }
                 }
 

@@ -6,9 +6,12 @@
 
 typedef struct{
     mp_obj_base_t base;
-    uint16_t width;
-    uint16_t height;
+    int32_t width;
+    int32_t height;
     uint8_t bit_depth;
+
+    // The number of bytes in each row of the image (stride)
+    uint32_t unpadded_bytes_width;
 
     uint32_t red_mask;
     uint32_t green_mask;
@@ -25,6 +28,7 @@ typedef struct{
 extern const mp_obj_type_t texture_resource_class_type;
 
 mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args);
-uint16_t texture_resource_get_pixel(texture_resource_class_obj_t *texture, uint32_t offset);
+uint16_t texture_resource_get_pixel(texture_resource_class_obj_t *texture, uint32_t pixel_offset);
+uint16_t texture_resource_get_pixel_and_alpha(texture_resource_class_obj_t *texture, uint32_t pixel_offset);
 
 #endif  // ENGINE_TEXTURE_RESOURCE_H
