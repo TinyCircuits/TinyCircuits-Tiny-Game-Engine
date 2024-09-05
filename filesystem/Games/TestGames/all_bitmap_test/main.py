@@ -3,6 +3,8 @@ import engine_main
 import engine
 from engine_resources import TextureResource
 from engine_nodes import Sprite2DNode, CameraNode
+from engine_math import Vector2
+import engine_io
 
 import os
 os.chdir("Games/TestGames/all_bitmap_test")
@@ -28,7 +30,20 @@ tex_16bit_rgb_565_no_bf_image_size = TextureResource("16bit_rgb_565_no_bf_image_
 tex_4bit_redbrick_no_clr_used = TextureResource("REDBRICK.BMP")
 
 # Sprites
-spr_1bit_2color = Sprite2DNode(texture=tex_1bit_2color)
+spr_1bit_2color = Sprite2DNode(texture=tex_1bit_2color, position=Vector2(0, 0))
+spr_4bit_16color = Sprite2DNode(texture=tex_4bit_16color, position=Vector2(18, 0))
+spr_8bit_256color = Sprite2DNode(texture=tex_8bit_256color, position=Vector2(36, 0))
 
+while True:
+    if engine.tick() is False:
+        continue
 
-engine.start()
+    if engine_io.LEFT.is_pressed:
+        cam.position.x -= 0.5
+    elif engine_io.RIGHT.is_pressed:
+        cam.position.x += 0.5
+    
+    if engine_io.LB.is_pressed:
+        cam.zoom -= 0.1
+    elif engine_io.RB.is_pressed:
+        cam.zoom += 0.1

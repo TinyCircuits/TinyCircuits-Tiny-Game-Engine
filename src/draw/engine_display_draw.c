@@ -84,7 +84,7 @@ void engine_draw_line(uint16_t color, float x_start, float y_start, float x_end,
 
 
 
-void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, int32_t window_width, int32_t window_height, uint32_t pixels_stride, float x_scale, float y_scale, float rotation_radians, uint16_t transparent_color, float alpha, engine_shader_t *shader){
+void engine_draw_blit(texture_resource_class_obj_t *texture, uint32_t offset, float center_x, float center_y, int32_t window_width, int32_t window_height, uint32_t pixels_stride, float x_scale, float y_scale, float rotation_radians, uint16_t transparent_color, float alpha, engine_shader_t *shader){
     /*  https://cohost.org/tomforsyth/post/891823-rotation-with-three#:~:text=But%20the%20TL%3BDR%20is%20you%20do%20three%20shears%3A
         https://stackoverflow.com/questions/65909025/rotating-a-bitmap-with-3-shears    Lots of inspiration from here
         https://computergraphics.stackexchange.com/questions/10599/rotate-a-bitmap-with-shearing
@@ -199,11 +199,12 @@ void engine_draw_blit(uint16_t *pixels, float center_x, float center_y, int32_t 
                 // bounds since those dimensions are clipped (destination rect)
                 if((rotX >= 0 && rotX < window_width) && (rotY >= 0 && rotY < window_height)){
                     uint32_t src_offset = rotY * pixels_stride + rotX;
-                    uint16_t src_color = pixels[src_offset];
+                    // uint16_t src_color = pixels[src_offset];
+                    uint16_t src_color = texture_resource_get_pixel(texture, offset+src_offset);
 
                     if(src_color != transparent_color || src_color == ENGINE_NO_TRANSPARENCY_COLOR){
                         // active_screen_buffer[dest_offset] = shader->execute(active_screen_buffer[dest_offset], src_color, alpha, shader);
-                        active_screen_buffer[dest_offset] = shader->execute(texture_resource_get_pixel(), src_color, alpha, shader);
+                        active_screen_buffer[dest_offset] = shader->execute(texture_resource_get_pixel(texture, offset+dest_offset), src_color, alpha, shader);
                     }
                 }
 
@@ -572,8 +573,6 @@ void engine_draw_filled_circle(uint16_t color, float center_x, float center_y, f
 
 
 void engine_draw_text(font_resource_class_obj_t *font, mp_obj_t text, float center_x, float center_y, float text_box_width, float text_box_height, float letter_spacing, float line_spacing, float x_scale, float y_scale, float rotation_radians, float alpha, engine_shader_t *shader){    
-    uint16_t *texture_data = ((mp_obj_array_t*)font->texture_resource->data)->items;
-    
     float sin_angle = sinf(rotation_radians);
     float cos_angle = cosf(rotation_radians);
 
@@ -636,7 +635,7 @@ void engine_draw_text(font_resource_class_obj_t *font, mp_obj_t text, float cent
         // Offset inside the ASCII font bitmap (not into where we're drawing)
         uint16_t char_bitmap_x_offset = font_resource_get_glyph_x_offset(font, current_char);
 
-        engine_draw_blit(texture_data+engine_math_2d_to_1d_index(char_bitmap_x_offset, 0, font->texture_resource->width),
+        engine_draw_blit(font->texture_resource, engine_math_2d_to_1d_index(char_bitmap_x_offset, 0, font->texture_resource->width),
                         floorf(final_char_x), floorf(final_char_y),
                         char_width, font->glyph_height,
                         font->texture_resource->width,
