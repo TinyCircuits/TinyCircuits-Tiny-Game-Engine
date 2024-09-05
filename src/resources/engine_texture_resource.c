@@ -521,7 +521,7 @@ uint16_t texture_resource_get_pixel(texture_resource_class_obj_t *texture, uint3
         //  1bit_byte_index = floor((bits_per_pixel * offset) / 8.0f) = floor((1*18)/8) = 2
         //  4bit_byte_index = floor((bits_per_pixel * offset) / 8.0f) = floor((4*4)/8)  = 2
         //  8bit_byte_index = floor((bits_per_pixel * offset) / 8.0f) = floor((8*2)/8)  = 2
-        uint32_t byte_containing_pixel_index = (uint32_t)(floorf((texture->bit_depth*pixel_offset)/8.0f));
+        uint32_t byte_containing_pixel_index = texture->bit_depth*pixel_offset/8;
         uint8_t byte_containing_pixel = ((uint8_t*)data->items)[byte_containing_pixel_index];
 
         // Now that we have the byte containing the index information
@@ -537,6 +537,7 @@ uint16_t texture_resource_get_pixel(texture_resource_class_obj_t *texture, uint3
         // 4bit_right_shift_count = (8-bit_depth) - (pixel_offset % (8/bit_depth)) = (8-4) - (4  % (8/4)) = 4 - (4  % 2) = 4
         // 8bit_right_shift_count = (8-bit_depth) - (pixel_offset % (8/bit_depth)) = (8-8) - (2  % (8/8)) = 0 - (2  % 1) = 0
         uint8_t right_shift_count = (8-texture->bit_depth) - (pixel_offset % (8/texture->bit_depth));
+        right_shift_count = (uint8_t)(floorf((float)right_shift_count/(float)texture->bit_depth)*texture->bit_depth);
         byte_containing_pixel = byte_containing_pixel >> right_shift_count;
 
         // The bits related to the index into the color table have been shifted all the
