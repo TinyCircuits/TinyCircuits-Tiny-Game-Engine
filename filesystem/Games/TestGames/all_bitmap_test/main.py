@@ -20,21 +20,34 @@ tex_16bit_xrgb_1555 = TextureResource("16bit_xrgb_1555.bmp")
 tex_16bit_argb_1555 = TextureResource("16bit_argb_1555.bmp")
 tex_16bit_xrgb_4444 = TextureResource("16bit_xrgb_4444.bmp")
 tex_16bit_argb_4444 = TextureResource("16bit_argb_4444.bmp")
+tex_16bit_rgb_565_no_bf_image_size = TextureResource("16bit_rgb_565_no_bf_image_size.bmp")
 
 tex_24bit_rgb_888 = TextureResource("24bit_rgb_888.bmp")
 
 tex_32bit_xrgb_8888 = TextureResource("32bit_xrgb_8888.bmp")
 tex_32bit_argb_8888 = TextureResource("32bit_argb_8888.bmp")
 
-tex_16bit_rgb_565_no_bf_image_size = TextureResource("16bit_rgb_565_no_bf_image_size.bmp")
 tex_4bit_redbrick_no_clr_used = TextureResource("REDBRICK.BMP")
 
 # Sprites
+
+# Top row
 spr_1bit_2color = Sprite2DNode(texture=tex_1bit_2color, position=Vector2(0, 0))
 spr_4bit_16color = Sprite2DNode(texture=tex_4bit_16color, position=Vector2(18, 0))
 spr_8bit_256color = Sprite2DNode(texture=tex_8bit_256color, position=Vector2(36, 0))
 
+# Bottom row
 spr_16bit_rgb_565 = Sprite2DNode(texture=tex_16bit_rgb_565, position=Vector2(0, 18))
+spr_16bit_xrgb_1555 = Sprite2DNode(texture=tex_16bit_xrgb_1555, position=Vector2(18, 18))
+spr_16bit_argb_1555 = Sprite2DNode(texture=tex_16bit_argb_1555, position=Vector2(36, 18))
+
+spr_16bit_xrgb_4444 = Sprite2DNode(texture=tex_16bit_xrgb_4444, position=Vector2(54, 18))
+spr_16bit_xrgb_4444.scale.x = 16/tex_16bit_xrgb_4444.width
+spr_16bit_xrgb_4444.scale.y = 16/tex_16bit_xrgb_4444.height
+
+spr_16bit_argb_4444 = Sprite2DNode(texture=tex_16bit_argb_4444, position=Vector2(72, 18))
+spr_16bit_argb_4444.scale.x = 16/tex_16bit_argb_4444.width
+spr_16bit_argb_4444.scale.y = 16/tex_16bit_argb_4444.height
 
 while True:
     if engine.tick() is False:
