@@ -34,6 +34,8 @@ spr_1bit_2color = Sprite2DNode(texture=tex_1bit_2color, position=Vector2(0, 0))
 spr_4bit_16color = Sprite2DNode(texture=tex_4bit_16color, position=Vector2(18, 0))
 spr_8bit_256color = Sprite2DNode(texture=tex_8bit_256color, position=Vector2(36, 0))
 
+spr_16bit_rgb_565 = Sprite2DNode(texture=tex_16bit_rgb_565, position=Vector2(0, 18))
+
 while True:
     if engine.tick() is False:
         continue
@@ -43,7 +45,12 @@ while True:
     elif engine_io.RIGHT.is_pressed:
         cam.position.x += 0.5
     
+    if engine_io.DOWN.is_pressed:
+        cam.position.y += 0.5
+    elif engine_io.UP.is_pressed:
+        cam.position.y -= 0.5
+    
     if engine_io.LB.is_pressed:
-        cam.zoom -= 0.1
+        cam.zoom -= 0.075
     elif engine_io.RB.is_pressed:
-        cam.zoom += 0.1
+        cam.zoom += 0.075

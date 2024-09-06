@@ -17,6 +17,7 @@ typedef struct{
     uint32_t green_mask;
     uint32_t blue_mask;
     uint32_t alpha_mask;
+    uint32_t combined_masks;
 
     bool has_alpha;
 

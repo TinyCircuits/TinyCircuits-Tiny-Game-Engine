@@ -185,7 +185,7 @@ void create_blank_from_params(texture_resource_class_obj_t *self, mp_obj_t width
 // Depending on the sign of the height of the image, need to flip the image in each case below
 // https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmapinfo#:~:text=If%20the%20height%20of%20the%20bitmap%20is%20positive
 
-void copy_palette_table(texture_resource_class_obj_t *self, uint32_t pixel_data_start, uint32_t padded_width){
+void copy_and_flip(texture_resource_class_obj_t *self, uint32_t pixel_data_start, uint32_t padded_width){
     // Fetch pixel data from filesystem row by row from bottom to top (flip)
     for(int32_t y=self->height-1; y>=0; y--){
         // Calculate and seek to start of each row
@@ -197,17 +197,12 @@ void copy_palette_table(texture_resource_class_obj_t *self, uint32_t pixel_data_
 }
 
 
-void copy_16bit_to_16bit_pixels(texture_resource_class_obj_t *self){
+void copy_and_flip_24bit_to_16bit(texture_resource_class_obj_t *self, uint32_t pixel_data_start, uint32_t padded_width){
 
 }
 
 
-void copy_24bit_to_16bit_pixels(texture_resource_class_obj_t *self){
-
-}
-
-
-void copy_32bit_to_16bit_pixels(texture_resource_class_obj_t *self){
+void copy_and_flip_32bit_to_16bit(texture_resource_class_obj_t *self, uint32_t pixel_data_start, uint32_t padded_width){
 
 }
 
@@ -258,6 +253,14 @@ void create_from_file(texture_resource_class_obj_t *self, mp_obj_t filepath, mp_
         self->alpha_mask = info_v3.bi_alpha_mask;
     }
 
+    // Combine the masks into one to make it easy to check if the
+    // bitmap contains a certain type of pixel data
+    self->combined_masks = 0;
+    self->combined_masks |= self->red_mask;
+    self->combined_masks |= self->green_mask;
+    self->combined_masks |= self->blue_mask;
+    self->combined_masks |= self->alpha_mask;
+
     // Print information
     ENGINE_PRINTF("TextureResource: BMP parameters parsed from '%s':\n", mp_obj_str_get_str(filepath));
     ENGINE_PRINTF("\t min version: \t\t\t%d\n", version);
@@ -273,6 +276,7 @@ void create_from_file(texture_resource_class_obj_t *self, mp_obj_t filepath, mp_
     ENGINE_PRINTF("\t bi_green_mask: \t\t"); print_binary(info_v2.bi_green_mask, 32); ENGINE_PRINTF("\n");
     ENGINE_PRINTF("\t bi_blue_mask: \t\t\t"); print_binary(info_v2.bi_blue_mask, 32); ENGINE_PRINTF("\n");
     ENGINE_PRINTF("\t bi_alpha_mask: \t\t"); print_binary(info_v3.bi_alpha_mask, 32); ENGINE_PRINTF("\n");
+    ENGINE_PRINTF("\t combined_masks: \t\t%lu\n", self->combined_masks);
 
     ENGINE_PRINTF("\t data_offset: \t\t\t%lu\n", data_offset);
     ENGINE_PRINTF("\t color_table_size_in_file: \t%lu\n", color_table_size_in_file);
@@ -380,14 +384,14 @@ void create_from_file(texture_resource_class_obj_t *self, mp_obj_t filepath, mp_
     // Depending on the bit depth, need to copy
     // pixel related data to texture pixel data differently
     // and 24-bit or 32-bit colors need to be reduced to 16-bit
-    if(self->bit_depth < 16){
-        copy_palette_table(self, header.bf_off_bits, padded_bytes_width);
-    }else if(self->bit_depth == 16){
-        copy_16bit_to_16bit_pixels(self);
+    if(self->bit_depth <= 16){
+        // 1 to 16-bit data doesn't need any modification
+        // during copy, just copy it to resource location
+        copy_and_flip(self, header.bf_off_bits, padded_bytes_width);
     }else if(self->bit_depth == 24){
-        copy_24bit_to_16bit_pixels(self);
+        copy_and_flip_24bit_to_16bit(self, header.bf_off_bits, padded_bytes_width);
     }else if(self->bit_depth == 32){
-        copy_32bit_to_16bit_pixels(self);
+        copy_and_flip_32bit_to_16bit(self, header.bf_off_bits, padded_bytes_width);
     }
 
     engine_file_close(0);
@@ -554,7 +558,9 @@ uint16_t texture_resource_get_pixel(texture_resource_class_obj_t *texture, uint3
         // Get the color from the color table
         color = ((uint16_t*)colors->items)[index_into_colors];
     }else{
-
+        if(texture->combined_masks == 65535){   // RGB565
+            color = ((uint16_t*)data->items)[pixel_offset];
+        }
     }
 
     // switch(texture->bit_depth){
