@@ -44,7 +44,7 @@ spr_16bit_argb_4444 = Sprite2DNode(texture=tex_16bit_argb_4444, position=Vector2
 spr_16bit_argb_4444.scale.x = 16/tex_16bit_argb_4444.width
 spr_16bit_argb_4444.scale.y = 16/tex_16bit_argb_4444.height
 
-spr_16bit_rgb_565_no_bf_image_size = Sprite2DNode(texture=tex_16bit_rgb_565_no_bf_image_size, position=Vector2(120, 24))
+spr_16bit_rgb_565_no_bf_image_size = Sprite2DNode(texture=tex_16bit_rgb_565_no_bf_image_size, position=Vector2(105, 24))
 
 while True:
     if engine.tick() is False:

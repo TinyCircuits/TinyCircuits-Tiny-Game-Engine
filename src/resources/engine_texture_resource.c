@@ -571,12 +571,6 @@ uint16_t texture_resource_get_pixel(texture_resource_class_obj_t *texture, uint3
 }
 
 
-uint16_t texture_resource_get_pixel_and_alpha(texture_resource_class_obj_t *texture, uint32_t offset){
-    // uint16_t color = texture_resource_get_pixel(texture, offset);
-    return 0;
-}
-
-
 /*  --- doc ---
     NAME: TextureResource
     ID: TextureResource
