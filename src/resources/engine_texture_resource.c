@@ -433,7 +433,7 @@ static mp_obj_t texture_resource_class_del(mp_obj_t self_in){
 MP_DEFINE_CONST_FUN_OBJ_1(texture_resource_class_del_obj, texture_resource_class_del);
 
 
-uint16_t texture_resource_get_pixel(texture_resource_class_obj_t *texture, uint32_t pixel_offset){
+uint16_t texture_resource_get_pixel(texture_resource_class_obj_t *texture, uint32_t pixel_offset, float *out_alpha){
     mp_obj_array_t *data = texture->data;
     mp_obj_array_t *colors = texture->colors;
 
@@ -492,32 +492,40 @@ uint16_t texture_resource_get_pixel(texture_resource_class_obj_t *texture, uint3
             // Mask out the values
             //                           A RRRRR GGGGG BBBBB
             //  Example:  pixel_1555 = 0b1_11011_00100_10101
+            //            a_mask     = 0b1_00000_00000_00000 -> a = pixel_1555 & a_mask = 0b1_11011_00100_10101 & 0b1_00000_00000_00000 = 0b1_00000_00000_00000
             //            r_mask     = 0b0_11111_00000_00000 -> r = pixel_1555 & r_mask = 0b1_11011_00100_10101 & 0b0_11111_00000_00000 = 0b0_11011_00000_00000
             //            g_mask     = 0b0_00000_11111_00000 -> g = pixel_1555 & g_mask = 0b1_11011_00100_10101 & 0b0_00000_11111_00000 = 0b0_00000_00100_00000
             //            b_mask     = 0b0_00000_00000_11111 -> b = pixel_1555 & g_mask = 0b1_11011_00100_10101 & 0b0_00000_00000_11111 = 0b0_00000_00000_10101
+            uint16_t a = pixel & texture->alpha_mask;
             uint16_t r = pixel & texture->red_mask;
             uint16_t g = pixel & texture->green_mask;
             uint16_t b = pixel & texture->blue_mask;
 
-            // Now each channel needs to be shifted all the way tot he right.
+            // Now each channel needs to be shifted all the way to the right.
             // Need to calculate how many bits are to the right of each channel
             // mask (r_mask, g_mask, etc.). To do this, figure how the number that
             // encompass the mask bits and the bit to the right (always a prw of 2 - 1)
             // Since a^b=c, b=log_a(c): https://math.stackexchange.com/a/673801
             //
-            //  Continued example:  r_all_right = 2^ceil(log2(r_mask))-1 = 2^ceil(log2(0b0_11111_00000_00000))-1 = 2^ceil(log2(31744))-1 = 2^ceil(14.95)^2 - 1 = (2^15)-1 = 32767 = 0b0111111111111111
-            //                      g_all_right = 2^ceil(log2(g_mask))-1 = 2^ceil(log2(0b0_00000_11111_00000))-1 = 2^ceil(log2(992))-1   = 2^ceil(9.95)^2 - 1  = (2^10)-1 = 2047  = 0b0000001111111111
-            //                      b_all_right = 2^ceil(log2(b_mask))-1 = 2^ceil(log2(0b0_00000_00000_11111))-1 = 2^ceil(log2(31))-1    = 2^ceil(4.95)^2  - 1 = (2^5)-1  = 32    = 0b0000000000011111
-            uint16_t r_all_right = (uint16_t)powf(2, ceilf(log2f(texture->red_mask))) - 1;
-            uint16_t g_all_right = (uint16_t)powf(2, ceilf(log2f(texture->green_mask))) - 1;
-            uint16_t b_all_right = (uint16_t)powf(2, ceilf(log2f(texture->blue_mask))) - 1;
+            //  Continued example:  a_all_right = 2^ceil(log2(a_mask))-1 = 2^ceil(log2(0b1_00000_00000_00000 + 1))-1 = 2^ceil(log2(32768 + 1))-1 = 2^ceil(15.00004) - 1 = (2^16)-1 = 65535 = 0b1111111111111111
+            //                      r_all_right = 2^ceil(log2(r_mask))-1 = 2^ceil(log2(0b0_11111_00000_00000 + 1))-1 = 2^ceil(log2(31744 + 1))-1 = 2^ceil(14.954) - 1   = (2^15)-1 = 32767 = 0b0111111111111111
+            //                      g_all_right = 2^ceil(log2(g_mask))-1 = 2^ceil(log2(0b0_00000_11111_00000 + 1))-1 = 2^ceil(log2(992 + 1))-1   = 2^ceil(9.9556) - 1   = (2^10)-1 = 2047  = 0b0000001111111111
+            //                      b_all_right = 2^ceil(log2(b_mask))-1 = 2^ceil(log2(0b0_00000_00000_11111 + 1))-1 = 2^ceil(log2(31 + 1))-1    = 2^ceil(5)  - 1       = (2^5)-1  = 32    = 0b0000000000011111
+            //
+            // Add one so that rounding up is always to the next int
+            uint16_t a_all_right = (uint16_t)powf(2, ceilf(log2f(texture->alpha_mask+1))) - 1;
+            uint16_t r_all_right = (uint16_t)powf(2, ceilf(log2f(texture->red_mask+1))) - 1;
+            uint16_t g_all_right = (uint16_t)powf(2, ceilf(log2f(texture->green_mask+1))) - 1;
+            uint16_t b_all_right = (uint16_t)powf(2, ceilf(log2f(texture->blue_mask+1))) - 1;
 
             // The above masks include the bits of the color channel mask, subtract that
             // mask out of the `all_right` masks
             //
-            //  Continued example:  r_just_right = r_all_right - r_mask = 0b0111111111111111 - 0b0_11111_00000_00000 = 0b0000001111111111 = 1023
+            //  Continued example:  a_just_right = a_all_right - a_mask = 0b1111111111111111 - 0b1_00000_00000_00000 = 0b0111111111111111 = 32767
+            //                      r_just_right = r_all_right - r_mask = 0b0111111111111111 - 0b0_11111_00000_00000 = 0b0000001111111111 = 1023
             //                      g_just_right = g_all_right - g_mask = 0b0000001111111111 - 0b0_00000_11111_00000 = 0b0000000000011111 = 31
             //                      b_just_right = b_all_right - b_mask = 0b0000000000011111 - 0b0_00000_00000_11111 = 0b0000000000000000 = 0
+            uint16_t a_just_right = a_all_right - texture->alpha_mask;
             uint16_t r_just_right = r_all_right - texture->red_mask;
             uint16_t g_just_right = g_all_right - texture->green_mask;
             uint16_t b_just_right = b_all_right - texture->blue_mask;
@@ -525,16 +533,22 @@ uint16_t texture_resource_get_pixel(texture_resource_class_obj_t *texture, uint3
             // Using the bits that are just to the right of each color channel mask, calculate
             // how many bits there are:
             //
-            //  Continued example:  r_right_shift_amount = ceil(log2(r_just_right)) = ceil(log2(1023)) = ceil(9.999)  = 10
-            //                      g_right_shift_amount = ceil(log2(g_just_right)) = ceil(log2(31))   = ceil(4.954)  = 5
-            //                      b_right_shift_amount = ceil(log2(b_just_right)) = ceil(log2(0))    = ceil(0)      = 0 
+            //  Continued example:  a_right_shift_amount = ceil(log2(a_just_right)) = ceil(log2(32767)) = ceil(14.99996) = 15
+            //                      r_right_shift_amount = ceil(log2(r_just_right)) = ceil(log2(1023))  = ceil(9.999)    = 10
+            //                      g_right_shift_amount = ceil(log2(g_just_right)) = ceil(log2(31))    = ceil(4.954)    = 5
+            //                      b_right_shift_amount = ceil(log2(b_just_right)) = ceil(log2(0))     = ceil(0)        = 0
+            uint16_t a_right_shift_amount = (uint16_t)ceilf(log2f(a_just_right));
             uint16_t r_right_shift_amount = (uint16_t)ceilf(log2f(r_just_right));
             uint16_t g_right_shift_amount = (uint16_t)ceilf(log2f(g_just_right));
             uint16_t b_right_shift_amount = (uint16_t)ceilf(log2f(b_just_right));
 
+            a = a >> a_right_shift_amount;
             r = r >> r_right_shift_amount;
             g = g >> g_right_shift_amount;
             b = b >> b_right_shift_amount;
+
+            // Alpha is special and is output as 0.0 ~ 1.0
+            if(out_alpha != NULL) *out_alpha = engine_math_map_clamp((float)a, 0.0f, (float)(texture->alpha_mask >> a_right_shift_amount), 0.0f, 1.0f);
 
             r = (uint16_t)engine_math_map_clamp((float)r, 0.0f, (float)(texture->red_mask >> r_right_shift_amount), 0.0f, 31.0f);
             g = (uint16_t)engine_math_map_clamp((float)g, 0.0f, (float)(texture->green_mask >> g_right_shift_amount), 0.0f, 63.0f);

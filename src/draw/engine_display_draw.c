@@ -200,11 +200,12 @@ void engine_draw_blit(texture_resource_class_obj_t *texture, uint32_t offset, fl
                 if((rotX >= 0 && rotX < window_width) && (rotY >= 0 && rotY < window_height)){
                     uint32_t src_offset = rotY * pixels_stride + rotX;
                     // uint16_t src_color = pixels[src_offset];
-                    uint16_t src_color = texture_resource_get_pixel(texture, offset+src_offset);
+                    float src_alpha = 0.0f;
+                    uint16_t src_color = texture_resource_get_pixel(texture, offset+src_offset, &src_alpha);
 
                     if(src_color != transparent_color || src_color == ENGINE_NO_TRANSPARENCY_COLOR){
                         // active_screen_buffer[dest_offset] = shader->execute(active_screen_buffer[dest_offset], src_color, alpha, shader);
-                        active_screen_buffer[dest_offset] = shader->execute(texture_resource_get_pixel(texture, offset+dest_offset), src_color, alpha, shader);
+                        active_screen_buffer[dest_offset] = shader->execute(active_screen_buffer[dest_offset], src_color, alpha*src_alpha, shader);
                     }
                 }
 

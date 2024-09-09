@@ -29,7 +29,6 @@ typedef struct{
 extern const mp_obj_type_t texture_resource_class_type;
 
 mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args);
-uint16_t texture_resource_get_pixel(texture_resource_class_obj_t *texture, uint32_t pixel_offset);
-uint16_t texture_resource_get_pixel_and_alpha(texture_resource_class_obj_t *texture, uint32_t pixel_offset);
+uint16_t texture_resource_get_pixel(texture_resource_class_obj_t *texture, uint32_t pixel_offset, float *out_alpha);
 
 #endif  // ENGINE_TEXTURE_RESOURCE_H

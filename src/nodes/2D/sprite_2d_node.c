@@ -111,7 +111,7 @@ void sprite_2d_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t camera_no
 
     // Decide which shader to use per-pixel
     engine_shader_t *shader = NULL;
-    if(sprite_opacity < 1.0f){
+    if(sprite_opacity < 1.0f || sprite_texture->alpha_mask != 0){
         shader = engine_get_builtin_shader(OPACITY_SHADER);
     }else{
         shader = engine_get_builtin_shader(EMPTY_SHADER);
