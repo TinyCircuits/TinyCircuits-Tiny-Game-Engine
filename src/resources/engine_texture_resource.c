@@ -111,13 +111,17 @@ uint8_t bitmap_get_header_and_info(bmfh_t *header, bmih_v1_t *info_v1, bmih_v2_t
         version = 3;
     }
 
-    // Check that this is a bitmap and is using correct uncompressed formats
+    // Check that this is a bitmap, is a supported bit-depth, and that it is not compressed
     if(header->bf_type != 19778){
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("TextureResource: BMP header ID field incorrect! Not a BMP file or file doesn't exist!"));
     }
 
-    if(info_v1->bi_compression != BI_RGB && info_v1->bi_compression != BI_BITFIELDS){
-        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("TextureResource: Bitmap uses compression, only raw RGB is supported!"));
+    if(info_v1->bi_bit_count > 16){
+        mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("TextureResource: ERROR: Only bit-depths of 16 and lower are supported! Got `%d`"), info_v1->bi_bit_count);
+    }
+
+    if(info_v1->bi_compression != BI_BITFIELDS && info_v1->bi_compression != BI_RGB){
+        mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("TextureResource: ERROR: This bitmap uses some kind of compression, only uncompressed bitmaps are supported!"));
     }
 
     return version;
@@ -333,21 +337,11 @@ void create_from_file(texture_resource_class_obj_t *self, mp_obj_t filepath, mp_
         //  width=16 -> unpadded=16 -> padded=ceil(16/4)*4 = 16 bytes
         //  width=17 -> unpadded=17 -> padded=ceil(17/4)*4 = 20 bytes
         self->unpadded_bytes_width = self->width;
-    }else if(self->bit_depth == 16){
+    }else{
         // Every group of two 8-bit horizontal bytes represents a 16-bit color
         //  width=16 -> unpadded=16*2=32 -> padded=ceil(32/4)*4 = 32 bytes
         //  width=17 -> unpadded=17*2=34 -> padded=ceil(34/4)*4 = 36 bytes
         self->unpadded_bytes_width = self->width * 2;
-    }else if(self->bit_depth == 24){
-        // Every group of three 8-bit horizontal bytes represents a 24-bit color
-        //  width=16 -> unpadded=16*3=48 -> padded=ceil(48/4)*4 = 48 bytes
-        //  width=17 -> unpadded=17*3=51 -> padded=ceil(51/4)*4 = 52 bytes
-        self->unpadded_bytes_width = self->width * 3;
-    }else if(self->bit_depth == 32){
-        // Every group of four 8-bit horizontal bytes represents a 32-bit color
-        //  width=16 -> unpadded=16*4=64 -> padded=ceil(64/4)*4 = 64 bytes
-        //  width=17 -> unpadded=17*4=68 -> padded=ceil(68/4)*4 = 68 bytes
-        self->unpadded_bytes_width = self->width * 4;
     }
 
     // Pad to 4 bytes
@@ -362,17 +356,8 @@ void create_from_file(texture_resource_class_obj_t *self, mp_obj_t filepath, mp_
         // Images using indexed colors have their index data copied
         // directly to the .data space in RAM or FLASH
         total_required_space = self->unpadded_bytes_width * self->height;
-    }else if(self->bit_depth > 16){
-        // If the colors are 24 or 32 bit, they will be reduced to
-        // 16 bit colors with an additional byte for alpha if it has
-        // it (although 24-bit doesn't seem to support alpha)
-        if(self->has_alpha){
-            total_required_space = pixel_count*3;
-        }else{
-            total_required_space = pixel_count*2;
-        }
     }else{
-        // Not any of the other cases, must be 16-bit image which will
+        // Not any of the other case, must be 16-bit image which will
         // get its pixel data directly copied to RAM or FLASH even if
         // it contains alpha bits in the color masks (decoded on the fly)
         total_required_space = pixel_count*2;
@@ -382,21 +367,12 @@ void create_from_file(texture_resource_class_obj_t *self, mp_obj_t filepath, mp_
     self->data = engine_resource_get_space_bytearray(total_required_space, self->in_ram);
     engine_resource_start_storing(self->data, self->in_ram);
 
-    // Depending on the bit depth, need to copy
-    // pixel related data to texture pixel data differently
-    // and 24-bit or 32-bit colors need to be reduced to 16-bit
-    if(self->bit_depth <= 16){
-        // 1 to 16-bit data doesn't need any modification
-        // during copy, just copy it to resource location
-        copy_and_flip(self, header.bf_off_bits, padded_bytes_width);
-    }else if(self->bit_depth == 24){
-        copy_and_flip_24bit_to_16bit(self, header.bf_off_bits, padded_bytes_width);
-    }else if(self->bit_depth == 32){
-        copy_and_flip_32bit_to_16bit(self, header.bf_off_bits, padded_bytes_width);
-    }
+    // All pixels are directly copied without modification
+    // for 1 ~ 16 bit bitmaps
+    copy_and_flip(self, header.bf_off_bits, padded_bytes_width);
 
+    // Close reading file and stop storing in resource space
     engine_file_close(0);
-
     engine_resource_stop_storing();
 }
 
@@ -506,18 +482,19 @@ uint16_t texture_resource_get_pixel(texture_resource_class_obj_t *texture, uint3
         // Get the color from the color table
         pixel = ((uint16_t*)colors->items)[index_into_colors];
     }else{
-        if(texture->combined_masks == 65535){   // RGB565
+        if(texture->combined_masks == 65535 && texture->has_alpha == false){   // RGB565
             pixel = ((uint16_t*)data->items)[pixel_offset];
-        }else if(texture->bit_depth == 16){
+        }else
+        if(texture->bit_depth == 16){
             // Get the 16-bit color that is masked a certain way
             pixel = ((uint16_t*)data->items)[pixel_offset];
 
             // Mask out the values
-            //
-            //  Example:  pixel_5551 = 0bX_11011_00100_10101
-            //            r_mask     = 0b0_11111_00000_00000 -> r = pixel_5551 & r_mask = 0bX_11011_00100_10101 & 0b0_11111_00000_00000 = 0b0_11011_00000_00000
-            //            g_mask     = 0b0_00000_11111_00000 -> g = pixel_5551 & g_mask = 0bX_11011_00100_10101 & 0b0_00000_11111_00000 = 0b0_00000_00100_00000
-            //            b_mask     = 0b0_00000_00000_11111 -> b = pixel_5551 & g_mask = 0bX_11011_00100_10101 & 0b0_00000_00000_11111 = 0b0_00000_00000_10101
+            //                           A RRRRR GGGGG BBBBB
+            //  Example:  pixel_1555 = 0b1_11011_00100_10101
+            //            r_mask     = 0b0_11111_00000_00000 -> r = pixel_1555 & r_mask = 0b1_11011_00100_10101 & 0b0_11111_00000_00000 = 0b0_11011_00000_00000
+            //            g_mask     = 0b0_00000_11111_00000 -> g = pixel_1555 & g_mask = 0b1_11011_00100_10101 & 0b0_00000_11111_00000 = 0b0_00000_00100_00000
+            //            b_mask     = 0b0_00000_00000_11111 -> b = pixel_1555 & g_mask = 0b1_11011_00100_10101 & 0b0_00000_00000_11111 = 0b0_00000_00000_10101
             uint16_t r = pixel & texture->red_mask;
             uint16_t g = pixel & texture->green_mask;
             uint16_t b = pixel & texture->blue_mask;
@@ -569,52 +546,6 @@ uint16_t texture_resource_get_pixel(texture_resource_class_obj_t *texture, uint3
             pixel |= (b << 0);
         }
     }
-
-    // switch(texture->bit_depth){
-    //     case 1:
-    //     {
-    //         // Need to get the byte containing the bit related to the pixel at `pixel_offset`.
-    //         // That bit indexes into `.colors` which holds the 16-bit color to return.
-    //         // Example, width=17 -> 3 bytes -> 00001111 00001111 1XXXXXXX
-    //         uint32_t byte_containing_pixel_index = (uint32_t)(floorf(pixel_offset/8.0f));
-    //         uint8_t byte_containing_pixel = ((uint8_t*)data->items)[byte_containing_pixel_index];
-    //         uint8_t right_shift_count = 7 - (pixel_offset % 8);
-    //         uint8_t index_into_color_table = (byte_containing_pixel >> right_shift_count) & 0b00000001;
-    //         color = ((uint16_t*)colors->items)[index_into_color_table];
-    //     }
-    //     break;
-    //     case 4:
-    //     {
-    //         uint32_t byte_containing_pixel_index = (uint32_t)(floorf(pixel_offset/8.0f));
-    //         uint8_t byte_containing_pixel = ((uint8_t*)data->items)[byte_containing_pixel_index];
-    //         uint8_t right_shift_count = 7 - (pixel_offset % 8);
-    //         uint8_t index_into_color_table = (byte_containing_pixel >> right_shift_count) & 0b00000001;
-    //         color = ((uint16_t*)colors->items)[index_into_color_table];
-    //     }
-    //     break;
-    //     case 8:
-    //     {
-
-    //     }
-    //     break;
-    //     case 16:
-    //     {
-
-    //     }
-    //     break;
-    //     case 24:
-    //     {
-
-    //     }
-    //     break;
-    //     case 32:
-    //     {
-
-    //     }
-    //     break;
-    // }
-    // uint16_t *texture_data = ((mp_obj_array_t*)texture->data)->items;
-    // return texture_data[offset];
 
     return pixel;
 }
