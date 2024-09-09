@@ -134,7 +134,7 @@ void bitmap_get_and_fill_color_table(uint16_t *color_table, uint16_t color_count
     // Color table in file is in bgr format (not rgb)
     uint8_t bgr[4];
 
-    ENGINE_PRINTF("\t colors: \t\t\t");
+    ENGINE_INFO_PRINTF("\t colors: \t\t\t");
     for(uint16_t color_index=0; color_index<color_count; color_index++){
         // Read the 4 bytes (last is reserved) from
         // color table and convert to 16 bit RGB565
@@ -145,9 +145,9 @@ void bitmap_get_and_fill_color_table(uint16_t *color_table, uint16_t color_count
         color_table[color_index] = rgb565;
 
         // Print the original color and converted RGB565
-        ENGINE_PRINTF("%d,%d,%d->%d,%d,%d  ", bgr[2], bgr[1], bgr[0], (rgb565 >> 11) & 0b00011111, (rgb565 >> 5) & 0b00111111, (rgb565 >> 0) & 0b00011111);
+        ENGINE_INFO_PRINTF("%d,%d,%d->%d,%d,%d  ", bgr[2], bgr[1], bgr[0], (rgb565 >> 11) & 0b00011111, (rgb565 >> 5) & 0b00111111, (rgb565 >> 0) & 0b00011111);
     }
-    ENGINE_PRINTF("\n");
+    ENGINE_INFO_PRINTF("\n");
 }
 
 
@@ -203,13 +203,138 @@ void copy_and_flip(texture_resource_class_obj_t *self, uint32_t pixel_data_start
 }
 
 
-void copy_and_flip_24bit_to_16bit(texture_resource_class_obj_t *self, uint32_t pixel_data_start, uint32_t padded_width){
+uint16_t texture_resource_get_indexed_pixel(texture_resource_class_obj_t *texture, uint32_t pixel_offset, float *out_alpha){
+    mp_obj_array_t *data = texture->data;
+    mp_obj_array_t *colors = texture->colors;
 
+    // No matter the bit-depth, calculate the index of the byte
+    // containing the bits related to the pixel we're after:
+    //
+    //               width: 24 -> offset = 18       width: 6 -> offset = 4         width: 3 -> offset = 2
+    //                                  v                            vvvv                           vvvv vvvv
+    //  Examples: 0000_0000 0000_0000 0010_0000  0000_0000 0000_0000 1111_0000  0000_0000 0000_0000 1111_1111 (the byte index we want to calculate is 2 no matter the bit-depth)
+    //  1bit_byte_index = floor((bits_per_pixel * offset) / 8.0f) = floor((1*18)/8) = 2
+    //  4bit_byte_index = floor((bits_per_pixel * offset) / 8.0f) = floor((4*4)/8)  = 2
+    //  8bit_byte_index = floor((bits_per_pixel * offset) / 8.0f) = floor((8*2)/8)  = 2
+    uint32_t byte_containing_pixel_index = texture->bit_depth*pixel_offset/8;
+    uint8_t byte_containing_pixel = ((uint8_t*)data->items)[byte_containing_pixel_index];
+
+    // Now that we have the byte containing the index information
+    // into the color table, extract just those bits to get the index.
+    // This only matters for the 1 and 4-bit cases since the 8-bit case
+    // already contains the entire bit range that makes up the index:
+    //
+    //           offset=18  offset=4   offset=2
+    //        
+    // Examples: 0010_0000  1111_0000  1111_1111
+    //
+    // 1bit_right_shift_count = (8-bit_depth) - (pixel_offset % (8/bit_depth)) = (8-1) - (18 % (8/1)) = 7 - (18 % 8) = 5
+    // 4bit_right_shift_count = (8-bit_depth) - (pixel_offset % (8/bit_depth)) = (8-4) - (4  % (8/4)) = 4 - (4  % 2) = 4
+    // 8bit_right_shift_count = (8-bit_depth) - (pixel_offset % (8/bit_depth)) = (8-8) - (2  % (8/8)) = 0 - (2  % 1) = 0
+    uint8_t right_shift_count = (8-texture->bit_depth) - (pixel_offset % (8/texture->bit_depth));
+    right_shift_count = (right_shift_count/texture->bit_depth)*texture->bit_depth;
+    byte_containing_pixel = byte_containing_pixel >> right_shift_count;
+
+    // The bits related to the index into the color table have been shifted all the
+    // way to the right, now we need a mask generated from the bit-depth to mask it out:
+    //
+    //  Examples: 0000_0001  0000_1111  1111_1111
+    //
+    // 1bit_mask = pow(2, bit_depth)-1 = 2^1 - 1 = 2-1   = 1   = 0b0000_0001
+    // 2bit_mask = pow(2, bit_depth)-1 = 2^4 - 1 = 16-1  = 15  = 0b0000_1111
+    // 8bit_mask = pow(2, bit_depth)-1 = 2^8 - 1 = 256-1 = 255 = 0b1111_1111
+    // https://stackoverflow.com/a/5345369 (raise integer two to a power using bit shifts)
+    uint8_t index_into_colors_mask = (1 << texture->bit_depth) - 1;
+    uint8_t index_into_colors = byte_containing_pixel & index_into_colors_mask;
+
+    // Get the color from the color table
+    return ((uint16_t*)colors->items)[index_into_colors];
 }
 
 
-void copy_and_flip_32bit_to_16bit(texture_resource_class_obj_t *self, uint32_t pixel_data_start, uint32_t padded_width){
+uint16_t texture_resource_get_16bit_rgb565(texture_resource_class_obj_t *texture, uint32_t pixel_offset, float *out_alpha){
+    mp_obj_array_t *data = texture->data;
+    return ((uint16_t*)data->items)[pixel_offset];
+}
 
+
+uint16_t texture_resource_get_16bit_argb(texture_resource_class_obj_t *texture, uint32_t pixel_offset, float *out_alpha){
+    mp_obj_array_t *data = texture->data;
+
+    // Get the 16-bit color that is masked a certain way
+    uint16_t pixel = ((uint16_t*)data->items)[pixel_offset];
+
+    // Mask out the values
+    //                           A RRRRR GGGGG BBBBB
+    //  Example:  pixel_1555 = 0b1_11011_00100_10101
+    //            a_mask     = 0b1_00000_00000_00000 -> a = pixel_1555 & a_mask = 0b1_11011_00100_10101 & 0b1_00000_00000_00000 = 0b1_00000_00000_00000
+    //            r_mask     = 0b0_11111_00000_00000 -> r = pixel_1555 & r_mask = 0b1_11011_00100_10101 & 0b0_11111_00000_00000 = 0b0_11011_00000_00000
+    //            g_mask     = 0b0_00000_11111_00000 -> g = pixel_1555 & g_mask = 0b1_11011_00100_10101 & 0b0_00000_11111_00000 = 0b0_00000_00100_00000
+    //            b_mask     = 0b0_00000_00000_11111 -> b = pixel_1555 & g_mask = 0b1_11011_00100_10101 & 0b0_00000_00000_11111 = 0b0_00000_00000_10101
+    uint16_t a = pixel & texture->alpha_mask;
+    uint16_t r = pixel & texture->red_mask;
+    uint16_t g = pixel & texture->green_mask;
+    uint16_t b = pixel & texture->blue_mask;
+
+    // Now each channel needs to be shifted all the way to the right.
+    // Need to calculate how many bits are to the right of each channel
+    // mask (r_mask, g_mask, etc.). To do this, figure how the number that
+    // encompass the mask bits and the bit to the right (always a prw of 2 - 1)
+    // Since a^b=c, b=log_a(c): https://math.stackexchange.com/a/673801
+    //
+    //  Continued example:  a_all_right = 2^ceil(log2(a_mask))-1 = 2^ceil(log2(0b1_00000_00000_00000 + 1))-1 = 2^ceil(log2(32768 + 1))-1 = 2^ceil(15.00004) - 1 = (2^16)-1 = 65535 = 0b1111111111111111
+    //                      r_all_right = 2^ceil(log2(r_mask))-1 = 2^ceil(log2(0b0_11111_00000_00000 + 1))-1 = 2^ceil(log2(31744 + 1))-1 = 2^ceil(14.954) - 1   = (2^15)-1 = 32767 = 0b0111111111111111
+    //                      g_all_right = 2^ceil(log2(g_mask))-1 = 2^ceil(log2(0b0_00000_11111_00000 + 1))-1 = 2^ceil(log2(992 + 1))-1   = 2^ceil(9.9556) - 1   = (2^10)-1 = 2047  = 0b0000001111111111
+    //                      b_all_right = 2^ceil(log2(b_mask))-1 = 2^ceil(log2(0b0_00000_00000_11111 + 1))-1 = 2^ceil(log2(31 + 1))-1    = 2^ceil(5)  - 1       = (2^5)-1  = 32    = 0b0000000000011111
+    //
+    // Add one so that rounding up is always to the next int
+    uint16_t a_all_right = (uint16_t)powf(2, ceilf(log2f(texture->alpha_mask+1))) - 1;
+    uint16_t r_all_right = (uint16_t)powf(2, ceilf(log2f(texture->red_mask+1))) - 1;
+    uint16_t g_all_right = (uint16_t)powf(2, ceilf(log2f(texture->green_mask+1))) - 1;
+    uint16_t b_all_right = (uint16_t)powf(2, ceilf(log2f(texture->blue_mask+1))) - 1;
+
+    // The above masks include the bits of the color channel mask, subtract that
+    // mask out of the `all_right` masks
+    //
+    //  Continued example:  a_just_right = a_all_right - a_mask = 0b1111111111111111 - 0b1_00000_00000_00000 = 0b0111111111111111 = 32767
+    //                      r_just_right = r_all_right - r_mask = 0b0111111111111111 - 0b0_11111_00000_00000 = 0b0000001111111111 = 1023
+    //                      g_just_right = g_all_right - g_mask = 0b0000001111111111 - 0b0_00000_11111_00000 = 0b0000000000011111 = 31
+    //                      b_just_right = b_all_right - b_mask = 0b0000000000011111 - 0b0_00000_00000_11111 = 0b0000000000000000 = 0
+    uint16_t a_just_right = a_all_right - texture->alpha_mask;
+    uint16_t r_just_right = r_all_right - texture->red_mask;
+    uint16_t g_just_right = g_all_right - texture->green_mask;
+    uint16_t b_just_right = b_all_right - texture->blue_mask;
+
+    // Using the bits that are just to the right of each color channel mask, calculate
+    // how many bits there are:
+    //
+    //  Continued example:  a_right_shift_amount = ceil(log2(a_just_right)) = ceil(log2(32767)) = ceil(14.99996) = 15
+    //                      r_right_shift_amount = ceil(log2(r_just_right)) = ceil(log2(1023))  = ceil(9.999)    = 10
+    //                      g_right_shift_amount = ceil(log2(g_just_right)) = ceil(log2(31))    = ceil(4.954)    = 5
+    //                      b_right_shift_amount = ceil(log2(b_just_right)) = ceil(log2(0))     = ceil(0)        = 0
+    uint16_t a_right_shift_amount = (uint16_t)ceilf(log2f(a_just_right));
+    uint16_t r_right_shift_amount = (uint16_t)ceilf(log2f(r_just_right));
+    uint16_t g_right_shift_amount = (uint16_t)ceilf(log2f(g_just_right));
+    uint16_t b_right_shift_amount = (uint16_t)ceilf(log2f(b_just_right));
+
+    a = a >> a_right_shift_amount;
+    r = r >> r_right_shift_amount;
+    g = g >> g_right_shift_amount;
+    b = b >> b_right_shift_amount;
+
+    // Alpha is special and is output as 0.0 ~ 1.0
+    if(out_alpha != NULL) *out_alpha = engine_math_map_clamp((float)a, 0.0f, (float)(texture->alpha_mask >> a_right_shift_amount), 0.0f, 1.0f);
+
+    r = (uint16_t)engine_math_map_clamp((float)r, 0.0f, (float)(texture->red_mask >> r_right_shift_amount), 0.0f, 31.0f);
+    g = (uint16_t)engine_math_map_clamp((float)g, 0.0f, (float)(texture->green_mask >> g_right_shift_amount), 0.0f, 63.0f);
+    b = (uint16_t)engine_math_map_clamp((float)b, 0.0f, (float)(texture->blue_mask >> b_right_shift_amount), 0.0f, 31.0f);
+
+    pixel = 0;
+    pixel |= (r << 11);
+    pixel |= (g << 5);
+    pixel |= (b << 0);
+
+    return pixel;
 }
 
 
@@ -235,18 +360,19 @@ void create_from_file(texture_resource_class_obj_t *self, mp_obj_t filepath, mp_
     bmih_v2_t info_v2;
     bmih_v3_t info_v3;
 
+    // Set memory to zeros
     memset(&header, 0, sizeof(bmfh_t));
     memset(&info_v1, 0, sizeof(bmih_v1_t));
     memset(&info_v2, 0, sizeof(bmih_v2_t));
     memset(&info_v3, 0, sizeof(bmih_v3_t));
 
+    // Fill header and info structs and get minimum version supported
     uint8_t version = bitmap_get_header_and_info(&header, &info_v1, &info_v2, &info_v3);
 
     uint32_t data_offset = sizeof(bmfh_t) + info_v1.bi_size;    // Offset to start of color table or pixel data after 14 bytes `bmfh` section and variable `bmih` section
-
-    uint32_t color_table_size_in_file = 0;  // Number of bytes the color table is using in the file
-    uint16_t color_count = 0;               // Number of 16-bit colors we will need (need to calculate this, not all bitmaps have the clr_used field filled out)
-    uint16_t color_table_size = 0;          // Number of bytes needed to store all the 16-bit colors
+    uint32_t color_table_size_in_file = 0;                      // Number of bytes the color table is using in the file
+    uint16_t color_count = 0;                                   // Number of 16-bit colors we will need (need to calculate this, not all bitmaps have the clr_used field filled out)
+    uint16_t color_table_size = 0;                              // Number of bytes needed to store all the 16-bit colors
 
     info_v1.bi_size_image = header.bf_size - header.bf_off_bits;                            // Not all exporters fill out `bi_size_image`, calculate it instead
     if(info_v1.bi_bit_count < 16){
@@ -274,26 +400,26 @@ void create_from_file(texture_resource_class_obj_t *self, mp_obj_t filepath, mp_
     self->combined_masks |= self->alpha_mask;
 
     // Print information
-    ENGINE_PRINTF("TextureResource: BMP parameters parsed from '%s':\n", mp_obj_str_get_str(filepath));
-    ENGINE_PRINTF("\t min version: \t\t\t%d\n", version);
-    ENGINE_PRINTF("\t bf_size: \t\t\t%d\n", header.bf_size);
-    ENGINE_PRINTF("\t bf_off_bits: \t\t\t%lu\n", header.bf_off_bits);
-    ENGINE_PRINTF("\t bi_size: \t\t\t%lu\n", info_v1.bi_size);
-    ENGINE_PRINTF("\t bi_width: \t\t\t%lu\n", info_v1.bi_width);
-    ENGINE_PRINTF("\t bi_height: \t\t\t%lu\n", info_v1.bi_height);
-    ENGINE_PRINTF("\t bi_bit_count: \t\t\t%lu\n", info_v1.bi_bit_count);
-    ENGINE_PRINTF("\t bi_size_image: \t\t%lu\n", info_v1.bi_size_image);
+    ENGINE_INFO_PRINTF("TextureResource: BMP parameters parsed from '%s':\n", mp_obj_str_get_str(filepath));
+    ENGINE_INFO_PRINTF("\t min version: \t\t\t%d\n", version);
+    ENGINE_INFO_PRINTF("\t bf_size: \t\t\t%d\n", header.bf_size);
+    ENGINE_INFO_PRINTF("\t bf_off_bits: \t\t\t%lu\n", header.bf_off_bits);
+    ENGINE_INFO_PRINTF("\t bi_size: \t\t\t%lu\n", info_v1.bi_size);
+    ENGINE_INFO_PRINTF("\t bi_width: \t\t\t%lu\n", info_v1.bi_width);
+    ENGINE_INFO_PRINTF("\t bi_height: \t\t\t%lu\n", info_v1.bi_height);
+    ENGINE_INFO_PRINTF("\t bi_bit_count: \t\t\t%lu\n", info_v1.bi_bit_count);
+    ENGINE_INFO_PRINTF("\t bi_size_image: \t\t%lu\n", info_v1.bi_size_image);
 
-    ENGINE_PRINTF("\t bi_red_mask: \t\t\t"); print_binary(info_v2.bi_red_mask, 32); ENGINE_PRINTF("\n");
-    ENGINE_PRINTF("\t bi_green_mask: \t\t"); print_binary(info_v2.bi_green_mask, 32); ENGINE_PRINTF("\n");
-    ENGINE_PRINTF("\t bi_blue_mask: \t\t\t"); print_binary(info_v2.bi_blue_mask, 32); ENGINE_PRINTF("\n");
-    ENGINE_PRINTF("\t bi_alpha_mask: \t\t"); print_binary(info_v3.bi_alpha_mask, 32); ENGINE_PRINTF("\n");
-    ENGINE_PRINTF("\t combined_masks: \t\t%lu\n", self->combined_masks);
+    ENGINE_INFO_PRINTF("\t bi_red_mask: \t\t\t"); print_binary(info_v2.bi_red_mask, 32); ENGINE_INFO_PRINTF("\n");
+    ENGINE_INFO_PRINTF("\t bi_green_mask: \t\t"); print_binary(info_v2.bi_green_mask, 32); ENGINE_INFO_PRINTF("\n");
+    ENGINE_INFO_PRINTF("\t bi_blue_mask: \t\t\t"); print_binary(info_v2.bi_blue_mask, 32); ENGINE_INFO_PRINTF("\n");
+    ENGINE_INFO_PRINTF("\t bi_alpha_mask: \t\t"); print_binary(info_v3.bi_alpha_mask, 32); ENGINE_INFO_PRINTF("\n");
+    ENGINE_INFO_PRINTF("\t combined_masks: \t\t%lu\n", self->combined_masks);
 
-    ENGINE_PRINTF("\t data_offset: \t\t\t%lu\n", data_offset);
-    ENGINE_PRINTF("\t color_table_size_in_file: \t%lu\n", color_table_size_in_file);
-    ENGINE_PRINTF("\t color_count: \t\t\t%lu\n", color_count);
-    ENGINE_PRINTF("\t color_table_size: \t\t%lu\n", color_table_size);
+    ENGINE_INFO_PRINTF("\t data_offset: \t\t\t%lu\n", data_offset);
+    ENGINE_INFO_PRINTF("\t color_table_size_in_file: \t%lu\n", color_table_size_in_file);
+    ENGINE_INFO_PRINTF("\t color_count: \t\t\t%lu\n", color_count);
+    ENGINE_INFO_PRINTF("\t color_table_size: \t\t%lu\n", color_table_size);
 
     // Seek to color table or pixel data (might be the same as bf_off_bits in some cases)
     engine_file_seek(0, data_offset, MP_SEEK_SET);
@@ -381,6 +507,17 @@ void create_from_file(texture_resource_class_obj_t *self, mp_obj_t filepath, mp_
     // Close reading file and stop storing in resource space
     engine_file_close(0);
     engine_resource_stop_storing();
+
+    // Assign a function for getting pixels from texture resource
+    if(self->bit_depth < 16){
+        self->get_pixel = texture_resource_get_indexed_pixel;
+    }else{
+        if((self->combined_masks == 65535 && self->has_alpha == false) || self->combined_masks == 0){   // RGB565
+            self->get_pixel = texture_resource_get_16bit_rgb565;
+        }else{
+            self->get_pixel = texture_resource_get_16bit_argb;
+        }
+    }
 }
 
 
@@ -438,137 +575,6 @@ static mp_obj_t texture_resource_class_del(mp_obj_t self_in){
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(texture_resource_class_del_obj, texture_resource_class_del);
-
-
-uint16_t texture_resource_get_pixel(texture_resource_class_obj_t *texture, uint32_t pixel_offset, float *out_alpha){
-    mp_obj_array_t *data = texture->data;
-    mp_obj_array_t *colors = texture->colors;
-
-    uint16_t pixel = 0;
-
-    if(texture->bit_depth < 16){
-        // No matter the bit-depth, calculate the index of the byte
-        // containing the bits related to the pixel we're after:
-        //
-        //               width: 24 -> offset = 18       width: 6 -> offset = 4         width: 3 -> offset = 2
-        //                                  v                            vvvv                           vvvv vvvv
-        //  Examples: 0000_0000 0000_0000 0010_0000  0000_0000 0000_0000 1111_0000  0000_0000 0000_0000 1111_1111 (the byte index we want to calculate is 2 no matter the bit-depth)
-        //  1bit_byte_index = floor((bits_per_pixel * offset) / 8.0f) = floor((1*18)/8) = 2
-        //  4bit_byte_index = floor((bits_per_pixel * offset) / 8.0f) = floor((4*4)/8)  = 2
-        //  8bit_byte_index = floor((bits_per_pixel * offset) / 8.0f) = floor((8*2)/8)  = 2
-        uint32_t byte_containing_pixel_index = texture->bit_depth*pixel_offset/8;
-        uint8_t byte_containing_pixel = ((uint8_t*)data->items)[byte_containing_pixel_index];
-
-        // Now that we have the byte containing the index information
-        // into the color table, extract just those bits to get the index.
-        // This only matters for the 1 and 4-bit cases since the 8-bit case
-        // already contains the entire bit range that makes up the index:
-        //
-        //           offset=18  offset=4   offset=2
-        //        
-        // Examples: 0010_0000  1111_0000  1111_1111
-        //
-        // 1bit_right_shift_count = (8-bit_depth) - (pixel_offset % (8/bit_depth)) = (8-1) - (18 % (8/1)) = 7 - (18 % 8) = 5
-        // 4bit_right_shift_count = (8-bit_depth) - (pixel_offset % (8/bit_depth)) = (8-4) - (4  % (8/4)) = 4 - (4  % 2) = 4
-        // 8bit_right_shift_count = (8-bit_depth) - (pixel_offset % (8/bit_depth)) = (8-8) - (2  % (8/8)) = 0 - (2  % 1) = 0
-        uint8_t right_shift_count = (8-texture->bit_depth) - (pixel_offset % (8/texture->bit_depth));
-        right_shift_count = (uint8_t)(floorf((float)right_shift_count/(float)texture->bit_depth)*texture->bit_depth);
-        byte_containing_pixel = byte_containing_pixel >> right_shift_count;
-
-        // The bits related to the index into the color table have been shifted all the
-        // way to the right, now we need a mask generated from the bit-depth to mask it out:
-        //
-        //  Examples: 0000_0001  0000_1111  1111_1111
-        //
-        // 1bit_mask = pow(2, bit_depth)-1 = 2^1 - 1 = 2-1   = 1   = 0b0000_0001
-        // 2bit_mask = pow(2, bit_depth)-1 = 2^4 - 1 = 16-1  = 15  = 0b0000_1111
-        // 8bit_mask = pow(2, bit_depth)-1 = 2^8 - 1 = 256-1 = 255 = 0b1111_1111
-        uint8_t index_into_colors_mask = (uint8_t)(powf(2.0f, (float)texture->bit_depth) - 1.0f);
-        uint8_t index_into_colors = byte_containing_pixel & index_into_colors_mask;
-
-        // Get the color from the color table
-        pixel = ((uint16_t*)colors->items)[index_into_colors];
-    }else{
-        if((texture->combined_masks == 65535 && texture->has_alpha == false) || texture->combined_masks == 0){   // RGB565
-            pixel = ((uint16_t*)data->items)[pixel_offset];
-        }else{
-            // Get the 16-bit color that is masked a certain way
-            pixel = ((uint16_t*)data->items)[pixel_offset];
-
-            // Mask out the values
-            //                           A RRRRR GGGGG BBBBB
-            //  Example:  pixel_1555 = 0b1_11011_00100_10101
-            //            a_mask     = 0b1_00000_00000_00000 -> a = pixel_1555 & a_mask = 0b1_11011_00100_10101 & 0b1_00000_00000_00000 = 0b1_00000_00000_00000
-            //            r_mask     = 0b0_11111_00000_00000 -> r = pixel_1555 & r_mask = 0b1_11011_00100_10101 & 0b0_11111_00000_00000 = 0b0_11011_00000_00000
-            //            g_mask     = 0b0_00000_11111_00000 -> g = pixel_1555 & g_mask = 0b1_11011_00100_10101 & 0b0_00000_11111_00000 = 0b0_00000_00100_00000
-            //            b_mask     = 0b0_00000_00000_11111 -> b = pixel_1555 & g_mask = 0b1_11011_00100_10101 & 0b0_00000_00000_11111 = 0b0_00000_00000_10101
-            uint16_t a = pixel & texture->alpha_mask;
-            uint16_t r = pixel & texture->red_mask;
-            uint16_t g = pixel & texture->green_mask;
-            uint16_t b = pixel & texture->blue_mask;
-
-            // Now each channel needs to be shifted all the way to the right.
-            // Need to calculate how many bits are to the right of each channel
-            // mask (r_mask, g_mask, etc.). To do this, figure how the number that
-            // encompass the mask bits and the bit to the right (always a prw of 2 - 1)
-            // Since a^b=c, b=log_a(c): https://math.stackexchange.com/a/673801
-            //
-            //  Continued example:  a_all_right = 2^ceil(log2(a_mask))-1 = 2^ceil(log2(0b1_00000_00000_00000 + 1))-1 = 2^ceil(log2(32768 + 1))-1 = 2^ceil(15.00004) - 1 = (2^16)-1 = 65535 = 0b1111111111111111
-            //                      r_all_right = 2^ceil(log2(r_mask))-1 = 2^ceil(log2(0b0_11111_00000_00000 + 1))-1 = 2^ceil(log2(31744 + 1))-1 = 2^ceil(14.954) - 1   = (2^15)-1 = 32767 = 0b0111111111111111
-            //                      g_all_right = 2^ceil(log2(g_mask))-1 = 2^ceil(log2(0b0_00000_11111_00000 + 1))-1 = 2^ceil(log2(992 + 1))-1   = 2^ceil(9.9556) - 1   = (2^10)-1 = 2047  = 0b0000001111111111
-            //                      b_all_right = 2^ceil(log2(b_mask))-1 = 2^ceil(log2(0b0_00000_00000_11111 + 1))-1 = 2^ceil(log2(31 + 1))-1    = 2^ceil(5)  - 1       = (2^5)-1  = 32    = 0b0000000000011111
-            //
-            // Add one so that rounding up is always to the next int
-            uint16_t a_all_right = (uint16_t)powf(2, ceilf(log2f(texture->alpha_mask+1))) - 1;
-            uint16_t r_all_right = (uint16_t)powf(2, ceilf(log2f(texture->red_mask+1))) - 1;
-            uint16_t g_all_right = (uint16_t)powf(2, ceilf(log2f(texture->green_mask+1))) - 1;
-            uint16_t b_all_right = (uint16_t)powf(2, ceilf(log2f(texture->blue_mask+1))) - 1;
-
-            // The above masks include the bits of the color channel mask, subtract that
-            // mask out of the `all_right` masks
-            //
-            //  Continued example:  a_just_right = a_all_right - a_mask = 0b1111111111111111 - 0b1_00000_00000_00000 = 0b0111111111111111 = 32767
-            //                      r_just_right = r_all_right - r_mask = 0b0111111111111111 - 0b0_11111_00000_00000 = 0b0000001111111111 = 1023
-            //                      g_just_right = g_all_right - g_mask = 0b0000001111111111 - 0b0_00000_11111_00000 = 0b0000000000011111 = 31
-            //                      b_just_right = b_all_right - b_mask = 0b0000000000011111 - 0b0_00000_00000_11111 = 0b0000000000000000 = 0
-            uint16_t a_just_right = a_all_right - texture->alpha_mask;
-            uint16_t r_just_right = r_all_right - texture->red_mask;
-            uint16_t g_just_right = g_all_right - texture->green_mask;
-            uint16_t b_just_right = b_all_right - texture->blue_mask;
-
-            // Using the bits that are just to the right of each color channel mask, calculate
-            // how many bits there are:
-            //
-            //  Continued example:  a_right_shift_amount = ceil(log2(a_just_right)) = ceil(log2(32767)) = ceil(14.99996) = 15
-            //                      r_right_shift_amount = ceil(log2(r_just_right)) = ceil(log2(1023))  = ceil(9.999)    = 10
-            //                      g_right_shift_amount = ceil(log2(g_just_right)) = ceil(log2(31))    = ceil(4.954)    = 5
-            //                      b_right_shift_amount = ceil(log2(b_just_right)) = ceil(log2(0))     = ceil(0)        = 0
-            uint16_t a_right_shift_amount = (uint16_t)ceilf(log2f(a_just_right));
-            uint16_t r_right_shift_amount = (uint16_t)ceilf(log2f(r_just_right));
-            uint16_t g_right_shift_amount = (uint16_t)ceilf(log2f(g_just_right));
-            uint16_t b_right_shift_amount = (uint16_t)ceilf(log2f(b_just_right));
-
-            a = a >> a_right_shift_amount;
-            r = r >> r_right_shift_amount;
-            g = g >> g_right_shift_amount;
-            b = b >> b_right_shift_amount;
-
-            // Alpha is special and is output as 0.0 ~ 1.0
-            if(out_alpha != NULL) *out_alpha = engine_math_map_clamp((float)a, 0.0f, (float)(texture->alpha_mask >> a_right_shift_amount), 0.0f, 1.0f);
-
-            r = (uint16_t)engine_math_map_clamp((float)r, 0.0f, (float)(texture->red_mask >> r_right_shift_amount), 0.0f, 31.0f);
-            g = (uint16_t)engine_math_map_clamp((float)g, 0.0f, (float)(texture->green_mask >> g_right_shift_amount), 0.0f, 63.0f);
-            b = (uint16_t)engine_math_map_clamp((float)b, 0.0f, (float)(texture->blue_mask >> b_right_shift_amount), 0.0f, 31.0f);
-
-            pixel = 0;
-            pixel |= (r << 11);
-            pixel |= (g << 5);
-            pixel |= (b << 0);
-        }
-    }
-
-    return pixel;
-}
 
 
 /*  --- doc ---

@@ -8,7 +8,7 @@ void print_binary(uint32_t number, uint32_t bit_count){
     while(bit_count != 0){
         // Get the left most bit
         bool bit = number & mask_bit;
-        ENGINE_PRINTF("%d", bit);
+        ENGINE_INFO_PRINTF("%d", bit);
 
         // Move the next bit to the left into the mask bit
         number = number << 1;

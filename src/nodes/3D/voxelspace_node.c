@@ -155,7 +155,7 @@ void voxelspace_node_class_draw(mp_obj_t voxelspace_node_base_obj, mp_obj_t came
             uint32_t index = (uint32_t)((y-voxelspace_position->z.value) * heightmap->width + (x-voxelspace_position->x.value));
 
             // Get each RGB channel as a float
-            uint16_t heightmap_value = texture_resource_get_pixel(heightmap, index, NULL);
+            uint16_t heightmap_value = heightmap->get_pixel(heightmap, index, NULL);
             float r = (heightmap_value >> 0) & 0b00011111;
             float g = (heightmap_value >> 5) & 0b00111111;
             float b = (heightmap_value >> 11) & 0b00011111;
@@ -186,7 +186,7 @@ void voxelspace_node_class_draw(mp_obj_t voxelspace_node_base_obj, mp_obj_t came
                 while(ipx >= height_buffer[i] && drawn_thickness < thickness){
                     if(engine_display_store_check_depth(i, ipx, depth)){
                         
-                        engine_draw_pixel(texture_resource_get_pixel(texture, index, NULL), i, ipx, 1.0f, shader);
+                        engine_draw_pixel(texture->get_pixel(texture, index, NULL), i, ipx, 1.0f, shader);
                     }
                     ipx--;
                     drawn_thickness += perspective;
@@ -200,7 +200,7 @@ void voxelspace_node_class_draw(mp_obj_t voxelspace_node_base_obj, mp_obj_t came
                 float drawn_thickness = 0;
                 while(ipx < height_buffer[i] && drawn_thickness < thickness){
                     if(engine_display_store_check_depth(i, ipx, depth)){
-                        engine_draw_pixel(texture_resource_get_pixel(texture, index, NULL), i, ipx, 1.0f, shader);
+                        engine_draw_pixel(texture->get_pixel(texture, index, NULL), i, ipx, 1.0f, shader);
                     }
                     ipx++;
                     drawn_thickness += perspective;
@@ -256,7 +256,7 @@ static mp_obj_t voxelspace_node_class_get_abs_height(mp_obj_t self, mp_obj_t x_o
         uint32_t index = (uint32_t)(((int32_t)z-voxelspace_position->z.value) * heightmap->width + ((int32_t)x-voxelspace_position->x.value));
 
         // Get each RGB channel as a float
-        uint16_t heightmap_value = texture_resource_get_pixel(heightmap, index, NULL);
+        uint16_t heightmap_value = heightmap->get_pixel(heightmap, index, NULL);
         float r = (heightmap_value >> 0) & 0b00011111;
         float g = (heightmap_value >> 5) & 0b00111111;
         float b = (heightmap_value >> 11) & 0b00011111;
