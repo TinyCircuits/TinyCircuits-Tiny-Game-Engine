@@ -6,6 +6,7 @@
 #include "math/engine_math.h"
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 
 // Size of the buffer used to store large reads from LittleFS
 #define TEMP_ROW_BUFFER_SIZE 512
@@ -233,6 +234,12 @@ void create_from_file(texture_resource_class_obj_t *self, mp_obj_t filepath, mp_
     bmih_v1_t info_v1;
     bmih_v2_t info_v2;
     bmih_v3_t info_v3;
+
+    memset(&header, 0, sizeof(bmfh_t));
+    memset(&info_v1, 0, sizeof(bmih_v1_t));
+    memset(&info_v2, 0, sizeof(bmih_v2_t));
+    memset(&info_v3, 0, sizeof(bmih_v3_t));
+
     uint8_t version = bitmap_get_header_and_info(&header, &info_v1, &info_v2, &info_v3);
 
     uint32_t data_offset = sizeof(bmfh_t) + info_v1.bi_size;    // Offset to start of color table or pixel data after 14 bytes `bmfh` section and variable `bmih` section
@@ -482,10 +489,9 @@ uint16_t texture_resource_get_pixel(texture_resource_class_obj_t *texture, uint3
         // Get the color from the color table
         pixel = ((uint16_t*)colors->items)[index_into_colors];
     }else{
-        if(texture->combined_masks == 65535 && texture->has_alpha == false){   // RGB565
+        if((texture->combined_masks == 65535 && texture->has_alpha == false) || texture->combined_masks == 0){   // RGB565
             pixel = ((uint16_t*)data->items)[pixel_offset];
-        }else
-        if(texture->bit_depth == 16){
+        }else{
             // Get the 16-bit color that is masked a certain way
             pixel = ((uint16_t*)data->items)[pixel_offset];
 
