@@ -151,54 +151,28 @@ void bitmap_get_and_fill_color_table(uint16_t *color_table, uint16_t color_count
 }
 
 
-void create_blank_from_params(texture_resource_class_obj_t *self, mp_obj_t width, mp_obj_t height, mp_obj_t color){
-    uint16_t blank_width = mp_obj_get_int(width);
-    uint16_t blank_height = mp_obj_get_int(height);
-    uint32_t blank_pixel_count = blank_width * blank_height;
-    uint16_t blank_color = 0xffff;
-
-    // Figure out the color to fill it with
-    if(color != mp_const_none){
-        // ALready know it's one of these, figure out which
-        if(mp_obj_is_type(color, &const_color_class_type) || mp_obj_is_type(color, &color_class_type)){
-            blank_color = ((color_class_obj_t*)color)->value;
-        }else{
-            blank_color = mp_obj_get_int(color);
-        }
-    }
-
-    // Create MicroPython bytearray
-    mp_obj_array_t *array = m_new_obj(mp_obj_array_t);
-    array->base.type = &mp_type_bytearray;
-    array->typecode = BYTEARRAY_TYPECODE;
-    array->free = 0;
-    array->len = blank_pixel_count * 2;
-    array->items = m_new(byte, array->len);
-
-    // Fill the bytearray with initial color
-    uint16_t *pixels = array->items;
-
-    for(uint16_t ipx=0; ipx<blank_pixel_count; ipx++){
-        pixels[ipx] = blank_color;
-    }
-
-    self->width = blank_width;
-    self->height = blank_height;
-    self->data = array;
-}
-
-
-// Depending on the sign of the height of the image, need to flip the image in each case below
-// https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmapinfo#:~:text=If%20the%20height%20of%20the%20bitmap%20is%20positive
-
-void copy_and_flip(texture_resource_class_obj_t *self, uint32_t pixel_data_start, uint32_t padded_width){
-    // Fetch pixel data from filesystem row by row from bottom to top (flip)
-    for(int32_t y=self->height-1; y>=0; y--){
-        // Calculate and seek to start of each row
-        uint32_t offset = y * padded_width + 0;
-        engine_file_seek(0, pixel_data_start + offset, MP_SEEK_SET);
-        
-        chunked_read_and_store_row(self->unpadded_bytes_width);
+uint32_t get_bit_depth_unpadded_bytes_width(uint16_t bit_depth, uint16_t pixel_width){
+    // https://en.wikipedia.org/wiki/BMP_file_format#:~:text=Each%20row%20in%20the%20Pixel%20array%20is%20padded%20to%20a%20multiple%20of%204%20bytes%20in%20size
+    if(bit_depth == 1){
+        // Each bit in horizontal byte is represents index into color table 
+        // with left-most bits representing pixels at the left of the image
+        //  width=16 -> unpadded=ceil(16/8)=2 -> padded = ceil(2/4)*4 = 4 bytes
+        //  width=17 -> unpadded=ceil(17/8)=3 -> padded = ceil(3/4)*4 = 4 bytes
+        return (uint32_t)ceilf((float)pixel_width / 8.0f);
+    }else if(bit_depth == 4){
+        // Every 4-bit chunk of a each horizontal byte represents index into
+        // color table
+        //  width=16 -> unpadded=ceil(16/2)=8 -> padded=ceil(8/4)*4 = 8 bytes
+        //  width=17 -> unpadded=ceil(17/2)=9 -> padded=ceil(9/4)*4 = 12 bytes
+        return (uint32_t)ceilf((float)pixel_width / 2.0f);
+    }else if(bit_depth == 8){
+        // Every 8-bit horizontal byte represents index into color table
+        return pixel_width;
+    }else{
+        // Every group of two 8-bit horizontal bytes represents a 16-bit color
+        //  width=16 -> unpadded=16*2=32 -> padded=ceil(32/4)*4 = 32 bytes
+        //  width=17 -> unpadded=17*2=34 -> padded=ceil(34/4)*4 = 36 bytes
+        return pixel_width * 2;
     }
 }
 
@@ -292,6 +266,98 @@ uint16_t texture_resource_get_16bit_axrgb(texture_resource_class_obj_t *texture,
     pixel |= (b << 0);
 
     return pixel;
+}
+
+
+void create_blank_from_params(texture_resource_class_obj_t *self, mp_obj_t width, mp_obj_t height, mp_obj_t color, mp_obj_t dit_depth){
+    uint16_t blank_width = mp_obj_get_int(width);
+    uint16_t blank_height = mp_obj_get_int(height);
+    uint32_t blank_pixel_count = blank_width * blank_height;
+    uint16_t blank_color = 0xffff;
+    uint16_t blank_bit_depth = 16;
+    uint16_t blank_data_bytes_size = 0;
+
+    // Figure out the color to fill it with
+    if(color != mp_const_none){
+        // ALready know it's one of these, figure out which
+        if(mp_obj_is_type(color, &const_color_class_type) || mp_obj_is_type(color, &color_class_type)){
+            blank_color = ((color_class_obj_t*)color)->value;
+        }else{
+            blank_color = mp_obj_get_int(color);
+        }
+    }
+
+    if(dit_depth != mp_const_none){
+        blank_bit_depth = mp_obj_get_int(dit_depth);
+    }
+
+    // Calculate number of bytes in full blank TextureResource
+    // in .data section
+    blank_data_bytes_size = blank_height * get_bit_depth_unpadded_bytes_width(blank_bit_depth, blank_width);
+    
+    // Create MicroPython .data bytearray
+    mp_obj_array_t *data = mp_const_none;
+    mp_obj_array_t *colors = mp_const_none;
+
+    data = m_new_obj(mp_obj_array_t);
+    data->base.type = &mp_type_bytearray;
+    data->typecode = BYTEARRAY_TYPECODE;
+    data->free = 0;
+    data->len = blank_data_bytes_size;
+    data->items = m_new(byte, data->len);
+    memset(data->items, 0, data->len);
+
+    // Create MicroPython .color bytearray
+    if(blank_bit_depth < 16){
+        colors = m_new_obj(mp_obj_array_t);
+        colors->base.type = &mp_type_bytearray;
+        colors->typecode = BYTEARRAY_TYPECODE;
+        colors->free = 0;
+        colors->len = (1 << blank_bit_depth) * 2; // Raise two to the power of bit-depth for number of colors adn multiply by 2 for 16-bit RGB565
+        colors->items = m_new(byte, colors->len);
+        memset(colors->items, 0, colors->len);
+    }
+
+    // Fill bitmap bytearray with initial color
+    if(blank_bit_depth < 16){
+        // All of the color indices are already 0, so just make the first color
+        // entry in color index array the color they passed to fill the entire image
+        memcpy(colors->items, &blank_color, 2);
+        self->get_pixel = texture_resource_get_indexed_pixel;
+    }else{
+        uint16_t *pixels = data->items;
+
+        for(uint16_t ipx=0; ipx<blank_pixel_count; ipx++){
+            pixels[ipx] = blank_color;
+        }
+
+        self->get_pixel = texture_resource_get_16bit_rgb565;
+    }
+
+    self->width = blank_width;
+    self->height = blank_height;
+    self->data = data;
+    self->colors = colors;
+    self->bit_depth = blank_bit_depth;
+    self->red_mask   = 0b1111100000000000;
+    self->green_mask = 0b0000011111100000;
+    self->blue_mask  = 0b0000000000011111;
+    self->alpha_mask = 0b0000000000000000;
+}
+
+
+// Depending on the sign of the height of the image, need to flip the image in each case below
+// https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmapinfo#:~:text=If%20the%20height%20of%20the%20bitmap%20is%20positive
+
+void copy_and_flip(texture_resource_class_obj_t *self, uint32_t pixel_data_start, uint32_t padded_width){
+    // Fetch pixel data from filesystem row by row from bottom to top (flip)
+    for(int32_t y=self->height-1; y>=0; y--){
+        // Calculate and seek to start of each row
+        uint32_t offset = y * padded_width + 0;
+        engine_file_seek(0, pixel_data_start + offset, MP_SEEK_SET);
+        
+        chunked_read_and_store_row(self->unpadded_bytes_width);
+    }
 }
 
 
@@ -389,6 +455,11 @@ void create_from_file(texture_resource_class_obj_t *self, mp_obj_t filepath, mp_
         mp_obj_array_t *colors = engine_resource_get_space_bytearray(color_table_size, true);
         bitmap_get_and_fill_color_table((uint16_t*)colors->items, color_count);
         self->colors = colors;
+
+        // The bitmasks changed to RGB565
+        self->red_mask   = 0b1111100000000000;
+        self->green_mask = 0b0000011111100000;
+        self->blue_mask  = 0b0000000000011111;
     }else{
         self->colors = mp_const_none;   // No color table for higher than 8 bit-depths
     }
@@ -403,29 +474,7 @@ void create_from_file(texture_resource_class_obj_t *self, mp_obj_t filepath, mp_
     uint32_t padded_bytes_width= 0;
 
     // https://en.wikipedia.org/wiki/BMP_file_format#:~:text=Each%20row%20in%20the%20Pixel%20array%20is%20padded%20to%20a%20multiple%20of%204%20bytes%20in%20size
-    if(self->bit_depth == 1){
-        // Each bit in horizontal byte is represents index into color table 
-        // with left-most bits representing pixels at the left of the image
-        //  width=16 -> unpadded=ceil(16/8)=2 -> padded = ceil(2/4)*4 = 4 bytes
-        //  width=17 -> unpadded=ceil(17/8)=3 -> padded = ceil(3/4)*4 = 4 bytes
-        self->unpadded_bytes_width = (uint32_t)ceilf((float)self->width / 8.0f);
-    }else if(self->bit_depth == 4){
-        // Every 4-bit chunk of a each horizontal byte represents index into
-        // color table
-        //  width=16 -> unpadded=ceil(16/2)=8 -> padded=ceil(8/4)*4 = 8 bytes
-        //  width=17 -> unpadded=ceil(17/2)=9 -> padded=ceil(9/4)*4 = 12 bytes
-        self->unpadded_bytes_width = (uint32_t)ceilf((float)self->width / 2.0f);
-    }else if(self->bit_depth == 8){
-        // Every 8-bit horizontal byte represents index into color table
-        //  width=16 -> unpadded=16 -> padded=ceil(16/4)*4 = 16 bytes
-        //  width=17 -> unpadded=17 -> padded=ceil(17/4)*4 = 20 bytes
-        self->unpadded_bytes_width = self->width;
-    }else{
-        // Every group of two 8-bit horizontal bytes represents a 16-bit color
-        //  width=16 -> unpadded=16*2=32 -> padded=ceil(32/4)*4 = 32 bytes
-        //  width=17 -> unpadded=17*2=34 -> padded=ceil(34/4)*4 = 36 bytes
-        self->unpadded_bytes_width = self->width * 2;
-    }
+    self->unpadded_bytes_width = get_bit_depth_unpadded_bytes_width(self->bit_depth, self->width);
 
     // Pad to 4 bytes
     padded_bytes_width = (uint32_t)(ceilf((float)self->unpadded_bytes_width / 4.0f) * 4.0f);
@@ -545,7 +594,7 @@ mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, si
             if(mp_obj_is_str(args[0]) && mp_obj_is_bool(args[1])){
                 create_from_file(self, args[0], args[1]);
             }else if(mp_obj_is_int(args[0]) && mp_obj_is_int(args[1])){
-                create_blank_from_params(self, args[0], args[1], mp_const_none);
+                create_blank_from_params(self, args[0], args[1], mp_const_none, mp_const_none);
             }else{
                 mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("TextureResource: ERROR: Expected file path `str` and in_ram `bool` or width `int` and height `int`, got: %s %s"), mp_obj_get_type_str(args[0]), mp_obj_get_type_str(args[1]));
             }
@@ -554,15 +603,24 @@ mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, si
         case 3: // `width`, `height`, and `color`
         {
             if(mp_obj_is_int(args[0]) && mp_obj_is_int(args[1]) && (mp_obj_is_int(args[2]) || mp_obj_is_type(args[2], &const_color_class_type) || mp_obj_is_type(args[2], &color_class_type))){
-                create_blank_from_params(self, args[0], args[1], args[2]);
+                create_blank_from_params(self, args[0], args[1], args[2], mp_const_none);
             }else{
                 mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("TextureResource: ERROR: Expected width `int`, height `int`, and `int` | `const_color` | `color` got: %s %s %s"), mp_obj_get_type_str(args[0]), mp_obj_get_type_str(args[1]), mp_obj_get_type_str(args[2]));
             }
         }
         break;
+        case 4: // `width`, `height`, `color`, and `bit_depth`
+        {
+            if(mp_obj_is_int(args[0]) && mp_obj_is_int(args[1]) && (mp_obj_is_int(args[2]) || mp_obj_is_type(args[2], &const_color_class_type) || mp_obj_is_type(args[2], &color_class_type)) && mp_obj_is_int(args[3])){
+                create_blank_from_params(self, args[0], args[1], args[2], args[3]);
+            }else{
+                mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("TextureResource: ERROR: Expected width `int`, height `int`, `int` | `const_color` | `color`, and `int` got: %s %s %s %s"), mp_obj_get_type_str(args[0]), mp_obj_get_type_str(args[1]), mp_obj_get_type_str(args[2]), mp_obj_get_type_str(args[3]));
+            }
+        }
+        break;
         default:
         {
-            mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("TextureResource: ERROR: Expected 1 ~ 3 arguments, got: %d"), n_args);
+            mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("TextureResource: ERROR: Expected 1 ~ 4 arguments, got: %d"), n_args);
         }
     }
     
@@ -582,10 +640,12 @@ MP_DEFINE_CONST_FUN_OBJ_1(texture_resource_class_del_obj, texture_resource_class
 /*  --- doc ---
     NAME: TextureResource
     ID: TextureResource
-    DESC: Object that holds pixel information. If a file path is specifed, the file needs to be a 16-bit or less format. If at least a width and height are specified instead, a blank white texture is created in RAM but an initial color can also be passed.
+    DESC: Object that holds pixel information. If a file path is specifed, the bitmap needs to be a 16-bit or less format. If at least a width and height are specified instead, a blank white RGB565 texture is created in RAM but an initial color can also be passed. If a `bit_depth` is passed, the first entry in the color table will be set to `color` and the entire image will index to that. Currently, no way to specify a custom pixel format when creating a blank bitmap, only blank RGB565 bitmaps can be created.
     PARAM:  [type=string | int]     [name=filepath | width]     [value=string | 0 ~ 65535]
     PARAM:  [type=bool | int]       [name=in_ram   | height]    [value=True or False | 0 ~ 65535]
     PARAM:  [type=int]              [name=color]                [value=int 16-bit RGB565 (optional)]
+    PARAM:  [type=int]              [name=bit_depth]            [value=1, 4, 8, or 16 (optional)]
+
     ATTR:   [type=float]            [name=width]                [value=any (read-only)]
     ATTR:   [type=float]            [name=height]               [value=any (read-only)]
     ATTR:   [type=int]              [name=bit_depth]            [value=any (read-only)]
