@@ -1199,3 +1199,19 @@ vox_node_perf_test.py, avg. FPS: 44.04103
 
 
  ----- 
+
+
+
+Tue Sep 10 12:02:51 2024 -0400 : 8c51ceb167cadb9d4d944e3298c9852336edd131
+Finish up allowing creating blank indexed bitmaps
+
+{
+line_node_perf_test.py, avg. FPS: 291.3096
+test_opacity_perf_test.py, avg. FPS: 105.7584
+test_perf_test.py, avg. FPS: 124.7724
+circle_node_perf_test.py, avg. FPS: 291.121
+vox_node_perf_test.py, avg. FPS: 42.37601
+}
+
+
+ ----- 
