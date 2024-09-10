@@ -19,11 +19,16 @@ typedef struct texture_resource_class_obj_t{
     uint32_t alpha_mask;
     uint32_t combined_masks;
 
-    bool has_alpha;
-
     mp_obj_t colors;
     mp_obj_t data;
     bool in_ram;
+
+    // Used by 16 xrgb or argb formats to move masked bits
+    // all the way to the right for mapping
+    uint16_t a_mask_right_shift_amount;
+    uint16_t r_mask_right_shift_amount;
+    uint16_t g_mask_right_shift_amount;
+    uint16_t b_mask_left_shift_amount;
 
     // Custom assigned function for getting pixels
     // from the texture_resource instance at an offset

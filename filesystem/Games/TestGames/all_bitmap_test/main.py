@@ -50,6 +50,8 @@ while True:
     if engine.tick() is False:
         continue
 
+    print(engine.get_running_fps())
+
     if engine_io.LEFT.is_pressed:
         cam.position.x -= 0.5
     elif engine_io.RIGHT.is_pressed:

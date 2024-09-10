@@ -258,7 +258,7 @@ uint16_t texture_resource_get_16bit_rgb565(texture_resource_class_obj_t *texture
 }
 
 
-uint16_t texture_resource_get_16bit_argb(texture_resource_class_obj_t *texture, uint32_t pixel_offset, float *out_alpha){
+uint16_t texture_resource_get_16bit_axrgb(texture_resource_class_obj_t *texture, uint32_t pixel_offset, float *out_alpha){
     mp_obj_array_t *data = texture->data;
 
     // Get the 16-bit color that is masked a certain way
@@ -276,58 +276,15 @@ uint16_t texture_resource_get_16bit_argb(texture_resource_class_obj_t *texture, 
     uint16_t g = pixel & texture->green_mask;
     uint16_t b = pixel & texture->blue_mask;
 
-    // Now each channel needs to be shifted all the way to the right.
-    // Need to calculate how many bits are to the right of each channel
-    // mask (r_mask, g_mask, etc.). To do this, figure how the number that
-    // encompass the mask bits and the bit to the right (always a prw of 2 - 1)
-    // Since a^b=c, b=log_a(c): https://math.stackexchange.com/a/673801
-    //
-    //  Continued example:  a_all_right = 2^ceil(log2(a_mask))-1 = 2^ceil(log2(0b1_00000_00000_00000 + 1))-1 = 2^ceil(log2(32768 + 1))-1 = 2^ceil(15.00004) - 1 = (2^16)-1 = 65535 = 0b1111111111111111
-    //                      r_all_right = 2^ceil(log2(r_mask))-1 = 2^ceil(log2(0b0_11111_00000_00000 + 1))-1 = 2^ceil(log2(31744 + 1))-1 = 2^ceil(14.954) - 1   = (2^15)-1 = 32767 = 0b0111111111111111
-    //                      g_all_right = 2^ceil(log2(g_mask))-1 = 2^ceil(log2(0b0_00000_11111_00000 + 1))-1 = 2^ceil(log2(992 + 1))-1   = 2^ceil(9.9556) - 1   = (2^10)-1 = 2047  = 0b0000001111111111
-    //                      b_all_right = 2^ceil(log2(b_mask))-1 = 2^ceil(log2(0b0_00000_00000_11111 + 1))-1 = 2^ceil(log2(31 + 1))-1    = 2^ceil(5)  - 1       = (2^5)-1  = 32    = 0b0000000000011111
-    //
-    // Add one so that rounding up is always to the next int
-    uint16_t a_all_right = (uint16_t)powf(2, ceilf(log2f(texture->alpha_mask+1))) - 1;
-    uint16_t r_all_right = (uint16_t)powf(2, ceilf(log2f(texture->red_mask+1))) - 1;
-    uint16_t g_all_right = (uint16_t)powf(2, ceilf(log2f(texture->green_mask+1))) - 1;
-    uint16_t b_all_right = (uint16_t)powf(2, ceilf(log2f(texture->blue_mask+1))) - 1;
-
-    // The above masks include the bits of the color channel mask, subtract that
-    // mask out of the `all_right` masks
-    //
-    //  Continued example:  a_just_right = a_all_right - a_mask = 0b1111111111111111 - 0b1_00000_00000_00000 = 0b0111111111111111 = 32767
-    //                      r_just_right = r_all_right - r_mask = 0b0111111111111111 - 0b0_11111_00000_00000 = 0b0000001111111111 = 1023
-    //                      g_just_right = g_all_right - g_mask = 0b0000001111111111 - 0b0_00000_11111_00000 = 0b0000000000011111 = 31
-    //                      b_just_right = b_all_right - b_mask = 0b0000000000011111 - 0b0_00000_00000_11111 = 0b0000000000000000 = 0
-    uint16_t a_just_right = a_all_right - texture->alpha_mask;
-    uint16_t r_just_right = r_all_right - texture->red_mask;
-    uint16_t g_just_right = g_all_right - texture->green_mask;
-    uint16_t b_just_right = b_all_right - texture->blue_mask;
-
-    // Using the bits that are just to the right of each color channel mask, calculate
-    // how many bits there are:
-    //
-    //  Continued example:  a_right_shift_amount = ceil(log2(a_just_right)) = ceil(log2(32767)) = ceil(14.99996) = 15
-    //                      r_right_shift_amount = ceil(log2(r_just_right)) = ceil(log2(1023))  = ceil(9.999)    = 10
-    //                      g_right_shift_amount = ceil(log2(g_just_right)) = ceil(log2(31))    = ceil(4.954)    = 5
-    //                      b_right_shift_amount = ceil(log2(b_just_right)) = ceil(log2(0))     = ceil(0)        = 0
-    uint16_t a_right_shift_amount = (uint16_t)ceilf(log2f(a_just_right));
-    uint16_t r_right_shift_amount = (uint16_t)ceilf(log2f(r_just_right));
-    uint16_t g_right_shift_amount = (uint16_t)ceilf(log2f(g_just_right));
-    uint16_t b_right_shift_amount = (uint16_t)ceilf(log2f(b_just_right));
-
-    a = a >> a_right_shift_amount;
-    r = r >> r_right_shift_amount;
-    g = g >> g_right_shift_amount;
-    b = b >> b_right_shift_amount;
+    // The shift amounts are calculated once at the end of
+    // creating the texture resource
+    a = a >> texture->a_mask_right_shift_amount;
+    r = r >> texture->r_mask_right_shift_amount;
+    g = g >> texture->g_mask_right_shift_amount;
+    b = b << texture->b_mask_left_shift_amount;
 
     // Alpha is special and is output as 0.0 ~ 1.0
-    if(out_alpha != NULL) *out_alpha = engine_math_map_clamp((float)a, 0.0f, (float)(texture->alpha_mask >> a_right_shift_amount), 0.0f, 1.0f);
-
-    r = (uint16_t)engine_math_map_clamp((float)r, 0.0f, (float)(texture->red_mask >> r_right_shift_amount), 0.0f, 31.0f);
-    g = (uint16_t)engine_math_map_clamp((float)g, 0.0f, (float)(texture->green_mask >> g_right_shift_amount), 0.0f, 63.0f);
-    b = (uint16_t)engine_math_map_clamp((float)b, 0.0f, (float)(texture->blue_mask >> b_right_shift_amount), 0.0f, 31.0f);
+    if(out_alpha != NULL) *out_alpha = engine_math_map((float)a, 0.0f, (float)(texture->alpha_mask >> texture->a_mask_right_shift_amount), 0.0f, 1.0f);
 
     pixel = 0;
     pixel |= (r << 11);
@@ -432,15 +389,8 @@ void create_from_file(texture_resource_class_obj_t *self, mp_obj_t filepath, mp_
         mp_obj_array_t *colors = engine_resource_get_space_bytearray(color_table_size, true);
         bitmap_get_and_fill_color_table((uint16_t*)colors->items, color_count);
         self->colors = colors;
-        self->has_alpha = false;        // Less than 16-bits does not have alpha (although it may be possible)
     }else{
         self->colors = mp_const_none;   // No color table for higher than 8 bit-depths
-
-        // Check if this does have alpha which means the
-        // pixel data will be 5658 instead of just 565
-        if(self->alpha_mask != 0){
-            self->has_alpha = true;
-        }
     }
 
     // Now that we know the bitmap information, fill out some
@@ -512,10 +462,62 @@ void create_from_file(texture_resource_class_obj_t *self, mp_obj_t filepath, mp_
     if(self->bit_depth < 16){
         self->get_pixel = texture_resource_get_indexed_pixel;
     }else{
-        if((self->combined_masks == 65535 && self->has_alpha == false) || self->combined_masks == 0){   // RGB565
+        if((self->combined_masks == 65535 && self->alpha_mask == 0) || self->combined_masks == 0){   // RGB565
             self->get_pixel = texture_resource_get_16bit_rgb565;
         }else{
-            self->get_pixel = texture_resource_get_16bit_argb;
+            self->get_pixel = texture_resource_get_16bit_axrgb;
+
+            // See: `texture_resource_get_16bit_argb`
+            // Each channel needs to be shifted all the way to the right.
+            // Need to calculate how many bits are to the right of each channel
+            // mask (r_mask, g_mask, etc.). To do this, figure how the number that
+            // encompass the mask bits and the bit to the right (always a prw of 2 - 1)
+            // Since a^b=c, b=log_a(c): https://math.stackexchange.com/a/673801
+            //
+            //  Continued example:  a_all_right = 2^ceil(log2(a_mask))-1 = 2^ceil(log2(0b1_00000_00000_00000 + 1))-1 = 2^ceil(log2(32768 + 1))-1 = 2^ceil(15.00004) - 1 = (2^16)-1 = 65535 = 0b1111111111111111
+            //                      r_all_right = 2^ceil(log2(r_mask))-1 = 2^ceil(log2(0b0_11111_00000_00000 + 1))-1 = 2^ceil(log2(31744 + 1))-1 = 2^ceil(14.954) - 1   = (2^15)-1 = 32767 = 0b0111111111111111
+            //                      g_all_right = 2^ceil(log2(g_mask))-1 = 2^ceil(log2(0b0_00000_11111_00000 + 1))-1 = 2^ceil(log2(992 + 1))-1   = 2^ceil(9.9556) - 1   = (2^10)-1 = 2047  = 0b0000001111111111
+            //                      not needed for blue, already in right-most bits
+            //
+            // Add one so that rounding up is always to the next int
+            uint16_t a_all_right = (uint16_t)powf(2, ceilf(log2f(self->alpha_mask+1))) - 1;
+            uint16_t r_all_right = (uint16_t)powf(2, ceilf(log2f(self->red_mask+1))) - 1;
+            uint16_t g_all_right = (uint16_t)powf(2, ceilf(log2f(self->green_mask+1))) - 1;
+
+            // The above masks include the bits of the color channel mask, subtract that
+            // mask out of the `all_right` masks
+            //
+            //  Continued example:  a_just_right = a_all_right - a_mask = 0b1111111111111111 - 0b1_00000_00000_00000 = 0b0111111111111111 = 32767
+            //                      r_just_right = r_all_right - r_mask = 0b0111111111111111 - 0b0_11111_00000_00000 = 0b0000001111111111 = 1023
+            //                      g_just_right = g_all_right - g_mask = 0b0000001111111111 - 0b0_00000_11111_00000 = 0b0000000000011111 = 31
+            //                      not needed for blue, already in right-most bits, would be 0
+            uint16_t a_just_right = a_all_right - self->alpha_mask;
+            uint16_t r_just_right = r_all_right - self->red_mask;
+            uint16_t g_just_right = g_all_right - self->green_mask;
+
+            // Using the bits that are just to the right of each color channel mask, calculate
+            // how many bits there are:
+            //
+            //  Continued example:  a_right_shift_amount = ceil(log2(a_just_right)) = ceil(log2(32767)) = ceil(14.99996) = 15
+            //                      r_right_shift_amount = ceil(log2(r_just_right)) = ceil(log2(1023))  = ceil(9.999)    = 10
+            //                      g_right_shift_amount = ceil(log2(g_just_right)) = ceil(log2(31))    = ceil(4.954)    = 5
+            //                      not needed for blue, already in right-most bits, would be 0
+            self->a_mask_right_shift_amount = (uint16_t)ceilf(log2f(a_just_right));
+            self->r_mask_right_shift_amount = (uint16_t)ceilf(log2f(r_just_right));
+            self->g_mask_right_shift_amount = (uint16_t)ceilf(log2f(g_just_right));
+
+            // Now that the bits for each channel are all the way to the right, need
+            // to shift them so that the bits are in the left/high side of the channel
+            // of the RGB565 channel (except for alpha)
+            //
+            //  Continued example:  r_right_shift_amount -= ceil(log2(0b00011111)) - ceil(log2(r_mask >> r_right_shift_amount)) -= ceil(log2(31)) - ceil(log2(0b0_11111_00000_00000 >> 10)) -= 5 - ceil(log2(31)) -= 5 - 5 -= 0
+            //                      g_right_shift_amount -= ceil(log2(0b00111111)) - ceil(log2(g_mask >> g_right_shift_amount)) -= ceil(log2(63)) - ceil(log2(0b0_00000_11111_00000 >> 5))  -= 6 - ceil(log2(31)) -= 6 - 5 -= 1
+            //           special -> b_left_shift_amount -= ceil(log2(0b00011111)) - ceil(log2(b_mask))                          -= ceil(log2(31)) - ceil(log2(0b0_00000_00000_11111))       -= 5 - ceil(log2(31)) -= 5 - 5 -= 0
+            //
+            //  Blue channel is already all the right, need to shift it left to get it into the RGB565 hi bits
+            self->r_mask_right_shift_amount -= (uint16_t)(ceilf(log2f(0b00011111)) - ceilf(log2f(self->red_mask >> self->r_mask_right_shift_amount)));
+            self->g_mask_right_shift_amount -= (uint16_t)(ceilf(log2f(0b00111111)) - ceilf(log2f(self->green_mask >> self->g_mask_right_shift_amount)));
+            self->b_mask_left_shift_amount   = (uint16_t)(ceilf(log2f(0b00011111)) - ceilf(log2f(self->blue_mask)));
         }
     }
 }
@@ -580,13 +582,19 @@ MP_DEFINE_CONST_FUN_OBJ_1(texture_resource_class_del_obj, texture_resource_class
 /*  --- doc ---
     NAME: TextureResource
     ID: TextureResource
-    DESC: Object that holds pixel information. If a file path is specifed, the file needs to be a 16-bit RGB565 .bmp file. If at least a width and height are specified instead, a blank white texture is created in RAM but an initial color can also be passed.
+    DESC: Object that holds pixel information. If a file path is specifed, the file needs to be a 16-bit or less format. If at least a width and height are specified instead, a blank white texture is created in RAM but an initial color can also be passed.
     PARAM:  [type=string | int]     [name=filepath | width]     [value=string | 0 ~ 65535]
     PARAM:  [type=bool | int]       [name=in_ram   | height]    [value=True or False | 0 ~ 65535]
     PARAM:  [type=int]              [name=color]                [value=int 16-bit RGB565 (optional)]
-    ATTR:   [type=float]        [name=width]     [value=any (read-only)]
-    ATTR:   [type=float]        [name=height]    [value=any (read-only)]
-    ATTR:   [type=bytearray]    [name=data]      [value=RGB565 bytearray (note, if in_ram is False, then writing to this is not a valid operation)]
+    ATTR:   [type=float]            [name=width]                [value=any (read-only)]
+    ATTR:   [type=float]            [name=height]               [value=any (read-only)]
+    ATTR:   [type=int]              [name=bit_depth]            [value=any (read-only)]
+    ATTR:   [type=int]              [name=red_mask]             [value=any (read-only)]
+    ATTR:   [type=int]              [name=blue_mask]            [value=any (read-only)]
+    ATTR:   [type=int]              [name=green_mask]           [value=any (read-only)]
+    ATTR:   [type=int]              [name=alpha_mask]           [value=any (read-only)]
+    ATTR:   [type=bytearray]        [name=data]                 [value=RGB565 bytearray (note, if in_ram is False, then writing to this is not a valid operation)]
+    ATTR:   [type=bytearray]        [name=colors]               [value=RGB565 bytearray (when the bit-depth is less than 16, this will be filled with RGB565 converted colors)]
 */ 
 static void texture_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing TextureResource attr");
@@ -619,9 +627,6 @@ static void texture_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj
             break;
             case MP_QSTR_alpha_mask:
                 destination[0] = mp_obj_new_int(self->alpha_mask);
-            break;
-            case MP_QSTR_has_alpha:
-                destination[0] = mp_obj_new_bool(self->has_alpha);
             break;
             case MP_QSTR_colors:
                 destination[0] = self->colors;
@@ -658,19 +663,16 @@ static void texture_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj
                 mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("TextureResource: ERROR: Bit depth of a texture cannot be set!"));
             break;
             case MP_QSTR_red_mask:
-                destination[0] = mp_obj_new_int(self->red_mask);
+                mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("TextureResource: ERROR: Red mask of a texture cannot be set!"));
             break;
             case MP_QSTR_green_mask:
-                destination[0] = mp_obj_new_int(self->green_mask);
+                mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("TextureResource: ERROR: Green mask of a texture cannot be set!"));
             break;
             case MP_QSTR_blue_mask:
-                destination[0] = mp_obj_new_int(self->blue_mask);
+                mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("TextureResource: ERROR: Blue mask of a texture cannot be set!"));
             break;
             case MP_QSTR_alpha_mask:
-                destination[0] = mp_obj_new_int(self->alpha_mask);
-            break;
-            case MP_QSTR_has_alpha:
-                mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("TextureResource: ERROR: `has_alpha` cannot be set!"));
+                mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("TextureResource: ERROR: Alpha mask of a texture cannot be set!"));
             break;
             default:
                 return; // Fail
