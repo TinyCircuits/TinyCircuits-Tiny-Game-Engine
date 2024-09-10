@@ -25,6 +25,8 @@ uint16_t engine_color_set_b_float(uint16_t color, float b);
 
 uint16_t engine_color_from_rgb_float(float r, float g, float b);
 
+uint16_t engine_color_16_from_24_bit_rgb(uint8_t r, uint8_t g, uint8_t b);
+
 bool engine_color_is_instance(mp_obj_t obj);
 
 // Returns an RGB565 color value from the specified Color or int (RGB565).
