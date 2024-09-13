@@ -54,3 +54,8 @@ void engine_link_clear_send(){
 void engine_link_clear_read(){
     
 }
+
+
+bool engine_link_is_host(){
+    return false;
+}
