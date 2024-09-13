@@ -40,7 +40,7 @@ bool is_host = false;   // Are we acting as a USB host
 // discovery (when `start` is true). Need to flip since the
 // units could have started disconnected
 const uint32_t discovery_flip_ticks_max_base = 75000;  
-const uint32_t discovery_flip_ticks_max_rand = 20000;
+const uint32_t discovery_flip_ticks_max_rand = 100000;
 uint32_t discovery_flip_ticks_max = discovery_flip_ticks_max_base + discovery_flip_ticks_max_rand;
 uint32_t discovery_flip_ticks_count = 0;
 
@@ -59,7 +59,6 @@ void tuh_mount_cb(uint8_t daddr){
 // only time we can get its device index
 void tuh_cdc_mount_cb(uint8_t idx){
     mounted_device_cdc_daddr = idx;
-    engine_io_rp3_set_indicator(true);
 }
 
 
