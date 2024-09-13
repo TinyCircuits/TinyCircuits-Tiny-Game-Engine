@@ -7,7 +7,6 @@ from engine_math import Vector2
 import engine_io
 
 import os
-os.chdir("Games/TestGames/all_bitmap_test")
 cam = CameraNode()
 
 # Textures

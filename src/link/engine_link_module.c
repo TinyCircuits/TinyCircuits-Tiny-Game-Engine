@@ -328,6 +328,22 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_link_module_clear_read_obj, engine_link_module_
 
 
 /*  --- doc ---
+    NAME: is_host
+    ID: engine_link_is_host
+    DESC: When not connected, always returns `False`. If connected, returns `True` the unit is acting as the USB host, otherwise returns `False` if acting as a USB device.
+    RETURN: True or False
+*/
+static mp_obj_t engine_link_module_is_host(){
+    if(engine_link_connected() == false){
+        return mp_obj_new_bool(false);
+    }
+
+    return mp_obj_new_bool(engine_link_is_host());
+}
+MP_DEFINE_CONST_FUN_OBJ_0(engine_link_module_is_host_obj, engine_link_module_is_host);
+
+
+/*  --- doc ---
     NAME: engine_link
     ID: engine_link
     DESC: Module for sending data from one Thumby Color to another
@@ -342,6 +358,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_link_module_clear_read_obj, engine_link_module_
     ATTR: [type=function]   [name={ref_link:engine_link_available}]             [value=function]
     ATTR: [type=function]   [name={ref_link:engine_link_clear_send}]            [value=function]
     ATTR: [type=function]   [name={ref_link:engine_link_clear_read}]            [value=function]
+    ATTR: [type=function]   [name={ref_link:engine_link_is_host}]               [value=function]
 */ 
 static const mp_rom_map_elem_t engine_link_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_link) },
@@ -356,6 +373,7 @@ static const mp_rom_map_elem_t engine_link_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_available), (mp_obj_t)&engine_link_module_available_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_clear_send), (mp_obj_t)&engine_link_module_clear_send_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_clear_read), (mp_obj_t)&engine_link_module_clear_read_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_is_host), (mp_obj_t)&engine_link_module_is_host_obj },
 };
 
 // Module init

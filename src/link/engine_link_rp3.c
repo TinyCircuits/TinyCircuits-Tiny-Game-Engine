@@ -224,3 +224,8 @@ void engine_link_clear_read(){
         ringbuf_clear(&stdin_ringbuf);
     }
 }
+
+
+bool engine_link_is_host(){
+    return is_host;
+}
