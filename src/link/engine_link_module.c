@@ -189,6 +189,9 @@ static mp_obj_t engine_link_module_send(size_t n_args, const mp_obj_t *args){
     count = min3(count, send_buffer->len, send_buffer->len-offset);
     engine_link_send((uint8_t*)send_buffer->items, count, offset);
 
+    // Run the task first (for host) to get data flowing
+    engine_link_task();
+
     return mp_obj_new_int(count);
 }
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_link_module_send_obj, 1, 3, engine_link_module_send);
@@ -224,6 +227,10 @@ static mp_obj_t engine_link_module_read(mp_obj_t count_obj){
 
     // Read and return array
     engine_link_read_into((uint8_t*)array->items, length, 0);
+
+    // Run the task first (for host) to get data flowing
+    engine_link_task();
+
     return array;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(engine_link_module_read_obj, engine_link_module_read);
@@ -284,6 +291,9 @@ static mp_obj_t engine_link_module_read_into(size_t n_args, const mp_obj_t *args
     count = min3(count, read_buffer->len, read_buffer->len-offset);
     engine_link_read_into((uint8_t*)read_buffer->items, count, offset);
 
+    // Run the task first (for host) to get data flowing
+    engine_link_task();
+
     return mp_obj_new_int(count);
 }
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_link_module_read_into_obj, 1, 3, engine_link_module_read_into);
@@ -296,6 +306,9 @@ MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_link_module_read_into_obj, 1, 3, engi
     RETURN: Number of bytes available to read (int)
 */
 static mp_obj_t engine_link_module_available(){
+    // Run the task first (for host) to get data flowing
+    engine_link_task();
+
     return mp_obj_new_int(engine_link_available());
 }
 MP_DEFINE_CONST_FUN_OBJ_0(engine_link_module_available_obj, engine_link_module_available);

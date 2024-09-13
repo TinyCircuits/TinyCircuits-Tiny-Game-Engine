@@ -181,6 +181,9 @@ void engine_link_send(const uint8_t *send_buffer, uint32_t count, uint32_t offse
 }
 
 
+// This is an unsafe raw function, functions that call this are expected
+// to make sure reads will not go out of bounds and that there is enough
+// data in the ring buffers
 void engine_link_read_into(uint8_t *buffer, uint32_t count, uint32_t offset){
     ringbuf_t *ringbuf = NULL;
 
