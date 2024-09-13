@@ -226,6 +226,11 @@ void engine_link_clear_read(){
 }
 
 
+bool engine_link_is_started(){
+    return started;
+}
+
+
 bool engine_link_is_host(){
     return is_host;
 }

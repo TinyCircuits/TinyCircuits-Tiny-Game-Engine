@@ -18,6 +18,7 @@ uint32_t engine_link_available();
 void engine_link_clear_send();
 void engine_link_clear_read();
 
+bool engine_link_is_started();
 bool engine_link_is_host();
 
 #endif  // ENGINE_LINK_UNIX_H

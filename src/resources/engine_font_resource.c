@@ -23,7 +23,14 @@ texture_resource_class_obj_t font_texture = {
   .in_ram = false,
   .width = 480,
   .height = 8,
-  .data = &font_texture_data
+  .bit_depth = 16,
+  .red_mask = 0b1111100000000000,
+  .green_mask = 0b0000011111100000,
+  .blue_mask = 0b0000000000011111,
+  .combined_masks = 0xffff,
+  .colors = mp_const_none,
+  .data = &font_texture_data,
+  .get_pixel = texture_resource_get_16bit_rgb565,
 };
 
 

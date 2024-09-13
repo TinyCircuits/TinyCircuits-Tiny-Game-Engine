@@ -75,6 +75,8 @@ class SyncedPlayer(Rectangle2DNode):
 
 
 player = SyncedPlayer()
+text_node_started = Text2DNode(text="started: False", position=Vector2(0, -30))
+text_node_is_host = Text2DNode(text="is host: False", position=Vector2(0, -15))
 text_node = Text2DNode(text="not connected")
 text_node_cb = Text2DNode(text="CB: not connected", position=Vector2(0, 15))
 text_node_available = Text2DNode(text="available: ~", position=Vector2(0, 30))
@@ -98,6 +100,10 @@ engine_link.set_disconnected_cb(disconnected)
 while True:
     if not engine.tick():
         continue
+
+    text_node_started.text = "started: " + str(engine_link.is_started())
+
+    text_node_is_host.text = "is host: " + str(engine_link.is_host())
 
     text_node_available.text = "available: " + str(engine_link.available())
     

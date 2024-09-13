@@ -10,9 +10,6 @@ typedef struct texture_resource_class_obj_t{
     int32_t height;
     uint8_t bit_depth;
 
-    // The number of bytes in each row of the image (stride)
-    uint32_t unpadded_bytes_width;
-
     uint32_t red_mask;
     uint32_t green_mask;
     uint32_t blue_mask;
@@ -37,6 +34,10 @@ typedef struct texture_resource_class_obj_t{
 
 extern const mp_obj_type_t texture_resource_class_type;
 
+
+uint16_t texture_resource_get_indexed_pixel(texture_resource_class_obj_t *texture, uint32_t pixel_offset, float *out_alpha);
+uint16_t texture_resource_get_16bit_rgb565(texture_resource_class_obj_t *texture, uint32_t pixel_offset, float *out_alpha);
+uint16_t texture_resource_get_16bit_axrgb(texture_resource_class_obj_t *texture, uint32_t pixel_offset, float *out_alpha);
 mp_obj_t texture_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args);
 
 #endif  // ENGINE_TEXTURE_RESOURCE_H

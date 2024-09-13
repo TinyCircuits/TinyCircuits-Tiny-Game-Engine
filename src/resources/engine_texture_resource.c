@@ -349,14 +349,14 @@ void create_blank_from_params(texture_resource_class_obj_t *self, mp_obj_t width
 // Depending on the sign of the height of the image, need to flip the image in each case below
 // https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmapinfo#:~:text=If%20the%20height%20of%20the%20bitmap%20is%20positive
 
-void copy_and_flip(texture_resource_class_obj_t *self, uint32_t pixel_data_start, uint32_t padded_width){
+void copy_and_flip(texture_resource_class_obj_t *self, uint32_t pixel_data_start, uint32_t padded_width, uint32_t unpadded_bytes_width){
     // Fetch pixel data from filesystem row by row from bottom to top (flip)
     for(int32_t y=self->height-1; y>=0; y--){
         // Calculate and seek to start of each row
         uint32_t offset = y * padded_width + 0;
         engine_file_seek(0, pixel_data_start + offset, MP_SEEK_SET);
         
-        chunked_read_and_store_row(self->unpadded_bytes_width);
+        chunked_read_and_store_row(unpadded_bytes_width);
     }
 }
 
@@ -474,10 +474,10 @@ void create_from_file(texture_resource_class_obj_t *self, mp_obj_t filepath, mp_
     uint32_t padded_bytes_width= 0;
 
     // https://en.wikipedia.org/wiki/BMP_file_format#:~:text=Each%20row%20in%20the%20Pixel%20array%20is%20padded%20to%20a%20multiple%20of%204%20bytes%20in%20size
-    self->unpadded_bytes_width = get_bit_depth_unpadded_bytes_width(self->bit_depth, self->width);
+    uint32_t unpadded_bytes_width = get_bit_depth_unpadded_bytes_width(self->bit_depth, self->width);
 
     // Pad to 4 bytes
-    padded_bytes_width = (uint32_t)(ceilf((float)self->unpadded_bytes_width / 4.0f) * 4.0f);
+    padded_bytes_width = (uint32_t)(ceilf((float)unpadded_bytes_width / 4.0f) * 4.0f);
 
     // Figure out the total space in RAM or FLASH scratch to allocate
     // for the final image data.
@@ -487,7 +487,7 @@ void create_from_file(texture_resource_class_obj_t *self, mp_obj_t filepath, mp_
     if(self->bit_depth < 16){
         // Images using indexed colors have their index data copied
         // directly to the .data space in RAM or FLASH
-        total_required_space = self->unpadded_bytes_width * self->height;
+        total_required_space = unpadded_bytes_width * self->height;
     }else{
         // Not any of the other case, must be 16-bit image which will
         // get its pixel data directly copied to RAM or FLASH even if
@@ -501,7 +501,7 @@ void create_from_file(texture_resource_class_obj_t *self, mp_obj_t filepath, mp_
 
     // All pixels are directly copied without modification
     // for 1 ~ 16 bit bitmaps
-    copy_and_flip(self, header.bf_off_bits, padded_bytes_width);
+    copy_and_flip(self, header.bf_off_bits, padded_bytes_width, unpadded_bytes_width);
 
     // Close reading file and stop storing in resource space
     engine_file_close(0);
