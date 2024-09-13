@@ -71,6 +71,9 @@ void engine_link_module_reset(){
     RETURN: True or False
 */ 
 static mp_obj_t engine_link_module_connected(){
+    // Run this for cases where someone is using a blocking loop
+    engine_link_module_task();
+
     if(engine_link_connected()){
         return mp_const_true;
     }else{
@@ -190,7 +193,7 @@ static mp_obj_t engine_link_module_send(size_t n_args, const mp_obj_t *args){
     engine_link_send((uint8_t*)send_buffer->items, count, offset);
 
     // Run the task first (for host) to get data flowing
-    engine_link_task();
+    engine_link_module_task();
 
     return mp_obj_new_int(count);
 }
@@ -229,7 +232,7 @@ static mp_obj_t engine_link_module_read(mp_obj_t count_obj){
     engine_link_read_into((uint8_t*)array->items, length, 0);
 
     // Run the task first (for host) to get data flowing
-    engine_link_task();
+    engine_link_module_task();
 
     return array;
 }
@@ -292,7 +295,7 @@ static mp_obj_t engine_link_module_read_into(size_t n_args, const mp_obj_t *args
     engine_link_read_into((uint8_t*)read_buffer->items, count, offset);
 
     // Run the task first (for host) to get data flowing
-    engine_link_task();
+    engine_link_module_task();
 
     return mp_obj_new_int(count);
 }
@@ -307,7 +310,7 @@ MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_link_module_read_into_obj, 1, 3, engi
 */
 static mp_obj_t engine_link_module_available(){
     // Run the task first (for host) to get data flowing
-    engine_link_task();
+    engine_link_module_task();
 
     return mp_obj_new_int(engine_link_available());
 }
