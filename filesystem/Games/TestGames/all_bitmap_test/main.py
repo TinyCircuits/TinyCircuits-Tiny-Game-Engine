@@ -45,6 +45,21 @@ spr_16bit_argb_4444.scale.y = 16/tex_16bit_argb_4444.height
 
 spr_16bit_rgb_565_no_bf_image_size = Sprite2DNode(texture=tex_16bit_rgb_565_no_bf_image_size, position=Vector2(105, 24))
 
+
+# Odd number dimensions sprites
+bg_bmp1 = TextureResource("scoreBG1.bmp", False)
+bg_spr1 = Sprite2DNode(position=Vector2(-30, -50), texture=bg_bmp1, opacity=1)
+
+bg_bmp4 = TextureResource("scoreBG4.bmp", False)
+bg_spr4 = Sprite2DNode(position=Vector2(-30, -20), texture=bg_bmp4, opacity=1)
+
+bg_bmp8 = TextureResource("scoreBG8.bmp", False)
+bg_spr8 = Sprite2DNode(position=Vector2(-30, 10), texture=bg_bmp8, opacity=1)
+
+bg_bmp16 = TextureResource("scoreBG16.bmp", False)
+bg_spr16 = Sprite2DNode(position=Vector2(-30, 40), texture=bg_bmp16, opacity=1)
+
+
 while True:
     if engine.tick() is False:
         continue

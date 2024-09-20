@@ -151,28 +151,32 @@ void bitmap_get_and_fill_color_table(uint16_t *color_table, uint16_t color_count
 }
 
 
-uint32_t get_bit_depth_unpadded_bytes_width(uint16_t bit_depth, uint16_t pixel_width){
+void get_bit_depth_strides(uint16_t bit_depth, uint16_t pixel_width, uint32_t *unpadded_byte_stride, uint16_t *pixel_stride){
     // https://en.wikipedia.org/wiki/BMP_file_format#:~:text=Each%20row%20in%20the%20Pixel%20array%20is%20padded%20to%20a%20multiple%20of%204%20bytes%20in%20size
     if(bit_depth == 1){
         // Each bit in horizontal byte is represents index into color table 
         // with left-most bits representing pixels at the left of the image
         //  width=16 -> unpadded=ceil(16/8)=2 -> padded = ceil(2/4)*4 = 4 bytes
         //  width=17 -> unpadded=ceil(17/8)=3 -> padded = ceil(3/4)*4 = 4 bytes
-        return (uint32_t)ceilf((float)pixel_width / 8.0f);
+        *unpadded_byte_stride = (uint32_t)ceilf((float)pixel_width / 8.0f);
+        *pixel_stride = *unpadded_byte_stride*8;
     }else if(bit_depth == 4){
         // Every 4-bit chunk of a each horizontal byte represents index into
         // color table
         //  width=16 -> unpadded=ceil(16/2)=8 -> padded=ceil(8/4)*4 = 8 bytes
         //  width=17 -> unpadded=ceil(17/2)=9 -> padded=ceil(9/4)*4 = 12 bytes
-        return (uint32_t)ceilf((float)pixel_width / 2.0f);
+        *unpadded_byte_stride = (uint32_t)ceilf((float)pixel_width / 2.0f);
+        *pixel_stride = *unpadded_byte_stride*2;
     }else if(bit_depth == 8){
         // Every 8-bit horizontal byte represents index into color table
-        return pixel_width;
+        *unpadded_byte_stride = pixel_width;
+        *pixel_stride = pixel_width;
     }else{
         // Every group of two 8-bit horizontal bytes represents a 16-bit color
         //  width=16 -> unpadded=16*2=32 -> padded=ceil(32/4)*4 = 32 bytes
         //  width=17 -> unpadded=17*2=34 -> padded=ceil(34/4)*4 = 36 bytes
-        return pixel_width * 2;
+        *unpadded_byte_stride = pixel_width * 2;
+        *pixel_stride = pixel_width;
     }
 }
 
@@ -190,6 +194,7 @@ uint16_t texture_resource_get_indexed_pixel(texture_resource_class_obj_t *textur
     //  1bit_byte_index = floor((bits_per_pixel * offset) / 8.0f) = floor((1*18)/8) = 2
     //  4bit_byte_index = floor((bits_per_pixel * offset) / 8.0f) = floor((4*4)/8)  = 2
     //  8bit_byte_index = floor((bits_per_pixel * offset) / 8.0f) = floor((8*2)/8)  = 2
+    // uint32_t byte_containing_pixel_index = texture->bit_depth*pixel_offset/8;
     uint32_t byte_containing_pixel_index = texture->bit_depth*pixel_offset/8;
     uint8_t byte_containing_pixel = ((uint8_t*)data->items)[byte_containing_pixel_index];
 
@@ -275,7 +280,7 @@ void create_blank_from_params(texture_resource_class_obj_t *self, mp_obj_t width
     uint32_t blank_pixel_count = blank_width * blank_height;
     uint16_t blank_color = 0xffff;
     uint16_t blank_bit_depth = 16;
-    uint16_t blank_data_bytes_size = 0;
+    uint32_t blank_data_bytes_size = 0;
 
     // Figure out the color to fill it with
     if(color != mp_const_none){
@@ -293,7 +298,9 @@ void create_blank_from_params(texture_resource_class_obj_t *self, mp_obj_t width
 
     // Calculate number of bytes in full blank TextureResource
     // in .data section
-    blank_data_bytes_size = blank_height * get_bit_depth_unpadded_bytes_width(blank_bit_depth, blank_width);
+    uint32_t unpadded_bytes_stride = 0;
+    get_bit_depth_strides(blank_bit_depth, blank_width, &unpadded_bytes_stride, &self->pixel_stride);
+    blank_data_bytes_size = unpadded_bytes_stride * blank_height;
     
     // Create MicroPython .data bytearray
     mp_obj_array_t *data = mp_const_none;
@@ -313,7 +320,7 @@ void create_blank_from_params(texture_resource_class_obj_t *self, mp_obj_t width
         colors->base.type = &mp_type_bytearray;
         colors->typecode = BYTEARRAY_TYPECODE;
         colors->free = 0;
-        colors->len = (1 << blank_bit_depth) * 2; // Raise two to the power of bit-depth for number of colors adn multiply by 2 for 16-bit RGB565
+        colors->len = (1 << blank_bit_depth) * 2; // Raise two to the power of bit-depth for number of colors and multiply by 2 for 16-bit RGB565
         colors->items = m_new(byte, colors->len);
         memset(colors->items, 0, colors->len);
     }
@@ -388,6 +395,8 @@ void create_from_file(texture_resource_class_obj_t *self, mp_obj_t filepath, mp_
     memset(&info_v1, 0, sizeof(bmih_v1_t));
     memset(&info_v2, 0, sizeof(bmih_v2_t));
     memset(&info_v3, 0, sizeof(bmih_v3_t));
+
+    self->pixel_stride = 0;
 
     // Fill header and info structs and get minimum version supported
     uint8_t version = bitmap_get_header_and_info(&header, &info_v1, &info_v2, &info_v3);
@@ -471,17 +480,17 @@ void create_from_file(texture_resource_class_obj_t *self, mp_obj_t filepath, mp_
     self->bit_depth = info_v1.bi_bit_count;
 
     // Figure out the number of bytes in each row of the image in the file
-    uint32_t padded_bytes_width= 0;
+    uint32_t padded_bytes_width = 0;
 
     // https://en.wikipedia.org/wiki/BMP_file_format#:~:text=Each%20row%20in%20the%20Pixel%20array%20is%20padded%20to%20a%20multiple%20of%204%20bytes%20in%20size
-    uint32_t unpadded_bytes_width = get_bit_depth_unpadded_bytes_width(self->bit_depth, self->width);
+    uint32_t unpadded_bytes_width = 0;
+    get_bit_depth_strides(self->bit_depth, self->width, &unpadded_bytes_width, &self->pixel_stride);
 
     // Pad to 4 bytes
     padded_bytes_width = (uint32_t)(ceilf((float)unpadded_bytes_width / 4.0f) * 4.0f);
 
     // Figure out the total space in RAM or FLASH scratch to allocate
     // for the final image data.
-    uint32_t pixel_count = self->width * self->height;
     uint32_t total_required_space = 0;
 
     if(self->bit_depth < 16){
@@ -492,6 +501,7 @@ void create_from_file(texture_resource_class_obj_t *self, mp_obj_t filepath, mp_
         // Not any of the other case, must be 16-bit image which will
         // get its pixel data directly copied to RAM or FLASH even if
         // it contains alpha bits in the color masks (decoded on the fly)
+        uint32_t pixel_count = self->width * self->height;
         total_required_space = pixel_count*2;
     }
 

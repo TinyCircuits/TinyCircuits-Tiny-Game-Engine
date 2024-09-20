@@ -9,6 +9,7 @@ typedef struct texture_resource_class_obj_t{
     int32_t width;
     int32_t height;
     uint8_t bit_depth;
+    uint16_t pixel_stride;  // Need the actual number of pixels that could technically fit the minimum number of bytes required to fit `width`
 
     uint32_t red_mask;
     uint32_t green_mask;
