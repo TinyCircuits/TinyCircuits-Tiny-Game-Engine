@@ -233,7 +233,7 @@ void engine_draw_blit(texture_resource_class_obj_t *texture, uint32_t offset, fl
 }
 
 
-void engine_draw_blit_depth(uint16_t *pixels, float center_x, float center_y, int32_t window_width, int32_t window_height, uint32_t pixels_stride, float x_scale, float y_scale, float rotation_radians, uint16_t transparent_color, float alpha, uint16_t depth, engine_shader_t *shader){
+void engine_draw_blit_depth(texture_resource_class_obj_t *texture, uint32_t offset, float center_x, float center_y, int32_t window_width, int32_t window_height, uint32_t pixels_stride, float x_scale, float y_scale, float rotation_radians, uint16_t transparent_color, float alpha, uint16_t depth, engine_shader_t *shader){
     /*  https://cohost.org/tomforsyth/post/891823-rotation-with-three#:~:text=But%20the%20TL%3BDR%20is%20you%20do%20three%20shears%3A
         https://stackoverflow.com/questions/65909025/rotating-a-bitmap-with-3-shears    Lots of inspiration from here
         https://computergraphics.stackexchange.com/questions/10599/rotate-a-bitmap-with-shearing
@@ -348,11 +348,13 @@ void engine_draw_blit_depth(uint16_t *pixels, float center_x, float center_y, in
                 // bounds since those dimensions are clipped (destination rect)
                 if((rotX >= 0 && rotX < window_width) && (rotY >= 0 && rotY < window_height)){
                     uint32_t src_offset = rotY * pixels_stride + rotX;
-                    uint16_t src_color = pixels[src_offset];
+                    // uint16_t src_color = pixels[src_offset];
+                    float src_alpha = 1.0f;
+                    uint16_t src_color = texture->get_pixel(texture, offset+src_offset, &src_alpha);
 
                     if(src_color != transparent_color || src_color == ENGINE_NO_TRANSPARENCY_COLOR){
                         if(engine_display_store_check_depth_index(dest_offset, depth)){
-                            active_screen_buffer[dest_offset] = shader->execute(active_screen_buffer[dest_offset], src_color, alpha, shader);
+                            active_screen_buffer[dest_offset] = shader->execute(active_screen_buffer[dest_offset], src_color, alpha*src_alpha, shader);
                         }
                     }
                 }

@@ -27,7 +27,7 @@ void engine_draw_line(uint16_t color, float x_start, float y_start, float x_end,
 
 void engine_draw_blit(texture_resource_class_obj_t *texture, uint32_t offset, float center_x, float center_y, int32_t window_width, int32_t window_height, uint32_t pixels_stride, float x_scale, float y_scale, float rotation_radians, uint16_t transparent_color, float alpha, engine_shader_t *shader);
 
-void engine_draw_blit_depth(uint16_t *pixels, float center_x, float center_y, int32_t window_width, int32_t window_height, uint32_t pixels_stride, float x_scale, float y_scale, float rotation_radians, uint16_t transparent_color, float alpha, uint16_t depth, engine_shader_t *shader);
+void engine_draw_blit_depth(texture_resource_class_obj_t *texture, uint32_t offset, float center_x, float center_y, int32_t window_width, int32_t window_height, uint32_t pixels_stride, float x_scale, float y_scale, float rotation_radians, uint16_t transparent_color, float alpha, uint16_t depth, engine_shader_t *shader);
 
 void engine_draw_rect(uint16_t color, float center_x, float center_y, int32_t width, int32_t height, float x_scale, float y_scale, float rotation_radians, float alpha, engine_shader_t *shader);
 

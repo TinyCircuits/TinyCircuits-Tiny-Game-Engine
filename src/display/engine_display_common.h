@@ -51,6 +51,8 @@ void engine_display_check_depth_buffer_created();
 // Frees the depth buffer (should be used on engine reset)
 void engine_display_free_depth_buffer();
 
+uint16_t *engine_display_get_depth_buffer();
+
 // Returns true if the passed depth is lower/closer
 // than the depth stored there before, also stores it if true.
 // Returns false if did not store it because it was lower

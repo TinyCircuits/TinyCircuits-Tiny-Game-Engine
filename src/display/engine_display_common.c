@@ -145,3 +145,8 @@ bool ENGINE_FAST_FUNCTION(engine_display_store_check_depth)(uint8_t sx, uint8_t 
     uint16_t index = sy * SCREEN_WIDTH + sx;
     return engine_display_store_check_depth_index(index, depth);
 }
+
+
+uint16_t *engine_display_get_depth_buffer(){
+    return depth_buffer;
+}

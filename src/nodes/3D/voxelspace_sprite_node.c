@@ -63,8 +63,6 @@ void voxelspace_sprite_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t c
     uint32_t spritesheet_width = sprite_texture->width;
     uint32_t spritesheet_height = sprite_texture->height;
 
-    uint16_t *sprite_pixel_data = ((mp_obj_array_t*)sprite_texture->data)->items;
-
     int32_t sprite_frame_width = spritesheet_width/sprite_frame_count_x;
     int32_t sprite_frame_height = spritesheet_height/sprite_frame_count_y;
     uint32_t sprite_frame_abs_x = sprite_frame_width*sprite_frame_current_x;
@@ -230,10 +228,10 @@ void voxelspace_sprite_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t c
         shader = engine_get_builtin_shader(EMPTY_SHADER);
     }
 
-    engine_draw_blit_depth(sprite_pixel_data+sprite_frame_fb_start_index,
+    engine_draw_blit_depth(sprite_texture, sprite_frame_fb_start_index,
                      floorf(sprite_rotated_x), floorf(sprite_rotated_y),
                      sprite_frame_width, sprite_frame_height,
-                     spritesheet_width,
+                     sprite_texture->pixel_stride,
                      scale_x,
                      scale_y,
                      -sprite_rotation,
@@ -241,8 +239,6 @@ void voxelspace_sprite_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t c
                      sprite_opacity,
                      depth,
                      shader);
-
-    // engine_draw_pixel(0b1111100000000000, floorf(((value/max) * SCREEN_WIDTH)), floorf(sprite_rotated_y), 1.0f, shader);
 
     // After drawing, go to the next frame if it is time to and the animation is playing
     if(sprite_playing == 1){
