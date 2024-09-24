@@ -7,7 +7,7 @@ from engine_resources import TextureResource, FontResource
 from engine_nodes import Circle2DNode, Rectangle2DNode, CameraNode, GUIBitmapButton2DNode, GUIButton2DNode, Line2DNode, PhysicsCircle2DNode, PhysicsRectangle2DNode
 
 import os
-os.chdir("Games/inherit_test")
+os.chdir("Games/TestGames/inherit_test")
 
 btn_bitmap = TextureResource("button.bmp")
 spr_bitmap = TextureResource("32x32.bmp")

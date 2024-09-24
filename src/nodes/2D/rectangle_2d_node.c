@@ -71,7 +71,7 @@ void rectangle_2d_node_class_draw(mp_obj_t rectangle_node_base_obj, mp_obj_t cam
                          floorf(inherited.px), floorf(inherited.py),
                          (int32_t)rectangle_width, (int32_t)rectangle_height,
                          rectangle_scale->x.value*camera_zoom, rectangle_scale->y.value*camera_zoom,
-                         -rectangle_rotation,
+                         -inherited.rotation,
                          rectangle_opacity,
                          shader);
     }else{
@@ -93,10 +93,10 @@ void rectangle_2d_node_class_draw(mp_obj_t rectangle_node_base_obj, mp_obj_t cam
         float bly = floorf(inherited.py + rectangle_half_height);
 
         // Rotate the points and then draw lines between them
-        engine_math_rotate_point(&tlx, &tly, inherited.px, rectangle_rotated_y, rectangle_rotation);
-        engine_math_rotate_point(&trx, &try, inherited.px, rectangle_rotated_y, rectangle_rotation);
-        engine_math_rotate_point(&brx, &bry, inherited.px, rectangle_rotated_y, rectangle_rotation);
-        engine_math_rotate_point(&blx, &bly, inherited.px, rectangle_rotated_y, rectangle_rotation);
+        engine_math_rotate_point(&tlx, &tly, inherited.px, inherited.py, inherited.rotation);
+        engine_math_rotate_point(&trx, &try, inherited.px, inherited.py, inherited.rotation);
+        engine_math_rotate_point(&brx, &bry, inherited.px, inherited.py, inherited.rotation);
+        engine_math_rotate_point(&blx, &bly, inherited.px, inherited.py, inherited.rotation);
 
         engine_draw_line(rectangle_color->value, tlx, tly, trx, try, camera_node, rectangle_opacity, shader);
         engine_draw_line(rectangle_color->value, trx, try, brx, bry, camera_node, rectangle_opacity, shader);
