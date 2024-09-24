@@ -15,7 +15,7 @@ These instructions assume that you are cloning MicroPython from the TinyCircuits
 8. `cd` to engine file system to build and run MicroPython and the engine
    1. `cd`: `cd ../../TinyCircuits-Tiny-Game-Engine/filesystem`
    2. build: `(cd ../../ports/unix && make -j8 USER_C_MODULES=../../TinyCircuits-Tiny-Game-Engine DEBUG=1)`
-   3. run: `../micropython_loop ../../ports/unix/build-standard/micropython -X heapsize=512000 main.py`
+   3. run: `../micropython_loop ../../ports/unix/build-standard/micropython -X heapsize=532480 main.py`
 
 Use `(cd ../../ports/unix && make clean)` to make clean if needed
 
@@ -39,9 +39,16 @@ These instructions assume that you are cloning MicroPython from the official Mic
    1. Change line 1784 to `default="longlong"` (don't know where this tool is used and how to pass it a different value, will just set it for now)
 10. `cd` to filesystem root: `cd micropython/TinyCircuits-Tiny-Game-Engine/filesystem`
 11. Build MicroPython UNIX port: `(cd ../../ports/unix && make -j8 USER_C_MODULES=../../TinyCircuits-Tiny-Game-Engine DEBUG=1)`
-12. Run MicroPython port: `../micropython_loop ../../ports/unix/build-standard/micropython -X heapsize=512000 main.py`
+12. Run MicroPython port: `../micropython_loop ../../ports/unix/build-standard/micropython -X heapsize=532480 main.py`
 
 Use `(cd ../../ports/unix && make clean)` to make clean if needed
 
 # Updating MicroPython version
 Make sure to check that the copied structures in src/utility/engine_mp.h are still the same in the version of MicroPython you're updating to. Some structures are not exposed so they had to be copied to where the engine can use them.
+
+# How UF2s are made
+1. Download and compile https://github.com/raspberrypi/picotool (requires pico-sdk be installed in default known location or pass `-DPICO_SDK_PATH=` to `cmake`)
+2. Upload a firmware and all files that should be included to Thumby Color
+3. Connect Thumby Color to computer with picotool installed in BOOTSEL mode (turn off, press and hold down DPAD direction, turn back on)
+4. Run: `sudo ./picotool save -r 0x10000000 0x11000000 thumby_color_dev_kit_full_image_08_20_2024.bin` (saves from `XIP_BASE` to `16MiB`s after to bin file)
+5. Run: `sudo ./picotool uf2 convert thumby_color_dev_kit_full_image_08_20_2024.bin thumby_color_dev_kit_full_image_08_20_2024.uf2`

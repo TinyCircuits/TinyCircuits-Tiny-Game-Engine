@@ -673,7 +673,6 @@ class PokerGame(Rectangle2DNode):
                 self.game_over_time = time.ticks_ms()  
             elif time.ticks_ms() - self.game_over_time >= 5000:
                 engine.end()
-                import engine_main
             return
 
         if self.hand_display_time and time.ticks_diff(time.ticks_ms(), self.hand_display_time) >= 2000:
@@ -1283,7 +1282,6 @@ class PokerGame(Rectangle2DNode):
         engine_audio.play(shuffle_sound, 0, False)
 
 
-engine_io.gui_toggle_button(None)
 # Make an instance of our game
 game = PokerGame(Vector2(0, 0), 256, 256)
 

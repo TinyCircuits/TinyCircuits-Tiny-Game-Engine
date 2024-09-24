@@ -27,9 +27,13 @@ void engine_display_set_fill_color(uint16_t color){
     engine_fill_color = color;
 }
 
-
 void engine_display_set_fill_background(uint16_t *data){
     engine_fill_background = data;
+}
+
+void engine_display_reset_fills(){
+    engine_fill_color = 0x0000;
+    engine_fill_background = NULL;
 }
 
 
@@ -140,4 +144,9 @@ bool ENGINE_FAST_FUNCTION(engine_display_store_check_depth_index)(uint16_t index
 bool ENGINE_FAST_FUNCTION(engine_display_store_check_depth)(uint8_t sx, uint8_t sy, uint16_t depth){
     uint16_t index = sy * SCREEN_WIDTH + sx;
     return engine_display_store_check_depth_index(index, depth);
+}
+
+
+uint16_t *engine_display_get_depth_buffer(){
+    return depth_buffer;
 }

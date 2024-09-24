@@ -23,7 +23,14 @@ texture_resource_class_obj_t font_texture = {
   .in_ram = false,
   .width = 480,
   .height = 8,
-  .data = &font_texture_data
+  .bit_depth = 16,
+  .red_mask = 0b1111100000000000,
+  .green_mask = 0b0000011111100000,
+  .blue_mask = 0b0000000000011111,
+  .combined_masks = 0xffff,
+  .colors = mp_const_none,
+  .data = &font_texture_data,
+  .get_pixel = texture_resource_get_16bit_rgb565,
 };
 
 
@@ -60,6 +67,7 @@ mp_obj_t font_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_
 
     uint32_t bitmap_width = self->texture_resource->width;
     uint32_t bitmap_height = self->texture_resource->height;
+    uint16_t bitmap_pixels_stride = self->texture_resource->pixel_stride;
 
     // The bottom row of pixels is used for defining the width
     // of each character using alternating colors
@@ -72,7 +80,7 @@ mp_obj_t font_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_
     // Start tracking the initial width color, what 
     // character we're on, and set the first offset to 0
     uint16_t current_glyph_index = 0;
-    uint16_t last_width_signifier_color = texture_resource_get_pixel(self->texture_resource, engine_math_2d_to_1d_index(alternating_pixel_x, alternating_pixel_y, bitmap_width));
+    uint16_t last_width_signifier_color = self->texture_resource->get_pixel(self->texture_resource, engine_math_2d_to_1d_index(alternating_pixel_x, alternating_pixel_y, bitmap_pixels_stride), NULL);
 
     // Find character information up to limit, but
     // count to end of bitmap for useful error reporting
@@ -87,7 +95,7 @@ mp_obj_t font_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_
 
         // Get the next pixel, and since we got another pixel,
         // increase the width of the current character
-        uint16_t next_width_signifier_color = texture_resource_get_pixel(self->texture_resource, engine_math_2d_to_1d_index(alternating_pixel_x, self->glyph_height, bitmap_width));
+        uint16_t next_width_signifier_color = self->texture_resource->get_pixel(self->texture_resource, engine_math_2d_to_1d_index(alternating_pixel_x, self->glyph_height, bitmap_width), NULL);
         if(current_glyph_index < ENGINE_FONT_MAX_CHAR_COUNT) self->glyph_widths[current_glyph_index]++;
 
         // If the pixel to the left of this one is not the same, 

@@ -35,9 +35,6 @@ void voxelspace_node_class_draw(mp_obj_t voxelspace_node_base_obj, mp_obj_t came
     texture_resource_class_obj_t *texture = voxelspace_node->texture_resource;
     texture_resource_class_obj_t *heightmap = voxelspace_node->heightmap_resource;
 
-    uint16_t *texture_data = ((mp_obj_array_t*)texture->data)->items;
-    uint16_t *heightmap_data = ((mp_obj_array_t*)heightmap->data)->items;
-
     // vector3_class_obj_t *voxelspace_rotation = mp_load_attr(voxelspace_node_base->attr_accessor, MP_QSTR_rotation);
     vector3_class_obj_t *voxelspace_position = voxelspace_node->position;
     vector3_class_obj_t *voxelspace_scale = voxelspace_node->scale;
@@ -155,12 +152,13 @@ void voxelspace_node_class_draw(mp_obj_t voxelspace_node_base_obj, mp_obj_t came
             }
 
             // Now that we know we have a position to sample, sample it
-            uint32_t index = (uint32_t)((y-voxelspace_position->z.value) * heightmap->width + (x-voxelspace_position->x.value));
+            uint32_t index = (uint32_t)((y-voxelspace_position->z.value) * heightmap->pixel_stride + (x-voxelspace_position->x.value));
 
             // Get each RGB channel as a float
-            float r = (heightmap_data[index] >> 0) & 0b00011111;
-            float g = (heightmap_data[index] >> 5) & 0b00111111;
-            float b = (heightmap_data[index] >> 11) & 0b00011111;
+            uint16_t heightmap_value = heightmap->get_pixel(heightmap, index, NULL);
+            float r = (heightmap_value >> 0) & 0b00011111;
+            float g = (heightmap_value >> 5) & 0b00111111;
+            float b = (heightmap_value >> 11) & 0b00011111;
 
             // Change from RGB565 (already normalized to 0.0 ~ 1.0 for each channel) to grayscale 0.0 ~ 1.0: https://en.wikipedia.org/wiki/Grayscale#:~:text=Ylinear%2C-,which%20is%20given%20by,-%5B6%5D
             // Divided each channel coefficient by their respective bit resolution to avoid 3 divides
@@ -187,7 +185,8 @@ void voxelspace_node_class_draw(mp_obj_t voxelspace_node_base_obj, mp_obj_t came
                 float drawn_thickness = 0;
                 while(ipx >= height_buffer[i] && drawn_thickness < thickness){
                     if(engine_display_store_check_depth(i, ipx, depth)){
-                        engine_draw_pixel(texture_data[index], i, ipx, 1.0f, shader);
+                        
+                        engine_draw_pixel(texture->get_pixel(texture, index, NULL), i, ipx, 1.0f, shader);
                     }
                     ipx--;
                     drawn_thickness += perspective;
@@ -201,7 +200,7 @@ void voxelspace_node_class_draw(mp_obj_t voxelspace_node_base_obj, mp_obj_t came
                 float drawn_thickness = 0;
                 while(ipx < height_buffer[i] && drawn_thickness < thickness){
                     if(engine_display_store_check_depth(i, ipx, depth)){
-                        engine_draw_pixel(texture_data[index], i, ipx, 1.0f, shader);
+                        engine_draw_pixel(texture->get_pixel(texture, index, NULL), i, ipx, 1.0f, shader);
                     }
                     ipx++;
                     drawn_thickness += perspective;
@@ -254,13 +253,13 @@ static mp_obj_t voxelspace_node_class_get_abs_height(mp_obj_t self, mp_obj_t x_o
 
     // Only need to check bounds if repeat is not true
     if(repeat == true || ((x >= voxelspace_position->x.value && x < voxelspace_position->x.value + heightmap->width) && (z >= voxelspace_position->z.value && z < voxelspace_position->z.value+heightmap->height))){
-        uint32_t index = (uint32_t)(((int32_t)z-voxelspace_position->z.value) * heightmap->width + ((int32_t)x-voxelspace_position->x.value));
+        uint32_t index = (uint32_t)(((int32_t)z-voxelspace_position->z.value) * heightmap->pixel_stride + ((int32_t)x-voxelspace_position->x.value));
 
         // Get each RGB channel as a float
-        uint16_t *heightmap_data = ((mp_obj_array_t*)heightmap->data)->items;
-        float r = (heightmap_data[index] >> 0) & 0b00011111;
-        float g = (heightmap_data[index] >> 5) & 0b00111111;
-        float b = (heightmap_data[index] >> 11) & 0b00011111;
+        uint16_t heightmap_value = heightmap->get_pixel(heightmap, index, NULL);
+        float r = (heightmap_value >> 0) & 0b00011111;
+        float g = (heightmap_value >> 5) & 0b00111111;
+        float b = (heightmap_value >> 11) & 0b00011111;
 
         // Change from RGB565 (already normalized to 0.0 ~ 1.0 for each channel) to grayscale 0.0 ~ 1.0: https://en.wikipedia.org/wiki/Grayscale#:~:text=Ylinear%2C-,which%20is%20given%20by,-%5B6%5D
         // Divided each channel coefficient by their respective bit resolution to avoid 3 divides
@@ -339,6 +338,10 @@ bool voxelspace_node_load_attr(engine_node_base_t *self_node_base, qstr attribut
             destination[0] = self->thickness;
             return true;
         break;
+        case MP_QSTR_global_position:
+            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("ERROR: `global_position` is not supported on this node yet!"));
+            return true;
+        break;
         default:
             return false; // Fail
     }
@@ -395,6 +398,10 @@ bool voxelspace_node_store_attr(engine_node_base_t *self_node_base, qstr attribu
             self->thickness = destination[1];
             return true;
         break;
+        case MP_QSTR_global_position:
+            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("ERROR: `global_position` is not supported on this node yet!"));
+            return true;
+        break;
         default:
             return false; // Fail
     }
@@ -404,8 +411,8 @@ bool voxelspace_node_store_attr(engine_node_base_t *self_node_base, qstr attribu
 static mp_attr_fun_t voxelspace_node_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing VoxelspaceNode attr");
     node_base_attr_handler(self_in, attribute, destination,
-                          (attr_handler_func[]){node_base_load_attr, voxelspace_node_load_attr},
-                          (attr_handler_func[]){node_base_store_attr, voxelspace_node_store_attr}, 2);
+                          (attr_handler_func[]){voxelspace_node_load_attr, node_base_load_attr},
+                          (attr_handler_func[]){voxelspace_node_store_attr, node_base_store_attr}, 2);
     return mp_const_none;
 }
 

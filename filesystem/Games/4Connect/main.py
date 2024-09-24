@@ -9,6 +9,7 @@ from engine_math import Vector2, Vector3
 from engine_nodes import Rectangle2DNode, CameraNode, PhysicsRectangle2DNode, PhysicsCircle2DNode, Circle2DNode, Text2DNode, Sprite2DNode
 from engine_resources import FontResource, TextureResource, WaveSoundResource
 from engine_animation import Tween, Delay, ONE_SHOT, EASE_SINE_IN
+import machine
 
 from simpletextmenu import SimpleTextMenu
 
@@ -17,7 +18,7 @@ random.seed(time.ticks_ms())
 
 # engine_debug.enable_all()
 
-font = FontResource("../../assets/outrunner_outline.bmp")
+font = FontResource("/system/assets/outrunner_outline.bmp")
 
 red_texture = TextureResource("red.bmp")
 yellow_texture = TextureResource("yellow.bmp")
@@ -298,7 +299,8 @@ class Game(Rectangle2DNode):
         return score
 
     def ai_move(self):
-
+        if hasattr(machine, 'freq'):
+            machine.freq(250 * 1000 * 1000)
         grid_copy = deepcopy_2d_list(self.grid)
         filled_cells = sum(grid_copy[row][col] != 0 for row in range(GRID_ROWS) for col in range(GRID_COLS))
         # Depth settings based on difficulty level and game stage
@@ -330,6 +332,8 @@ class Game(Rectangle2DNode):
                     best_cols = [col]  # Reset the list with the current column
                 elif score == best_score:
                     best_cols.append(col)
+        if hasattr(machine, 'freq'):
+                machine.freq(150 * 1000 * 1000)
 
         return random.choice(best_cols) if best_cols else random.choice(self.valid_moves(grid_copy))
 

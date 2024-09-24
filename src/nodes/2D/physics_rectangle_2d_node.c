@@ -338,6 +338,7 @@ static mp_attr_fun_t physics_rectangle_2d_node_class_attr(mp_obj_t self_in, qstr
     ATTR:  [type=function]                               [name={ref_link:disable_collision_layer}]          [value=function]
     ATTR:  [type=function]                               [name={ref_link:adjust_from_to}]                   [value=function]
     ATTR:  [type={ref_link:Vector2}]                     [name=position]                                    [value={ref_link:Vector2}]
+    ATTR:  [type={ref_link:Vector2}]                     [name=global_position]                             [value={ref_link:Vector2} (read-only)]
     ATTR:  [type=float]                                  [name=width]                                       [value=any]
     ATTR:  [type=float]                                  [name=height]                                      [value=any]
     ATTR:  [type={ref_link:Vector2}]                     [name=velocity]                                    [value={ref_link:Vector2}]

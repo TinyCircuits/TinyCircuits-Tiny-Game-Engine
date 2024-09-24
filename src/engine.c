@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 
 #include "engine_object_layers.h"
 #include "display/engine_display.h"
@@ -11,6 +12,7 @@
 #include "audio/engine_audio_module.h"
 #include "math/engine_math.h"
 #include "utility/engine_defines.h"
+#include "link/engine_link_module.h"
 
 #include "draw/engine_display_draw.h"
 
@@ -24,6 +26,18 @@
 #include "py/objstr.h"
 
 #include "engine_main.h"
+
+
+#if defined(__arm__)
+    #include "hardware/clocks.h"
+    #include "hardware/pll.h"
+    #include "hardware/structs/rosc.h"
+    #include "hardware/structs/scb.h"
+    #include "hardware/structs/syscfg.h"
+    #include "hardware/watchdog.h"
+    #include "hardware/xosc.h"
+    #include "py/mphal.h"
+#endif
 
 
 // ### MODULE ###
@@ -42,6 +56,16 @@ uint32_t engine_fps_time_at_before_last_tick_ms = MILLIS_NULL;
 
 float engine_get_fps_limit_ms(){
     return engine_fps_limit_period_ms;
+}
+
+
+void engine_set_freq(uint32_t hz){
+    #if defined(__arm__)
+        if(!set_sys_clock_khz(hz / 1000, false)){
+            mp_raise_ValueError(MP_ERROR_TEXT("cannot change frequency"));
+        }
+        engine_audio_adjust_playback_with_freq(hz);
+    #endif
 }
 
 
@@ -115,20 +139,45 @@ static mp_obj_t engine_get_running_fps(){
 MP_DEFINE_CONST_FUN_OBJ_0(engine_get_running_fps_obj, engine_get_running_fps);
 
 
-// Mostly used internally when engine.stop() is called
-// but exposed anyway to MicroPython
 /* --- doc ---
    NAME: reset
    ID: engine_reset
-   DESC: Resets internal state of engine (TODO: make sure all state is cleared, run when games end or go back to REPL or launcher)
+   DESC: machine.reset() but works across all platforms. Performs a complete hard reset of the device by default.
+   PARAM: [type=bool]   [name=soft_reset]   [value=True or False (default: False)]
    RETURN: None
 */
-static mp_obj_t engine_reset(){
-    fps_limit_disabled = true;
-    engine_main_reset();
+static mp_obj_t engine_reset(size_t n_args, const mp_obj_t *args){
+    // Set default reset as not a soft reset and see if any arguments set it
+    bool soft_reset = false;
+
+    if(n_args == 1){
+        if(mp_obj_is_bool(args[0])){
+            soft_reset = mp_obj_get_int(args[0]);
+        }else{
+            mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("Engine: ERROR: Expected `int` got %s"), mp_obj_get_type_str(args[0]));
+        }
+    }
+
+    // Do the reset depending on the platform
+    #if defined(__EMSCRIPTEN__)
+        exit(93);
+        (void)soft_reset;
+    #elif defined(__unix__)
+        exit(93);
+        (void)soft_reset;
+    #else
+        mp_obj_t machine_module = mp_import_name(MP_QSTR_machine, mp_const_none, MP_OBJ_NEW_SMALL_INT(0));
+
+        if(soft_reset){
+            mp_call_function_0(mp_load_attr(machine_module, MP_QSTR_soft_reset));
+        }else{
+            mp_call_function_0(mp_load_attr(machine_module, MP_QSTR_reset));
+        }
+    #endif
+
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_0(engine_reset_obj, engine_reset);
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_reset_obj, 0, 1, engine_reset);
 
 
 /* --- doc ---
@@ -177,6 +226,9 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_time_to_next_tick_obj, engine_mp_time_to_next_t
 
 
 bool engine_tick(){
+    // Run this as often as possible
+    engine_link_module_task();
+
     bool ticked = false;
 
     // Not sure why this is needed exactly for handling ctrl-c
@@ -212,6 +264,7 @@ bool engine_tick(){
 
         // Call every instanced node's callbacks
         engine_invoke_all_node_tick_callbacks(dt_ms * 0.001f);
+        engine_objects_clear_deletable();                       // Remove any nodes marked for deletion before rendering
         engine_invoke_all_node_draw_callbacks();
 
         engine_gui_tick();
@@ -224,8 +277,6 @@ bool engine_tick(){
 
         ticked = true;
     }
-
-    engine_objects_clear_deletable();
 
     // Not sure why this is needed exactly for handling ctrl-c
     // correctly, just replicating what happens in modutime.c
@@ -287,6 +338,32 @@ static mp_obj_t engine_start(){
 MP_DEFINE_CONST_FUN_OBJ_0(engine_start_obj, engine_start);
 
 
+/* --- doc ---
+   NAME: freq
+   ID: engine_freq
+   DESC: Gets or sets the processor frequency (use this in place of machine.freq(Hz))
+   PARAM: [type=int] [name=hz] [value=any positive integer | optional]
+   RETURN: None or int
+*/
+static mp_obj_t engine_freq(size_t n_args, const mp_obj_t *args){
+    if(n_args == 1){
+        engine_set_freq(mp_obj_get_int(args[0]));
+    }else{
+        #if defined(__arm__)
+            return mp_obj_new_int(mp_hal_get_cpu_freq());
+        #endif
+    }
+
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_freq_obj, 0, 1, engine_freq);
+
+
+static mp_obj_t engine_root_dir(){
+    return mp_obj_new_str(filesystem_root, strlen(filesystem_root));
+}
+MP_DEFINE_CONST_FUN_OBJ_0(engine_root_dir_obj, engine_root_dir);
+
 
 static mp_obj_t engine_module_init(){
     engine_main_raise_if_not_initialized();
@@ -307,6 +384,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_module_init_obj, engine_module_init);
    ATTR: [type=function] [name={ref_link:engine_start}]         [value=function]
    ATTR: [type=function] [name={ref_link:engine_end}]           [value=function]
    ATTR: [type=function] [name={ref_link:engine_reset}]         [value=function]
+   ATTR: [type=function] [name={ref_link:engine_freq}]          [value=function]
 */
 static const mp_rom_map_elem_t engine_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine) },
@@ -319,6 +397,8 @@ static const mp_rom_map_elem_t engine_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_start), (mp_obj_t)&engine_start_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_end), (mp_obj_t)&engine_end_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_reset), (mp_obj_t)&engine_reset_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_freq), (mp_obj_t)&engine_freq_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_root_dir), (mp_obj_t)&engine_root_dir_obj },
 };
 
 // Module init

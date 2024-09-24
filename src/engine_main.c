@@ -1,13 +1,17 @@
 #include <stdio.h>
+#include <unistd.h>
+
 #include "py/obj.h"
 #include "py/runtime.h"
 #include "py/gc.h"
 #include "engine_main.h"
+#include "engine.h"
 
 #include "engine_object_layers.h"
 #include "resources/engine_resource_manager.h"
 #include "audio/engine_audio_module.h"
 #include "io/engine_io_module.h"
+#include "save/engine_save_module.h"
 #include "time/engine_rtc.h"
 #include "display/engine_display.h"
 #include "display/engine_display_common.h"
@@ -15,6 +19,7 @@
 #include "animation/engine_animation_module.h"
 #include "engine_gui.h"
 #include "fault/engine_fault.h"
+#include "link/engine_link_module.h"
 #include "py/mpstate.h"
 
 #if defined(__arm__)
@@ -23,6 +28,14 @@
 
 #define BATTERY_ADC_GPIO_PIN 29
 #define BATTERY_ADC_PORT 3
+
+
+#if defined(__unix__)
+    char filesystem_root[1024];
+#else
+    char filesystem_root[2];
+#endif
+
 
 bool is_engine_initialized = false;
 
@@ -33,16 +46,17 @@ void engine_main_raise_if_not_initialized(){
     }
 }
 
-#if defined(__unix__)
-    #include <unistd.h>
-    char filesystem_root[1024];
-#endif
 
 void engine_main_reset(){
     ENGINE_PRINTF("EngineMain: Resetting engine...\n");
 
-    // Set back to default
-    engine_display_set_fill_color(0x0000);
+    // Always reset the processor core clock speed
+    // engine_set_freq(150 * 1000 * 1000);
+
+    // Always reset screen background fills
+    engine_display_reset_fills();
+    
+    engine_link_module_reset();
 
     // Reset contigious flash space manager
     engine_audio_stop_all();
@@ -88,11 +102,16 @@ static mp_obj_t engine_main_module_init(){
     ENGINE_PRINTF("Engine init!\n");
 
     #if defined(__unix__)
-        if (getcwd(filesystem_root, sizeof(filesystem_root)) == NULL){
+        if(getcwd(filesystem_root, sizeof(filesystem_root)) == NULL){
             filesystem_root[0] = '\0';
         }
-        ENGINE_PRINTF("Filesystem root: %s\n", filesystem_root);
+        
+    #else
+        filesystem_root[0] = '/';
+        filesystem_root[1] = '\0';
     #endif
+
+    ENGINE_PRINTF("Filesystem root: %s\n", filesystem_root);
 
     // Init display first
     engine_display_init();
@@ -126,7 +145,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_main_module_init_obj, engine_main_module_init);
 /* --- doc ---
    NAME: engine_main
    ID: engine_main
-   DESC: This module needs to imported in main files using the engine. This sets up the device and engine plus resets everything every time it is imported. IMport this module anytime you want all engine nodes to be removed or when the engine should be setup
+   DESC: This module needs to imported in main files using the engine. This sets up the device and engine plus resets everything every time it is imported. Import this module anytime you want all engine nodes to be removed or when the engine should be setup
 */
 static const mp_rom_map_elem_t engine_main_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine) },

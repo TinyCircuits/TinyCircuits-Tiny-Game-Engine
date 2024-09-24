@@ -32,8 +32,16 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_draw_set_background_color_obj, engine_draw_set_
 static mp_obj_t engine_draw_set_background(mp_obj_t background){
     texture_resource_class_obj_t *background_texture_resource = background;
 
+    // Needs to be the same size
     if(background_texture_resource->width != SCREEN_WIDTH || background_texture_resource->height != SCREEN_HEIGHT){
-        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Could not background image, images dimensions are not equal to screen dimensions!"));
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineDraw: ERROR: Could not set background bitmap, bitmap dimensions are not equal to screen dimensions!"));
+    }
+
+    // Needs to be RGB565
+    if(background_texture_resource->red_mask   != 0b1111100000000000 ||
+       background_texture_resource->green_mask != 0b0000011111100000 ||
+       background_texture_resource->blue_mask  != 0b0000000000011111){
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineDraw: ERROR: Could not set background bitmap, bitmap needs to be RGB565 format!"));
     }
 
     uint16_t *texture_data = ((mp_obj_array_t*)background_texture_resource->data)->items;

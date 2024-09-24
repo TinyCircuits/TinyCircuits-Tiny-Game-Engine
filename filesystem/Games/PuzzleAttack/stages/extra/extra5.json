@@ -1,0 +1,97 @@
+{
+    "name": "Extra 5",
+    "prefix": "X5",
+    "levels": [
+        [
+            " YY   ",
+            " YCC  ",
+            " CYCC ",
+            "PPCPY ",
+            4
+        ],
+        [
+            "   Y  ",
+            "  YR  ",
+            " GYG  ",
+            " GGY  ",
+            " RYRR ",
+            "YRRGR ",
+            3
+        ],
+        [
+            " C  ",
+            "CB  ",
+            "BG  ",
+            "PRB ",
+            "BPPB",
+            "RCRP",
+            "GPGG",
+            4
+        ],
+        [
+            " CC   ",
+            " CPP  ",
+            " RRBB ",
+            " RRBB ",
+            " YYCC ",
+            " CYCY ",
+            "PPRBPP",
+            4
+        ],
+        [
+            "  G ",
+            "  Y ",
+            "  C ",
+            "GGC ",
+            "CGG ",
+            "GCC ",
+            "GYY ",
+            3
+        ],
+        [
+            " R  ",
+            " C  ",
+            " C  ",
+            "PP  ",
+            "PY  ",
+            "YR Y",
+            "CR R",
+            4
+        ],
+        [
+            "  C ",
+            "  YY",
+            " RCG",
+            "RGRR",
+            "CRYG",
+            4
+        ],
+        [
+            " PBB  ",
+            " YPR  ",
+            " PPR  ",
+            " YBYRR",
+            " PBRBB",
+            4
+        ],
+        [
+            "   G  ",
+            "   R  ",
+            "   R  ",
+            " PPCG ",
+            " RCCR ",
+            "PGGRR ",
+            3
+        ],
+        [
+            "   R  ",
+            "  RY  ",
+            " CGY  ",
+            "PGPG  ",
+            "GCYP  ",
+            "PYPR  ",
+            "PCGY  ",
+            3
+        ]
+    ]
+}

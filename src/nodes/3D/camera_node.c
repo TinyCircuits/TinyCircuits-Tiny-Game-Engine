@@ -161,6 +161,10 @@ bool camera_node_load_attr(engine_node_base_t *self_node_base, qstr attribute, m
             destination[0] = self->opacity;
             return true;
         break;
+        case MP_QSTR_global_position:
+            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("ERROR: `global_position` is not supported on this node yet!"));
+            return true;
+        break;
         default:
             return false; // Fail
     }
@@ -203,6 +207,10 @@ bool camera_node_store_attr(engine_node_base_t *self_node_base, qstr attribute, 
         break;
         case MP_QSTR_opacity:
             self->opacity = destination[1];
+            return true;
+        break;
+        case MP_QSTR_global_position:
+            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("ERROR: `global_position` is not supported on this node yet!"));
             return true;
         break;
         default:

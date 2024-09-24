@@ -150,6 +150,22 @@ uint16_t engine_color_from_rgb_float(float r, float g, float b){
 }
 
 
+uint16_t engine_color_16_from_24_bit_rgb(uint8_t r, uint8_t g, uint8_t b){
+    // RGB565
+    r = r >> 3; // RRRR RRRR -> R RRRR  [5]
+    g = g >> 2; // GGGG GGGG -> GG GGGG [6]
+    b = b >> 3; // BBBB BBBB -> B BBBB  [5]
+
+    uint16_t color = 0;
+    color = color | (((uint16_t)r) << 11);
+    color = color | (((uint16_t)g) << 5);
+    color = color | (((uint16_t)b) << 0);
+
+    // RRRRRGGGGGGBBBBB
+    return color;
+}
+
+
 /*  --- doc ---
     NAME: set
     ID: set

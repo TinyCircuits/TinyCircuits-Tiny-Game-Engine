@@ -3,8 +3,6 @@ import errno
 import machine
 import sys
 
-from system.root_dir import ROOT_DIR
-
 
 def file_exists(path):
     try:
@@ -56,23 +54,12 @@ def delete_file(path):
             raise
 
 
+# Given a file path, return just the name of the file
 def basename(path):
     return path[path.rfind("/") + 1 :]
 
 
+# Given a file path, return the path to the directory the file is in
 def dirname(path):
-    ind = path.rfind("/")
-    return "/" if ind < 0 else path[:ind]
-
-
-IS_THUMBY = "TinyCircuits Thumby Color" in sys.implementation._machine
-
-
-def thumby_reset(hard):
-    if IS_THUMBY:
-        if hard:
-            machine.reset()
-        else:
-            machine.soft_reset()
-    else:
-        sys.exit(93)
+    index = path.rfind("/")
+    return "/" if index < 0 else path[:index]

@@ -10,12 +10,13 @@ from engine_nodes import Rectangle2DNode, CameraNode, Sprite2DNode, Text2DNode, 
 from engine_resources import FontResource, TextureResource, WaveSoundResource
 from engine_animation import Tween, ONE_SHOT, EASE_SINE_IN
 from engine_draw import Color
+import machine
 
 from chessengine import openings, piece_values, pstable
 
 random.seed(time.ticks_ms())
 
-font = FontResource("../../assets/outrunner_outline.bmp")
+font = FontResource("/system/assets/outrunner_outline.bmp")
 
 chess_texture = TextureResource("chess.bmp")
 board_texture = TextureResource("board.bmp")
@@ -444,19 +445,23 @@ class SimulatedChessBoard:
                     castling_rook_to = (3, from_pos[1])
 
             if isinstance(piece, Pawn):
-                if abs(to_pos[1] - piece.grid_position[1]) == 2:
-                    piece.en_passant_target = True
-                else:
-                    piece.en_passant_target = False
-
                 if not captured_piece and abs(to_pos[0] - piece.grid_position[0]) == 1:
                     en_passant_capture = self.piece_positions.get((to_pos[0], from_pos[1]))
                     if en_passant_capture and isinstance(en_passant_capture, Pawn) and en_passant_capture.en_passant_target:
                         captured_piece = en_passant_capture
 
+                if abs(to_pos[1] - piece.grid_position[1]) == 2:
+                    self.reset_en_passant_status()
+                    piece.en_passant_target = True
+                else:
+                    self.reset_en_passant_status()
+                    piece.en_passant_target = False
+
                 if to_pos[1] == 0 or to_pos[1] == 7:
                     promotion = piece
                     piece = self.promote_pawn(piece)
+            else:
+                self.reset_en_passant_status()
 
             if castling_rook_from and castling_rook_to:
                 rook = self.piece_positions.get(castling_rook_from)
@@ -487,7 +492,6 @@ class SimulatedChessBoard:
                 'promotion': promotion,
                 'has_moved_before': has_moved_before
             })
-            self.reset_en_passant_status()
         return piece, captured_piece
 
     def undo_move(self):
@@ -894,8 +898,15 @@ class ChessGame(Rectangle2DNode):
             global MAX_DEPTH
             if self.endgame:
                 MAX_DEPTH = 3
-                                
+     
+            if hasattr(machine, 'freq'):
+                machine.freq(250 * 1000 * 1000)
+
             eval_score, best_move = minimax(self.chessboard.board, depth=MAX_DEPTH, is_white=not self.player_is_white, alpha=float('-inf'), beta=float('inf'))
+
+            if hasattr(machine, 'freq'):
+                machine.freq(150 * 1000 * 1000)
+
             if not best_move:
                 return
             p, to_pos = best_move
@@ -1134,18 +1145,11 @@ CHECKMATE_SCORE = 60000
 STALEMATE_SCORE = 0
 
 def minimax(board, depth, is_white, alpha, beta):
-    safety=False
-    if depth == MAX_DEPTH:
-        if board.is_in_check(is_white):
-            safety=True
     if depth == 0:
         return evaluate_board(board), None
 
     best_move = None
-    if safety:
-        all_moves = board.get_all_safe_moves(is_white, sort=True)
-    else:
-        all_moves = board.get_all_valid_moves(is_white, sort=True)
+    all_moves = board.get_all_safe_moves(is_white, sort=True)
 
     if not all_moves:
         eval_score = evaluate_board(board)

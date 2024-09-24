@@ -72,8 +72,6 @@ void sprite_2d_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t camera_no
     uint32_t spritesheet_width = sprite_texture->width;
     uint32_t spritesheet_height = sprite_texture->height;
 
-    uint16_t *sprite_pixel_data = (uint16_t*)((mp_obj_array_t*)sprite_texture->data)->items;
-
     uint32_t sprite_frame_width = spritesheet_width/sprite_frame_count_x;
     uint32_t sprite_frame_height = spritesheet_height/sprite_frame_count_y;
     uint32_t sprite_frame_abs_x = sprite_frame_width*sprite_frame_current_x;
@@ -97,16 +95,16 @@ void sprite_2d_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t camera_no
 
     // Decide which shader to use per-pixel
     engine_shader_t *shader = NULL;
-    if(sprite_opacity < 1.0f){
+    if(sprite_opacity < 1.0f || sprite_texture->alpha_mask != 0){
         shader = engine_get_builtin_shader(OPACITY_SHADER);
     }else{
         shader = engine_get_builtin_shader(EMPTY_SHADER);
     }
 
-    engine_draw_blit(sprite_pixel_data+sprite_frame_fb_start_index,
+    engine_draw_blit(sprite_texture, sprite_frame_fb_start_index,
                      floorf(inherited.px), floorf(inherited.py),
                      sprite_frame_width, sprite_frame_height,
-                     spritesheet_width,
+                     sprite_texture->pixel_stride,
                      sprite_scale->x.value*camera_zoom,
                      sprite_scale->y.value*camera_zoom,
                     -inherited.rotation,
@@ -338,6 +336,7 @@ static mp_attr_fun_t sprite_2d_node_class_attr(mp_obj_t self_in, qstr attribute,
     ATTR:   [type=function]                         [name={ref_link:remove_child}]                      [value=function]
     ATTR:   [type=function]                         [name={ref_link:tick}]                              [value=function]
     ATTR:   [type={ref_link:Vector2}]               [name=position]                                     [value={ref_link:Vector2}]
+    ATTR:   [type={ref_link:Vector2}]               [name=global_position]                              [value={ref_link:Vector2} (read-only)]
     ATTR:   [type={ref_link:TextureResource}]       [name=texture]                                      [value={ref_link:TextureResource}]
     ATTR:   [type={ref_link:Color}|int (RGB565)]    [name=transparent_color]                            [value=color]
     ATTR:   [type=float]                            [name=fps]                                          [value=any]

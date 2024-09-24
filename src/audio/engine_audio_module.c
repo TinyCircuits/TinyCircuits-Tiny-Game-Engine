@@ -45,6 +45,7 @@ volatile float master_volume = 1.0f;
 
     // Pin for PWM audio sample wrap callback (faster than repeating timer, by a lot)
     uint audio_callback_pwm_pin_slice;
+    pwm_config audio_callback_pwm_pin_config;
 
     uint8_t *current_source_data = NULL;
 
@@ -272,6 +273,13 @@ void engine_audio_setup_playback(){
 }
 
 
+void engine_audio_adjust_playback_with_freq(uint32_t core_clock_hz){
+    #if defined(__arm__)
+        pwm_config_set_wrap(&audio_callback_pwm_pin_config, (uint16_t)((float)(core_clock_hz) / ENGINE_AUDIO_SAMPLE_RATE) - 1);
+    #endif
+}
+
+
 void engine_audio_setup(){
     ENGINE_PRINTF("EngineAudio: Setting up...\n");
 
@@ -294,9 +302,9 @@ void engine_audio_setup(){
         irq_set_exclusive_handler(PWM_IRQ_WRAP_0, repeating_audio_callback);
         irq_set_priority(PWM_IRQ_WRAP_0, 1);
         irq_set_enabled(PWM_IRQ_WRAP_0, true);
-        pwm_config audio_callback_pwm_pin_config = pwm_get_default_config();
+        audio_callback_pwm_pin_config = pwm_get_default_config();
         pwm_config_set_clkdiv_int(&audio_callback_pwm_pin_config, 1);
-        pwm_config_set_wrap(&audio_callback_pwm_pin_config, (uint16_t)((150.0f * 1000.0f * 1000.0f) / ENGINE_AUDIO_SAMPLE_RATE) - 1);
+        engine_audio_adjust_playback_with_freq(150 * 1000 * 1000);
         pwm_init(audio_callback_pwm_pin_slice, &audio_callback_pwm_pin_config, true);
     #endif
 }

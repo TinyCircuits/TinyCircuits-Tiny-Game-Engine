@@ -33,6 +33,45 @@ mp_obj_str_t* engine_file_to_system_path(mp_obj_str_t *filename){
 }
 
 
+void engine_file_mkdir(mp_obj_str_t *dir){
+    mp_vfs_mkdir(engine_file_to_system_path(dir));
+}
+
+
+void engine_file_makedirs(mp_obj_str_t *dir){
+    if(!mp_obj_is_str(dir)){
+        mp_raise_TypeError(MP_ERROR_TEXT("EngineFile: ERROR: dir is not a string"));
+    }
+    if(engine_file_exists(dir)){
+        return;
+    }
+    GET_STR_DATA_LEN(dir, dir_str, dir_str_len);
+    for(size_t i = 1; i < dir_str_len; i++){
+        if(dir_str[i] == '/'){
+            mp_obj_t parent_dir = mp_obj_new_str((const char*)dir_str, i);
+            if(!engine_file_exists(parent_dir)){
+                engine_file_mkdir(parent_dir);
+            }
+        }
+    }
+    engine_file_mkdir(dir);
+}
+
+
+mp_obj_str_t* engine_file_dirname(mp_obj_str_t *path){
+    if(!mp_obj_is_str(path)){
+        mp_raise_TypeError(MP_ERROR_TEXT("EngineFile: ERROR: path is not a string"));
+    }
+    GET_STR_DATA_LEN(path, path_str, path_str_len);
+    for(size_t i = path_str_len - 1; i > 0; i--){
+        if(path_str[i] == '/'){
+            return mp_obj_new_str((const char*)path_str, i);
+        }
+    }
+    return mp_const_none;
+}
+
+
 void engine_file_open_read(uint8_t file_index, mp_obj_str_t *filename){
     mp_obj_t file_open_args[2] = {
         engine_file_to_system_path(filename),
