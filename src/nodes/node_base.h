@@ -9,6 +9,10 @@
 #define NODE_BASE_DISABLED_BIT_INDEX 1
 #define NODE_BASE_JUST_ADDED_BIT_INDEX 2
 #define NODE_BASE_DELETABLE_BIT_INDEX 3
+#define NODE_BASE_INHERIT_OPACITY_BIT_INDEX 4
+#define NODE_BASE_INHERIT_SCALE_BIT_INDEX 5
+#define NODE_BASE_INHERIT_POSITION_BIT_INDEX 6
+#define NODE_BASE_INHERIT_ROTATION_BIT_INDEX 7
 
 typedef struct{
     mp_obj_base_t base;                     // All nodes get defined by what is placed in this
@@ -42,15 +46,30 @@ typedef struct{
 
 
 void node_base_init(engine_node_base_t *node_base, const mp_obj_type_t *mp_type, uint8_t node_type, uint8_t layer);
+
 bool node_base_is_visible(engine_node_base_t *node_base);
 void node_base_set_if_visible(engine_node_base_t *node_base, bool is_visible);
+
 bool node_base_is_disabled(engine_node_base_t *node_base);
 void node_base_set_if_disabled(engine_node_base_t *node_base, bool is_disabled);
+
 bool node_base_is_just_added(engine_node_base_t *node_base);
 void node_base_set_if_just_added(engine_node_base_t *node_base, bool is_just_added);
+
 bool node_base_is_deletable(engine_node_base_t *node_base);
 void node_base_set_if_deletable(engine_node_base_t *node_base, bool is_deletable);
 
+bool node_base_does_inherit_opacity(engine_node_base_t *node_base);
+void node_base_set_inherit_opacity(engine_node_base_t *node_base, bool inherit_opacity);
+
+bool node_base_does_inherit_scale(engine_node_base_t *node_base);
+void node_base_set_inherit_scale(engine_node_base_t *node_base, bool inherit_scale);
+
+bool node_base_does_inherit_position(engine_node_base_t *node_base);
+void node_base_set_inherit_position(engine_node_base_t *node_base, bool inherit_position);
+
+bool node_base_does_inherit_rotation(engine_node_base_t *node_base);
+void node_base_set_inherit_rotation(engine_node_base_t *node_base, bool inherit_rotation);
 
 // Given an object that may be a Python class instance or the node_base itself,
 // get the node_base from it. Returns `true` if instance and `false` if not

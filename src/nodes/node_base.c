@@ -39,13 +39,16 @@ void node_base_init(engine_node_base_t *node_base, const mp_obj_type_t *mp_type,
     node_base_set_if_visible(node_base, true);
     node_base_set_if_disabled(node_base, false);
     node_base_set_if_just_added(node_base, true);
+    node_base_set_inherit_opacity(node_base, true);
+    node_base_set_inherit_scale(node_base, true);
+    node_base_set_inherit_position(node_base, true);
+    node_base_set_inherit_rotation(node_base, true);
 }
 
 
 bool node_base_is_visible(engine_node_base_t *node_base){
     return BIT_GET(node_base->meta_data, NODE_BASE_VISIBLE_BIT_INDEX);
 }
-
 
 void node_base_set_if_visible(engine_node_base_t *node_base, bool is_visible){
     if(is_visible){
@@ -91,6 +94,54 @@ void node_base_set_if_deletable(engine_node_base_t *node_base, bool is_deletable
         BIT_SET_TRUE(node_base->meta_data, NODE_BASE_DELETABLE_BIT_INDEX);
     }else{
         BIT_SET_FALSE(node_base->meta_data, NODE_BASE_DELETABLE_BIT_INDEX);
+    }
+}
+
+bool node_base_does_inherit_opacity(engine_node_base_t *node_base){
+    return BIT_GET(node_base->meta_data, NODE_BASE_INHERIT_OPACITY_BIT_INDEX);
+}
+
+void node_base_set_inherit_opacity(engine_node_base_t *node_base, bool inherit_opacity){
+    if(inherit_opacity){
+        BIT_SET_TRUE(node_base->meta_data, NODE_BASE_INHERIT_OPACITY_BIT_INDEX);
+    }else{
+        BIT_SET_FALSE(node_base->meta_data, NODE_BASE_INHERIT_OPACITY_BIT_INDEX);
+    }
+}
+
+bool node_base_does_inherit_scale(engine_node_base_t *node_base){
+    return BIT_GET(node_base->meta_data, NODE_BASE_INHERIT_SCALE_BIT_INDEX);
+}
+
+void node_base_set_inherit_scale(engine_node_base_t *node_base, bool inherit_scale){
+    if(inherit_scale){
+        BIT_SET_TRUE(node_base->meta_data, NODE_BASE_INHERIT_SCALE_BIT_INDEX);
+    }else{
+        BIT_SET_FALSE(node_base->meta_data, NODE_BASE_INHERIT_SCALE_BIT_INDEX);
+    }
+}
+
+bool node_base_does_inherit_position(engine_node_base_t *node_base){
+    return BIT_GET(node_base->meta_data, NODE_BASE_INHERIT_POSITION_BIT_INDEX);
+}
+
+void node_base_set_inherit_position(engine_node_base_t *node_base, bool inherit_position){
+    if(inherit_position){
+        BIT_SET_TRUE(node_base->meta_data, NODE_BASE_INHERIT_POSITION_BIT_INDEX);
+    }else{
+        BIT_SET_FALSE(node_base->meta_data, NODE_BASE_INHERIT_POSITION_BIT_INDEX);
+    }
+}
+
+bool node_base_does_inherit_rotation(engine_node_base_t *node_base){
+    return BIT_GET(node_base->meta_data, NODE_BASE_INHERIT_ROTATION_BIT_INDEX);
+}
+
+void node_base_set_inherit_rotation(engine_node_base_t *node_base, bool inherit_rotation){
+    if(inherit_rotation){
+        BIT_SET_TRUE(node_base->meta_data, NODE_BASE_INHERIT_ROTATION_BIT_INDEX);
+    }else{
+        BIT_SET_FALSE(node_base->meta_data, NODE_BASE_INHERIT_ROTATION_BIT_INDEX);
     }
 }
 
@@ -387,10 +438,38 @@ void node_base_inherit_2d(mp_obj_t child_node_base, engine_inheritable_2d_t *inh
         return;
     }
 
+    // At this point, the `inheritable` structure only contains the
+    // childs attributes which are needed by the child anyways. Now,
+    // as we traverse the parents above it, if at any point one of
+    // the parents stops inheriting the below attributes, stop inheriting
+    // them from then on.
+    bool stop_inheriting_opacity = false;
+    bool stop_inheriting_scale = false;
+    bool stop_inheriting_position = false;
+    bool stop_inheriting_rotation = false;
+
     // Start the traversal upwards until we get to a NULL parent
     engine_node_base_t *current_node_base = node_base;
 
     while(true){
+        // Update which atributes to not inherit before getting the
+        // parent attributes. Only update if we haven't run into a
+        // child or parent of the child that stops inheriting. If we
+        // did, we want to always stop inheriting that attribute as
+        // we go further
+        if(stop_inheriting_opacity == false)  stop_inheriting_opacity  = !node_base_does_inherit_opacity(current_node_base);
+        if(stop_inheriting_scale == false)    stop_inheriting_scale    = !node_base_does_inherit_scale(current_node_base);
+        if(stop_inheriting_position == false) stop_inheriting_position = !node_base_does_inherit_position(current_node_base);
+        if(stop_inheriting_rotation == false) stop_inheriting_rotation = !node_base_does_inherit_rotation(current_node_base);
+
+        // If everything is not being inherited, stop the
+        // loop since there's no reason to keep going
+        if(stop_inheriting_opacity == true && stop_inheriting_scale == true && stop_inheriting_position == true && stop_inheriting_rotation == true){
+            break;
+        }
+
+        // Get the parent node base from the node we were just on.
+        // At this point, do update the attributes to not
         engine_node_base_t *parent_node_base = current_node_base->parent_node_base;
 
         // Stop traversal only if the parent of
@@ -410,68 +489,82 @@ void node_base_inherit_2d(mp_obj_t child_node_base, engine_inheritable_2d_t *inh
             break;
         }
 
-        // Get parent attributes that will affect child
-        mp_obj_t parent_position = mp_load_attr(parent_node_base->attr_accessor, MP_QSTR_position);
-        mp_obj_t parent_rotation = engine_mp_load_attr_maybe(parent_node_base->attr_accessor, MP_QSTR_rotation);
-        mp_obj_t parent_scale = engine_mp_load_attr_maybe(parent_node_base->attr_accessor, MP_QSTR_scale);
-        mp_obj_t parent_opacity_obj = engine_mp_load_attr_maybe(parent_node_base->attr_accessor, MP_QSTR_opacity);
-        float parent_opacity = 1.0f;
-        
-        if(parent_opacity_obj != MP_OBJ_NULL){
-            parent_opacity = mp_obj_get_float(parent_opacity_obj);
-        }
-
         // Setup temps that are re-used in multiple ways
         float temp_parent_pos_x = 0.0f;
         float temp_parent_pos_y = 0.0f;
         float temp_parent_rot = 0.0f;
-        float temp_parent_scale_x = 0.0f;
-        float temp_parent_scale_y = 0.0f;
+        float temp_parent_scale_x = 1.0f;
+        float temp_parent_scale_y = 1.0f;
+        float temp_parent_opacity = 1.0f;
 
-        // Decode parent position (use projection of 3D position
-        // for respective 2D position that child will rotate around)
-        if(mp_obj_is_type(parent_position, &vector3_class_type)){
-            temp_parent_pos_x = ((vector3_class_obj_t*)parent_position)->x.value;
-            temp_parent_pos_y = ((vector3_class_obj_t*)parent_position)->y.value;
-        }else if(mp_obj_is_type(parent_position, &vector2_class_type)){
-            temp_parent_pos_x = ((vector2_class_obj_t*)parent_position)->x.value;
-            temp_parent_pos_y = ((vector2_class_obj_t*)parent_position)->y.value;
-        }else{
-            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: Error: Do not know how to get inherited 2D position for this `position `object type!"));
+        // Get position from parent
+        if(stop_inheriting_position == false){
+            mp_obj_t parent_position = mp_load_attr(parent_node_base->attr_accessor, MP_QSTR_position);
+
+            // Decode parent position (use projection of 3D position
+            // for respective 2D position that child will rotate around)
+            if(mp_obj_is_type(parent_position, &vector3_class_type)){
+                temp_parent_pos_x = ((vector3_class_obj_t*)parent_position)->x.value;
+                temp_parent_pos_y = ((vector3_class_obj_t*)parent_position)->y.value;
+            }else if(mp_obj_is_type(parent_position, &vector2_class_type)){
+                temp_parent_pos_x = ((vector2_class_obj_t*)parent_position)->x.value;
+                temp_parent_pos_y = ((vector2_class_obj_t*)parent_position)->y.value;
+            }else{
+                mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: Error: Do not know how to get inherited 2D position for this `position `object type!"));
+            }
         }
 
-        // Decode parent rotation (use z-axis rotation of 3D node
-        // for rotation around parent for 2D child node)
-        if(parent_rotation == MP_OBJ_NULL){
-            temp_parent_rot = 0.0f;
-        }else if(mp_obj_is_type(parent_rotation, &vector3_class_type)){
-            temp_parent_rot = ((vector3_class_obj_t*)parent_rotation)->z.value;
-        }else if(mp_obj_is_float(parent_rotation)){
-            temp_parent_rot = mp_obj_get_float(parent_rotation);
-        }else{
-            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: Error: Do not know how to get inherited 2D rotation for this `rotation `object type!"));
+        // Get rotation from parent
+        if(stop_inheriting_rotation == false){
+            mp_obj_t parent_rotation = engine_mp_load_attr_maybe(parent_node_base->attr_accessor, MP_QSTR_rotation);
+
+            // Decode parent rotation (use z-axis rotation of 3D node
+            // for rotation around parent for 2D child node)
+            if(parent_rotation == MP_OBJ_NULL){
+                temp_parent_rot = 0.0f;
+            }else if(mp_obj_is_type(parent_rotation, &vector3_class_type)){
+                temp_parent_rot = ((vector3_class_obj_t*)parent_rotation)->z.value;
+            }else if(mp_obj_is_float(parent_rotation)){
+                temp_parent_rot = mp_obj_get_float(parent_rotation);
+            }else{
+                mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: Error: Do not know how to get inherited 2D rotation for this `rotation `object type!"));
+            }
         }
 
-        // Decode parent scale (use xy of 3D for 2D scale)
-        if(parent_scale == MP_OBJ_NULL){
-            temp_parent_scale_x = 1.0f;
-            temp_parent_scale_y = 1.0f;
-        }else if(mp_obj_is_type(parent_scale, &vector3_class_type)){
-            temp_parent_scale_x = ((vector3_class_obj_t*)parent_scale)->x.value;
-            temp_parent_scale_y = ((vector3_class_obj_t*)parent_scale)->y.value;
-        }else if(mp_obj_is_type(parent_scale, &vector2_class_type)){
-            temp_parent_scale_x = ((vector2_class_obj_t*)parent_scale)->x.value;
-            temp_parent_scale_y = ((vector2_class_obj_t*)parent_scale)->y.value;
-        }else if(mp_obj_is_float(parent_scale)){
-            float scale = mp_obj_get_float(parent_scale);
-            temp_parent_scale_x = scale;
-            temp_parent_scale_y = scale;
-        }else if(mp_obj_is_int(parent_scale)){
-            float scale = (float)mp_obj_get_int(parent_scale);
-            temp_parent_scale_x = scale;
-            temp_parent_scale_y = scale;
-        }else{
-            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: Error: Do not know how to get inherited 2D scale for this `scale `object type!"));
+        // Get scale from parent
+        if(stop_inheriting_scale == false){
+            mp_obj_t parent_scale = engine_mp_load_attr_maybe(parent_node_base->attr_accessor, MP_QSTR_scale);
+
+            // Decode parent scale (use xy of 3D for 2D scale)
+            if(parent_scale == MP_OBJ_NULL){
+                temp_parent_scale_x = 1.0f;
+                temp_parent_scale_y = 1.0f;
+            }else if(mp_obj_is_type(parent_scale, &vector3_class_type)){
+                temp_parent_scale_x = ((vector3_class_obj_t*)parent_scale)->x.value;
+                temp_parent_scale_y = ((vector3_class_obj_t*)parent_scale)->y.value;
+            }else if(mp_obj_is_type(parent_scale, &vector2_class_type)){
+                temp_parent_scale_x = ((vector2_class_obj_t*)parent_scale)->x.value;
+                temp_parent_scale_y = ((vector2_class_obj_t*)parent_scale)->y.value;
+            }else if(mp_obj_is_float(parent_scale)){
+                float scale = mp_obj_get_float(parent_scale);
+                temp_parent_scale_x = scale;
+                temp_parent_scale_y = scale;
+            }else if(mp_obj_is_int(parent_scale)){
+                float scale = (float)mp_obj_get_int(parent_scale);
+                temp_parent_scale_x = scale;
+                temp_parent_scale_y = scale;
+            }else{
+                mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: Error: Do not know how to get inherited 2D scale for this `scale `object type!"));
+            }
+        }
+
+        // Get opacity from parent
+        if(stop_inheriting_opacity == false){
+            mp_obj_t parent_opacity_obj = engine_mp_load_attr_maybe(parent_node_base->attr_accessor, MP_QSTR_opacity);
+
+            if(parent_opacity_obj != MP_OBJ_NULL){
+                temp_parent_opacity = mp_obj_get_float(parent_opacity_obj);
+            }
         }
 
         // Scale transformation due to parent scale
@@ -482,7 +575,7 @@ void node_base_inherit_2d(mp_obj_t child_node_base, engine_inheritable_2d_t *inh
         inheritable->rotation += temp_parent_rot;
         inheritable->sx *= temp_parent_scale_x;
         inheritable->sy *= temp_parent_scale_y;
-        inheritable->opacity *= parent_opacity;
+        inheritable->opacity *= temp_parent_opacity;
 
         // Rotate child around parent
         engine_math_rotate_point(&inheritable->px, &inheritable->py, temp_parent_pos_x, temp_parent_pos_y, temp_parent_rot);
@@ -568,6 +661,21 @@ bool node_base_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp_
 
             return true;
         }
+        case MP_QSTR_inherit_opacity:
+            destination[0] = mp_obj_new_bool(node_base_does_inherit_opacity(self_node_base));
+            return true;
+        break;
+        case MP_QSTR_inherit_scale:
+            destination[0] = mp_obj_new_bool(node_base_does_inherit_scale(self_node_base));
+            return true;
+        break;
+        case MP_QSTR_inherit_position:
+            destination[0] = mp_obj_new_bool(node_base_does_inherit_position(self_node_base));
+            return true;
+        break;
+        case MP_QSTR_inherit_rotation:
+            destination[0] = mp_obj_new_bool(node_base_does_inherit_rotation(self_node_base));
+            return true;
         break;
     }
 
@@ -583,6 +691,22 @@ bool node_base_store_attr(engine_node_base_t *self_node_base, qstr attribute, mp
         break;
         case MP_QSTR_global_position:
             mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: ERROR: Setting the global position of a node is not supported yet!"));
+        break;
+        case MP_QSTR_inherit_opacity:
+            node_base_set_inherit_opacity(self_node_base, mp_obj_get_int(destination[1]));
+            return true;
+        break;
+        case MP_QSTR_inherit_scale:
+            node_base_set_inherit_scale(self_node_base, mp_obj_get_int(destination[1]));
+            return true;
+        break;
+        case MP_QSTR_inherit_position:
+            node_base_set_inherit_position(self_node_base, mp_obj_get_int(destination[1]));
+            return true;
+        break;
+        case MP_QSTR_inherit_rotation:
+            node_base_set_inherit_rotation(self_node_base, mp_obj_get_int(destination[1]));
+            return true;
         break;
     }
 
