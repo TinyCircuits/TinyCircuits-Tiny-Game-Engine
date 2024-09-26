@@ -455,6 +455,7 @@ static mp_attr_fun_t voxelspace_sprite_node_class_attr(mp_obj_t self_in, qstr at
     ATTR:   [type=function]                         [name={ref_link:node_base_mark_destroy_all}]        [value=function]
     ATTR:   [type=function]                         [name={ref_link:node_base_mark_destroy_children}]   [value=function]
     ATTR:   [type=function]                         [name={ref_link:remove_child}]                      [value=function]
+    ATTR:   [type=function]                         [name={ref_link:get_parent}]                        [value=function]
     ATTR:   [type=function]                         [name={ref_link:tick}]                              [value=function]
     ATTR:   [type={ref_link:Vector2}]               [name=position]                                     [value={ref_link:Vector2}]
     ATTR:   [type={ref_link:TextureResource}]       [name=texture]                                      [value={ref_link:TextureResource}]

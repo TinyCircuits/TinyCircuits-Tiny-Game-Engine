@@ -361,6 +361,23 @@ mp_obj_t node_base_remove_child(mp_obj_t self_parent_in, mp_obj_t child_in){
 }
 
 
+/*  --- doc ---
+    NAME: get_parent
+    ID: get_parent
+    DESC: Returns the parent node of the node this is called on                                                                                                        
+    RETURN: None or `object`
+*/ 
+mp_obj_t node_base_get_parent(mp_obj_t self_in){
+    engine_node_base_t *self = self_in;
+
+    if(self->parent_node_base == NULL){
+        return mp_const_none;
+    }else{
+        return (mp_obj_t)self->parent_node_base;
+    }
+}
+
+
 void node_base_set_layer(engine_node_base_t *node_base, uint8_t layer){
     engine_remove_object_from_layer(node_base->object_list_node, node_base->layer);
     node_base->layer = layer;
@@ -641,6 +658,11 @@ bool node_base_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp_
         break;
         case MP_QSTR_remove_child:
             destination[0] = MP_OBJ_FROM_PTR(&node_base_remove_child_obj);
+            destination[1] = self_node_base;
+            return true;
+        break;
+        case MP_QSTR_get_parent:
+            destination[0] = MP_OBJ_FROM_PTR(&node_base_get_parent);
             destination[1] = self_node_base;
             return true;
         break;

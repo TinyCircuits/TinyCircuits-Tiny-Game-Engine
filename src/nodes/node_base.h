@@ -99,6 +99,9 @@ static MP_DEFINE_CONST_FUN_OBJ_1(node_base_get_child_count_obj, node_base_get_ch
 mp_obj_t node_base_remove_child(mp_obj_t self_parent_in, mp_obj_t child_in);
 static MP_DEFINE_CONST_FUN_OBJ_2(node_base_remove_child_obj, node_base_remove_child);
 
+mp_obj_t node_base_get_parent(mp_obj_t self_in);
+static MP_DEFINE_CONST_FUN_OBJ_1(node_base_get_parent_obj, node_base_get_parent);
+
 // Fills 'inheritable' with data from parents and child
 void node_base_inherit_2d(mp_obj_t child_node_base, engine_inheritable_2d_t *inheritable);
 
