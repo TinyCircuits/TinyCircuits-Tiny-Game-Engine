@@ -33,7 +33,7 @@ void gui_button_2d_node_class_draw(mp_obj_t button_node_base_obj, mp_obj_t camer
         return;
     }
 
-    if(button->text != mp_const_none && button->font_resource != mp_const_none){
+    if(button->text != mp_const_none){
         engine_node_base_t *camera_node_base = camera_node;
         engine_camera_node_class_obj_t *camera = camera_node_base->node;
 
@@ -631,6 +631,7 @@ static mp_attr_fun_t gui_button_2d_node_class_attr(mp_obj_t self_in, qstr attrib
     ATTR:   [type=int]                              [name=layer]                                        [value=0 ~ 127]
 
     OVRR:   [type=function]                         [name={ref_link:tick}]                              [value=function]
+    OVRR:   [type=function]                         [name={ref_link:on_before_focused}]                 [value=function]
     OVRR:   [type=function]                         [name={ref_link:on_focused}]                        [value=function]
     OVRR:   [type=function]                         [name={ref_link:on_just_focused}]                   [value=function]
     OVRR:   [type=function]                         [name={ref_link:on_just_unfocused}]                 [value=function]
@@ -644,7 +645,7 @@ mp_obj_t gui_button_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, 
     mp_arg_t allowed_args[] = {
         { MP_QSTR_child_class,              MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_position,                 MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(0.0f)})} },
-        { MP_QSTR_font,                     MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_font,                     MP_ARG_OBJ, {.u_obj = &font} },
         { MP_QSTR_text,                     MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_outline,                  MP_ARG_OBJ, {.u_obj = mp_obj_new_float(2.0f)} },
         { MP_QSTR_padding,                  MP_ARG_OBJ, {.u_obj = mp_obj_new_float(2.0f)} },

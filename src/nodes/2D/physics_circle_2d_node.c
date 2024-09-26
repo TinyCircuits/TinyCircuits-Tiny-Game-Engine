@@ -56,11 +56,19 @@ void physics_circle_2d_node_class_draw(mp_obj_t circle_node_base_obj, mp_obj_t c
     inherited.px += camera_viewport->width/2;
     inherited.py += camera_viewport->height/2;
 
+    // Scale circle radius by smallest inherited (not sure the best way to do this)
+    float scale_radius_by = 1.0f;
+    if(inherited.sx < inherited.sy){
+        scale_radius_by = inherited.sx;
+    }else{
+        scale_radius_by = inherited.sy;
+    }
+
     // The final circle radius to draw the circle at is a combination of
     // the set radius, times the set scale, times the set camera zoom.
     // Do this after determining if a child of a camera at any point
     // since in that case zoom shouldn't have an effect
-    circle_radius = (circle_radius*camera_zoom);
+    circle_radius = circle_radius*scale_radius_by*camera_zoom;
 
     engine_shader_t *shader = engine_get_builtin_shader(EMPTY_SHADER);
 
@@ -178,7 +186,7 @@ static mp_attr_fun_t physics_circle_2d_node_class_attr(mp_obj_t self_in, qstr at
 /*  --- doc ---
     NAME: PhysicsCircle2DNode
     ID: PhysicsCircle2DNode
-    DESC: Node that is affected by physics. Usually other nodes are added as children to this node
+    DESC: Node that is affected by physics. Usually other nodes are added as children to this node. If the parents of this node have scales with two dimensions ({ref_link:Vector2}), then the radius will be scaled the smallest resulting component.
     PARAM: [type={ref_link:Vector2}]                     [name=position]                                    [value={ref_link:Vector2}]
     PARAM: [type=float]                                  [name=radius]                                      [value=any]
     PARAM: [type={ref_link:Vector2}]                     [name=velocity]                                    [value={ref_link:Vector2}]

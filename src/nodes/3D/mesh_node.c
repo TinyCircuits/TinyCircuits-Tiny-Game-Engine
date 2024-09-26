@@ -195,7 +195,7 @@ static mp_attr_fun_t mesh_node_class_attr(mp_obj_t self_in, qstr attribute, mp_o
 /*  --- doc ---
     NAME: MeshNode
     ID: MeshNode
-    DESC: Node that renders a list of vertices (without indices)
+    DESC: Node that renders a list of vertices (without indices) (WIP). Note: 3D nodes do not currently support inheritance between each other, attributes like position, rotation, scale, and opacity will not work in parent/child inheritance.
     PARAM: [type={ref_link:Vector3}]             [name=position]                                    [value={ref_link:Vector3}]
     PARAM: [type=list]                           [name=vertices]                                    [value=list of {ref_link:Vector3}]
     PARAM:  [type=int]                           [name=layer]                                       [value=0 ~ 127]

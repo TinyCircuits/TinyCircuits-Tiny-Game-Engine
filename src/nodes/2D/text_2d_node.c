@@ -38,8 +38,8 @@ void text_2d_node_class_draw(mp_obj_t text_2d_node_base_obj, mp_obj_t camera_nod
         return;
     }
 
-    vector2_class_obj_t *text_scale =  text_2d_node->scale;
     color_class_obj_t *text_color = text_2d_node->color;
+    font_resource_class_obj_t *text_font = text_2d_node->font_resource;
     float text_box_width = mp_obj_get_float(text_2d_node->width);
     float text_box_height = mp_obj_get_float(text_2d_node->height);
 
@@ -48,47 +48,25 @@ void text_2d_node_class_draw(mp_obj_t text_2d_node_base_obj, mp_obj_t camera_nod
 
     rectangle_class_obj_t *camera_viewport = camera->viewport;
     float camera_zoom = mp_obj_get_float(camera->zoom);
+    float camera_opacity = mp_obj_get_float(camera->opacity);
 
-    float text_resolved_hierarchy_x = 0.0f;
-    float text_resolved_hierarchy_y = 0.0f;
-    float text_resolved_hierarchy_rotation = 0.0f;
-    bool text_is_child_of_camera = false;
-    node_base_get_child_absolute_xy(&text_resolved_hierarchy_x, &text_resolved_hierarchy_y, &text_resolved_hierarchy_rotation, &text_is_child_of_camera, text_2d_node_base);
+    // Get inherited properties
+    engine_inheritable_2d_t inherited;
+    node_base_inherit_2d(text_2d_node_base, &inherited);
 
-    // Store the non-rotated x and y for a second
-    float text_rotated_x = text_resolved_hierarchy_x;
-    float text_rotated_y = text_resolved_hierarchy_y;
-    float text_rotation = text_resolved_hierarchy_rotation;
-
-    if(text_is_child_of_camera == false){
-        float camera_resolved_hierarchy_x = 0.0f;
-        float camera_resolved_hierarchy_y = 0.0f;
-        float camera_resolved_hierarchy_rotation = 0.0f;
-        node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
-        camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
-
-        text_rotated_x = (text_rotated_x - camera_resolved_hierarchy_x) * camera_zoom;
-        text_rotated_y = (text_rotated_y - camera_resolved_hierarchy_y) * camera_zoom;
-
-        // Rotate rectangle origin about the camera
-        engine_math_rotate_point(&text_rotated_x, &text_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
-
-        text_rotation += camera_resolved_hierarchy_rotation;
+    if(inherited.is_camera_child == false){
+        engine_camera_transform_2d(camera_node, &inherited.px, &inherited.py, &inherited.rotation);
     }else{
         camera_zoom = 1.0f;
     }
 
-    text_rotated_x += camera_viewport->width/2;
-    text_rotated_y += camera_viewport->height/2;
+    inherited.px += camera_viewport->width/2;
+    inherited.py += camera_viewport->height/2;
+
+    text_opacity = inherited.opacity*camera_opacity;
 
     float text_letter_spacing = mp_obj_get_float(text_2d_node->letter_spacing);
     float text_line_spacing = mp_obj_get_float(text_2d_node->line_spacing);
-
-    font_resource_class_obj_t *text_font = text_2d_node->font_resource;
-
-    if(text_font == mp_const_none){
-        text_font = &font;
-    }
 
     // Decide which shader to use per-pixel
     engine_shader_t *text_shader = NULL;
@@ -102,14 +80,19 @@ void text_2d_node_class_draw(mp_obj_t text_2d_node_base_obj, mp_obj_t camera_nod
         text_shader->program[2] = (text_color->value >> 0) & 0b11111111;
 
         memcpy(text_shader->program+3, &t, sizeof(float));
-    }else
-    if(text_opacity < 1.0f || text_font->texture_resource->alpha_mask != 0){
+    }else if(text_opacity < 1.0f || text_font->texture_resource->alpha_mask != 0){
         text_shader = engine_get_builtin_shader(OPACITY_SHADER);   
     }else{
         text_shader = engine_get_builtin_shader(EMPTY_SHADER);
     }
 
-    engine_draw_text(text_font, text_2d_node->text, text_rotated_x, text_rotated_y, text_box_width, text_box_height, text_letter_spacing, text_line_spacing, text_scale->x.value*camera_zoom, text_scale->y.value*camera_zoom, text_rotation, text_opacity, text_shader);
+    engine_draw_text(text_font,
+                     text_2d_node->text,
+                     inherited.px, inherited.py,
+                     text_box_width, text_box_height,
+                     text_letter_spacing, text_line_spacing,
+                     inherited.sx*camera_zoom, inherited.sy*camera_zoom,
+                     inherited.rotation, text_opacity, text_shader);
 }
 
 
@@ -127,9 +110,6 @@ static void text_2d_node_class_calculate_dimensions(engine_text_2d_node_class_ob
     float text_box_height = 0.0f;
 
     font_resource_class_obj_t *text_font = text_2d_node->font_resource;
-    if(text_font == mp_const_none){
-        text_font = &font;
-    }
 
     font_resource_get_box_dimensions(text_font, text_2d_node->text, &text_box_width, &text_box_height, mp_obj_get_float(text_2d_node->letter_spacing), mp_obj_get_float(text_2d_node->line_spacing));
 
@@ -313,7 +293,7 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
     mp_arg_t allowed_args[] = {
         { MP_QSTR_child_class,          MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_position,             MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL)} },
-        { MP_QSTR_font,                 MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_font,                 MP_ARG_OBJ, {.u_obj = &font} },
         { MP_QSTR_text,                 MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_rotation,             MP_ARG_OBJ, {.u_obj = mp_obj_new_float(0.0f)} },
         { MP_QSTR_scale,                MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)})} },

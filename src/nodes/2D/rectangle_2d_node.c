@@ -30,7 +30,6 @@ void rectangle_2d_node_class_draw(mp_obj_t rectangle_node_base_obj, mp_obj_t cam
         return;
     }
 
-    vector2_class_obj_t *rectangle_scale =  rectangle_2d_node->scale;
     float rectangle_width = mp_obj_get_float(rectangle_2d_node->width);
     float rectangle_height = mp_obj_get_float(rectangle_2d_node->height);
     color_class_obj_t *rectangle_color = rectangle_2d_node->color;
@@ -53,9 +52,6 @@ void rectangle_2d_node_class_draw(mp_obj_t rectangle_node_base_obj, mp_obj_t cam
     inherited.px += camera_viewport->width/2;
     inherited.py += camera_viewport->height/2;
 
-    rectangle_width = rectangle_width*inherited.sx*camera_zoom;
-    rectangle_height = rectangle_height*inherited.sy*camera_zoom;
-
     rectangle_opacity = inherited.opacity * camera_opacity;
 
     // Decide which shader to use per-pixel
@@ -70,13 +66,13 @@ void rectangle_2d_node_class_draw(mp_obj_t rectangle_node_base_obj, mp_obj_t cam
         engine_draw_rect(rectangle_color->value,
                          floorf(inherited.px), floorf(inherited.py),
                          (int32_t)rectangle_width, (int32_t)rectangle_height,
-                         rectangle_scale->x.value*camera_zoom, rectangle_scale->y.value*camera_zoom,
+                         inherited.sx*camera_zoom, inherited.sy*camera_zoom,
                          -inherited.rotation,
                          rectangle_opacity,
                          shader);
     }else{
-        float rectangle_half_width = rectangle_width/2;
-        float rectangle_half_height = rectangle_height/2;
+        float rectangle_half_width = (rectangle_width/2.0f)*inherited.sx*camera_zoom;
+        float rectangle_half_height = (rectangle_height/2.0f)*inherited.sy*camera_zoom;
 
         // Calculate the coordinates of the 4 corners of the rectangle, not rotated
         // NOTE: positive y is down

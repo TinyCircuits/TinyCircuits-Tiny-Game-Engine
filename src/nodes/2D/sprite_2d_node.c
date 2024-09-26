@@ -55,7 +55,6 @@ void sprite_2d_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t camera_no
     }
 
     texture_resource_class_obj_t *sprite_texture = sprite_2d_node->texture_resource;
-    vector2_class_obj_t *sprite_scale =  sprite_2d_node->scale;
 
     rectangle_class_obj_t *camera_viewport = camera->viewport;
     float camera_zoom = mp_obj_get_float(camera->zoom);
@@ -105,8 +104,8 @@ void sprite_2d_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t camera_no
                      floorf(inherited.px), floorf(inherited.py),
                      sprite_frame_width, sprite_frame_height,
                      sprite_texture->pixel_stride,
-                     sprite_scale->x.value*camera_zoom,
-                     sprite_scale->y.value*camera_zoom,
+                     inherited.sx*camera_zoom,
+                     inherited.sy*camera_zoom,
                     -inherited.rotation,
                      transparent_color->value,
                      sprite_opacity,

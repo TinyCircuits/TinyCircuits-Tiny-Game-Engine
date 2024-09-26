@@ -226,7 +226,7 @@ void voxelspace_node_class_draw(mp_obj_t voxelspace_node_base_obj, mp_obj_t came
 /*  --- doc ---
     NAME: get_abs_height
     ID: get_abs_height
-    DESC: Gets the absolute height at a position in the voxelspace node (takes position into account). If the position isn't inside the node at its current position and dimensions, returns None.
+    DESC: Gets the absolute height at a position in the voxelspace node (takes position into account). If the position isn't inside the node at its current position and dimensions, returns None. Note: 3D nodes do not currently support inheritance between each other, attributes like position, rotation, scale, and opacity will not work in parent/child inheritance.
     PARAM:  [type=float]    [name=x]   [value=any]
     PARAM:  [type=float]    [name=y]   [value=any]
     RETURN: float or None

@@ -418,7 +418,7 @@ void node_base_inherit_2d(mp_obj_t child_node_base, engine_inheritable_2d_t *inh
         float parent_opacity = 1.0f;
         
         if(parent_opacity_obj != MP_OBJ_NULL){
-            parent_opacity = mp_obj_get_float(child_opacity_obj);
+            parent_opacity = mp_obj_get_float(parent_opacity_obj);
         }
 
         // Setup temps that are re-used in multiple ways
@@ -492,93 +492,6 @@ void node_base_inherit_2d(mp_obj_t child_node_base, engine_inheritable_2d_t *inh
 }
 
 
-void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, bool *is_child_of_camera, mp_obj_t child_node_base_in){
-    engine_node_base_t *child_node_base = child_node_base_in;
-    if(is_child_of_camera != NULL) *is_child_of_camera = false;
-
-    mp_obj_t child_node_base_position_obj = mp_load_attr(child_node_base->attr_accessor, MP_QSTR_position);
-    if(mp_obj_is_type(child_node_base_position_obj, &vector3_class_type)){
-        *x = ((vector3_class_obj_t*)child_node_base_position_obj)->x.value;
-        *y = ((vector3_class_obj_t*)child_node_base_position_obj)->y.value;
-    }else{
-        *x = ((vector2_class_obj_t*)child_node_base_position_obj)->x.value;
-        *y = ((vector2_class_obj_t*)child_node_base_position_obj)->y.value;
-    }
-
-    mp_obj_t rotation_obj = engine_mp_load_attr_maybe(child_node_base->attr_accessor, MP_QSTR_rotation);
-
-    // Use z-axis rotation for 2D rotations from 3D vectors
-    if(rotation_obj == MP_OBJ_NULL){
-        // In the case that the rotation attribute does not exist on this node, set rotation to 0
-        if(rotation != NULL) *rotation = 0.0f;
-    }else if(mp_obj_is_type(rotation_obj, &vector3_class_type)){
-        if(rotation != NULL) *rotation = ((vector3_class_obj_t*)rotation_obj)->z.value;
-    }else{
-        if(rotation != NULL) *rotation = (float)mp_obj_get_float(rotation_obj);
-    }
-
-    // Before doing anything, check if this child even has a parent 
-    if(child_node_base->parent_node_base != NULL){
-        engine_node_base_t *seeking_node_base = child_node_base;
-        
-        while(true){
-            engine_node_base_t *seeking_parent_node_base = seeking_node_base->parent_node_base;
-
-            if(seeking_parent_node_base != NULL){
-                // Need to know if a child of a camera so that 
-                // certain scaling and translations do not occur
-                if(is_child_of_camera != NULL && seeking_parent_node_base->type == NODE_TYPE_CAMERA){
-                    *is_child_of_camera = true;
-                }
-
-                mp_obj_t parent_position_obj = mp_load_attr(seeking_parent_node_base->attr_accessor, MP_QSTR_position);
-                mp_obj_t parent_rotation_obj = engine_mp_load_attr_maybe(seeking_parent_node_base->attr_accessor, MP_QSTR_rotation);
-
-                float parent_x = 0.0f;
-                float parent_y = 0.0f;
-                float parent_rotation_radians = 0.0f;
-
-                if(mp_obj_is_type(parent_position_obj, &vector3_class_type)){
-                    parent_x = ((vector3_class_obj_t*)parent_position_obj)->x.value;
-                    parent_y = ((vector3_class_obj_t*)parent_position_obj)->y.value;
-                }else{
-                    parent_x = ((vector2_class_obj_t*)parent_position_obj)->x.value;
-                    parent_y = ((vector2_class_obj_t*)parent_position_obj)->y.value;
-                }
-
-                if(parent_rotation_obj == MP_OBJ_NULL){
-                    // In the case that the rotation attribute does not exist on this node, set rotation to 0
-                    parent_rotation_radians = 0.0f;
-                }else if(mp_obj_is_type(parent_rotation_obj, &vector3_class_type)){
-                    parent_rotation_radians = ((vector3_class_obj_t*)parent_rotation_obj)->z.value;
-                }else{
-                    parent_rotation_radians = (float)mp_obj_get_float(parent_rotation_obj);
-                }
-
-                if(is_child_of_camera == NULL || (is_child_of_camera != NULL && *is_child_of_camera == false)){
-                    *x += parent_x;
-                    *y += parent_y;
-                    
-                    if(rotation != NULL){
-                        *rotation += parent_rotation_radians;
-
-                        // If the rotation sum is not close to zero, rotate the point (small optimization)
-                        if(engine_math_compare_floats(*rotation, 0.0f) == false){
-                            engine_math_rotate_point(x, y, parent_x, parent_y, parent_rotation_radians);
-                        }
-                    }
-                }
-            }else{
-                // Done, reached top-most parent
-                break;
-            }
-
-            seeking_node_base = seeking_node_base->parent_node_base;
-        }
-    }
-}
-
-
 void node_base_set_attr_handler_default(mp_obj_t node_instance){
     if(default_instance_attr_func != NULL) MP_OBJ_TYPE_SET_SLOT((mp_obj_type_t*)((mp_obj_base_t*)node_instance)->type, attr, default_instance_attr_func, 5);
 }
@@ -648,12 +561,10 @@ bool node_base_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp_
         break;
         case MP_QSTR_global_position:
         {
-            float x = 0.0f;
-            float y = 0.0f;
+            engine_inheritable_2d_t inherited;
+            node_base_inherit_2d(self_node_base, &inherited);
 
-            node_base_get_child_absolute_xy(&x, &y, NULL, NULL, self_node_base);
-
-            destination[0] = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(x), mp_obj_new_float(y)});
+            destination[0] = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(inherited.px), mp_obj_new_float(inherited.py)});
 
             return true;
         }

@@ -57,8 +57,8 @@ void physics_rectangle_2d_node_class_draw(mp_obj_t rectangle_node_base_obj, mp_o
     inherited.px += camera_viewport->width/2;
     inherited.py += camera_viewport->height/2;
 
-    rectangle_width = (uint16_t)(rectangle_width*camera_zoom);
-    rectangle_height = (uint16_t)(rectangle_height*camera_zoom);
+    rectangle_width = (uint16_t)(rectangle_width*inherited.sx*camera_zoom);
+    rectangle_height = (uint16_t)(rectangle_height*inherited.sy*camera_zoom);
 
     float rectangle_half_width = rectangle_width/2;
     float rectangle_half_height = rectangle_height/2;

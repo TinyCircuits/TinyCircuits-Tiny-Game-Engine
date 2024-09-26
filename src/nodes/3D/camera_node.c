@@ -231,7 +231,7 @@ static mp_attr_fun_t camera_node_class_attr(mp_obj_t self_in, qstr attribute, mp
 /*  --- doc ---
     NAME: CameraNode
     ID: CameraNode
-    DESC: Node that defines the perspective the scene is drawn at. There can be multiple but this will impact performance if rendering the same scene twice. To make other nodes not move when the camera moves, make the other nodes children of the camera.
+    DESC: Node that defines the perspective the scene is drawn at. There can be multiple but this will impact performance if rendering the same scene twice. To make other nodes not move when the camera moves, make the other nodes children of the camera. Note: 3D nodes do not currently support inheritance between each other, attributes like position, rotation, scale, and opacity will not work in parent/child inheritance.
     PARAM: [type={ref_link:Vector3}]             [name=position]                                    [value={ref_link:Vector3}]
     PARAM: [type=float]                          [name=zoom]                                        [value=any (scales all nodes by this factor, 1.0 by default)]
     PARAM: [type={ref_link:Rectangle}]           [name=viewport]                                    [value={ref_link:Rectangle} (not used currently, TODO)]

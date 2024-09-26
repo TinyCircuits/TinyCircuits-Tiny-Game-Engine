@@ -60,17 +60,14 @@ void line_2d_node_class_draw(mp_obj_t line_node_base_obj, mp_obj_t camera_node){
 
     line_opacity = inherited.opacity*camera_opacity;
 
-    float line_x_scale = inherited.sx*camera_zoom;
-    float line_y_scale = inherited.sy*camera_zoom;
+    // Scale by camera
+    line_thickness = line_thickness * inherited.sy * camera_zoom;
+    line_length = line_length * inherited.sx * camera_zoom;
 
-    // // Scale by camera
-    // line_thickness = line_thickness * camera_zoom;
-    // line_length = line_length * camera_zoom;
-
-    // // Stop line from disappearing when it gets too thin
-    // if(line_thickness < 1.0f){
-    //     line_thickness = 1.0f;
-    // }
+    // Stop line from disappearing when it gets too thin
+    if(line_thickness < 1.0f){
+        line_thickness = 1.0f;
+    }
 
     // Decide which shader to use per-pixel
     engine_shader_t *shader = NULL;
@@ -84,7 +81,7 @@ void line_2d_node_class_draw(mp_obj_t line_node_base_obj, mp_obj_t camera_node){
         engine_draw_rect(line_color->value,
                          floorf(inherited.px), floorf(inherited.py),
                          (int32_t)line_thickness, (int32_t)line_length,
-                         line_x_scale, line_y_scale,
+                         1.0f, 1.0f,
                         -inherited.rotation,
                          line_opacity,
                          shader);

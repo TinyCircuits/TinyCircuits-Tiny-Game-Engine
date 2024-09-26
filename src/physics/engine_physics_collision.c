@@ -25,8 +25,12 @@ void engine_physics_setup_abs_rectangle(engine_node_base_t *node_base, physics_a
     abs_rect->node_base = node_base;
     engine_physics_node_base_t *physics_rect = node_base->node;
 
-    bool is_camera_child = false;
-    node_base_get_child_absolute_xy(&abs_rect->abs_x, &abs_rect->abs_y, &abs_rect->rotation, &is_camera_child, node_base);
+    engine_inheritable_2d_t inherited;
+    node_base_inherit_2d(node_base, &inherited);
+    abs_rect->abs_x = inherited.px;
+    abs_rect->abs_y = inherited.py;
+    abs_rect->rotation = inherited.rotation;
+
     engine_physics_rectangle_2d_node_calculate(physics_rect, abs_rect->vertices_x, abs_rect->vertices_y, abs_rect->normals_x, abs_rect->normals_y, abs_rect->rotation);
     abs_rect->dynamic = mp_obj_get_int(physics_rect->dynamic);
 }
@@ -36,10 +40,21 @@ void engine_physics_setup_abs_circle(engine_node_base_t *node_base, physics_abs_
     abs_circle->node_base = node_base;
     engine_physics_node_base_t *physics_circle = node_base->node;
     engine_physics_circle_2d_node_class_obj_t *circle = physics_circle->unique_data;
-    
-    bool is_camera_child = false;
-    node_base_get_child_absolute_xy(&abs_circle->abs_x, &abs_circle->abs_y, &abs_circle->rotation, &is_camera_child, node_base);
-    abs_circle->radius = mp_obj_get_float(circle->radius);
+
+    engine_inheritable_2d_t inherited;
+    node_base_inherit_2d(node_base, &inherited);
+    abs_circle->abs_x = inherited.px;
+    abs_circle->abs_y = inherited.py;
+    abs_circle->rotation = inherited.rotation;
+
+    float scale_radius_by = 1.0f;
+    if(inherited.sx < inherited.sy){
+        scale_radius_by = inherited.sx;
+    }else{
+        scale_radius_by = inherited.sy;
+    }
+
+    abs_circle->radius = mp_obj_get_float(circle->radius) * scale_radius_by;
     abs_circle->dynamic = mp_obj_get_int(physics_circle->dynamic);
 }
 

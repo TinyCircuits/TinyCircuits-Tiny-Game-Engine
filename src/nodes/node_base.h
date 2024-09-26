@@ -83,8 +83,6 @@ static MP_DEFINE_CONST_FUN_OBJ_2(node_base_remove_child_obj, node_base_remove_ch
 // Fills 'inheritable' with data from parents and child
 void node_base_inherit_2d(mp_obj_t child_node_base, engine_inheritable_2d_t *inheritable);
 
-void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, bool *is_child_of_camera, mp_obj_t child_node_base);
-
 void node_base_set_attr_handler_default(mp_obj_t node_instance);
 void node_base_use_default_attr_handler(mp_obj_t self_in, qstr attribute, mp_obj_t *destination);
 
