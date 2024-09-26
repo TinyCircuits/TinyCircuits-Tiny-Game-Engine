@@ -487,9 +487,13 @@ static mp_attr_fun_t gui_bitmap_button_2d_node_class_attr(mp_obj_t self_in, qstr
 
     PARAM:  [type=float]                      [name=letter_spacing]                                 [value=any]
     PARAM:  [type=float]                      [name=line_spacing]                                   [value=any]
-    PARAM:  [type=bool]                       [name=disabled]                                       [value=True or False (when True, element will not be focused by default navigation system)]
     PARAM:  [type=int]                        [name=layer]                                          [value=0 ~ 127]
+    PARAM:  [type=bool]                       [name=disabled]                                       [value=True or False (when True, element will not be focused by default navigation system)]
 
+    PARAM:   [type=bool]                      [name=inherit_position]                               [value=True or False]
+    PARAM:   [type=bool]                      [name=inherit_opacity]                                [value=True or False]
+    PARAM:   [type=bool]                      [name=inherit_rotation]                               [value=True or False]
+    PARAM:   [type=bool]                      [name=inherit_scale]                                  [value=True or False]
 
     ATTR:   [type=function]                   [name={ref_link:add_child}]                           [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_child}]                           [value=function]
@@ -531,7 +535,6 @@ static mp_attr_fun_t gui_bitmap_button_2d_node_class_attr(mp_obj_t self_in, qstr
 
     ATTR:   [type=float]                      [name=letter_spacing]                                 [value=any]
     ATTR:   [type=float]                      [name=line_spacing]                                   [value=any]
-    ATTR:   [type=bool]                       [name=disabled]                                       [value=True or False (when True, element will not be focused by default navigation system)]
 
     ATTR:   [type=boolean]                    [name=focused]                                        [value=True or False (can be read to see if focused or set to focus it)]
     ATTR:   [type=boolean]                    [name=pressed]                                        [value=True or False (can be read to see if pressed or set to press it)]
@@ -539,6 +542,12 @@ static mp_attr_fun_t gui_bitmap_button_2d_node_class_attr(mp_obj_t self_in, qstr
     ATTR:   [type=float]                      [name=width]                                          [value=any (total width of the button, read-only): NOT IMPLEMENTED YET: TODO]
     ATTR:   [type=float]                      [name=height]                                         [value=any (total height of the button, read-only):  NOT IMPLEMENTED YET: TODO]
     ATTR:   [type=int]                        [name=layer]                                          [value=0 ~ 127]
+    ATTR:   [type=bool]                       [name=disabled]                                       [value=True or False (when True, element will not be focused by default navigation system)]
+
+    ATTR:   [type=bool]                       [name=inherit_position]                               [value=True or False]
+    ATTR:   [type=bool]                       [name=inherit_opacity]                                [value=True or False]
+    ATTR:   [type=bool]                       [name=inherit_rotation]                               [value=True or False]
+    ATTR:   [type=bool]                       [name=inherit_scale]                                  [value=True or False]
 
     OVRR:   [type=function]                   [name={ref_link:tick}]                                [value=function]
     OVRR:   [type=function]                   [name={ref_link:on_before_focused}]                   [value=function]
@@ -553,30 +562,35 @@ mp_obj_t gui_bitmap_button_2d_node_class_new(const mp_obj_type_t *type, size_t n
     ENGINE_INFO_PRINTF("New GUIBitmapButton2DNode");
 
     mp_arg_t allowed_args[] = {
-        { MP_QSTR_child_class,          MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_position,             MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(0.0f)})} },
-        { MP_QSTR_font,                 MP_ARG_OBJ, {.u_obj = &font} },
-        { MP_QSTR_text,                 MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_child_class,          MP_ARG_OBJ,  {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_position,             MP_ARG_OBJ,  {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(0.0f)})} },
+        { MP_QSTR_font,                 MP_ARG_OBJ,  {.u_obj = &font} },
+        { MP_QSTR_text,                 MP_ARG_OBJ,  {.u_obj = mp_const_none} },
 
-        { MP_QSTR_text_color,           MP_ARG_OBJ, {.u_obj = mp_const_none} },
-        { MP_QSTR_focused_text_color,   MP_ARG_OBJ, {.u_obj = mp_const_none} },
-        { MP_QSTR_pressed_text_color,   MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_text_color,           MP_ARG_OBJ,  {.u_obj = mp_const_none} },
+        { MP_QSTR_focused_text_color,   MP_ARG_OBJ,  {.u_obj = mp_const_none} },
+        { MP_QSTR_pressed_text_color,   MP_ARG_OBJ,  {.u_obj = mp_const_none} },
 
-        { MP_QSTR_bitmap,               MP_ARG_OBJ, {.u_obj = mp_const_none} },
-        { MP_QSTR_focused_bitmap,       MP_ARG_OBJ, {.u_obj = mp_const_none} },
-        { MP_QSTR_pressed_bitmap,       MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_bitmap,               MP_ARG_OBJ,  {.u_obj = mp_const_none} },
+        { MP_QSTR_focused_bitmap,       MP_ARG_OBJ,  {.u_obj = mp_const_none} },
+        { MP_QSTR_pressed_bitmap,       MP_ARG_OBJ,  {.u_obj = mp_const_none} },
 
-        { MP_QSTR_transparent_color,    MP_ARG_OBJ, {.u_obj = MP_OBJ_NEW_SMALL_INT(ENGINE_NO_TRANSPARENCY_COLOR)} },
+        { MP_QSTR_transparent_color,    MP_ARG_OBJ,  {.u_obj = MP_OBJ_NEW_SMALL_INT(ENGINE_NO_TRANSPARENCY_COLOR)} },
 
-        { MP_QSTR_rotation,             MP_ARG_OBJ, {.u_obj = mp_obj_new_float(0.0f)} },
-        { MP_QSTR_scale,                MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)})} },
-        { MP_QSTR_text_scale,           MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)})} },
-        { MP_QSTR_opacity,              MP_ARG_OBJ, {.u_obj = mp_obj_new_float(1.0f)} },
+        { MP_QSTR_rotation,             MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(0.0f)} },
+        { MP_QSTR_scale,                MP_ARG_OBJ,  {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)})} },
+        { MP_QSTR_text_scale,           MP_ARG_OBJ,  {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)})} },
+        { MP_QSTR_opacity,              MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(1.0f)} },
 
-        { MP_QSTR_letter_spacing,       MP_ARG_OBJ, {.u_obj = mp_obj_new_float(0.0f)} },
-        { MP_QSTR_line_spacing,         MP_ARG_OBJ, {.u_obj = mp_obj_new_float(0.0f)} },
-        { MP_QSTR_layer,                MP_ARG_INT, {.u_int = 0} },
-        { MP_QSTR_disabled,             MP_ARG_OBJ, {.u_obj = mp_obj_new_bool(false)} }
+        { MP_QSTR_letter_spacing,       MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(0.0f)} },
+        { MP_QSTR_line_spacing,         MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(0.0f)} },
+        { MP_QSTR_layer,                MP_ARG_INT,  {.u_int = 0} },
+        { MP_QSTR_disabled,             MP_ARG_OBJ,  {.u_obj = mp_obj_new_bool(false)} },
+
+        { MP_QSTR_inherit_position,     MP_ARG_BOOL, {.u_bool = true} },
+        { MP_QSTR_inherit_opacity,      MP_ARG_BOOL, {.u_bool = true} },
+        { MP_QSTR_inherit_rotation,     MP_ARG_BOOL, {.u_bool = true} },
+        { MP_QSTR_inherit_scale,        MP_ARG_BOOL, {.u_bool = true} },
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
     enum arg_ids {child_class, position, font, text,
@@ -597,7 +611,8 @@ mp_obj_t gui_bitmap_button_2d_node_class_new(const mp_obj_type_t *type, size_t n
                   line_spacing,
                   
                   layer,
-                  disabled};
+                  disabled,
+                  inherit_position, inherit_opacity, inherit_rotation, inherit_scale};
 
     bool inherited = false;
 
@@ -658,6 +673,10 @@ mp_obj_t gui_bitmap_button_2d_node_class_new(const mp_obj_type_t *type, size_t n
     gui_bitmap_button_2d_node->letter_spacing = parsed_args[letter_spacing].u_obj;
     gui_bitmap_button_2d_node->line_spacing = parsed_args[line_spacing].u_obj;
     gui_bitmap_button_2d_node->disabled = parsed_args[disabled].u_obj;
+    node_base_set_inherit_position(node_base, parsed_args[inherit_position].u_bool);
+    node_base_set_inherit_opacity(node_base, parsed_args[inherit_opacity].u_bool);
+    node_base_set_inherit_rotation(node_base, parsed_args[inherit_rotation].u_bool);
+    node_base_set_inherit_scale(node_base, parsed_args[inherit_scale].u_bool);
 
     gui_bitmap_button_2d_node->focused = false;
     gui_bitmap_button_2d_node->pressed = false;

@@ -221,6 +221,10 @@ static mp_attr_fun_t rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribu
     PARAM:  [type=float]                            [name=rotation]                                     [value=any (radians)]
     PARAM:  [type={ref_link:Vector2}]               [name=scale]                                        [value={ref_link:Vector2}]
     PARAM:  [type=int]                              [name=layer]                                        [value=0 ~ 127]
+    PARAM:  [type=bool]                             [name=inherit_position]                             [value=True or False]
+    PARAM:  [type=bool]                             [name=inherit_opacity]                              [value=True or False]
+    PARAM:  [type=bool]                             [name=inherit_rotation]                             [value=True or False]
+    PARAM:  [type=bool]                             [name=inherit_scale]                                [value=True or False]
     ATTR:   [type=function]                         [name={ref_link:add_child}]                         [value=function]
     ATTR:   [type=function]                         [name={ref_link:get_child}]                         [value=function]
     ATTR:   [type=function]                         [name={ref_link:get_child_count}]                   [value=function]
@@ -239,25 +243,33 @@ static mp_attr_fun_t rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribu
     ATTR:   [type=float]                            [name=rotation]                                     [value=any (radians)]
     ATTR:   [type={ref_link:Vector2}]               [name=scale]                                        [value={ref_link:Vector2}]
     ATTR:   [type=int]                              [name=layer]                                        [value=0 ~ 127]
+    ATTR:   [type=bool]                             [name=inherit_position]                             [value=True or False]
+    ATTR:   [type=bool]                             [name=inherit_opacity]                              [value=True or False]
+    ATTR:   [type=bool]                             [name=inherit_rotation]                             [value=True or False]
+    ATTR:   [type=bool]                             [name=inherit_scale]                                [value=True or False]
     OVRR:   [type=function]                         [name={ref_link:tick}]                              [value=function]
 */
 mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Rectangle2DNode");
 
     mp_arg_t allowed_args[] = {
-        { MP_QSTR_child_class,  MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_position,     MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL)} },
-        { MP_QSTR_width,        MP_ARG_OBJ, {.u_obj = mp_obj_new_float(10.0f)} },
-        { MP_QSTR_height,       MP_ARG_OBJ, {.u_obj = mp_obj_new_float(10.0f)} },
-        { MP_QSTR_color,        MP_ARG_OBJ, {.u_obj = MP_OBJ_NEW_SMALL_INT(0xffff)} },
-        { MP_QSTR_opacity,      MP_ARG_OBJ, {.u_obj = mp_obj_new_float(1.0f)} },
-        { MP_QSTR_outline,      MP_ARG_OBJ, {.u_obj = mp_obj_new_bool(false)} },
-        { MP_QSTR_rotation,     MP_ARG_OBJ, {.u_obj = mp_obj_new_float(0.0f)} },
-        { MP_QSTR_scale,        MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)})} },
-        { MP_QSTR_layer,        MP_ARG_INT, {.u_int = 0} }
+        { MP_QSTR_child_class,       MP_ARG_OBJ,  {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_position,          MP_ARG_OBJ,  {.u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL)} },
+        { MP_QSTR_width,             MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(10.0f)} },
+        { MP_QSTR_height,            MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(10.0f)} },
+        { MP_QSTR_color,             MP_ARG_OBJ,  {.u_obj = MP_OBJ_NEW_SMALL_INT(0xffff)} },
+        { MP_QSTR_opacity,           MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(1.0f)} },
+        { MP_QSTR_outline,           MP_ARG_OBJ,  {.u_obj = mp_obj_new_bool(false)} },
+        { MP_QSTR_rotation,          MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(0.0f)} },
+        { MP_QSTR_scale,             MP_ARG_OBJ,  {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)})} },
+        { MP_QSTR_layer,             MP_ARG_INT,  {.u_int = 0} },
+        { MP_QSTR_inherit_position,  MP_ARG_BOOL, {.u_bool = true} },
+        { MP_QSTR_inherit_opacity,   MP_ARG_BOOL, {.u_bool = true} },
+        { MP_QSTR_inherit_rotation,  MP_ARG_BOOL, {.u_bool = true} },
+        { MP_QSTR_inherit_scale,     MP_ARG_BOOL, {.u_bool = true} },
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
-    enum arg_ids {child_class, position, width, height, color, opacity, outline, rotation, scale, layer};
+    enum arg_ids {child_class, position, width, height, color, opacity, outline, rotation, scale, layer, inherit_position, inherit_opacity, inherit_rotation, inherit_scale};
     bool inherited = false;
 
     // If there is one positional argument and it isn't the first
@@ -293,6 +305,10 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
     rectangle_2d_node->outline = parsed_args[outline].u_obj;
     rectangle_2d_node->rotation = parsed_args[rotation].u_obj;
     rectangle_2d_node->scale = parsed_args[scale].u_obj;
+    node_base_set_inherit_position(node_base, parsed_args[inherit_position].u_bool);
+    node_base_set_inherit_opacity(node_base, parsed_args[inherit_opacity].u_bool);
+    node_base_set_inherit_rotation(node_base, parsed_args[inherit_rotation].u_bool);
+    node_base_set_inherit_scale(node_base, parsed_args[inherit_scale].u_bool);
 
     if(inherited == true){  // Inherited (use existing object)
         // Get the Python class instance

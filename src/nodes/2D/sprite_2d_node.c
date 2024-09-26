@@ -326,6 +326,10 @@ static mp_attr_fun_t sprite_2d_node_class_attr(mp_obj_t self_in, qstr attribute,
     PARAM:  [type=float]                            [name=opacity]                                      [value=0 ~ 1.0]
     PARAM:  [type=boolean]                          [name=playing]                                      [value=boolean]
     PARAM:  [type=int]                              [name=layer]                                        [value=0 ~ 127]
+    PARAM:  [type=bool]                             [name=inherit_position]                             [value=True or False]
+    PARAM:  [type=bool]                             [name=inherit_opacity]                              [value=True or False]
+    PARAM:  [type=bool]                             [name=inherit_rotation]                             [value=True or False]
+    PARAM:  [type=bool]                             [name=inherit_scale]                                [value=True or False]
     ATTR:   [type=function]                         [name={ref_link:add_child}]                         [value=function]
     ATTR:   [type=function]                         [name={ref_link:get_child}]                         [value=function]
     ATTR:   [type=function]                         [name={ref_link:get_child_count}]                   [value=function]
@@ -349,28 +353,36 @@ static mp_attr_fun_t sprite_2d_node_class_attr(mp_obj_t self_in, qstr attribute,
     ATTR:   [type=int]                              [name=frame_current_x]                              [value=any positive integer]
     ATTR:   [type=int]                              [name=frame_current_y]                              [value=any positive integer]
     ATTR:   [type=int]                              [name=layer]                                        [value=0 ~ 127]
+    ATTR:   [type=bool]                             [name=inherit_position]                             [value=True or False]
+    ATTR:   [type=bool]                             [name=inherit_opacity]                              [value=True or False]
+    ATTR:   [type=bool]                             [name=inherit_rotation]                             [value=True or False]
+    ATTR:   [type=bool]                             [name=inherit_scale]                                [value=True or False]
     OVRR:   [type=function]                         [name={ref_link:tick}]                              [value=function]
 */
 mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Sprite2DNode");
 
     mp_arg_t allowed_args[] = {
-        { MP_QSTR_child_class,          MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_position,             MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL)} },
-        { MP_QSTR_texture,              MP_ARG_OBJ, {.u_obj = mp_const_none} },
-        { MP_QSTR_transparent_color,    MP_ARG_OBJ, {.u_obj = MP_OBJ_NEW_SMALL_INT(ENGINE_NO_TRANSPARENCY_COLOR)} },
-        { MP_QSTR_fps,                  MP_ARG_OBJ, {.u_obj = mp_obj_new_float(30.0f)} },
-        { MP_QSTR_frame_count_x,        MP_ARG_OBJ, {.u_obj = mp_obj_new_int(1)} },
-        { MP_QSTR_frame_count_y,        MP_ARG_OBJ, {.u_obj = mp_obj_new_int(1)} },
-        { MP_QSTR_rotation,             MP_ARG_OBJ, {.u_obj = mp_obj_new_float(0.0f)} },
-        { MP_QSTR_scale,                MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)})} },
-        { MP_QSTR_opacity,              MP_ARG_OBJ, {.u_obj = mp_obj_new_float(1.0f)} },
-        { MP_QSTR_playing,              MP_ARG_OBJ, {.u_obj = mp_obj_new_bool(true)} },
-        { MP_QSTR_loop,                 MP_ARG_OBJ, {.u_obj = mp_obj_new_bool(true)} },
-        { MP_QSTR_layer,                MP_ARG_INT, {.u_int = 0} }
+        { MP_QSTR_child_class,          MP_ARG_OBJ,  {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_position,             MP_ARG_OBJ,  {.u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL)} },
+        { MP_QSTR_texture,              MP_ARG_OBJ,  {.u_obj = mp_const_none} },
+        { MP_QSTR_transparent_color,    MP_ARG_OBJ,  {.u_obj = MP_OBJ_NEW_SMALL_INT(ENGINE_NO_TRANSPARENCY_COLOR)} },
+        { MP_QSTR_fps,                  MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(30.0f)} },
+        { MP_QSTR_frame_count_x,        MP_ARG_OBJ,  {.u_obj = mp_obj_new_int(1)} },
+        { MP_QSTR_frame_count_y,        MP_ARG_OBJ,  {.u_obj = mp_obj_new_int(1)} },
+        { MP_QSTR_rotation,             MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(0.0f)} },
+        { MP_QSTR_scale,                MP_ARG_OBJ,  {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)})} },
+        { MP_QSTR_opacity,              MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(1.0f)} },
+        { MP_QSTR_playing,              MP_ARG_OBJ,  {.u_obj = mp_obj_new_bool(true)} },
+        { MP_QSTR_loop,                 MP_ARG_OBJ,  {.u_obj = mp_obj_new_bool(true)} },
+        { MP_QSTR_layer,                MP_ARG_INT,  {.u_int = 0} },
+        { MP_QSTR_inherit_position,     MP_ARG_BOOL, {.u_bool = true} },
+        { MP_QSTR_inherit_opacity,      MP_ARG_BOOL, {.u_bool = true} },
+        { MP_QSTR_inherit_rotation,     MP_ARG_BOOL, {.u_bool = true} },
+        { MP_QSTR_inherit_scale,        MP_ARG_BOOL, {.u_bool = true} },
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
-    enum arg_ids {child_class, position, texture, transparent_color, fps, frame_count_x, frame_count_y, rotation, scale, opacity, playing, loop, layer};
+    enum arg_ids {child_class, position, texture, transparent_color, fps, frame_count_x, frame_count_y, rotation, scale, opacity, playing, loop, layer, inherit_position, inherit_opacity, inherit_rotation, inherit_scale};
     bool inherited = false;
 
     // If there is one positional argument and it isn't the first
@@ -410,6 +422,11 @@ mp_obj_t sprite_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
     sprite_2d_node->opacity = parsed_args[opacity].u_obj;
     sprite_2d_node->playing = parsed_args[playing].u_obj;
     sprite_2d_node->loop = parsed_args[loop].u_obj;
+    node_base_set_inherit_position(node_base, parsed_args[inherit_position].u_bool);
+    node_base_set_inherit_opacity(node_base, parsed_args[inherit_opacity].u_bool);
+    node_base_set_inherit_rotation(node_base, parsed_args[inherit_rotation].u_bool);
+    node_base_set_inherit_scale(node_base, parsed_args[inherit_scale].u_bool);
+
     sprite_2d_node->frame_current_x = mp_obj_new_int(0);
     sprite_2d_node->frame_current_y = mp_obj_new_int(0);
 

@@ -195,6 +195,10 @@ static mp_attr_fun_t circle_2d_node_class_attr(mp_obj_t self_in, qstr attribute,
    PARAM:   [type=float]                            [name=rotation]                                      [value=any]
    PARAM:   [type=float]                            [name=scale]                                         [value=any]
    PARAM:   [type=int]                              [name=layer]                                         [value=0 ~ 127]
+   PARAM:   [type=bool]                             [name=inherit_position]                              [value=True or False]
+   PARAM:   [type=bool]                             [name=inherit_opacity]                               [value=True or False]
+   PARAM:   [type=bool]                             [name=inherit_rotation]                              [value=True or False]
+   PARAM:   [type=bool]                             [name=inherit_scale]                                 [value=True or False]
    ATTR:    [type=function]                         [name={ref_link:add_child}]                          [value=function]
    ATTR:    [type=function]                         [name={ref_link:get_child}]                          [value=function]
    ATTR:    [type=function]                         [name={ref_link:get_child_count}]                    [value=function]
@@ -204,6 +208,7 @@ static mp_attr_fun_t circle_2d_node_class_attr(mp_obj_t self_in, qstr attribute,
    ATTR:    [type=function]                         [name={ref_link:remove_child}]                       [value=function]
    ATTR:    [type=function]                         [name={ref_link:tick}]                               [value=function]
    ATTR:    [type={ref_link:Vector2}]               [name=position]                                      [value={ref_link:Vector2}]
+   ATTR:    [type={ref_link:Vector2}]               [name=global_position]                               [value={ref_link:Vector2} (read-only)]
    ATTR:    [type=float]                            [name=radius]                                        [value=any]
    ATTR:    [type=float]                            [name=rotation]                                      [value=any]
    ATTR:    [type={ref_link:Color}|int (RGB565)]    [name=color]                                         [value=color]
@@ -211,24 +216,32 @@ static mp_attr_fun_t circle_2d_node_class_attr(mp_obj_t self_in, qstr attribute,
    ATTR:    [type=float]                            [name=scale]                                         [value=any]
    ATTR:    [type=bool]                             [name=outline]                                       [value=True or False]
    ATTR:    [type=int]                              [name=layer]                                         [value=0 ~ 127]
+   ATTR:    [type=bool]                             [name=inherit_position]                              [value=True or False]
+   ATTR:    [type=bool]                             [name=inherit_opacity]                               [value=True or False]
+   ATTR:    [type=bool]                             [name=inherit_rotation]                              [value=True or False]
+   ATTR:    [type=bool]                             [name=inherit_scale]                                 [value=True or False]
    OVRR:    [type=function]                         [name={ref_link:tick}]                               [value=function]
 */
 mp_obj_t circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Circle2DNode");
 
     mp_arg_t allowed_args[] = {
-        { MP_QSTR_child_class,  MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_position,     MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL)} },
-        { MP_QSTR_radius,       MP_ARG_OBJ, {.u_obj = mp_obj_new_float(5.0f)} },
-        { MP_QSTR_color,        MP_ARG_OBJ, {.u_obj = MP_OBJ_NEW_SMALL_INT(0xffff)} },
-        { MP_QSTR_opacity,      MP_ARG_OBJ, {.u_obj = mp_obj_new_float(1.0f)} },
-        { MP_QSTR_outline,      MP_ARG_OBJ, {.u_obj = mp_obj_new_bool(false)} },
-        { MP_QSTR_rotation,     MP_ARG_OBJ, {.u_obj = mp_obj_new_float(0.0f)} },
-        { MP_QSTR_scale,        MP_ARG_OBJ, {.u_obj = mp_obj_new_float(1.0f)} },
-        { MP_QSTR_layer,        MP_ARG_INT, {.u_int = 0} }
+        { MP_QSTR_child_class,       MP_ARG_OBJ,  {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_position,          MP_ARG_OBJ,  {.u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL)} },
+        { MP_QSTR_radius,            MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(5.0f)} },
+        { MP_QSTR_color,             MP_ARG_OBJ,  {.u_obj = MP_OBJ_NEW_SMALL_INT(0xffff)} },
+        { MP_QSTR_opacity,           MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(1.0f)} },
+        { MP_QSTR_outline,           MP_ARG_OBJ,  {.u_obj = mp_obj_new_bool(false)} },
+        { MP_QSTR_rotation,          MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(0.0f)} },
+        { MP_QSTR_scale,             MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(1.0f)} },
+        { MP_QSTR_layer,             MP_ARG_INT,  {.u_int = 0} },
+        { MP_QSTR_inherit_position,  MP_ARG_BOOL, {.u_bool = true} },
+        { MP_QSTR_inherit_opacity,   MP_ARG_BOOL, {.u_bool = true} },
+        { MP_QSTR_inherit_rotation,  MP_ARG_BOOL, {.u_bool = true} },
+        { MP_QSTR_inherit_scale,     MP_ARG_BOOL, {.u_bool = true} },
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
-    enum arg_ids {child_class, position, radius, color, opacity, outline, rotation, scale, layer};
+    enum arg_ids {child_class, position, radius, color, opacity, outline, rotation, scale, layer, inherit_position, inherit_opacity, inherit_rotation, inherit_scale};
     bool inherited = false;
 
     // If there is one positional argument and it isn't the first
@@ -263,6 +276,10 @@ mp_obj_t circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size
     circle_2d_node->opacity = parsed_args[opacity].u_obj;
     circle_2d_node->scale = parsed_args[scale].u_obj;
     circle_2d_node->outline = parsed_args[outline].u_obj;
+    node_base_set_inherit_position(node_base, parsed_args[inherit_position].u_bool);
+    node_base_set_inherit_opacity(node_base, parsed_args[inherit_opacity].u_bool);
+    node_base_set_inherit_rotation(node_base, parsed_args[inherit_rotation].u_bool);
+    node_base_set_inherit_scale(node_base, parsed_args[inherit_scale].u_bool);
 
     if(inherited == true){  // Inherited (use existing object)
         // Get the Python class instance
