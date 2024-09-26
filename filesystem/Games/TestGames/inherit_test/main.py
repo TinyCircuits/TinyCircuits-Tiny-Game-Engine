@@ -58,10 +58,10 @@ spr_parent.add_child(spr_child)
 
 
 # Text2DNode test (text height is 5)
-text_label  = Text2DNode(text="Text Test", position=Vector2(180, 60))
-text_parent = Text2DNode(scale=Vector2(2, 2), text="Hello!", position=Vector2(180+60, 80))
-text_child  = Text2DNode(scale=Vector2(2, 2), text="Hello!", position=Vector2(0, 2.5))
-text_label  = Text2DNode(scale=Vector2(2*2, 2*2), text="Hello!", position=Vector2(180-60, 85))
+text_label   = Text2DNode(text="Text Test", position=Vector2(180, 60))
+text_parent  = Text2DNode(scale=Vector2(2, 2), text="Hello!", opacity=0.75, position=Vector2(180+60, 80))
+text_child   = Text2DNode(scale=Vector2(2, 2), text="Hello!", opacity=0.75, position=Vector2(0, 2.5))
+text_compare = Text2DNode(scale=Vector2(2*2, 2*2), text="Hello!", opacity=0.75*0.75, position=Vector2(180-60, 85))
 text_parent.add_child(text_child)
 
 

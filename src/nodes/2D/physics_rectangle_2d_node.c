@@ -92,11 +92,11 @@ void physics_rectangle_2d_node_class_draw(mp_obj_t rectangle_node_base_obj, mp_o
 }
 
 
-void engine_physics_rectangle_2d_node_calculate(engine_physics_node_base_t *physics_node_base, float *vertices_x, float *vertices_y, float *normals_x, float *normals_y, float rotation){
+void engine_physics_rectangle_2d_node_calculate(engine_physics_node_base_t *physics_node_base, float scale_x, float scale_y, float *vertices_x, float *vertices_y, float *normals_x, float *normals_y, float rotation){
     engine_physics_rectangle_2d_node_class_obj_t *self = physics_node_base->unique_data;
 
-    float half_width = mp_obj_get_float(self->width) * 0.5f;
-    float half_height = mp_obj_get_float(self->height) * 0.5f;
+    float half_width = mp_obj_get_float(self->width) * 0.5f * scale_x;
+    float half_height = mp_obj_get_float(self->height) * 0.5f * scale_y;
 
     float x_traversal_cos = cosf(rotation) * half_width;
     float x_traversal_sin = sinf(rotation) * half_width;
