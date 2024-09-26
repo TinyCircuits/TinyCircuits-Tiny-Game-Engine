@@ -21,7 +21,11 @@ bool gui_passing_enabled = false;
 
 
 void resolve_gui_node_position(engine_node_base_t *gui_node_base, float *x, float *y){
-    node_base_get_child_absolute_xy(x, y, NULL, NULL, gui_node_base);
+    engine_inheritable_2d_t inherited;
+    node_base_inherit_2d(gui_node_base, &inherited);
+
+    *x = inherited.px;
+    *y = inherited.py;
 }
 
 

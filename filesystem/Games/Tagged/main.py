@@ -1,6 +1,4 @@
-import machine
-#__freq = machine.freq()
-machine.freq(250000000)
+engine.freq(250000000)
 
 import os
 # os.chdir("/Games/Tagged")
@@ -28,7 +26,7 @@ from engine_animation import Tween, Delay, ONE_SHOT, LOOP, PING_PONG, EASE_ELAST
 
 #engine_debug.enable_all()
 
-#machine.freq(__freq)
+#engine.freq(__freq)
 
 engine.fps_limit(50)
 

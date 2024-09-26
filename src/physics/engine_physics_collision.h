@@ -85,18 +85,14 @@ void engine_physics_rect_rect_get_contacting(float px, float py,
 // a ling segment to line segment intersection is found. If the line segments are parallel,
 // the midpoint of the overlapping line segments is taken as the collision contact point
 void engine_physics_rect_rect_get_contact(physics_contact_t *contact,
-                                          float abs_a_position_x, float abs_a_position_y, float abs_b_position_x, float abs_b_position_y,
-                                          engine_physics_node_base_t *physics_rectangle_a,
-                                          engine_physics_node_base_t *physics_rectangle_b);
+                                          physics_abs_rectangle_t *abs_rect_a, physics_abs_rectangle_t *abs_rect_b);
 
 // Get the contact point from the OBB to circle collision: https://dyn4j.org/2011/11/contact-points-using-clipping/
 // Finds the closest vertex in the rectangle to the circle, creates an edge between the circle and that
 // vertex, runs SAT, finds a direction to place contact point from circle's perspective
 void engine_physics_rect_circle_get_contact(physics_contact_t *contact,
                                             float circle_to_vert_axis_x, float circle_to_vert_axis_y,
-                                            float abs_rectangle_pos_x, float abs_rectangle_pos_y, float abs_circle_pos_x, float abs_circle_pos_y,
-                                            engine_physics_node_base_t *physics_node_base_rectangle,
-                                            engine_physics_node_base_t *physics_node_base_circle);
+                                            physics_abs_rectangle_t *abs_rect, physics_abs_circle_t *abs_circle);
 
 // rectangle vs. rectangle: https://code.tutsplus.com/how-to-create-a-custom-2d-physics-engine-oriented-rigid-bodies--gamedev-8032t
 // Runs SAT to figure out if rectangles are colliding

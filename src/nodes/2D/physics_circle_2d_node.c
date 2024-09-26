@@ -43,47 +43,36 @@ void physics_circle_2d_node_class_draw(mp_obj_t circle_node_base_obj, mp_obj_t c
         color = outline_color->value;
     }
 
-    float circle_resolved_hierarchy_x = 0.0f;
-    float circle_resolved_hierarchy_y = 0.0f;
-    float circle_resolved_hierarchy_rotation = 0.0f;
-    bool circle_is_child_of_camera = false;
-    node_base_get_child_absolute_xy(&circle_resolved_hierarchy_x, &circle_resolved_hierarchy_y, &circle_resolved_hierarchy_rotation, &circle_is_child_of_camera, circle_node_base);
+    // Get inherited properties
+    engine_inheritable_2d_t inherited;
+    node_base_inherit_2d(circle_node_base, &inherited);
 
-    // Store the non-rotated x and y for a second
-    float circle_rotated_x = circle_resolved_hierarchy_x;
-    float circle_rotated_y = circle_resolved_hierarchy_y;
-    float circle_rotation = circle_resolved_hierarchy_rotation;
-
-    if(circle_is_child_of_camera == false){
-        float camera_resolved_hierarchy_x = 0.0f;
-        float camera_resolved_hierarchy_y = 0.0f;
-        float camera_resolved_hierarchy_rotation = 0.0f;
-        node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
-        camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
-
-        circle_rotated_x = (circle_rotated_x - camera_resolved_hierarchy_x) * camera_zoom;
-        circle_rotated_y = (circle_rotated_y - camera_resolved_hierarchy_y) * camera_zoom;
-
-        // Rotate rectangle origin about the camera
-        engine_math_rotate_point(&circle_rotated_x, &circle_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
-
-        circle_rotation += camera_resolved_hierarchy_rotation;
+    if(inherited.is_camera_child == false){
+        engine_camera_transform_2d(camera_node, &inherited.px, &inherited.py, &inherited.rotation);
     }else{
         camera_zoom = 1.0f;
+    }
+
+    inherited.px += camera_viewport->width/2;
+    inherited.py += camera_viewport->height/2;
+
+    // Scale circle radius by smallest inherited (not sure the best way to do this)
+    float scale_radius_by = 1.0f;
+    if(inherited.sx < inherited.sy){
+        scale_radius_by = inherited.sx;
+    }else{
+        scale_radius_by = inherited.sy;
     }
 
     // The final circle radius to draw the circle at is a combination of
     // the set radius, times the set scale, times the set camera zoom.
     // Do this after determining if a child of a camera at any point
     // since in that case zoom shouldn't have an effect
-    circle_radius = (circle_radius*camera_zoom);
-
-    circle_rotated_x += camera_viewport->width/2;
-    circle_rotated_y += camera_viewport->height/2;
+    circle_radius = circle_radius*scale_radius_by*camera_zoom;
 
     engine_shader_t *shader = engine_get_builtin_shader(EMPTY_SHADER);
 
-    engine_draw_outline_circle(color, floorf(circle_rotated_x), floorf(circle_rotated_y), circle_radius, 1.0f, shader);
+    engine_draw_outline_circle(color, floorf(inherited.px), floorf(inherited.py), circle_radius, 1.0f, shader);
 }
 
 
@@ -197,7 +186,7 @@ static mp_attr_fun_t physics_circle_2d_node_class_attr(mp_obj_t self_in, qstr at
 /*  --- doc ---
     NAME: PhysicsCircle2DNode
     ID: PhysicsCircle2DNode
-    DESC: Node that is affected by physics. Usually other nodes are added as children to this node
+    DESC: Node that is affected by physics. Usually other nodes are added as children to this node. If the parents of this node have scales with two dimensions ({ref_link:Vector2}), then the radius will be scaled the smallest resulting component.
     PARAM: [type={ref_link:Vector2}]                     [name=position]                                    [value={ref_link:Vector2}]
     PARAM: [type=float]                                  [name=radius]                                      [value=any]
     PARAM: [type={ref_link:Vector2}]                     [name=velocity]                                    [value={ref_link:Vector2}]
@@ -211,6 +200,10 @@ static mp_attr_fun_t physics_circle_2d_node_class_attr(mp_obj_t self_in, qstr at
     PARAM: [type={ref_link:Color}]                       [name=outline_color]                               [value={ref_link:Color}]
     PARAM: [type=int]                                    [name=collision_mask]                              [value=32-bit bitmask (nodes with the same true bits will collide, set to 1 by default)]
     PARAM: [type=int]                                    [name=layer]                                       [value=0 ~ 127]
+    PARAM: [type=bool]                                   [name=inherit_position]                            [value=True or False]
+    PARAM: [type=bool]                                   [name=inherit_opacity]                             [value=True or False]
+    PARAM: [type=bool]                                   [name=inherit_rotation]                            [value=True or False]
+    PARAM: [type=bool]                                   [name=inherit_scale]                               [value=True or False]
     ATTR:  [type=function]                               [name={ref_link:add_child}]                        [value=function]
     ATTR:  [type=function]                               [name={ref_link:get_child}]                        [value=function]
     ATTR:  [type=function]                               [name={ref_link:get_child_count}]                  [value=function]
@@ -218,6 +211,7 @@ static mp_attr_fun_t physics_circle_2d_node_class_attr(mp_obj_t self_in, qstr at
     ATTR:  [type=function]                               [name={ref_link:node_base_mark_destroy_all}]       [value=function]
     ATTR:  [type=function]                               [name={ref_link:node_base_mark_destroy_children}]  [value=function]
     ATTR:  [type=function]                               [name={ref_link:remove_child}]                     [value=function]
+    ATTR:  [type=function]                               [name={ref_link:get_parent}]                       [value=function]
     ATTR:  [type=function]                               [name={ref_link:tick}]                             [value=function]
     ATTR:  [type=function]                               [name={ref_link:enable_collision_layer}]           [value=function]
     ATTR:  [type=function]                               [name={ref_link:disable_collision_layer}]          [value=function]
@@ -237,6 +231,10 @@ static mp_attr_fun_t physics_circle_2d_node_class_attr(mp_obj_t self_in, qstr at
     ATTR:  [type=function]                               [name={ref_link:on_collide}]                       [value=function]
     ATTR:  [type=function]                               [name={ref_link:on_separate}]                      [value=function]
     ATTR:  [type=int]                                    [name=layer]                                       [value=0 ~ 127]
+    ATTR:  [type=bool]                                   [name=inherit_position]                            [value=True or False]
+    ATTR:  [type=bool]                                   [name=inherit_opacity]                             [value=True or False]
+    ATTR:  [type=bool]                                   [name=inherit_rotation]                            [value=True or False]
+    ATTR:  [type=bool]                                   [name=inherit_scale]                               [value=True or False]
     OVRR:  [type=function]                               [name={ref_link:physics_tick}]                     [value=function]
     OVRR:  [type=function]                               [name={ref_link:tick}]                             [value=function]
     OVRR:  [type=function]                               [name={ref_link:on_collide}]                       [value=function]
@@ -246,25 +244,29 @@ mp_obj_t physics_circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_ar
     ENGINE_INFO_PRINTF("New PhysicsCircle2DNode");
 
     mp_arg_t allowed_args[] = {
-        { MP_QSTR_child_class,      MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_position,         MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL)} },
-        { MP_QSTR_radius,           MP_ARG_OBJ, {.u_obj = mp_obj_new_float(5.0f)} },
-        { MP_QSTR_velocity,         MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL)} },
-        { MP_QSTR_angular_velocity, MP_ARG_OBJ, {.u_obj = mp_obj_new_float(0.0f)} },
-        { MP_QSTR_rotation,         MP_ARG_OBJ, {.u_obj = mp_obj_new_float(0.0)} },
-        { MP_QSTR_density,          MP_ARG_OBJ, {.u_obj = mp_obj_new_float(1.0f)} },
-        { MP_QSTR_friction,         MP_ARG_OBJ, {.u_obj = mp_obj_new_float(0.1f)} },
-        { MP_QSTR_bounciness,       MP_ARG_OBJ, {.u_obj = mp_obj_new_float(1.0f)} },
-        { MP_QSTR_dynamic,          MP_ARG_OBJ, {.u_obj = mp_obj_new_int(1)} },
-        { MP_QSTR_solid,            MP_ARG_OBJ, {.u_obj = mp_obj_new_int(1)} },
-        { MP_QSTR_gravity_scale,    MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)})} },
-        { MP_QSTR_outline,          MP_ARG_OBJ, {.u_obj = mp_obj_new_int(0)} },
-        { MP_QSTR_outline_color,    MP_ARG_OBJ, {.u_obj = mp_const_none} },
-        { MP_QSTR_collision_mask,   MP_ARG_INT, {.u_int = 1} },
-        { MP_QSTR_layer,            MP_ARG_INT, {.u_int = 0} }
+        { MP_QSTR_child_class,       MP_ARG_OBJ,  {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_position,          MP_ARG_OBJ,  {.u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL)} },
+        { MP_QSTR_radius,            MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(5.0f)} },
+        { MP_QSTR_velocity,          MP_ARG_OBJ,  {.u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL)} },
+        { MP_QSTR_angular_velocity,  MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(0.0f)} },
+        { MP_QSTR_rotation,          MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(0.0)} },
+        { MP_QSTR_density,           MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(1.0f)} },
+        { MP_QSTR_friction,          MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(0.1f)} },
+        { MP_QSTR_bounciness,        MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(1.0f)} },
+        { MP_QSTR_dynamic,           MP_ARG_OBJ,  {.u_obj = mp_obj_new_int(1)} },
+        { MP_QSTR_solid,             MP_ARG_OBJ,  {.u_obj = mp_obj_new_int(1)} },
+        { MP_QSTR_gravity_scale,     MP_ARG_OBJ,  {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)})} },
+        { MP_QSTR_outline,           MP_ARG_OBJ,  {.u_obj = mp_obj_new_int(0)} },
+        { MP_QSTR_outline_color,     MP_ARG_OBJ,  {.u_obj = mp_const_none} },
+        { MP_QSTR_collision_mask,    MP_ARG_INT,  {.u_int = 1} },
+        { MP_QSTR_layer,             MP_ARG_INT,  {.u_int = 0} },
+        { MP_QSTR_inherit_position,  MP_ARG_BOOL, {.u_bool = true} },
+        { MP_QSTR_inherit_opacity,   MP_ARG_BOOL, {.u_bool = true} },
+        { MP_QSTR_inherit_rotation,  MP_ARG_BOOL, {.u_bool = true} },
+        { MP_QSTR_inherit_scale,     MP_ARG_BOOL, {.u_bool = true} },
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
-    enum arg_ids {child_class, position, radius, velocity, angular_velocity, rotation, density, friction, bounciness, dynamic, solid, gravity_scale, outline, outline_color, collision_mask, layer};
+    enum arg_ids {child_class, position, radius, velocity, angular_velocity, rotation, density, friction, bounciness, dynamic, solid, gravity_scale, outline, outline_color, collision_mask, layer, inherit_position, inherit_opacity, inherit_rotation, inherit_scale};
     bool inherited = false;
 
     // If there is one positional argument and it isn't the first
@@ -310,6 +312,10 @@ mp_obj_t physics_circle_2d_node_class_new(const mp_obj_type_t *type, size_t n_ar
     physics_node_base->outline = parsed_args[outline].u_obj;
     physics_node_base->outline_color = parsed_args[outline_color].u_obj;
     physics_node_base->collision_mask = parsed_args[collision_mask].u_int;
+    node_base_set_inherit_position(node_base, parsed_args[inherit_position].u_bool);
+    node_base_set_inherit_opacity(node_base, parsed_args[inherit_opacity].u_bool);
+    node_base_set_inherit_rotation(node_base, parsed_args[inherit_rotation].u_bool);
+    node_base_set_inherit_scale(node_base, parsed_args[inherit_scale].u_bool);
 
     physics_node_base->physics_id = engine_physics_ids_take_available();
     physics_node_base->mass = 0.0f;

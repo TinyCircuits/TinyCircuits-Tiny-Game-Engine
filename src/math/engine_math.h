@@ -68,7 +68,7 @@ bool engine_math_2d_do_segments_intersect(float line_0_start_x, float line_0_sta
 void engine_math_rotate_point(float *px, float *py, float cx, float cy, float angle_radians);
 
 // Scales a point from a center position
-void engine_math_scale_point(float *px, float *py, float cx, float cy, float scale);
+void engine_math_scale_point(float *px, float *py, float cx, float cy, float sx, float sy);
 
 float engine_math_fast_sin(float angle_radians);
 

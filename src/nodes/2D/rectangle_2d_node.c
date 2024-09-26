@@ -30,7 +30,6 @@ void rectangle_2d_node_class_draw(mp_obj_t rectangle_node_base_obj, mp_obj_t cam
         return;
     }
 
-    vector2_class_obj_t *rectangle_scale =  rectangle_2d_node->scale;
     float rectangle_width = mp_obj_get_float(rectangle_2d_node->width);
     float rectangle_height = mp_obj_get_float(rectangle_2d_node->height);
     color_class_obj_t *rectangle_color = rectangle_2d_node->color;
@@ -38,41 +37,22 @@ void rectangle_2d_node_class_draw(mp_obj_t rectangle_node_base_obj, mp_obj_t cam
 
     rectangle_class_obj_t *camera_viewport = camera->viewport;
     float camera_zoom = mp_obj_get_float(camera->zoom);
+    float camera_opacity = mp_obj_get_float(camera->opacity);
 
-    float rectangle_resolved_hierarchy_x = 0.0f;
-    float rectangle_resolved_hierarchy_y = 0.0f;
-    float rectangle_resolved_hierarchy_rotation = 0.0f;
-    bool rectangle_is_child_of_camera = false;
-    node_base_get_child_absolute_xy(&rectangle_resolved_hierarchy_x, &rectangle_resolved_hierarchy_y, &rectangle_resolved_hierarchy_rotation, &rectangle_is_child_of_camera, rectangle_node_base);
+    // Get inherited properties
+    engine_inheritable_2d_t inherited;
+    node_base_inherit_2d(rectangle_node_base, &inherited);
 
-    // Store the non-rotated x and y for a second
-    float rectangle_rotated_x = rectangle_resolved_hierarchy_x;
-    float rectangle_rotated_y = rectangle_resolved_hierarchy_y;
-    float rectangle_rotation = rectangle_resolved_hierarchy_rotation;
-
-    if(rectangle_is_child_of_camera == false){
-        float camera_resolved_hierarchy_x = 0.0f;
-        float camera_resolved_hierarchy_y = 0.0f;
-        float camera_resolved_hierarchy_rotation = 0.0f;
-        node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
-        camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
-
-        rectangle_rotated_x = (rectangle_rotated_x - camera_resolved_hierarchy_x) * camera_zoom;
-        rectangle_rotated_y = (rectangle_rotated_y - camera_resolved_hierarchy_y) * camera_zoom;
-
-        // Rotate rectangle origin about the camera
-        engine_math_rotate_point(&rectangle_rotated_x, &rectangle_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
-
-        rectangle_rotation += camera_resolved_hierarchy_rotation;
+    if(inherited.is_camera_child == false){
+        engine_camera_transform_2d(camera_node, &inherited.px, &inherited.py, &inherited.rotation);
     }else{
         camera_zoom = 1.0f;
     }
 
-    rectangle_width = rectangle_width*camera_zoom;
-    rectangle_height = rectangle_height*camera_zoom;
+    inherited.px += camera_viewport->width/2;
+    inherited.py += camera_viewport->height/2;
 
-    rectangle_rotated_x += camera_viewport->width/2;
-    rectangle_rotated_y += camera_viewport->height/2;
+    rectangle_opacity = inherited.opacity * camera_opacity;
 
     // Decide which shader to use per-pixel
     engine_shader_t *shader = NULL;
@@ -84,35 +64,35 @@ void rectangle_2d_node_class_draw(mp_obj_t rectangle_node_base_obj, mp_obj_t cam
 
     if(rectangle_outlined == false){
         engine_draw_rect(rectangle_color->value,
-                         floorf(rectangle_rotated_x), floorf(rectangle_rotated_y),
+                         floorf(inherited.px), floorf(inherited.py),
                          (int32_t)rectangle_width, (int32_t)rectangle_height,
-                         rectangle_scale->x.value*camera_zoom, rectangle_scale->y.value*camera_zoom,
-                         -rectangle_rotation,
+                         inherited.sx*camera_zoom, inherited.sy*camera_zoom,
+                         -inherited.rotation,
                          rectangle_opacity,
                          shader);
     }else{
-        float rectangle_half_width = rectangle_width/2;
-        float rectangle_half_height = rectangle_height/2;
+        float rectangle_half_width = (rectangle_width/2.0f)*inherited.sx*camera_zoom;
+        float rectangle_half_height = (rectangle_height/2.0f)*inherited.sy*camera_zoom;
 
         // Calculate the coordinates of the 4 corners of the rectangle, not rotated
         // NOTE: positive y is down
-        float tlx = floorf(rectangle_rotated_x - rectangle_half_width);
-        float tly = floorf(rectangle_rotated_y - rectangle_half_height);
+        float tlx = floorf(inherited.px - rectangle_half_width);
+        float tly = floorf(inherited.py - rectangle_half_height);
 
-        float trx = floorf(rectangle_rotated_x + rectangle_half_width);
-        float try = floorf(rectangle_rotated_y - rectangle_half_height);
+        float trx = floorf(inherited.px + rectangle_half_width);
+        float try = floorf(inherited.py - rectangle_half_height);
 
-        float brx = floorf(rectangle_rotated_x + rectangle_half_width);
-        float bry = floorf(rectangle_rotated_y + rectangle_half_height);
+        float brx = floorf(inherited.px + rectangle_half_width);
+        float bry = floorf(inherited.py + rectangle_half_height);
 
-        float blx = floorf(rectangle_rotated_x - rectangle_half_width);
-        float bly = floorf(rectangle_rotated_y + rectangle_half_height);
+        float blx = floorf(inherited.px - rectangle_half_width);
+        float bly = floorf(inherited.py + rectangle_half_height);
 
         // Rotate the points and then draw lines between them
-        engine_math_rotate_point(&tlx, &tly, rectangle_rotated_x, rectangle_rotated_y, rectangle_rotation);
-        engine_math_rotate_point(&trx, &try, rectangle_rotated_x, rectangle_rotated_y, rectangle_rotation);
-        engine_math_rotate_point(&brx, &bry, rectangle_rotated_x, rectangle_rotated_y, rectangle_rotation);
-        engine_math_rotate_point(&blx, &bly, rectangle_rotated_x, rectangle_rotated_y, rectangle_rotation);
+        engine_math_rotate_point(&tlx, &tly, inherited.px, inherited.py, inherited.rotation);
+        engine_math_rotate_point(&trx, &try, inherited.px, inherited.py, inherited.rotation);
+        engine_math_rotate_point(&brx, &bry, inherited.px, inherited.py, inherited.rotation);
+        engine_math_rotate_point(&blx, &bly, inherited.px, inherited.py, inherited.rotation);
 
         engine_draw_line(rectangle_color->value, tlx, tly, trx, try, camera_node, rectangle_opacity, shader);
         engine_draw_line(rectangle_color->value, trx, try, brx, bry, camera_node, rectangle_opacity, shader);
@@ -241,6 +221,10 @@ static mp_attr_fun_t rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribu
     PARAM:  [type=float]                            [name=rotation]                                     [value=any (radians)]
     PARAM:  [type={ref_link:Vector2}]               [name=scale]                                        [value={ref_link:Vector2}]
     PARAM:  [type=int]                              [name=layer]                                        [value=0 ~ 127]
+    PARAM:  [type=bool]                             [name=inherit_position]                             [value=True or False]
+    PARAM:  [type=bool]                             [name=inherit_opacity]                              [value=True or False]
+    PARAM:  [type=bool]                             [name=inherit_rotation]                             [value=True or False]
+    PARAM:  [type=bool]                             [name=inherit_scale]                                [value=True or False]
     ATTR:   [type=function]                         [name={ref_link:add_child}]                         [value=function]
     ATTR:   [type=function]                         [name={ref_link:get_child}]                         [value=function]
     ATTR:   [type=function]                         [name={ref_link:get_child_count}]                   [value=function]
@@ -248,6 +232,7 @@ static mp_attr_fun_t rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribu
     ATTR:   [type=function]                         [name={ref_link:node_base_mark_destroy_all}]        [value=function]
     ATTR:   [type=function]                         [name={ref_link:node_base_mark_destroy_children}]   [value=function]
     ATTR:   [type=function]                         [name={ref_link:remove_child}]                      [value=function]
+    ATTR:   [type=function]                         [name={ref_link:get_parent}]                        [value=function]
     ATTR:   [type=function]                         [name={ref_link:tick}]                              [value=function]
     ATTR:   [type={ref_link:Vector2}]               [name=position]                                     [value={ref_link:Vector2}]
     ATTR:   [type={ref_link:Vector2}]               [name=global_position]                              [value={ref_link:Vector2} (read-only)]
@@ -259,25 +244,33 @@ static mp_attr_fun_t rectangle_2d_node_class_attr(mp_obj_t self_in, qstr attribu
     ATTR:   [type=float]                            [name=rotation]                                     [value=any (radians)]
     ATTR:   [type={ref_link:Vector2}]               [name=scale]                                        [value={ref_link:Vector2}]
     ATTR:   [type=int]                              [name=layer]                                        [value=0 ~ 127]
+    ATTR:   [type=bool]                             [name=inherit_position]                             [value=True or False]
+    ATTR:   [type=bool]                             [name=inherit_opacity]                              [value=True or False]
+    ATTR:   [type=bool]                             [name=inherit_rotation]                             [value=True or False]
+    ATTR:   [type=bool]                             [name=inherit_scale]                                [value=True or False]
     OVRR:   [type=function]                         [name={ref_link:tick}]                              [value=function]
 */
 mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Rectangle2DNode");
 
     mp_arg_t allowed_args[] = {
-        { MP_QSTR_child_class,  MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_position,     MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL)} },
-        { MP_QSTR_width,        MP_ARG_OBJ, {.u_obj = mp_obj_new_float(10.0f)} },
-        { MP_QSTR_height,       MP_ARG_OBJ, {.u_obj = mp_obj_new_float(10.0f)} },
-        { MP_QSTR_color,        MP_ARG_OBJ, {.u_obj = MP_OBJ_NEW_SMALL_INT(0xffff)} },
-        { MP_QSTR_opacity,      MP_ARG_OBJ, {.u_obj = mp_obj_new_float(1.0f)} },
-        { MP_QSTR_outline,      MP_ARG_OBJ, {.u_obj = mp_obj_new_bool(false)} },
-        { MP_QSTR_rotation,     MP_ARG_OBJ, {.u_obj = mp_obj_new_float(0.0f)} },
-        { MP_QSTR_scale,        MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)})} },
-        { MP_QSTR_layer,        MP_ARG_INT, {.u_int = 0} }
+        { MP_QSTR_child_class,       MP_ARG_OBJ,  {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_position,          MP_ARG_OBJ,  {.u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL)} },
+        { MP_QSTR_width,             MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(10.0f)} },
+        { MP_QSTR_height,            MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(10.0f)} },
+        { MP_QSTR_color,             MP_ARG_OBJ,  {.u_obj = MP_OBJ_NEW_SMALL_INT(0xffff)} },
+        { MP_QSTR_opacity,           MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(1.0f)} },
+        { MP_QSTR_outline,           MP_ARG_OBJ,  {.u_obj = mp_obj_new_bool(false)} },
+        { MP_QSTR_rotation,          MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(0.0f)} },
+        { MP_QSTR_scale,             MP_ARG_OBJ,  {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)})} },
+        { MP_QSTR_layer,             MP_ARG_INT,  {.u_int = 0} },
+        { MP_QSTR_inherit_position,  MP_ARG_BOOL, {.u_bool = true} },
+        { MP_QSTR_inherit_opacity,   MP_ARG_BOOL, {.u_bool = true} },
+        { MP_QSTR_inherit_rotation,  MP_ARG_BOOL, {.u_bool = true} },
+        { MP_QSTR_inherit_scale,     MP_ARG_BOOL, {.u_bool = true} },
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
-    enum arg_ids {child_class, position, width, height, color, opacity, outline, rotation, scale, layer};
+    enum arg_ids {child_class, position, width, height, color, opacity, outline, rotation, scale, layer, inherit_position, inherit_opacity, inherit_rotation, inherit_scale};
     bool inherited = false;
 
     // If there is one positional argument and it isn't the first
@@ -313,6 +306,10 @@ mp_obj_t rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, s
     rectangle_2d_node->outline = parsed_args[outline].u_obj;
     rectangle_2d_node->rotation = parsed_args[rotation].u_obj;
     rectangle_2d_node->scale = parsed_args[scale].u_obj;
+    node_base_set_inherit_position(node_base, parsed_args[inherit_position].u_bool);
+    node_base_set_inherit_opacity(node_base, parsed_args[inherit_opacity].u_bool);
+    node_base_set_inherit_rotation(node_base, parsed_args[inherit_rotation].u_bool);
+    node_base_set_inherit_scale(node_base, parsed_args[inherit_scale].u_bool);
 
     if(inherited == true){  // Inherited (use existing object)
         // Get the Python class instance

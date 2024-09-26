@@ -10,7 +10,6 @@ from engine_nodes import Rectangle2DNode, CameraNode, Sprite2DNode, Text2DNode, 
 from engine_resources import FontResource, TextureResource, WaveSoundResource
 from engine_animation import Tween, ONE_SHOT, EASE_SINE_IN
 from engine_draw import Color
-import machine
 
 from chessengine import openings, piece_values, pstable
 
@@ -899,13 +898,11 @@ class ChessGame(Rectangle2DNode):
             if self.endgame:
                 MAX_DEPTH = 3
      
-            if hasattr(machine, 'freq'):
-                machine.freq(250 * 1000 * 1000)
+            engine.freq(250 * 1000 * 1000)
 
             eval_score, best_move = minimax(self.chessboard.board, depth=MAX_DEPTH, is_white=not self.player_is_white, alpha=float('-inf'), beta=float('inf'))
 
-            if hasattr(machine, 'freq'):
-                machine.freq(150 * 1000 * 1000)
+            engine.freq(150 * 1000 * 1000)
 
             if not best_move:
                 return

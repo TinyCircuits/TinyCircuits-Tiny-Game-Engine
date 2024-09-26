@@ -411,7 +411,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(rtttl_sound_resource_class_del_obj, rtttl_sound_resour
 /*  --- doc ---
     NAME: RTTTLSoundResource
     ID: RTTTLSoundResource
-    DESC: Can be used to play a music in a ringtone format (TODO: better docs): https://en.wikipedia.org/wiki/Ring_Tone_Text_Transfer_Language
+    DESC: Can be used to play a music in ringtone format (TODO: better docs): https://en.wikipedia.org/wiki/Ring_Tone_Text_Transfer_Language
     PARAM:  [type=string]         [name=filepath] [value=any]
     ATTR:   [type=int]            [name=tempo]    [value=any positive value]
     ATTR:   [type=bytearray]      [name=data]     [value=bytearray consisting 32-bit duration/frequency integer pairs]                                                                                                                                                               
