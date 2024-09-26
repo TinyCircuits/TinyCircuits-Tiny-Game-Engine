@@ -1,9 +1,9 @@
 If you run into performance issues (i.e. with voxel stuff), you can use:
 
 ```python
-import machine
+import engine
 
-machine.freq(250 * 1000 * 1000)
+engine.freq(250 * 1000 * 1000)
 ```
 
 

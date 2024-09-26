@@ -401,7 +401,7 @@ void node_base_inherit_2d(mp_obj_t child_node_base, engine_inheritable_2d_t *inh
         inheritable->px = ((vector2_class_obj_t*)child_position)->x.value;
         inheritable->py = ((vector2_class_obj_t*)child_position)->y.value;
     }else{
-        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: Error: Do not know how to set initial inherit 2D position for this `position `object type!"));
+        mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: Error: Do not know how to set initial inherit 2D position for this `position `object type!, got %s"), mp_obj_get_type_str(child_position));
     }
 
     // Setup initial rotation (no nodes have 2D rotation)
@@ -411,8 +411,10 @@ void node_base_inherit_2d(mp_obj_t child_node_base, engine_inheritable_2d_t *inh
         inheritable->rotation = ((vector3_class_obj_t*)child_rotation)->z.value;
     }else if(mp_obj_is_float(child_rotation)){
         inheritable->rotation = (float)mp_obj_get_float(child_rotation);
+    }else if(mp_obj_is_int(child_rotation)){
+        inheritable->rotation = (float)mp_obj_get_int(child_rotation);
     }else{
-        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: Error: Do not know how to set initial inherit 2D rotation for this `rotation `object type!"));
+        mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: Error: Do not know how to set initial inherit 2D rotation for this `rotation` object type!, got %s"), mp_obj_get_type_str(child_rotation));
     }
 
     // Setup initial scale (some nodes, like circles, have 1D scale)
@@ -434,7 +436,7 @@ void node_base_inherit_2d(mp_obj_t child_node_base, engine_inheritable_2d_t *inh
         inheritable->sx = scale;
         inheritable->sy = scale;
     }else{
-        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: Error: Do not know how to set initial inherit 2D scale for this `scale `object type!"));
+        mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: Error: Do not know how to set initial inherit 2D scale for this `scale `object type, got %s!"), mp_obj_get_type_str(child_scale));
     }
 
     // Setup initial opacity and `is camera child`
@@ -527,7 +529,7 @@ void node_base_inherit_2d(mp_obj_t child_node_base, engine_inheritable_2d_t *inh
                 temp_parent_pos_x = ((vector2_class_obj_t*)parent_position)->x.value;
                 temp_parent_pos_y = ((vector2_class_obj_t*)parent_position)->y.value;
             }else{
-                mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: Error: Do not know how to get inherited 2D position for this `position `object type!"));
+                mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: Error: Do not know how to get inherited 2D position for this `position `object type! got, %s"), mp_obj_get_type_str(parent_position));
             }
         }
 
@@ -543,8 +545,10 @@ void node_base_inherit_2d(mp_obj_t child_node_base, engine_inheritable_2d_t *inh
                 temp_parent_rot = ((vector3_class_obj_t*)parent_rotation)->z.value;
             }else if(mp_obj_is_float(parent_rotation)){
                 temp_parent_rot = mp_obj_get_float(parent_rotation);
+            }else if(mp_obj_is_int(parent_rotation)){
+                inheritable->rotation = (float)mp_obj_get_int(parent_rotation);
             }else{
-                mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: Error: Do not know how to get inherited 2D rotation for this `rotation `object type!"));
+                mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: Error: Do not know how to get inherited 2D rotation for this `rotation `object type! got, %s"), mp_obj_get_type_str(parent_rotation));
             }
         }
 
@@ -571,7 +575,7 @@ void node_base_inherit_2d(mp_obj_t child_node_base, engine_inheritable_2d_t *inh
                 temp_parent_scale_x = scale;
                 temp_parent_scale_y = scale;
             }else{
-                mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: Error: Do not know how to get inherited 2D scale for this `scale `object type!"));
+                mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: Error: Do not know how to get inherited 2D scale for this `scale `object type! got, %s"), mp_obj_get_type_str(parent_scale));
             }
         }
 

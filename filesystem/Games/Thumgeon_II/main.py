@@ -17,10 +17,9 @@ import os
 import gc
 import urandom
 import utime
-import machine
 import math
 
-machine.freq(250000000)
+engine.freq(250000000)
 
 gc.threshold(1024*32)
 engine_physics.set_gravity(0.0, 0.0)
@@ -758,7 +757,7 @@ def show_death_screen(msg):
     msgnode.mark_destroy_all()
     wherenode.mark_destroy_all()
     running = False
-    machine.soft_reset()
+    engine.reset(True)
 
 
 class InventoryRenderer(Sprite2DNode):
