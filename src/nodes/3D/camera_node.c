@@ -228,7 +228,7 @@ bool camera_node_store_attr(engine_node_base_t *self_node_base, qstr attribute, 
             self->fov = destination[1];
             float f_view_distance = mp_obj_get_float(self->view_distance);
             float f_fov_degrees = mp_obj_get_float(self->fov);
-            glm_perspective(f_fov_degrees * PI / 180.0f, SCREEN_WIDTH/SCREEN_HEIGHT, 0.5f, f_view_distance, self->m_projection);
+            glm_perspective(f_fov_degrees * PI / 180.0f, SCREEN_WIDTH/SCREEN_HEIGHT, 0.1f, f_view_distance, self->m_projection);
             return true;
         }
         break;

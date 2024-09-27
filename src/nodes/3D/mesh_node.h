@@ -17,6 +17,7 @@ typedef struct{
     mp_obj_t rotation;  // Vector3
     mp_obj_t scale;     // Vector3
     mp_obj_list_t *vertices;
+    mp_obj_t color;
     mp_obj_t tick_cb;
 
     mat4 m_translation;

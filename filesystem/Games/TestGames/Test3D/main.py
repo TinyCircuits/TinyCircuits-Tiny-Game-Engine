@@ -1,6 +1,7 @@
 import engine_main
 
 import engine
+import engine_draw
 from engine_nodes import CameraNode, MeshNode
 from engine_math import Vector3, Matrix4x4
 import engine_io
@@ -69,34 +70,49 @@ class MyCam(CameraNode):
 
 
 camera = MyCam()
-mesh = MeshNode()
+mesh = MeshNode(color=engine_draw.orange)
+floor = MeshNode(color=engine_draw.red)
 
 
-def add_quad(v1, v2, v3, v4):
-    mesh.vertices.append(v1)
-    mesh.vertices.append(v2)
-    mesh.vertices.append(v3)
+def add_quad(to_add_to, v1, v2, v3, v4):
+    to_add_to.vertices.append(v1)
+    to_add_to.vertices.append(v2)
+    to_add_to.vertices.append(v3)
 
-    mesh.vertices.append(v3)
-    mesh.vertices.append(v4)
-    mesh.vertices.append(v1)
+    to_add_to.vertices.append(v3)
+    to_add_to.vertices.append(v4)
+    to_add_to.vertices.append(v1)
 
 
-add_quad(Vector3(0, 0, -10), Vector3(0, 1, -10), Vector3(1, 1, -10), Vector3(1, 0, -10))
-add_quad(Vector3(0, 1, -10), Vector3(0, 2, -10), Vector3(1, 2, -10), Vector3(1, 1, -10))
-add_quad(Vector3(0, 2, -10), Vector3(0, 3, -10), Vector3(1, 3, -10), Vector3(1, 2, -10))
-add_quad(Vector3(0, 3, -10), Vector3(0, 4, -10), Vector3(1, 4, -10), Vector3(1, 3, -10))
-add_quad(Vector3(0, 4, -10), Vector3(0, 5, -10), Vector3(1, 5, -10), Vector3(1, 4, -10))
+add_quad(mesh, Vector3(0, 0, 0), Vector3(0, 1, 0), Vector3(1, 1, 0), Vector3(1, 0, 0))
+add_quad(mesh, Vector3(0, 1, 0), Vector3(0, 2, 0), Vector3(1, 2, 0), Vector3(1, 1, 0))
+add_quad(mesh, Vector3(0, 2, 0), Vector3(0, 3, 0), Vector3(1, 3, 0), Vector3(1, 2, 0))
+add_quad(mesh, Vector3(0, 3, 0), Vector3(0, 4, 0), Vector3(1, 4, 0), Vector3(1, 3, 0))
+add_quad(mesh, Vector3(0, 4, 0), Vector3(0, 5, 0), Vector3(1, 5, 0), Vector3(1, 4, 0))
 
-add_quad(Vector3(-1, 3, -10), Vector3(-1, 4, -10), Vector3(0, 4, -10), Vector3(0, 3, -10))
-add_quad(Vector3(1, 3, -10), Vector3(1, 4, -10), Vector3(2, 4, -10), Vector3(2, 3, -10))
+add_quad(mesh, Vector3(-1, 3, 0), Vector3(-1, 4, 0), Vector3(0, 4, 0), Vector3(0, 3, 0))
+add_quad(mesh, Vector3(1, 3, 0), Vector3(1, 4, 0), Vector3(2, 4, 0), Vector3(2, 3, 0))
 
-add_quad(Vector3(-2, 2, -10), Vector3(-2, 3, -10), Vector3(-1, 3, -10), Vector3(-1, 2, -10))
-add_quad(Vector3(3, 2, -10), Vector3(3, 3, -10), Vector3(2, 3, -10), Vector3(2, 2, -10))
+add_quad(mesh, Vector3(-2, 2, 0), Vector3(-2, 3, 0), Vector3(-1, 3, 0), Vector3(-1, 2, 0))
+add_quad(mesh, Vector3(3, 2, 0), Vector3(3, 3, 0), Vector3(2, 3, 0), Vector3(2, 2, 0))
+
+
+add_quad(floor, Vector3(-5, -3, -5), Vector3(5, -3, -5), Vector3(5, -3, 5), Vector3(-5, -3, 5))
+
+
+t = 0
 
 
 while True:
     if engine.tick() is False:
         continue
 
+    mesh.rotation.x += 0.01
     mesh.rotation.y += 0.01
+    mesh.rotation.z += 0.01
+
+    mesh.position.x = math.sin(t*2) * 4
+    mesh.position.y = math.sin(t) * 2
+    mesh.position.z = math.cos(t*2) * 4
+
+    t += 0.01

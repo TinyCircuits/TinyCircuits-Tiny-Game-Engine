@@ -41,7 +41,7 @@ void engine_display_sdl_init(){
     window_renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
     window_frame_buffer = SDL_CreateTexture(window_renderer, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-    SDL_SetWindowSize(window, SCREEN_WIDTH*3, SCREEN_HEIGHT*3);
+    SDL_SetWindowSize(window, SCREEN_WIDTH*4, SCREEN_HEIGHT*4);
 
     engine_display_sdl_update_screen(active_screen_buffer);
 }
