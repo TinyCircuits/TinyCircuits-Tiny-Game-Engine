@@ -46,7 +46,7 @@ void voxelspace_node_class_draw(mp_obj_t voxelspace_node_base_obj, mp_obj_t came
 
     vector3_class_obj_t *camera_rotation = camera->rotation;
     vector3_class_obj_t *camera_position = camera->position;
-    float camera_fov_half = mp_obj_get_float(camera->fov) * 0.5f;
+    float camera_fov_half_rad = (mp_obj_get_float(camera->fov) * PI / 180.0f) * 0.5f;
     float camera_view_distance = mp_obj_get_float(camera->view_distance);
 
     engine_shader_t *shader = engine_get_builtin_shader(EMPTY_SHADER);
@@ -90,11 +90,11 @@ void voxelspace_node_class_draw(mp_obj_t voxelspace_node_base_obj, mp_obj_t came
     float skew_roll_line_dy = sinf(camera_rotation->z.value);
     float skew_roll_start_offset = -SCREEN_WIDTH_HALF * tanf(camera_rotation->z.value);
 
-    float view_left_x = cosf(camera_rotation->y.value-camera_fov_half) * inverse_x_scale;
-    float view_left_y = sinf(camera_rotation->y.value-camera_fov_half) * inverse_z_scale;
+    float view_left_x = cosf(camera_rotation->y.value-camera_fov_half_rad) * inverse_x_scale;
+    float view_left_y = sinf(camera_rotation->y.value-camera_fov_half_rad) * inverse_z_scale;
 
-    float view_right_x = cosf(camera_rotation->y.value+camera_fov_half) * inverse_x_scale;
-    float view_right_y = sinf(camera_rotation->y.value+camera_fov_half) * inverse_z_scale;
+    float view_right_x = cosf(camera_rotation->y.value+camera_fov_half_rad) * inverse_x_scale;
+    float view_right_y = sinf(camera_rotation->y.value+camera_fov_half_rad) * inverse_z_scale;
 
     // Trying to render objects in front of the camera at `camera_view_distance` units away:
     //  \-----|-----/
@@ -105,7 +105,7 @@ void voxelspace_node_class_draw(mp_obj_t voxelspace_node_base_obj, mp_obj_t came
     //       \|/
     // Find the hypotenuse based on the `camera_view_distance` we
     // want to render at
-    float hypot = camera_view_distance / cosf(camera_fov_half);
+    float hypot = camera_view_distance / cosf(camera_fov_half_rad);
 
     while(z < hypot){
         float pleft_x = z * view_left_x;

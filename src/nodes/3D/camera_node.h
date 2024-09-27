@@ -7,6 +7,13 @@
 #include "utility/engine_mp.h"
 #include "nodes/node_base.h"
 
+#define CGLM_CLIPSPACE_INCLUDE_ALL 1
+#include "../lib/cglm/include/cglm/cglm.h"
+#include "../lib/cglm/include/cglm/vec3.h"
+#include "../lib/cglm/include/cglm/mat4.h"
+#include "../lib/cglm/include/cglm/cam.h"
+#include "../lib/cglm/include/cglm/euler.h"
+
 
 // Node the defines view that the world is rendered about
 typedef struct{
@@ -19,6 +26,12 @@ typedef struct{
     mp_obj_t opacity;               // Opacity to apply to all nodes rendered by this camera
     mp_obj_t tick_cb;
     linked_list_node *camera_list_node;
+
+    mat4 m_translation;
+    mat4 m_rotation;
+
+    mat4 m_projection;
+    vec4 v_viewport;
 }engine_camera_node_class_obj_t;
 
 extern const mp_obj_type_t engine_camera_node_class_type;

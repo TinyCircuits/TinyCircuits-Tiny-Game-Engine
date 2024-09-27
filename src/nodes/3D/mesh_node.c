@@ -16,50 +16,59 @@
 #include "draw/engine_display_draw.h"
 #include "draw/engine_shader.h"
 
-#define CGLM_CLIPSPACE_INCLUDE_ALL 1
-#include "../lib/cglm/include/cglm/cglm.h"
-#include "../lib/cglm/include/cglm/vec3.h"
-#include "../lib/cglm/include/cglm/mat4.h"
-#include "../lib/cglm/include/cglm/cam.h"
-
 
 // Defined in camera_node.h
 extern const vector3_class_obj_t world_north;
+
+
+void mesh_node_set_translation(void *user_ptr){
+    engine_mesh_node_class_obj_t *mesh = user_ptr;
+    vector3_class_obj_t *p = mesh->position;
+    glm_translate_make(mesh->m_translation, (vec3){-p->x.value, -p->y.value, -p->z.value});
+}
+
+
+void mesh_node_set_rotation(void *user_ptr){
+    engine_mesh_node_class_obj_t *mesh = user_ptr;
+    vector3_class_obj_t *r = (vector3_class_obj_t*)mesh->rotation;
+    glm_euler((vec3){-r->x.value, -r->y.value, -r->z.value}, mesh->m_rotation);
+}
+
+
+void mesh_node_set_scale(void *user_ptr){
+    engine_mesh_node_class_obj_t *mesh = user_ptr;
+    vector3_class_obj_t *s = (vector3_class_obj_t*)mesh->scale;
+    glm_scale_make(mesh->m_scale, (vec3){s->x.value, s->y.value, s->z.value});
+}
 
 
 void mesh_node_class_draw(mp_obj_t mesh_node_base_obj, mp_obj_t camera_node){
     engine_node_base_t *mesh_node_base = mesh_node_base_obj;
     engine_mesh_node_class_obj_t *mesh_node = mesh_node_base->node;
 
+    if(mesh_node->vertices->len < 3){
+        return;
+    }
+
     engine_node_base_t *camera_node_base = camera_node;
     engine_camera_node_class_obj_t *camera = camera_node_base->node;
 
     engine_shader_t *shader = engine_get_builtin_shader(EMPTY_SHADER);
 
-    vector3_class_obj_t *camera_position = camera->position;
-    float camera_view_distance = mp_obj_get_float(camera->view_distance);
-
-    vec3 cam_position = {camera_position->x.value, camera_position->y.value, camera_position->z.value};
-    vec3 cam_target = GLM_VEC3_ZERO_INIT;
-    vec3 cam_up = {world_north.x.value, world_north.y.value, world_north.z.value};
-
-    if(mesh_node->vertices->len < 3){
-        return;
-    }
-
     mat4 m_view = GLM_MAT4_ZERO_INIT;
-    glm_lookat(cam_position, cam_target, cam_up, m_view);
+    glm_mat4_mul(camera->m_rotation, camera->m_translation, m_view);
+    // glm_mat4_mul(m_view, mesh_node->m_rotation, m_view);
+    // glm_mat4_mul(m_view, mesh_node->m_translation, m_view);
 
-    mat4 m_projection = GLM_MAT4_ZERO_INIT;
-    glm_perspective(1.571f, SCREEN_WIDTH/SCREEN_HEIGHT, 0.5f, camera_view_distance, m_projection);
 
-    // mat4 m_model = GLM_MAT4_IDENTITY_INIT;
+    // glm_mat4_mul(camera->m_rotation, mesh_node->m_rotation, m_view);
+    // glm_mat4
+
+    // glm_mat4_mul(m_view, mesh_node->m_rotation, m_view);
+    // glm_mat4_mul(m_view, mesh_node->m_translation, m_view);
 
     mat4 mvp = GLM_MAT4_ZERO_INIT;
-    glm_mat4_mul(m_projection, m_view, mvp);
-    // glm_mat4_mul(mvp, m_model, mvp);
-
-    vec4 v_viewport = {0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT};
+    glm_mat4_mul(camera->m_projection, m_view, mvp);
 
 
     for(uint16_t ivx=0; ivx<mesh_node->vertices->len; ivx+=3){
@@ -74,9 +83,9 @@ void mesh_node_class_draw(mp_obj_t mesh_node_base_obj, mp_obj_t camera_node){
         vec3 out_0 = GLM_VEC3_ZERO_INIT;
         vec3 out_1 = GLM_VEC3_ZERO_INIT;
         vec3 out_2 = GLM_VEC3_ZERO_INIT;
-        glm_project_zo(v0, mvp, v_viewport, out_0);
-        glm_project_zo(v1, mvp, v_viewport, out_1);
-        glm_project_zo(v2, mvp, v_viewport, out_2);
+        glm_project_zo(v0, mvp, camera->v_viewport, out_0);
+        glm_project_zo(v1, mvp, camera->v_viewport, out_1);
+        glm_project_zo(v2, mvp, camera->v_viewport, out_2);
 
         float z0 = out_0[2];
         float z1 = out_1[2];
@@ -99,28 +108,28 @@ void mesh_node_class_draw(mp_obj_t mesh_node_base_obj, mp_obj_t camera_node){
             int32_t x2 = (int32_t)out_2[0];
             int32_t y2 = (int32_t)out_2[1];
 
-            engine_draw_filled_triangle(0b1111100000000000, x0, y0, x1, y1, x2, y2, 1.0f, shader);
+            // engine_draw_filled_triangle(0b1111100000000000, x0, y0, x1, y1, x2, y2, 1.0f, shader);
 
-            // // Wireframe
-            // bool endpoint_0_on_screen = engine_math_int32_between(x0, 0, SCREEN_WIDTH_MINUS_1) && engine_math_int32_between(y0, 0, SCREEN_HEIGHT_MINUS_1);
-            // bool endpoint_1_on_screen = engine_math_int32_between(x1, 0, SCREEN_WIDTH_MINUS_1) && engine_math_int32_between(y1, 0, SCREEN_HEIGHT_MINUS_1);
-            // bool endpoint_2_on_screen = engine_math_int32_between(x2, 0, SCREEN_WIDTH_MINUS_1) && engine_math_int32_between(y2, 0, SCREEN_HEIGHT_MINUS_1);
+            // Wireframe
+            bool endpoint_0_on_screen = engine_math_int32_between(x0, 0, SCREEN_WIDTH_MINUS_1) && engine_math_int32_between(y0, 0, SCREEN_HEIGHT_MINUS_1);
+            bool endpoint_1_on_screen = engine_math_int32_between(x1, 0, SCREEN_WIDTH_MINUS_1) && engine_math_int32_between(y1, 0, SCREEN_HEIGHT_MINUS_1);
+            bool endpoint_2_on_screen = engine_math_int32_between(x2, 0, SCREEN_WIDTH_MINUS_1) && engine_math_int32_between(y2, 0, SCREEN_HEIGHT_MINUS_1);
 
-            // // If either endpoint is on screen, draw the full line
-            // // This avoids drawing lines that are out of bounds on
-            // // the camera's view plane and increases performance a
-            // // ton
-            // if(endpoint_0_on_screen || endpoint_1_on_screen){
-            //     engine_draw_line(0xffff, out_0[0], out_0[1], out_1[0], out_1[1], NULL, 1.0f, &empty_shader);
-            // }
+            // If either endpoint is on screen, draw the full line
+            // This avoids drawing lines that are out of bounds on
+            // the camera's view plane and increases performance a
+            // ton
+            if(endpoint_0_on_screen || endpoint_1_on_screen){
+                engine_draw_line(0xffff, out_0[0], out_0[1], out_1[0], out_1[1], NULL, 1.0f, shader);
+            }
 
-            // if(endpoint_1_on_screen || endpoint_2_on_screen){
-            //     engine_draw_line(0xffff, out_1[0], out_1[1], out_2[0], out_2[1], NULL, 1.0f, &empty_shader);
-            // }
+            if(endpoint_1_on_screen || endpoint_2_on_screen){
+                engine_draw_line(0xffff, out_1[0], out_1[1], out_2[0], out_2[1], NULL, 1.0f, shader);
+            }
 
-            // if(endpoint_2_on_screen || endpoint_0_on_screen){
-            //     engine_draw_line(0xffff, out_2[0], out_2[1], out_0[0], out_0[1], NULL, 1.0f, &empty_shader);
-            // }
+            if(endpoint_2_on_screen || endpoint_0_on_screen){
+                engine_draw_line(0xffff, out_2[0], out_2[1], out_0[0], out_0[1], NULL, 1.0f, shader);
+            }
         }
     }
 }
@@ -139,6 +148,14 @@ bool mesh_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_t
         break;
         case MP_QSTR_position:
             destination[0] = self->position;
+            return true;
+        break;
+        case MP_QSTR_rotation:
+            destination[0] = self->rotation;
+            return true;
+        break;
+        case MP_QSTR_scale:
+            destination[0] = self->scale;
             return true;
         break;
         case MP_QSTR_vertices:
@@ -166,8 +183,25 @@ bool mesh_store_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_
             return true;
         break;
         case MP_QSTR_position:
+        {
             self->position = destination[1];
+            mesh_node_set_translation(self);
             return true;
+        }
+        break;
+        case MP_QSTR_rotation:
+        {
+            self->position = destination[1];
+            mesh_node_set_rotation(self);
+            return true;
+        }
+        break;
+        case MP_QSTR_scale:
+        {
+            self->position = destination[1];
+            mesh_node_set_scale(self);
+            return true;
+        }
         break;
         case MP_QSTR_vertices:
             self->vertices = destination[1];
@@ -209,8 +243,9 @@ static mp_attr_fun_t mesh_node_class_attr(mp_obj_t self_in, qstr attribute, mp_o
     ATTR:  [type=function]                       [name={ref_link:get_parent}]                       [value=function]
     ATTR:  [type=function]                       [name={ref_link:tick}]                             [value=function]
     ATTR:  [type={ref_link:Vector3}]             [name=position]                                    [value={ref_link:Vector3}]
+    ATTR:  [type={ref_link:Vector3}]             [name=rotation]                                    [value={ref_link:Vector3}]
+    ATTR:  [type={ref_link:Vector3}]             [name=scale]                                       [value={ref_link:Vector3}]
     ATTR:  [type=list]                           [name=vertices]                                    [value=list of {ref_link:Vector3}]
-    ATTR:  [type=int]                            [name=layer]                                       [value=0 ~ 127]
     OVRR:  [type=function]                       [name={ref_link:tick}]                             [value=function]
 */
 mp_obj_t mesh_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
@@ -222,11 +257,12 @@ mp_obj_t mesh_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_
     mp_arg_t allowed_args[] = {
         { MP_QSTR_child_class,  MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_position,     MP_ARG_OBJ, {.u_obj = vector3_class_new(&vector3_class_type, 3, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(0.0f), mp_obj_new_float(0.0f)})} },
+        { MP_QSTR_rotation,     MP_ARG_OBJ, {.u_obj = vector3_class_new(&vector3_class_type, 3, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(0.0f), mp_obj_new_float(0.0f)})} },
+        { MP_QSTR_scale,        MP_ARG_OBJ, {.u_obj = vector3_class_new(&vector3_class_type, 3, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)})} },
         { MP_QSTR_vertices,     MP_ARG_OBJ, {.u_obj = mp_obj_new_list(0, NULL)} },
-        { MP_QSTR_layer,        MP_ARG_INT, {.u_int = 0} }
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
-    enum arg_ids {child_class, position, vertices, layer};
+    enum arg_ids {child_class, position, rotation, scale, vertices};
     bool inherited = false;
 
     // If there is one positional argument and it isn't the first 
@@ -248,7 +284,7 @@ mp_obj_t mesh_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_
 
     // All nodes are a engine_node_base_t node. Specific node data is stored in engine_node_base_t->node
     engine_node_base_t *node_base = mp_obj_malloc_with_finaliser(engine_node_base_t, &engine_mesh_node_class_type);
-    node_base_init(node_base, &engine_mesh_node_class_type, NODE_TYPE_MESH_3D, parsed_args[layer].u_int);
+    node_base_init(node_base, &engine_mesh_node_class_type, NODE_TYPE_MESH_3D, 0);
 
     engine_mesh_node_class_obj_t *mesh_node = m_malloc(sizeof(engine_mesh_node_class_obj_t));
     node_base->node = mesh_node;
@@ -257,7 +293,26 @@ mp_obj_t mesh_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_
     mesh_node->tick_cb = mp_const_none;
 
     mesh_node->position = parsed_args[position].u_obj;
+    mesh_node->rotation = parsed_args[rotation].u_obj;
+    mesh_node->scale    = parsed_args[scale].u_obj;
     mesh_node->vertices = parsed_args[vertices].u_obj;
+
+    vector3_class_obj_t *p = (vector3_class_obj_t*)mesh_node->position;
+    vector3_class_obj_t *r = (vector3_class_obj_t*)mesh_node->rotation;
+    vector3_class_obj_t *s = (vector3_class_obj_t*)mesh_node->scale;
+
+    glm_translate_make(mesh_node->m_translation, (vec3){p->x.value, p->y.value, p->z.value});
+    glm_euler((vec3){r->x.value, r->y.value, r->z.value}, mesh_node->m_rotation);
+    glm_scale_make(mesh_node->m_scale, (vec3){s->x.value, s->y.value, s->z.value});
+
+    p->on_changed = &mesh_node_set_translation;
+    p->on_change_user_ptr = mesh_node;
+
+    r->on_changed = &mesh_node_set_rotation;
+    r->on_change_user_ptr = mesh_node;
+
+    s->on_changed = &mesh_node_set_scale;
+    s->on_change_user_ptr = mesh_node;
 
     if(inherited == true){
         // Get the Python class instance

@@ -15,35 +15,43 @@ class MyCam(CameraNode):
     def __init__(self):
         super().__init__(self)
         self.distance = 0.75
-        self.mode = 0
-        self.position.z = -25
+        self.fov = 75.0
 
     def forward(self):
-        self.position.x += math.cos(self.rotation.y) * self.distance
-        self.position.z += math.sin(self.rotation.y) * self.distance
+        self.position.x -= math.sin(self.rotation.y) * self.distance
+        self.position.z -= math.cos(self.rotation.y) * self.distance
 
     def backward(self):
-        self.position.x -= math.cos(self.rotation.y) * self.distance
-        self.position.z -= math.sin(self.rotation.y) * self.distance
+        self.position.x += math.sin(self.rotation.y) * self.distance
+        self.position.z += math.cos(self.rotation.y) * self.distance
 
     def left(self):
-        self.position.x -= math.cos(self.rotation.y+(math.pi/2)) * self.distance
-        self.position.z -= math.sin(self.rotation.y+(math.pi/2)) * self.distance
+        self.position.x -= math.sin(self.rotation.y+(math.pi/2)) * self.distance
+        self.position.z -= math.cos(self.rotation.y+(math.pi/2)) * self.distance
 
     def right(self):
-        self.position.x += math.cos(self.rotation.y+(math.pi/2)) * self.distance
-        self.position.z += math.sin(self.rotation.y+(math.pi/2)) * self.distance
+        self.position.x += math.sin(self.rotation.y+(math.pi/2)) * self.distance
+        self.position.z += math.cos(self.rotation.y+(math.pi/2)) * self.distance
+
+    # def forward(self):
+    #     self.position.z -= 0.1
+
+    # def backward(self):
+    #     self.position.z += 0.1
+
+    # def left(self):
+    #     self.position.x -= 0.1
+
+    # def right(self):
+    #     self.position.x += 0.1
 
     def tick(self, dt):
-        # print(engine.get_running_fps())
-        # print(self.position.x, self.position.y, self.position.z)
+        print(self.position)
 
         if engine_io.RB.is_pressed:
-            self.rotation.y += 0.05
-            engine_io.rumble(self.rotation.y)
-        if engine_io.LB.is_pressed:
             self.rotation.y -= 0.05
-            engine_io.rumble(self.rotation.y)
+        if engine_io.LB.is_pressed:
+            self.rotation.y += 0.05
 
 
         if engine_io.UP.is_pressed:
@@ -56,33 +64,17 @@ class MyCam(CameraNode):
             self.right()
 
         if engine_io.A.is_pressed:
-            if self.mode == 0:
-                self.position.y -= 1
-            else:
-                self.rotation.x -= 0.5
+            self.position.y += 1
         if engine_io.B.is_pressed:
-            if self.mode == 0:
-                self.position.y += 1
-            else:
-                self.rotation.x += 0.5
-
-        if engine_io.MENU.is_pressed:
-            if self.mode == 0:
-                self.mode = 1
-            else:
-                self.mode = 0
+            self.position.y -= 1
 
 
 camera = MyCam()
 mesh = MeshNode()
 noise = NoiseResource()
-
-
-quad_count = 0
-
+noise.seed = 65
 
 def add_quad(v1, v2, v3, v4):
-    quad_count += 1
     mesh.vertices.append(v1)
     mesh.vertices.append(v2)
     mesh.vertices.append(v3)
@@ -144,9 +136,6 @@ for x in range(16):
                              Vector3(gx-size, gy,      gz),
                              Vector3(gx,      gy,      gz),
                              Vector3(gx,      gy-size, gz))
-
-
-print(quad_count)
 
 
 # mesh.vertices.append(Vector3(-5, -5, 1))
