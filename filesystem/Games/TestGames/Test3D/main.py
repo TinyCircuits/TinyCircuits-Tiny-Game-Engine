@@ -6,8 +6,10 @@ from engine_nodes import CameraNode, MeshNode
 from engine_math import Vector3, Matrix4x4
 import engine_io
 import math
+from engine_resources import MeshResource
 
-# engine.freq(250 * 1000 * 1000)
+
+engine.freq(250 * 1000 * 1000)
 
 engine.fps_limit(60)
 
@@ -70,8 +72,12 @@ class MyCam(CameraNode):
 
 
 camera = MyCam()
-mesh = MeshNode(color=engine_draw.orange)
-floor = MeshNode(color=engine_draw.red)
+
+arrow_mesh = MeshResource()
+floor_mesh = MeshResource()
+
+arrow_mesh_node = MeshNode(mesh=arrow_mesh, color=engine_draw.orange)
+floor_mesh_node = MeshNode(mesh=floor_mesh, color=engine_draw.red)
 
 
 def add_quad(to_add_to, v1, v2, v3, v4):
@@ -84,20 +90,20 @@ def add_quad(to_add_to, v1, v2, v3, v4):
     to_add_to.vertices.append(v1)
 
 
-add_quad(mesh, Vector3(0, 0, 0), Vector3(0, 1, 0), Vector3(1, 1, 0), Vector3(1, 0, 0))
-add_quad(mesh, Vector3(0, 1, 0), Vector3(0, 2, 0), Vector3(1, 2, 0), Vector3(1, 1, 0))
-add_quad(mesh, Vector3(0, 2, 0), Vector3(0, 3, 0), Vector3(1, 3, 0), Vector3(1, 2, 0))
-add_quad(mesh, Vector3(0, 3, 0), Vector3(0, 4, 0), Vector3(1, 4, 0), Vector3(1, 3, 0))
-add_quad(mesh, Vector3(0, 4, 0), Vector3(0, 5, 0), Vector3(1, 5, 0), Vector3(1, 4, 0))
+add_quad(arrow_mesh, Vector3(0, 0, 0), Vector3(0, 1, 0), Vector3(1, 1, 0), Vector3(1, 0, 0))
+add_quad(arrow_mesh, Vector3(0, 1, 0), Vector3(0, 2, 0), Vector3(1, 2, 0), Vector3(1, 1, 0))
+add_quad(arrow_mesh, Vector3(0, 2, 0), Vector3(0, 3, 0), Vector3(1, 3, 0), Vector3(1, 2, 0))
+add_quad(arrow_mesh, Vector3(0, 3, 0), Vector3(0, 4, 0), Vector3(1, 4, 0), Vector3(1, 3, 0))
+add_quad(arrow_mesh, Vector3(0, 4, 0), Vector3(0, 5, 0), Vector3(1, 5, 0), Vector3(1, 4, 0))
 
-add_quad(mesh, Vector3(-1, 3, 0), Vector3(-1, 4, 0), Vector3(0, 4, 0), Vector3(0, 3, 0))
-add_quad(mesh, Vector3(1, 3, 0), Vector3(1, 4, 0), Vector3(2, 4, 0), Vector3(2, 3, 0))
+add_quad(arrow_mesh, Vector3(-1, 3, 0), Vector3(-1, 4, 0), Vector3(0, 4, 0), Vector3(0, 3, 0))
+add_quad(arrow_mesh, Vector3(1, 3, 0), Vector3(1, 4, 0), Vector3(2, 4, 0), Vector3(2, 3, 0))
 
-add_quad(mesh, Vector3(-2, 2, 0), Vector3(-2, 3, 0), Vector3(-1, 3, 0), Vector3(-1, 2, 0))
-add_quad(mesh, Vector3(3, 2, 0), Vector3(3, 3, 0), Vector3(2, 3, 0), Vector3(2, 2, 0))
+add_quad(arrow_mesh, Vector3(-2, 2, 0), Vector3(-2, 3, 0), Vector3(-1, 3, 0), Vector3(-1, 2, 0))
+add_quad(arrow_mesh, Vector3(3, 2, 0), Vector3(3, 3, 0), Vector3(2, 3, 0), Vector3(2, 2, 0))
 
 
-add_quad(floor, Vector3(-5, -3, -5), Vector3(5, -3, -5), Vector3(5, -3, 5), Vector3(-5, -3, 5))
+add_quad(floor_mesh, Vector3(-5, -3, -5), Vector3(5, -3, -5), Vector3(5, -3, 5), Vector3(-5, -3, 5))
 
 
 t = 0
@@ -107,12 +113,12 @@ while True:
     if engine.tick() is False:
         continue
 
-    mesh.rotation.x += 0.01
-    mesh.rotation.y += 0.01
-    mesh.rotation.z += 0.01
+    arrow_mesh_node.rotation.x += 0.01
+    arrow_mesh_node.rotation.y += 0.01
+    arrow_mesh_node.rotation.z += 0.01
 
-    mesh.position.x = math.sin(t*2) * 4
-    mesh.position.y = math.sin(t) * 2
-    mesh.position.z = math.cos(t*2) * 4
+    arrow_mesh_node.position.x = math.sin(t*2) * 4
+    arrow_mesh_node.position.y = math.sin(t) * 2
+    arrow_mesh_node.position.z = math.cos(t*2) * 4
 
     t += 0.01

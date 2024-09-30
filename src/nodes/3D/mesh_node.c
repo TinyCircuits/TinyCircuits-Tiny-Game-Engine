@@ -15,6 +15,7 @@
 #include "display/engine_display_common.h"
 #include "draw/engine_display_draw.h"
 #include "draw/engine_shader.h"
+#include "resources/engine_mesh_resource.h"
 
 
 // Defined in camera_node.h
@@ -45,11 +46,24 @@ void mesh_node_set_scale(void *user_ptr){
 void mesh_node_class_draw(mp_obj_t mesh_node_base_obj, mp_obj_t camera_node){
     engine_node_base_t *mesh_node_base = mesh_node_base_obj;
     engine_mesh_node_class_obj_t *mesh_node = mesh_node_base->node;
-    color_class_obj_t *mesh_color = mesh_node->color;
+    mesh_resource_class_obj_t *mesh = mesh_node->mesh;
 
-    if(mesh_node->vertices->len < 3){
+    // Nothing to draw if no mesh
+    if(mesh == mp_const_none){
         return;
     }
+
+    mp_obj_list_t *vertices = mesh->vertices;
+
+    // No triangles to draw
+    if(vertices->len < 3){
+        return;
+    }
+
+    // mp_obj_list_t *indices = mesh->indices;
+    // mp_obj_list_t *uvs = mesh->uvs;
+
+    color_class_obj_t *mesh_color = mesh_node->color;
 
     engine_node_base_t *camera_node_base = camera_node;
     engine_camera_node_class_obj_t *camera = camera_node_base->node;
@@ -65,24 +79,14 @@ void mesh_node_class_draw(mp_obj_t mesh_node_base_obj, mp_obj_t camera_node){
     mat4 m_view = GLM_MAT4_ZERO_INIT;
     glm_mat4_mul(m_view0, m_view1, m_view);
 
-    // glm_mat4_mul(m_view, mesh_node->m_rotation, m_view);
-    // glm_mat4_mul(m_view, mesh_node->m_translation, m_view);
-
-
-    // glm_mat4_mul(camera->m_rotation, mesh_node->m_rotation, m_view);
-    // glm_mat4
-
-    // glm_mat4_mul(m_view, mesh_node->m_rotation, m_view);
-    // glm_mat4_mul(m_view, mesh_node->m_translation, m_view);
-
     mat4 mvp = GLM_MAT4_ZERO_INIT;
     glm_mat4_mul(camera->m_projection, m_view, mvp);
 
 
-    for(uint16_t ivx=0; ivx<mesh_node->vertices->len; ivx+=3){
-        vector3_class_obj_t *vertex_0 = mesh_node->vertices->items[ivx];
-        vector3_class_obj_t *vertex_1 = mesh_node->vertices->items[ivx+1];
-        vector3_class_obj_t *vertex_2 = mesh_node->vertices->items[ivx+2];
+    for(uint16_t ivx=0; ivx<vertices->len; ivx+=3){
+        vector3_class_obj_t *vertex_0 = vertices->items[ivx];
+        vector3_class_obj_t *vertex_1 = vertices->items[ivx+1];
+        vector3_class_obj_t *vertex_2 = vertices->items[ivx+2];
 
         vec3 v0 = {vertex_0->x.value, vertex_0->y.value, vertex_0->z.value};
         vec3 v1 = {vertex_1->x.value, vertex_1->y.value, vertex_1->z.value};
@@ -166,8 +170,8 @@ bool mesh_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_t
             destination[0] = self->scale;
             return true;
         break;
-        case MP_QSTR_vertices:
-            destination[0] = self->vertices;
+        case MP_QSTR_mesh:
+            destination[0] = self->mesh;
             return true;
         break;
         case MP_QSTR_color:
@@ -215,8 +219,8 @@ bool mesh_store_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_
             return true;
         }
         break;
-        case MP_QSTR_vertices:
-            self->vertices = destination[1];
+        case MP_QSTR_mesh:
+            self->mesh = destination[1];
             return true;
         break;
         case MP_QSTR_color:
@@ -275,11 +279,11 @@ mp_obj_t mesh_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_
         { MP_QSTR_position,     MP_ARG_OBJ, {.u_obj = vector3_class_new(&vector3_class_type, 3, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(0.0f), mp_obj_new_float(0.0f)})} },
         { MP_QSTR_rotation,     MP_ARG_OBJ, {.u_obj = vector3_class_new(&vector3_class_type, 3, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(0.0f), mp_obj_new_float(0.0f)})} },
         { MP_QSTR_scale,        MP_ARG_OBJ, {.u_obj = vector3_class_new(&vector3_class_type, 3, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)})} },
-        { MP_QSTR_vertices,     MP_ARG_OBJ, {.u_obj = mp_obj_new_list(0, NULL)} },
+        { MP_QSTR_mesh,         MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_color,        MP_ARG_OBJ, {.u_obj = MP_OBJ_NEW_SMALL_INT(0xffff)} },
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
-    enum arg_ids {child_class, position, rotation, scale, vertices, color};
+    enum arg_ids {child_class, position, rotation, scale, mesh, color};
     bool inherited = false;
 
     // If there is one positional argument and it isn't the first 
@@ -312,7 +316,7 @@ mp_obj_t mesh_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_
     mesh_node->position = parsed_args[position].u_obj;
     mesh_node->rotation = parsed_args[rotation].u_obj;
     mesh_node->scale    = parsed_args[scale].u_obj;
-    mesh_node->vertices = parsed_args[vertices].u_obj;
+    mesh_node->mesh     = parsed_args[mesh].u_obj;
     mesh_node->color    = engine_color_wrap(parsed_args[color].u_obj);
 
     vector3_class_obj_t *p = (vector3_class_obj_t*)mesh_node->position;
