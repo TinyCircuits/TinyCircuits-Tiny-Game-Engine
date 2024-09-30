@@ -8,7 +8,7 @@ import engine_io
 import math
 import engine_draw
 
-# engine.freq(250 * 1000 * 1000)
+engine.freq(250 * 1000 * 1000)
 
 engine.fps_limit(60)
 
@@ -96,7 +96,7 @@ def is_solid(x, y, z):
         return False
 
 size = 4
-chunk_size = 32
+chunk_size = 28
 
 for x in range(chunk_size):
     for y in range(chunk_size):
@@ -123,7 +123,7 @@ for x in range(chunk_size):
 
             if this_solid != is_solid(x, y+1, z):
                 if this_solid:
-                    add_quad(engine_draw.green,
+                    add_quad(engine_draw.brown,
                              Vector3(gx-size, gy, gz-size),
                              Vector3(gx-size, gy, gz),
                              Vector3(gx,      gy, gz),

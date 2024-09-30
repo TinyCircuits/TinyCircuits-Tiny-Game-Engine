@@ -740,11 +740,11 @@ void engine_draw_filled_triangle_depth(uint16_t color, int32_t x0, int32_t y0, u
     // A = x0, y0
     // B = x1, y1
     // C = x2, y2
-    float ABC = (float)edge_function(x0, y0, x1, y1, x2, y2);
+    const float ABC = (float)edge_function(x0, y0, x1, y1, x2, y2);
 
     // If our edge function (signed area x2) is negative, it's a back facing triangle and we can cull it
     // https://jtsorlinis.github.io/rendering-tutorial/#:~:text=RESET-,A%20nifty%20trick,-Another%20really%20useful
-    if(ABC < 0.0f){
+    if(ABC <= 0.0f){
         // Don't bother drawing this triangle
         return;
     }
@@ -786,7 +786,7 @@ void engine_draw_filled_triangle_depth(uint16_t color, int32_t x0, int32_t y0, u
             float weight_c = (float)ABP / ABC;
 
             // https://jtsorlinis.github.io/rendering-tutorial/#:~:text=get%20the%20interpolated%20colour
-            uint16_t depth_p = (uint16_t)(depth_z0*weight_a + depth_z1*weight_b + depth_z2*weight_c);
+            uint16_t depth_p = (uint16_t)((float)depth_z0*weight_a + (float)depth_z1*weight_b + (float)depth_z2*weight_c);
 
             // Check that the pixel is on the right side of each
             // edge for all the edge functions calculated

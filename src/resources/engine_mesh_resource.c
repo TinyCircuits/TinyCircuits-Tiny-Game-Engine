@@ -40,7 +40,7 @@ mp_obj_t mesh_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_
         if(n_args == 1){
             if(mp_obj_is_str(args[0])){                             // path
                 // Open .obj mesh in FLASH
-                MP_ERROR_TEXT("MeshResource: ERROR: using .obj files is not implemented yet!");
+                mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("MeshResource: ERROR: using .obj files is not implemented yet!"));
             }else if(mp_obj_is_type(args[0], &mp_type_list)){       // vertices
                 self->vertices = args[0];
                 self->indices = mp_obj_new_list(0, NULL);
@@ -52,7 +52,7 @@ mp_obj_t mesh_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_
         }else if(n_args == 2){
             if(mp_obj_is_str(args[0]) && mp_obj_is_bool(args[1])){  // path, in_ram
                 // Open .obj mesh in FLASH or RAM
-                MP_ERROR_TEXT("MeshResource: ERROR: using .obj files is not implemented yet!");
+                mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("MeshResource: ERROR: using .obj files is not implemented yet!"));
             }else if(mp_obj_is_type(args[0], &mp_type_list) &&
                      mp_obj_is_type(args[1], &mp_type_list)){       // vertices, indices
                 self->vertices = args[0];

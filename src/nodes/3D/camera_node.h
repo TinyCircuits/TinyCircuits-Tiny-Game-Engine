@@ -8,6 +8,7 @@
 #include "nodes/node_base.h"
 
 #define CGLM_CLIPSPACE_INCLUDE_ALL 1
+#define CGLM_FORCE_DEPTH_ZERO_TO_ONE 1
 #include "../lib/cglm/include/cglm/cglm.h"
 #include "../lib/cglm/include/cglm/vec3.h"
 #include "../lib/cglm/include/cglm/mat4.h"
