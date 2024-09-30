@@ -9,6 +9,7 @@ typedef struct mesh_resource_class_obj_t{
     mp_obj_t vertices;  // list of Vector3s
     mp_obj_t indices;   // list of ints
     mp_obj_t uvs;       // list of floats
+    mp_obj_t triangle_colors;    // List of Colors
 }mesh_resource_class_obj_t;
 
 extern const mp_obj_type_t mesh_resource_class_type;

@@ -29,11 +29,13 @@ mp_obj_t mesh_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_
     //  1. nothing: .vertices, .indices, and .uvs are set to empty `lists`
     //  2. path, in_ram: .vertices, .indices, and .uvs are set to `bytearray`s depending on the data in the .obj file otherwise set to empty `list`
     //  3. vertices, indices, and uvs: .vertices, .indices, and .uvs are set to passed `lists` or `bytearrays`, otherwise, set to empty `list`
+    //  4. vertices, indices, uvs and colors: .vertices, .indices, .uvs, and .triangle_colors, are set to passed `lists` or `bytearrays`, otherwise, set to empty `list`
 
     if(n_args == 0){
         self->vertices = mp_obj_new_list(0, NULL);
         self->indices = mp_obj_new_list(0, NULL);
         self->uvs = mp_obj_new_list(0, NULL);
+        self->triangle_colors = mp_obj_new_list(0, NULL);
     }else{
         if(n_args == 1){
             if(mp_obj_is_str(args[0])){                             // path
@@ -43,6 +45,7 @@ mp_obj_t mesh_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_
                 self->vertices = args[0];
                 self->indices = mp_obj_new_list(0, NULL);
                 self->uvs = mp_obj_new_list(0, NULL);
+                self->triangle_colors = mp_obj_new_list(0, NULL);
             }else{
                 mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("MeshResource: ERROR: Expected first argument to be a `str` or `list`, got `%s`"), mp_obj_get_type_str(args[0]));
             }
@@ -55,6 +58,7 @@ mp_obj_t mesh_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_
                 self->vertices = args[0];
                 self->indices = args[1];
                 self->uvs = mp_obj_new_list(0, NULL);
+                self->triangle_colors = mp_obj_new_list(0, NULL);
             }else{
                 mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("MeshResource: ERROR: Expected the two arguments to be `str` and `bool` or `list` and `list`, got `%s` and `%s`"), mp_obj_get_type_str(args[0]), mp_obj_get_type_str(args[1]));
             }
@@ -65,11 +69,24 @@ mp_obj_t mesh_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_
                 self->vertices = args[0];
                 self->indices = args[1];
                 self->uvs = args[2];
+                self->triangle_colors = mp_obj_new_list(0, NULL);
             }else{
                 mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("MeshResource: ERROR: Expected the three arguments to be `list`, `list`, and `list`, got `%s`, `%s`, and `%s`"), mp_obj_get_type_str(args[0]), mp_obj_get_type_str(args[1]), mp_obj_get_type_str(args[2]));
             }
+        }else if(n_args == 4){
+            if(mp_obj_is_type(args[0], &mp_type_list) &&
+               mp_obj_is_type(args[1], &mp_type_list) &&
+               mp_obj_is_type(args[2], &mp_type_list) &&
+               mp_obj_is_type(args[3], &mp_type_list)){             // vertices, indices, uvs, triangle_colors
+                self->vertices = args[0];
+                self->indices = args[1];
+                self->uvs = args[2];
+                self->triangle_colors = mp_obj_new_list(0, args[3]);
+            }else{
+                mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("MeshResource: ERROR: Expected the four arguments to be `list`, `list`, `list`, and `list`, got `%s`, `%s`, `%s`, and `%s`"), mp_obj_get_type_str(args[0]), mp_obj_get_type_str(args[1]), mp_obj_get_type_str(args[2]), mp_obj_get_type_str(args[3]));
+            }
         }else{
-            mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("MeshResource: ERROR: Too many arguments! Expected at most `3`, got `%d`"), n_args);
+            mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("MeshResource: ERROR: Too many arguments! Expected at most `4`, got `%d`"), n_args);
         }
     }
 
@@ -105,8 +122,14 @@ static void mesh_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t 
             case MP_QSTR_vertices:
                 destination[0] = self->vertices;
             break;
+            case MP_QSTR_indices:
+                destination[0] = self->indices;
+            break;
             case MP_QSTR_uvs:
                 destination[0] = self->uvs;
+            break;
+            case MP_QSTR_triangle_colors:
+                destination[0] = self->triangle_colors;
             break;
             default:
                 return; // Fail
@@ -116,8 +139,14 @@ static void mesh_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t 
             case MP_QSTR_vertices:
                 self->vertices = destination[1];
             break;
+            case MP_QSTR_indices:
+                self->indices = destination[1];
+            break;
             case MP_QSTR_uvs:
                 self->uvs = destination[1];
+            break;
+            case MP_QSTR_triangle_colors:
+                self->triangle_colors = destination[1];
             break;
             default:
                 return; // Fail

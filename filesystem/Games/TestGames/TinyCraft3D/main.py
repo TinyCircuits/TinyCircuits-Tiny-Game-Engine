@@ -3,9 +3,10 @@ import engine_main
 import engine
 from engine_nodes import CameraNode, MeshNode
 from engine_math import Vector3, Matrix4x4
-from engine_resources import NoiseResource
+from engine_resources import NoiseResource, MeshResource
 import engine_io
 import math
+import engine_draw
 
 # engine.freq(250 * 1000 * 1000)
 
@@ -46,7 +47,7 @@ class MyCam(CameraNode):
     #     self.position.x += 0.1
 
     def tick(self, dt):
-        print(self.position)
+        # print(self.position)
 
         if engine_io.RB.is_pressed:
             self.rotation.y -= 0.05
@@ -70,18 +71,22 @@ class MyCam(CameraNode):
 
 
 camera = MyCam()
-mesh = MeshNode()
+mesh_resource = MeshResource()
+mesh = MeshNode(mesh=mesh_resource)
 noise = NoiseResource()
-noise.seed = 65
+noise.seed = 69
+noise.frequency = 0.006
 
-def add_quad(v1, v2, v3, v4):
-    mesh.vertices.append(v1)
-    mesh.vertices.append(v2)
-    mesh.vertices.append(v3)
+def add_quad(color, v1, v2, v3, v4):
+    mesh_resource.vertices.append(v1)
+    mesh_resource.vertices.append(v2)
+    mesh_resource.vertices.append(v3)
+    mesh_resource.triangle_colors.append(color)
 
-    mesh.vertices.append(v3)
-    mesh.vertices.append(v4)
-    mesh.vertices.append(v1)
+    mesh_resource.vertices.append(v3)
+    mesh_resource.vertices.append(v4)
+    mesh_resource.vertices.append(v1)
+    mesh_resource.triangle_colors.append(color)
 
 
 def is_solid(x, y, z):
@@ -91,10 +96,11 @@ def is_solid(x, y, z):
         return False
 
 size = 4
+chunk_size = 32
 
-for x in range(16):
-    for y in range(16):
-        for z in range(16):
+for x in range(chunk_size):
+    for y in range(chunk_size):
+        for z in range(chunk_size):
             gx = x * size - 8*size
             gy = y * size - 8*size
             gz = z * size - 8*size
@@ -103,36 +109,42 @@ for x in range(16):
 
             if this_solid != is_solid(x+1, y, z):
                 if this_solid:
-                    add_quad(Vector3(gx, gy-size, gz-size),
+                    add_quad(engine_draw.brown,
+                             Vector3(gx, gy-size, gz-size),
                              Vector3(gx, gy,      gz-size),
                              Vector3(gx, gy,      gz),
                              Vector3(gx, gy-size, gz))
                 else:
-                    add_quad(Vector3(gx, gy-size, gz-size),
+                    add_quad(engine_draw.brown,
+                             Vector3(gx, gy-size, gz-size),
                              Vector3(gx, gy-size, gz),
                              Vector3(gx, gy,      gz),
                              Vector3(gx, gy,      gz-size))
 
             if this_solid != is_solid(x, y+1, z):
                 if this_solid:
-                    add_quad(Vector3(gx-size, gy, gz-size),
-                            Vector3(gx-size, gy, gz),
-                            Vector3(gx,      gy, gz),
-                            Vector3(gx,      gy, gz-size))
+                    add_quad(engine_draw.green,
+                             Vector3(gx-size, gy, gz-size),
+                             Vector3(gx-size, gy, gz),
+                             Vector3(gx,      gy, gz),
+                             Vector3(gx,      gy, gz-size))
                 else:
-                    add_quad(Vector3(gx-size, gy, gz-size),
+                    add_quad(engine_draw.green,
+                             Vector3(gx-size, gy, gz-size),
                              Vector3(gx,      gy, gz-size),
                              Vector3(gx,      gy, gz),
                              Vector3(gx-size, gy, gz))
 
             if this_solid != is_solid(x, y, z+1):
                 if this_solid:
-                    add_quad(Vector3(gx-size, gy-size, gz),
+                    add_quad(engine_draw.brown,
+                             Vector3(gx-size, gy-size, gz),
                              Vector3(gx,      gy-size, gz),
                              Vector3(gx,      gy,      gz),
                              Vector3(gx-size, gy,      gz))
                 else:
-                    add_quad(Vector3(gx-size, gy-size, gz),
+                    add_quad(engine_draw.brown,
+                             Vector3(gx-size, gy-size, gz),
                              Vector3(gx-size, gy,      gz),
                              Vector3(gx,      gy,      gz),
                              Vector3(gx,      gy-size, gz))

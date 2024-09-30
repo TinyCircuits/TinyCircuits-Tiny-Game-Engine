@@ -62,6 +62,8 @@ void mesh_node_class_draw(mp_obj_t mesh_node_base_obj, mp_obj_t camera_node){
 
     // mp_obj_list_t *indices = mesh->indices;
     // mp_obj_list_t *uvs = mesh->uvs;
+    mp_obj_list_t *triangle_colors = mesh->triangle_colors;
+    // ENGINE_PRINTF("%ld\n", triangle_colors->len);
 
     color_class_obj_t *mesh_color = mesh_node->color;
 
@@ -119,7 +121,13 @@ void mesh_node_class_draw(mp_obj_t mesh_node_base_obj, mp_obj_t camera_node){
             int32_t x2 = (int32_t)out_2[0];
             int32_t y2 = (int32_t)out_2[1];
 
-            engine_draw_filled_triangle_depth(mesh_color->value, x0, y0, (uint16_t)(z0*UINT16_MAX), x1, y1, (uint16_t)(z1*UINT16_MAX), x2, y2, (uint16_t)(z2*UINT16_MAX), 1.0f, shader);
+            uint16_t color = mesh_color->value;
+
+            if(ivx/3 < triangle_colors->len){
+                color = ((color_class_obj_t*)triangle_colors->items[ivx/3])->value;
+            }
+
+            engine_draw_filled_triangle_depth(color, x0, y0, (uint16_t)(z0*UINT16_MAX), x1, y1, (uint16_t)(z1*UINT16_MAX), x2, y2, (uint16_t)(z2*UINT16_MAX), 1.0f, shader);
 
             // // Wireframe
             // bool endpoint_0_on_screen = engine_math_int32_between(x0, 0, SCREEN_WIDTH_MINUS_1) && engine_math_int32_between(y0, 0, SCREEN_HEIGHT_MINUS_1);

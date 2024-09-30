@@ -768,6 +768,8 @@ void engine_draw_filled_triangle_depth(uint16_t color, int32_t x0, int32_t y0, u
     int16_t px = min_x;
     int16_t py = min_y;
 
+    // Go through all pixels in triangle view box and check if each
+    // point is inside or outside the triangle inside the box
     for(py=min_y; py<=max_y; py++){
         for(px=min_x; px<=max_x; px++){
             // https://jtsorlinis.github.io/rendering-tutorial/#:~:text=this%20triangle%0A%7D-,Back%20to%20business,-So%2C%20why%20is
@@ -783,19 +785,19 @@ void engine_draw_filled_triangle_depth(uint16_t color, int32_t x0, int32_t y0, u
             float weight_b = (float)CAP / ABC;
             float weight_c = (float)ABP / ABC;
 
+            // https://jtsorlinis.github.io/rendering-tutorial/#:~:text=get%20the%20interpolated%20colour
             uint16_t depth_p = (uint16_t)(depth_z0*weight_a + depth_z1*weight_b + depth_z2*weight_c);
 
             // Check that the pixel is on the right side of each
             // edge for all the edge functions calculated
-            if (ABP >= 0 && BCP >= 0 && CAP >= 0){
-                if(engine_display_store_check_depth(px, py, depth_p)){
-                    engine_draw_pixel_no_check(color, px, py, alpha, shader);
-                }
+            //
+            // Fast way of checking if these are all positive:
+            // // https://fgiesen.wordpress.com/2013/02/10/optimizing-the-basic-rasterizer/#:~:text=if%20((w0%20%7C%20w1%20%7C%20w2)%20%3E%3D%200)
+            if((ABP | BCP | CAP) >= 0 && engine_display_store_check_depth(px, py, depth_p)){
+                engine_draw_pixel_no_check(color, px, py, alpha, shader);
             }
         }
     }
-
-
     
 
     // int16_t A01 = (int16_t)(y0 - y1), B01 = (int16_t)(x1 - x0);
@@ -817,9 +819,9 @@ void engine_draw_filled_triangle_depth(uint16_t color, int32_t x0, int32_t y0, u
     // int16_t px = minX;
     // int16_t py = minY;
 
-    // int16_t w0_row = (int16_t)orient2d(x1, y1, x2, y2, px, py);
-    // int16_t w1_row = (int16_t)orient2d(x2, y2, x0, y0, px, py);
-    // int16_t w2_row = (int16_t)orient2d(x0, y0, x1, y1, px, py);
+    // int16_t w0_row = (int16_t)edge_function(x1, y1, x2, y2, px, py);
+    // int16_t w1_row = (int16_t)edge_function(x2, y2, x0, y0, px, py);
+    // int16_t w2_row = (int16_t)edge_function(x0, y0, x1, y1, px, py);
 
     // // Rasterize
     // for(py = minY; py <= maxY; py++){
