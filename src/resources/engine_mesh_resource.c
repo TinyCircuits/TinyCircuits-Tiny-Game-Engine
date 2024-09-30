@@ -56,7 +56,7 @@ mp_obj_t mesh_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_
                 self->indices = args[1];
                 self->uvs = mp_obj_new_list(0, NULL);
             }else{
-                mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("MeshResource: ERROR: Expected the two argument to be `str` and `bool` or `list` and `list`, got `%s` and `%s`"), mp_obj_get_type_str(args[0]), mp_obj_get_type_str(args[1]));
+                mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("MeshResource: ERROR: Expected the two arguments to be `str` and `bool` or `list` and `list`, got `%s` and `%s`"), mp_obj_get_type_str(args[0]), mp_obj_get_type_str(args[1]));
             }
         }else if(n_args == 3){
             if(mp_obj_is_type(args[0], &mp_type_list) &&
@@ -66,7 +66,7 @@ mp_obj_t mesh_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_
                 self->indices = args[1];
                 self->uvs = args[2];
             }else{
-                mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("MeshResource: ERROR: Expected the three argument to be `list`, `list`, and `list`, got `%s`, `%s`, and `%s`"), mp_obj_get_type_str(args[0]), mp_obj_get_type_str(args[1]), mp_obj_get_type_str(args[2]));
+                mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("MeshResource: ERROR: Expected the three arguments to be `list`, `list`, and `list`, got `%s`, `%s`, and `%s`"), mp_obj_get_type_str(args[0]), mp_obj_get_type_str(args[1]), mp_obj_get_type_str(args[2]));
             }
         }else{
             mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("MeshResource: ERROR: Too many arguments! Expected at most `3`, got `%d`"), n_args);

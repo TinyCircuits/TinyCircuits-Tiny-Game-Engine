@@ -82,7 +82,6 @@ void mesh_node_class_draw(mp_obj_t mesh_node_base_obj, mp_obj_t camera_node){
     mat4 mvp = GLM_MAT4_ZERO_INIT;
     glm_mat4_mul(camera->m_projection, m_view, mvp);
 
-
     for(uint16_t ivx=0; ivx<vertices->len; ivx+=3){
         vector3_class_obj_t *vertex_0 = vertices->items[ivx];
         vector3_class_obj_t *vertex_1 = vertices->items[ivx+1];
@@ -120,28 +119,28 @@ void mesh_node_class_draw(mp_obj_t mesh_node_base_obj, mp_obj_t camera_node){
             int32_t x2 = (int32_t)out_2[0];
             int32_t y2 = (int32_t)out_2[1];
 
-            // engine_draw_filled_triangle(0b1111100000000000, x0, y0, x1, y1, x2, y2, 1.0f, shader);
+            engine_draw_filled_triangle_depth(mesh_color->value, x0, y0, (uint16_t)(z0*UINT16_MAX), x1, y1, (uint16_t)(z1*UINT16_MAX), x2, y2, (uint16_t)(z2*UINT16_MAX), 1.0f, shader);
 
-            // Wireframe
-            bool endpoint_0_on_screen = engine_math_int32_between(x0, 0, SCREEN_WIDTH_MINUS_1) && engine_math_int32_between(y0, 0, SCREEN_HEIGHT_MINUS_1);
-            bool endpoint_1_on_screen = engine_math_int32_between(x1, 0, SCREEN_WIDTH_MINUS_1) && engine_math_int32_between(y1, 0, SCREEN_HEIGHT_MINUS_1);
-            bool endpoint_2_on_screen = engine_math_int32_between(x2, 0, SCREEN_WIDTH_MINUS_1) && engine_math_int32_between(y2, 0, SCREEN_HEIGHT_MINUS_1);
+            // // Wireframe
+            // bool endpoint_0_on_screen = engine_math_int32_between(x0, 0, SCREEN_WIDTH_MINUS_1) && engine_math_int32_between(y0, 0, SCREEN_HEIGHT_MINUS_1);
+            // bool endpoint_1_on_screen = engine_math_int32_between(x1, 0, SCREEN_WIDTH_MINUS_1) && engine_math_int32_between(y1, 0, SCREEN_HEIGHT_MINUS_1);
+            // bool endpoint_2_on_screen = engine_math_int32_between(x2, 0, SCREEN_WIDTH_MINUS_1) && engine_math_int32_between(y2, 0, SCREEN_HEIGHT_MINUS_1);
 
-            // If either endpoint is on screen, draw the full line
-            // This avoids drawing lines that are out of bounds on
-            // the camera's view plane and increases performance a
-            // ton
-            if(endpoint_0_on_screen || endpoint_1_on_screen){
-                engine_draw_line(mesh_color->value, out_0[0], out_0[1], out_1[0], out_1[1], NULL, 1.0f, shader);
-            }
+            // // If either endpoint is on screen, draw the full line
+            // // This avoids drawing lines that are out of bounds on
+            // // the camera's view plane and increases performance a
+            // // ton
+            // if(endpoint_0_on_screen || endpoint_1_on_screen){
+            //     engine_draw_line(mesh_color->value, out_0[0], out_0[1], out_1[0], out_1[1], NULL, 1.0f, shader);
+            // }
 
-            if(endpoint_1_on_screen || endpoint_2_on_screen){
-                engine_draw_line(mesh_color->value, out_1[0], out_1[1], out_2[0], out_2[1], NULL, 1.0f, shader);
-            }
+            // if(endpoint_1_on_screen || endpoint_2_on_screen){
+            //     engine_draw_line(mesh_color->value, out_1[0], out_1[1], out_2[0], out_2[1], NULL, 1.0f, shader);
+            // }
 
-            if(endpoint_2_on_screen || endpoint_0_on_screen){
-                engine_draw_line(mesh_color->value, out_2[0], out_2[1], out_0[0], out_0[1], NULL, 1.0f, shader);
-            }
+            // if(endpoint_2_on_screen || endpoint_0_on_screen){
+            //     engine_draw_line(mesh_color->value, out_2[0], out_2[1], out_0[0], out_0[1], NULL, 1.0f, shader);
+            // }
         }
     }
 }

@@ -76,6 +76,7 @@ camera = MyCam()
 arrow_mesh = MeshResource()
 floor_mesh = MeshResource()
 
+
 arrow_mesh_node = MeshNode(mesh=arrow_mesh, color=engine_draw.orange)
 floor_mesh_node = MeshNode(mesh=floor_mesh, color=engine_draw.red)
 
@@ -100,25 +101,23 @@ add_quad(arrow_mesh, Vector3(-1, 3, 0), Vector3(-1, 4, 0), Vector3(0, 4, 0), Vec
 add_quad(arrow_mesh, Vector3(1, 3, 0), Vector3(1, 4, 0), Vector3(2, 4, 0), Vector3(2, 3, 0))
 
 add_quad(arrow_mesh, Vector3(-2, 2, 0), Vector3(-2, 3, 0), Vector3(-1, 3, 0), Vector3(-1, 2, 0))
-add_quad(arrow_mesh, Vector3(3, 2, 0), Vector3(3, 3, 0), Vector3(2, 3, 0), Vector3(2, 2, 0))
+add_quad(arrow_mesh, Vector3(3, 2, 0), Vector3(2, 2, 0), Vector3(2, 3, 0), Vector3(3, 3, 0))
 
 
-add_quad(floor_mesh, Vector3(-5, -3, -5), Vector3(5, -3, -5), Vector3(5, -3, 5), Vector3(-5, -3, 5))
-
+add_quad(floor_mesh, Vector3(-10, -3, -10), Vector3(10, -3, -10), Vector3(10, -3, 10), Vector3(-10, -3, 10))
 
 t = 0
-
 
 while True:
     if engine.tick() is False:
         continue
 
-    arrow_mesh_node.rotation.x += 0.01
-    arrow_mesh_node.rotation.y += 0.01
-    arrow_mesh_node.rotation.z += 0.01
+    arrow_mesh_node.rotation.x += 0.005
+    arrow_mesh_node.rotation.y += 0.005
+    arrow_mesh_node.rotation.z += 0.005
 
     arrow_mesh_node.position.x = math.sin(t*2) * 4
-    arrow_mesh_node.position.y = math.sin(t) * 2
+    arrow_mesh_node.position.y = math.sin(t) * 7
     arrow_mesh_node.position.z = math.cos(t*2) * 4
 
     t += 0.01

@@ -6,9 +6,9 @@
 
 typedef struct mesh_resource_class_obj_t{
     mp_obj_base_t base;
-    mp_obj_t vertices;  // list of Vector3s or bytearray of triplet 4 byte float groups
-    mp_obj_t indices;   // list of ints or bytearray of 4 byte ints
-    mp_obj_t uvs;       // list of floats or bytearray of 4 byte floats
+    mp_obj_t vertices;  // list of Vector3s
+    mp_obj_t indices;   // list of ints
+    mp_obj_t uvs;       // list of floats
 }mesh_resource_class_obj_t;
 
 extern const mp_obj_type_t mesh_resource_class_type;
