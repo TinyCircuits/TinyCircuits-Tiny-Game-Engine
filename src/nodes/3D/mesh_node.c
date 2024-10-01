@@ -43,6 +43,109 @@ void mesh_node_set_scale(void *user_ptr){
 }
 
 
+void mesh_node_project_draw(vec3 v0, vec3 v1, vec3 v2, mat4 mvp, vec4 v_viewport, uint16_t triangle_color, engine_shader_t *shader){
+    vec3 out_0 = GLM_VEC3_ZERO_INIT;
+    vec3 out_1 = GLM_VEC3_ZERO_INIT;
+    vec3 out_2 = GLM_VEC3_ZERO_INIT;
+    glm_project_zo(v0, mvp, v_viewport, out_0);
+    glm_project_zo(v1, mvp, v_viewport, out_1);
+    glm_project_zo(v2, mvp, v_viewport, out_2);
+
+    // Convert from 0.0 ~ 1.0 to 0 ~ UINT16_MAX
+    uint32_t z0 = (uint32_t)(out_0[2]*(float)UINT16_MAX);
+    uint32_t z1 = (uint32_t)(out_1[2]*(float)UINT16_MAX);
+    uint32_t z2 = (uint32_t)(out_2[2]*(float)UINT16_MAX);
+
+    // Check that the triangle vertices are in front of the camera (not behind)
+    // Doing float compares for each pixel cuts FPS by half, this maybe could be
+    // better: TODO
+    if(((z0 > 0 && z0 < UINT16_MAX)) &&
+        ((z1 > 0 && z1 < UINT16_MAX)) &&
+        ((z2 > 0 && z2 < UINT16_MAX))){
+
+        // Cast to int and see if any endpoints will be on screen
+        int32_t x0 = (int32_t)out_0[0];
+        int32_t y0 = (int32_t)out_0[1];
+
+        int32_t x1 = (int32_t)out_1[0];
+        int32_t y1 = (int32_t)out_1[1];
+
+        int32_t x2 = (int32_t)out_2[0];
+        int32_t y2 = (int32_t)out_2[1];
+
+        uint16_t color = triangle_color;
+
+        engine_draw_filled_triangle_depth(color, x0, y0, z0, x1, y1, z1, x2, y2, z2, 1.0f, shader);
+
+        // // Wireframe
+        // bool endpoint_0_on_screen = engine_math_int32_between(x0, 0, SCREEN_WIDTH_MINUS_1) && engine_math_int32_between(y0, 0, SCREEN_HEIGHT_MINUS_1);
+        // bool endpoint_1_on_screen = engine_math_int32_between(x1, 0, SCREEN_WIDTH_MINUS_1) && engine_math_int32_between(y1, 0, SCREEN_HEIGHT_MINUS_1);
+        // bool endpoint_2_on_screen = engine_math_int32_between(x2, 0, SCREEN_WIDTH_MINUS_1) && engine_math_int32_between(y2, 0, SCREEN_HEIGHT_MINUS_1);
+
+        // // If either endpoint is on screen, draw the full line
+        // // This avoids drawing lines that are out of bounds on
+        // // the camera's view plane and increases performance a
+        // // ton
+        // if(endpoint_0_on_screen || endpoint_1_on_screen){
+        //     engine_draw_line(mesh_color->value, out_0[0], out_0[1], out_1[0], out_1[1], NULL, 1.0f, shader);
+        // }
+
+        // if(endpoint_1_on_screen || endpoint_2_on_screen){
+        //     engine_draw_line(mesh_color->value, out_1[0], out_1[1], out_2[0], out_2[1], NULL, 1.0f, shader);
+        // }
+
+        // if(endpoint_2_on_screen || endpoint_0_on_screen){
+        //     engine_draw_line(mesh_color->value, out_2[0], out_2[1], out_0[0], out_0[1], NULL, 1.0f, shader);
+        // }
+    }
+}
+
+
+bool mesh_node_get_tri_verts_vec3_list(mp_obj_t vertex_data, vec3 v0, vec3 v1, vec3 v2, uint16_t *index, uint16_t vertex_count){
+    mp_obj_list_t *vertices = vertex_data;
+
+    vector3_class_obj_t *vertex_0 = vertices->items[*index];
+    vector3_class_obj_t *vertex_1 = vertices->items[*index+1];
+    vector3_class_obj_t *vertex_2 = vertices->items[*index+2];
+
+    v0[0] = vertex_0->x.value;
+    v0[1] = vertex_0->y.value;
+    v0[2] = vertex_0->z.value;
+
+    v1[0] = vertex_1->x.value;
+    v1[1] = vertex_1->y.value;
+    v1[2] = vertex_1->z.value;
+
+    v2[0] = vertex_2->x.value;
+    v2[1] = vertex_2->y.value;
+    v2[2] = vertex_2->z.value;
+
+    // if(ivx/3 < triangle_colors->len){
+    //     color = ((color_class_obj_t*)triangle_colors->items[ivx/3])->value;
+    // }
+
+    *index += 3;
+
+    if(*index >= vertex_count){
+        return false;
+    }else{
+        return true;
+    }
+}
+
+
+uint16_t mesh_node_get_tri_color_vec3_list(mp_obj_t triangle_color_data, uint16_t index){
+    mp_obj_list_t *triangle_colors = triangle_color_data;
+
+    return ((color_class_obj_t*)triangle_colors->items[index/3])->value;
+}
+
+
+bool mesh_node_get_tri_verts_uint8_bytearray(mp_obj_t vertex_data, vec3 v0, vec3 v1, vec3 v2, uint16_t *index, uint16_t vertex_count){
+    return true;
+}
+
+
 void mesh_node_class_draw(mp_obj_t mesh_node_base_obj, mp_obj_t camera_node){
     engine_node_base_t *mesh_node_base = mesh_node_base_obj;
     engine_mesh_node_class_obj_t *mesh_node = mesh_node_base->node;
@@ -53,19 +156,39 @@ void mesh_node_class_draw(mp_obj_t mesh_node_base_obj, mp_obj_t camera_node){
         return;
     }
 
-    mp_obj_list_t *vertices = mesh->vertices;
+    uint32_t vertex_count = 0;
+    bool (*get_tri_verts_func)(mp_obj_t vertex_data, vec3 v0, vec3 v1, vec3 v2, uint16_t *index, uint16_t vertex_count) = NULL;
+    uint16_t (*get_tri_colors_func)(mp_obj_t triangle_color_data, uint16_t index) = NULL;
+
+    if(mp_obj_is_type(mesh->vertices, &mp_type_list)){
+        get_tri_verts_func = mesh_node_get_tri_verts_vec3_list;
+        vertex_count = ((mp_obj_list_t*)mesh->vertices)->len;           // Each Vector3 element is a vertex
+    }else if(mp_obj_is_type(mesh->vertices, &mp_type_bytearray)){
+        get_tri_verts_func = mesh_node_get_tri_verts_uint8_bytearray;
+        vertex_count = ((mp_obj_array_t*)mesh->vertices)->len/3;        // Every 3 bytes represents the xyz for a vertex
+    }
+
+    if(mp_obj_is_type(mesh->triangle_colors, &mp_type_list)){
+        get_tri_colors_func = mesh_node_get_tri_color_vec3_list;
+    }else if(mp_obj_is_type(mesh->triangle_colors, &mp_type_bytearray)){
+        get_tri_colors_func = NULL;
+    }
 
     // No triangles to draw
-    if(vertices->len < 3){
+    if(vertex_count < 3){
         return;
     }
 
     // mp_obj_list_t *indices = mesh->indices;
     // mp_obj_list_t *uvs = mesh->uvs;
-    mp_obj_list_t *triangle_colors = mesh->triangle_colors;
+    // mp_obj_list_t *triangle_colors = mesh->triangle_colors;
     // ENGINE_PRINTF("%ld\n", triangle_colors->len);
 
-    color_class_obj_t *mesh_color = mesh_node->color;
+    if(mesh->vertex_count != mp_const_none){
+        vertex_count = mp_obj_get_int(mesh->vertex_count);
+    }
+
+    // color_class_obj_t *mesh_color = mesh_node->color;
 
     engine_node_base_t *camera_node_base = camera_node;
     engine_camera_node_class_obj_t *camera = camera_node_base->node;
@@ -75,6 +198,8 @@ void mesh_node_class_draw(mp_obj_t mesh_node_base_obj, mp_obj_t camera_node){
     mat4 m_view0 = GLM_MAT4_ZERO_INIT;
     glm_mat4_mul(camera->m_rotation, camera->m_translation, m_view0);
 
+    // glm_mat4_mul(mesh_node->scale, m_view0, m_view0);
+
     mat4 m_view1 = GLM_MAT4_ZERO_INIT;
     glm_mat4_mul(mesh_node->m_rotation, mesh_node->m_translation, m_view1);
 
@@ -83,75 +208,59 @@ void mesh_node_class_draw(mp_obj_t mesh_node_base_obj, mp_obj_t camera_node){
 
     mat4 mvp = GLM_MAT4_ZERO_INIT;
     glm_mat4_mul(camera->m_projection, m_view, mvp);
+    // glm_mat4_mul(mvp, m_view2, mvp);
 
-    for(uint16_t ivx=0; ivx<vertices->len; ivx+=3){
-        vector3_class_obj_t *vertex_0 = vertices->items[ivx];
-        vector3_class_obj_t *vertex_1 = vertices->items[ivx+1];
-        vector3_class_obj_t *vertex_2 = vertices->items[ivx+2];
+    uint16_t index = 0;
+    // uint16_t triangle_color = 0xbdf7;
+    uint16_t triangle_color = 0xffff;
 
-        vec3 v0 = {vertex_0->x.value, vertex_0->y.value, vertex_0->z.value};
-        vec3 v1 = {vertex_1->x.value, vertex_1->y.value, vertex_1->z.value};
-        vec3 v2 = {vertex_2->x.value, vertex_2->y.value, vertex_2->z.value};
+    vec3 v0 = GLM_VEC3_ZERO_INIT;
+    vec3 v1 = GLM_VEC3_ZERO_INIT;
+    vec3 v2 = GLM_VEC3_ZERO_INIT;
+    
+    while(true){
+        // While index = 0, get triangle color first
+        triangle_color = get_tri_colors_func(mesh->triangle_colors, index);
 
-        vec3 out_0 = GLM_VEC3_ZERO_INIT;
-        vec3 out_1 = GLM_VEC3_ZERO_INIT;
-        vec3 out_2 = GLM_VEC3_ZERO_INIT;
-        glm_project_zo(v0, mvp, camera->v_viewport, out_0);
-        glm_project_zo(v1, mvp, camera->v_viewport, out_1);
-        glm_project_zo(v2, mvp, camera->v_viewport, out_2);
-
-        // Convert from 0.0 ~ 1.0 to 0 ~ UINT16_MAX
-        uint32_t z0 = (uint32_t)(out_0[2]*(float)UINT16_MAX);
-        uint32_t z1 = (uint32_t)(out_1[2]*(float)UINT16_MAX);
-        uint32_t z2 = (uint32_t)(out_2[2]*(float)UINT16_MAX);
-
-        // Check that the triangle vertices are in front of the camera (not behind)
-        // Doing float compares for each pixel cuts FPS by half, this maybe could be
-        // better: TODO
-        if(((z0 > 0 && z0 < UINT16_MAX)) &&
-           ((z1 > 0 && z1 < UINT16_MAX)) &&
-           ((z2 > 0 && z2 < UINT16_MAX))){
-
-            // Cast to int and see if any endpoints will be on screen
-            int32_t x0 = (int32_t)out_0[0];
-            int32_t y0 = (int32_t)out_0[1];
-
-            int32_t x1 = (int32_t)out_1[0];
-            int32_t y1 = (int32_t)out_1[1];
-
-            int32_t x2 = (int32_t)out_2[0];
-            int32_t y2 = (int32_t)out_2[1];
-
-            uint16_t color = mesh_color->value;
-
-            if(ivx/3 < triangle_colors->len){
-                color = ((color_class_obj_t*)triangle_colors->items[ivx/3])->value;
-            }
-
-            engine_draw_filled_triangle_depth(color, x0, y0, z0, x1, y1, z1, x2, y2, z2, 1.0f, shader);
-
-            // // Wireframe
-            // bool endpoint_0_on_screen = engine_math_int32_between(x0, 0, SCREEN_WIDTH_MINUS_1) && engine_math_int32_between(y0, 0, SCREEN_HEIGHT_MINUS_1);
-            // bool endpoint_1_on_screen = engine_math_int32_between(x1, 0, SCREEN_WIDTH_MINUS_1) && engine_math_int32_between(y1, 0, SCREEN_HEIGHT_MINUS_1);
-            // bool endpoint_2_on_screen = engine_math_int32_between(x2, 0, SCREEN_WIDTH_MINUS_1) && engine_math_int32_between(y2, 0, SCREEN_HEIGHT_MINUS_1);
-
-            // // If either endpoint is on screen, draw the full line
-            // // This avoids drawing lines that are out of bounds on
-            // // the camera's view plane and increases performance a
-            // // ton
-            // if(endpoint_0_on_screen || endpoint_1_on_screen){
-            //     engine_draw_line(mesh_color->value, out_0[0], out_0[1], out_1[0], out_1[1], NULL, 1.0f, shader);
-            // }
-
-            // if(endpoint_1_on_screen || endpoint_2_on_screen){
-            //     engine_draw_line(mesh_color->value, out_1[0], out_1[1], out_2[0], out_2[1], NULL, 1.0f, shader);
-            // }
-
-            // if(endpoint_2_on_screen || endpoint_0_on_screen){
-            //     engine_draw_line(mesh_color->value, out_2[0], out_2[1], out_0[0], out_0[1], NULL, 1.0f, shader);
-            // }
+        // This will increment and check that the index is within vertex bounds
+        if(get_tri_verts_func(mesh->vertices, v0, v1, v2, &index, vertex_count) == false){
+            break;
         }
+
+        // Project and draw the triangle
+        mesh_node_project_draw(v0, v1, v2, mvp, camera->v_viewport, triangle_color, shader);
     }
+
+
+    // for(uint16_t ivx=0; ivx<vertex_count; ivx+=3){
+
+    //     // if(mp_obj_is_type(vertices, &mp_type_list)){
+    //         vector3_class_obj_t *vertex_0 = vertices->items[ivx];
+    //         vector3_class_obj_t *vertex_1 = vertices->items[ivx+1];
+    //         vector3_class_obj_t *vertex_2 = vertices->items[ivx+2];
+
+    //         v0[0] = vertex_0->x.value;
+    //         v0[1] = vertex_0->y.value;
+    //         v0[2] = vertex_0->z.value;
+
+    //         v1[0] = vertex_1->x.value;
+    //         v1[1] = vertex_1->y.value;
+    //         v1[2] = vertex_1->z.value;
+
+    //         v2[0] = vertex_2->x.value;
+    //         v2[1] = vertex_2->y.value;
+    //         v2[2] = vertex_2->z.value;
+    //     // }else if(mp_obj_is_type(vertices, &mp_type_bytearray)){
+            
+    //     // }
+
+    //     uint16_t color = mesh_color->value;
+    //     if(ivx/3 < triangle_colors->len){
+    //         color = ((color_class_obj_t*)triangle_colors->items[ivx/3])->value;
+    //     }
+
+    //     mesh_node_project(v0, v1, v2, mvp, camera->v_viewport, color, shader);
+    // }
 }
 
 

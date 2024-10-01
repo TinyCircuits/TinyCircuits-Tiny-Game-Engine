@@ -84,6 +84,10 @@ noise = NoiseResource()
 noise.seed = 69
 noise.frequency = 0.0125
 
+mesh.scale.x = 1.25
+mesh.scale.y = 1.25
+mesh.scale.z = 1.25
+
 def add_quad(color, v1, v2, v3, v4):
     mesh_resource.vertices.append(v1)
     mesh_resource.vertices.append(v2)

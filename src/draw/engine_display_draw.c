@@ -797,16 +797,8 @@ void engine_draw_filled_triangle_depth(uint16_t color, float ax, float ay, uint1
 
         for(px=min_x; px<=max_x; px++){
 
-            // int32_t ABP = edge_function(ax, ay, bx, by, px, py);
-            // int32_t BCP = edge_function(bx, by, cx, cy, px, py);
-            // int32_t CAP = edge_function(cx, cy, ax, ay, px, py);
-
-            // // We now have the weights of the point P towards each of the vertices (Barycentric coordinates)
-            // float weight_a = (float)BCP / ABC;
-            // float weight_b = (float)CAP / ABC;
-            // float weight_c = (float)ABP / ABC;
-
             // https://jtsorlinis.github.io/rendering-tutorial/#:~:text=get%20the%20interpolated%20colour
+            // BCP + CAP + ABP = 1.0
             uint16_t depth_p = (uint16_t)((float)depth_az*BCP + (float)depth_bz*CAP + (float)depth_cz*ABP);
 
             // Check that the pixel is on the right side of each
@@ -828,56 +820,4 @@ void engine_draw_filled_triangle_depth(uint16_t color, float ax, float ay, uint1
         CAP_ROW += dx_ca;
         ABP_ROW += dx_ab;
     }
-    
-
-    // int16_t A01 = (int16_t)(y0 - y1), B01 = (int16_t)(x1 - x0);
-    // int16_t A12 = (int16_t)(y1 - y2), B12 = (int16_t)(x2 - x1);
-    // int16_t A20 = (int16_t)(y2 - y0), B20 = (int16_t)(x0 - x2);
-
-    // // Compute triangle bounding box
-    // int16_t minX = (int16_t)min3(x0, x1, x2);
-    // int16_t minY = (int16_t)min3(y0, y1, y2);
-    // int16_t maxX = (int16_t)max3(x0, x1, x2);
-    // int16_t maxY = (int16_t)max3(y0, y1, y2);
-
-    // // Clip against screen bounds
-    // minX = max(minX, 0);
-    // minY = max(minY, 0);
-    // maxX = min(maxX, SCREEN_WIDTH_MINUS_1);
-    // maxY = min(maxY, SCREEN_HEIGHT_MINUS_1);
-
-    // int16_t px = minX;
-    // int16_t py = minY;
-
-    // int16_t w0_row = (int16_t)edge_function(x1, y1, x2, y2, px, py);
-    // int16_t w1_row = (int16_t)edge_function(x2, y2, x0, y0, px, py);
-    // int16_t w2_row = (int16_t)edge_function(x0, y0, x1, y1, px, py);
-
-    // // Rasterize
-    // for(py = minY; py <= maxY; py++){
-    //     // Barycentric coordinates at start of row
-    //     int16_t w0 = w0_row;
-    //     int16_t w1 = w1_row;
-    //     int16_t w2 = w2_row;
-
-    //     for(px = minX; px <= maxX; px++){
-    //         // If p is on or inside all edges, render pixel.
-    //         // https://fgiesen.wordpress.com/2013/02/10/optimizing-the-basic-rasterizer/#:~:text=if%20((w0%20%7C%20w1%20%7C%20w2)%20%3E%3D%200)
-    //         if ((w0 | w1 | w2) >= 0){
-    //             // if(engine_display_store_check_depth(px, py, depth)){
-    //                 engine_draw_pixel_no_check(color, px, py, alpha, shader);
-    //             // }
-    //         }
-
-    //         // One step to the right
-    //         w0 += A12;
-    //         w1 += A20;
-    //         w2 += A01;
-    //     }
-
-    //     // One row step
-    //     w0_row += B12;
-    //     w1_row += B20;
-    //     w2_row += B01;
-    // }
 }

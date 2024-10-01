@@ -31,6 +31,8 @@ mp_obj_t mesh_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_
     //  3. vertices, indices, and uvs: .vertices, .indices, and .uvs are set to passed `lists` or `bytearrays`, otherwise, set to empty `list`
     //  4. vertices, indices, uvs and colors: .vertices, .indices, .uvs, and .triangle_colors, are set to passed `lists` or `bytearrays`, otherwise, set to empty `list`
 
+    self->vertex_count = mp_const_none;
+
     if(n_args == 0){
         self->vertices = mp_obj_new_list(0, NULL);
         self->indices = mp_obj_new_list(0, NULL);
@@ -38,52 +40,52 @@ mp_obj_t mesh_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_
         self->triangle_colors = mp_obj_new_list(0, NULL);
     }else{
         if(n_args == 1){
-            if(mp_obj_is_str(args[0])){                             // path
+            if(mp_obj_is_str(args[0])){                                                                            // path
                 // Open .obj mesh in FLASH
                 mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("MeshResource: ERROR: using .obj files is not implemented yet!"));
-            }else if(mp_obj_is_type(args[0], &mp_type_list)){       // vertices
+            }else if(mp_obj_is_type(args[0], &mp_type_list) || mp_obj_is_type(args[0], &mp_type_bytearray)){       // vertices
                 self->vertices = args[0];
                 self->indices = mp_obj_new_list(0, NULL);
                 self->uvs = mp_obj_new_list(0, NULL);
                 self->triangle_colors = mp_obj_new_list(0, NULL);
             }else{
-                mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("MeshResource: ERROR: Expected first argument to be a `str` or `list`, got `%s`"), mp_obj_get_type_str(args[0]));
+                mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("MeshResource: ERROR: Expected first argument to be a `str` or `list/bytearray`, got `%s`"), mp_obj_get_type_str(args[0]));
             }
         }else if(n_args == 2){
             if(mp_obj_is_str(args[0]) && mp_obj_is_bool(args[1])){  // path, in_ram
                 // Open .obj mesh in FLASH or RAM
                 mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("MeshResource: ERROR: using .obj files is not implemented yet!"));
-            }else if(mp_obj_is_type(args[0], &mp_type_list) &&
-                     mp_obj_is_type(args[1], &mp_type_list)){       // vertices, indices
+            }else if((mp_obj_is_type(args[0], &mp_type_list) || mp_obj_is_type(args[0], &mp_type_bytearray)) &&
+                     (mp_obj_is_type(args[1], &mp_type_list) || mp_obj_is_type(args[1], &mp_type_bytearray))){       // vertices, indices
                 self->vertices = args[0];
                 self->indices = args[1];
                 self->uvs = mp_obj_new_list(0, NULL);
                 self->triangle_colors = mp_obj_new_list(0, NULL);
             }else{
-                mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("MeshResource: ERROR: Expected the two arguments to be `str` and `bool` or `list` and `list`, got `%s` and `%s`"), mp_obj_get_type_str(args[0]), mp_obj_get_type_str(args[1]));
+                mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("MeshResource: ERROR: Expected the two arguments to be `str` and `bool` or `list/bytearray` and `list/bytearray`, got `%s` and `%s`"), mp_obj_get_type_str(args[0]), mp_obj_get_type_str(args[1]));
             }
         }else if(n_args == 3){
-            if(mp_obj_is_type(args[0], &mp_type_list) &&
-               mp_obj_is_type(args[1], &mp_type_list) &&
-               mp_obj_is_type(args[2], &mp_type_list)){             // vertices, indices, uvs
+            if((mp_obj_is_type(args[0], &mp_type_list) || mp_obj_is_type(args[0], &mp_type_bytearray)) &&
+               (mp_obj_is_type(args[1], &mp_type_list) || mp_obj_is_type(args[1], &mp_type_bytearray)) &&
+               (mp_obj_is_type(args[2], &mp_type_list) || mp_obj_is_type(args[2], &mp_type_bytearray))){             // vertices, indices, uvs
                 self->vertices = args[0];
                 self->indices = args[1];
                 self->uvs = args[2];
                 self->triangle_colors = mp_obj_new_list(0, NULL);
             }else{
-                mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("MeshResource: ERROR: Expected the three arguments to be `list`, `list`, and `list`, got `%s`, `%s`, and `%s`"), mp_obj_get_type_str(args[0]), mp_obj_get_type_str(args[1]), mp_obj_get_type_str(args[2]));
+                mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("MeshResource: ERROR: Expected the three arguments to be `list/bytearray`, `list/bytearray`, and `list/bytearray`, got `%s`, `%s`, and `%s`"), mp_obj_get_type_str(args[0]), mp_obj_get_type_str(args[1]), mp_obj_get_type_str(args[2]));
             }
         }else if(n_args == 4){
-            if(mp_obj_is_type(args[0], &mp_type_list) &&
-               mp_obj_is_type(args[1], &mp_type_list) &&
-               mp_obj_is_type(args[2], &mp_type_list) &&
-               mp_obj_is_type(args[3], &mp_type_list)){             // vertices, indices, uvs, triangle_colors
+            if((mp_obj_is_type(args[0], &mp_type_list) || mp_obj_is_type(args[0], &mp_type_bytearray)) &&
+               (mp_obj_is_type(args[1], &mp_type_list) || mp_obj_is_type(args[1], &mp_type_bytearray)) &&
+               (mp_obj_is_type(args[2], &mp_type_list) || mp_obj_is_type(args[2], &mp_type_bytearray)) &&
+               (mp_obj_is_type(args[3], &mp_type_list) || mp_obj_is_type(args[3], &mp_type_bytearray))){             // vertices, indices, uvs, triangle_colors
                 self->vertices = args[0];
                 self->indices = args[1];
                 self->uvs = args[2];
                 self->triangle_colors = mp_obj_new_list(0, args[3]);
             }else{
-                mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("MeshResource: ERROR: Expected the four arguments to be `list`, `list`, `list`, and `list`, got `%s`, `%s`, `%s`, and `%s`"), mp_obj_get_type_str(args[0]), mp_obj_get_type_str(args[1]), mp_obj_get_type_str(args[2]), mp_obj_get_type_str(args[3]));
+                mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("MeshResource: ERROR: Expected the four arguments to be `list/bytearray`, `list/bytearray`, `list/bytearray`, and `list/bytearray`, got `%s`, `%s`, `%s`, and `%s`"), mp_obj_get_type_str(args[0]), mp_obj_get_type_str(args[1]), mp_obj_get_type_str(args[2]), mp_obj_get_type_str(args[3]));
             }
         }else{
             mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("MeshResource: ERROR: Too many arguments! Expected at most `4`, got `%d`"), n_args);
@@ -131,6 +133,9 @@ static void mesh_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t 
             case MP_QSTR_triangle_colors:
                 destination[0] = self->triangle_colors;
             break;
+            case MP_QSTR_vertex_count:
+                destination[0] = self->vertex_count;
+            break;
             default:
                 return; // Fail
         }
@@ -147,6 +152,9 @@ static void mesh_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t 
             break;
             case MP_QSTR_triangle_colors:
                 self->triangle_colors = destination[1];
+            break;
+            case MP_QSTR_vertex_count:
+                self->vertex_count = destination[1];
             break;
             default:
                 return; // Fail
