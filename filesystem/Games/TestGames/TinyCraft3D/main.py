@@ -8,15 +8,21 @@ import engine_io
 import math
 import engine_draw
 
-engine.freq(250 * 1000 * 1000)
+# engine.freq(250 * 1000 * 1000)
 
-engine.fps_limit(60)
+# engine.fps_limit(60)
+engine.disable_fps_limit()
 
 class MyCam(CameraNode):
     def __init__(self):
         super().__init__(self)
         self.distance = 0.75
         self.fov = 75.0
+
+        self.rotation.y = -90
+
+        for i in range(100):
+            self.backward()
 
     def forward(self):
         self.position.x -= math.sin(self.rotation.y) * self.distance
@@ -48,6 +54,7 @@ class MyCam(CameraNode):
 
     def tick(self, dt):
         # print(self.position)
+        print(engine.get_running_fps())
 
         if engine_io.RB.is_pressed:
             self.rotation.y -= 0.05
@@ -75,7 +82,7 @@ mesh_resource = MeshResource()
 mesh = MeshNode(mesh=mesh_resource)
 noise = NoiseResource()
 noise.seed = 69
-noise.frequency = 0.006
+noise.frequency = 0.0125
 
 def add_quad(color, v1, v2, v3, v4):
     mesh_resource.vertices.append(v1)
@@ -96,7 +103,7 @@ def is_solid(x, y, z):
         return False
 
 size = 4
-chunk_size = 28
+chunk_size = 15
 
 for x in range(chunk_size):
     for y in range(chunk_size):

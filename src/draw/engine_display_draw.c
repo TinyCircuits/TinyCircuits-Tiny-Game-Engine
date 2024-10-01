@@ -736,26 +736,26 @@ void engine_draw_filled_triangle(uint16_t color, float x0, float y0, float x1, f
 }
 
 
-void engine_draw_filled_triangle_depth(uint16_t color, int32_t x0, int32_t y0, uint16_t depth_z0, int32_t x1, int32_t y1, uint16_t depth_z1, int32_t x2, int32_t y2, uint16_t depth_z2, float alpha, engine_shader_t *shader){
+void engine_draw_filled_triangle_depth(uint16_t color, int32_t ax, int32_t ay, uint16_t depth_az, int32_t bx, int32_t by, uint16_t depth_bz, int32_t cx, int32_t cy, uint16_t depth_cz, float alpha, engine_shader_t *shader){
     // A = x0, y0
     // B = x1, y1
     // C = x2, y2
-    const float ABC = (float)edge_function(x0, y0, x1, y1, x2, y2);
+    const float ABC = (float)edge_function(ax, ay, bx, by, cx, cy);
 
-    // If our edge function (signed area x2) is negative, it's a back facing triangle and we can cull it
+    // Do not render triangles with 2x negative area - back face culling
     // https://jtsorlinis.github.io/rendering-tutorial/#:~:text=RESET-,A%20nifty%20trick,-Another%20really%20useful
     if(ABC <= 0.0f){
-        // Don't bother drawing this triangle
+        // Do not draw this triangle
         return;
     }
 
     // https://jtsorlinis.github.io/rendering-tutorial/#:~:text=the%20triangle%27s%20vertices
     // Compute triangle bounding box. Each pixel in this box will be
     // determined to be inside or outside of the triangle
-    int16_t min_x = (int16_t)min3(x0, x1, x2);
-    int16_t min_y = (int16_t)min3(y0, y1, y2);
-    int16_t max_x = (int16_t)max3(x0, x1, x2);
-    int16_t max_y = (int16_t)max3(y0, y1, y2);
+    int32_t min_x = (int32_t)min3(ax, bx, cx);
+    int32_t min_y = (int32_t)min3(ay, by, cy);
+    int32_t max_x = (int32_t)max3(ax, bx, cx);
+    int32_t max_y = (int32_t)max3(ay, by, cy);
 
     // Clip against screen bounds (added this). Don't want to
     // check if pixels are inside the triangle if not visible
@@ -765,20 +765,41 @@ void engine_draw_filled_triangle_depth(uint16_t color, int32_t x0, int32_t y0, u
     max_y = min(max_y, SCREEN_HEIGHT_MINUS_1);
 
     // Start at the minimum x and y corner of the triangle view box
-    int16_t px = min_x;
-    int16_t py = min_y;
+    int16_t px = (int16_t)min_x;
+    int16_t py = (int16_t)min_y;
+
+    // https://jtsorlinis.github.io/rendering-tutorial/#:~:text=this%20triangle%0A%7D-,Back%20to%20business,-So%2C%20why%20is
+    // https://fgiesen.wordpress.com/2013/02/10/optimizing-the-basic-rasterizer/#:~:text=In%20our%20basic%20triangle%20rasterization%20loop
+    // Calculate our edge functions. If (px, py) is on the
+    // right side of all of the edges, each of these will
+    // be a positive number
+    int32_t BCP_ROW = edge_function(bx, by, cx, cy, px, py);
+    int32_t CAP_ROW = edge_function(cx, cy, ax, ay, px, py);
+    int32_t ABP_ROW = edge_function(ax, ay, bx, by, px, py);
+
+    // https://fgiesen.wordpress.com/2013/02/10/optimizing-the-basic-rasterizer/#:~:text=In%20our%20basic%20triangle%20rasterization%20loop
+    int32_t dy_ab = ay - by;
+    int32_t dx_ab = bx - ax;
+
+    int32_t dy_bc = by - cy;
+    int32_t dx_bc = cx - bx;
+
+    int32_t dy_ca = cy - ay;
+    int32_t dx_ca = ax - cx;
 
     // Go through all pixels in triangle view box and check if each
     // point is inside or outside the triangle inside the box
     for(py=min_y; py<=max_y; py++){
+        // Barycentric coordinates at start of row
+        int32_t BCP = BCP_ROW;
+        int32_t CAP = CAP_ROW;
+        int32_t ABP = ABP_ROW;
+
         for(px=min_x; px<=max_x; px++){
-            // https://jtsorlinis.github.io/rendering-tutorial/#:~:text=this%20triangle%0A%7D-,Back%20to%20business,-So%2C%20why%20is
-            // Calculate our edge functions. If (px, py) is on the
-            // right side of all of the edges, each of these will
-            // be a positive number
-            int32_t ABP = edge_function(x0, y0, x1, y1, px, py);
-            int32_t BCP = edge_function(x1, y1, x2, y2, px, py);
-            int32_t CAP = edge_function(x2, y2, x0, y0, px, py);
+
+            // int32_t ABP = edge_function(ax, ay, bx, by, px, py);
+            // int32_t BCP = edge_function(bx, by, cx, cy, px, py);
+            // int32_t CAP = edge_function(cx, cy, ax, ay, px, py);            
 
             // We now have the weights of the point P towards each of the vertices (Barycentric coordinates)
             float weight_a = (float)BCP / ABC;
@@ -786,7 +807,7 @@ void engine_draw_filled_triangle_depth(uint16_t color, int32_t x0, int32_t y0, u
             float weight_c = (float)ABP / ABC;
 
             // https://jtsorlinis.github.io/rendering-tutorial/#:~:text=get%20the%20interpolated%20colour
-            uint16_t depth_p = (uint16_t)((float)depth_z0*weight_a + (float)depth_z1*weight_b + (float)depth_z2*weight_c);
+            uint16_t depth_p = (uint16_t)((float)depth_az*weight_a + (float)depth_bz*weight_b + (float)depth_cz*weight_c);
 
             // Check that the pixel is on the right side of each
             // edge for all the edge functions calculated
@@ -796,7 +817,17 @@ void engine_draw_filled_triangle_depth(uint16_t color, int32_t x0, int32_t y0, u
             if((ABP | BCP | CAP) >= 0 && engine_display_store_check_depth(px, py, depth_p)){
                 engine_draw_pixel_no_check(color, px, py, alpha, shader);
             }
+
+            // One step to the right
+            BCP += dy_bc;
+            CAP += dy_ca;
+            ABP += dy_ab;
         }
+
+        // One row step
+        BCP_ROW += dx_bc;
+        CAP_ROW += dx_ca;
+        ABP_ROW += dx_ab;
     }
     
 
