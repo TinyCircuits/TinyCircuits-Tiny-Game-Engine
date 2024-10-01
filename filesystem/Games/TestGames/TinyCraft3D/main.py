@@ -8,10 +8,139 @@ import engine_io
 import math
 import engine_draw
 
+
 # engine.freq(250 * 1000 * 1000)
 
 # engine.fps_limit(60)
 engine.disable_fps_limit()
+
+
+CHUNK_SIZE_VOXELS = 6
+VOXEL_SIZE = 4
+
+
+noise = NoiseResource()
+noise.seed = 69
+noise.frequency = 0.0125
+
+
+class Chunk(MeshNode):
+    def __init__(self):
+        super().__init__(self)
+        # Allocate enough 8-bit xyz vertex memory for worst case lattice chunk
+
+        worst_case_voxel_count = CHUNK_SIZE_VOXELS*CHUNK_SIZE_VOXELS*CHUNK_SIZE_VOXELS
+        vertices_per_voxel_face = 6
+        faces_per_voxel = 6
+        bytes_per_8bit_vertex = 3
+
+        worst_case_vertex_count = worst_case_voxel_count * vertices_per_voxel_face * faces_per_voxel
+        worst_case_vertex_byte_count = worst_case_vertex_count * bytes_per_8bit_vertex
+
+        print("Worst case chunk vertex byte count:", worst_case_vertex_byte_count)
+
+        self.mesh = MeshResource(bytearray(worst_case_vertex_byte_count))
+    
+    def is_solid(self, x, y, z):
+        if noise.noise_3d(x*3, y*3, z*3) < 0.25:
+            return True
+        else:
+            return False
+
+    def add_quad(self, color, v1x, v1y, v1z, v2x, v2y, v2z, v3x, v3y, v3z, v4x, v4y, v4z):
+        byte_offset = self.mesh.vertex_count*3
+
+        self.mesh.vertices[byte_offset] = v1x
+        self.mesh.vertices[byte_offset+1] = v1y
+        self.mesh.vertices[byte_offset+2] = v1z
+
+        self.mesh.vertices[byte_offset+3] = v2x
+        self.mesh.vertices[byte_offset+4] = v2y
+        self.mesh.vertices[byte_offset+5] = v2z
+
+        self.mesh.vertices[byte_offset+6] = v3x
+        self.mesh.vertices[byte_offset+7] = v3y
+        self.mesh.vertices[byte_offset+8] = v3z
+
+
+        self.mesh.vertices[byte_offset+9] = v3x
+        self.mesh.vertices[byte_offset+10] = v3y
+        self.mesh.vertices[byte_offset+11] = v3z
+
+        self.mesh.vertices[byte_offset+12] = v4x
+        self.mesh.vertices[byte_offset+13] = v4y
+        self.mesh.vertices[byte_offset+14] = v4z
+
+        self.mesh.vertices[byte_offset+15] = v1x
+        self.mesh.vertices[byte_offset+16] = v1y
+        self.mesh.vertices[byte_offset+17] = v1z
+
+        self.mesh.vertex_count += 6
+
+    def generate(self):
+        self.mesh.vertex_count = 0
+
+        for x in range(CHUNK_SIZE_VOXELS):
+            for y in range(CHUNK_SIZE_VOXELS):
+                for z in range(CHUNK_SIZE_VOXELS):
+                    gx = x * VOXEL_SIZE
+                    gy = y * VOXEL_SIZE
+                    gz = z * VOXEL_SIZE
+
+                    this_solid = self.is_solid(x, y, z)
+
+                    if this_solid != self.is_solid(x+1, y, z):
+                        if this_solid:
+                            self.add_quad(engine_draw.brown,
+                                    gx, gy-VOXEL_SIZE, gz-VOXEL_SIZE,
+                                    gx, gy,            gz-VOXEL_SIZE,
+                                    gx, gy,            gz,
+                                    gx, gy-VOXEL_SIZE, gz)
+                        else:
+                            self.add_quad(engine_draw.brown,
+                                    gx, gy-VOXEL_SIZE, gz-VOXEL_SIZE,
+                                    gx, gy-VOXEL_SIZE, gz,
+                                    gx, gy,            gz,
+                                    gx, gy,            gz-VOXEL_SIZE)
+
+                    if this_solid != self.is_solid(x, y+1, z):
+                        if this_solid:
+                            self.add_quad(engine_draw.brown,
+                                    gx-VOXEL_SIZE, gy, gz-VOXEL_SIZE,
+                                    gx-VOXEL_SIZE, gy, gz,
+                                    gx,            gy, gz,
+                                    gx,            gy, gz-VOXEL_SIZE)
+                        else:
+                            self.add_quad(engine_draw.green,
+                                    gx-VOXEL_SIZE, gy, gz-VOXEL_SIZE,
+                                    gx,            gy, gz-VOXEL_SIZE,
+                                    gx,            gy, gz,
+                                    gx-VOXEL_SIZE, gy, gz)
+
+                    if this_solid != self.is_solid(x, y, z+1):
+                        if this_solid:
+                            self.add_quad(engine_draw.brown,
+                                    gx-VOXEL_SIZE, gy-VOXEL_SIZE, gz,
+                                    gx,            gy-VOXEL_SIZE, gz,
+                                    gx,            gy,            gz,
+                                    gx-VOXEL_SIZE, gy,            gz)
+                        else:
+                            self.add_quad(engine_draw.brown,
+                                    gx-VOXEL_SIZE, gy-VOXEL_SIZE, gz,
+                                    gx-VOXEL_SIZE, gy,            gz,
+                                    gx,            gy,            gz,
+                                    gx,            gy-VOXEL_SIZE, gz)
+        
+
+
+# chunks = []
+
+# for i in range(9):
+#     chunks.append(Chunk())
+
+chunk = Chunk()
+chunk.generate()
+
 
 class MyCam(CameraNode):
     def __init__(self):
@@ -21,7 +150,7 @@ class MyCam(CameraNode):
 
         self.rotation.y = -90
 
-        for i in range(100):
+        for i in range(50):
             self.backward()
 
     def forward(self):
@@ -54,7 +183,7 @@ class MyCam(CameraNode):
 
     def tick(self, dt):
         # print(self.position)
-        print(engine.get_running_fps())
+        # print(engine.get_running_fps())
 
         if engine_io.RB.is_pressed:
             self.rotation.y -= 0.05
@@ -78,106 +207,6 @@ class MyCam(CameraNode):
 
 
 camera = MyCam()
-mesh_resource = MeshResource()
-mesh = MeshNode(mesh=mesh_resource)
-noise = NoiseResource()
-noise.seed = 69
-noise.frequency = 0.0125
 
-mesh.scale.x = 1.25
-mesh.scale.y = 1.25
-mesh.scale.z = 1.25
-
-def add_quad(color, v1, v2, v3, v4):
-    mesh_resource.vertices.append(v1)
-    mesh_resource.vertices.append(v2)
-    mesh_resource.vertices.append(v3)
-    mesh_resource.triangle_colors.append(color)
-
-    mesh_resource.vertices.append(v3)
-    mesh_resource.vertices.append(v4)
-    mesh_resource.vertices.append(v1)
-    mesh_resource.triangle_colors.append(color)
-
-
-def is_solid(x, y, z):
-    if noise.noise_3d(x*3, y*3, z*3) < 0.25:
-        return True
-    else:
-        return False
-
-size = 4
-chunk_size = 15
-
-for x in range(chunk_size):
-    for y in range(chunk_size):
-        for z in range(chunk_size):
-            gx = x * size - 8*size
-            gy = y * size - 8*size
-            gz = z * size - 8*size
-
-            this_solid = is_solid(x, y, z)
-
-            if this_solid != is_solid(x+1, y, z):
-                if this_solid:
-                    add_quad(engine_draw.brown,
-                             Vector3(gx, gy-size, gz-size),
-                             Vector3(gx, gy,      gz-size),
-                             Vector3(gx, gy,      gz),
-                             Vector3(gx, gy-size, gz))
-                else:
-                    add_quad(engine_draw.brown,
-                             Vector3(gx, gy-size, gz-size),
-                             Vector3(gx, gy-size, gz),
-                             Vector3(gx, gy,      gz),
-                             Vector3(gx, gy,      gz-size))
-
-            if this_solid != is_solid(x, y+1, z):
-                if this_solid:
-                    add_quad(engine_draw.brown,
-                             Vector3(gx-size, gy, gz-size),
-                             Vector3(gx-size, gy, gz),
-                             Vector3(gx,      gy, gz),
-                             Vector3(gx,      gy, gz-size))
-                else:
-                    add_quad(engine_draw.green,
-                             Vector3(gx-size, gy, gz-size),
-                             Vector3(gx,      gy, gz-size),
-                             Vector3(gx,      gy, gz),
-                             Vector3(gx-size, gy, gz))
-
-            if this_solid != is_solid(x, y, z+1):
-                if this_solid:
-                    add_quad(engine_draw.brown,
-                             Vector3(gx-size, gy-size, gz),
-                             Vector3(gx,      gy-size, gz),
-                             Vector3(gx,      gy,      gz),
-                             Vector3(gx-size, gy,      gz))
-                else:
-                    add_quad(engine_draw.brown,
-                             Vector3(gx-size, gy-size, gz),
-                             Vector3(gx-size, gy,      gz),
-                             Vector3(gx,      gy,      gz),
-                             Vector3(gx,      gy-size, gz))
-
-
-# mesh.vertices.append(Vector3(-5, -5, 1))
-# mesh.vertices.append(Vector3(5, -5, 1))
-# mesh.vertices.append(Vector3(0, 5, 5))
-
-# mesh.vertices.append(Vector3(-5, -5, -1))
-# mesh.vertices.append(Vector3(5, -5, -1))
-# mesh.vertices.append(Vector3(0, 5, -5))
-
-# mesh.vertices.append(Vector3(-5, -5, 1))
-# mesh.vertices.append(Vector3(5, -5, 1))
-# mesh.vertices.append(Vector3(0, -10, 5))
-
-# mesh.vertices.append(Vector3(-5, -5, -1))
-# mesh.vertices.append(Vector3(5, -5, -1))
-# mesh.vertices.append(Vector3(0, -10, -5))
-
-
-# print(mesh.vertices)
 
 engine.start()

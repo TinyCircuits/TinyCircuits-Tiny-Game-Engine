@@ -101,48 +101,51 @@ void mesh_node_project_draw(vec3 v0, vec3 v1, vec3 v2, mat4 mvp, vec4 v_viewport
 }
 
 
-bool mesh_node_get_tri_verts_vec3_list(mp_obj_t vertex_data, vec3 v0, vec3 v1, vec3 v2, uint16_t *index, uint16_t vertex_count){
+void mesh_node_get_tri_verts_vec3_list(mp_obj_t vertex_data, vec3 v0, vec3 v1, vec3 v2, uint16_t vertex_index){
     mp_obj_list_t *vertices = vertex_data;
 
-    vector3_class_obj_t *vertex_0 = vertices->items[*index];
-    vector3_class_obj_t *vertex_1 = vertices->items[*index+1];
-    vector3_class_obj_t *vertex_2 = vertices->items[*index+2];
+    vector3_class_obj_t *vertex_0 = vertices->items[vertex_index];
+    vector3_class_obj_t *vertex_1 = vertices->items[vertex_index+1];
+    vector3_class_obj_t *vertex_2 = vertices->items[vertex_index+2];
 
-    v0[0] = vertex_0->x.value;
-    v0[1] = vertex_0->y.value;
-    v0[2] = vertex_0->z.value;
+    v0[0] = vertex_0->x.value;  // x
+    v0[1] = vertex_0->y.value;  // y
+    v0[2] = vertex_0->z.value;  // z
 
-    v1[0] = vertex_1->x.value;
-    v1[1] = vertex_1->y.value;
-    v1[2] = vertex_1->z.value;
+    v1[0] = vertex_1->x.value;  // x
+    v1[1] = vertex_1->y.value;  // y
+    v1[2] = vertex_1->z.value;  // z
 
-    v2[0] = vertex_2->x.value;
-    v2[1] = vertex_2->y.value;
-    v2[2] = vertex_2->z.value;
-
-    // if(ivx/3 < triangle_colors->len){
-    //     color = ((color_class_obj_t*)triangle_colors->items[ivx/3])->value;
-    // }
-
-    *index += 3;
-
-    if(*index >= vertex_count){
-        return false;
-    }else{
-        return true;
-    }
+    v2[0] = vertex_2->x.value;  // x
+    v2[1] = vertex_2->y.value;  // y
+    v2[2] = vertex_2->z.value;  // z
 }
 
 
-uint16_t mesh_node_get_tri_color_vec3_list(mp_obj_t triangle_color_data, uint16_t index){
+uint16_t mesh_node_get_tri_color_vec3_list(mp_obj_t triangle_color_data, uint16_t vertex_index){
     mp_obj_list_t *triangle_colors = triangle_color_data;
 
-    return ((color_class_obj_t*)triangle_colors->items[index/3])->value;
+    return ((color_class_obj_t*)triangle_colors->items[vertex_index/3])->value;
 }
 
 
-bool mesh_node_get_tri_verts_uint8_bytearray(mp_obj_t vertex_data, vec3 v0, vec3 v1, vec3 v2, uint16_t *index, uint16_t vertex_count){
-    return true;
+void mesh_node_get_tri_verts_int8_bytearray(mp_obj_t vertex_data, vec3 v0, vec3 v1, vec3 v2, uint16_t vertex_index){
+    mp_obj_array_t *vertex_array = vertex_data;
+    int8_t *vertices = vertex_array->items;
+
+    uint32_t vertex_byte_offset = vertex_index*3;
+
+    v0[0] = (float)vertices[vertex_byte_offset];    // x
+    v0[1] = (float)vertices[vertex_byte_offset+1];  // y
+    v0[2] = (float)vertices[vertex_byte_offset+2];  // z
+
+    v1[0] = (float)vertices[vertex_byte_offset+3];  // x
+    v1[1] = (float)vertices[vertex_byte_offset+4];  // y
+    v1[2] = (float)vertices[vertex_byte_offset+5];  // z
+
+    v2[0] = (float)vertices[vertex_byte_offset+6];  // x
+    v2[1] = (float)vertices[vertex_byte_offset+7];  // y
+    v2[2] = (float)vertices[vertex_byte_offset+8];  // z
 }
 
 
@@ -157,22 +160,22 @@ void mesh_node_class_draw(mp_obj_t mesh_node_base_obj, mp_obj_t camera_node){
     }
 
     uint32_t vertex_count = 0;
-    bool (*get_tri_verts_func)(mp_obj_t vertex_data, vec3 v0, vec3 v1, vec3 v2, uint16_t *index, uint16_t vertex_count) = NULL;
-    uint16_t (*get_tri_colors_func)(mp_obj_t triangle_color_data, uint16_t index) = NULL;
+    void (*get_tri_verts_func)(mp_obj_t vertex_data, vec3 v0, vec3 v1, vec3 v2, uint16_t vertex_index) = NULL;
+    // uint16_t (*get_tri_colors_func)(mp_obj_t triangle_color_data, uint16_t vertex_index) = NULL;
 
     if(mp_obj_is_type(mesh->vertices, &mp_type_list)){
         get_tri_verts_func = mesh_node_get_tri_verts_vec3_list;
         vertex_count = ((mp_obj_list_t*)mesh->vertices)->len;           // Each Vector3 element is a vertex
     }else if(mp_obj_is_type(mesh->vertices, &mp_type_bytearray)){
-        get_tri_verts_func = mesh_node_get_tri_verts_uint8_bytearray;
-        vertex_count = ((mp_obj_array_t*)mesh->vertices)->len/3;        // Every 3 bytes represents the xyz for a vertex
+        get_tri_verts_func = mesh_node_get_tri_verts_int8_bytearray;
+        vertex_count = ((mp_obj_array_t*)mesh->vertices)->len/3;        // Every 3 bytes represents the xyz for a vertex (8-bit)
     }
 
-    if(mp_obj_is_type(mesh->triangle_colors, &mp_type_list)){
-        get_tri_colors_func = mesh_node_get_tri_color_vec3_list;
-    }else if(mp_obj_is_type(mesh->triangle_colors, &mp_type_bytearray)){
-        get_tri_colors_func = NULL;
-    }
+    // if(mp_obj_is_type(mesh->triangle_colors, &mp_type_list)){
+    //     get_tri_colors_func = mesh_node_get_tri_color_vec3_list;
+    // }else if(mp_obj_is_type(mesh->triangle_colors, &mp_type_bytearray)){
+    //     get_tri_colors_func = NULL;
+    // }
 
     // No triangles to draw
     if(vertex_count < 3){
@@ -210,7 +213,7 @@ void mesh_node_class_draw(mp_obj_t mesh_node_base_obj, mp_obj_t camera_node){
     glm_mat4_mul(camera->m_projection, m_view, mvp);
     // glm_mat4_mul(mvp, m_view2, mvp);
 
-    uint16_t index = 0;
+    uint16_t vertex_index = 0;
     // uint16_t triangle_color = 0xbdf7;
     uint16_t triangle_color = 0xffff;
 
@@ -218,17 +221,16 @@ void mesh_node_class_draw(mp_obj_t mesh_node_base_obj, mp_obj_t camera_node){
     vec3 v1 = GLM_VEC3_ZERO_INIT;
     vec3 v2 = GLM_VEC3_ZERO_INIT;
     
-    while(true){
-        // While index = 0, get triangle color first
-        triangle_color = get_tri_colors_func(mesh->triangle_colors, index);
+    // Loop through triangles and render them
+    while(vertex_index < vertex_count){
+        // triangle_color = get_tri_colors_func(mesh->triangle_colors, vertex_index);
 
-        // This will increment and check that the index is within vertex bounds
-        if(get_tri_verts_func(mesh->vertices, v0, v1, v2, &index, vertex_count) == false){
-            break;
-        }
+        get_tri_verts_func(mesh->vertices, v0, v1, v2, vertex_index);
 
         // Project and draw the triangle
         mesh_node_project_draw(v0, v1, v2, mvp, camera->v_viewport, triangle_color, shader);
+
+        vertex_index += 3;
     }
 
 
