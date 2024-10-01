@@ -674,7 +674,7 @@ void engine_draw_text(font_resource_class_obj_t *font, mp_obj_t text, float cent
 // x2 and y2 is positive for all three edges, the point is on the right side of the edge
 // and inside the triangle (assuming we are going for a right/clock-wise of vertices, want
 // point to be on left side of edges if using a left/counter clock-wise winding)
-int32_t edge_function(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2){
+float edge_function(float x0, float y0, float x1, float y1, float x2, float y2){
     return (x1 - x0) * (y2 - y0) - (y1 - y0) * (x2 - x0);
 }
 
@@ -736,11 +736,11 @@ void engine_draw_filled_triangle(uint16_t color, float x0, float y0, float x1, f
 }
 
 
-void engine_draw_filled_triangle_depth(uint16_t color, int32_t ax, int32_t ay, uint16_t depth_az, int32_t bx, int32_t by, uint16_t depth_bz, int32_t cx, int32_t cy, uint16_t depth_cz, float alpha, engine_shader_t *shader){
+void engine_draw_filled_triangle_depth(uint16_t color, float ax, float ay, uint16_t depth_az, float bx, float by, uint16_t depth_bz, float cx, float cy, uint16_t depth_cz, float alpha, engine_shader_t *shader){
     // A = x0, y0
     // B = x1, y1
     // C = x2, y2
-    const float ABC = (float)edge_function(ax, ay, bx, by, cx, cy);
+    const float ABC = edge_function(ax, ay, bx, by, cx, cy);
 
     // Do not render triangles with 2x negative area - back face culling
     // https://jtsorlinis.github.io/rendering-tutorial/#:~:text=RESET-,A%20nifty%20trick,-Another%20really%20useful
@@ -773,48 +773,47 @@ void engine_draw_filled_triangle_depth(uint16_t color, int32_t ax, int32_t ay, u
     // Calculate our edge functions. If (px, py) is on the
     // right side of all of the edges, each of these will
     // be a positive number
-    int32_t BCP_ROW = edge_function(bx, by, cx, cy, px, py);
-    int32_t CAP_ROW = edge_function(cx, cy, ax, ay, px, py);
-    int32_t ABP_ROW = edge_function(ax, ay, bx, by, px, py);
+    float BCP_ROW = edge_function(bx, by, cx, cy, px, py) / ABC;
+    float CAP_ROW = edge_function(cx, cy, ax, ay, px, py) / ABC;
+    float ABP_ROW = edge_function(ax, ay, bx, by, px, py) / ABC;
 
     // https://fgiesen.wordpress.com/2013/02/10/optimizing-the-basic-rasterizer/#:~:text=In%20our%20basic%20triangle%20rasterization%20loop
-    int32_t dy_ab = ay - by;
-    int32_t dx_ab = bx - ax;
+    float dy_bc = (float)(by - cy) / ABC;
+    float dx_bc = (float)(cx - bx) / ABC;
+    
+    float dy_ca = (float)(cy - ay) / ABC;
+    float dx_ca = (float)(ax - cx) / ABC;
 
-    int32_t dy_bc = by - cy;
-    int32_t dx_bc = cx - bx;
-
-    int32_t dy_ca = cy - ay;
-    int32_t dx_ca = ax - cx;
+    float dy_ab = (float)(ay - by) / ABC;
+    float dx_ab = (float)(bx - ax) / ABC;
 
     // Go through all pixels in triangle view box and check if each
     // point is inside or outside the triangle inside the box
     for(py=min_y; py<=max_y; py++){
         // Barycentric coordinates at start of row
-        int32_t BCP = BCP_ROW;
-        int32_t CAP = CAP_ROW;
-        int32_t ABP = ABP_ROW;
+        float BCP = BCP_ROW;
+        float CAP = CAP_ROW;
+        float ABP = ABP_ROW;
 
         for(px=min_x; px<=max_x; px++){
 
             // int32_t ABP = edge_function(ax, ay, bx, by, px, py);
             // int32_t BCP = edge_function(bx, by, cx, cy, px, py);
-            // int32_t CAP = edge_function(cx, cy, ax, ay, px, py);            
+            // int32_t CAP = edge_function(cx, cy, ax, ay, px, py);
 
-            // We now have the weights of the point P towards each of the vertices (Barycentric coordinates)
-            float weight_a = (float)BCP / ABC;
-            float weight_b = (float)CAP / ABC;
-            float weight_c = (float)ABP / ABC;
+            // // We now have the weights of the point P towards each of the vertices (Barycentric coordinates)
+            // float weight_a = (float)BCP / ABC;
+            // float weight_b = (float)CAP / ABC;
+            // float weight_c = (float)ABP / ABC;
 
             // https://jtsorlinis.github.io/rendering-tutorial/#:~:text=get%20the%20interpolated%20colour
-            uint16_t depth_p = (uint16_t)((float)depth_az*weight_a + (float)depth_bz*weight_b + (float)depth_cz*weight_c);
+            uint16_t depth_p = (uint16_t)((float)depth_az*BCP + (float)depth_bz*CAP + (float)depth_cz*ABP);
 
             // Check that the pixel is on the right side of each
-            // edge for all the edge functions calculated
-            //
-            // Fast way of checking if these are all positive:
-            // // https://fgiesen.wordpress.com/2013/02/10/optimizing-the-basic-rasterizer/#:~:text=if%20((w0%20%7C%20w1%20%7C%20w2)%20%3E%3D%200)
-            if((ABP | BCP | CAP) >= 0 && engine_display_store_check_depth(px, py, depth_p)){
+            // edge for all the edge functions calculated. Instead of
+            // comparing directly to 0.0, make sure triangles get filled
+            // by comparing to numbers above some small negative number
+            if((ABP >= -0.001f && BCP >= -0.001f && CAP >= -0.001f) && engine_display_store_check_depth(px, py, depth_p)){
                 engine_draw_pixel_no_check(color, px, py, alpha, shader);
             }
 
