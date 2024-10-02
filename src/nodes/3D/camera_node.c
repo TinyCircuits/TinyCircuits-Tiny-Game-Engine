@@ -256,7 +256,17 @@ bool camera_node_store_attr(engine_node_base_t *self_node_base, qstr attribute, 
         break;
         case MP_QSTR_position:
         {
-            self->position = destination[1];
+            // Un link callbacks on old Vector3
+            vector3_class_obj_t *old = self->position;
+            old->on_changed = NULL;
+            old->on_change_user_ptr = NULL;
+
+            // Put callbacks on new Vector3
+            vector3_class_obj_t *new = destination[1];
+            new->on_changed = camera_node_set_translation;
+            new->on_change_user_ptr = self;
+
+            self->position = new;
             camera_node_set_translation(self);
             return true;
         }
@@ -271,7 +281,17 @@ bool camera_node_store_attr(engine_node_base_t *self_node_base, qstr attribute, 
         break;
         case MP_QSTR_rotation:
         {
-            self->rotation = destination[1];
+            // Un link callbacks on old Vector3
+            vector3_class_obj_t *old = self->rotation;
+            old->on_changed = NULL;
+            old->on_change_user_ptr = NULL;
+
+            // Put callbacks on new Vector3
+            vector3_class_obj_t *new = destination[1];
+            new->on_changed = camera_node_set_rotation;
+            new->on_change_user_ptr = self;
+
+            self->rotation = new;
             camera_node_set_rotation(self);
             return true;
         }
@@ -403,6 +423,12 @@ mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t 
     vector3_class_obj_t *r = (vector3_class_obj_t*)camera_node->rotation;
     glm_translate_make(camera_node->m_translation, (vec3){p->x.value, p->y.value, p->z.value});
     glm_euler((vec3){r->x.value, r->y.value, r->z.value}, camera_node->m_rotation);
+
+    p->on_changed = camera_node_set_translation;
+    p->on_change_user_ptr = camera_node;
+
+    r->on_changed = camera_node_set_rotation;
+    r->on_change_user_ptr = camera_node;
 
     camera_node_set_perspective(camera_node);
 

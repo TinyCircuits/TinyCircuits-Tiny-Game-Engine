@@ -15,8 +15,8 @@ import engine_draw
 engine.disable_fps_limit()
 
 
-CHUNK_SIZE_VOXELS = 10
-VOXEL_SIZE = 4
+CHUNK_SIZE_VOXELS = 7
+VOXEL_SIZE = 5
 
 
 noise = NoiseResource()
@@ -102,6 +102,8 @@ class Chunk(MeshNode):
         self.position.y = cy * VOXEL_SIZE * CHUNK_SIZE_VOXELS
         self.position.z = cz * VOXEL_SIZE * CHUNK_SIZE_VOXELS
 
+        print("Chunk:", self.position)
+
         self.mesh.vertex_count = 0
 
         for x in range(CHUNK_SIZE_VOXELS):
@@ -157,13 +159,50 @@ class Chunk(MeshNode):
         
 
 
+
+class ChunkManager():
+    def __init__(self, initial_xi, initial_yi, initial_zi):
+        self.chunks = []
+
+        for i in range(1):
+            chunk = Chunk()
+            self.chunks.append(chunk)
+        
+        self.last_xi = initial_xi
+        self.last_yi = initial_yi
+        self.last_zi = initial_zi
+    
+    def update(self, abs_x, abs_y, abs_z):
+        xi = int(abs_x) // (CHUNK_SIZE_VOXELS*VOXEL_SIZE)
+        yi = int(abs_y) // (CHUNK_SIZE_VOXELS*VOXEL_SIZE)
+        zi = int(abs_z) // (CHUNK_SIZE_VOXELS*VOXEL_SIZE)
+
+        if xi != self.last_xi:
+            self.last_xi = xi
+            self.chunks[0].generate(xi, yi, zi)
+            return True
+        elif yi != self.last_yi:
+            self.last_yi = yi
+            self.chunks[0].generate(xi, yi, zi)
+            return True
+        elif zi != self.last_zi:
+            self.last_zi = zi
+            self.chunks[0].generate(xi, yi, zi)
+            return True
+
+        return False
+        
+
+# chunk_manager = ChunkManager(0, 0, 0)
+
 chunks = []
 
 # for x in range(3):
-#     for z in range(3):
-#         chunk = Chunk()
-#         chunk.generate(x, 0, z)
-#         chunks.append(chunk)
+#     for y in range(1):
+#         for z in range(3):
+#             chunk = Chunk()
+#             chunk.generate(x, y, z)
+#             chunks.append(chunk)
 
 
 for x in range(7):
@@ -186,10 +225,10 @@ class MyCam(CameraNode):
         self.distance = 0.75
         self.fov = 75.0
 
-        self.rotation.y = -90
+        # self.rotation.y = -90
 
-        for i in range(50):
-            self.backward()
+        # for i in range(50):
+        #     self.backward()
 
     def forward(self):
         self.position.x -= math.sin(self.rotation.y) * self.distance
@@ -230,6 +269,10 @@ class MyCam(CameraNode):
             self.position.y += 1
         if engine_io.B.is_pressed:
             self.position.y -= 1
+        
+        
+        # if chunk_manager.update(self.position.x, self.position.y, self.position.z):
+        print("Camera:", self.position)
 
 
 camera = MyCam()

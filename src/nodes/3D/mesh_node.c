@@ -454,21 +454,51 @@ bool mesh_store_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_
         break;
         case MP_QSTR_position:
         {
-            self->position = destination[1];
+            // Un link callbacks on old Vector3
+            vector3_class_obj_t *old = self->position;
+            old->on_changed = NULL;
+            old->on_change_user_ptr = NULL;
+
+            // Put callbacks on new Vector3
+            vector3_class_obj_t *new = destination[1];
+            new->on_changed = mesh_node_set_translation;
+            new->on_change_user_ptr = self;
+
+            self->position = new;
             mesh_node_set_translation(self);
             return true;
         }
         break;
         case MP_QSTR_rotation:
         {
-            self->position = destination[1];
+            // Un link callbacks on old Vector3
+            vector3_class_obj_t *old = self->rotation;
+            old->on_changed = NULL;
+            old->on_change_user_ptr = NULL;
+
+            // Put callbacks on new Vector3
+            vector3_class_obj_t *new = destination[1];
+            new->on_changed = mesh_node_set_rotation;
+            new->on_change_user_ptr = self;
+
+            self->rotation = new;
             mesh_node_set_rotation(self);
             return true;
         }
         break;
         case MP_QSTR_scale:
         {
-            self->position = destination[1];
+            // Un link callbacks on old Vector3
+            vector3_class_obj_t *old = self->scale;
+            old->on_changed = NULL;
+            old->on_change_user_ptr = NULL;
+
+            // Put callbacks on new Vector3
+            vector3_class_obj_t *new = destination[1];
+            new->on_changed = mesh_node_set_scale;
+            new->on_change_user_ptr = self;
+
+            self->scale = new;
             mesh_node_set_scale(self);
             return true;
         }
@@ -580,6 +610,15 @@ mp_obj_t mesh_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_
     glm_translate_make(mesh_node->m_translation, (vec3){p->x.value, p->y.value, p->z.value});
     glm_euler((vec3){r->x.value, r->y.value, r->z.value}, mesh_node->m_rotation);
     glm_scale_make(mesh_node->m_scale, (vec3){s->x.value, s->y.value, s->z.value});
+
+    p->on_changed = mesh_node_set_translation;
+    p->on_change_user_ptr = mesh_node;
+
+    r->on_changed = mesh_node_set_rotation;
+    r->on_change_user_ptr = mesh_node;
+
+    s->on_changed = mesh_node_set_scale;
+    s->on_change_user_ptr = mesh_node;
 
     if(inherited == true){
         // Get the Python class instance
