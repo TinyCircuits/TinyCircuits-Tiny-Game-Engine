@@ -9,13 +9,13 @@ import math
 import engine_draw
 
 
-# engine.freq(250 * 1000 * 1000)
+engine.freq(250 * 1000 * 1000)
 
 # engine.fps_limit(60)
 engine.disable_fps_limit()
 
 
-CHUNK_SIZE_VOXELS = 7
+CHUNK_SIZE_VOXELS = 10
 VOXEL_SIZE = 5
 
 
@@ -48,7 +48,8 @@ class Chunk(MeshNode):
         self.mesh = MeshResource(bytearray(worst_case_vertex_byte_count), [], [], bytearray(worst_case_tri_color_byte_count))
     
     def is_solid(self, x, y, z):
-        if noise.noise_3d(self.cx+x, self.cy+y, self.cz+z) < 0.25:
+        # if noise.noise_3d(self.cx+x, self.cy+y, self.cz+z) < 0.25:
+        if self.cy+y+noise.noise_2d(self.cx+x, self.cz+z)*2 > 1:
             return True
         else:
             return False
@@ -102,16 +103,16 @@ class Chunk(MeshNode):
         self.position.y = cy * VOXEL_SIZE * CHUNK_SIZE_VOXELS
         self.position.z = cz * VOXEL_SIZE * CHUNK_SIZE_VOXELS
 
-        print("Chunk:", self.position)
+        # print("Chunk:", self.position)
 
         self.mesh.vertex_count = 0
 
         for x in range(CHUNK_SIZE_VOXELS):
             for y in range(CHUNK_SIZE_VOXELS):
                 for z in range(CHUNK_SIZE_VOXELS):
-                    gx = x * VOXEL_SIZE
-                    gy = y * VOXEL_SIZE
-                    gz = z * VOXEL_SIZE
+                    gx = x * VOXEL_SIZE - (CHUNK_SIZE_VOXELS*VOXEL_SIZE//2)
+                    gy = y * VOXEL_SIZE - (CHUNK_SIZE_VOXELS*VOXEL_SIZE//2)
+                    gz = z * VOXEL_SIZE - (CHUNK_SIZE_VOXELS*VOXEL_SIZE//2)
 
                     this_solid = self.is_solid(x, y, z)
 
@@ -164,13 +165,21 @@ class ChunkManager():
     def __init__(self, initial_xi, initial_yi, initial_zi):
         self.chunks = []
 
-        for i in range(1):
-            chunk = Chunk()
-            self.chunks.append(chunk)
+        for xi in range(initial_xi-1, initial_xi+3-1):
+            for zi in range(initial_zi-1, initial_zi+3-1):
+                chunk = Chunk()
+                chunk.generate(xi, initial_yi, zi)
+                self.chunks.append(chunk)
         
         self.last_xi = initial_xi
         self.last_yi = initial_yi
         self.last_zi = initial_zi
+    
+    def generate(self, xi, yi, zi):
+        for x in range(3):
+            for z in range(3):
+                i = z*3 + x
+                self.chunks[i].generate(xi+x, yi, zi+z)
     
     def update(self, abs_x, abs_y, abs_z):
         xi = int(abs_x) // (CHUNK_SIZE_VOXELS*VOXEL_SIZE)
@@ -179,15 +188,18 @@ class ChunkManager():
 
         if xi != self.last_xi:
             self.last_xi = xi
-            self.chunks[0].generate(xi, yi, zi)
+            # self.chunks[0].generate(xi, yi, zi)
+            self.generate(xi, yi, zi)
             return True
         elif yi != self.last_yi:
             self.last_yi = yi
-            self.chunks[0].generate(xi, yi, zi)
+            # self.chunks[0].generate(xi, yi, zi)
+            self.generate(xi, yi, zi)
             return True
         elif zi != self.last_zi:
             self.last_zi = zi
-            self.chunks[0].generate(xi, yi, zi)
+            # self.chunks[0].generate(xi, yi, zi)
+            self.generate(xi, yi, zi)
             return True
 
         return False
@@ -223,7 +235,7 @@ class MyCam(CameraNode):
     def __init__(self):
         super().__init__(self)
         self.distance = 0.75
-        self.fov = 75.0
+        self.fov = 100.0
 
         # self.rotation.y = -90
 
@@ -271,8 +283,10 @@ class MyCam(CameraNode):
             self.position.y -= 1
         
         
-        if chunk_manager.update(self.position.x, self.position.y, self.position.z):
-            print("Camera:", self.position)
+        # if chunk_manager.update(self.position.x, self.position.y, self.position.z):
+        #     print("Camera:", self.position)
+
+        chunk_manager.update(self.position.x, self.position.y, self.position.z)
 
 
 camera = MyCam()
