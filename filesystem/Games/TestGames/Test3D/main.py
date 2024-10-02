@@ -17,38 +17,38 @@ class MyCam(CameraNode):
     def __init__(self):
         super().__init__(self)
         self.distance = 0.75
-        self.fov = 45.0
-
-    def forward(self):
-        self.position.x -= math.sin(self.rotation.y) * self.distance
-        self.position.z -= math.cos(self.rotation.y) * self.distance
-
-    def backward(self):
-        self.position.x += math.sin(self.rotation.y) * self.distance
-        self.position.z += math.cos(self.rotation.y) * self.distance
-
-    def left(self):
-        self.position.x -= math.sin(self.rotation.y+(math.pi/2)) * self.distance
-        self.position.z -= math.cos(self.rotation.y+(math.pi/2)) * self.distance
-
-    def right(self):
-        self.position.x += math.sin(self.rotation.y+(math.pi/2)) * self.distance
-        self.position.z += math.cos(self.rotation.y+(math.pi/2)) * self.distance
+        self.fov = 75.0
 
     # def forward(self):
-    #     self.position.z -= 0.1
+    #     self.position.x -= math.sin(self.rotation.y) * self.distance
+    #     self.position.z -= math.cos(self.rotation.y) * self.distance
 
     # def backward(self):
-    #     self.position.z += 0.1
+    #     self.position.x += math.sin(self.rotation.y) * self.distance
+    #     self.position.z += math.cos(self.rotation.y) * self.distance
 
     # def left(self):
-    #     self.position.x -= 0.1
+    #     self.position.x -= math.sin(self.rotation.y+(math.pi/2)) * self.distance
+    #     self.position.z -= math.cos(self.rotation.y+(math.pi/2)) * self.distance
 
     # def right(self):
-    #     self.position.x += 0.1
+    #     self.position.x += math.sin(self.rotation.y+(math.pi/2)) * self.distance
+    #     self.position.z += math.cos(self.rotation.y+(math.pi/2)) * self.distance
+
+    def forward(self):
+        self.position.z -= 0.1
+
+    def backward(self):
+        self.position.z += 0.1
+
+    def left(self):
+        self.position.x -= 0.1
+
+    def right(self):
+        self.position.x += 0.1
 
     def tick(self, dt):
-        # print(self.position)
+        print(self.position, " | ", self.rotation)
 
         if engine_io.RB.is_pressed:
             self.rotation.y -= 0.05
@@ -72,6 +72,7 @@ class MyCam(CameraNode):
 
 
 camera = MyCam()
+camera.position = Vector3(0, -14, 25)
 
 arrow_mesh = MeshResource()
 floor_mesh = MeshResource()
@@ -112,12 +113,12 @@ while True:
     if engine.tick() is False:
         continue
 
-    arrow_mesh_node.rotation.x += 0.005
-    arrow_mesh_node.rotation.y += 0.005
-    arrow_mesh_node.rotation.z += 0.005
+    # arrow_mesh_node.rotation.x += 0.005
+    arrow_mesh_node.rotation.y += 0.05
+    # arrow_mesh_node.rotation.z += 0.005
 
     arrow_mesh_node.position.x = math.sin(t*2) * 4
-    arrow_mesh_node.position.y = math.sin(t) * 7
+    # arrow_mesh_node.position.y = math.sin(t) * 5
     arrow_mesh_node.position.z = math.cos(t*2) * 4
 
     t += 0.01

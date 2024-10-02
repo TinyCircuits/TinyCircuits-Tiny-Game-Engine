@@ -6,6 +6,7 @@
 
 #define CGLM_CLIPSPACE_INCLUDE_ALL 1
 #define CGLM_FORCE_DEPTH_ZERO_TO_ONE 1
+#define CGLM_CONFIG_CLIP_CONTROL CGLM_CLIP_CONTROL_RH_ZO
 #include "../lib/cglm/include/cglm/cglm.h"
 #include "../lib/cglm/include/cglm/vec3.h"
 #include "../lib/cglm/include/cglm/mat4.h"
@@ -24,6 +25,7 @@ typedef struct{
     mat4 m_translation;
     mat4 m_rotation;
     mat4 m_scale;
+    mat4 m_final_transformation;
 }engine_mesh_node_class_obj_t;
 
 extern const mp_obj_type_t engine_mesh_node_class_type;

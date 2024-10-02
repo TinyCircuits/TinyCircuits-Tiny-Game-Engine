@@ -15,69 +15,93 @@ import engine_draw
 engine.disable_fps_limit()
 
 
-CHUNK_SIZE_VOXELS = 6
+CHUNK_SIZE_VOXELS = 10
 VOXEL_SIZE = 4
 
 
 noise = NoiseResource()
 noise.seed = 69
-noise.frequency = 0.0125
+noise.frequency = 0.05
 
 
 class Chunk(MeshNode):
     def __init__(self):
         super().__init__(self)
-        # Allocate enough 8-bit xyz vertex memory for worst case lattice chunk
 
+        # Allocate enough 8-bit xyz vertex memory for worst case lattice chunk
         worst_case_voxel_count = CHUNK_SIZE_VOXELS*CHUNK_SIZE_VOXELS*CHUNK_SIZE_VOXELS
         vertices_per_voxel_face = 6
         faces_per_voxel = 6
         bytes_per_8bit_vertex = 3
 
+        tris_per_face = 2
+        tris_per_voxel = tris_per_face*faces_per_voxel
+        tri_colors_per_voxel = tris_per_voxel
+        worst_case_tri_color_count = tri_colors_per_voxel * worst_case_voxel_count
+        worst_case_tri_color_byte_count = worst_case_tri_color_count*2
+
         worst_case_vertex_count = worst_case_voxel_count * vertices_per_voxel_face * faces_per_voxel
         worst_case_vertex_byte_count = worst_case_vertex_count * bytes_per_8bit_vertex
 
-        print("Worst case chunk vertex byte count:", worst_case_vertex_byte_count)
+        print("Worst case chunk byte count:", worst_case_vertex_byte_count, worst_case_tri_color_byte_count, worst_case_vertex_byte_count+worst_case_tri_color_byte_count)
 
-        self.mesh = MeshResource(bytearray(worst_case_vertex_byte_count))
+        self.mesh = MeshResource(bytearray(worst_case_vertex_byte_count), [], [], bytearray(worst_case_tri_color_byte_count))
     
     def is_solid(self, x, y, z):
-        if noise.noise_3d(x*3, y*3, z*3) < 0.25:
+        if noise.noise_3d(self.cx+x, self.cy+y, self.cz+z) < 0.25:
             return True
         else:
             return False
 
     def add_quad(self, color, v1x, v1y, v1z, v2x, v2y, v2z, v3x, v3y, v3z, v4x, v4y, v4z):
-        byte_offset = self.mesh.vertex_count*3
+        vertex_byte_offset = self.mesh.vertex_count*3
 
-        self.mesh.vertices[byte_offset] = v1x
-        self.mesh.vertices[byte_offset+1] = v1y
-        self.mesh.vertices[byte_offset+2] = v1z
+        self.mesh.vertices[vertex_byte_offset] = v1x
+        self.mesh.vertices[vertex_byte_offset+1] = v1y
+        self.mesh.vertices[vertex_byte_offset+2] = v1z
 
-        self.mesh.vertices[byte_offset+3] = v2x
-        self.mesh.vertices[byte_offset+4] = v2y
-        self.mesh.vertices[byte_offset+5] = v2z
+        self.mesh.vertices[vertex_byte_offset+3] = v2x
+        self.mesh.vertices[vertex_byte_offset+4] = v2y
+        self.mesh.vertices[vertex_byte_offset+5] = v2z
 
-        self.mesh.vertices[byte_offset+6] = v3x
-        self.mesh.vertices[byte_offset+7] = v3y
-        self.mesh.vertices[byte_offset+8] = v3z
+        self.mesh.vertices[vertex_byte_offset+6] = v3x
+        self.mesh.vertices[vertex_byte_offset+7] = v3y
+        self.mesh.vertices[vertex_byte_offset+8] = v3z
 
 
-        self.mesh.vertices[byte_offset+9] = v3x
-        self.mesh.vertices[byte_offset+10] = v3y
-        self.mesh.vertices[byte_offset+11] = v3z
+        self.mesh.vertices[vertex_byte_offset+9] = v3x
+        self.mesh.vertices[vertex_byte_offset+10] = v3y
+        self.mesh.vertices[vertex_byte_offset+11] = v3z
 
-        self.mesh.vertices[byte_offset+12] = v4x
-        self.mesh.vertices[byte_offset+13] = v4y
-        self.mesh.vertices[byte_offset+14] = v4z
+        self.mesh.vertices[vertex_byte_offset+12] = v4x
+        self.mesh.vertices[vertex_byte_offset+13] = v4y
+        self.mesh.vertices[vertex_byte_offset+14] = v4z
 
-        self.mesh.vertices[byte_offset+15] = v1x
-        self.mesh.vertices[byte_offset+16] = v1y
-        self.mesh.vertices[byte_offset+17] = v1z
+        self.mesh.vertices[vertex_byte_offset+15] = v1x
+        self.mesh.vertices[vertex_byte_offset+16] = v1y
+        self.mesh.vertices[vertex_byte_offset+17] = v1z
+
+
+        triangle_index = self.mesh.vertex_count//3
+        triangle_color_byte_offset = triangle_index*2
+
+        self.mesh.triangle_colors[triangle_color_byte_offset] = (color.value >> 0) & 0b11111111
+        self.mesh.triangle_colors[triangle_color_byte_offset+1] = (color.value >> 8) & 0b11111111
+
+        self.mesh.triangle_colors[triangle_color_byte_offset+2] = (color.value >> 0) & 0b11111111
+        self.mesh.triangle_colors[triangle_color_byte_offset+3] = (color.value >> 8) & 0b11111111
 
         self.mesh.vertex_count += 6
 
-    def generate(self):
+    def generate(self, cx, cy, cz):
+        self.cx = cx * CHUNK_SIZE_VOXELS
+        self.cy = cy * CHUNK_SIZE_VOXELS
+        self.cz = cz * CHUNK_SIZE_VOXELS
+
+        self.position.x = cx * VOXEL_SIZE * CHUNK_SIZE_VOXELS
+        self.position.y = cy * VOXEL_SIZE * CHUNK_SIZE_VOXELS
+        self.position.z = cz * VOXEL_SIZE * CHUNK_SIZE_VOXELS
+
         self.mesh.vertex_count = 0
 
         for x in range(CHUNK_SIZE_VOXELS):
@@ -133,13 +157,27 @@ class Chunk(MeshNode):
         
 
 
-# chunks = []
+chunks = []
 
-# for i in range(9):
-#     chunks.append(Chunk())
+# for x in range(3):
+#     for z in range(3):
+#         chunk = Chunk()
+#         chunk.generate(x, 0, z)
+#         chunks.append(chunk)
 
-chunk = Chunk()
-chunk.generate()
+
+for x in range(7):
+    chunk = Chunk()
+    chunk.generate(x, 0, 0)
+    chunks.append(chunk)
+
+# chunk = Chunk()
+# chunk.generate(0, 0, 0)
+# chunks.append(chunk)
+
+# chunk = Chunk()
+# chunk.generate(1, 0, 0)
+# chunks.append(chunk)
 
 
 class MyCam(CameraNode):
@@ -168,18 +206,6 @@ class MyCam(CameraNode):
     def right(self):
         self.position.x += math.sin(self.rotation.y+(math.pi/2)) * self.distance
         self.position.z += math.cos(self.rotation.y+(math.pi/2)) * self.distance
-
-    # def forward(self):
-    #     self.position.z -= 0.1
-
-    # def backward(self):
-    #     self.position.z += 0.1
-
-    # def left(self):
-    #     self.position.x -= 0.1
-
-    # def right(self):
-    #     self.position.x += 0.1
 
     def tick(self, dt):
         # print(self.position)
