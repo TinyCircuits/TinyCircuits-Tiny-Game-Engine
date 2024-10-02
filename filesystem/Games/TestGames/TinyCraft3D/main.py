@@ -193,9 +193,9 @@ class ChunkManager():
         return False
         
 
-# chunk_manager = ChunkManager(0, 0, 0)
+chunk_manager = ChunkManager(0, 0, 0)
 
-chunks = []
+# chunks = []
 
 # for x in range(3):
 #     for y in range(1):
@@ -205,10 +205,10 @@ chunks = []
 #             chunks.append(chunk)
 
 
-for x in range(7):
-    chunk = Chunk()
-    chunk.generate(x, 0, 0)
-    chunks.append(chunk)
+# for x in range(7):
+#     chunk = Chunk()
+#     chunk.generate(x, 0, 0)
+#     chunks.append(chunk)
 
 # chunk = Chunk()
 # chunk.generate(0, 0, 0)
@@ -271,8 +271,8 @@ class MyCam(CameraNode):
             self.position.y -= 1
         
         
-        # if chunk_manager.update(self.position.x, self.position.y, self.position.z):
-        print("Camera:", self.position)
+        if chunk_manager.update(self.position.x, self.position.y, self.position.z):
+            print("Camera:", self.position)
 
 
 camera = MyCam()

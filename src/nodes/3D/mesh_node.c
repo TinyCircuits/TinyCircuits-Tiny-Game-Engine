@@ -289,7 +289,7 @@ void mesh_node_class_draw(mp_obj_t mesh_node_base_obj, mp_obj_t camera_node){
     glm_lookat_rh_zo((vec3){0, 0, -1}, (vec3){0, 0, 0}, (vec3){0, -1, 0}, m_cam_lookat);
 
     mat4 m_cam_scale = GLM_MAT4_ZERO_INIT;
-    glm_scale_make(m_cam_scale, (vec3){1.0f, -1.0f, 1.0});
+    glm_scale_make(m_cam_scale, (vec3){-1.0f, -1.0f, -1.0});
 
 
     mat4 m_cam_rotation = GLM_MAT4_ZERO_INIT;
