@@ -82,7 +82,6 @@ void camera_node_set_perspective(engine_camera_node_class_obj_t *self){
     // glm_perspective_rh_zo(-f_fov_degrees * (PI / 180.0f), SCREEN_WIDTH/SCREEN_HEIGHT, 0.1f, f_view_distance, self->m_projection);
 
 
-    // Only the x-axis is reversed! 1
     glm_perspective_rh_zo(-f_fov_degrees * (PI / 180.0f), SCREEN_WIDTH/SCREEN_HEIGHT, 0.1f, f_view_distance, self->m_projection);
 
 

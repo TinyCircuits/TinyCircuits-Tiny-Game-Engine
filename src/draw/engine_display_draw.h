@@ -43,6 +43,7 @@ void engine_draw_filled_triangle_depth(texture_resource_class_obj_t *texture, ui
                                        float ax, float ay, uint16_t depth_az, float au, float av,
                                        float bx, float by, uint16_t depth_bz, float bu, float bv,
                                        float cx, float cy, uint16_t depth_cz, float cu, float cv,
+                                       float w0, float w1, float w2,
                                        float alpha, engine_shader_t *shader);
 
 #endif  // ENGINE_DISPLAY_DRAW_H

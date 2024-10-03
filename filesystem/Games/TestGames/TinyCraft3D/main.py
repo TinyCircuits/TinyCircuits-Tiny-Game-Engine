@@ -3,7 +3,7 @@ import engine_main
 import engine
 from engine_nodes import CameraNode, MeshNode
 from engine_math import Vector3, Matrix4x4
-from engine_resources import NoiseResource, MeshResource
+from engine_resources import NoiseResource, MeshResource, TextureResource
 import engine_io
 import math
 import engine_draw
@@ -14,6 +14,7 @@ engine.freq(250 * 1000 * 1000)
 # engine.fps_limit(60)
 engine.disable_fps_limit()
 
+texture = TextureResource("Games/TestGames/TinyCraft3D/atlas.bmp")
 
 CHUNK_SIZE_VOXELS = 10
 VOXEL_SIZE = 5
@@ -28,8 +29,10 @@ class Chunk(MeshNode):
     def __init__(self):
         super().__init__(self)
 
+        self.texture = texture
+
         # Allocate enough 8-bit xyz vertex memory for worst case lattice chunk
-        worst_case_voxel_count = CHUNK_SIZE_VOXELS*CHUNK_SIZE_VOXELS*CHUNK_SIZE_VOXELS
+        worst_case_voxel_count = (CHUNK_SIZE_VOXELS*CHUNK_SIZE_VOXELS*CHUNK_SIZE_VOXELS)//2
         vertices_per_voxel_face = 6
         faces_per_voxel = 6
         bytes_per_8bit_vertex = 3
@@ -43,44 +46,60 @@ class Chunk(MeshNode):
         worst_case_vertex_count = worst_case_voxel_count * vertices_per_voxel_face * faces_per_voxel
         worst_case_vertex_byte_count = worst_case_vertex_count * bytes_per_8bit_vertex
 
+        uvs_per_voxel = vertices_per_voxel_face * faces_per_voxel
+        worst_case_uv_byte_count = worst_case_voxel_count * uvs_per_voxel * 2
+
         print("Worst case chunk byte count:", worst_case_vertex_byte_count, worst_case_tri_color_byte_count, worst_case_vertex_byte_count+worst_case_tri_color_byte_count)
 
-        self.mesh = MeshResource(bytearray(worst_case_vertex_byte_count), [], [], bytearray(worst_case_tri_color_byte_count))
+        self.mesh = MeshResource(bytearray(worst_case_vertex_byte_count), [], bytearray(worst_case_uv_byte_count), bytearray(worst_case_tri_color_byte_count))
     
     def is_solid(self, x, y, z):
-        # if noise.noise_3d(self.cx+x, self.cy+y, self.cz+z) < 0.25:
-        if self.cy+y+noise.noise_2d(self.cx+x, self.cz+z)*2 > 1:
+        if noise.noise_3d(self.cx+x, self.cy+y, self.cz+z) < 0.25:
+        # if self.cy+y+noise.noise_2d(self.cx+x, self.cz+z)*2 > 1:
             return True
         else:
             return False
 
-    def add_quad(self, color, v1x, v1y, v1z, v2x, v2y, v2z, v3x, v3y, v3z, v4x, v4y, v4z):
+    def add_quad(self, color, v1x, v1y, v1z, v2x, v2y, v2z, v3x, v3y, v3z, v4x, v4y, v4z,  v1u, v1v,  v2u, v2v,  v3u, v3v,  v4u, v4v):
         vertex_byte_offset = self.mesh.vertex_count*3
+        uv_byte_offset = self.mesh.vertex_count*2
 
         self.mesh.vertices[vertex_byte_offset] = v1x
         self.mesh.vertices[vertex_byte_offset+1] = v1y
         self.mesh.vertices[vertex_byte_offset+2] = v1z
-
-        self.mesh.vertices[vertex_byte_offset+3] = v2x
-        self.mesh.vertices[vertex_byte_offset+4] = v2y
-        self.mesh.vertices[vertex_byte_offset+5] = v2z
+        self.mesh.uvs[uv_byte_offset] = v1u
+        self.mesh.uvs[uv_byte_offset+1] = v1v
 
         self.mesh.vertices[vertex_byte_offset+6] = v3x
         self.mesh.vertices[vertex_byte_offset+7] = v3y
         self.mesh.vertices[vertex_byte_offset+8] = v3z
+        self.mesh.uvs[uv_byte_offset+2] = v3u
+        self.mesh.uvs[uv_byte_offset+3] = v3v
+
+        self.mesh.vertices[vertex_byte_offset+3] = v2x
+        self.mesh.vertices[vertex_byte_offset+4] = v2y
+        self.mesh.vertices[vertex_byte_offset+5] = v2z
+        self.mesh.uvs[uv_byte_offset+4] = v2u
+        self.mesh.uvs[uv_byte_offset+5] = v2v
 
 
         self.mesh.vertices[vertex_byte_offset+9] = v3x
         self.mesh.vertices[vertex_byte_offset+10] = v3y
         self.mesh.vertices[vertex_byte_offset+11] = v3z
-
-        self.mesh.vertices[vertex_byte_offset+12] = v4x
-        self.mesh.vertices[vertex_byte_offset+13] = v4y
-        self.mesh.vertices[vertex_byte_offset+14] = v4z
+        self.mesh.uvs[uv_byte_offset+6] = v3u
+        self.mesh.uvs[uv_byte_offset+7] = v3v
 
         self.mesh.vertices[vertex_byte_offset+15] = v1x
         self.mesh.vertices[vertex_byte_offset+16] = v1y
         self.mesh.vertices[vertex_byte_offset+17] = v1z
+        self.mesh.uvs[uv_byte_offset+8] = v1u
+        self.mesh.uvs[uv_byte_offset+9] = v1v
+
+        self.mesh.vertices[vertex_byte_offset+12] = v4x
+        self.mesh.vertices[vertex_byte_offset+13] = v4y
+        self.mesh.vertices[vertex_byte_offset+14] = v4z
+        self.mesh.uvs[uv_byte_offset+10] = v4u
+        self.mesh.uvs[uv_byte_offset+11] = v4v
 
 
         triangle_index = self.mesh.vertex_count//3
@@ -122,13 +141,21 @@ class Chunk(MeshNode):
                                     gx, gy-VOXEL_SIZE, gz-VOXEL_SIZE,
                                     gx, gy,            gz-VOXEL_SIZE,
                                     gx, gy,            gz,
-                                    gx, gy-VOXEL_SIZE, gz)
+                                    gx, gy-VOXEL_SIZE, gz,
+                                    0, 0,
+                                    64, 0,
+                                    64, 64,
+                                    0, 64)
                         else:
                             self.add_quad(engine_draw.brown,
                                     gx, gy-VOXEL_SIZE, gz-VOXEL_SIZE,
                                     gx, gy-VOXEL_SIZE, gz,
                                     gx, gy,            gz,
-                                    gx, gy,            gz-VOXEL_SIZE)
+                                    gx, gy,            gz-VOXEL_SIZE,
+                                    0, 0,
+                                    64, 0,
+                                    64, 64,
+                                    0, 64)
 
                     if this_solid != self.is_solid(x, y+1, z):
                         if this_solid:
@@ -136,13 +163,21 @@ class Chunk(MeshNode):
                                     gx-VOXEL_SIZE, gy, gz-VOXEL_SIZE,
                                     gx-VOXEL_SIZE, gy, gz,
                                     gx,            gy, gz,
-                                    gx,            gy, gz-VOXEL_SIZE)
+                                    gx,            gy, gz-VOXEL_SIZE,
+                                    0, 0,
+                                    64, 0,
+                                    64, 64,
+                                    0, 64)
                         else:
                             self.add_quad(engine_draw.green,
                                     gx-VOXEL_SIZE, gy, gz-VOXEL_SIZE,
                                     gx,            gy, gz-VOXEL_SIZE,
                                     gx,            gy, gz,
-                                    gx-VOXEL_SIZE, gy, gz)
+                                    gx-VOXEL_SIZE, gy, gz,
+                                    128-1, 0,
+                                    192-1, 0,
+                                    192-1, 64-1,
+                                    128-1, 64-1)
 
                     if this_solid != self.is_solid(x, y, z+1):
                         if this_solid:
@@ -150,13 +185,21 @@ class Chunk(MeshNode):
                                     gx-VOXEL_SIZE, gy-VOXEL_SIZE, gz,
                                     gx,            gy-VOXEL_SIZE, gz,
                                     gx,            gy,            gz,
-                                    gx-VOXEL_SIZE, gy,            gz)
+                                    gx-VOXEL_SIZE, gy,            gz,
+                                    0, 0,
+                                    64-1, 0,
+                                    64-1, 64-1,
+                                    0, 64-1)
                         else:
                             self.add_quad(engine_draw.brown,
                                     gx-VOXEL_SIZE, gy-VOXEL_SIZE, gz,
                                     gx-VOXEL_SIZE, gy,            gz,
                                     gx,            gy,            gz,
-                                    gx,            gy-VOXEL_SIZE, gz)
+                                    gx,            gy-VOXEL_SIZE, gz,
+                                    0, 0,
+                                    64, 0,
+                                    64, 64,
+                                    0, 64)
         
 
 
@@ -205,16 +248,16 @@ class ChunkManager():
         return False
         
 
-chunk_manager = ChunkManager(0, 0, 0)
+# chunk_manager = ChunkManager(0, 0, 0)
 
-# chunks = []
+chunks = []
 
-# for x in range(3):
-#     for y in range(1):
-#         for z in range(3):
-#             chunk = Chunk()
-#             chunk.generate(x, y, z)
-#             chunks.append(chunk)
+for x in range(2):
+    for y in range(4):
+        for z in range(2):
+            chunk = Chunk()
+            chunk.generate(x, y, z)
+            chunks.append(chunk)
 
 
 # for x in range(7):
@@ -286,7 +329,7 @@ class MyCam(CameraNode):
         # if chunk_manager.update(self.position.x, self.position.y, self.position.z):
         #     print("Camera:", self.position)
 
-        chunk_manager.update(self.position.x, self.position.y, self.position.z)
+        # chunk_manager.update(self.position.x, self.position.y, self.position.z)
 
 
 camera = MyCam()

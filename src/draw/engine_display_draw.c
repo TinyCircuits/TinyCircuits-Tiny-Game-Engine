@@ -740,6 +740,7 @@ void engine_draw_filled_triangle_depth(texture_resource_class_obj_t *texture, ui
                                        float ax, float ay, uint16_t depth_az, float au, float av,
                                        float bx, float by, uint16_t depth_bz, float bu, float bv,
                                        float cx, float cy, uint16_t depth_cz, float cu, float cv,
+                                       float w0, float w1, float w2,
                                        float alpha, engine_shader_t *shader){
     // A = x0, y0
     // B = x1, y1
@@ -791,6 +792,7 @@ void engine_draw_filled_triangle_depth(texture_resource_class_obj_t *texture, ui
     float dy_ab = (float)(ay - by) / ABC;
     float dx_ab = (float)(bx - ax) / ABC;
 
+
     // Go through all pixels in triangle view box and check if each
     // point is inside or outside the triangle inside the box
     for(py=min_y; py<=max_y; py++){
@@ -811,8 +813,37 @@ void engine_draw_filled_triangle_depth(texture_resource_class_obj_t *texture, ui
             // by comparing to numbers above some small negative number
             if((ABP >= -0.001f && BCP >= -0.001f && CAP >= -0.001f) && engine_display_store_check_depth(px, py, depth_p)){
 
-                uint16_t u = (uint16_t)(au*BCP + bu*CAP + cu*ABP);
-                uint16_t v = (uint16_t)(av*BCP + bv*CAP + cv*ABP);
+                // https://stackoverflow.com/questions/12360023/barycentric-coordinates-texture-mapping
+                // https://computergraphics.stackexchange.com/a/4091
+                // https://www.reddit.com/r/opengl/comments/49fdhc/comment/d0rlh12/
+                // https://web.archive.org/web/20240416044207/https://www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical-implementation/perspective-correct-interpolation-vertex-attributes.html
+                float w = BCP/w0 + CAP/w1 + ABP/w2;
+
+                uint16_t u = (uint16_t)((BCP*au/w0 + CAP*bu/w1 + ABP*cu/w2) / w);
+                uint16_t v = (uint16_t)((BCP*av/w0 + CAP*bv/w1 + ABP*cv/w2) / w);
+
+                // // https://computergraphics.stackexchange.com/questions/4079/perspective-correct-texture-mapping
+                // float tau = au / w0;
+                // float tav = av / w0;
+                // float tinvw0 = 1.0f / w0;
+
+                // float tbu = bu / w1;
+                // float tbv = bv / w1;
+                // float tinvw1 = 1.0f / w1;
+
+                // float tcu = cu / w2;
+                // float tcv = cv / w2;
+                // float tinvw2 = 1.0f / w2;
+
+                // // float invw = 1.0f / w;
+
+
+                // uint16_t invw = (uint16_t)((tinvw0*BCP + tinvw1*CAP + tinvw2*ABP));
+                // uint16_t u = (uint16_t)((tau*BCP + tbu*CAP + tcu*ABP)/(1.0f/invw));
+                // uint16_t v = (uint16_t)((tav*BCP + tbv*CAP + tcv*ABP)/(1.0f/invw));
+
+                // uint16_t u = (uint16_t)((au*BCP + bu*CAP + cu*ABP));
+                // uint16_t v = (uint16_t)((av*BCP + bv*CAP + cv*ABP));
 
                 // Get the pixel from the texture
                 uint32_t index = v * texture->width + u;

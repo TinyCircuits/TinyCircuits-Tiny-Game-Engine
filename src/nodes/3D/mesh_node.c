@@ -59,6 +59,18 @@ void mesh_node_project_draw(texture_resource_class_obj_t *texture, vec3 v0, vec3
     glm_project_zo(v1, mvp, v_viewport, out_1);
     glm_project_zo(v2, mvp, v_viewport, out_2);
 
+    float w0 = mvp[0][3] * v0[0] + mvp[1][3] * v0[1] + mvp[2][3] * v0[2] + mvp[3][3];
+    float w1 = mvp[0][3] * v1[0] + mvp[1][3] * v1[1] + mvp[2][3] * v1[2] + mvp[3][3];
+    float w2 = mvp[0][3] * v2[0] + mvp[1][3] * v2[1] + mvp[2][3] * v2[2] + mvp[3][3];
+
+    // float w0 = mvp[0][2] * v0[0] + mvp[1][2] * v0[1] + mvp[2][2] * v0[2] + mvp[3][2];
+    // float w1 = mvp[0][2] * v1[0] + mvp[1][2] * v1[1] + mvp[2][2] * v1[2] + mvp[3][2];
+    // float w2 = mvp[0][2] * v2[0] + mvp[1][2] * v2[1] + mvp[2][2] * v2[2] + mvp[3][2];
+
+    // float w0 = 1.0f / glm_project_z_zo(v0, mvp) * out_0[2];
+    // float w1 = 1.0f / glm_project_z_zo(v1, mvp) * out_1[2];
+    // float w2 = 1.0f / glm_project_z_zo(v2, mvp) * out_2[2];
+
     // Convert from 0.0 ~ 1.0 to 0 ~ UINT16_MAX
     uint32_t z0 = (uint32_t)(out_0[2]*(float)UINT16_MAX);
     uint32_t z1 = (uint32_t)(out_1[2]*(float)UINT16_MAX);
@@ -75,6 +87,7 @@ void mesh_node_project_draw(texture_resource_class_obj_t *texture, vec3 v0, vec3
                                           out_0[0], out_0[1], z0, v0uv[0], v0uv[1],
                                           out_1[0], out_1[1], z1, v1uv[0], v1uv[1],
                                           out_2[0], out_2[1], z2, v2uv[0], v2uv[1],
+                                          w0, w1, w2,
                                           1.0f, shader);
 
         // // Wireframe
@@ -180,19 +193,31 @@ void mesh_node_get_tri_vert_uvs_list(mp_obj_t uv_data, vec2 v0uv, vec2 v1uv, vec
     vector2_class_obj_t *vertex_2_uv = uvs->items[vertex_index+2];
 
     // Get the uvs in terms of pixels, not percentage
-    v0uv[0] = vertex_0_uv->x.value*texture_width;
-    v0uv[1] = vertex_0_uv->y.value*texture_height;
+    v0uv[0] = vertex_0_uv->x.value*texture_width;   // u
+    v0uv[1] = vertex_0_uv->y.value*texture_height;  // v
 
-    v1uv[0] = vertex_1_uv->x.value*texture_width;
-    v1uv[1] = vertex_1_uv->y.value*texture_height;
+    v1uv[0] = vertex_1_uv->x.value*texture_width;   // u
+    v1uv[1] = vertex_1_uv->y.value*texture_height;  // v
 
-    v2uv[0] = vertex_2_uv->x.value*texture_width;
-    v2uv[1] = vertex_2_uv->y.value*texture_height;
+    v2uv[0] = vertex_2_uv->x.value*texture_width;   // u
+    v2uv[1] = vertex_2_uv->y.value*texture_height;  // v
 }
 
 
 void mesh_node_get_tri_vert_uvs_uint8_array(mp_obj_t uv_data, vec2 v0uv, vec2 v1uv, vec2 v2uv, uint16_t texture_width, uint16_t texture_height, uint16_t vertex_index){
+    mp_obj_array_t *uv_array = uv_data;
+    uint8_t *uvs = uv_array->items;
 
+    uint32_t uv_byte_offset = vertex_index*2;
+
+    v0uv[0] = (float)(((float)uvs[uv_byte_offset]/(float)(UINT8_MAX))*texture_width);       // u
+    v0uv[1] = (float)(((float)uvs[uv_byte_offset+1]/(float)(UINT8_MAX))*texture_height);    // v
+
+    v1uv[0] = (float)(((float)uvs[uv_byte_offset+2]/(float)(UINT8_MAX))*texture_width);     // u
+    v1uv[1] = (float)(((float)uvs[uv_byte_offset+3]/(float)(UINT8_MAX))*texture_height);    // v
+
+    v2uv[0] = (float)(((float)uvs[uv_byte_offset+4]/(float)(UINT8_MAX))*texture_width);     // u
+    v2uv[1] = (float)(((float)uvs[uv_byte_offset+5]/(float)(UINT8_MAX))*texture_height);    // v
 }
 
 
