@@ -3,10 +3,10 @@ import engine_main
 import engine
 import engine_draw
 from engine_nodes import CameraNode, MeshNode
-from engine_math import Vector3, Matrix4x4
+from engine_math import Vector2, Vector3, Matrix4x4
 import engine_io
 import math
-from engine_resources import MeshResource
+from engine_resources import MeshResource, TextureResource
 
 
 engine.freq(250 * 1000 * 1000)
@@ -17,35 +17,35 @@ class MyCam(CameraNode):
     def __init__(self):
         super().__init__(self)
         self.distance = 0.75
-        self.fov = 75.0
-
-    # def forward(self):
-    #     self.position.x -= math.sin(self.rotation.y) * self.distance
-    #     self.position.z -= math.cos(self.rotation.y) * self.distance
-
-    # def backward(self):
-    #     self.position.x += math.sin(self.rotation.y) * self.distance
-    #     self.position.z += math.cos(self.rotation.y) * self.distance
-
-    # def left(self):
-    #     self.position.x -= math.sin(self.rotation.y+(math.pi/2)) * self.distance
-    #     self.position.z -= math.cos(self.rotation.y+(math.pi/2)) * self.distance
-
-    # def right(self):
-    #     self.position.x += math.sin(self.rotation.y+(math.pi/2)) * self.distance
-    #     self.position.z += math.cos(self.rotation.y+(math.pi/2)) * self.distance
+        self.fov = 90.0
 
     def forward(self):
-        self.position.z -= 0.1
+        self.position.x -= math.sin(self.rotation.y) * self.distance
+        self.position.z -= math.cos(self.rotation.y) * self.distance
 
     def backward(self):
-        self.position.z += 0.1
+        self.position.x += math.sin(self.rotation.y) * self.distance
+        self.position.z += math.cos(self.rotation.y) * self.distance
 
     def left(self):
-        self.position.x -= 0.1
+        self.position.x -= math.sin(self.rotation.y+(math.pi/2)) * self.distance
+        self.position.z -= math.cos(self.rotation.y+(math.pi/2)) * self.distance
 
     def right(self):
-        self.position.x += 0.1
+        self.position.x += math.sin(self.rotation.y+(math.pi/2)) * self.distance
+        self.position.z += math.cos(self.rotation.y+(math.pi/2)) * self.distance
+
+    # def forward(self):
+    #     self.position.z -= 0.1
+
+    # def backward(self):
+    #     self.position.z += 0.1
+
+    # def left(self):
+    #     self.position.x -= 0.1
+
+    # def right(self):
+    #     self.position.x += 0.1
 
     def tick(self, dt):
         print(self.position, " | ", self.rotation)
@@ -74,38 +74,52 @@ class MyCam(CameraNode):
 camera = MyCam()
 camera.position = Vector3(0, -14, 25)
 
+texture = TextureResource("Games/TestGames/Test3D/cw.bmp")
+
 arrow_mesh = MeshResource()
 floor_mesh = MeshResource()
 
 
-arrow_mesh_node = MeshNode(mesh=arrow_mesh, color=engine_draw.orange)
-floor_mesh_node = MeshNode(mesh=floor_mesh, color=engine_draw.red)
+arrow_mesh_node = MeshNode(mesh=arrow_mesh, color=engine_draw.orange, texture=texture)
+floor_mesh_node = MeshNode(mesh=floor_mesh, color=engine_draw.red, texture=texture)
 
 
-def add_quad(to_add_to, v1, v2, v3, v4):
+def add_quad(to_add_to, v1, v2, v3, v4, v1uv, v2uv, v3uv, v4uv):
     to_add_to.vertices.append(v1)
+    to_add_to.uvs.append(v1uv)
+
     to_add_to.vertices.append(v2)
-    to_add_to.vertices.append(v3)
+    to_add_to.uvs.append(v2uv)
 
     to_add_to.vertices.append(v3)
+    to_add_to.uvs.append(v3uv)
+
+
+    to_add_to.vertices.append(v3)
+    to_add_to.uvs.append(v3uv)
+
     to_add_to.vertices.append(v4)
+    to_add_to.uvs.append(v4uv)
+
     to_add_to.vertices.append(v1)
+    to_add_to.uvs.append(v1uv)
 
 
-add_quad(arrow_mesh, Vector3(0, 0, 0), Vector3(0, 1, 0), Vector3(1, 1, 0), Vector3(1, 0, 0))
-add_quad(arrow_mesh, Vector3(0, 1, 0), Vector3(0, 2, 0), Vector3(1, 2, 0), Vector3(1, 1, 0))
-add_quad(arrow_mesh, Vector3(0, 2, 0), Vector3(0, 3, 0), Vector3(1, 3, 0), Vector3(1, 2, 0))
-add_quad(arrow_mesh, Vector3(0, 3, 0), Vector3(0, 4, 0), Vector3(1, 4, 0), Vector3(1, 3, 0))
-add_quad(arrow_mesh, Vector3(0, 4, 0), Vector3(0, 5, 0), Vector3(1, 5, 0), Vector3(1, 4, 0))
 
-add_quad(arrow_mesh, Vector3(-1, 3, 0), Vector3(-1, 4, 0), Vector3(0, 4, 0), Vector3(0, 3, 0))
-add_quad(arrow_mesh, Vector3(1, 3, 0), Vector3(1, 4, 0), Vector3(2, 4, 0), Vector3(2, 3, 0))
+add_quad(arrow_mesh, Vector3(0, 0, 0), Vector3(0, 1, 0), Vector3(1, 1, 0), Vector3(1, 0, 0),  Vector2(0, 0), Vector2(0, 1), Vector2(1, 1), Vector2(1, 0))
+add_quad(arrow_mesh, Vector3(0, 1, 0), Vector3(0, 2, 0), Vector3(1, 2, 0), Vector3(1, 1, 0),  Vector2(0, 0), Vector2(0, 1), Vector2(1, 1), Vector2(1, 0))
+add_quad(arrow_mesh, Vector3(0, 2, 0), Vector3(0, 3, 0), Vector3(1, 3, 0), Vector3(1, 2, 0),  Vector2(0, 0), Vector2(0, 1), Vector2(1, 1), Vector2(1, 0))
+add_quad(arrow_mesh, Vector3(0, 3, 0), Vector3(0, 4, 0), Vector3(1, 4, 0), Vector3(1, 3, 0),  Vector2(0, 0), Vector2(0, 1), Vector2(1, 1), Vector2(1, 0))
+add_quad(arrow_mesh, Vector3(0, 4, 0), Vector3(0, 5, 0), Vector3(1, 5, 0), Vector3(1, 4, 0),  Vector2(0, 0), Vector2(0, 1), Vector2(1, 1), Vector2(1, 0))
 
-add_quad(arrow_mesh, Vector3(-2, 2, 0), Vector3(-2, 3, 0), Vector3(-1, 3, 0), Vector3(-1, 2, 0))
-add_quad(arrow_mesh, Vector3(3, 2, 0), Vector3(2, 2, 0), Vector3(2, 3, 0), Vector3(3, 3, 0))
+add_quad(arrow_mesh, Vector3(-1, 3, 0), Vector3(-1, 4, 0), Vector3(0, 4, 0), Vector3(0, 3, 0),  Vector2(0, 0), Vector2(0, 1), Vector2(1, 1), Vector2(1, 0))
+add_quad(arrow_mesh, Vector3(1, 3, 0), Vector3(1, 4, 0), Vector3(2, 4, 0), Vector3(2, 3, 0),  Vector2(0, 0), Vector2(0, 1), Vector2(1, 1), Vector2(1, 0))
+
+add_quad(arrow_mesh, Vector3(-2, 2, 0), Vector3(-2, 3, 0), Vector3(-1, 3, 0), Vector3(-1, 2, 0),  Vector2(0, 0), Vector2(0, 1), Vector2(1, 1), Vector2(1, 0))
+add_quad(arrow_mesh, Vector3(3, 2, 0), Vector3(2, 2, 0), Vector3(2, 3, 0), Vector3(3, 3, 0),  Vector2(0, 0), Vector2(0, 1), Vector2(1, 1), Vector2(1, 0))
 
 
-add_quad(floor_mesh, Vector3(-10, -3, -10), Vector3(10, -3, -10), Vector3(10, -3, 10), Vector3(-10, -3, 10))
+add_quad(floor_mesh, Vector3(-10, -3, -10), Vector3(10, -3, -10), Vector3(10, -3, 10), Vector3(-10, -3, 10),  Vector2(0, 0), Vector2(0, 1), Vector2(1, 1), Vector2(1, 0))
 
 t = 0
 
@@ -114,7 +128,7 @@ while True:
         continue
 
     # arrow_mesh_node.rotation.x += 0.005
-    arrow_mesh_node.rotation.y += 0.05
+    arrow_mesh_node.rotation.y += 0.01
     # arrow_mesh_node.rotation.z += 0.005
 
     arrow_mesh_node.position.x = math.sin(t*2) * 4

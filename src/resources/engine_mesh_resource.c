@@ -52,7 +52,7 @@ mp_obj_t mesh_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_
                 mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("MeshResource: ERROR: Expected first argument to be a `str` or `list/bytearray`, got `%s`"), mp_obj_get_type_str(args[0]));
             }
         }else if(n_args == 2){
-            if(mp_obj_is_str(args[0]) && mp_obj_is_bool(args[1])){  // path, in_ram
+            if(mp_obj_is_str(args[0]) && mp_obj_is_bool(args[1])){                                                  // path, in_ram
                 // Open .obj mesh in FLASH or RAM
                 mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("MeshResource: ERROR: using .obj files is not implemented yet!"));
             }else if((mp_obj_is_type(args[0], &mp_type_list) || mp_obj_is_type(args[0], &mp_type_bytearray)) &&

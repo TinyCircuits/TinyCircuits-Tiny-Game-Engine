@@ -20,6 +20,8 @@ typedef struct{
     mp_obj_t scale;     // Vector3
     mp_obj_t mesh;      // MeshResource
     mp_obj_t color;
+    mp_obj_t texture;   // TextureResource
+
     mp_obj_t tick_cb;
 
     mat4 m_translation;

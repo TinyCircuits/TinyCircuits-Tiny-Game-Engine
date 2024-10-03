@@ -7,6 +7,7 @@
 #include "engine_object_layers.h"
 #include "nodes/3D/camera_node.h"
 #include "math/vector3.h"
+#include "math/vector2.h"
 #include "math/rectangle.h"
 #include "draw/engine_display_draw.h"
 #include "math/engine_math.h"
@@ -50,7 +51,7 @@ void mesh_node_set_scale(void *user_ptr){
 }
 
 
-void mesh_node_project_draw(vec3 v0, vec3 v1, vec3 v2, mat4 mvp, vec4 v_viewport, uint16_t triangle_color, engine_shader_t *shader){
+void mesh_node_project_draw(texture_resource_class_obj_t *texture, vec3 v0, vec3 v1, vec3 v2, vec2 v0uv, vec2 v1uv, vec2 v2uv, mat4 mvp, vec4 v_viewport, uint16_t triangle_color, engine_shader_t *shader){
     vec3 out_0 = GLM_VEC3_ZERO_INIT;
     vec3 out_1 = GLM_VEC3_ZERO_INIT;
     vec3 out_2 = GLM_VEC3_ZERO_INIT;
@@ -70,7 +71,11 @@ void mesh_node_project_draw(vec3 v0, vec3 v1, vec3 v2, mat4 mvp, vec4 v_viewport
         ((z1 > 0 && z1 < UINT16_MAX)) &&
         ((z2 > 0 && z2 < UINT16_MAX))){
 
-        engine_draw_filled_triangle_depth(triangle_color, out_0[0], out_0[1], z0, out_1[0], out_1[1], z1, out_2[0], out_2[1], z2, 1.0f, shader);
+        engine_draw_filled_triangle_depth(texture, triangle_color,
+                                          out_0[0], out_0[1], z0, v0uv[0], v0uv[1],
+                                          out_1[0], out_1[1], z1, v1uv[0], v1uv[1],
+                                          out_2[0], out_2[1], z2, v2uv[0], v2uv[1],
+                                          1.0f, shader);
 
         // // Wireframe
         // // Cast to int and see if any endpoints will be on screen
@@ -167,6 +172,30 @@ uint16_t mesh_node_get_tri_color_default(mp_obj_t triangle_color_data, uint16_t 
 }
 
 
+void mesh_node_get_tri_vert_uvs_list(mp_obj_t uv_data, vec2 v0uv, vec2 v1uv, vec2 v2uv, uint16_t texture_width, uint16_t texture_height, uint16_t vertex_index){
+    mp_obj_list_t *uvs = uv_data;
+
+    vector2_class_obj_t *vertex_0_uv = uvs->items[vertex_index];
+    vector2_class_obj_t *vertex_1_uv = uvs->items[vertex_index+1];
+    vector2_class_obj_t *vertex_2_uv = uvs->items[vertex_index+2];
+
+    // Get the uvs in terms of pixels, not percentage
+    v0uv[0] = vertex_0_uv->x.value*texture_width;
+    v0uv[1] = vertex_0_uv->y.value*texture_height;
+
+    v1uv[0] = vertex_1_uv->x.value*texture_width;
+    v1uv[1] = vertex_1_uv->y.value*texture_height;
+
+    v2uv[0] = vertex_2_uv->x.value*texture_width;
+    v2uv[1] = vertex_2_uv->y.value*texture_height;
+}
+
+
+void mesh_node_get_tri_vert_uvs_uint8_array(mp_obj_t uv_data, vec2 v0uv, vec2 v1uv, vec2 v2uv, uint16_t texture_width, uint16_t texture_height, uint16_t vertex_index){
+
+}
+
+
 void mesh_node_class_draw(mp_obj_t mesh_node_base_obj, mp_obj_t camera_node){
     engine_node_base_t *mesh_node_base = mesh_node_base_obj;
     engine_mesh_node_class_obj_t *mesh_node = mesh_node_base->node;
@@ -180,6 +209,7 @@ void mesh_node_class_draw(mp_obj_t mesh_node_base_obj, mp_obj_t camera_node){
     uint32_t vertex_count = 0;
     void (*get_tri_verts_func)(mp_obj_t vertex_data, vec3 v0, vec3 v1, vec3 v2, uint16_t vertex_index) = NULL;
     uint16_t (*get_tri_colors_func)(mp_obj_t triangle_color_data, uint16_t vertex_index, uint16_t default_color) = NULL;
+    void (*get_tri_vert_uvs_func)(mp_obj_t uv_data, vec2 v0uv, vec2 v1uv, vec2 v2uv, uint16_t texture_width, uint16_t texture_height, uint16_t vertex_index) = NULL;
 
     if(mp_obj_is_type(mesh->vertices, &mp_type_list)){
         get_tri_verts_func = mesh_node_get_tri_verts_vec3_list;
@@ -203,6 +233,14 @@ void mesh_node_class_draw(mp_obj_t mesh_node_base_obj, mp_obj_t camera_node){
         }
     }
 
+
+    if(mp_obj_is_type(mesh->uvs, &mp_type_list)){
+        get_tri_vert_uvs_func = mesh_node_get_tri_vert_uvs_list;
+    }else if(mp_obj_is_type(mesh->uvs, &mp_type_bytearray)){
+        get_tri_vert_uvs_func = mesh_node_get_tri_vert_uvs_uint8_array;
+    }
+
+
     // No triangles to draw
     if(vertex_count < 3){
         return;
@@ -212,6 +250,7 @@ void mesh_node_class_draw(mp_obj_t mesh_node_base_obj, mp_obj_t camera_node){
         vertex_count = mp_obj_get_int(mesh->vertex_count);
     }
 
+    texture_resource_class_obj_t *mesh_texture = mesh_node->texture;
     color_class_obj_t *mesh_color = mesh_node->color;
 
     engine_node_base_t *camera_node_base = camera_node;
@@ -219,72 +258,9 @@ void mesh_node_class_draw(mp_obj_t mesh_node_base_obj, mp_obj_t camera_node){
 
     engine_shader_t *shader = engine_get_builtin_shader(EMPTY_SHADER);
 
-
-
-    // // Only the x-axis is reversed! 1
-    // mat4 m_cam_lookat = GLM_MAT4_ZERO_INIT;
-    // glm_lookat_rh_zo((vec3){0, 0, -1}, (vec3){0, 0, 0}, (vec3){0, 1, 0}, m_cam_lookat);
-
-    // mat4 m_cam_scale = GLM_MAT4_ZERO_INIT;
-    // glm_scale_make(m_cam_scale, (vec3){1.0f, -1.0f, 1.0});
-
-
-    // mat4 m_cam_rotation = GLM_MAT4_ZERO_INIT;
-    // glm_mat4_mul(camera->m_rotation, m_cam_lookat, m_cam_rotation);
-
-    // mat4 m_cam_translation = GLM_MAT4_ZERO_INIT;
-    // glm_mat4_mul(camera->m_translation, m_cam_scale, m_cam_translation);
-
-
-    // mat4 m_cam_view = GLM_MAT4_ZERO_INIT;
-    // glm_mat4_mul(m_cam_rotation, m_cam_translation, m_cam_view);
-
-    // mat4 m_model_view = GLM_MAT4_ZERO_INIT;
-    // glm_mat4_mul(mesh_node->m_rotation, mesh_node->m_translation, m_model_view);
-
-
-    // mat4 m_final_view = GLM_MAT4_ZERO_INIT;
-    // glm_mat4_mul(m_cam_view, m_model_view, m_final_view);
-
-
-    // mat4 mvp = GLM_MAT4_ZERO_INIT;
-    // glm_mat4_mul(camera->m_projection, m_final_view, mvp);
-
-
-
-    // // x-axis the y-axis is reversed 2
-    // mat4 m_cam_lookat = GLM_MAT4_ZERO_INIT;
-    // glm_lookat_rh_zo((vec3){0, 0, -1}, (vec3){0, 0, 0}, (vec3){0, 1, 0}, m_cam_lookat);
-
-    // mat4 m_cam_scale = GLM_MAT4_ZERO_INIT;
-    // glm_scale_make(m_cam_scale, (vec3){1.0f, 1.0f, 1.0});
-
-
-    // mat4 m_cam_rotation = GLM_MAT4_ZERO_INIT;
-    // glm_mat4_mul(camera->m_rotation, m_cam_lookat, m_cam_rotation);
-
-    // mat4 m_cam_translation = GLM_MAT4_ZERO_INIT;
-    // glm_mat4_mul(camera->m_translation, m_cam_scale, m_cam_translation);
-
-
-    // mat4 m_cam_view = GLM_MAT4_ZERO_INIT;
-    // glm_mat4_mul(m_cam_rotation, m_cam_translation, m_cam_view);
-
-    // mat4 m_model_view = GLM_MAT4_ZERO_INIT;
-    // glm_mat4_mul(mesh_node->m_rotation, mesh_node->m_translation, m_model_view);
-
-
-    // mat4 m_final_view = GLM_MAT4_ZERO_INIT;
-    // glm_mat4_mul(m_cam_view, m_model_view, m_final_view);
-
-
-    // mat4 mvp = GLM_MAT4_ZERO_INIT;
-    // glm_mat4_mul(camera->m_projection, m_final_view, mvp);
-
-
     
-
-    // Only the x-axis is reversed! 1
+    // https://stackoverflow.com/a/39881407
+    // https://stackoverflow.com/a/45647934
     mat4 m_cam_lookat = GLM_MAT4_ZERO_INIT;
     glm_lookat_rh_zo((vec3){0, 0, -1}, (vec3){0, 0, 0}, (vec3){0, -1, 0}, m_cam_lookat);
 
@@ -312,38 +288,6 @@ void mesh_node_class_draw(mp_obj_t mesh_node_base_obj, mp_obj_t camera_node){
 
     mat4 mvp = GLM_MAT4_ZERO_INIT;
     glm_mat4_mul(camera->m_projection, m_final_view, mvp);
-
-
-
-
-    // mat4 m = GLM_MAT4_ZERO_INIT;
-    // glm_lookat_rh_zo((vec3){0, 0, -1}, (vec3){0, 0, 0}, (vec3){0, 1, 0}, m);
-
-    // mat4 rc = GLM_MAT4_ZERO_INIT;
-    // glm_mat4_mul(camera->m_rotation, m, rc);
-
-    // // https://stackoverflow.com/a/39881407
-    // mat4 m_view0 = GLM_MAT4_ZERO_INIT;
-    // glm_mat4_mul(rc, camera->m_translation, m_view0);
-
-    // mat4 m_view1 = GLM_MAT4_ZERO_INIT;
-    // glm_mat4_mul(mesh_node->m_rotation, mesh_node->m_translation, m_view1);
-
-    // mat4 m_view = GLM_MAT4_ZERO_INIT;
-    // glm_mat4_mul(m_view0, m_view1, m_view);
-
-    // mat4 mvp = GLM_MAT4_ZERO_INIT;
-    // glm_mat4_mul(camera->m_projection, m_view, mvp);
-
-
-    // // Order of operations
-    // // https://stackoverflow.com/a/39881407
-    // // https://stackoverflow.com/a/45647934
-    // mat4 mvp = GLM_MAT4_ZERO_INIT;
-    // mat4 in = GLM_MAT4_ZERO_INIT;
-    // glm_mat4_inv(mesh_node->m_final_transformation, in);
-    // glm_mat4_mul(camera->m_final_transformation, in, mvp);
-    // glm_mat4_mul(camera->m_projection, mvp, mvp);
     
 
     uint16_t vertex_index = 0;
@@ -352,49 +296,24 @@ void mesh_node_class_draw(mp_obj_t mesh_node_base_obj, mp_obj_t camera_node){
     vec3 v0 = GLM_VEC3_ZERO_INIT;
     vec3 v1 = GLM_VEC3_ZERO_INIT;
     vec3 v2 = GLM_VEC3_ZERO_INIT;
+
+    vec2 v0uv = GLM_VEC2_ZERO_INIT;
+    vec2 v1uv = GLM_VEC2_ZERO_INIT;
+    vec2 v2uv = GLM_VEC2_ZERO_INIT;
     
     // Loop through triangles and render them
     while(vertex_index < vertex_count){
+        get_tri_vert_uvs_func(mesh->uvs, v0uv, v1uv, v2uv, mesh_texture->width, mesh_texture->height, vertex_index);
+
         triangle_color = get_tri_colors_func(mesh->triangle_colors, vertex_index, mesh_color->value);
 
         get_tri_verts_func(mesh->vertices, v0, v1, v2, vertex_index);
 
         // Project and draw the triangle
-        mesh_node_project_draw(v0, v1, v2, mvp, camera->v_viewport, triangle_color, shader);
+        mesh_node_project_draw(mesh_texture, v0, v1, v2, v0uv, v1uv, v2uv, mvp, camera->v_viewport, triangle_color, shader);
 
         vertex_index += 3;
     }
-
-
-    // for(uint16_t ivx=0; ivx<vertex_count; ivx+=3){
-
-    //     // if(mp_obj_is_type(vertices, &mp_type_list)){
-    //         vector3_class_obj_t *vertex_0 = vertices->items[ivx];
-    //         vector3_class_obj_t *vertex_1 = vertices->items[ivx+1];
-    //         vector3_class_obj_t *vertex_2 = vertices->items[ivx+2];
-
-    //         v0[0] = vertex_0->x.value;
-    //         v0[1] = vertex_0->y.value;
-    //         v0[2] = vertex_0->z.value;
-
-    //         v1[0] = vertex_1->x.value;
-    //         v1[1] = vertex_1->y.value;
-    //         v1[2] = vertex_1->z.value;
-
-    //         v2[0] = vertex_2->x.value;
-    //         v2[1] = vertex_2->y.value;
-    //         v2[2] = vertex_2->z.value;
-    //     // }else if(mp_obj_is_type(vertices, &mp_type_bytearray)){
-            
-    //     // }
-
-    //     uint16_t color = mesh_color->value;
-    //     if(ivx/3 < triangle_colors->len){
-    //         color = ((color_class_obj_t*)triangle_colors->items[ivx/3])->value;
-    //     }
-
-    //     mesh_node_project(v0, v1, v2, mvp, camera->v_viewport, color, shader);
-    // }
 }
 
 
@@ -426,6 +345,10 @@ bool mesh_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_t
         break;
         case MP_QSTR_mesh:
             destination[0] = self->mesh;
+            return true;
+        break;
+        case MP_QSTR_texture:
+            destination[0] = self->texture;
             return true;
         break;
         case MP_QSTR_color:
@@ -507,6 +430,10 @@ bool mesh_store_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_
             self->mesh = destination[1];
             return true;
         break;
+        case MP_QSTR_texture:
+            self->texture = destination[1];
+            return true;
+        break;
         case MP_QSTR_color:
             self->color = destination[1];
             return true;
@@ -564,10 +491,11 @@ mp_obj_t mesh_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_
         { MP_QSTR_rotation,     MP_ARG_OBJ, {.u_obj = vector3_class_new(&vector3_class_type, 3, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(0.0f), mp_obj_new_float(0.0f)})} },
         { MP_QSTR_scale,        MP_ARG_OBJ, {.u_obj = vector3_class_new(&vector3_class_type, 3, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)})} },
         { MP_QSTR_mesh,         MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_texture,      MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_color,        MP_ARG_OBJ, {.u_obj = MP_OBJ_NEW_SMALL_INT(0xffff)} },
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
-    enum arg_ids {child_class, position, rotation, scale, mesh, color};
+    enum arg_ids {child_class, position, rotation, scale, mesh, texture, color};
     bool inherited = false;
 
     // If there is one positional argument and it isn't the first 
@@ -601,6 +529,7 @@ mp_obj_t mesh_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_
     mesh_node->rotation = parsed_args[rotation].u_obj;
     mesh_node->scale    = parsed_args[scale].u_obj;
     mesh_node->mesh     = parsed_args[mesh].u_obj;
+    mesh_node->texture  = parsed_args[texture].u_obj;
     mesh_node->color    = engine_color_wrap(parsed_args[color].u_obj);
 
     vector3_class_obj_t *p = (vector3_class_obj_t*)mesh_node->position;

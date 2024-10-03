@@ -736,7 +736,11 @@ void engine_draw_filled_triangle(uint16_t color, float x0, float y0, float x1, f
 }
 
 
-void engine_draw_filled_triangle_depth(uint16_t color, float ax, float ay, uint16_t depth_az, float bx, float by, uint16_t depth_bz, float cx, float cy, uint16_t depth_cz, float alpha, engine_shader_t *shader){
+void engine_draw_filled_triangle_depth(texture_resource_class_obj_t *texture, uint16_t color,
+                                       float ax, float ay, uint16_t depth_az, float au, float av,
+                                       float bx, float by, uint16_t depth_bz, float bu, float bv,
+                                       float cx, float cy, uint16_t depth_cz, float cu, float cv,
+                                       float alpha, engine_shader_t *shader){
     // A = x0, y0
     // B = x1, y1
     // C = x2, y2
@@ -806,7 +810,20 @@ void engine_draw_filled_triangle_depth(uint16_t color, float ax, float ay, uint1
             // comparing directly to 0.0, make sure triangles get filled
             // by comparing to numbers above some small negative number
             if((ABP >= -0.001f && BCP >= -0.001f && CAP >= -0.001f) && engine_display_store_check_depth(px, py, depth_p)){
-                engine_draw_pixel_no_check(color, px, py, alpha, shader);
+
+                uint16_t u = (uint16_t)(au*BCP + bu*CAP + cu*ABP);
+                uint16_t v = (uint16_t)(av*BCP + bv*CAP + cv*ABP);
+
+                // Get the pixel from the texture
+                uint32_t index = v * texture->width + u;
+                float texture_pixel_alpha = 0.0f;
+
+                uint16_t texture_pixel_color = texture->get_pixel(texture, index, &texture_pixel_alpha);
+
+                // Mix
+                alpha = alpha * texture_pixel_alpha;
+
+                engine_draw_pixel_no_check(texture_pixel_color, px, py, alpha, shader);
             }
 
             // One step to the right
