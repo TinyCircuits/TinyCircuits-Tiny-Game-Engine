@@ -160,7 +160,7 @@ mp_obj_t engine_saving_read_entry(uint8_t file_index, uint32_t entry_data_len, u
         break;
         case SAVE_INTEGER:
         {
-            mp_int_t integer = 0;
+            int32_t integer = 0;
             engine_file_read(file_index, &integer, entry_data_len);
             return mp_obj_new_int(integer);
         }
@@ -243,7 +243,7 @@ void engine_saving_write_entry(uint8_t file_index, mp_obj_t entry, const byte* e
         engine_file_write(file_index, str_data, entry_data_len);
     }else if(mp_obj_is_int(entry)){
         entry_data_type = SAVE_INTEGER;
-        int value = mp_obj_get_int(entry);
+        int32_t value = mp_obj_get_int(entry);
         engine_file_write(file_index, &entry_data_type, 1);
         engine_file_write(file_index, &value, entry_data_len);
     }else if(mp_obj_is_float(entry)){
