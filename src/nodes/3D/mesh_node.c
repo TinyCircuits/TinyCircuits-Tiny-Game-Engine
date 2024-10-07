@@ -284,13 +284,46 @@ void mesh_node_class_draw(mp_obj_t mesh_node_base_obj, mp_obj_t camera_node){
     engine_shader_t *shader = engine_get_builtin_shader(EMPTY_SHADER);
 
     
+    // // https://stackoverflow.com/a/39881407
+    // // https://stackoverflow.com/a/45647934
+    // mat4 m_cam_lookat = GLM_MAT4_ZERO_INIT;
+    // glm_lookat_rh_zo((vec3){0, 0, -1}, (vec3){0, 0, 0}, (vec3){0, 1, 0}, m_cam_lookat);
+
+    // mat4 m_cam_scale = GLM_MAT4_ZERO_INIT;
+    // glm_scale_make(m_cam_scale, (vec3){-1.0f, -1.0f, -1.0f});
+
+
+    // mat4 m_cam_rotation = GLM_MAT4_ZERO_INIT;
+    // glm_mat4_mul(camera->m_rotation, m_cam_lookat, m_cam_rotation);
+
+    // mat4 m_cam_translation = GLM_MAT4_ZERO_INIT;
+    // glm_mat4_mul(camera->m_translation, m_cam_scale, m_cam_translation);
+
+
+    // mat4 m_cam_view = GLM_MAT4_ZERO_INIT;
+    // glm_mat4_mul(m_cam_rotation, m_cam_translation, m_cam_view);
+
+    // mat4 m_model_view = GLM_MAT4_ZERO_INIT;
+    // glm_mat4_mul(mesh_node->m_rotation, mesh_node->m_translation, m_model_view);
+
+
+    // mat4 m_final_view = GLM_MAT4_ZERO_INIT;
+    // glm_mat4_mul(m_cam_view, m_model_view, m_final_view);
+
+
+    // mat4 mvp = GLM_MAT4_ZERO_INIT;
+    // glm_mat4_mul(camera->m_projection, m_final_view, mvp);
+
+
     // https://stackoverflow.com/a/39881407
     // https://stackoverflow.com/a/45647934
+    // https://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/#:~:text=%2C%20myRotationAxis%20)%3B-,Cumulating%20transformations,-So%20now%20we
+    // https://www.reddit.com/r/opengl/comments/6cah2x/how_to_mvp_transformation_matrices_relate_to_each/
     mat4 m_cam_lookat = GLM_MAT4_ZERO_INIT;
-    glm_lookat_rh_zo((vec3){0, 0, -1}, (vec3){0, 0, 0}, (vec3){0, -1, 0}, m_cam_lookat);
+    glm_lookat_rh_zo((vec3){0, 0, -1}, (vec3){0, 0, 0}, (vec3){0, 1, 0}, m_cam_lookat);
 
     mat4 m_cam_scale = GLM_MAT4_ZERO_INIT;
-    glm_scale_make(m_cam_scale, (vec3){-1.0f, -1.0f, -1.0});
+    glm_scale_make(m_cam_scale, (vec3){-1.0f, -1.0f, -1.0f});
 
 
     mat4 m_cam_rotation = GLM_MAT4_ZERO_INIT;
@@ -301,15 +334,15 @@ void mesh_node_class_draw(mp_obj_t mesh_node_base_obj, mp_obj_t camera_node){
 
 
     mat4 m_cam_view = GLM_MAT4_ZERO_INIT;
-    glm_mat4_mul(m_cam_rotation, m_cam_translation, m_cam_view);
+    glm_mat4_mul(m_cam_translation, m_cam_rotation, m_cam_view);
+    glm_mat4_inv(m_cam_view, m_cam_view);
 
     mat4 m_model_view = GLM_MAT4_ZERO_INIT;
-    glm_mat4_mul(mesh_node->m_rotation, mesh_node->m_translation, m_model_view);
+    glm_mat4_mul(mesh_node->m_translation, mesh_node->m_rotation, m_model_view);
 
 
     mat4 m_final_view = GLM_MAT4_ZERO_INIT;
     glm_mat4_mul(m_cam_view, m_model_view, m_final_view);
-
 
     mat4 mvp = GLM_MAT4_ZERO_INIT;
     glm_mat4_mul(camera->m_projection, m_final_view, mvp);

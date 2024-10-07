@@ -17,7 +17,13 @@ class MyCam(CameraNode):
     def __init__(self):
         super().__init__(self)
         self.distance = 0.75
-        self.fov = 75.0
+        self.fov = 100.0
+        self.rotate_type = 0
+
+        # self.rotation.y = -90
+
+        # for i in range(50):
+        #     self.backward()
 
     def forward(self):
         self.position.x -= math.sin(self.rotation.y) * self.distance
@@ -35,25 +41,38 @@ class MyCam(CameraNode):
         self.position.x += math.sin(self.rotation.y+(math.pi/2)) * self.distance
         self.position.z += math.cos(self.rotation.y+(math.pi/2)) * self.distance
 
-    # def forward(self):
-    #     self.position.z -= 0.1
-
-    # def backward(self):
-    #     self.position.z += 0.1
-
-    # def left(self):
-    #     self.position.x -= 0.1
-
-    # def right(self):
-    #     self.position.x += 0.1
-
     def tick(self, dt):
-        print(self.position, " | ", self.rotation)
+        # print(self.position)
+        # print(engine.get_running_fps())
+
+        if engine_io.MENU.is_just_pressed:
+            self.rotate_type += 1
+
+            if self.rotate_type >= 3:
+                self.rotate_type = 0
+            
+            print("Rotate type:", self.rotate_type)
 
         if engine_io.RB.is_pressed:
-            self.rotation.y -= 0.05
+            if self.rotate_type == 0:
+                self.rotation.y -= 0.05
+                print(self.rotation)
+            elif self.rotate_type == 1:
+                self.rotation.x -= 0.05
+                print(self.rotation)
+            elif self.rotate_type == 2:
+                self.rotation.z -= 0.05
+                print(self.rotation)
         if engine_io.LB.is_pressed:
-            self.rotation.y += 0.05
+            if self.rotate_type == 0:
+                self.rotation.y += 0.05
+                print(self.rotation)
+            elif self.rotate_type == 1:
+                self.rotation.x += 0.05
+                print(self.rotation)
+            elif self.rotate_type == 2:
+                self.rotation.z += 0.05
+                print(self.rotation)
 
 
         if engine_io.UP.is_pressed:
@@ -144,11 +163,16 @@ while True:
 
 
 
-# This is gdscript code meant to be attached to a Node3D in Godot 4.2.2 so that the above engine code
+# This is gdscript code meant to be attached to a Camera3D in Godot 4.2.2 so that the above engine code
 # that generates a mesh can be compared
 # extends Node3D
 
+# extends Camera3D
+
 # # https://www.reddit.com/r/godot/comments/jh9yx7/godot_create_a_mesh_programmatically/
+
+# var distance = 0.75
+# var rotate_type = 0
 
 # func add_quad(index:int, vert_data:PackedVector3Array, index_data:PackedInt32Array, uv_data:PackedVector2Array,
 # 			  v1:Vector3, v2:Vector3, v3:Vector3, v4:Vector3,
@@ -195,10 +219,7 @@ while True:
 # 	var light = DirectionalLight3D.new()
 # 	add_child(light)
 	
-# 	var camera = Camera3D.new();
-# 	camera.translate(Vector3(0, 5, 25))
-# 	add_child(camera)
-	
+# 	translate(Vector3(0, 5, 25))
 	
 # 	var mesh = MeshInstance3D.new()
 # 	var arr_mesh = ArrayMesh.new()
@@ -223,9 +244,49 @@ while True:
 # 	mesh.set_mesh(arr_mesh)
 # 	mesh.set_surface_override_material(0, material)
 	
-# 	add_child(mesh)
+# 	get_parent_node_3d().add_child.call_deferred(mesh)
 
 
 # # Called every frame. 'delta' is the elapsed time since the previous frame.
 # func _process(_delta):
-# 	pass
+# 	if Input.is_action_just_pressed("MENU"):
+# 			rotate_type += 1
+
+# 			if rotate_type >= 3:
+# 				rotate_type = 0
+			
+# 			print("Rotate type:", self.rotate_type)
+	
+# 	if Input.is_action_pressed("RB"):
+# 		if rotate_type == 0:
+# 			rotation.y -= 0.05
+# 			print(rotation)
+# 		elif rotate_type == 1:
+# 			rotation.x -= 0.05
+# 			print(rotation)
+# 		elif rotate_type == 2:
+# 			rotation.z -= 0.05
+# 			print(rotation)
+# 	if Input.is_action_pressed("LB"):
+# 		if rotate_type == 0:
+# 			rotation.y += 0.05
+# 			print(rotation)
+# 		elif rotate_type == 1:
+# 			rotation.x += 0.05
+# 			print(rotation)
+# 		elif rotate_type == 2:
+# 			rotation.z += 0.05
+# 			print(rotation)
+	
+# 	if Input.is_action_pressed("UP"):
+# 		position.x -= sin(rotation.y) * distance
+# 		position.z -= cos(rotation.y) * distance
+# 	if Input.is_action_pressed("DOWN"):
+# 		position.x += sin(rotation.y) * distance
+# 		position.z += cos(rotation.y) * distance
+# 	if Input.is_action_pressed("LEFT"):
+# 		position.x -= sin(rotation.y+(PI/2)) * distance
+# 		position.z -= cos(rotation.y+(PI/2)) * distance
+# 	if Input.is_action_pressed("RIGHT"):
+# 		position.x += sin(rotation.y+(PI/2)) * distance
+# 		position.z += cos(rotation.y+(PI/2)) * distance

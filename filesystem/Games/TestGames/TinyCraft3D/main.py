@@ -279,6 +279,7 @@ class MyCam(CameraNode):
         super().__init__(self)
         self.distance = 0.75
         self.fov = 100.0
+        self.rotate_type = 0
 
         # self.rotation.y = -90
 
@@ -305,10 +306,28 @@ class MyCam(CameraNode):
         # print(self.position)
         # print(engine.get_running_fps())
 
+        if engine_io.MENU.is_just_pressed:
+            self.rotate_type += 1
+
+            if self.rotate_type >= 3:
+                self.rotate_type = 0
+            
+            print("Rotate type:", self.rotate_type)
+
         if engine_io.RB.is_pressed:
-            self.rotation.y -= 0.05
+            if self.rotate_type == 0:
+                self.rotation.y -= 0.05
+            elif self.rotate_type == 1:
+                self.rotation.x -= 0.05
+            elif self.rotate_type == 2:
+                self.rotation.z -= 0.05
         if engine_io.LB.is_pressed:
-            self.rotation.y += 0.05
+            if self.rotate_type == 0:
+                self.rotation.y += 0.05
+            elif self.rotate_type == 1:
+                self.rotation.x += 0.05
+            elif self.rotate_type == 2:
+                self.rotation.z += 0.05
 
 
         if engine_io.UP.is_pressed:
