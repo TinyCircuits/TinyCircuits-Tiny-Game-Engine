@@ -1,5 +1,5 @@
 # TinyCircuits-Tiny-Game-Engine
-This is a game engine for embedded devices that can run MicroPython.
+This is a 2D/3D game engine for embedded devices that can run Python/MicroPython.
 
 # Building on Linux
 These instructions assume that you are cloning MicroPython from the TinyCircuits Fork that has been pre-modified
