@@ -94,7 +94,7 @@ void engine_init_screen_buffers(){
 
 void engine_switch_active_screen_buffer(){
     mp_obj_array_t *back_data = MP_STATE_VM(back_fb_data);
-    mp_obj_array_t *front_data = MP_STATE_VM(back_fb_data);
+    mp_obj_array_t *front_data = MP_STATE_VM(front_fb_data);
     mp_obj_framebuf_t *back = MP_STATE_VM(back_fb);
     mp_obj_framebuf_t *front = MP_STATE_VM(front_fb);
 
