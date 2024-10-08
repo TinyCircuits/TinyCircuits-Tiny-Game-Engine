@@ -61,66 +61,46 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_draw_module_init_obj, engine_draw_module_init);
 /*  --- doc ---
     NAME: back_fb_data
     ID: back_fb_data
-    DESC: Get or set the back framebuffer data.
-    PARAM: [type=bytearray (optional)]   [name=back_fb_data]  [value=bytearray 128*128*2]
-    RETURN: bytearray | None
+    DESC: Get the mutable back framebuffer data.
+    RETURN: bytearray
 */
-static mp_obj_t engine_draw_back_fb_data(size_t n_args, const mp_obj_t *args){
-    if (n_args == 0) {
-        return MP_STATE_VM(back_fb_data);
-    } else {
-        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("ERROR: Setting back_fb_data not supported yet!"));
-    }
+static mp_obj_t engine_draw_back_fb_data(){
+    return MP_STATE_VM(back_fb_data);
 }
-MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_draw_back_fb_data_obj, 0, 1, engine_draw_back_fb_data);
+MP_DEFINE_CONST_FUN_OBJ_0(engine_draw_back_fb_data_obj, engine_draw_back_fb_data);
 
 /*  --- doc ---
     NAME: front_fb_data
     ID: front_fb_data
-    DESC: Get or set the front framebuffer data.
-    PARAM: [type=bytearray (optional)]   [name=front_fb_data]  [value=bytearray 128*128*2]
-    RETURN: bytearray | None
+    DESC: Get the mutable front framebuffer data.
+    RETURN: bytearray
 */
-static mp_obj_t engine_draw_front_fb_data(size_t n_args, const mp_obj_t *args){
-    if (n_args == 0) {
-        return MP_STATE_VM(front_fb_data);
-    } else {
-        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("ERROR: Setting front_fb_data not supported yet!"));
-    }
+static mp_obj_t engine_draw_front_fb_data(){
+    return MP_STATE_VM(front_fb_data);
 }
-MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_draw_front_fb_data_obj, 0, 1, engine_draw_front_fb_data);
+MP_DEFINE_CONST_FUN_OBJ_0(engine_draw_front_fb_data_obj, engine_draw_front_fb_data);
 
 /*  --- doc ---
     NAME: back_fb
     ID: back_fb
-    DESC: Get or set the back framebuffer.
-    PARAM: [type=framebuf (optional)]   [name=back_fb]  [value=framebuf]
-    RETURN: framebuf | None
+    DESC: Get the back framebuffer which can be directly manipulated.
+    RETURN: framebuf
 */
-static mp_obj_t engine_draw_back_fb(size_t n_args, const mp_obj_t *args){
-    if (n_args == 0) {
-        return MP_STATE_VM(back_fb);
-    } else {
-        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("ERROR: Setting back_fb not supported yet!"));
-    }
+static mp_obj_t engine_draw_back_fb(){
+    return MP_STATE_VM(back_fb);
 }
-MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_draw_back_fb_obj, 0, 1, engine_draw_back_fb);
+MP_DEFINE_CONST_FUN_OBJ_0(engine_draw_back_fb_obj, engine_draw_back_fb);
 
 /*  --- doc ---
     NAME: front_fb
     ID: front_fb
-    DESC: Get or set the front framebuffer.
-    PARAM: [type=framebuf (optional)]   [name=front_fb]  [value=framebuf]
-    RETURN: framebuf | None
+    DESC: Get the front framebuffer which can be directly manipulated.
+    RETURN: framebuf
 */
-static mp_obj_t engine_draw_front_fb(size_t n_args, const mp_obj_t *args){
-    if (n_args == 0) {
-        return MP_STATE_VM(front_fb);
-    } else {
-        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("ERROR: Setting front_fb not supported yet!"));
-    }
+static mp_obj_t engine_draw_front_fb(){
+    return MP_STATE_VM(front_fb);
 }
-MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_draw_front_fb_obj, 0, 1, engine_draw_front_fb);
+MP_DEFINE_CONST_FUN_OBJ_0(engine_draw_front_fb_obj, engine_draw_front_fb);
 
 
 color_class_obj_t black         = {{&const_color_class_type}, .value = 0x0000};
