@@ -5,6 +5,9 @@
 #include "extmod/vfs.h"
 #include "py/objstr.h"
 
+#include <stdio.h>
+#include <string.h>
+
 // The file that we currently have open
 
 struct mp_stream_seek_t file_seek;

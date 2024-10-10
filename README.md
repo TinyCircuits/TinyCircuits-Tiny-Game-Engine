@@ -43,6 +43,9 @@ These instructions assume that you are cloning MicroPython from the official Mic
 
 Use `(cd ../../ports/unix && make clean)` to make clean if needed
 
+# Building on Linux for WebAssembly
+1. Follow instructions here https://emscripten.org/docs/getting_started/downloads.html and finish after executing `source ./emsdk_env.sh` (will need to execute this last command in `emsdk` in every new terminal/session)
+
 # Updating MicroPython version
 Make sure to check that the copied structures in src/utility/engine_mp.h are still the same in the version of MicroPython you're updating to. Some structures are not exposed so they had to be copied to where the engine can use them.
 
