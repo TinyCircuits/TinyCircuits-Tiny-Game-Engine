@@ -45,6 +45,9 @@ Use `(cd ../../ports/unix && make clean)` to make clean if needed
 
 # Building on Linux for WebAssembly
 1. Follow instructions here https://emscripten.org/docs/getting_started/downloads.html and finish after executing `source ./emsdk_env.sh` (will need to execute this last command in `emsdk` in every new terminal/session)
+2. `git clone https://github.com/TinyCircuits/micropython/tree/engine micropython`
+3. `cd micropython/ports/webassembly`
+4. `make -j8 USER_C_MODULES=../../TinyCircuits-Tiny-Game-Engine`
 
 # Updating MicroPython version
 Make sure to check that the copied structures in src/utility/engine_mp.h are still the same in the version of MicroPython you're updating to. Some structures are not exposed so they had to be copied to where the engine can use them.
