@@ -7,7 +7,7 @@
 #include "audio/engine_audio_channel.h"
 
 // Forward declare since `resources/engine_audio_channel.h` and this file include each other
-typedef struct audio_channel_class_obj_t audio_channel_class_obj_t;
+struct audio_channel_class_obj_t;
 
 // All sound resources must conform to this structure.
 // The audio playback engine expects these fields to
@@ -21,7 +21,7 @@ typedef struct sound_resource_base_class_obj_t{
     uint8_t play_counter;                                           // Based on the playback sample rate of the engine and the source, this tracks when the next sample from the source should be played
     float last_sample;                                              // Keep the last sample to return it for times when it is not time to return a new sample
     uint16_t bytes_per_sample;                                      // Value used by playback engine to know how many bytes are in a sample
-    audio_channel_class_obj_t *channel;                             // If being played by a channel, then this is the channel that is playing it (IMPORTANT: need this link so that when this source is deleted it can remove itself from the channel as a source by setting itself NULL)
+    struct audio_channel_class_obj_t *channel;                      // If being played by a channel, then this is the channel that is playing it (IMPORTANT: need this link so that when this source is deleted it can remove itself from the channel as a source by setting itself NULL)
     uint8_t *(*get_data)(void*, uint32_t, uint16_t*);               // Function used by playback engine to fill audio buffer
     void *extra_data;                                               // Each individual sound resource can attach extra data for its own use (not by the playback engine directly)
 }sound_resource_base_class_obj_t;

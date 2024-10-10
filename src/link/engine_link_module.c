@@ -23,7 +23,7 @@
 */
 
 #if defined(__EMSCRIPTEN__)
-
+    #include "engine_link_unix.h"   // Just use this in place of something else for now since it is empty anyways
 #elif defined(__unix__)
     #include "engine_link_unix.h"
 #elif defined(__arm__)

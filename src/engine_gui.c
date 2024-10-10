@@ -409,7 +409,7 @@ void engine_gui_tick(){
         dir_y = 1.0f;
     }
     
-    if(dir_x || dir_y){
+    if((bool)dir_x || (bool)dir_y){
         bool allow_wrap = false;
         if(gui_wrapping_enabled){
             // Allow wrapping only if any of the dpad buttons was just pressed.
