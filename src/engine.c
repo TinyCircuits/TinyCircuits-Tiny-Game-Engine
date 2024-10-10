@@ -28,7 +28,16 @@
 #include "engine_main.h"
 
 
-#if defined(__arm__)
+#if defined(__EMSCRIPTEN__)
+    #include <emscripten.h>
+
+    // This is called by the MicroPython VM hook so that
+    // new serial data can be retrieved from the web page
+    // while just MicroPython is running, not just the engine
+    EM_JS(void, new_hook, (), {
+        self.get_serial();
+    });
+#elif defined(__arm__)
     #include "hardware/clocks.h"
     #include "hardware/pll.h"
     #include "hardware/structs/rosc.h"
