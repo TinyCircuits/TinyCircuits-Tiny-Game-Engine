@@ -18,7 +18,9 @@ const mp_stream_p_t *file_streams[2];
 
 
 mp_obj_str_t* engine_file_to_system_path(mp_obj_str_t *filename){
-    #ifdef __unix__
+    #if defined(__EMSCRIPTEN__)
+        return filename;
+    #elif defined(__unix__)
         if(!mp_obj_is_str(filename)){
             return filename;
         }
@@ -30,7 +32,7 @@ mp_obj_str_t* engine_file_to_system_path(mp_obj_str_t *filename){
         char buff[1024];
         sprintf(buff, "%s%s", filesystem_root, filename_str);
         return mp_obj_new_str(buff, strlen(buff));
-    #else
+    #elif defined(__arm__)
         return filename;
     #endif
 }
