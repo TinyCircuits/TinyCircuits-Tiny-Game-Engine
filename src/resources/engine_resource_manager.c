@@ -7,9 +7,15 @@
 #include "py/misc.h"
 #include "utility/engine_file.h"
 
+#if defined(__EMSCRIPTEN__) || defined(__unix__)
+    #define FLASH_PAGE_SIZE 256
+    #define FLASH_SECTOR_SIZE 4096
+    #define FLASH_RESOURCE_SPACE_BASE 0
+    #define FLASH_RESOURCE_SPACE_SIZE 2 * 1024 * 1024
+    #define XIP_BASE 0
 
-
-#ifndef __unix__
+    uint8_t *scratch_space = NULL;
+#else
     #include "pico/stdlib.h"
     #include "hardware/flash.h"
     #include "hardware/sync.h"
@@ -23,16 +29,17 @@
     // The room left over after the room for the firmware
     // and the MicroPython filesystem is flash scratch
     #define FLASH_RESOURCE_SPACE_SIZE PICO_FLASH_SIZE_BYTES - (MICROPY_HW_FLASH_STORAGE_BYTES + FLASH_RESOURCE_SPACE_BASE)
-
-    // Intermediate buffer to hold data read from flash before
-    // programming it to a contigious flash area
-    uint8_t page_prog[FLASH_PAGE_SIZE];
-    uint16_t page_prog_index = 0;
-    uint32_t page_prog_count = 0;
-
-    // How many pages (not sectors), that have been used so far
-    uint32_t used_pages_count = 0;
 #endif
+
+
+// Intermediate buffer to hold data read from flash before
+// programming it to a contigious flash area
+uint8_t page_prog[FLASH_PAGE_SIZE];
+uint16_t page_prog_index = 0;
+uint32_t page_prog_count = 0;
+
+// How many pages (not sectors), that have been used so far
+uint32_t used_pages_count = 0;
 
 
 // These are used for tracking where we are storing
@@ -41,6 +48,15 @@
 uint8_t *current_storing_location = NULL;
 uint32_t index_in_storing_location = 0;
 bool storing_in_ram = false;
+
+
+void engine_resource_init(){
+    #if defined(__unix__) || defined(__EMSCRIPTEN__)
+        if(scratch_space == NULL) scratch_space = malloc(FLASH_RESOURCE_SPACE_SIZE);
+    #else
+
+    #endif
+}
 
 
 void engine_resource_reset(){
@@ -67,42 +83,42 @@ mp_obj_t engine_resource_get_space_bytearray(uint32_t space_size, bool fast_spac
         array->items = m_new(byte, array->len);
         memset(array->items, 0, array->len);
     }else{
-        #ifdef __arm__
-            // How many flash pages will be needed to fit 'space_size' data? 
-            // Pages are 256 bytes and data must be written in that page size:
-            // https://www.raspberrypi.com/documentation/pico-sdk/hardware.html#rpip8ee511575881aa0f3936
-            uint32_t required_pages_count = (uint32_t)ceilf(((float)space_size)/FLASH_PAGE_SIZE);
+        // How many flash pages will be needed to fit 'space_size' data? 
+        // Pages are 256 bytes and data must be written in that page size:
+        // https://www.raspberrypi.com/documentation/pico-sdk/hardware.html#rpip8ee511575881aa0f3936
+        uint32_t required_pages_count = (uint32_t)ceilf(((float)space_size)/FLASH_PAGE_SIZE);
 
-            // Based on how many pages have been used so far, how many sectors have
-            // already been erased? This will be used to find the base offset of sectors
-            // to erase if the extra pages end up in new sectors. Sectors are 4096 bytes
-            // and must be erased in that sector size:
-            // https://www.raspberrypi.com/documentation/pico-sdk/hardware.html#rpip8ee511575881aa0f3936
-            uint32_t already_erased_sectors_count = (uint32_t)ceilf(((float)(used_pages_count*FLASH_PAGE_SIZE))/FLASH_SECTOR_SIZE);
+        // Based on how many pages have been used so far, how many sectors have
+        // already been erased? This will be used to find the base offset of sectors
+        // to erase if the extra pages end up in new sectors. Sectors are 4096 bytes
+        // and must be erased in that sector size:
+        // https://www.raspberrypi.com/documentation/pico-sdk/hardware.html#rpip8ee511575881aa0f3936
+        uint32_t already_erased_sectors_count = (uint32_t)ceilf(((float)(used_pages_count*FLASH_PAGE_SIZE))/FLASH_SECTOR_SIZE);
 
-            // Based on how many pages have been used and how many more are going to be used,
-            // how many sectors should be erased
-            uint32_t total_erase_sector_count = (uint32_t)ceilf(((float)((required_pages_count+used_pages_count)*FLASH_PAGE_SIZE))/FLASH_SECTOR_SIZE);
+        // Based on how many pages have been used and how many more are going to be used,
+        // how many sectors should be erased
+        uint32_t total_erase_sector_count = (uint32_t)ceilf(((float)((required_pages_count+used_pages_count)*FLASH_PAGE_SIZE))/FLASH_SECTOR_SIZE);
 
-            uint32_t additional_sectors_to_erase_count = total_erase_sector_count - already_erased_sectors_count;
+        uint32_t additional_sectors_to_erase_count = total_erase_sector_count - already_erased_sectors_count;
 
-            // Get the offset where sector erasing will start and
-            // how many sectors, in bytes to erase, then erase them
-            uint32_t sectors_to_erase_offset = already_erased_sectors_count*FLASH_SECTOR_SIZE;
-            uint32_t sectors_to_erase_size   = additional_sectors_to_erase_count*FLASH_SECTOR_SIZE;
+        // Get the offset where sector erasing will start and
+        // how many sectors, in bytes to erase, then erase them
+        uint32_t sectors_to_erase_offset = already_erased_sectors_count*FLASH_SECTOR_SIZE;
+        uint32_t sectors_to_erase_size   = additional_sectors_to_erase_count*FLASH_SECTOR_SIZE;
 
-            // Before erasing everything for the requested size,
-            // check if we're going to be erasing addresses out of
-            // bounds, stop everything if that is going to happen
-            // (will lose filesystem otherwise!)
-            const uint32_t erase_size = sectors_to_erase_size;
-            const uint32_t erase_start = FLASH_RESOURCE_SPACE_BASE + sectors_to_erase_offset;
-            const uint32_t erase_end = erase_start + erase_size;
+        // Before erasing everything for the requested size,
+        // check if we're going to be erasing addresses out of
+        // bounds, stop everything if that is going to happen
+        // (will lose filesystem otherwise!)
+        const uint32_t erase_size = sectors_to_erase_size;
+        const uint32_t erase_start = FLASH_RESOURCE_SPACE_BASE + sectors_to_erase_offset;
+        const uint32_t erase_end = erase_start + erase_size;
 
-            if(erase_end > FLASH_RESOURCE_SPACE_BASE+FLASH_RESOURCE_SPACE_SIZE){
-                mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineResourceManager: ERROR: Scratch space is going to overflow! Too many assets loaded! Scratch space is %ld bytes but the asset requires erasing %ld bytes from %ld to %ld"), FLASH_RESOURCE_SPACE_SIZE, erase_size, erase_start, erase_end);
-            }
-            
+        if(erase_end > FLASH_RESOURCE_SPACE_BASE+FLASH_RESOURCE_SPACE_SIZE){
+            mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineResourceManager: ERROR: Scratch space is going to overflow! Too many assets loaded! Scratch space is %ld bytes but the asset requires erasing %ld bytes from %ld to %ld"), FLASH_RESOURCE_SPACE_SIZE, erase_size, erase_start, erase_end);
+        }
+        
+        #if defined(__arm__)
             // Need to disable interrupts when texture resources are created:
             // https://github.com/raspberrypi/pico-examples/issues/34#issuecomment-1369267917
             // otherwise hangs forever
@@ -112,9 +128,11 @@ mp_obj_t engine_resource_get_space_bytearray(uint32_t space_size, bool fast_spac
 
             // Stored in contiguous flash location
             array->items = (uint8_t*)(XIP_BASE + FLASH_RESOURCE_SPACE_BASE + (used_pages_count*FLASH_PAGE_SIZE));
-
-            used_pages_count += required_pages_count;
+        #else
+            array->items = scratch_space + XIP_BASE + FLASH_RESOURCE_SPACE_BASE + (used_pages_count*FLASH_PAGE_SIZE);
         #endif
+
+        used_pages_count += required_pages_count;
     }
 
     return array;
@@ -129,10 +147,8 @@ void engine_resource_start_storing(mp_obj_t bytearray, bool in_ram){
     // When using flash, need a way to track how many pages
     // in this storing operation have been stored, use this
     // to track
-    #if defined(__arm__)
-        page_prog_index = 0;
-        page_prog_count = 0;
-    #endif
+    page_prog_index = 0;
+    page_prog_count = 0;
 }
 
 
@@ -142,27 +158,28 @@ void engine_resource_store_u8(uint8_t to_store){
         uint8_t *u8_current_storing_location = (uint8_t*)current_storing_location;
         u8_current_storing_location[index_in_storing_location] = to_store;
     }else{
-        #if defined(__arm__)
-            uint8_t *u8_page_prog = (uint8_t*)page_prog;
+        uint8_t *u8_page_prog = (uint8_t*)page_prog;
 
-            // Store the 'to_byte' byte in a buffer in ram for now
-            u8_page_prog[page_prog_index] = to_store;
+        // Store the 'to_byte' byte in a buffer in ram for now
+        u8_page_prog[page_prog_index] = to_store;
 
-            // Once buffer is full, write it to flash and
-            // reset indices to start filling again
-            page_prog_index++;
-            if(page_prog_index >= FLASH_PAGE_SIZE){
+        // Once buffer is full, write it to flash and
+        // reset indices to start filling again
+        page_prog_index++;
+        if(page_prog_index >= FLASH_PAGE_SIZE){
+
+            #if defined(__arm__)
                 uint32_t address_offset = ((uint32_t)current_storing_location) - XIP_BASE;
                 uint32_t paused_interrupts = save_and_disable_interrupts();
                 flash_range_program(address_offset + (page_prog_count*FLASH_PAGE_SIZE), page_prog, FLASH_PAGE_SIZE);
                 restore_interrupts(paused_interrupts);
+            #else
+                memcpy(current_storing_location + (page_prog_count*FLASH_PAGE_SIZE), page_prog, FLASH_PAGE_SIZE);
+            #endif
 
-                page_prog_index = 0;
-                page_prog_count++;
-            }
-        #else
-            ENGINE_ERROR_PRINTF("EngineResourceManager: ERROR, no none ram programmer implemented on this platform! Resources will not work!");
-        #endif
+            page_prog_index = 0;
+            page_prog_count++;
+        }
     }
     
     index_in_storing_location++;
@@ -175,27 +192,27 @@ void engine_resource_store_u16(uint16_t to_store){
         uint16_t *u16_current_storing_location = (uint16_t*)current_storing_location;
         u16_current_storing_location[index_in_storing_location] = to_store;
     }else{
-        #if defined(__arm__)
-            uint16_t *u16_page_prog = (uint16_t*)page_prog;
+        uint16_t *u16_page_prog = (uint16_t*)page_prog;
 
-            // Store the 'to_byte' byte in a buffer in ram for now
-            u16_page_prog[page_prog_index] = to_store;
+        // Store the 'to_byte' byte in a buffer in ram for now
+        u16_page_prog[page_prog_index] = to_store;
 
-            // Once buffer is full, write it to flash and
-            // reset indices to start filling again
-            page_prog_index++;
-            if(page_prog_index >= FLASH_PAGE_SIZE/2){
+        // Once buffer is full, write it to flash and
+        // reset indices to start filling again
+        page_prog_index++;
+        if(page_prog_index >= FLASH_PAGE_SIZE/2){
+            #if defined(__arm__)
                 uint32_t address_offset = ((uint32_t)current_storing_location) - XIP_BASE;
                 uint32_t paused_interrupts = save_and_disable_interrupts();
                 flash_range_program(address_offset + (page_prog_count*FLASH_PAGE_SIZE), page_prog, FLASH_PAGE_SIZE);
                 restore_interrupts(paused_interrupts);
+            #else
+                memcpy(current_storing_location + (page_prog_count*FLASH_PAGE_SIZE), page_prog, FLASH_PAGE_SIZE);
+            #endif
 
-                page_prog_index = 0;
-                page_prog_count++;
-            }
-        #else
-            ENGINE_ERROR_PRINTF("EngineResourceManager: ERROR, no none ram programmer implemented on this platform! Resources will not work!");
-        #endif
+            page_prog_index = 0;
+            page_prog_count++;
+        }
     }
     
     index_in_storing_location++;
@@ -203,12 +220,14 @@ void engine_resource_store_u16(uint16_t to_store){
 
 
 void engine_resource_stop_storing(){
-    #if defined(__arm__)
-        if(page_prog_index != 0){
+    if(page_prog_index != 0){
+        #if defined(__arm__)
             uint32_t address_offset = ((uint32_t)current_storing_location) - XIP_BASE;
             uint32_t paused_interrupts = save_and_disable_interrupts();
             flash_range_program(address_offset + (page_prog_count*FLASH_PAGE_SIZE), page_prog, FLASH_PAGE_SIZE);
             restore_interrupts(paused_interrupts);
-        }
-    #endif
+        #else
+            memcpy(current_storing_location + (page_prog_count*FLASH_PAGE_SIZE), page_prog, FLASH_PAGE_SIZE);
+        #endif
+    }
 }

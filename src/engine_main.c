@@ -113,6 +113,8 @@ static mp_obj_t engine_main_module_init(){
 
     ENGINE_PRINTF("Filesystem root: %s\n", filesystem_root);
 
+    engine_resource_init();
+
     // Init display first
     engine_display_init();
     engine_display_init_framebuffers();
