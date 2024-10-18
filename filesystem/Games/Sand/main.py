@@ -470,7 +470,7 @@ while True:
         # Shape Physics
         shapePhysics()
 
-        fb = engine_draw.front_fb()
+        fb = engine_draw.back_fb()
 
         # Overlay shape
         for spring in springs:
