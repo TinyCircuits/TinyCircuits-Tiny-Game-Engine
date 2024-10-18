@@ -61,7 +61,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_draw_module_init_obj, engine_draw_module_init);
 /*  --- doc ---
     NAME: back_fb_data
     ID: back_fb_data
-    DESC: Get or set the back framebuffer data.
+    DESC: Get or set the back framebuffer data (this is the buffer that the engine draws to).
     PARAM: [type=bytearray (optional)]   [name=back_fb_data]  [value=bytearray 128*128*2]
     RETURN: bytearray | None
 */
@@ -77,7 +77,7 @@ MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_draw_back_fb_data_obj, 0, 1, engine_d
 /*  --- doc ---
     NAME: front_fb_data
     ID: front_fb_data
-    DESC: Get or set the front framebuffer data.
+    DESC: Get or set the front framebuffer data (shouldn't ever need to access this, this is the buffer actively being sent to the screen).
     PARAM: [type=bytearray (optional)]   [name=front_fb_data]  [value=bytearray 128*128*2]
     RETURN: bytearray | None
 */
@@ -93,7 +93,7 @@ MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_draw_front_fb_data_obj, 0, 1, engine_
 /*  --- doc ---
     NAME: back_fb
     ID: back_fb
-    DESC: Get or set the back framebuffer.
+    DESC: Get or set the back framebuffer (this is the buffer that the engine draws to).
     PARAM: [type=framebuf (optional)]   [name=back_fb]  [value=framebuf]
     RETURN: framebuf | None
 */
@@ -109,7 +109,7 @@ MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_draw_back_fb_obj, 0, 1, engine_draw_b
 /*  --- doc ---
     NAME: front_fb
     ID: front_fb
-    DESC: Get or set the front framebuffer.
+    DESC: Get or set the front framebuffer (shouldn't ever need to access this, this is the buffer actively being sent to the screen).
     PARAM: [type=framebuf (optional)]   [name=front_fb]  [value=framebuf]
     RETURN: framebuf | None
 */
