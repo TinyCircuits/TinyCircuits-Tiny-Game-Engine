@@ -32,9 +32,6 @@
 // and into RAM faster than that
 #define CHANNEL_BUFFER_SIZE 512
 
-// Forward declare since `resources/engine_sound_resource_base.h` and this file include each other
-typedef struct sound_resource_base_class_obj_t sound_resource_base_class_obj_t;
-
 typedef struct audio_channel_class_obj_t{
     mp_obj_base_t base;
     mp_obj_t source;                            // Source of the audio for the channel, currently

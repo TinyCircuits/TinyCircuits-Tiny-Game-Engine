@@ -93,20 +93,27 @@ void engine_init_screen_buffers(){
 
 
 void engine_switch_active_screen_buffer(){
+    // Cast the back and front MicroPython framebuffer
+    // data and framebuf objects
     mp_obj_array_t *back_data = MP_STATE_VM(back_fb_data);
     mp_obj_array_t *front_data = MP_STATE_VM(front_fb_data);
     mp_obj_framebuf_t *back = MP_STATE_VM(back_fb);
     mp_obj_framebuf_t *front = MP_STATE_VM(front_fb);
 
-    back_data->items = screen_buffers[active_screen_buffer_index];
-    back->buf = screen_buffers[active_screen_buffer_index];
+    // Let's say that before this function was called, back buffer
+    // buffer that was being drawn to was buffer 0 (active_screen_buffer_index=0),
+    // make buffer 0 the new front buffer after this function is called
+    front_data->items = screen_buffers[active_screen_buffer_index];
+    front->buf = screen_buffers[active_screen_buffer_index];
 
-    // Switch which screen buffer should be drawn to
+    // Switch which screen buffer should be drawn to (back buffer)
     active_screen_buffer_index = 1 - active_screen_buffer_index;
     active_screen_buffer = screen_buffers[active_screen_buffer_index];
 
-    front_data->items = screen_buffers[active_screen_buffer_index];
-    front->buf = screen_buffers[active_screen_buffer_index];
+    // Now that we switched the old back buffer 0 to the new front buffer,
+    // make the new back buffer the old front buffer (active_screen_buffer_index=1)
+    back_data->items = screen_buffers[active_screen_buffer_index];
+    back->buf = screen_buffers[active_screen_buffer_index];
 }
 
 

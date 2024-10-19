@@ -5,18 +5,22 @@
 #include "math/engine_math.h"
 #include "utility/engine_defines.h"
 
-#ifdef __unix__
+#if defined(__EMSCRIPTEN__)
+
+#elif defined(__unix__)
     #include "engine_io_sdl.h"
-#else
+#elif defined(__arm__)
     #include "engine_io_rp3.h"
     #include "hardware/adc.h"
 #endif
 
 
 void engine_io_setup(){
-    #ifdef __unix__
+    #if defined(__EMSCRIPTEN__)
         // Nothing to do
-    #else
+    #elif defined(__unix__)
+        // Nothing to do
+    #elif defined(__arm__)
         engine_io_rp3_setup();
     #endif
 }
@@ -35,9 +39,11 @@ void engine_io_tick(){
     RETURN: None
 */
 static mp_obj_t engine_io_rumble(mp_obj_t intensity_obj){
-    #ifdef __unix__
+    #if defined(__EMSCRIPTEN__)
         // Nothing to do
-    #else
+    #elif defined(__unix__)
+        // Nothing to do
+    #elif defined(__arm__)
         float intensity = mp_obj_get_float(intensity_obj);
         engine_io_rp3_rumble(intensity);
     #endif

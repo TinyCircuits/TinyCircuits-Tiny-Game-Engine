@@ -6,12 +6,20 @@
 
 
 // https://stackoverflow.com/questions/43287103/predefined-macro-to-distinguish-arm-none-eabi-gcc-from-gcc
-#ifdef __unix__
+#if defined(__EMSCRIPTEN__)
+    #include <emscripten.h>
+
+    EM_JS(void, engine_display_web_update_screen, (uint16_t *screen_buffer_to_render), {
+        self.update_display(screen_buffer_to_render); // Call Javascript function that updates canvas
+    });
+#elif defined(__unix__)
     #include "engine_display_driver_unix_sdl.h"
-#else
+#elif defined(__arm__)
     #include "engine_display_driver_rp2_gc9107.h"
-    // #include "engine_display_driver_rp2_st7789.h"
+#else
+    #warning "PLATFORM COMPILE-TIME ERROR, EngineDisplay: Unsupported platform"
 #endif
+
 
 // Defined in engine_display_common.c
 extern uint16_t *active_screen_buffer;
@@ -22,23 +30,25 @@ void engine_display_init(){
 
     engine_init_screen_buffers();
 
-    #ifdef __unix__
+    #if defined(__EMSCRIPTEN__)
+
+    #elif defined(__unix__)
         engine_display_sdl_init();
-    #else
+    #elif defined(__arm__)
         engine_display_gc9107_init();
-        // engine_display_st7789_init();
     #endif
 }
 
 
 void engine_display_send(){
     // Send the screen buffer to the display
-    #ifdef __unix__
+    // Send the screen buffer to the display
+    #if defined(__EMSCRIPTEN__)
+        engine_display_web_update_screen(active_screen_buffer);
+    #elif defined(__unix__)
         engine_display_sdl_update_screen(active_screen_buffer);
-        // engine_display_sdl_update_screen(depth_buffer);
-    #else
+    #elif defined(__arm__)
         engine_display_gc9107_update(active_screen_buffer);
-        // engine_display_st7789_update(active_screen_buffer);
     #endif
 
     engine_switch_active_screen_buffer();

@@ -4,9 +4,16 @@
 #include "py/obj.h"
 #include <string.h>
 
-#ifdef __unix__
+#if defined(__EMSCRIPTEN__)
+    #include <emscripten.h>
+
+    EM_JS(int, engine_io_web_pressed_buttons, (), {
+        let pressed = self.get_pressed_buttons(); // Call Javascript function that sends message to main thread to get tracked pressed buttons
+        return pressed;
+    });
+#elif defined(__unix__)
     #include "engine_io_sdl.h"
-#else
+#elif defined(__arm__)
     #include "engine_io_rp3.h"
     #include "hardware/adc.h"
 #endif
@@ -65,12 +72,16 @@ void buttons_update_state() {
     // Move the current state to prev_*.
     prev_pressed_buttons = pressed_buttons;
     prev_long_pressed_buttons = long_pressed_buttons;
+
     // Store the current state of the buttons in pressed_buttons.
-    #ifdef __unix__
+    #if defined(__EMSCRIPTEN__)
+        pressed_buttons = engine_io_web_pressed_buttons();
+    #elif defined(__unix__)
         pressed_buttons = engine_io_sdl_pressed_buttons();
-    #else
+    #elif defined(__arm__)
         pressed_buttons = engine_io_rp3_pressed_buttons();
     #endif
+
     // Clear the assume-released state for any actually released button.
     assume_released_buttons &= pressed_buttons;
     // Mark all the assume-released buttons as not pressed.
@@ -143,7 +154,7 @@ void button_update_state(button_class_obj_t *button, uint32_t now_millis, int32_
 }
 
 
-inline void button_release_helper(button_class_obj_t *button) {
+void button_release_helper(button_class_obj_t *button) {
     button->last_pressed_millis = MILLIS_NULL;
     button->last_released_millis = MILLIS_NULL;
 }

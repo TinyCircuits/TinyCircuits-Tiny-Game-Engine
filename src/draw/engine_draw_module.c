@@ -61,7 +61,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_draw_module_init_obj, engine_draw_module_init);
 /*  --- doc ---
     NAME: back_fb_data
     ID: back_fb_data
-    DESC: Get the mutable back framebuffer data.
+    DESC: Get the mutable back framebuffer data (this is the buffer that the engine draws to).
     RETURN: bytearray
 */
 static mp_obj_t engine_draw_back_fb_data(){
@@ -72,7 +72,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_draw_back_fb_data_obj, engine_draw_back_fb_data
 /*  --- doc ---
     NAME: front_fb_data
     ID: front_fb_data
-    DESC: Get the mutable front framebuffer data.
+    DESC: Get the mutable front framebuffer data (shouldn't ever need to access this, this is the buffer actively being sent to the screen).
     RETURN: bytearray
 */
 static mp_obj_t engine_draw_front_fb_data(){
@@ -83,7 +83,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_draw_front_fb_data_obj, engine_draw_front_fb_da
 /*  --- doc ---
     NAME: back_fb
     ID: back_fb
-    DESC: Get the back framebuffer which can be directly manipulated.
+    DESC: Get the back framebuffer which can be directly manipulated (this is the buffer that the engine draws to).
     RETURN: framebuf
 */
 static mp_obj_t engine_draw_back_fb(){
@@ -94,7 +94,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_draw_back_fb_obj, engine_draw_back_fb);
 /*  --- doc ---
     NAME: front_fb
     ID: front_fb
-    DESC: Get the front framebuffer which can be directly manipulated.
+    DESC: Get the front framebuffer which can be directly manipulated (shouldn't ever need to access this, this is the buffer actively being sent to the screen).
     RETURN: framebuf
 */
 static mp_obj_t engine_draw_front_fb(){
