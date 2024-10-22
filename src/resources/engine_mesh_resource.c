@@ -13,6 +13,65 @@
 #define TEMP_PARSE_BUFFER_SIZE 512
 
 
+typedef enum mesh_pack_type_enum {NOPACK=0, PACKFLOAT=1} mesh_pack_type;
+
+
+void load_obj_get_counts(char *read_line_buffer, uint32_t *vertex_count, uint32_t *face_count){
+    while(true){
+        // Reset these for every line
+        char c = ' ';
+        uint8_t index = 0;
+
+        // Read until end of line but check first characters for 'v' or 'f'
+        // indicating if the line contains information on vertex or face
+        while(true){
+            // Read a character and track how many have been read (end if nothing read, EOF)
+            if(engine_file_read(0, &c, 1) == 0){
+                return;
+            }
+            read_line_buffer[index] = c;
+            index++;
+
+            // Stop reading line if at end of it
+            if(c == '\r' || c == '\n'){
+                break;
+            }
+
+            // If we have read two characters, see if face or vertex count can be increased
+            if(index == 2){
+                if(read_line_buffer[0] == 'v' && read_line_buffer[1] == ' '){
+                    *vertex_count += 1;
+                }else if(read_line_buffer[0] == 'f' && read_line_buffer[1] == ' '){
+                    *face_count += 1;
+                }
+            }
+        }
+    }
+}
+
+
+void load_obj_file(mesh_resource_class_obj_t *self, mp_obj_str_t *obj_path_mp, int pack_type){
+    // Buffer for reading each line of .obj into to parse
+    char read_line_buffer[128];
+
+    // Open the file
+    engine_file_open_read(0, obj_path_mp);
+
+    // #1: Figure out how many vertices and indices/uvs there are. The number of vertices
+    // can be different from the number of indices/uvs. The number of vertices and uvs should
+    // be the same
+    uint32_t vertex_count = 0;
+    uint32_t face_count = 0;
+    load_obj_get_counts(read_line_buffer, &vertex_count, &face_count);
+
+    ENGINE_PRINTF("%ld %ld", vertex_count, face_count);
+    
+
+    // Close the file
+    engine_file_close(0);
+}
+
+
 mp_obj_t mesh_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New MeshResource");
 
@@ -42,7 +101,8 @@ mp_obj_t mesh_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_
         if(n_args == 1){
             if(mp_obj_is_str(args[0])){                                                                            // path
                 // Open .obj mesh in FLASH
-                mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("MeshResource: ERROR: using .obj files is not implemented yet!"));
+                load_obj_file(self, args[0], NOPACK);
+                // mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("MeshResource: ERROR: using .obj files is not implemented yet!"));
             }else if(mp_obj_is_type(args[0], &mp_type_list) || mp_obj_is_type(args[0], &mp_type_bytearray)){       // vertices
                 self->vertices = args[0];
                 self->indices = mp_obj_new_list(0, NULL);
@@ -168,7 +228,7 @@ static void mesh_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t 
 
 // Class attributes
 static const mp_rom_map_elem_t mesh_resource_class_locals_dict_table[] = {
-    
+    { MP_ROM_QSTR(MP_QSTR_PACKFLOAT), MP_ROM_INT(0) },
 };
 static MP_DEFINE_CONST_DICT(mesh_resource_class_locals_dict, mesh_resource_class_locals_dict_table);
 
