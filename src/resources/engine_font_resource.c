@@ -95,7 +95,7 @@ mp_obj_t font_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_
 
         // Get the next pixel, and since we got another pixel,
         // increase the width of the current character
-        uint16_t next_width_signifier_color = self->texture_resource->get_pixel(self->texture_resource, engine_math_2d_to_1d_index(alternating_pixel_x, self->glyph_height, bitmap_width), NULL);
+        uint16_t next_width_signifier_color = self->texture_resource->get_pixel(self->texture_resource, engine_math_2d_to_1d_index(alternating_pixel_x, alternating_pixel_y, bitmap_pixels_stride), NULL);
         if(current_glyph_index < ENGINE_FONT_MAX_CHAR_COUNT) self->glyph_widths[current_glyph_index]++;
 
         // If the pixel to the left of this one is not the same, 

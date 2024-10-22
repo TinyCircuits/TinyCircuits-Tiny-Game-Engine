@@ -638,10 +638,10 @@ void engine_draw_text(font_resource_class_obj_t *font, mp_obj_t text, float cent
         // Offset inside the ASCII font bitmap (not into where we're drawing)
         uint16_t char_bitmap_x_offset = font_resource_get_glyph_x_offset(font, current_char);
 
-        engine_draw_blit(font->texture_resource, engine_math_2d_to_1d_index(char_bitmap_x_offset, 0, font->texture_resource->width),
+        engine_draw_blit(font->texture_resource, engine_math_2d_to_1d_index(char_bitmap_x_offset, 0, font->texture_resource->pixel_stride),
                         floorf(final_char_x), floorf(final_char_y),
                         char_width, font->glyph_height,
-                        font->texture_resource->width,
+                        font->texture_resource->pixel_stride,
                         x_scale,
                         y_scale,
                         -rotation_radians,
