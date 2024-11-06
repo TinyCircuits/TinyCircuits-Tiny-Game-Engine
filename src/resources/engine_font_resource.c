@@ -24,6 +24,7 @@ texture_resource_class_obj_t font_texture = {
   .width = 480,
   .height = 8,
   .bit_depth = 16,
+  .pixel_stride = 480,
   .red_mask = 0b1111100000000000,
   .green_mask = 0b0000011111100000,
   .blue_mask = 0b0000000000011111,
