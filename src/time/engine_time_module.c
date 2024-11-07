@@ -96,10 +96,17 @@ MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_time_datetime_obj, 0, 1, engine_time_
     NAME: is_compromised
     ID: is_compromised
     DESC: Returns True if the RTC clock detected a low voltage that meant it lost power or was very close
-    RETURN: True or False
+    RETURN: True, False, or RTC_I2C_ERROR
 */
 static mp_obj_t engine_time_is_compromised(size_t n_args, const mp_obj_t *args){
-    return mp_obj_new_bool(engine_rtc_check_compromised());
+    int status = engine_rtc_check_compromised();
+
+    if(status == true || status == false){
+        mp_obj_new_bool(status);
+    }
+
+    // RTC_I2C_ERROR at this point
+    return mp_obj_new_int(status);
 }
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_time_is_compromised_obj, 0, 1, engine_time_is_compromised);
 
