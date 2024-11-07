@@ -35,9 +35,9 @@ static mp_obj_t engine_save__init_saves_dir(mp_obj_t dir){
     if(!mp_obj_is_str(dir)){
         mp_raise_TypeError(MP_ERROR_TEXT("EngineSave: ERROR: dir is not a string"));
     }
-    if(saves_dir_len){
-        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineSave: ERROR: _init_saves_dir was already called"));
-    }
+    // if(saves_dir_len){
+    //     mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineSave: ERROR: _init_saves_dir was already called"));
+    // }
     GET_STR_DATA_LEN(dir, dir_str, dir_str_len);
     if(!dir_str_len){
         mp_raise_ValueError(MP_ERROR_TEXT("EngineSave: ERROR: dir is empty string"));
