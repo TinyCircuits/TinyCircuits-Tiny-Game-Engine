@@ -38,6 +38,7 @@ typedef struct audio_channel_class_obj_t{
     uint32_t source_byte_offset;                // The total byte position inside the source that the ISR is using to start filling from
     float gain;                                 // Multiplier on each sample, 1.0 changes nothing
     float time;                                 // Where in the 'channel_source' the audio is being played from
+    float amplitude;                            // Last amplitude on this channel to be played (before clamping or gain)
     bool loop;                                  // Loop back to the start of the 'channel_source' at the end or set it to mp_const_none
     bool done;                                  // After starting a sound on this channel, this is set to true and then false when the end is reached (never set false in the case of 'looping' being true)
     uint8_t *buffers[2];                        // Dual buffers for audio, one gets DMA'ed to while the other is read from

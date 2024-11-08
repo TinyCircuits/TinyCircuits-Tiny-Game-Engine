@@ -254,6 +254,8 @@ bool engine_tick(){
         ENGINE_PERFORMANCE_STOP(ENGINE_PERF_TIMER_1, "Loop time");
         ENGINE_PERFORMANCE_START(ENGINE_PERF_TIMER_1);
 
+        float dt_s = dt_ms * 0.001f;
+
         // Update/grab which buttons are pressed before calling all node callbacks
         engine_io_tick();
 
@@ -263,7 +265,7 @@ bool engine_tick(){
         engine_animation_tick(dt_ms);
 
         // Call every instanced node's callbacks
-        engine_invoke_all_node_tick_callbacks(dt_ms * 0.001f);
+        engine_invoke_all_node_tick_callbacks(dt_s);
         engine_objects_clear_deletable();                       // Remove any nodes marked for deletion before rendering
         engine_invoke_all_node_draw_callbacks();
 
@@ -294,6 +296,18 @@ bool engine_tick(){
 
     return ticked;
 }
+
+
+/* --- doc ---
+   NAME: dt
+   ID: engine_dt
+   DESC: Returns the time, in seconds, since the last {ref_link:engine_tick}
+   RETURN: True or False
+*/
+static mp_obj_t engine_mp_dt(){
+    return mp_obj_new_float(millis_diff(millis(), engine_fps_time_at_last_tick_ms) * 0.001f);
+}
+MP_DEFINE_CONST_FUN_OBJ_0(engine_mp_dt_obj, engine_mp_dt);
 
 
 /* --- doc ---
@@ -376,15 +390,16 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_module_init_obj, engine_module_init);
    NAME: engine
    ID: engine
    DESC: Main component for controlling vital engine features
-   ATTR: [type=function] [name={ref_link:fps_limit}]            [value=getter/setter function]
-   ATTR: [type=function] [name={ref_link:disable_fps_limit}]    [value=function (fps limit is disabled by default, use {ref_link:fps_limit} to enable it)]
-   ATTR: [type=function] [name={ref_link:get_running_fps}]      [value=function]
+   ATTR: [type=function] [name={ref_link:fps_limit}]                   [value=getter/setter function]
+   ATTR: [type=function] [name={ref_link:disable_fps_limit}]           [value=function (fps limit is disabled by default, use {ref_link:fps_limit} to enable it)]
+   ATTR: [type=function] [name={ref_link:get_running_fps}]             [value=function]
    ATTR: [type=function] [name={ref_link:engine_time_to_next_tick}]    [value=function]
-   ATTR: [type=function] [name={ref_link:engine_tick}]          [value=function]
-   ATTR: [type=function] [name={ref_link:engine_start}]         [value=function]
-   ATTR: [type=function] [name={ref_link:engine_end}]           [value=function]
-   ATTR: [type=function] [name={ref_link:engine_reset}]         [value=function]
-   ATTR: [type=function] [name={ref_link:engine_freq}]          [value=function]
+   ATTR: [type=function] [name={ref_link:engine_tick}]                 [value=function]
+   ATTR: [type=function] [name={ref_link:engine_dt}]                   [value=function]
+   ATTR: [type=function] [name={ref_link:engine_start}]                [value=function]
+   ATTR: [type=function] [name={ref_link:engine_end}]                  [value=function]
+   ATTR: [type=function] [name={ref_link:engine_reset}]                [value=function]
+   ATTR: [type=function] [name={ref_link:engine_freq}]                 [value=function]
 */
 static const mp_rom_map_elem_t engine_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine) },
@@ -394,6 +409,7 @@ static const mp_rom_map_elem_t engine_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_get_running_fps), (mp_obj_t)&engine_get_running_fps_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_time_to_next_tick), (mp_obj_t)&engine_time_to_next_tick_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_tick), (mp_obj_t)&engine_mp_tick_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_dt), (mp_obj_t)&engine_mp_dt_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_start), (mp_obj_t)&engine_start_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_end), (mp_obj_t)&engine_end_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_reset), (mp_obj_t)&engine_reset_obj },

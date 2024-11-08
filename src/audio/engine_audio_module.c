@@ -223,6 +223,9 @@ volatile float master_volume = 1.0f;
                 sample = get_rtttl_sample(channel, &complete);
             }
 
+            // Set the amplitude just retrieved as the last sample to have been played on the channel
+            channel->amplitude = sample;
+
             total_sample += sample * channel->gain * master_volume;
 
             if(complete && channel->loop == false){

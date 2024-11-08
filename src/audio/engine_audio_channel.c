@@ -121,6 +121,7 @@ mp_obj_t audio_channel_stop(mp_obj_t self_in){
     channel->source_byte_offset = 0;
     channel->gain = 1.0f;
     channel->time = 0.0f;
+    channel->amplitude = 0.0f;
     channel->done = true;
     channel->loop = false;
     channel->buffers_ends[0] = CHANNEL_BUFFER_SIZE;
@@ -148,7 +149,8 @@ MP_DEFINE_CONST_FUN_OBJ_1(audio_channel_stop_obj, audio_channel_stop);
     ATTR: [type=function]   [name={ref_link:audio_channel_stop}]    [value=function]
     ATTR: [type=object]     [name=source]                           [value={ref_link:WaveSoundResource} or {ref_link:ToneSoundResource}]
     ATTR: [type=float]      [name=gain]                             [value=any (default is 1.0)]
-    ATTR: [type=float]      [name=time]                             [value=0.0 to end of sound (read-only)]
+    ATTR: [type=float]      [name=time]                             [value=0.0 to time at the end of the media being played (if there is an end) (read-only and is updated to represent the current time in seconds of teh media being played)]
+    ATTR: [type=float]      [name=amplitude]                        [value=0.0 to 1.0 (the amplitude of the last sample played on this channel, read-only)]
     ATTR: [type=boolean]    [name=loop]                             [value=True or False (whether to loop audio or not)]
     ATTR: [type=boolean]    [name=done]                             [value=True or False (set True when audio finishes playing if not looping, read-only)]
 */ 
@@ -176,6 +178,9 @@ static void audio_channel_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t 
             case MP_QSTR_time:
                 destination[0] = mp_obj_new_float(self->time);
             break;
+            case MP_QSTR_amplitude:
+                destination[0] = mp_obj_new_float(self->amplitude);
+            break;
             case MP_QSTR_loop:
                 destination[0] = mp_obj_new_bool(self->loop);
             break;
@@ -196,6 +201,9 @@ static void audio_channel_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t 
             // case MP_QSTR_time:
             //     self->time = mp_obj_get_float(destination[1]);
             // break;
+            case MP_QSTR_amplitude:
+                mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("AudioChannel: ERROR: Setting the sample amplitude is not allowed!"));
+            break;
             case MP_QSTR_loop:
                 self->loop = mp_obj_get_int(destination[1]);
             break;
