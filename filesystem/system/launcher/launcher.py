@@ -7,7 +7,7 @@ import engine_io
 from engine_resources import TextureResource, FontResource
 from engine_nodes import Sprite2DNode, CameraNode, GUIButton2DNode, Text2DNode
 from engine_math import Vector2
-from engine_animation import Tween, ONE_SHOT, EASE_BACK_OUT, EASE_SINE_OUT
+from engine_animation import Tween, Delay, ONE_SHOT, EASE_BACK_OUT, EASE_SINE_OUT
 
 from system.launcher_state import get_launcher_state
 
@@ -63,6 +63,15 @@ launcher_state = get_launcher_state()
 # Launcher page index
 page = 0
 
+rumble_delay = Delay()
+
+def end_rumble(delay):
+    engine_io.rumble(0.0)
+
+def start_rumble():
+    engine_io.rumble(0.3)
+    rumble_delay.start(85, end_rumble)
+
 # Main launcher loop
 while True:
     if engine.tick():
@@ -73,9 +82,11 @@ while True:
         if engine_io.RB.is_pressed_autorepeat:
             new_page = page + 1
             page_switched = True
+            start_rumble()
         elif engine_io.LB.is_pressed_autorepeat:
             new_page = page - 1
             page_switched = True
+            start_rumble()
         
         # Loop page of at either end
         if new_page >= 3:
