@@ -1,7 +1,9 @@
 import engine
 import engine_draw
+import engine_audio
+import engine_link
 from engine_nodes import Sprite2DNode, CameraNode
-from engine_resources import TextureResource
+from engine_resources import TextureResource, WaveSoundResource
 from engine_animation import Tween, Delay, ONE_SHOT, EASE_ELAST_OUT
 from engine_math import Vector2
 import random
@@ -60,6 +62,13 @@ def splash():
     L_tween.start(L_sprite, "position", None, Vector2(31, 0), random.uniform(time_min, time_max), 1.0, ONE_SHOT, EASE_ELAST_OUT)
     RO_tween.start(RO_sprite, "position", None, Vector2(41, 0), random.uniform(time_min, time_max), 1.0, ONE_SHOT, EASE_ELAST_OUT)
     R_tween.start(R_sprite, "position", None, Vector2(52, -1), random.uniform(time_min, time_max), 1.0, ONE_SHOT, EASE_ELAST_OUT)
+
+    # Do not play the jingle if connected to computer (or Thumby too I guess)
+    # just so developers do not have to hear it all the time
+    if not engine_link.connected():
+        jingle = WaveSoundResource("/system/splash/assets/jingle.wav")
+        engine_audio.set_volume(1.0)
+        engine_audio.play(jingle, 0, False)
 
     t0 = time.ticks_ms()
     while True:
