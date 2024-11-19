@@ -121,6 +121,7 @@ uint8_t bitmap_get_header_and_info(bmfh_t *header, bmih_v1_t *info_v1, bmih_v2_t
         mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("TextureResource: ERROR: Only bit-depths of 16 and lower are supported! Got `%d`"), info_v1->bi_bit_count);
     }
 
+    // https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmapinfoheader#:~:text=For%20uncompressed%20RGB%20formats%2C%20the%20following%20values%20are%20possible
     if(info_v1->bi_compression != BI_BITFIELDS && info_v1->bi_compression != BI_RGB){
         mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("TextureResource: ERROR: This bitmap uses some kind of compression, only uncompressed bitmaps are supported!"));
     }
@@ -411,6 +412,12 @@ void create_from_file(texture_resource_class_obj_t *self, mp_obj_t filepath, mp_
         color_table_size_in_file = header.bf_size - (data_offset + info_v1.bi_size_image);  // If indexed bitmap, calculate size of file color index table (consists of u32s)
         color_count = color_table_size_in_file / 4;                                         // Number of colors in color table (might not use all available, so calculate it)
         color_table_size = color_count * 2;                                                 // How many bytes we need to store for 16-bit versions of these colors
+    }else if(info_v1.bi_compression == BI_RGB){
+        // According to // https://web.archive.org/web/20221228185041/https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmapinfoheader#:~:text=For%2016%2Dbpp%20bitmaps%2C%20if%20biCompression%20equals%20BI_RGB
+        // if the compression is BI_RGB then pixel data is ALWAYS stored as 16 bit 555. If the compression is BI_BITFIELDS, then it has masks and should be resolved later
+        self->red_mask   = 0b0111110000000000;
+        self->green_mask = 0b0000001111100000;
+        self->blue_mask  = 0b0000000000011111;
     }
 
     if(version >= 2){
