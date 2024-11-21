@@ -659,7 +659,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(texture_resource_class_del_obj, texture_resource_class
     ID: TextureResource
     DESC: Object that holds pixel information. If a file path is specifed, the bitmap needs to be a 16-bit or less format. If at least a width and height are specified instead, a blank white RGB565 texture is created in RAM but an initial color can also be passed. If a `bit_depth` is passed, the first entry in the color table will be set to `color` and the entire blank image will index to that.
     PARAM:  [type=string | int]     [name=filepath | width]     [value=string | 0 ~ 65535]
-    PARAM:  [type=bool | int]       [name=in_ram   | height]    [value=True or False | 0 ~ 65535]
+    PARAM:  [type=bool | int]       [name=in_ram   | height]    [value=True or False (default: False) | 0 ~ 65535]
     PARAM:  [type=int]              [name=color]                [value=int 16-bit RGB565 (optional)]
     PARAM:  [type=int]              [name=bit_depth]            [value=1, 4, 8, or 16 (optional)]
 

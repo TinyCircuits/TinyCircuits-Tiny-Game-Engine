@@ -93,10 +93,13 @@ float ENGINE_FAST_FUNCTION(rtttl_sound_resource_get_sample)(rtttl_sound_resource
         self->interrupt_samples_until_next = duration;
         tone_sound_resource_set_frequency(self->tone, frequency);
 
-        // Loop if reach end of track
+        // Reset if reach end of track
         self->note_cursor++;
         if(self->note_cursor >= self->note_count){
             self->note_cursor = 0;
+
+            // Mark as complete so that channel manager can stop looping if it should
+            *complete = true;
         }
     }
 

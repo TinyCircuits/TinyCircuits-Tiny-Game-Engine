@@ -14,6 +14,7 @@ struct audio_channel_class_obj_t;
 // exist and be populated correctly for the source
 typedef struct sound_resource_base_class_obj_t{
     mp_obj_base_t base;
+    bool in_ram;
     uint32_t total_sample_count;                                    // Value used by playback engine to know if it reached the end of the sound       
     uint32_t total_data_size;
     uint32_t sample_rate;                                           // Value used by playback engine to know how often to fetch new samples
