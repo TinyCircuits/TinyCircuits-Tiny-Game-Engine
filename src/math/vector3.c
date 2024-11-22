@@ -12,6 +12,9 @@ mp_obj_t vector3_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw
     ENGINE_INFO_PRINTF("New Vector3");
     vector3_class_obj_t *self = m_new_obj(vector3_class_obj_t);
     self->base.type = &vector3_class_type;
+    self->on_change_user_ptr = NULL;
+    self->on_changing = NULL;
+    self->on_changed = NULL;
 
     self->x.base.type = &mp_type_float;
     self->y.base.type = &mp_type_float;
@@ -110,13 +113,34 @@ static void vector3_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *desti
     }else if(destination[1] != MP_OBJ_NULL){    // Store
         switch(attribute) {
             case MP_QSTR_x:
+            {
                 self->x.value = mp_obj_get_float(destination[1]);
+            
+                float new_x = mp_obj_get_float(destination[1]);
+                if(self->on_changing != NULL) self->on_changing(self->on_change_user_ptr, new_x, self->x.value);
+                self->x.value = new_x;
+                if(self->on_changed != NULL) self->on_changed(self->on_change_user_ptr);
+            }
             break;
             case MP_QSTR_y:
+            {
                 self->y.value = mp_obj_get_float(destination[1]);
+            
+                float new_y = mp_obj_get_float(destination[1]);
+                if(self->on_changing != NULL) self->on_changing(self->on_change_user_ptr, new_y, self->y.value);
+                self->y.value = new_y;
+                if(self->on_changed != NULL) self->on_changed(self->on_change_user_ptr);
+            }
             break;
             case MP_QSTR_z:
+            {
                 self->z.value = mp_obj_get_float(destination[1]);
+            
+                float new_z = mp_obj_get_float(destination[1]);
+                if(self->on_changing != NULL) self->on_changing(self->on_change_user_ptr, new_z, self->z.value);
+                self->z.value = new_z;
+                if(self->on_changed != NULL) self->on_changed(self->on_change_user_ptr);
+            }
             break;
             default:
                 return; // Fail

@@ -12,6 +12,8 @@
 #define ENGINE_BYTEARRAY_OBJ_TO_DATA(bytearray) ((mp_obj_array_t*)bytearray)->items
 #define ENGINE_BYTEARRAY_OBJ_LEN(bytearray) ((mp_obj_array_t*)bytearray)->len
 
+void engine_resource_init();
+
 // Resets counters and positions so that assets can be written to flash
 // from the start, again
 void engine_resource_reset();

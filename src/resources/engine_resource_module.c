@@ -5,6 +5,7 @@
 #include "engine_font_resource.h"
 #include "engine_noise_resource.h"
 #include "engine_rtttl_sound_resource.h"
+#include "engine_mesh_resource.h"
 #include "engine_main.h"
 
 
@@ -24,6 +25,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_resources_module_init_obj, engine_resources_mod
     ATTR: [type=object]   [name={ref_link:ToneSoundResource}]   [value=object]
     ATTR: [type=object]   [name={ref_link:FontResource}]        [value=object]
     ATTR: [type=object]   [name={ref_link:RTTTLSoundResource}]  [value=object]
+    ATTR: [type=object]   [name={ref_link:MeshResource}]        [value=object]
 */
 static const mp_rom_map_elem_t engine_resources_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_resources) },
@@ -34,6 +36,7 @@ static const mp_rom_map_elem_t engine_resources_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_FontResource), (mp_obj_t)&font_resource_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_NoiseResource), (mp_obj_t)&noise_resource_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_RTTTLSoundResource), (mp_obj_t)&rtttl_sound_resource_class_type },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_MeshResource), (mp_obj_t)&mesh_resource_class_type },
 };
 
 // Module init

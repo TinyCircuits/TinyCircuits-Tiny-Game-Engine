@@ -16,7 +16,7 @@ These instructions assume that you are cloning MicroPython from the TinyCircuits
 9. `cd` to engine file system to build and run MicroPython and the engine
    1. `cd`: `cd ../../TinyCircuits-Tiny-Game-Engine/filesystem`
    2. build: `(cd ../../ports/unix && make -j8 USER_C_MODULES=../../TinyCircuits-Tiny-Game-Engine DEBUG=1)`
-   3. run: `../micropython_loop ../../ports/unix/build-standard/micropython -X heapsize=532480 main.py`
+   3. run: `../micropython_loop ../../ports/unix/build-standard/micropython -X heapsize=2617152 main.py`
 
 Use `(cd ../../ports/unix && make clean)` to make clean if needed
 
@@ -39,9 +39,9 @@ These instructions assume that you are cloning MicroPython from the official Mic
    3. Add `#define MICROPY_TRACKED_ALLOC (1)` anywhere
 10. UGLY: inside `micropython/tools/mpy-tool.py`
    1. Change line 1784 to `default="longlong"` (don't know where this tool is used and how to pass it a different value, will just set it for now)
-11. `cd` to filesystem root: `cd micropython/TinyCircuits-Tiny-Game-Engine/filesystem`
-12. Build MicroPython UNIX port: `(cd ../../ports/unix && make -j8 USER_C_MODULES=../../TinyCircuits-Tiny-Game-Engine DEBUG=1)`
-13. Run MicroPython port: `../micropython_loop ../../ports/unix/build-standard/micropython -X heapsize=532480 main.py`
+10. `cd` to filesystem root: `cd micropython/TinyCircuits-Tiny-Game-Engine/filesystem`
+11. Build MicroPython UNIX port: `(cd ../../ports/unix && make -j8 USER_C_MODULES=../../TinyCircuits-Tiny-Game-Engine DEBUG=1)`
+12. Run MicroPython port: `../micropython_loop ../../ports/unix/build-standard/micropython -X heapsize=2617152 main.py`
 
 Use `(cd ../../ports/unix && make clean)` to make clean if needed
 
@@ -55,6 +55,9 @@ If you followed the one of two methods to setup everythign above, you can run th
 2. `git clone https://github.com/TinyCircuits/micropython/tree/engine micropython`
 3. `cd micropython/ports/webassembly`
 4. `make -j8 USER_C_MODULES=../../TinyCircuits-Tiny-Game-Engine`
+
+# Linux and Webassembly heap size
+To mimic the hardware, the heap needs to be `520kB` SRAM + `2MiB` of FLASH scratch = `520*1000 + 2*1024*1024 = 2617152`
 
 # Updating MicroPython version
 Make sure to check that the copied structures in src/utility/engine_mp.h are still the same in the version of MicroPython you're updating to. Some structures are not exposed so they had to be copied to where the engine can use them.

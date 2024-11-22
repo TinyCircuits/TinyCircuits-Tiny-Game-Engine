@@ -27,7 +27,7 @@ size_t saves_dir_len = 0;
 /* --- doc ---
    NAME: _init_saves_dir
    ID: engine_save__init_saves_dir
-   DESC: Initializes the saves directory location for the current run (does not create the directory yet). Apps should never call it - it is called by the app loader. The saves API will only work if this was called first. It cannot be called again before machine is reset.
+   DESC: Initializes the saves directory location for the current run (does not create the directory yet). Apps should never call it - it is called by the app loader. The saves API will only work if this was called first.
    PARAM:   [type=str]  [name=dir]   [value=e.g. "Saves/Games/MyGame"]
    RETURN: None
 */

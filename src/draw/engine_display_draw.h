@@ -39,4 +39,11 @@ void engine_draw_text(font_resource_class_obj_t *font, mp_obj_t text, float cent
 
 void engine_draw_filled_triangle(uint16_t color, float x0, float y0, float x1, float y1, float x2, float y2, float alpha, engine_shader_t *shader);
 
+void engine_draw_filled_triangle_depth(texture_resource_class_obj_t *texture, uint16_t color,
+                                       float ax, float ay, uint16_t depth_az, float au, float av,
+                                       float bx, float by, uint16_t depth_bz, float bu, float bv,
+                                       float cx, float cy, uint16_t depth_cz, float cu, float cv,
+                                       float w0, float w1, float w2,
+                                       float alpha, engine_shader_t *shader);
+
 #endif  // ENGINE_DISPLAY_DRAW_H

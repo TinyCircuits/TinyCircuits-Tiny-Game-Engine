@@ -374,11 +374,6 @@ void create_from_file(texture_resource_class_obj_t *self, mp_obj_t filepath, mp_
     // ram or not (faster if stored in ram, up to programmer)
     self->in_ram = mp_obj_get_int(in_ram);
 
-    // Always loaded into ram on unix port
-    #if defined(__unix__)
-        self->in_ram = true;
-    #endif
-
     // BMP parsing: https://en.wikipedia.org/wiki/BMP_file_format
     // https://learn.microsoft.com/en-us/windows/win32/gdi/bitmap-storage
     // Variable names are from https://github.com/WerWolv/ImHex patterns

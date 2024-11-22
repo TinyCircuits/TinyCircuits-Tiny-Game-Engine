@@ -23,6 +23,9 @@ const vector3_class_obj_t world_up = {
     .z = (mp_obj_float_t){.base.type = &mp_type_float,
                           .value = 0.0f,
     },
+    .on_change_user_ptr = NULL,
+    .on_changed = NULL,
+    .on_changing = NULL
 };
 
 
@@ -33,12 +36,79 @@ const vector3_class_obj_t world_north = {
                           .value = 0.0f,
     },
     .y = (mp_obj_float_t){.base.type = &mp_type_float,
-                          .value = -1.0f,
-    },
-    .z = (mp_obj_float_t){.base.type = &mp_type_float,
                           .value = 0.0f,
     },
+    .z = (mp_obj_float_t){.base.type = &mp_type_float,
+                          .value = -1.0f,
+    },
+    .on_change_user_ptr = NULL,
+    .on_changed = NULL,
+    .on_changing = NULL
 };
+
+
+// https://stackoverflow.com/a/39881407
+void camera_node_set_final_transformation(void *user_ptr){
+    engine_camera_node_class_obj_t *camera = user_ptr;
+    glm_mul(camera->m_rotation, camera->m_translation, camera->m_final_transformation);
+}
+
+
+void camera_node_set_translation(void *user_ptr){
+    engine_camera_node_class_obj_t *camera = user_ptr;
+    vector3_class_obj_t *p = camera->position;
+    glm_translate_make(camera->m_translation, (vec3){p->x.value, p->y.value, p->z.value});
+    camera_node_set_final_transformation(camera);
+}
+
+
+void camera_node_set_rotation(void *user_ptr){
+    engine_camera_node_class_obj_t *camera = user_ptr;
+    vector3_class_obj_t *r = (vector3_class_obj_t*)camera->rotation;
+    // glm_euler((vec3){r->x.value, r->y.value, r->z.value}, camera->m_rotation);
+    glm_euler_yxz((vec3){r->x.value, r->y.value, r->z.value}, camera->m_rotation);
+    camera_node_set_final_transformation(camera);
+}
+
+
+void camera_node_set_perspective(engine_camera_node_class_obj_t *self){
+    float f_view_distance = mp_obj_get_float(self->view_distance);
+    float f_fov_degrees = mp_obj_get_float(self->fov);
+
+    // // Only the x-axis is reversed! 1
+    // glm_perspective_rh_zo(f_fov_degrees * (PI / 180.0f), -SCREEN_WIDTH/SCREEN_HEIGHT, 0.1f, f_view_distance, self->m_projection);
+
+    // // x-axis the y-axis is reversed 2
+    // glm_perspective_rh_zo(-f_fov_degrees * (PI / 180.0f), SCREEN_WIDTH/SCREEN_HEIGHT, 0.1f, f_view_distance, self->m_projection);
+
+
+    glm_perspective_rh_zo(f_fov_degrees * (PI / 180.0f), SCREEN_WIDTH/SCREEN_HEIGHT, 0.1f, f_view_distance, self->m_projection);
+
+
+    // https://learnopengl.com/Getting-started/Coordinate-Systems#:~:text=A%20perspective%20projection%20matrix%20can%20be%20created%20in%20GLM%20as%20follows
+    // glm_perspective_rh_zo(-f_fov_degrees * (PI / 180.0f), SCREEN_WIDTH/SCREEN_HEIGHT, 0.1f, f_view_distance, self->m_projection);
+    // glm_mat4_inv(self->m_projection, self->m_projection);
+    // glm_mat4_transpose(self->m_projection);
+
+
+    // This does correctly setup each axis for right-handed, just everything is flipped
+    // mat4 m = GLM_MAT4_ZERO_INIT;
+    // glm_lookat_rh_zo((vec3){0, 0, -1}, (vec3){0, 0, 0}, (vec3){0, 1, 0}, m);
+    // glm_mat4_mul(self->m_projection, m, self->m_projection);
+
+
+    // mat4 m2 = {
+    //     {1, 0, 0, 0},
+    //     {0, 1, 0, 0},
+    //     {0, 0, 1, 0},
+    //     {0, 0, 0, 1}
+    // };
+
+    // mat4 m2 = GLM_MAT4_ZERO_INIT;
+    // glm_rotate_make(m2, -PI, (vec3){0.0f, 0.0f, 1.0f});
+
+    // glm_mat4_mul(self->m_projection, m2, self->m_projection);
+}
 
 
 // // https://forums.unrealengine.com/t/how-does-get-look-at-rotation-work-from-a-mathematical-point-of-view/732711/3
@@ -135,6 +205,7 @@ bool camera_node_load_attr(engine_node_base_t *self_node_base, qstr attribute, m
         break;
         case MP_QSTR_position:
             destination[0] = self->position;
+            camera_node_set_translation(self);
             return true;
         break;
         case MP_QSTR_zoom:
@@ -147,6 +218,7 @@ bool camera_node_load_attr(engine_node_base_t *self_node_base, qstr attribute, m
         break;
         case MP_QSTR_rotation:
             destination[0] = self->rotation;
+            camera_node_set_rotation(self);
             return true;
         break;
         case MP_QSTR_fov:
@@ -182,8 +254,21 @@ bool camera_node_store_attr(engine_node_base_t *self_node_base, qstr attribute, 
             return true;
         break;
         case MP_QSTR_position:
-            self->position = destination[1];
+        {
+            // Un link callbacks on old Vector3
+            vector3_class_obj_t *old = self->position;
+            old->on_changed = NULL;
+            old->on_change_user_ptr = NULL;
+
+            // Put callbacks on new Vector3
+            vector3_class_obj_t *new = destination[1];
+            new->on_changed = camera_node_set_translation;
+            new->on_change_user_ptr = self;
+
+            self->position = new;
+            camera_node_set_translation(self);
             return true;
+        }
         break;
         case MP_QSTR_zoom:
             self->zoom = destination[1];
@@ -194,16 +279,35 @@ bool camera_node_store_attr(engine_node_base_t *self_node_base, qstr attribute, 
             return true;
         break;
         case MP_QSTR_rotation:
-            self->rotation = destination[1];
+        {
+            // Un link callbacks on old Vector3
+            vector3_class_obj_t *old = self->rotation;
+            old->on_changed = NULL;
+            old->on_change_user_ptr = NULL;
+
+            // Put callbacks on new Vector3
+            vector3_class_obj_t *new = destination[1];
+            new->on_changed = camera_node_set_rotation;
+            new->on_change_user_ptr = self;
+
+            self->rotation = new;
+            camera_node_set_rotation(self);
             return true;
+        }
         break;
         case MP_QSTR_fov:
+        {
             self->fov = destination[1];
+            camera_node_set_perspective(self);
             return true;
+        }
         break;
         case MP_QSTR_view_distance:
+        {
             self->view_distance = destination[1];
+            camera_node_set_perspective(self);
             return true;
+        }
         break;
         case MP_QSTR_opacity:
             self->opacity = destination[1];
@@ -236,7 +340,7 @@ static mp_attr_fun_t camera_node_class_attr(mp_obj_t self_in, qstr attribute, mp
     PARAM: [type=float]                          [name=zoom]                                        [value=any (scales all nodes by this factor, 1.0 by default)]
     PARAM: [type={ref_link:Rectangle}]           [name=viewport]                                    [value={ref_link:Rectangle} (not used currently, TODO)]
     PARAM: [type={ref_link:Vector3}]             [name=rotation]                                    [value={ref_link:Vector3}]
-    PARAM: [type=float]                          [name=fov]                                         [value=any (sets the field fo view for rendering some nodes, not all nodes use this)]
+    PARAM: [type=float]                          [name=fov]                                         [value=any (sets the field of view for rendering some nodes, not all nodes use this), degrees]
     PARAM: [type=float]                          [name=view_distance]                               [value=any (sets the view distance for some nodes, not all nodes use this)]
     PARAM: [type=float]                          [name=opacity]                                     [value=0.0 ~ 1.0 (this opacity is applied to all nodes rendered by this camera)]
     PARAM: [type=int]                            [name=layer]                                       [value=0 ~ 127]
@@ -268,7 +372,7 @@ mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t 
         { MP_QSTR_rotation,         MP_ARG_OBJ, {.u_obj = vector3_class_new(&vector3_class_type, 0, 0, NULL)} },
         { MP_QSTR_zoom,             MP_ARG_OBJ, {.u_obj = mp_obj_new_float(1.0f)} },
         { MP_QSTR_viewport,         MP_ARG_OBJ, {.u_obj = rectangle_class_new(&rectangle_class_type, 4, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(0.0f), mp_obj_new_float((float)SCREEN_WIDTH), mp_obj_new_float((float)SCREEN_HEIGHT)})} },
-        { MP_QSTR_fov,              MP_ARG_OBJ, {.u_obj = mp_obj_new_float(PI/2.0f)} },
+        { MP_QSTR_fov,              MP_ARG_OBJ, {.u_obj = mp_obj_new_float(90.0f)} },
         { MP_QSTR_view_distance,    MP_ARG_OBJ, {.u_obj = mp_obj_new_float(256.0f)} },
         { MP_QSTR_opacity,          MP_ARG_INT, {.u_obj = mp_obj_new_float(1.0f)} },
         { MP_QSTR_layer,            MP_ARG_INT, {.u_int = 0} }
@@ -313,6 +417,35 @@ mp_obj_t camera_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t 
     camera_node->fov = parsed_args[fov].u_obj;
     camera_node->view_distance = parsed_args[view_distance].u_obj;
     camera_node->opacity = parsed_args[opacity].u_obj;
+
+    vector3_class_obj_t *p = (vector3_class_obj_t*)camera_node->position;
+    vector3_class_obj_t *r = (vector3_class_obj_t*)camera_node->rotation;
+    glm_translate_make(camera_node->m_translation, (vec3){p->x.value, p->y.value, p->z.value});
+    glm_euler((vec3){r->x.value, r->y.value, r->z.value}, camera_node->m_rotation);
+
+    p->on_changed = camera_node_set_translation;
+    p->on_change_user_ptr = camera_node;
+
+    r->on_changed = camera_node_set_rotation;
+    r->on_change_user_ptr = camera_node;
+
+    camera_node_set_perspective(camera_node);
+
+    // Viewport gets flipped: https://www.saschawillems.de/blog/2019/03/29/flipping-the-vulkan-viewport/
+    // camera_node->v_viewport[0] = 0.0f;
+    // camera_node->v_viewport[1] = (float)SCREEN_HEIGHT;
+    // camera_node->v_viewport[2] = (float)SCREEN_WIDTH;
+    // camera_node->v_viewport[3] = -(float)SCREEN_HEIGHT;
+
+    // camera_node->v_viewport[0] = (float)SCREEN_WIDTH;
+    // camera_node->v_viewport[1] = (float)SCREEN_HEIGHT;
+    // camera_node->v_viewport[2] = -(float)SCREEN_WIDTH;
+    // camera_node->v_viewport[3] = -(float)SCREEN_HEIGHT;
+
+    camera_node->v_viewport[0] = 0.0f;
+    camera_node->v_viewport[1] = 0.0f;
+    camera_node->v_viewport[2] = (float)SCREEN_WIDTH;
+    camera_node->v_viewport[3] = (float)SCREEN_HEIGHT;
     
     if(inherited == true){  // Inherited (use existing object)
         // Get the Python class instance

@@ -658,64 +658,214 @@ void engine_draw_text(font_resource_class_obj_t *font, mp_obj_t text, float cent
 }
 
 
+// // https://fgiesen.wordpress.com/2013/02/08/triangle-rasterization-in-practice/#:~:text=int%20x%2C%20y%3B%0A%7D%3B-,int%20orient2d,-(const%20Point2D%26%20a
+// int32_t orient2d(float x0, float y0, float x1, float y1, float x2, float y2){
+//     return (x1-x0)*(y2-y0) - (y1-y0)*(x2-x0);
+// }
+
+
 // https://fgiesen.wordpress.com/2013/02/08/triangle-rasterization-in-practice/#:~:text=int%20x%2C%20y%3B%0A%7D%3B-,int%20orient2d,-(const%20Point2D%26%20a
-float orient2d(float x0, float y0, float x1, float y1, float x2, float y2){
-    return (x1-x0)*(y2-y0) - (y1-y0)*(x2-x0);
+// https://jtsorlinis.github.io/rendering-tutorial/#:~:text=Here%27s%20what%20that%20looks%20like%20in%20code%3A
+// https://jtsorlinis.github.io/rendering-tutorial/#:~:text=this%20triangle%0A%7D-,Back%20to%20business,-So%2C%20why%20is
+// This returns twice the area of the triangle made of of these points. This is used
+// to determine if a point is inside a triangle. For example, if we let the point
+// to be checked to be x2, and y2, then the point is on the right side of the triangle
+// when the twice area is positive and outside if negative. If we test that the point in
+// x2 and y2 is positive for all three edges, the point is on the right side of the edge
+// and inside the triangle (assuming we are going for a right/clock-wise of vertices, want
+// point to be on left side of edges if using a left/counter clock-wise winding)
+float edge_function(float x0, float y0, float x1, float y1, float x2, float y2){
+    return (x1 - x0) * (y2 - y0) - (y1 - y0) * (x2 - x0);
 }
 
 
 // https://fgiesen.wordpress.com/2013/02/08/triangle-rasterization-in-practice/#:~:text=trivial%20to%20traverse.-,This%20gives%3A,-void%20drawTri(const
 // https://fgiesen.wordpress.com/2013/02/10/optimizing-the-basic-rasterizer/#:~:text=In%20our%20basic%20triangle%20rasterization%20loop
 void engine_draw_filled_triangle(uint16_t color, float x0, float y0, float x1, float y1, float x2, float y2, float alpha, engine_shader_t *shader){
-    // Triangle setup
-    int16_t A01 = (int16_t)(y0 - y1), B01 = (int16_t)(x1 - x0);
-    int16_t A12 = (int16_t)(y1 - y2), B12 = (int16_t)(x2 - x1);
-    int16_t A20 = (int16_t)(y2 - y0), B20 = (int16_t)(x0 - x2);
+    // // Triangle setup
+    // int16_t A01 = (int16_t)(y0 - y1), B01 = (int16_t)(x1 - x0);
+    // int16_t A12 = (int16_t)(y1 - y2), B12 = (int16_t)(x2 - x1);
+    // int16_t A20 = (int16_t)(y2 - y0), B20 = (int16_t)(x0 - x2);
 
-    // Compute triangle bounding box
-    int16_t minX = (int16_t)min3(x0, x1, x2);
-    int16_t minY = (int16_t)min3(y0, y1, y2);
-    int16_t maxX = (int16_t)max3(x0, x1, x2);
-    int16_t maxY = (int16_t)max3(y0, y1, y2);
+    // // Compute triangle bounding box
+    // int16_t minX = (int16_t)min3(x0, x1, x2);
+    // int16_t minY = (int16_t)min3(y0, y1, y2);
+    // int16_t maxX = (int16_t)max3(x0, x1, x2);
+    // int16_t maxY = (int16_t)max3(y0, y1, y2);
 
-    // Clip against screen bounds
-    minX = max(minX, 0);
-    minY = max(minY, 0);
-    maxX = min(maxX, SCREEN_WIDTH_MINUS_1);
-    maxY = min(maxY, SCREEN_HEIGHT_MINUS_1);
+    // // Clip against screen bounds
+    // minX = max(minX, 0);
+    // minY = max(minY, 0);
+    // maxX = min(maxX, SCREEN_WIDTH_MINUS_1);
+    // maxY = min(maxY, SCREEN_HEIGHT_MINUS_1);
 
-    int16_t px = minX;
-    int16_t py = minY;
+    // int16_t px = minX;
+    // int16_t py = minY;
 
-    int16_t w0_row = (int16_t)orient2d(x1, y1, x2, y2, px, py);
-    int16_t w1_row = (int16_t)orient2d(x2, y2, x0, y0, px, py);
-    int16_t w2_row = (int16_t)orient2d(x0, y0, x1, y1, px, py);
+    // int16_t w0_row = (int16_t)orient2d(x1, y1, x2, y2, px, py);
+    // int16_t w1_row = (int16_t)orient2d(x2, y2, x0, y0, px, py);
+    // int16_t w2_row = (int16_t)orient2d(x0, y0, x1, y1, px, py);
 
-    // Rasterize
-    for(py = minY; py <= maxY; py++){
+    // // Rasterize
+    // for(py = minY; py <= maxY; py++){
+    //     // Barycentric coordinates at start of row
+    //     int16_t w0 = w0_row;
+    //     int16_t w1 = w1_row;
+    //     int16_t w2 = w2_row;
+
+    //     for(px = minX; px <= maxX; px++){
+    //         // If p is on or inside all edges, render pixel.
+    //         // https://fgiesen.wordpress.com/2013/02/10/optimizing-the-basic-rasterizer/#:~:text=if%20((w0%20%7C%20w1%20%7C%20w2)%20%3E%3D%200)
+    //         if ((w0 | w1 | w2) >= 0){
+    //             // if(engine_display_store_check_depth(px, py, depth)){
+    //                 engine_draw_pixel_no_check(color, px, py, alpha, shader);
+    //             // }
+    //         }
+
+    //         // One step to the right
+    //         w0 += A12;
+    //         w1 += A20;
+    //         w2 += A01;
+    //     }
+
+    //     // One row step
+    //     w0_row += B12;
+    //     w1_row += B20;
+    //     w2_row += B01;
+    // }
+}
+
+
+void engine_draw_filled_triangle_depth(texture_resource_class_obj_t *texture, uint16_t color,
+                                       float ax, float ay, uint16_t depth_az, float au, float av,
+                                       float bx, float by, uint16_t depth_bz, float bu, float bv,
+                                       float cx, float cy, uint16_t depth_cz, float cu, float cv,
+                                       float w0, float w1, float w2,
+                                       float alpha, engine_shader_t *shader){
+    // A = x0, y0
+    // B = x1, y1
+    // C = x2, y2
+    const float ABC = edge_function(ax, ay, bx, by, cx, cy);
+
+    // Do not render triangles with 2x negative area - back face culling
+    // https://jtsorlinis.github.io/rendering-tutorial/#:~:text=RESET-,A%20nifty%20trick,-Another%20really%20useful
+    if(ABC <= 0.0f){
+        // Do not draw this triangle
+        return;
+    }
+
+    // https://jtsorlinis.github.io/rendering-tutorial/#:~:text=the%20triangle%27s%20vertices
+    // Compute triangle bounding box. Each pixel in this box will be
+    // determined to be inside or outside of the triangle
+    int32_t min_x = (int32_t)min3(ax, bx, cx);
+    int32_t min_y = (int32_t)min3(ay, by, cy);
+    int32_t max_x = (int32_t)max3(ax, bx, cx);
+    int32_t max_y = (int32_t)max3(ay, by, cy);
+
+    // Clip against screen bounds (added this). Don't want to
+    // check if pixels are inside the triangle if not visible
+    min_x = max(min_x, 0);
+    min_y = max(min_y, 0);
+    max_x = min(max_x, SCREEN_WIDTH_MINUS_1);
+    max_y = min(max_y, SCREEN_HEIGHT_MINUS_1);
+
+    // Start at the minimum x and y corner of the triangle view box
+    int16_t px = (int16_t)min_x;
+    int16_t py = (int16_t)min_y;
+
+    // https://jtsorlinis.github.io/rendering-tutorial/#:~:text=this%20triangle%0A%7D-,Back%20to%20business,-So%2C%20why%20is
+    // https://fgiesen.wordpress.com/2013/02/10/optimizing-the-basic-rasterizer/#:~:text=In%20our%20basic%20triangle%20rasterization%20loop
+    // Calculate our edge functions. If (px, py) is on the
+    // right side of all of the edges, each of these will
+    // be a positive number
+    float BCP_ROW = edge_function(bx, by, cx, cy, px, py) / ABC;
+    float CAP_ROW = edge_function(cx, cy, ax, ay, px, py) / ABC;
+    float ABP_ROW = edge_function(ax, ay, bx, by, px, py) / ABC;
+
+    // https://fgiesen.wordpress.com/2013/02/10/optimizing-the-basic-rasterizer/#:~:text=In%20our%20basic%20triangle%20rasterization%20loop
+    float dy_bc = (float)(by - cy) / ABC;
+    float dx_bc = (float)(cx - bx) / ABC;
+    
+    float dy_ca = (float)(cy - ay) / ABC;
+    float dx_ca = (float)(ax - cx) / ABC;
+
+    float dy_ab = (float)(ay - by) / ABC;
+    float dx_ab = (float)(bx - ax) / ABC;
+
+
+    // Go through all pixels in triangle view box and check if each
+    // point is inside or outside the triangle inside the box
+    for(py=min_y; py<=max_y; py++){
         // Barycentric coordinates at start of row
-        int16_t w0 = w0_row;
-        int16_t w1 = w1_row;
-        int16_t w2 = w2_row;
+        float BCP = BCP_ROW;
+        float CAP = CAP_ROW;
+        float ABP = ABP_ROW;
 
-        for(px = minX; px <= maxX; px++){
-            // If p is on or inside all edges, render pixel.
-            // https://fgiesen.wordpress.com/2013/02/10/optimizing-the-basic-rasterizer/#:~:text=if%20((w0%20%7C%20w1%20%7C%20w2)%20%3E%3D%200)
-            if ((w0 | w1 | w2) >= 0){
-                // if(engine_display_store_check_depth(px, py, depth)){
-                    engine_draw_pixel_no_check(color, px, py, alpha, shader);
-                // }
+        for(px=min_x; px<=max_x; px++){
+
+            // https://jtsorlinis.github.io/rendering-tutorial/#:~:text=get%20the%20interpolated%20colour
+            // BCP + CAP + ABP = 1.0
+            uint16_t depth_p = (uint16_t)((float)depth_az*BCP + (float)depth_bz*CAP + (float)depth_cz*ABP);
+
+            // Check that the pixel is on the right side of each
+            // edge for all the edge functions calculated. Instead of
+            // comparing directly to 0.0, make sure triangles get filled
+            // by comparing to numbers above some small negative number
+            if((ABP >= -0.001f && BCP >= -0.001f && CAP >= -0.001f) && engine_display_store_check_depth(px, py, depth_p)){
+
+                // https://stackoverflow.com/questions/12360023/barycentric-coordinates-texture-mapping
+                // https://computergraphics.stackexchange.com/a/4091
+                // https://www.reddit.com/r/opengl/comments/49fdhc/comment/d0rlh12/
+                // https://web.archive.org/web/20240416044207/https://www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical-implementation/perspective-correct-interpolation-vertex-attributes.html
+                float w = BCP/w0 + CAP/w1 + ABP/w2;
+
+                uint16_t u = (uint16_t)((BCP*au/w0 + CAP*bu/w1 + ABP*cu/w2) / w);
+                uint16_t v = (uint16_t)((BCP*av/w0 + CAP*bv/w1 + ABP*cv/w2) / w);
+
+                // // https://computergraphics.stackexchange.com/questions/4079/perspective-correct-texture-mapping
+                // float tau = au / w0;
+                // float tav = av / w0;
+                // float tinvw0 = 1.0f / w0;
+
+                // float tbu = bu / w1;
+                // float tbv = bv / w1;
+                // float tinvw1 = 1.0f / w1;
+
+                // float tcu = cu / w2;
+                // float tcv = cv / w2;
+                // float tinvw2 = 1.0f / w2;
+
+                // // float invw = 1.0f / w;
+
+
+                // uint16_t invw = (uint16_t)((tinvw0*BCP + tinvw1*CAP + tinvw2*ABP));
+                // uint16_t u = (uint16_t)((tau*BCP + tbu*CAP + tcu*ABP)/(1.0f/invw));
+                // uint16_t v = (uint16_t)((tav*BCP + tbv*CAP + tcv*ABP)/(1.0f/invw));
+
+                // uint16_t u = (uint16_t)((au*BCP + bu*CAP + cu*ABP));
+                // uint16_t v = (uint16_t)((av*BCP + bv*CAP + cv*ABP));
+
+                // Get the pixel from the texture
+                uint32_t index = v * texture->width + u;
+                float texture_pixel_alpha = 0.0f;
+
+                uint16_t texture_pixel_color = texture->get_pixel(texture, index, &texture_pixel_alpha);
+
+                // Mix
+                alpha = alpha * texture_pixel_alpha;
+
+                engine_draw_pixel_no_check(texture_pixel_color, px, py, alpha, shader);
             }
 
             // One step to the right
-            w0 += A12;
-            w1 += A20;
-            w2 += A01;
+            BCP += dy_bc;
+            CAP += dy_ca;
+            ABP += dy_ab;
         }
 
         // One row step
-        w0_row += B12;
-        w1_row += B20;
-        w2_row += B01;
+        BCP_ROW += dx_bc;
+        CAP_ROW += dx_ca;
+        ABP_ROW += dx_ab;
     }
 }
