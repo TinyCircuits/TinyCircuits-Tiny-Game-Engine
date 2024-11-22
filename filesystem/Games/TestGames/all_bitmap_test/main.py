@@ -9,6 +9,8 @@ import engine_io
 import os
 cam = CameraNode()
 
+os.chdir("Games/TestGames/all_bitmap_test")
+
 # Textures
 tex_1bit_2color = TextureResource("1bit_2color.bmp")
 tex_4bit_16color = TextureResource("4bit_16color.bmp")
@@ -22,7 +24,11 @@ tex_16bit_xrgb_4444 = TextureResource("16bit_xrgb_4444.bmp")
 tex_16bit_argb_4444 = TextureResource("16bit_argb_4444.bmp")
 tex_16bit_rgb_565_no_bf_image_size = TextureResource("16bit_rgb_565_no_bf_image_size.bmp")
 
-# # Sprites
+tex_checkpoint = TextureResource("checkpoint.bmp")
+tex_player_move_left = TextureResource("player_move_left.bmp")
+
+
+# Sprites
 
 # Top row
 spr_1bit_2color = Sprite2DNode(texture=tex_1bit_2color, position=Vector2(0, 0))
@@ -45,6 +51,9 @@ spr_16bit_argb_4444.scale.y = 16/tex_16bit_argb_4444.height
 
 spr_16bit_rgb_565_no_bf_image_size = Sprite2DNode(texture=tex_16bit_rgb_565_no_bf_image_size, position=Vector2(105, 24))
 
+spr_checkpoint = Sprite2DNode(texture=tex_checkpoint, position=Vector2(-70, -14))
+spr_player_move_left = Sprite2DNode(texture=tex_player_move_left, position=Vector2(-70, 14))
+
 
 # Odd number dimensions sprites
 bg_bmp1 = TextureResource("scoreBG1.bmp", False)
@@ -64,7 +73,7 @@ while True:
     if engine.tick() is False:
         continue
 
-    print(engine.get_running_fps())
+    # print(engine.get_running_fps())
 
     if engine_io.LEFT.is_pressed:
         cam.position.x -= 0.5

@@ -5,8 +5,10 @@
 
 #if defined(__arm__)
     #include "../lib/bm8563/bm8563.h"
+    #include "pico/stdlib.h"
     #include "hardware/gpio.h"
     #include "hardware/i2c.h"
+    #include "pico/time.h"
 
     bm8563_t bm;
 
@@ -15,13 +17,20 @@
 
     // Custom I2C reader/writer functions for bm8563 library to call
     int32_t custom_i2c_read(void *handle, uint8_t address, uint8_t reg, uint8_t *buffer, uint16_t size){
-        if(i2c_write_blocking(i2c0, address, &reg, 1, true) == PICO_ERROR_GENERIC){
+        // Write register we want to read from
+        int ret = i2c_write_timeout_us(i2c0, address, &reg, 1, true, 250000);
+        if(ret == PICO_ERROR_GENERIC || ret == PICO_ERROR_TIMEOUT){
+            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineTime: ERROR: I2C could not write register to read from RTC IC!"));
             return BM8563_ERROR_NOTTY;
         }
 
-        if(i2c_read_blocking(i2c0, address, buffer, size, false) == PICO_ERROR_GENERIC){
+        // Read what was returned by the write
+        ret = i2c_read_timeout_us(i2c0, address, buffer, size, false, 250000);
+        if(ret == PICO_ERROR_GENERIC || ret == PICO_ERROR_TIMEOUT){
+            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineTime: ERROR: I2C could not read data from RTC IC!"));
             return BM8563_ERROR_NOTTY;
         }
+
         return BM8563_OK;
     }
 
@@ -30,9 +39,13 @@
         data[0] = reg;
         memcpy(data+1, buffer, size);
 
-        if(i2c_write_blocking(i2c0, address, data, size+1, false) == PICO_ERROR_GENERIC){
+        // Write the data
+        int ret = i2c_write_timeout_us(i2c0, address, data, size+1, false, 250000);
+        if(ret == PICO_ERROR_GENERIC || ret == PICO_ERROR_TIMEOUT){
+            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineTime: ERROR: I2C could not write data to RTC IC!"));
             return BM8563_ERROR_NOTTY;
         }
+
         return BM8563_OK;
     }
 #endif
@@ -44,7 +57,28 @@ void engine_rtc_init(){
         // https://www.lcsc.com/datasheet/lcsc_datasheet_2308181040_GATEMODE-BM8563EMA_C269878.pdf <- actual part 
         // https://static.chipdip.ru/lib/031/DOC043031000.pdf
         // https://www.nxp.com/docs/en/data-sheet/PCF8563.pdf
-        i2c_init(i2c0, 400000);
+        i2c_init(i2c0, 10000);  // Reduced from 400kHz to 10kHz because of I2C errors and freezing due to pull up resistor values
+        gpio_set_function(RTC_I2C_SCL_GPIO, GPIO_FUNC_I2C);
+        gpio_set_function(RTC_I2C_SDA_GPIO, GPIO_FUNC_I2C);
+        gpio_set_pulls(RTC_I2C_SCL_GPIO, true, 0);
+        gpio_set_pulls(RTC_I2C_SDA_GPIO, true, 0);
+
+        // Depending on what happen to the RTC chip, it might be in a
+        // stalled state and need the CLK toggled a couple times to
+        // get it out of that state
+        gpio_init(RTC_I2C_SCL_GPIO);
+        gpio_set_dir(RTC_I2C_SCL_GPIO, GPIO_OUT);
+
+        sleep_ms(10);
+
+        for(uint8_t i=0; i<100; i++){
+            gpio_put(RTC_I2C_SCL_GPIO, 1);
+            sleep_us(100);
+            gpio_put(RTC_I2C_SCL_GPIO, 0);
+            sleep_us(100);
+        }
+
+        // Reset the PINs for I2C comms
         gpio_set_function(RTC_I2C_SCL_GPIO, GPIO_FUNC_I2C);
         gpio_set_function(RTC_I2C_SDA_GPIO, GPIO_FUNC_I2C);
         gpio_set_pulls(RTC_I2C_SCL_GPIO, true, 0);
@@ -59,10 +93,18 @@ void engine_rtc_init(){
 }
 
 
-bool engine_rtc_check_compromised(){
+int engine_rtc_check_compromised(){
     #if defined(__arm__)
         struct tm rtc;
-        if(bm8563_read(&bm, &rtc) == BM8563_ERR_LOW_VOLTAGE) return true;
+
+        bm8563_err_t status = bm8563_read(&bm, &rtc);
+
+        if(status == BM8563_ERR_LOW_VOLTAGE){
+            return true;
+        }else if(status == BM8563_ERROR_NOTTY){
+            return ENGINE_RTC_I2C_ERROR;
+        }
+
     #endif
 
     return false;

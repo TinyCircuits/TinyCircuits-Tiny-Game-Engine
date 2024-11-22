@@ -27,9 +27,11 @@ volatile mp_obj_t channels[CHANNEL_COUNT];
 // The master volume that all mixed samples are scaled by (0.0 ~ 1.0)
 volatile float master_volume = 1.0f;
 
-
-#if defined(__unix__)
+#if defined(__EMSCRIPTEN__)
     // Nothing to do
+#elif defined(__unix__)
+    #include <SDL2/SDL.h>
+    SDL_AudioSpec audio;
 #elif defined(__arm__)
     #include "pico/stdlib.h"
     #include "hardware/dma.h"
@@ -223,6 +225,9 @@ volatile float master_volume = 1.0f;
                 sample = get_rtttl_sample(channel, &complete);
             }
 
+            // Set the amplitude just retrieved as the last sample to have been played on the channel
+            channel->amplitude = sample;
+
             total_sample += sample * channel->gain * master_volume;
 
             if(complete && channel->loop == false){
@@ -249,7 +254,9 @@ volatile float master_volume = 1.0f;
 
 
 void engine_audio_setup_playback(){
-    #if defined(__unix__)
+    #if defined(__EMSCRIPTEN__)
+        // Nothing to do
+    #elif defined(__unix__)
         // Nothing to do
     #elif defined(__arm__)
         // Setup amplifier but make sure it is disabled while PWM is being setup
@@ -292,8 +299,11 @@ void engine_audio_setup(){
         channels[icx] = channel;
     }
 
-    #if defined(__unix__)
+    #if defined(__EMSCRIPTEN__)
         // Nothing to do
+    #elif defined(__unix__)
+        audio.freq = 22050;
+        audio.format = AUDIO_U16;
     #elif defined(__arm__)
         //generate the interrupt at the audio sample rate to set the PWM duty cycle
         audio_callback_pwm_pin_slice = pwm_gpio_to_slice_num(AUDIO_CALLBACK_PWM_PIN);

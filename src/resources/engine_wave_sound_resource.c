@@ -20,7 +20,7 @@ uint8_t *wave_sound_resource_fill_destination(void *channel_in, uint32_t max_buf
 
 mp_obj_t wave_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New WaveSoundResource");
-    mp_arg_check_num(n_args, n_kw, 1, 1, false);
+    mp_arg_check_num(n_args, n_kw, 1, 2, false);
 
     sound_resource_base_class_obj_t *self = mp_obj_malloc_with_finaliser(sound_resource_base_class_obj_t, &wave_sound_resource_class_type);
     self->base.type = &wave_sound_resource_class_type;
@@ -29,6 +29,11 @@ mp_obj_t wave_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
     self->play_counter_max = 0;
     self->play_counter = 0;
     self->last_sample = 0.0f;
+    self->in_ram = false;
+
+    if(n_args > 1){
+        self->in_ram = mp_obj_get_int(args[1]);
+    }
 
     // Wave parsing: https://truelogic.org/wordpress/2015/09/04/parsing-a-wav-file-in-c/
     //               https://www.aelius.com/njh/wavemetatools/doc/riffmci.pdf
@@ -98,8 +103,8 @@ mp_obj_t wave_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
     ENGINE_INFO_PRINTF("\tbytes_per_sample:\t\t%lu", self->bytes_per_sample);
 
     // Get space in continuous flash area (stored in extra data for this type 'wave_sound_resource_class_type')
-    self->extra_data = engine_resource_get_space_bytearray(self->total_data_size, false);
-    engine_resource_start_storing(self->extra_data, false);
+    self->extra_data = engine_resource_get_space_bytearray(self->total_data_size, self->in_ram);
+    engine_resource_start_storing(self->extra_data, self->in_ram);
 
     uint8_t temp_buffer[512];
     uint32_t remaining_amount_to_read = self->total_data_size;
@@ -136,9 +141,6 @@ static mp_obj_t wave_sound_resource_class_del(mp_obj_t self_in){
         audio_channel_stop(channel);
     }
 
-    // Since this is stored in contigious flash space and
-    // nothing exists to get rid of it, yet, do nothing
-
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(wave_sound_resource_class_del_obj, wave_sound_resource_class_del);
@@ -148,8 +150,11 @@ MP_DEFINE_CONST_FUN_OBJ_1(wave_sound_resource_class_del_obj, wave_sound_resource
     NAME: WaveSoundResource
     ID: WaveSoundResource
     DESC: Holds audio data from a .wav file. `.wav` files can be 8 or 16-bit PCM and only samples rates equal to or less than 22050Hz. Recommended sample rates are: 22050Hz, 11025Hz, 5512Hz, 2756Hz, and 1378Hz
-    PARAM:  [type=string]       [name=filepath] [value=string]
-    ATTR:   [type=bytearray]    [name=data]     [value=value of bytearray containing the audio samples]                                                                                                                                                                
+    PARAM:  [type=string]       [name=filepath]     [value=string]
+    PARAM:  [type=boolean]      [name=in_ram]       [value=True or False (default: False)]
+    ATTR:   [type=bytearray]    [name=data]         [value=value of bytearray containing the audio samples]
+    ATTR:   [type=float]        [name=duration]     [value=length of wave file in seconds (read-only)]
+    ATTR:   [type=int]          [name=sample_rate]  [value=rate that samples are played in Hz (read-only)]                                                                                                                                               
 */ 
 static void wave_sound_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing WaveSoundResource attr");
@@ -165,6 +170,12 @@ static void wave_sound_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_
             case MP_QSTR_data:
                 destination[0] = self->extra_data;
             break;
+            case MP_QSTR_duration:
+                destination[0] = mp_obj_new_float((float)self->total_sample_count / (float)self->sample_rate);
+            break;
+            case MP_QSTR_sample_rate:
+                destination[0] = mp_obj_new_int(self->sample_rate);
+            break;
             default:
                 return; // Fail
         }
@@ -172,6 +183,12 @@ static void wave_sound_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_
         switch(attribute){
             case MP_QSTR_data:
                 self->extra_data = destination[1];
+            break;
+            case MP_QSTR_duration:
+                mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("WaveSoundResource: ERROR: Setting the duration it now allowed!"));
+            break;
+            case MP_QSTR_sample_rate:
+                mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("WaveSoundResource: ERROR: Setting the sample rate it now allowed!"));
             break;
             default:
                 return; // Fail
