@@ -48,7 +48,9 @@ mp_obj_t audio_channel_class_new(const mp_obj_type_t *type, size_t n_args, size_
     // get a default DMA config, and set the transfer size
     // to 8-bits since smallest audio sample bit-depth is 8
     // (using 16 would mean we'd copy too much data in 8-bit case)
-    #if defined(__unix__)
+    #if defined(__EMSCRIPTEN__)
+
+    #elif defined(__unix__)
 
     #elif defined(__arm__)
         self->dma_channel = dma_claim_unused_channel(true);
