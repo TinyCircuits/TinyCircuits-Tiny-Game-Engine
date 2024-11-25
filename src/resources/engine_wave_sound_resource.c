@@ -18,6 +18,18 @@ uint8_t *wave_sound_resource_fill_destination(void *channel_in, uint32_t max_buf
 }
 
 
+// Provided a output buffer, starts copy to buffer using platforms's copy
+void wave_fill_dest(float *output_sample_buffer, uint32_t start_offset, uint32_t len){
+    #if defined(__EMSCRIPTEN__)
+
+    #elif defined(__unix__)
+
+    #elif defined(__arm__)
+
+    #endif
+}
+
+
 mp_obj_t wave_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New WaveSoundResource");
     mp_arg_check_num(n_args, n_kw, 1, 2, false);

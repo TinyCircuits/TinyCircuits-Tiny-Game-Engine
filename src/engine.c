@@ -46,6 +46,7 @@
     #include "hardware/watchdog.h"
     #include "hardware/xosc.h"
     #include "py/mphal.h"
+    #include "audio/engine_audio_rp3.h"
 #endif
 
 
@@ -73,7 +74,7 @@ void engine_set_freq(uint32_t hz){
         if(!set_sys_clock_khz(hz / 1000, false)){
             mp_raise_ValueError(MP_ERROR_TEXT("cannot change frequency"));
         }
-        engine_audio_adjust_playback_with_freq(hz);
+        engine_audio_rp3_adjust_freq(hz);
     #endif
 }
 

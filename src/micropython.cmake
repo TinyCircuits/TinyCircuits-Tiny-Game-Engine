@@ -56,6 +56,7 @@ target_sources(usermod_engine INTERFACE
     ${ENGINE_MOD_DIR}/draw/engine_display_draw.c
     ${ENGINE_MOD_DIR}/audio/engine_audio_module.c
     ${ENGINE_MOD_DIR}/audio/engine_audio_channel.c
+    ${ENGINE_MOD_DIR}/audio/engine_audio_rp3.c
     ${ENGINE_MOD_DIR}/resources/engine_resource_module.c
     ${ENGINE_MOD_DIR}/resources/engine_resource_manager.c
     ${ENGINE_MOD_DIR}/resources/engine_texture_resource.c

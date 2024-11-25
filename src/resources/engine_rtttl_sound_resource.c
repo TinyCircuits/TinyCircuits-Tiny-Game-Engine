@@ -108,6 +108,18 @@ float ENGINE_FAST_FUNCTION(rtttl_sound_resource_get_sample)(rtttl_sound_resource
 }
 
 
+// Provided a output buffer, starts copy to buffer using platforms's copy
+void rtttl_fill_dest(float *output_sample_buffer, uint32_t start_offset, uint32_t len){
+    #if defined(__EMSCRIPTEN__)
+
+    #elif defined(__unix__)
+
+    #elif defined(__arm__)
+
+    #endif
+}
+
+
 bool rtttl_sound_resource_get_substr(void *substr, uint8_t substr_max_len, const char *start, uint8_t start_len, const char *end, uint8_t end_len){
     uint32_t file_size = engine_file_size(0);
     

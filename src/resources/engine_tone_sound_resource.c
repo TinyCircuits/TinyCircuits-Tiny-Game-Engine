@@ -51,6 +51,18 @@ float ENGINE_FAST_FUNCTION(tone_sound_resource_get_sample)(tone_sound_resource_c
 }
 
 
+// Provided a output buffer, starts copy to buffer using platforms's copy
+void tone_fill_dest(float *output_sample_buffer, uint32_t start_offset, uint32_t len){
+    #if defined(__EMSCRIPTEN__)
+
+    #elif defined(__unix__)
+
+    #elif defined(__arm__)
+
+    #endif
+}
+
+
 mp_obj_t tone_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New ToneSoundResource");
     mp_arg_check_num(n_args, n_kw, 0, 0, false);
@@ -73,6 +85,11 @@ mp_obj_t tone_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
 
 
 void tone_sound_resource_set_frequency(tone_sound_resource_class_obj_t *self, float frequency){
+
+    if(frequency <= 50.0f || frequency >= ENGINE_AUDIO_SAMPLE_RATE/2.0f){
+        mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("ToneSoundResource: Error: the tone generator can only play frequncies between 50Hz and %0.3f. A frequncey of %.03f was being set..."), (double)(ENGINE_AUDIO_SAMPLE_RATE/2.0f), (double)frequency);
+    }
+
     self->next_frequency = frequency;
     self->fade_type = FADE_DOWN;
     self->fade_factor = 0.0f;
