@@ -1,7 +1,6 @@
 #include "py/obj.h"
 #include "py/mpthread.h"
 #include "engine_audio_module.h"
-#include "resources/engine_sound_resource_base.h"
 #include "resources/engine_wave_sound_resource.h"
 #include "resources/engine_tone_sound_resource.h"
 #include "resources/engine_rtttl_sound_resource.h"
@@ -67,7 +66,7 @@ volatile float master_volume = 1.0f;
 
 //             // Using the sound resource base, fill this channel's
 //             // buffer with audio data from the source resource
-//             // channel->buffer_end = channel->source->fill_buffer(channel->source, channel->buffer, channel->source_byte_offset, CHANNEL_BUFFER_SIZE);
+//             // channel->buffer_end = channel->source->fill_buffer(channel->source, channel->buffer, channel->source_byte_offset, CHANNEL_BUFFER_LEN);
 
 //             if(channel->source == NULL){
 //                 return;
@@ -75,7 +74,7 @@ volatile float master_volume = 1.0f;
 
 //             sound_resource_base_class_obj_t *source = channel->source;
 
-//             current_source_data = source->get_data(channel, CHANNEL_BUFFER_SIZE, &channel->buffers_ends[channel->reading_buffer_index]);
+//             current_source_data = source->get_data(channel, CHANNEL_BUFFER_LEN, &channel->buffers_ends[channel->reading_buffer_index]);
 
 //             // memcpy((uint8_t*)channel->buffer, (uint8_t*)current_source_data, channel->buffer_end);
 
@@ -316,7 +315,7 @@ void engine_audio_play_on_channel(mp_obj_t sound_resource_obj, audio_channel_cla
     channel->busy = true;
 
     if(mp_obj_is_type(sound_resource_obj, &wave_sound_resource_class_type)){
-        sound_resource_base_class_obj_t *source = sound_resource_obj;
+        wave_sound_resource_class_obj_t *source = sound_resource_obj;
 
         // Very important to set this link! The source needs access to the channel that
         // is playing it (if one is) so that it can remove itself from the linked channel's
@@ -341,6 +340,12 @@ void engine_audio_play_on_channel(mp_obj_t sound_resource_obj, audio_channel_cla
     channel->source = sound_resource_obj;
     channel->loop = mp_obj_get_int(loop_obj);
     channel->done = false;
+
+    // Do not care about the old data, reset the buffers to
+    // both be filled with audio data initially, and fill them
+    audio_channeL_buffer_reset(channel);
+    audio_channel_fill_internal_buffer(channel, 0);
+    audio_channel_fill_internal_buffer(channel, 1);
 
     // Now let the interrupt use it
     channel->busy = false;

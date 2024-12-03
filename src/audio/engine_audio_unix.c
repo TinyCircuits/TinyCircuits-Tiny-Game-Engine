@@ -1,5 +1,6 @@
 #if defined(__unix__)
     #include "engine_audio_unix.h"
+    #include <string.h>
     #include <SDL2/SDL.h>
 
     // Main audio playback object
@@ -12,7 +13,17 @@
     }
 
 
+    void engine_audio_unix_channel_init(){
+        
+    }
+
+
     void engine_audio_unix_setup_playback(){
 
+    }
+
+
+    void engine_audio_unix_copy(uint8_t *dest, uint8_t *src, uint32_t count){
+        memcpy(dest, src, count);
     }
 #endif

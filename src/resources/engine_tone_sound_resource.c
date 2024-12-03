@@ -12,54 +12,26 @@
 #include "../lib/cglm/include/cglm/util.h"
 #include "../lib/cglm/include/cglm/ease.h"
 
-enum fade_types {FADE_NONE=0, FADE_DOWN=1, FADE_UP=2};
 
-#define STEP 0.01f
+// Provided a output buffer, starts copy
+// to buffer using platforms's copy
+uint32_t tone_fill_dest(tone_sound_resource_class_obj_t *tone, audio_channel_class_obj_t *channel, uint8_t *output, uint32_t byte_count, bool *complete){
+    // By default, assume this tone is not
+    // done providing samples
+    bool complete = false;
 
-float ENGINE_FAST_FUNCTION(tone_sound_resource_get_sample)(tone_sound_resource_class_obj_t *self){
-    float gain = 1.0f;
-
-    // When the frequency of this resource is changed,
-    // fade gain to zero, switch f, and then back to 1.0
-    if(self->fade_type == FADE_DOWN){
-        self->fade_factor += STEP;
-
-        if(self->fade_factor < 1.0f){
-            gain = glm_lerp(1.0f, 0.0, self->fade_factor);
-        }else{
-            gain = 0.0f;
-            self->frequency = self->next_frequency;
-            self->omega = 2.0f * PI * self->frequency;
-
-            self->fade_type = FADE_UP;
-            self->fade_factor = 0.0f;
-        }
-    }else if(self->fade_type == FADE_UP){
-        self->fade_factor += STEP;
-
-        if(self->fade_factor < 1.0f){
-            gain = glm_lerp(0.0f, 1.0, self->fade_factor);
-        }else{
-            self->fade_type = FADE_NONE;
-            gain = 1.0f;
-        }
-    }
-
-    float sample = sinf(self->omega * self->time) * gain;
-    self->time += ENGINE_AUDIO_SAMPLE_DT;
-    return sample;
-}
-
-
-// Provided a output buffer, starts copy to buffer using platforms's copy
-void tone_fill_dest(float *output_sample_buffer, uint32_t start_offset, uint32_t len){
     #if defined(__EMSCRIPTEN__)
+        engine_audio_web_copy(NULL, NULL, 0);
 
     #elif defined(__unix__)
+        engine_audio_unix_copy(NULL, NULL, 0);
 
     #elif defined(__arm__)
-
+        engine_audio_rp3_copy(channel->dma_copy_channel, &channel->dma_copy_config NULL, NULL, 0);
+        
     #endif
+
+    return complete;
 }
 
 
@@ -76,10 +48,6 @@ mp_obj_t tone_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
     self->omega = 2.0f * PI * self->frequency;
     self->time = 0.0f;
 
-    self->next_frequency = 0.0f;
-    self->fade_type = FADE_NONE; 
-    self->fade_factor = 0.0f;
-
     return MP_OBJ_FROM_PTR(self);
 }
 
@@ -90,9 +58,9 @@ void tone_sound_resource_set_frequency(tone_sound_resource_class_obj_t *self, fl
         mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("ToneSoundResource: Error: the tone generator can only play frequncies between 50Hz and %0.3f. A frequncey of %.03f was being set..."), (double)(ENGINE_AUDIO_SAMPLE_RATE/2.0f), (double)frequency);
     }
 
-    self->next_frequency = frequency;
-    self->fade_type = FADE_DOWN;
-    self->fade_factor = 0.0f;
+    self->frequency = frequency;
+    self->omega = 2.0f * PI * self->frequency;
+    self->time = 0.0f;
 }
 
 

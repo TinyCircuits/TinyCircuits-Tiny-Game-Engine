@@ -5,10 +5,40 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "resources/engine_sound_resource_base.h"
 #include "resources/engine_wave_sound_resource.h"
 #include "resources/engine_tone_sound_resource.h"
 #include "resources/engine_rtttl_sound_resource.h"
+
+
+#if defined(__EMSCRIPTEN__)
+    #include "engine_audio_web.h"
+#elif defined(__unix__)
+    #include "engine_audio_unix.h"
+#elif defined(__arm__)
+    #include "engine_audio_rp3.h"
+#endif
+
+
+void audio_channeL_buffer_reset(audio_channel_class_obj_t *channel){
+    channel->buffers_data_len[0] = CHANNEL_BUFFER_LEN;
+    channel->buffers_data_len[1] = CHANNEL_BUFFER_LEN;
+    channel->buffers_byte_cursor[0] = 0;
+    channel->buffers_byte_cursor[1] = 0;
+    channel->buffer_to_fill_index = 0;
+    channel->buffer_to_read_index = 1;
+    channel->source_byte_cursor = 0;
+}
+
+
+void audio_channel_reset(audio_channel_class_obj_t *channel){
+    channel->source = NULL;
+    channel->gain = 1.0f;
+    channel->time = 0.0f;
+    channel->amplitude = 0.0f;
+    channel->done = true;
+    channel->loop = false;
+    audio_channeL_buffer_reset(channel);
+}
 
 
 mp_obj_t audio_channel_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
@@ -21,26 +51,14 @@ mp_obj_t audio_channel_class_new(const mp_obj_type_t *type, size_t n_args, size_
     audio_channel_class_obj_t *self = (audio_channel_class_obj_t*)malloc(sizeof(audio_channel_class_obj_t));
     self->base.type = &audio_channel_class_type;
 
-    self->source = NULL;   // Set to NULL to indicate that source/channel not active
-    self->source_byte_offset = 0;
-    self->gain = 1.0f;
-    self->time = 0.0f;
-    self->done = true;
-    self->loop = false;
-    self->buffers[0] = (uint8_t*)malloc(CHANNEL_BUFFER_SIZE);   // Use C heap. Easier to avoid gc and we have a consistent number of buffers anyways
-    self->buffers[1] = (uint8_t*)malloc(CHANNEL_BUFFER_SIZE);   // Use C heap. Easier to avoid gc and we have a consistent number of buffers anyways
-    self->buffers_ends[0] = CHANNEL_BUFFER_SIZE;
-    self->buffers_ends[1] = CHANNEL_BUFFER_SIZE;
-    self->buffers_byte_offsets[0] = 0;
-    self->buffers_byte_offsets[1] = 0;
-    self->reading_buffer_index = 0;
-    self->filling_buffer_index = 0;
-    self->busy = false;
+    self->buffers[0] = (uint8_t*)malloc(CHANNEL_BUFFER_LEN);   // Use C heap. Easier to avoid gc and we have persistent buffers anyways
+    self->buffers[1] = (uint8_t*)malloc(CHANNEL_BUFFER_LEN);   // Use C heap. Easier to avoid gc and we have persistent buffers anyways
+    audio_channel_reset(self);
 
     // Make sure to clear the buffers to zero to avoid static sound
     // when audio first starts playing
-    memset(self->buffers[0], 0x0000, sizeof(uint8_t) * CHANNEL_BUFFER_SIZE);
-    memset(self->buffers[1], 0x0000, sizeof(uint8_t) * CHANNEL_BUFFER_SIZE);
+    memset(self->buffers[0], 0x0000, sizeof(uint8_t) * CHANNEL_BUFFER_LEN);
+    memset(self->buffers[1], 0x0000, sizeof(uint8_t) * CHANNEL_BUFFER_LEN);
 
     // https://github.com/raspberrypi/pico-examples/blob/eca13acf57916a0bd5961028314006983894fc84/dma/hello_dma/hello_dma.c#L21-L30
     // https://github.com/raspberrypi/pico-examples/blob/master/flash/xip_stream/flash_xip_stream.c#L58-L70 (see pg. 127 of rp2040 datasheet: https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf)
@@ -49,16 +67,11 @@ mp_obj_t audio_channel_class_new(const mp_obj_type_t *type, size_t n_args, size_
     // to 8-bits since smallest audio sample bit-depth is 8
     // (using 16 would mean we'd copy too much data in 8-bit case)
     #if defined(__EMSCRIPTEN__)
-
+        engine_audio_web_channel_init();
     #elif defined(__unix__)
-
+        engine_audio_unix_channel_init();
     #elif defined(__arm__)
-        self->dma_channel = dma_claim_unused_channel(true);
-        self->dma_config = dma_channel_get_default_config(self->dma_channel);
-        channel_config_set_transfer_data_size(&self->dma_config, DMA_SIZE_8);
-        channel_config_set_read_increment(&self->dma_config, true);
-        channel_config_set_write_increment(&self->dma_config, true);
-        // channel_config_set_dreq(&self->dma_config, DREQ_XIP_STREAM); // When this is set DMA never finishes (see pg. 127 of rp2040 datasheet: https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf)
+        engine_audio_rp3_channel_init(&self->dma_copy_channel, &self->dma_copy_config);
     #endif
     
     return MP_OBJ_FROM_PTR(self);
@@ -91,6 +104,78 @@ mp_obj_t audio_channel_play(mp_obj_t self_in, mp_obj_t sound_resource_obj, mp_ob
 MP_DEFINE_CONST_FUN_OBJ_3(audio_channel_play_obj, audio_channel_play);
 
 
+bool audio_channel_fill_internal_buffer(audio_channel_class_obj_t *channel, uint8_t buffer_to_fill_index){
+    // By default, assume the source is not
+    // indicating it is done providing samples
+    bool complete = false;
+
+    uint8_t *buffer_to_fill = channel->buffers[buffer_to_fill_index];
+    uint32_t filled_buffer_len = 0;
+
+    if(mp_obj_is_type(channel->source, &wave_sound_resource_class_type)){
+        wave_sound_resource_class_obj_t *wave = channel->source;
+        filled_buffer_len = wave_fill_dest(wave, channel, buffer_to_fill, CHANNEL_BUFFER_LEN, &complete);
+    }else if(mp_obj_is_type(channel->source, &tone_sound_resource_class_type)){
+        tone_sound_resource_class_obj_t *tone = channel->source;
+        filled_buffer_len = tone_fill_dest(tone, channel, buffer_to_fill, CHANNEL_BUFFER_LEN, &complete);
+    }else if(mp_obj_is_type(channel->source, &rtttl_sound_resource_class_type)){
+        rtttl_sound_resource_class_obj_t *rtttl = channel->source;
+        filled_buffer_len = rtttl_fill_dest(rtttl, channel, buffer_to_fill, CHANNEL_BUFFER_LEN, &complete);
+    }
+
+    // Update the channel with how many bytes were copied
+    channel->buffers_data_len[buffer_to_fill_index] = filled_buffer_len;
+
+    return complete;
+}
+
+
+// Fills `output` with `count` float samples
+// (may be less than -1.0 or grater than 1.0)
+//
+// Returns `true` when the channel determines
+// it reached the end of the source data and
+// looping is not enabled, otherwise, `false`
+bool audio_channel_get_samples(audio_channel_class_obj_t *channel, float *output, uint32_t count){
+    // By default, assume the source is not
+    // indicating it is done providing samples
+    bool complete = false;
+
+    // Check if more samples should be placed into
+    // channel audio buffers from source, and do it if
+    // the audio from the current read buffer has been
+    // filled
+    uint8_t  buffer_to_read_index = channel->buffer_to_read_index;
+    uint16_t buffer_cursor        = channel->buffers_byte_cursor[buffer_to_read_index];
+    uint16_t buffer_data_len      = channel->buffers_data_len[buffer_to_read_index];
+    if(buffer_cursor >= buffer_data_len){
+        // 1. Both buffers have audio samples but the read buffer
+        //    has been completly played, switch buffers
+        channel->buffer_to_fill_index = !channel->buffer_to_fill_index; // 0 to 1 or 1 to 0
+        channel->buffer_to_read_index = !channel->buffer_to_read_index; // 1 to 0 or 0 to 1
+
+        // 2. Now that the channels have been switched, fill the
+        //    fill buffer with new data while the other buffer is
+        //    read from
+        complete = audio_channel_fill_internal_buffer(channel, channel->buffer_to_fill_index);
+    }
+
+    // Get the buffer to read from, the cursor inside it, and the actual
+    // buffer to read from
+    buffer_to_read_index   = channel->buffer_to_read_index;
+    buffer_cursor = channel->buffers_byte_cursor[buffer_to_read_index];
+    uint8_t *buffer_to_read  = channel->buffers[buffer_to_read_index];
+
+    // Copy the data (blocking) to the output buffer (typically,
+    // the rp2 port will grab one sample at a time in the repeating
+    // callback. Other ports will ask for more data when their buffers
+    // need it, but they should be faster at copying)
+    // memcpy(output, buffer_to_read, sizeof(float)*count);
+
+    return complete;
+}
+
+
 /*  --- doc ---
     NAME: stop
     ID: audio_channel_stop
@@ -111,7 +196,7 @@ mp_obj_t audio_channel_stop(mp_obj_t self_in){
     // unlinked. Took care of it here anyway
     if(channel->source != NULL){
         if(mp_obj_is_type(channel->source, &wave_sound_resource_class_type)){
-            ((sound_resource_base_class_obj_t*)channel->source)->channel = NULL;
+            ((wave_sound_resource_class_obj_t*)channel->source)->channel = NULL;
         }else if(mp_obj_is_type(channel->source, &tone_sound_resource_class_type)){
             ((tone_sound_resource_class_obj_t*)channel->source)->channel = NULL;
         }else if(mp_obj_is_type(channel->source, &rtttl_sound_resource_class_type)){
@@ -119,19 +204,7 @@ mp_obj_t audio_channel_stop(mp_obj_t self_in){
         }
     }
 
-    channel->source = NULL;
-    channel->source_byte_offset = 0;
-    channel->gain = 1.0f;
-    channel->time = 0.0f;
-    channel->amplitude = 0.0f;
-    channel->done = true;
-    channel->loop = false;
-    channel->buffers_ends[0] = CHANNEL_BUFFER_SIZE;
-    channel->buffers_ends[1] = CHANNEL_BUFFER_SIZE;
-    channel->buffers_byte_offsets[0] = 0;
-    channel->buffers_byte_offsets[1] = 0;
-    channel->reading_buffer_index = 0;
-    channel->filling_buffer_index = 0;
+    audio_channel_reset(channel);
 
     // Set back to false now that we're done readjusting the channel
     channel->busy = false;

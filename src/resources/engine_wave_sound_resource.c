@@ -10,23 +10,48 @@
 
 uint8_t *wave_sound_resource_fill_destination(void *channel_in, uint32_t max_buffer_size, uint16_t *leftover_size){
     audio_channel_class_obj_t *channel = channel_in;
-    sound_resource_base_class_obj_t *source = (sound_resource_base_class_obj_t*)channel->source;
+    wave_sound_resource_class_obj_t *wave = (wave_sound_resource_class_obj_t*)channel->source;
 
-    *leftover_size = (uint16_t)fminf(source->total_data_size - channel->source_byte_offset, max_buffer_size);
-    uint8_t *data = ENGINE_BYTEARRAY_OBJ_TO_DATA(source->extra_data);
+    *leftover_size = (uint16_t)fminf(wave->total_data_size - channel->source_byte_offset, max_buffer_size);
+    uint8_t *data = ENGINE_BYTEARRAY_OBJ_TO_DATA(wave->data);
     return data + channel->source_byte_offset;
 }
 
 
-// Provided a output buffer, starts copy to buffer using platforms's copy
-void wave_fill_dest(float *output_sample_buffer, uint32_t start_offset, uint32_t len){
+// Provided a output buffer, starts copy
+// to buffer using platforms's copy
+uint32_t wave_fill_dest(wave_sound_resource_class_obj_t *wave, audio_channel_class_obj_t *channel, uint8_t *output, uint32_t byte_count, bool *complete){
+    // By default, assume this wave is not
+    // done providing samples
+    *complete = false;
+
+    uint32_t source_byte_cursor = channel->source_byte_cursor;
+    uint32_t total_data_size    = wave->total_data_size;
+    uint32_t remaining_bytes    = total_data_size - source_byte_cursor;
+
+    // Set the number of bytes to copy to whatever is smallest
+    byte_count = byte_count < remaining_bytes ? byte_count : remaining_bytes;
+
     #if defined(__EMSCRIPTEN__)
+        engine_audio_web_copy(output, NULL, byte_count);
 
     #elif defined(__unix__)
+        engine_audio_unix_copy(output, NULL, byte_count);
 
     #elif defined(__arm__)
-
+        engine_audio_rp3_copy(channel->dma_copy_channel, &channel->dma_copy_config output, NULL, byte_count);
+        
     #endif
+
+    // Update where we are in the channel's source buffer
+    channel->source_byte_cursor += byte_count;
+
+    // Check if we have reached the end of the source buffer
+    if(channel->source_byte_cursor >= total_data_size){
+        *complete = true;
+    }
+
+    return byte_count;
 }
 
 
@@ -34,9 +59,8 @@ mp_obj_t wave_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
     ENGINE_INFO_PRINTF("New WaveSoundResource");
     mp_arg_check_num(n_args, n_kw, 1, 2, false);
 
-    sound_resource_base_class_obj_t *self = mp_obj_malloc_with_finaliser(sound_resource_base_class_obj_t, &wave_sound_resource_class_type);
+    wave_sound_resource_class_obj_t *self = mp_obj_malloc_with_finaliser(wave_sound_resource_class_obj_t, &wave_sound_resource_class_type);
     self->base.type = &wave_sound_resource_class_type;
-    self->get_data = &wave_sound_resource_fill_destination;
     self->channel = NULL;
     self->play_counter_max = 0;
     self->play_counter = 0;
@@ -114,9 +138,9 @@ mp_obj_t wave_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
     ENGINE_INFO_PRINTF("\ttotal_sample_count:\t\t%lu", self->total_sample_count);
     ENGINE_INFO_PRINTF("\tbytes_per_sample:\t\t%lu", self->bytes_per_sample);
 
-    // Get space in continuous flash area (stored in extra data for this type 'wave_sound_resource_class_type')
-    self->extra_data = engine_resource_get_space_bytearray(self->total_data_size, self->in_ram);
-    engine_resource_start_storing(self->extra_data, self->in_ram);
+    // Get space in resource area (stored in extra data for this type 'wave_sound_resource_class_type')
+    self->data = engine_resource_get_space_bytearray(self->total_data_size, self->in_ram);
+    engine_resource_start_storing(self->data, self->in_ram);
 
     uint8_t temp_buffer[512];
     uint32_t remaining_amount_to_read = self->total_data_size;
@@ -143,7 +167,7 @@ mp_obj_t wave_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
 static mp_obj_t wave_sound_resource_class_del(mp_obj_t self_in){
     ENGINE_INFO_PRINTF("WaveSoundResource: Deleted (freeing sound data)");
 
-    sound_resource_base_class_obj_t *self = self_in;
+    wave_sound_resource_class_obj_t *self = self_in;
     audio_channel_class_obj_t *channel = self->channel;
 
     // This is very important! Need to make sure to set channel source this source is
@@ -171,7 +195,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(wave_sound_resource_class_del_obj, wave_sound_resource
 static void wave_sound_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing WaveSoundResource attr");
 
-    sound_resource_base_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    wave_sound_resource_class_obj_t *self = MP_OBJ_TO_PTR(self_in);
 
     if(destination[0] == MP_OBJ_NULL){          // Load
         switch(attribute){
@@ -180,7 +204,7 @@ static void wave_sound_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_
                 destination[1] = self_in;
             break;
             case MP_QSTR_data:
-                destination[0] = self->extra_data;
+                destination[0] = self->data;
             break;
             case MP_QSTR_duration:
                 destination[0] = mp_obj_new_float((float)self->total_sample_count / (float)self->sample_rate);
@@ -194,7 +218,7 @@ static void wave_sound_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_
     }else if(destination[1] != MP_OBJ_NULL){    // Store
         switch(attribute){
             case MP_QSTR_data:
-                self->extra_data = destination[1];
+                self->data = destination[1];
             break;
             case MP_QSTR_duration:
                 mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("WaveSoundResource: ERROR: Setting the duration it now allowed!"));

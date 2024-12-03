@@ -108,15 +108,25 @@ float ENGINE_FAST_FUNCTION(rtttl_sound_resource_get_sample)(rtttl_sound_resource
 }
 
 
-// Provided a output buffer, starts copy to buffer using platforms's copy
-void rtttl_fill_dest(float *output_sample_buffer, uint32_t start_offset, uint32_t len){
+// Provided a output buffer, starts copy
+// to buffer using platforms's copy
+uint32_t rtttl_fill_dest(rtttl_sound_resource_class_obj_t *rtttl, audio_channel_class_obj_t *channel, uint8_t *output, uint32_t byte_count, bool *complete){
+    // By default, assume this rtttl is not
+    // done providing samples
+    bool complete = false;
+
     #if defined(__EMSCRIPTEN__)
+        engine_audio_web_copy(NULL, NULL, 0);
 
     #elif defined(__unix__)
+        engine_audio_unix_copy(NULL, NULL, 0);
 
     #elif defined(__arm__)
-
+        engine_audio_rp3_copy(channel->dma_copy_channel, &channel->dma_copy_config NULL, NULL, 0);
+        
     #endif
+
+    return complete;
 }
 
 
@@ -192,7 +202,7 @@ uint16_t rtttl_sound_resource_count_notes(){
     engine_file_seek_until(0, ":", 1);
     engine_file_seek_until(0, ":", 1);
 
-    // Start with one noted counted since
+    // Start with one note counted since
     // last note does not end with comma
     uint16_t note_count = 1;
 

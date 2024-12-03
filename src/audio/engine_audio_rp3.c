@@ -7,7 +7,55 @@
 
 
     // Samples each channel, adds, normalizes, and sets PWM
-    void ENGINE_FAST_FUNCTION(repeating_audio_callback)(void){
+    void ENGINE_FAST_FUNCTION(engine_audio_rp3_playback_cb)(void){
+        float output = 0.0f;        // Samples from each channel are added to this
+        bool play_ouput = false;    // Set `true` if at least one channel is ready to play
+
+        for(uint8_t icx=0; icx<CHANNEL_COUNT; icx++){
+            audio_channel_class_obj_t *channel = channels[icx];
+
+            // If the channel is not playing/set or if it is
+            // busy being setup, skip it
+            if(channel->source == NULL || channel->busy){
+                continue;
+            }
+
+            // Playing at least one sample, switch flag
+            play_ouput = true;
+
+            // Get one sample from a channel at a time
+            float sample = 0.0f;
+            bool channel_source_complete = audio_channel_get_samples(channel, &sample, 1);
+
+            // Set the amplitude just retrieved as the last sample
+            // to have been played on the channel
+            channel->amplitude = sample;
+
+            // Mix the sample into the output
+            output += sample * channel->gain * master_volume;
+
+            // If the channel is not set to loop the source, stop
+            // the channel now that the source says it is done
+            if(channel->loop == false && channel_source_complete){
+                audio_channel_stop(channel);
+            }
+        }
+
+        if(play_ouput){
+            // Up to the user to make sure all playing channels do not add up and
+            // go out of -1.0 ~ 1.0 range. Clamp the total sample sum since
+            // very likely it could end of out of bounds, and map to PWM levels
+            // NOTE: Set PWM wrap to 512 levels so it will use values from 0 to 511
+            output = engine_math_map_clamp(output, -1.0f, 1.0f, 0.0f, 511.0f);
+
+            // Actually set the wrap value to play this sample
+            pwm_set_gpio_level(AUDIO_PWM_PIN, (uint32_t)(output));
+        }
+
+        pwm_clear_irq(audio_callback_pwm_pin_slice);
+
+        return;
+    }
 
 
     // Adjusts PWM wrap value based on clock speed
@@ -18,17 +66,27 @@
 
 
     void engine_audio_rp3_init(){
-        //generate the interrupt at the audio sample rate to set the PWM duty cycle
+        // Generate the interrupt at the audio sample rate to set the PWM duty cycle
         audio_callback_pwm_pin_slice = pwm_gpio_to_slice_num(AUDIO_CALLBACK_PWM_PIN);
         pwm_clear_irq(audio_callback_pwm_pin_slice);
         pwm_set_irq_enabled(audio_callback_pwm_pin_slice, true);
-        irq_set_exclusive_handler(PWM_IRQ_WRAP_0, repeating_audio_callback);
+        irq_set_exclusive_handler(PWM_IRQ_WRAP_0, engine_audio_rp3_playback_cb);
         irq_set_priority(PWM_IRQ_WRAP_0, 1);
         irq_set_enabled(PWM_IRQ_WRAP_0, true);
         audio_callback_pwm_pin_config = pwm_get_default_config();
         pwm_config_set_clkdiv_int(&audio_callback_pwm_pin_config, 1);
         engine_audio_rp3_adjust_freq(150 * 1000 * 1000);
         pwm_init(audio_callback_pwm_pin_slice, &audio_callback_pwm_pin_config, true);
+    }
+
+
+    void engine_audio_rp3_channel_init(int *dma_channel, dma_channel_config *dma_config){
+        *dma_channel = dma_claim_unused_channel(true);
+        *dma_config  = dma_channel_get_default_config(*dma_channel);
+        channel_config_set_transfer_data_size(dma_config, DMA_SIZE_8);
+        channel_config_set_read_increment(dma_config, true);
+        channel_config_set_write_increment(dma_config, true);
+        // channel_config_set_dreq(&self->dma_config, DREQ_XIP_STREAM); // When this is set DMA never finishes (see pg. 127 of rp2040 datasheet: https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf)
     }
 
 
@@ -45,10 +103,34 @@
         gpio_set_function(AUDIO_PWM_PIN, GPIO_FUNC_PWM);
         pwm_config audio_pwm_pin_config = pwm_get_default_config();
         pwm_config_set_clkdiv_int(&audio_pwm_pin_config, 1);
-        pwm_config_set_wrap(&audio_pwm_pin_config, 512);   // 125MHz / 1024 = 122kHz
+        pwm_config_set_wrap(&audio_pwm_pin_config, 512);   // 150MHz / 512 = 146kHz
         pwm_init(audio_pwm_pin_slice, &audio_pwm_pin_config, true);
 
         // Now allow sound to play by enabling the amplifier
         gpio_put(AUDIO_ENABLE_PIN, 1);
+    }
+
+
+    void engine_audio_rp3_copy(int dma_copy_channel, dma_channel_config *dma_copy_config, uint8_t *dest, uint8_t *src, uint32_t count){
+        // https://github.com/raspberrypi/pico-examples/blob/eca13acf57916a0bd5961028314006983894fc84/flash/xip_stream/flash_xip_stream.c#L45-L48
+        // while (!(xip_ctrl_hw->stat & XIP_STAT_FIFO_EMPTY))
+        //     (void) xip_ctrl_hw->stream_fifo;
+        // xip_ctrl_hw->stream_addr = (uint32_t)current_source_data;
+        // xip_ctrl_hw->stream_ctr = channel->buffer_end;
+
+        if(dma_channel_is_busy(dma_copy_channel)){
+            ENGINE_WARNING_PRINTF("AudioModule: Waiting on previous DMA transfer to complete, this ideally shouldn't happen");
+            dma_channel_wait_for_finish_blocking(dma_copy_channel);
+        }
+
+        // https://github.com/raspberrypi/pico-examples/blob/master/flash/xip_stream/flash_xip_stream.c#L58-L70
+        dma_channel_configure(
+            dma_copy_channel,   // Channel to be configured
+            dma_copy_config,    // The configuration we just created
+            dest,               // The initial write address
+            src,                // The initial read address
+            count,              // Number of transfers; in this case each is 1 byte
+            true                // Start immediately
+        );
     }
 #endif
