@@ -6,9 +6,12 @@ void engine_main_reset();
 
 
 #if defined(__unix__)
-    extern char filesystem_root[1024];
+    #define FILESYSTEM_ROOT_MAX_LEN 512
 #else
-    extern char filesystem_root[2];
+    #define FILESYSTEM_ROOT_MAX_LEN 2
 #endif
+
+extern char filesystem_root[FILESYSTEM_ROOT_MAX_LEN];
+
 
 #endif  // ENGINE_MAIN_H

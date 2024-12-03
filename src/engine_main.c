@@ -30,13 +30,7 @@
 #define BATTERY_ADC_PORT 3
 
 
-#if defined(__unix__)
-    char filesystem_root[1024];
-#else
-    char filesystem_root[2];
-#endif
-
-
+char filesystem_root[FILESYSTEM_ROOT_MAX_LEN];
 bool is_engine_initialized = false;
 
 
