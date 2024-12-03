@@ -27,6 +27,12 @@ volatile mp_obj_t channels[CHANNEL_COUNT];
 // The master volume that all mixed samples are scaled by (0.0 ~ 1.0)
 volatile float master_volume = 1.0f;
 
+
+void engine_audio_apply_master_volume(float volume){
+    master_volume = volume;
+}
+
+
 #if defined(__EMSCRIPTEN__)
     // Nothing to do
 #elif defined(__unix__)

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <unistd.h>
+#include <string.h>
 
 #include "py/obj.h"
 #include "py/runtime.h"
@@ -22,7 +23,11 @@
 #include "link/engine_link_module.h"
 #include "py/mpstate.h"
 
-#if defined(__arm__)
+#if defined(__EMSCRIPTEN__)
+
+#elif defined(__unix__)
+    #include <dirent.h>
+#elif defined(__arm__)
     #include "hardware/adc.h"
 #endif
 
@@ -38,6 +43,127 @@ void engine_main_raise_if_not_initialized(){
     if(is_engine_initialized == false){
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineMain: ERROR: `import engine_main` needs to be done at least once at the very start!"));
     }
+}
+
+
+void engine_main_handle_settings(mp_obj_str_t *settings_location){
+    ENGINE_PRINTF("Settings location: %s\n", settings_location->data);
+
+    // Default values
+    double volume = 100.0;
+    double brightness = 100.0;
+
+    // Create settings file if it does not exist, otherwise,
+    // parse the file
+    if(!engine_file_exists(settings_location)){
+        engine_file_open_create_write(0, settings_location);
+
+        uint8_t volume_str[] = {'v', 'o', 'l', 'u', 'm', 'e', '=', '1', '0', '0', '.', '0', '\n'};
+        uint8_t brightness_str[] = {'b', 'r', 'i', 'g', 'h', 't', 'n', 'e', 's', 's', '=', '1', '0', '0', '.', '0'};
+
+        engine_file_write(0, volume_str, sizeof(volume_str));
+        engine_file_write(0, brightness_str, sizeof(brightness_str));
+    }else{
+        engine_file_open_read(0, settings_location);
+        uint32_t file_size = engine_file_size(0);
+        
+        // Buffer to hold read characters
+        char line_buffer[32] = {0};
+        uint8_t line_buffer_cursor = 0;
+        char character = '\0';
+        uint8_t equals_index = 0;
+        uint8_t line_number = 1;
+        uint32_t total_read_amount = 0;
+        
+        while(true){
+            // Accumlate one character at a time into the buffer
+            uint8_t read_amount = engine_file_read(0, &character, 1);
+            total_read_amount += read_amount;
+
+            // Ignore spaces but accumulate everything else
+            if(character != ' '){
+                line_buffer[line_buffer_cursor] = character;
+
+                // Need to track the seperator (equals sign)
+                if(character == '='){
+                    equals_index = line_buffer_cursor;
+                }
+
+                line_buffer_cursor++;
+            }
+
+            // If we're at the end of a line/file, parse the buffer
+            if(character == '\n' || total_read_amount == file_size){
+                if(equals_index == 0){
+                    mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineMain: ERROR: Could not find '=' sign on line %d of 'system/settings.txt' file!"), line_number);
+                }
+
+                if(strncmp("volume", line_buffer, equals_index) == 0){
+                    volume = strtod(line_buffer+equals_index+1, NULL);
+                }else if(strncmp("brightness", line_buffer, equals_index) == 0){
+                    brightness = strtod(line_buffer+equals_index+1, NULL);
+                }else{
+                    ENGINE_WARNING_PRINTF("EngineMain: WARNING: Could not parse line in 'system/settings.txt' file! Unknown value...");
+                }
+
+                // Reset and increment these every line
+                line_buffer_cursor = 0;
+                character = 0;
+                equals_index = 0;
+                memset(line_buffer, 0, sizeof(line_buffer));
+                line_number++;
+            }
+
+            // Break the loop when we reach the end of the file
+            if(total_read_amount == file_size){
+                break;
+            }
+        }
+    }
+
+    if(volume > 100.0){
+        ENGINE_WARNING_PRINTF("EngineMain: WARNING: Volume from 'system/settings.txt' is set to %0.3f. The range is typically 0 ~ 100 but the volume can be blown if desired", volume);
+    }
+
+    if(brightness > 100.0){
+        mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineMain: ERROR: Brightness from 'system/settings.txt' is set to %0.3f. The range is 0 ~ 100"), brightness);
+    }
+
+    ENGINE_PRINTF("%0.3f %0.3f\n", volume, brightness)
+
+    // Set the master volume and brightness in the other engine modules
+    engine_audio_apply_master_volume((float)volume/100.0f);
+    // engine_display_apply_brightness((float)brightness/100.0f);
+
+    // No matter what, close the file in this index
+    engine_file_close(0);
+}
+
+
+void engine_main_settings(){
+    // Use .txt because Thonny knows how to open that by default (but not .ini)
+    char settings_location_path[] = "system/settings.txt";
+
+    #if defined(__arm__) || defined(__EMSCRIPTEN__)
+        char settings_location_full[FILESYSTEM_ROOT_MAX_LEN + sizeof(settings_location_path)];
+        int size = sprintf(settings_location_full, "%s/%s", filesystem_root, settings_location_path);
+
+        mp_obj_str_t settings_location = {
+            .base.type = &mp_type_str,
+            .hash = 0,
+            .data = (byte*)settings_location_full,
+            .len = size,
+        };
+        engine_main_handle_settings(&settings_location);
+    #elif defined(__unix__)
+        mp_obj_str_t settings_location = {
+            .base.type = &mp_type_str,
+            .hash = 0,
+            .data = (byte*)settings_location_path,
+            .len = sizeof(settings_location_path),
+        };
+        engine_main_handle_settings(&settings_location);
+    #endif
 }
 
 
@@ -73,6 +199,24 @@ void engine_main_reset(){
 
 
 static mp_obj_t engine_main_module_init(){
+    // If the engine has not been initialzed yet, get the filesystem root
+    if(!is_engine_initialized){
+        #if defined(__EMSCRIPTEN__) || defined(__arm__)
+            // On hardware or in the browser, it's easy, it is always '/'
+            filesystem_root[0] = '/';
+            filesystem_root[1] = '\0';
+        #elif defined(__unix__)
+            // On Linux, assume the user knows to execute while in `filesystem` folder
+            if(getcwd(filesystem_root, sizeof(filesystem_root)) == NULL){
+                filesystem_root[0] = '\0';
+            }
+        #endif
+
+        ENGINE_PRINTF("Filesystem root: %s\n", filesystem_root);
+    }
+
+    engine_main_settings();
+
     if(is_engine_initialized == true){
         // Always do a engine reset on import since there are
         // cases when we can't catch the end of the script
@@ -94,18 +238,6 @@ static mp_obj_t engine_main_module_init(){
     is_engine_initialized = true;
 
     ENGINE_PRINTF("Engine init!\n");
-
-    #if defined(__unix__)
-        if(getcwd(filesystem_root, sizeof(filesystem_root)) == NULL){
-            filesystem_root[0] = '\0';
-        }
-        
-    #else
-        filesystem_root[0] = '/';
-        filesystem_root[1] = '\0';
-    #endif
-
-    ENGINE_PRINTF("Filesystem root: %s\n", filesystem_root);
 
     engine_resource_init();
 
