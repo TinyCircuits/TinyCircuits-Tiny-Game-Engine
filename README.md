@@ -4,33 +4,37 @@ This is a 2D/3D game engine for embedded devices that can run Python/MicroPython
 # Building on Linux for RP2350
 1. Update package list: `sudo apt update`
 2. Install build chain dependencies (https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf#page=33): `sudo apt install git python3 cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential g++ libstdc++-arm-none-eabi-newlib`
-3. Clone TinyCircuits MicroPython: `git clone --recurse-submodules https://github.com/TinyCircuits/micropython.git mp-thumby`
+3. Clone TinyCircuits MicroPython: `git https://github.com/TinyCircuits/micropython.git mp-thumby`
 4. `cd` into MicroPython: `cd mp-thumby`
 5. Checkout engine branch: `git checkout engine`
-6. Setup cross compiler:
+6. Init the engine submodule: `git submodule update --init --recursive`
+7. Setup cross compiler:
    1. cd `mpy-cross` (folder is inside `mp-thumby`)
    2. `make -j8`
-7. Go back to MicroPython root folder: `cd ..`
-8. Setup `rp2` port:
+8. Go back to MicroPython root folder: `cd ..`
+9. Setup `rp2` port:
    1. `cd ports/rp2`
    2. `make submodules`
    3. `make clean`
-9. Go back to MicroPython root folder: `cd ../..`
-10. Go into engine folder: `cd TinyCircuits-Tiny-Game-Engine`
-11. Run the custom Python build and upload script: `python3 build_and_upload.py` (NOTE: you may need to install `pyserial`: `python3 -m pip install pyserial` and the .uf2 will be output to `mp-thumby/ports/rp2/build-THUMBY_COLOR/firmware.uf2` once you see the message `Finding drive letter...`)
+10. Go back to MicroPython root folder: `cd ../..`
+11. Go into engine folder: `cd TinyCircuits-Tiny-Game-Engine`
+12. Run the custom Python build and upload script: `python3 build_and_upload.py`
+
+(NOTE: you may need to install `pyserial`: `python3 -m pip install pyserial` and the .uf2 will be output to `mp-thumby/ports/rp2/build-THUMBY_COLOR/firmware.uf2` once you see the message `Finding drive letter...`)
 
 # Building on Linux for Linux
 These instructions assume that you are cloning MicroPython from the TinyCircuits Fork that has been pre-modified
 1. Install SDL2: `sudo apt install libsdl2-dev`
 2. Install FFI: `sudo apt install libffi-dev`
 3. Install build tools: `sudo apt install build-essential`
-4. Clone TinyCircuits MicroPython: `git clone --recurse-submodules https://github.com/TinyCircuits/micropython.git mp-thumby`
+4. Clone TinyCircuits MicroPython: `git clone https://github.com/TinyCircuits/micropython.git mp-thumby`
 5. `cd` into MicroPython: `cd mp-thumby`
 6. Checkout engine branch: `git checkout engine`
-7. Setup UNIX port:
+7. Init the engine submodule: `git submodule update --init --recursive`
+8. Setup UNIX port:
    1. `cd ports/unix`
    2. `make submodules`
-8. `cd` to engine file system to build and run MicroPython and the engine
+9. `cd` to engine file system to build and run MicroPython and the engine
    1. `cd`: `cd ../../TinyCircuits-Tiny-Game-Engine/filesystem`
    2. build: `(cd ../../ports/unix && make -j8 USER_C_MODULES=../../TinyCircuits-Tiny-Game-Engine DEBUG=1)`
    3. run: `../micropython_loop ../../ports/unix/build-standard/micropython -X heapsize=2617152 main.py`
