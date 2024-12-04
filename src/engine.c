@@ -387,23 +387,27 @@ MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_freq_obj, 0, 1, engine_freq);
    ID: engine_setting_volume
    DESC: Apples and saves the master volume that all sounds on the device are affected by. This isn't intended to be used by games.
    PARAM: [type=float] [name=volume] [value=any positive float between 0.0 and 1.0 (if no argument is supplied, current settings value is retrieved)]
+   PARAM: [type=bool]  [name=save]   [value=True or False (save or just apply the setting)]
    RETURN: None or float
 */
 static mp_obj_t engine_setting_volume(size_t n_args, const mp_obj_t *args){
     if(n_args == 0){
         // Just return this since it was loaded when engine_main was imported
         return mp_obj_new_float(engine_audio_get_master_volume());
+    }else if(n_args == 2){
+        float new_volume = mp_obj_get_float(args[0]);
+        float brightness = engine_display_get_brightness();
+        bool save = mp_obj_get_int(args[1]);
+
+        engine_audio_apply_master_volume(new_volume);
+        if(save) engine_main_settings_write(new_volume, brightness);
+    }else{
+        mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("Engine: ERROR: Expected 0 or 2 arguments, got %d"), n_args);
     }
-
-    float new_volume = mp_obj_get_float(args[0]);
-    float brightness = engine_display_get_brightness();
-
-    engine_audio_apply_master_volume(new_volume);
-    engine_main_settings_write(new_volume, brightness);
 
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_setting_volume_obj, 0, 1, engine_setting_volume);
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_setting_volume_obj, 0, 2, engine_setting_volume);
 
 
 /* --- doc ---
@@ -411,23 +415,27 @@ MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_setting_volume_obj, 0, 1, engine_sett
    ID: engine_setting_brightness
    DESC: Apples and saves the screen brightness
    PARAM: [type=float] [name=volume] [value=any positive float between 0.0 and 1.0 (if no argument is supplied, current settings value is retrieved)]
+   PARAM: [type=bool]  [name=save]   [value=True or False (save or just apply the setting)]
    RETURN: None or float
 */
 static mp_obj_t engine_setting_brightness(size_t n_args, const mp_obj_t *args){
     if(n_args == 0){
         // Just return this since it was loaded when engine_main was imported
         return mp_obj_new_float(engine_display_get_brightness());
+    }else if(n_args == 2){
+        float volume = engine_audio_get_master_volume();
+        float new_brightness = mp_obj_get_float(args[0]);
+        bool save = mp_obj_get_int(args[1]);
+
+        engine_display_apply_brightness(new_brightness);
+        if(save) engine_main_settings_write(volume, new_brightness);
+    }else{
+        mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("Engine: ERROR: Expected 0 or 2 arguments, got %d"), n_args);
     }
-
-    float volume = engine_audio_get_master_volume();
-    float new_brightness = mp_obj_get_float(args[0]);
-
-    engine_display_apply_brightness(new_brightness);
-    engine_main_settings_write(volume, new_brightness);
 
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_setting_brightness_obj, 0, 1, engine_setting_brightness);
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_setting_brightness_obj, 0, 2, engine_setting_brightness);
 
 
 static mp_obj_t engine_root_dir(){

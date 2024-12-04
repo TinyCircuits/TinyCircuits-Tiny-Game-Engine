@@ -69,8 +69,8 @@ def end_rumble(delay):
     engine_io.rumble(0.0)
 
 def start_rumble():
-    engine_io.rumble(0.3)
-    rumble_delay.start(85, end_rumble)
+    engine_io.rumble(0.425)
+    rumble_delay.start(90, end_rumble)
 
 # Main launcher loop
 while True:

@@ -44,8 +44,11 @@ class SettingIcon(GUIBitmapButton2DNode):
 
 
 class SettingsSlider(Rectangle2DNode):
-    def __init__(self, font, bitmap, setter_getter):
+    def __init__(self, font, bitmap, min, max, setter_getter):
         super().__init__(self)
+
+        self.min = min
+        self.max = max
 
         self.setter_getter = setter_getter
         self.percentage = self.setter_getter()
@@ -88,15 +91,15 @@ class SettingsSlider(Rectangle2DNode):
         self.color = setting_background_color
 
     def update(self):
-        if self.percentage > 1.0:
-            self.percentage = 1.0
-        elif self.percentage < 0.0:
-            self.percentage = 0.0
-
-        self.setter_getter(self.percentage)
+        if self.percentage > self.max:
+            self.percentage = self.max
+        elif self.percentage < self.min:
+            self.percentage = self.min
 
         self.bar.width = self.bar_max_width * self.percentage
         self.position_bar()
+
+        self.setter_getter(self.percentage, False)  # Do not save setting, just apply
 
     def tick(self, dt):
         if self.icon.focused is not True:
@@ -109,13 +112,18 @@ class SettingsSlider(Rectangle2DNode):
             self.percentage += 0.025
             self.update()
         
+        # Only save after one or the other button is done being held
+        # (don't want to constantly write the file)
+        if engine_io.LEFT.is_just_released or engine_io.RIGHT.is_just_released:
+            self.setter_getter(self.percentage, True)   # Actually save the setting
+        
 
 class SettingsScreen():
     def __init__(self, font):
-        self.volume_slider = SettingsSlider(font, volume_texture, engine.setting_volume)
+        self.volume_slider = SettingsSlider(font, volume_texture, 0.0, 1.0, engine.setting_volume)
         self.volume_slider.position.y = -28
 
-        self.brightness_slider = SettingsSlider(font, sun_texture, engine.setting_brightness)
+        self.brightness_slider = SettingsSlider(font, sun_texture, 0.05, 1.0, engine.setting_brightness)
         self.brightness_slider.position.y = -2
     
     def tell_page(self, new_page):

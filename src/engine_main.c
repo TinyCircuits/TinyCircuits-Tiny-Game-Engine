@@ -61,10 +61,10 @@ void engine_main_settings_write(float volume, float brightness){
 
     char buffer[32];
 
-    int size = snprintf(buffer, 32, "volume=%0.1f\n", (double)volume);
+    int size = snprintf(buffer, 32, "volume=%0.2f\n", (double)volume);
     engine_file_write(0, buffer, size);
 
-    size = snprintf(buffer, 32, "brightness=%0.1f", (double)brightness);
+    size = snprintf(buffer, 32, "brightness=%0.2f", (double)brightness);
     engine_file_write(0, buffer, size);
 
     engine_file_close(0);
@@ -136,14 +136,14 @@ void engine_main_settings_read(){
     engine_file_close(0);
 
     // Clamp and re-write values if out of bounds
-    if((volume < 0.0f || volume > 1.0f) || (brightness < 0.0f || brightness > 1.0f)){
+    if((volume < 0.0f || volume > 1.0f) || (brightness < 0.05f || brightness > 1.0f)){
         volume = engine_math_clamp(volume, 0.0f, 1.0f);
-        brightness = engine_math_clamp(brightness, 0.0f, 1.0f);
+        brightness = engine_math_clamp(brightness, 0.05f, 1.0f);
 
         engine_main_settings_write(volume, brightness);
     }
 
-    ENGINE_PRINTF("Volume: %0.1f, Brightness: %0.1f\n", (double)volume, (double)brightness);
+    ENGINE_PRINTF("Volume: %0.2f, Brightness: %0.2f\n", (double)volume, (double)brightness);
 
     // Set the master volume and brightness in the other engine modules
     engine_audio_apply_master_volume((float)volume);
