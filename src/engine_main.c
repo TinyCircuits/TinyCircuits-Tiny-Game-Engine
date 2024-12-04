@@ -132,7 +132,7 @@ void engine_main_handle_settings(mp_obj_str_t *settings_location){
     ENGINE_PRINTF("%0.3f %0.3f\n", volume, brightness)
 
     // Set the master volume and brightness in the other engine modules
-    engine_audio_apply_master_volume((float)volume/100.0f);
+    engine_audio_set_master_volume((float)volume/100.0f);
     // engine_display_apply_brightness((float)brightness/100.0f);
 
     // No matter what, close the file in this index
@@ -179,7 +179,7 @@ void engine_main_reset(){
     engine_link_module_reset();
 
     // Reset contigious flash space manager
-    engine_audio_stop_all();
+    engine_audio_reset();
     engine_resource_reset();
     engine_gui_reset();
 
