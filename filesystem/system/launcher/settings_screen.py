@@ -4,6 +4,7 @@ from engine_nodes import EmptyNode, Rectangle2DNode, Text2DNode, GUIBitmapButton
 from engine_math import Vector2
 from engine_resources import TextureResource
 import engine_draw
+import engine
 from engine_draw import Color
 
 setting_background_color = Color(0.157, 0.137, 0.263)                          # Background color for category rows
@@ -43,10 +44,11 @@ class SettingIcon(GUIBitmapButton2DNode):
 
 
 class SettingsSlider(Rectangle2DNode):
-    def __init__(self, font, bitmap):
+    def __init__(self, font, bitmap, setter_getter):
         super().__init__(self)
 
-        self.percentage = 1.0
+        self.setter_getter = setter_getter
+        self.percentage = self.setter_getter()
         
         self.scale_factor = 0.65
 
@@ -64,7 +66,7 @@ class SettingsSlider(Rectangle2DNode):
         self.icon.position.x = (-self.width/2) + (bitmap.width*self.scale_factor/2) + 1
 
         self.bar_max_width = self.width - (bitmap.width*self.scale_factor) - 6
-        self.bar = Rectangle2DNode(width=self.bar_max_width, height=self.height-14, inherit_scale=False, inherit_opacity=False, color=bar_color)
+        self.bar = Rectangle2DNode(width=self.bar_max_width*self.percentage, height=self.height-14, inherit_scale=False, inherit_opacity=False, color=bar_color)
         self.position_bar()
 
         self.add_child(self.icon)
@@ -85,34 +87,36 @@ class SettingsSlider(Rectangle2DNode):
     def on_unfocus(self):
         self.color = setting_background_color
 
+    def update(self):
+        if self.percentage > 1.0:
+            self.percentage = 1.0
+        elif self.percentage < 0.0:
+            self.percentage = 0.0
+
+        self.setter_getter(self.percentage)
+
+        self.bar.width = self.bar_max_width * self.percentage
+        self.position_bar()
+
     def tick(self, dt):
         if self.icon.focused is not True:
             return
         
         if engine_io.LEFT.is_pressed:
-            self.percentage -= 0.01
+            self.percentage -= 0.025
+            self.update()
         elif engine_io.RIGHT.is_pressed:
-            self.percentage += 0.01
+            self.percentage += 0.025
+            self.update()
         
-        if self.percentage > 1.0:
-            self.percentage = 1.0
-        elif self.percentage < 0.0:
-            self.percentage = 0.0
-        
-        self.bar.width = self.bar_max_width * self.percentage
-        self.position_bar()
-
 
 class SettingsScreen():
     def __init__(self, font):
-        # self.credit = Text2DNode(font=font, text="Nothing here\nyet...", letter_spacing=1, line_spacing=1)
-        # self.credit.position.x = 128
+        self.volume_slider = SettingsSlider(font, volume_texture, engine.setting_volume)
+        self.volume_slider.position.y = -28
 
-        self.volume_slider = SettingsSlider(font, volume_texture)
-        self.volume_slider.position.y = -30
-
-        self.brightness_slider = SettingsSlider(font, sun_texture)
-        self.brightness_slider.position.y = -6
+        self.brightness_slider = SettingsSlider(font, sun_texture, engine.setting_brightness)
+        self.brightness_slider.position.y = -2
     
     def tell_page(self, new_page):
         global page

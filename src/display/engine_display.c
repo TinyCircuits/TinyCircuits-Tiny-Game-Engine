@@ -23,7 +23,7 @@
 
 // Defined in engine_display_common.c
 extern uint16_t *active_screen_buffer;
-
+float screen_brightness = 1.0f;
 
 void engine_display_init(){
     ENGINE_PRINTF("EngineDisplay: Setting up...\n");
@@ -37,6 +37,24 @@ void engine_display_init(){
     #elif defined(__arm__)
         engine_display_gc9107_init();
     #endif
+}
+
+
+void engine_display_apply_brightness(float brightness){
+    screen_brightness = brightness;
+
+    #if defined(__EMSCRIPTEN__)
+
+    #elif defined(__unix__)
+        
+    #elif defined(__arm__)
+        
+    #endif
+}
+
+
+float engine_display_get_brightness(){
+    return screen_brightness;
 }
 
 

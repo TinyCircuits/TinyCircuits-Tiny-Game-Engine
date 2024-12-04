@@ -14,4 +14,7 @@ void engine_main_reset();
 extern char filesystem_root[FILESYSTEM_ROOT_MAX_LEN];
 
 
+void engine_main_settings_write(float volume, float brightness);
+
+
 #endif  // ENGINE_MAIN_H
