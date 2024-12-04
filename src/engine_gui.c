@@ -74,15 +74,6 @@ bool engine_gui_is_gui_focused(){
 
 
 void engine_gui_focus_node(engine_node_base_t *gui_node_base){
-    // Focus this node
-    if(mp_obj_is_type(gui_node_base, &engine_gui_bitmap_button_2d_node_class_type)){
-        engine_gui_bitmap_button_2d_node_class_obj_t *gui_node = gui_node_base->node;
-        gui_node->focused = true;
-    }else{
-        engine_gui_button_2d_node_class_obj_t *gui_node = gui_node_base->node;
-        gui_node->focused = true;
-    }
-
     // Unfocus the last one
     if(focused_gui_node_base != NULL){
         if(mp_obj_is_type(focused_gui_node_base, &engine_gui_bitmap_button_2d_node_class_type)){
@@ -92,6 +83,15 @@ void engine_gui_focus_node(engine_node_base_t *gui_node_base){
             engine_gui_button_2d_node_class_obj_t *gui_node = focused_gui_node_base->node;
             gui_node->focused = false;
         }
+    }
+
+    // Focus this node
+    if(mp_obj_is_type(gui_node_base, &engine_gui_bitmap_button_2d_node_class_type)){
+        engine_gui_bitmap_button_2d_node_class_obj_t *gui_node = gui_node_base->node;
+        gui_node->focused = true;
+    }else{
+        engine_gui_button_2d_node_class_obj_t *gui_node = gui_node_base->node;
+        gui_node->focused = true;
     }
 
     focused_gui_node_base = gui_node_base;

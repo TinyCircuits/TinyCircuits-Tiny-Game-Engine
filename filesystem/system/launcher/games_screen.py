@@ -29,6 +29,9 @@ full_screen_rect = Rectangle2DNode(color=engine_draw.black, width=128, height=12
 loading_bar_rect = Rectangle2DNode(color=engine_draw.white, height=12, layer=6, opacity=0.0)
 loading_bar_width_increment = 0
 
+last_focused_tile = None
+
+
 def setup_loading_bar(game_count):
     global loading_bar_width_increment
     full_screen_rect.opacity = 1.0
@@ -179,7 +182,10 @@ class GameLauncherTile(GUIBitmapButton2DNode):
         self.tween.start(self.position, "x", self.position.x, x, 100, 1.0, ONE_SHOT, EASE_SINE_OUT)
         
     def on_just_focused(self):
+        global last_focused_tile
+
         self.on_tile_focused_cb(self)
+        last_focused_tile = self
     
     def on_just_pressed(self):
         # Save launcher state so splash doesn't show (TODO: save something)
@@ -362,6 +368,7 @@ class GamesScreen():
 
         if page == 0:
             are_tiles_disabled = False
+            if last_focused_tile is not None: last_focused_tile.focused = True
         else:
             are_tiles_disabled = True
         

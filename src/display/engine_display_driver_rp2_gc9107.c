@@ -1,6 +1,7 @@
 #include "engine_display_driver_rp2_gc9107.h"
 #include "engine_display_common.h"
 #include "debug/debug_print.h"
+#include "engine_display.h"
 
 #include <string.h>
 #include <stdbool.h>
@@ -8,6 +9,8 @@
 #include "hardware/spi.h"
 #include "hardware/dma.h"
 #include "hardware/gpio.h"
+#include "hardware/pio.h"
+#include "pwm.pio.h"
 
 
 // Based on max from Bodmer: https://github.com/Bodmer/TFT_eSPI/blob/5162af0a0e13e0d4bc0e4c792ed28d38599a1f23/User_Setup.h#L366
@@ -52,6 +55,25 @@ dma_channel_config dma_config;
 uint16_t *txbuf = NULL;
 
 
+PIO pio = pio0;
+int sm = 0;
+
+
+// Write `period` to the input shift register
+void pio_pwm_set_period(PIO pio, uint sm, uint32_t period) {
+    pio_sm_set_enabled(pio, sm, false);
+    pio_sm_put_blocking(pio, sm, period);
+    pio_sm_exec(pio, sm, pio_encode_pull(false, false));
+    pio_sm_exec(pio, sm, pio_encode_out(pio_isr, 32));
+    pio_sm_set_enabled(pio, sm, true);
+}
+
+// Write `level` to TX FIFO. State machine will copy this into X.
+void pio_pwm_set_level(PIO pio, uint sm, uint32_t level) {
+    pio_sm_put_blocking(pio, sm, level);
+}
+
+
 static void gc9107_write_cmd(uint8_t cmd, const uint8_t* data, size_t length){
     // Interesting note on performance: https://github.com/Bodmer/TFT_eSPI/blob/5162af0a0e13e0d4bc0e4c792ed28d38599a1f23/TFT_eSPI.cpp#L3416-L3417
     // Set to 8-bit SPI during cmd sending
@@ -87,6 +109,11 @@ void gc9107_reset_window(){
 }
 
 
+void engine_display_gc9107_apply_brightness(float brightness){
+    pio_pwm_set_level(pio, sm, (uint32_t)(255.0f*brightness));
+}
+
+
 void engine_display_gc9107_init(){
     ENGINE_INFO_PRINTF("Setting up GC9107 screen");
 
@@ -104,14 +131,18 @@ void engine_display_gc9107_init(){
     gpio_init(PIN_GP17_SPI0_CSn__TO__CS);               // Although part of the SPI port, we'll control chip select manually
     gpio_init(PIN_GP16__TO__DC);
     gpio_init(PIN_GP4__TO__RST);
-    gpio_init(PIN_GP7__TO__BL);
     gpio_set_dir(PIN_GP17_SPI0_CSn__TO__CS, GPIO_OUT);
     gpio_set_dir(PIN_GP16__TO__DC, GPIO_OUT);
     gpio_set_dir(PIN_GP4__TO__RST, GPIO_OUT);
-    gpio_set_dir(PIN_GP7__TO__BL, GPIO_OUT);
+
+    // https://github.com/raspberrypi/pico-examples/blob/master/pio/pwm/pwm.c
+    // GPIO 7 and 23 share the same slice, use PIO for BL PWM
+    uint offset = pio_add_program(pio, &pwm_program);
+    pwm_program_init(pio, sm, offset, PIN_GP7__TO__BL);
+    pio_pwm_set_period(pio, sm, 255);
 
     // Do the init sequence
-    gpio_put(PIN_GP7__TO__BL, 0);  // Backlight off during init
+    engine_display_gc9107_apply_brightness(0.0f);   // Backlight off before all init
     
     // New demo code from less wide connector screen version
     // https://www.buydisplay.com/square-0-85-inch-128x128-ips-tft-lcd-display-4-wire-spi-gc9107
@@ -219,7 +250,7 @@ void engine_display_gc9107_init(){
     channel_config_set_transfer_data_size(&dma_config, DMA_SIZE_16);
     channel_config_set_dreq(&dma_config, DREQ_SPI0_TX);
 
-    gpio_put(PIN_GP7__TO__BL, 1);  // Backlight on after all init
+    engine_display_gc9107_apply_brightness(engine_display_get_brightness());  // Backlight on after all init
 }
 
 

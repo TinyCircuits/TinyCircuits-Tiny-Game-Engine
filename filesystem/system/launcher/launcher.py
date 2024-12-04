@@ -69,8 +69,8 @@ def end_rumble(delay):
     engine_io.rumble(0.0)
 
 def start_rumble():
-    engine_io.rumble(0.3)
-    rumble_delay.start(85, end_rumble)
+    engine_io.rumble(0.425)
+    rumble_delay.start(90, end_rumble)
 
 # Main launcher loop
 while True:
@@ -102,6 +102,7 @@ while True:
             camera.to_page(new_page)
 
             games_screen.tell_page(new_page)
+            settings_screen.tell_page(new_page)
             credits_screen.tell_page(new_page)
 
             page = new_page
