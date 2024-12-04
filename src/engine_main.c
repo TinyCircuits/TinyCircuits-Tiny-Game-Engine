@@ -39,13 +39,10 @@
 char filesystem_root[FILESYSTEM_ROOT_MAX_LEN];
 bool is_engine_initialized = false;
 
-// Use .txt because Thonny knows how to open that by default (but not .ini)
-char settings_location_path[] = "system/settings.txt";
-
 mp_obj_str_t settings_location = {
     .base.type = &mp_type_str,
     .hash = 0,
-    .data = (byte[FILESYSTEM_ROOT_MAX_LEN + sizeof(settings_location_path)]){},
+    .data = (byte[]){"/system/settings.txt"},
     .len = 0,
 };
 
@@ -164,20 +161,6 @@ void engine_main_handle_settings(){
 }
 
 
-void engine_main_settings_get_path(){
-    // Use .txt because Thonny knows how to open that by default (but not .ini)
-    char settings_location_path[] = "system/settings.txt";
-
-    #if defined(__arm__) || defined(__EMSCRIPTEN__)
-        int size = sprintf((char*)settings_location.data, "%s/%s", filesystem_root, settings_location_path);
-        settings_location.len = size;
-    #elif defined(__unix__)
-        memcpy((byte*)settings_location.data, settings_location_path, sizeof(settings_location_path));
-        settings_location.len = sizeof(settings_location_path);
-    #endif
-}
-
-
 void engine_main_reset(){
     ENGINE_PRINTF("EngineMain: Resetting engine...\n");
 
@@ -224,9 +207,6 @@ static mp_obj_t engine_main_module_init(){
         #endif
 
         ENGINE_PRINTF("Filesystem root: %s\n", filesystem_root);
-
-        // Only need to set this path once at startup
-        engine_main_settings_get_path();
     }
 
     engine_main_handle_settings();

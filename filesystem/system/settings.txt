@@ -1,2 +1,0 @@
-volume=0.36
-brightness=0.40
