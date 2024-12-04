@@ -102,6 +102,7 @@ while True:
             camera.to_page(new_page)
 
             games_screen.tell_page(new_page)
+            settings_screen.tell_page(new_page)
             credits_screen.tell_page(new_page)
 
             page = new_page

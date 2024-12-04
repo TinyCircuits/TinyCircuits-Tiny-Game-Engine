@@ -1,0 +1,2 @@
+volume=100.0
+brightness=100.0
