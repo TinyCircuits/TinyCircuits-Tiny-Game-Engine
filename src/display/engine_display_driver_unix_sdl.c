@@ -23,6 +23,11 @@
     }
 
 
+    void engine_display_sdl_apply_brightness(float brightness){
+        SDL_SetWindowBrightness(window, brightness);
+    }
+
+
     void engine_display_sdl_init(){
         // https://dev.to/noah11012/using-sdl2-opening-a-window-79c
         if(SDL_Init(SDL_INIT_VIDEO) < 0){

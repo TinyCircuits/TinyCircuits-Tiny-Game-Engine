@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 
+void engine_display_sdl_apply_brightness(float brightness);
 void engine_display_sdl_init();
 void engine_display_sdl_update_screen(uint16_t *screen_buffer_to_render);
 

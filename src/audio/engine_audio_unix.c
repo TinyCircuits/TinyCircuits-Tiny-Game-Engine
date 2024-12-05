@@ -15,7 +15,6 @@
         audio_channel_class_obj_t *channel = engine_audio_get_channel(0);
         float volume = channel->gain * engine_audio_get_game_volume() * engine_audio_get_master_volume();
         audio_channel_get_samples(channel, (float*)to_fill_buffer, buffer_len, volume, &complete);
-        ENGINE_PRINTF("WANTS AUDIO!\n");
     }
 
 

@@ -50,7 +50,7 @@ void engine_display_apply_brightness(float brightness){
     #if defined(__EMSCRIPTEN__)
 
     #elif defined(__unix__)
-        
+        engine_display_sdl_apply_brightness(brightness);
     #elif defined(__arm__)
         engine_display_gc9107_apply_brightness(brightness);
     #endif
