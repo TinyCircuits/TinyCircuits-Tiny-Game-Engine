@@ -7,6 +7,7 @@
     #include "draw/engine_display_draw.h"
     #include "debug/debug_print.h"
     #include <SDL2/SDL.h>
+    #include "display/engine_display.h"
 
     SDL_Window *window;
     SDL_Renderer *window_renderer;      // https://dev.to/noah11012/using-sdl2-2d-accelerated-renderering-1kcb
@@ -52,6 +53,7 @@
 
         SDL_SetWindowSize(window, SCREEN_WIDTH*3, SCREEN_HEIGHT*3);
 
+        engine_display_sdl_apply_brightness(engine_display_get_brightness());
         engine_display_sdl_update_screen(active_screen_buffer);
     }
 
