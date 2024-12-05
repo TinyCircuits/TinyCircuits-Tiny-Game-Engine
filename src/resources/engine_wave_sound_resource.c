@@ -3,19 +3,29 @@
 #include "audio/engine_audio_module.h"
 #include "debug/debug_print.h"
 #include "resources/engine_resource_manager.h"
+#include "utility/engine_file.h"
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
 
 
-uint8_t *wave_sound_resource_fill_destination(void *channel_in, uint32_t max_buffer_size, uint16_t *leftover_size){
-    audio_channel_class_obj_t *channel = channel_in;
-    wave_sound_resource_class_obj_t *wave = (wave_sound_resource_class_obj_t*)channel->source;
+#if defined(__EMSCRIPTEN__)
+    #include "audio/engine_audio_web.h"
+#elif defined(__unix__)
+    #include "audio/engine_audio_unix.h"
+#elif defined(__arm__)
+    #include "audio/engine_audio_rp3.h"
+#endif
 
-    *leftover_size = (uint16_t)fminf(wave->total_data_size - channel->source_byte_offset, max_buffer_size);
-    uint8_t *data = ENGINE_BYTEARRAY_OBJ_TO_DATA(wave->data);
-    return data + channel->source_byte_offset;
-}
+
+// uint8_t *wave_sound_resource_fill_destination(void *channel_in, uint32_t max_buffer_size, uint16_t *leftover_size){
+//     // audio_channel_class_obj_t *channel = channel_in;
+//     // wave_sound_resource_class_obj_t *wave = (wave_sound_resource_class_obj_t*)channel->source;
+
+//     // *leftover_size = (uint16_t)fminf(wave->total_data_size - channel->source_byte_offset, max_buffer_size);
+//     // uint8_t *data = ENGINE_BYTEARRAY_OBJ_TO_DATA(wave->data);
+//     // return data + channel->source_byte_offset;
+// }
 
 
 // Provided a output buffer, starts copy
@@ -32,15 +42,14 @@ uint32_t wave_fill_dest(wave_sound_resource_class_obj_t *wave, audio_channel_cla
     // Set the number of bytes to copy to whatever is smallest
     byte_count = byte_count < remaining_bytes ? byte_count : remaining_bytes;
 
+    mp_obj_array_t *wave_data = (mp_obj_array_t*)wave->data;
+
     #if defined(__EMSCRIPTEN__)
-        engine_audio_web_copy(output, NULL, byte_count);
-
+        engine_audio_web_copy(output, ((uint8_t*)wave_data->items)+source_byte_cursor, byte_count);
     #elif defined(__unix__)
-        engine_audio_unix_copy(output, NULL, byte_count);
-
+        engine_audio_unix_copy(output, ((uint8_t*)wave_data->items)+source_byte_cursor, byte_count);
     #elif defined(__arm__)
-        engine_audio_rp3_copy(channel->dma_copy_channel, &channel->dma_copy_config output, NULL, byte_count);
-        
+        engine_audio_rp3_copy(channel->dma_copy_channel, &channel->dma_copy_config, output, ((uint8_t*)wave_data->items)+source_byte_cursor, byte_count);
     #endif
 
     // Update where we are in the channel's source buffer
@@ -52,6 +61,34 @@ uint32_t wave_fill_dest(wave_sound_resource_class_obj_t *wave, audio_channel_cla
     }
 
     return byte_count;
+}
+
+
+uint32_t wave_convert(wave_sound_resource_class_obj_t *wave, uint8_t *channel_buffer, float *output, uint32_t sample_count, float volume){
+    uint32_t bytes_converted_count = 0;
+
+    if(wave->bytes_per_sample == 1){    // 8-bit samples to convert
+        uint8_t *to_convert = channel_buffer;
+
+        for(uint32_t isx=0; isx<sample_count; isx++){
+            uint8_t sample = to_convert[isx];               // Get sample as unsigned 8-bit value from 0 to 255
+            output[isx] = (float)((int8_t)(sample - 128));  // Center sample in preparation for scaling to -1.0 ~ 1.0. Subtract 128 so that 0 -> -128 and 255 -> 127
+            output[isx] = output[isx] / (float)INT8_MAX;    // Scale from -128.0 ~ 127.0 to -1.0078 ~ 1.0 (will clamp later)
+            output[isx] = output[isx] * volume;             // Scale gain of sample
+            bytes_converted_count += 1;
+        }
+    }else{                              // 16-bit samples to convert
+        int16_t *to_convert = (int16_t*)channel_buffer;
+
+        for(uint32_t isx=0; isx<sample_count; isx++){
+            int16_t sample = to_convert[isx];               // Get the sample as signed 16-bit value
+            output[isx] = (float)sample / (float)INT16_MAX; // Scale from -32768 ~ 32767 to -1.000031 ~ 1.0 (will clamp later)
+            output[isx] = output[isx] * volume;             // Scale gain of sample
+            bytes_converted_count += 2;
+        }
+    }
+
+    return bytes_converted_count;
 }
 
 

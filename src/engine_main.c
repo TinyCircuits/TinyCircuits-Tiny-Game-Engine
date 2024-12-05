@@ -23,6 +23,8 @@
 #include "fault/engine_fault.h"
 #include "link/engine_link_module.h"
 #include "py/mpstate.h"
+#include "py/objstr.h"
+#include "utility/engine_file.h"
 
 #if defined(__EMSCRIPTEN__)
 

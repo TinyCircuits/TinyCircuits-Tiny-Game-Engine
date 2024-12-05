@@ -3,6 +3,7 @@
 
 #include "py/obj.h"
 #include "utility/engine_defines.h"
+#include "audio/engine_audio_channel.h"
 
 typedef struct{
     mp_obj_base_t base;
@@ -19,5 +20,6 @@ extern const mp_obj_type_t tone_sound_resource_class_type;
 mp_obj_t tone_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args);
 void tone_sound_resource_set_frequency(tone_sound_resource_class_obj_t *self, float frequency);
 uint32_t tone_fill_dest(tone_sound_resource_class_obj_t *tone, audio_channel_class_obj_t *channel, uint8_t *output, uint32_t byte_count, bool *complete);
+uint32_t tone_convert(tone_sound_resource_class_obj_t *tone, uint8_t *channel_buffer, float *output, uint32_t sample_count, float volume);
 
 #endif  // ENGINE_TONE_SOUND_RESOURCE_H

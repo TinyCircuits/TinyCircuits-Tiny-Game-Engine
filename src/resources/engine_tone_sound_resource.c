@@ -8,9 +8,16 @@
 #include <string.h>
 #include <math.h>
 
-
 #include "../lib/cglm/include/cglm/util.h"
 #include "../lib/cglm/include/cglm/ease.h"
+
+#if defined(__EMSCRIPTEN__)
+    #include "audio/engine_audio_web.h"
+#elif defined(__unix__)
+    #include "audio/engine_audio_unix.h"
+#elif defined(__arm__)
+    #include "audio/engine_audio_rp3.h"
+#endif
 
 
 // Provided a output buffer, starts copy
@@ -18,20 +25,24 @@
 uint32_t tone_fill_dest(tone_sound_resource_class_obj_t *tone, audio_channel_class_obj_t *channel, uint8_t *output, uint32_t byte_count, bool *complete){
     // By default, assume this tone is not
     // done providing samples
-    bool complete = false;
+    *complete = false;
 
-    #if defined(__EMSCRIPTEN__)
-        engine_audio_web_copy(NULL, NULL, 0);
+    // #if defined(__EMSCRIPTEN__)
+    //     engine_audio_web_copy(NULL, NULL, 0);
 
-    #elif defined(__unix__)
-        engine_audio_unix_copy(NULL, NULL, 0);
+    // #elif defined(__unix__)
+    //     engine_audio_unix_copy(NULL, NULL, 0);
 
-    #elif defined(__arm__)
-        engine_audio_rp3_copy(channel->dma_copy_channel, &channel->dma_copy_config NULL, NULL, 0);
-        
-    #endif
+    // #elif defined(__arm__)
+    //     engine_audio_rp3_copy(channel->dma_copy_channel, &channel->dma_copy_config NULL, NULL, 0);
+    // #endif
 
-    return complete;
+    return 0;
+}
+
+
+uint32_t tone_convert(tone_sound_resource_class_obj_t *tone, uint8_t *channel_buffer, float *output, uint32_t sample_count, float volume){
+    return 0;
 }
 
 

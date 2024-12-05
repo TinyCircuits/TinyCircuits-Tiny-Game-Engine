@@ -36,6 +36,11 @@ volatile float master_volume = 1.0f;    // Set by settings file, games cannot se
 volatile float game_volume = 1.0f;      // Games are allowed to set this through `set_volume`
 
 
+audio_channel_class_obj_t *engine_audio_get_channel(uint8_t channel_index){
+    return (audio_channel_class_obj_t*)channels[channel_index];
+}
+
+
 void engine_audio_apply_master_volume(float volume){
     master_volume = volume;
 }
@@ -43,6 +48,16 @@ void engine_audio_apply_master_volume(float volume){
 
 float engine_audio_get_master_volume(){
     return master_volume;
+}
+
+
+void engine_audio_apply_game_volume(float volume){
+    game_volume = volume;
+}
+
+
+float engine_audio_get_game_volume(){
+    return game_volume;
 }
 
 

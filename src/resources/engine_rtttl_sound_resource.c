@@ -5,12 +5,21 @@
 #include "debug/debug_print.h"
 #include "resources/engine_resource_manager.h"
 #include "math/engine_math.h"
+#include "utility/engine_file.h"
+#include "resources/engine_tone_sound_resource.h"
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
 
-
 #include "../lib/cglm/include/cglm/util.h"
+
+#if defined(__EMSCRIPTEN__)
+    #include "audio/engine_audio_web.h"
+#elif defined(__unix__)
+    #include "audio/engine_audio_unix.h"
+#elif defined(__arm__)
+    #include "audio/engine_audio_rp3.h"
+#endif
 
 
 // https://producelikeapro.com/blog/wp-content/uploads/2022/01/Understanding-Note-Frequency-Charts-And-Why-You-Should-Be-Using-One_2.jpg
@@ -74,37 +83,38 @@ const uint8_t octave_base = 4;
 
 
 float ENGINE_FAST_FUNCTION(rtttl_sound_resource_get_sample)(rtttl_sound_resource_class_obj_t *self, bool *complete){
-    if(self->interrupt_samples_counting >= self->interrupt_samples_until_next){
-        // Reset counter and cast data to something more accessible
-        self->interrupt_samples_counting = 0;
-        uint8_t *data = ENGINE_BYTEARRAY_OBJ_TO_DATA(self->data);
+    // if(self->interrupt_samples_counting >= self->interrupt_samples_until_next){
+    //     // Reset counter and cast data to something more accessible
+    //     self->interrupt_samples_counting = 0;
+    //     uint8_t *data = ENGINE_BYTEARRAY_OBJ_TO_DATA(self->data);
 
-        // Copy data into types from track
-        uint32_t index = self->note_cursor * 8;
-        uint32_t duration = 0;
-        float frequency = 0.0f;
+    //     // Copy data into types from track
+    //     uint32_t index = self->note_cursor * 8;
+    //     uint32_t duration = 0;
+    //     float frequency = 0.0f;
 
-        memcpy(&duration, data+index, 4);
-        memcpy(&frequency, data+index+4, 4);
+    //     memcpy(&duration, data+index, 4);
+    //     memcpy(&frequency, data+index+4, 4);
 
-        // Use the data to set the duration this
-        // note will return samples for and
-        // then set the frequency
-        self->interrupt_samples_until_next = duration;
-        tone_sound_resource_set_frequency(self->tone, frequency);
+    //     // Use the data to set the duration this
+    //     // note will return samples for and
+    //     // then set the frequency
+    //     self->interrupt_samples_until_next = duration;
+    //     tone_sound_resource_set_frequency(self->tone, frequency);
 
-        // Reset if reach end of track
-        self->note_cursor++;
-        if(self->note_cursor >= self->note_count){
-            self->note_cursor = 0;
+    //     // Reset if reach end of track
+    //     self->note_cursor++;
+    //     if(self->note_cursor >= self->note_count){
+    //         self->note_cursor = 0;
 
-            // Mark as complete so that channel manager can stop looping if it should
-            *complete = true;
-        }
-    }
+    //         // Mark as complete so that channel manager can stop looping if it should
+    //         *complete = true;
+    //     }
+    // }
 
-    self->interrupt_samples_counting++;
-    return tone_sound_resource_get_sample(self->tone);
+    // self->interrupt_samples_counting++;
+    // return tone_sound_resource_get_sample(self->tone);
+    return 0.0f;
 }
 
 
@@ -113,20 +123,25 @@ float ENGINE_FAST_FUNCTION(rtttl_sound_resource_get_sample)(rtttl_sound_resource
 uint32_t rtttl_fill_dest(rtttl_sound_resource_class_obj_t *rtttl, audio_channel_class_obj_t *channel, uint8_t *output, uint32_t byte_count, bool *complete){
     // By default, assume this rtttl is not
     // done providing samples
-    bool complete = false;
+    *complete = false;
 
-    #if defined(__EMSCRIPTEN__)
-        engine_audio_web_copy(NULL, NULL, 0);
+    // #if defined(__EMSCRIPTEN__)
+    //     engine_audio_web_copy(NULL, NULL, 0);
 
-    #elif defined(__unix__)
-        engine_audio_unix_copy(NULL, NULL, 0);
+    // #elif defined(__unix__)
+    //     engine_audio_unix_copy(NULL, NULL, 0);
 
-    #elif defined(__arm__)
-        engine_audio_rp3_copy(channel->dma_copy_channel, &channel->dma_copy_config NULL, NULL, 0);
+    // #elif defined(__arm__)
+    //     engine_audio_rp3_copy(channel->dma_copy_channel, &channel->dma_copy_config NULL, NULL, 0);
         
-    #endif
+    // #endif
 
-    return complete;
+    return 0;
+}
+
+
+uint32_t rtttl_convert(rtttl_sound_resource_class_obj_t *rtttl, uint8_t *channel_buffer, float *output, uint32_t sample_count, float volume){
+    return 0;
 }
 
 

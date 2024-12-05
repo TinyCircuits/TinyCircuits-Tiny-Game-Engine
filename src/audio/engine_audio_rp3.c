@@ -1,5 +1,10 @@
 #if defined(__arm__)
     #include "engine_audio_rp3.h"
+    #include "audio/engine_audio_channel.h"
+    #include "audio/engine_audio_module.h"
+    #include "utility/engine_defines.h"
+    #include "math/engine_math.h"
+    #include "debug/debug_print.h"
 
     // Pin for PWM audio sample wrap callback (faster than repeating timer, by a lot)
     uint audio_callback_pwm_pin_slice;
@@ -12,7 +17,7 @@
         bool play_ouput = false;    // Set `true` if at least one channel is ready to play
 
         for(uint8_t icx=0; icx<CHANNEL_COUNT; icx++){
-            audio_channel_class_obj_t *channel = channels[icx];
+            audio_channel_class_obj_t *channel = engine_audio_get_channel(icx);
 
             // If the channel is not playing/set or if it is
             // busy being setup, skip it
@@ -20,19 +25,23 @@
                 continue;
             }
 
+            // Calculate the volume of all the samples on this channel
+            float volume = channel->gain * engine_audio_get_master_volume() * engine_audio_get_game_volume();
+
             // Playing at least one sample, switch flag
             play_ouput = true;
 
             // Get one sample from a channel at a time
             float sample = 0.0f;
-            bool channel_source_complete = audio_channel_get_samples(channel, &sample, 1);
+            bool channel_source_complete = false;
+            audio_channel_get_samples(channel, &sample, 1, volume, &channel_source_complete);
 
             // Set the amplitude just retrieved as the last sample
             // to have been played on the channel
             channel->amplitude = sample;
 
             // Mix the sample into the output
-            output += sample * channel->gain * master_volume;
+            output += sample;
 
             // If the channel is not set to loop the source, stop
             // the channel now that the source says it is done

@@ -109,22 +109,19 @@ bool audio_channel_fill_internal_buffer(audio_channel_class_obj_t *channel, uint
     // indicating it is done providing samples
     bool complete = false;
 
-    uint8_t *buffer_to_fill = channel->buffers[buffer_to_fill_index];
-    uint32_t filled_buffer_len = 0;
+    uint8_t *channel_buffer_to_fill = channel->buffers[buffer_to_fill_index];
+    uint32_t filled_channel_buffer_len = 0;
 
     if(mp_obj_is_type(channel->source, &wave_sound_resource_class_type)){
-        wave_sound_resource_class_obj_t *wave = channel->source;
-        filled_buffer_len = wave_fill_dest(wave, channel, buffer_to_fill, CHANNEL_BUFFER_LEN, &complete);
+        filled_channel_buffer_len = wave_fill_dest(channel->source, channel, channel_buffer_to_fill, CHANNEL_BUFFER_LEN, &complete);
     }else if(mp_obj_is_type(channel->source, &tone_sound_resource_class_type)){
-        tone_sound_resource_class_obj_t *tone = channel->source;
-        filled_buffer_len = tone_fill_dest(tone, channel, buffer_to_fill, CHANNEL_BUFFER_LEN, &complete);
+        filled_channel_buffer_len = tone_fill_dest(channel->source, channel, channel_buffer_to_fill, CHANNEL_BUFFER_LEN, &complete);
     }else if(mp_obj_is_type(channel->source, &rtttl_sound_resource_class_type)){
-        rtttl_sound_resource_class_obj_t *rtttl = channel->source;
-        filled_buffer_len = rtttl_fill_dest(rtttl, channel, buffer_to_fill, CHANNEL_BUFFER_LEN, &complete);
+        filled_channel_buffer_len = rtttl_fill_dest(channel->source, channel, channel_buffer_to_fill, CHANNEL_BUFFER_LEN, &complete);
     }
 
     // Update the channel with how many bytes were copied
-    channel->buffers_data_len[buffer_to_fill_index] = filled_buffer_len;
+    channel->buffers_data_len[buffer_to_fill_index] = filled_channel_buffer_len;
 
     return complete;
 }
@@ -136,19 +133,31 @@ bool audio_channel_fill_internal_buffer(audio_channel_class_obj_t *channel, uint
 // Returns `true` when the channel determines
 // it reached the end of the source data and
 // looping is not enabled, otherwise, `false`
-bool audio_channel_get_samples(audio_channel_class_obj_t *channel, float *output, uint32_t count){
+//
+// Here is how data is moved from sources to outputs
+//
+//   wave_resource (pcm8, pcm16), tone_resource (generated pcm8), rtttl_resource (grabs from tone generated pcm8)
+//                                                           |
+//                                                           | data from any of these sources are moved in their current raw form to audio channel buffers (DMA from flash/ram to ram)
+//                                                           V
+//                                                  autio_channel_buffer
+//                                                           |
+//                                                           | As the playback buffer needs more data, it is converted and volume/gain mixed on the fly for the requested amounts
+//                                                           V
+//                                                    playback_buffer
+uint32_t audio_channel_get_samples(audio_channel_class_obj_t *channel, float *output, uint32_t sample_count, float volume, bool *complete){
     // By default, assume the source is not
     // indicating it is done providing samples
-    bool complete = false;
+    *complete = false;
 
     // Check if more samples should be placed into
     // channel audio buffers from source, and do it if
     // the audio from the current read buffer has been
     // filled
-    uint8_t  buffer_to_read_index = channel->buffer_to_read_index;
-    uint16_t buffer_cursor        = channel->buffers_byte_cursor[buffer_to_read_index];
-    uint16_t buffer_data_len      = channel->buffers_data_len[buffer_to_read_index];
-    if(buffer_cursor >= buffer_data_len){
+    uint8_t  channel_buffer_to_read_index = channel->buffer_to_read_index;
+    uint32_t channel_buffer_byte_cursor   = channel->buffers_byte_cursor[channel_buffer_to_read_index];
+    uint32_t channel_buffer_data_len      = channel->buffers_data_len[channel_buffer_to_read_index];
+    if(channel_buffer_byte_cursor >= channel_buffer_data_len){
         // 1. Both buffers have audio samples but the read buffer
         //    has been completly played, switch buffers
         channel->buffer_to_fill_index = !channel->buffer_to_fill_index; // 0 to 1 or 1 to 0
@@ -157,22 +166,46 @@ bool audio_channel_get_samples(audio_channel_class_obj_t *channel, float *output
         // 2. Now that the channels have been switched, fill the
         //    fill buffer with new data while the other buffer is
         //    read from
-        complete = audio_channel_fill_internal_buffer(channel, channel->buffer_to_fill_index);
+        *complete = audio_channel_fill_internal_buffer(channel, channel->buffer_to_fill_index);
     }
 
-    // Get the buffer to read from, the cursor inside it, and the actual
-    // buffer to read from
-    buffer_to_read_index   = channel->buffer_to_read_index;
-    buffer_cursor = channel->buffers_byte_cursor[buffer_to_read_index];
-    uint8_t *buffer_to_read  = channel->buffers[buffer_to_read_index];
+    // Get the buffer to read from and the cursor inside it + how much data inside it
+    channel_buffer_to_read_index     = channel->buffer_to_read_index;
+    channel_buffer_byte_cursor       = channel->buffers_byte_cursor[channel_buffer_to_read_index];
+    channel_buffer_data_len          = channel->buffers_data_len[channel_buffer_to_read_index];
+    uint8_t *channel_buffer_to_read  = channel->buffers[channel_buffer_to_read_index];
 
-    // Copy the data (blocking) to the output buffer (typically,
-    // the rp2 port will grab one sample at a time in the repeating
-    // callback. Other ports will ask for more data when their buffers
-    // need it, but they should be faster at copying)
-    // memcpy(output, buffer_to_read, sizeof(float)*count);
+    // Calculate how many bytes are left to read in the channel
+    uint32_t channel_remaining_bytes = channel_buffer_data_len - channel_buffer_byte_cursor;
 
-    return complete;
+    // Convert and copy from audio channel to output. Typically, on hardware,
+    // the output will be a single float, but on other platforms it might be
+    // a large buffer of floats
+    if(mp_obj_is_type(channel->source, &wave_sound_resource_class_type)){
+        wave_sound_resource_class_obj_t *wave = channel->source;
+
+        // Calculate number of remaining samples in the channel buffer,
+        // and set the number of samples to be converted to whatever is
+        // smallest (actually available vs. requested)
+        uint16_t channel_remaining_samples = channel_remaining_bytes / wave->bytes_per_sample;
+        sample_count = (channel_remaining_samples < sample_count) ? channel_remaining_samples : sample_count;
+
+        channel_buffer_byte_cursor += wave_convert(wave, (channel_buffer_to_read + channel_buffer_byte_cursor), output, sample_count, volume);
+    }else if(mp_obj_is_type(channel->source, &tone_sound_resource_class_type)){
+        tone_sound_resource_class_obj_t *tone = channel->source;
+
+        channel_buffer_byte_cursor += tone_convert(tone, (channel_buffer_to_read + channel_buffer_byte_cursor), output, sample_count, volume);
+    }else if(mp_obj_is_type(channel->source, &rtttl_sound_resource_class_type)){
+        rtttl_sound_resource_class_obj_t *rtttl = channel->source;
+
+        channel_buffer_byte_cursor += rtttl_convert(rtttl, (channel_buffer_to_read + channel_buffer_byte_cursor), output, sample_count, volume);
+    }
+
+    // Update the channel cursor now that it probably moved
+    channel->buffers_byte_cursor[channel_buffer_to_read_index] = channel_buffer_byte_cursor;
+
+    // Return the actual number of samples copied to output
+    return sample_count;
 }
 
 

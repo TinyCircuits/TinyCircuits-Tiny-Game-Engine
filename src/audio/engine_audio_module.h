@@ -6,9 +6,15 @@
 #define ENGINE_AUDIO_SAMPLE_RATE 22050.0f
 #define ENGINE_AUDIO_SAMPLE_DT 1.0f / ENGINE_AUDIO_SAMPLE_RATE
 
+audio_channel_class_obj_t *engine_audio_get_channel(uint8_t channel_index);
+
 void engine_audio_init();
+
 void engine_audio_apply_master_volume(float volume);
 float engine_audio_get_master_volume();
+
+void engine_audio_apply_game_volume(float volume);
+float engine_audio_get_game_volume();
 
 void engine_audio_setup_playback();
 
