@@ -32,9 +32,8 @@
             play_ouput = true;
 
             // Get one sample from a channel at a time
-            float sample = 0.0f;
             bool channel_source_complete = false;
-            audio_channel_get_samples(channel, &sample, 1, volume, &channel_source_complete);
+            float sample = audio_channel_get_rate_limited_sample(channel, volume, &channel_source_complete);
 
             // Set the amplitude just retrieved as the last sample
             // to have been played on the channel

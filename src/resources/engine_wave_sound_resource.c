@@ -55,6 +55,9 @@ uint32_t wave_fill_dest(wave_sound_resource_class_obj_t *wave, audio_channel_cla
     // Update where we are in the channel's source buffer
     channel->source_byte_cursor += byte_count;
 
+    // Update the time the channel is at inside the source data
+    channel->time = (1.0f / wave->sample_rate) * (channel->source_byte_cursor / wave->bytes_per_sample);
+
     // Check if we have reached the end of the source buffer
     if(channel->source_byte_cursor >= total_data_size){
         *complete = true;

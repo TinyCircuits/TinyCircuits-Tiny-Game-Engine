@@ -20,8 +20,8 @@
 
 
 void audio_channeL_buffer_reset(audio_channel_class_obj_t *channel){
-    channel->buffers_data_len[0] = CHANNEL_BUFFER_LEN;
-    channel->buffers_data_len[1] = CHANNEL_BUFFER_LEN;
+    channel->buffers_data_len[0] = 0;
+    channel->buffers_data_len[1] = 0;
     channel->buffers_byte_cursor[0] = 0;
     channel->buffers_byte_cursor[1] = 0;
     channel->buffer_to_fill_index = 0;
@@ -122,6 +122,7 @@ bool audio_channel_fill_internal_buffer(audio_channel_class_obj_t *channel, uint
 
     // Update the channel with how many bytes were copied
     channel->buffers_data_len[buffer_to_fill_index] = filled_channel_buffer_len;
+    channel->buffers_byte_cursor[buffer_to_fill_index] = 0;
 
     return complete;
 }
@@ -167,6 +168,15 @@ uint32_t audio_channel_get_samples(audio_channel_class_obj_t *channel, float *ou
         //    fill buffer with new data while the other buffer is
         //    read from
         *complete = audio_channel_fill_internal_buffer(channel, channel->buffer_to_fill_index);
+
+        // When we run through all the data in the source,
+        // loop back to the start (decided at a later stage
+        // if the channel should keep going, but this needs
+        // to happen in any case). Would also be set when
+        // new audio is played on this channel
+        if(*complete){
+            channel->source_byte_cursor = 0;
+        }
     }
 
     // Get the buffer to read from and the cursor inside it + how much data inside it
@@ -206,6 +216,37 @@ uint32_t audio_channel_get_samples(audio_channel_class_obj_t *channel, float *ou
 
     // Return the actual number of samples copied to output
     return sample_count;
+}
+
+
+// This is used on platforms that need to play individual samples
+// themselves (like rp2 port). It returns need samples at the correct
+// rate defined by each type of source
+float audio_channel_get_rate_limited_sample(audio_channel_class_obj_t *channel, float volume, bool *complete){
+    if(mp_obj_is_type(channel->source, &wave_sound_resource_class_type)){
+        wave_sound_resource_class_obj_t *wave = channel->source;
+
+        // Keep returning current sample until time to get next one
+        if(wave->play_counter != 0){
+            if(wave->play_counter == wave->play_counter_max){
+                wave->play_counter = 0;
+            }else{
+                wave->play_counter++;
+                return wave->last_sample;
+            }
+        }
+
+        audio_channel_get_samples(channel, &wave->last_sample, 1, volume, complete);
+        wave->play_counter++;
+
+        return wave->last_sample;
+    }else if(mp_obj_is_type(channel->source, &tone_sound_resource_class_type)){
+        // tone_sound_resource_class_obj_t *tone = channel->source;
+    }else if(mp_obj_is_type(channel->source, &rtttl_sound_resource_class_type)){
+        // rtttl_sound_resource_class_obj_t *rtttl = channel->source;
+    }
+
+    return 0.0f;
 }
 
 
@@ -258,7 +299,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(audio_channel_stop_obj, audio_channel_stop);
     ATTR: [type=object]     [name=source]                           [value={ref_link:WaveSoundResource} or {ref_link:ToneSoundResource}]
     ATTR: [type=float]      [name=gain]                             [value=any (default is 1.0)]
     ATTR: [type=float]      [name=time]                             [value=0.0 to time at the end of the media being played (if there is an end) (read-only and is updated to represent the current time in seconds of teh media being played)]
-    ATTR: [type=float]      [name=amplitude]                        [value=0.0 to 1.0 (the amplitude of the last sample played on this channel, read-only)]
+    ATTR: [type=float]      [name=amplitude]                        [value=-1.0 to 1.0 (the amplitude of the last sample played on this channel, read-only)]
     ATTR: [type=boolean]    [name=loop]                             [value=True or False (whether to loop audio or not)]
     ATTR: [type=boolean]    [name=done]                             [value=True or False (set True when audio finishes playing if not looping, read-only)]
 */ 

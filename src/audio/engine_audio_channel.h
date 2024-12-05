@@ -67,6 +67,8 @@ extern const mp_obj_type_t audio_channel_class_type;
 
 mp_obj_t audio_channel_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args);
 uint32_t audio_channel_get_samples(audio_channel_class_obj_t *channel, float *output, uint32_t sample_count, float volume, bool *complete);
+float audio_channel_get_rate_limited_sample(audio_channel_class_obj_t *channel, float volume, bool *complete);
+
 void audio_channeL_buffer_reset(audio_channel_class_obj_t *channel);
 bool audio_channel_fill_internal_buffer(audio_channel_class_obj_t *channel, uint8_t buffer_to_fill_index);
 mp_obj_t audio_channel_stop(mp_obj_t self_in);
