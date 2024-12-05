@@ -3,6 +3,8 @@ add_library(usermod_engine INTERFACE)
 
 set(ENGINE_MOD_DIR ${CMAKE_CURRENT_LIST_DIR})
 
+pico_generate_pio_header(usermod_engine ${ENGINE_MOD_DIR}/display/pwm.pio)
+
 # Add our source files to the lib
 target_sources(usermod_engine INTERFACE
     ${ENGINE_MOD_DIR}/engine_main.c

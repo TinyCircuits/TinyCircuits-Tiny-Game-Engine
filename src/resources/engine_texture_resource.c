@@ -335,7 +335,7 @@ void create_blank_from_params(texture_resource_class_obj_t *self, mp_obj_t width
     }else{
         uint16_t *pixels = data->items;
 
-        for(uint16_t ipx=0; ipx<blank_pixel_count; ipx++){
+        for(uint32_t ipx=0; ipx<blank_pixel_count; ipx++){
             pixels[ipx] = blank_color;
         }
 

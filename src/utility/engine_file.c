@@ -29,7 +29,7 @@ mp_obj_str_t* engine_file_to_system_path(mp_obj_str_t *filename){
             return filename;
         }
         // This is an absolute path, prefix with filesystem root.
-        char buff[1024];
+        char buff[512];
         sprintf(buff, "%s%s", filesystem_root, filename_str);
         return mp_obj_new_str(buff, strlen(buff));
     #elif defined(__arm__)

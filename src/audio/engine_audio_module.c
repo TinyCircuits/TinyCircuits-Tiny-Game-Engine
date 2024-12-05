@@ -30,8 +30,21 @@
 // and one is used for the screen
 volatile mp_obj_t channels[CHANNEL_COUNT];
 
-// The master volume that all mixed samples are scaled by (0.0 ~ 1.0)
-volatile float master_volume = 1.0f;
+// These scale the amplitudes of each audio sample
+// Apart from these, there is also each channel's gain
+volatile float master_volume = 1.0f;    // Set by settings file, games cannot set this and effects all audio
+volatile float game_volume = 1.0f;      // Games are allowed to set this through `set_volume`
+
+
+void engine_audio_apply_master_volume(float volume){
+    master_volume = volume;
+}
+
+
+float engine_audio_get_master_volume(){
+    return master_volume;
+}
+
 
 // #if defined(__EMSCRIPTEN__)
 //     // Nothing to do
@@ -234,7 +247,7 @@ volatile float master_volume = 1.0f;
 //             // Set the amplitude just retrieved as the last sample to have been played on the channel
 //             channel->amplitude = sample;
 
-//             total_sample += sample * channel->gain * master_volume;
+            // total_sample += sample * channel->gain * game_volume * master_volume;
 
 //             if(complete && channel->loop == false){
 //                 audio_channel_stop(channel);
@@ -292,8 +305,12 @@ void engine_audio_init(){
 }
 
 
-void engine_audio_stop_all(){
+void engine_audio_reset(){
     ENGINE_INFO_PRINTF("EngineAudio: Stopping all channels...");
+
+    // By default, set the game volume back to max
+    // (the master volume can still scale this lower)
+    game_volume = 1.0f;
 
     for(uint8_t icx=0; icx<CHANNEL_COUNT; icx++){
         // Check that each channel is not NULL since reset
@@ -398,7 +415,7 @@ MP_DEFINE_CONST_FUN_OBJ_3(engine_audio_play_obj, engine_audio_play);
 /*  --- doc ---
     NAME: set_volume
     ID: set_volume
-    DESC: Sets the master volume clamped between 0.0 and 1.0. In the future, this will be persistent and stored/restored using a settings file (TODO)
+    DESC: Sets the game volume clamped between 0.0 and 1.0
     PARAM: [type=float] [name=set_volume] [value=any]
     RETURN: None
 */
@@ -406,7 +423,7 @@ static mp_obj_t engine_audio_set_volume(mp_obj_t new_volume){
     // Don't clamp so that users can clip their waveforms
     // which adds more area under the curve and therefore
     // is louder (sounds worse though)
-    master_volume = mp_obj_get_float(new_volume);
+    game_volume = mp_obj_get_float(new_volume);
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_1(engine_audio_set_volume_obj, engine_audio_set_volume);
@@ -415,7 +432,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_audio_set_volume_obj, engine_audio_set_volume);
 /*  --- doc ---
     NAME: get_volume
     ID: get_volume
-    DESC: Returns the currently set master volume between 0.0 and 1.0
+    DESC: Returns the currently set game volume between 0.0 and 1.0
     RETURN: None
 */
 static mp_obj_t engine_audio_get_volume(){

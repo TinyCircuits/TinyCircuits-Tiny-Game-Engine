@@ -7,9 +7,12 @@
 #define ENGINE_AUDIO_SAMPLE_DT 1.0f / ENGINE_AUDIO_SAMPLE_RATE
 
 void engine_audio_init();
+void engine_audio_apply_master_volume(float volume);
+float engine_audio_get_master_volume();
+
 void engine_audio_setup_playback();
 
 void engine_audio_play_on_channel(mp_obj_t sound_resource_obj, audio_channel_class_obj_t *channel, mp_obj_t loop_obj);
-void engine_audio_stop_all();
+void engine_audio_reset();
 
 #endif  // ENGINE_AUDIO_MODULE

@@ -67,7 +67,6 @@ def splash():
     # just so developers do not have to hear it all the time
     if not engine_link.connected():
         jingle = WaveSoundResource("/system/splash/assets/jingle.wav", True)
-        engine_audio.set_volume(1.0)
         engine_audio.play(jingle, 0, False)
 
     t0 = time.ticks_ms()

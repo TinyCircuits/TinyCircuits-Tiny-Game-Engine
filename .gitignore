@@ -9,3 +9,4 @@ filesystem/lib
 doc/build
 .vscode
 **/desktop.ini
+filesystem/system/settings.txt
