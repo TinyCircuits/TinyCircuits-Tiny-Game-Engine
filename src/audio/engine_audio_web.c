@@ -3,12 +3,12 @@
     #include "engine_audio_web.h"
 
 
-    void engine_audio_web_init(){
+    void engine_audio_web_init_one_time(){
         
     }
 
 
-    void engine_audio_web_channel_init(){
+    void engine_audio_web_channel_init_one_time(){
         
     }
 

@@ -67,11 +67,11 @@ mp_obj_t audio_channel_class_new(const mp_obj_type_t *type, size_t n_args, size_
     // to 8-bits since smallest audio sample bit-depth is 8
     // (using 16 would mean we'd copy too much data in 8-bit case)
     #if defined(__EMSCRIPTEN__)
-        engine_audio_web_channel_init();
+        engine_audio_web_channel_init_one_time();
     #elif defined(__unix__)
-        engine_audio_unix_channel_init();
+        engine_audio_unix_channel_init_one_time(self);
     #elif defined(__arm__)
-        engine_audio_rp3_channel_init(&self->dma_copy_channel, &self->dma_copy_config);
+        engine_audio_rp3_channel_init_one_time(&self->dma_copy_channel, &self->dma_copy_config);
     #endif
     
     return MP_OBJ_FROM_PTR(self);
@@ -220,9 +220,13 @@ uint32_t audio_channel_get_samples(audio_channel_class_obj_t *channel, float *ou
 
 
 // This is used on platforms that need to play individual samples
-// themselves (like rp2 port). It returns need samples at the correct
+// themselves (like rp2 port). It returns needed samples at the correct
 // rate defined by each type of source
 float audio_channel_get_rate_limited_sample(audio_channel_class_obj_t *channel, float volume, bool *complete){
+    if(channel->source == NULL){
+        return 0.0f;
+    }
+
     if(mp_obj_is_type(channel->source, &wave_sound_resource_class_type)){
         wave_sound_resource_class_obj_t *wave = channel->source;
 
@@ -278,6 +282,7 @@ mp_obj_t audio_channel_stop(mp_obj_t self_in){
         }
     }
 
+    // Sets source to NULL and resets other properties
     audio_channel_reset(channel);
 
     // Set back to false now that we're done readjusting the channel

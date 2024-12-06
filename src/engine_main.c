@@ -247,7 +247,7 @@ static mp_obj_t engine_main_module_init(){
     engine_fault_handling_register();
 
     // Needs to be setup before hand since dynamicly inits array
-    engine_audio_init();
+    engine_audio_init_one_time();
     engine_audio_setup_playback();
 
     engine_io_setup();

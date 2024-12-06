@@ -298,7 +298,7 @@ void engine_audio_setup_playback(){
 }
 
 
-void engine_audio_init(){
+void engine_audio_init_one_time(){
     ENGINE_PRINTF("EngineAudio: Setting up...\n");
 
     // Fill channels array with channels. This has to be done
@@ -311,12 +311,52 @@ void engine_audio_init(){
     }
 
     #if defined(__EMSCRIPTEN__)
-        engine_audio_web_init();
+        engine_audio_web_init_one_time();
     #elif defined(__unix__)
-        engine_audio_unix_init();
+        engine_audio_unix_init_one_time();
     #elif defined(__arm__)
-        engine_audio_rp3_init();
+        engine_audio_rp3_init_one_time();
     #endif
+}
+
+
+float engine_audio_get_mixed_output_sample(bool *play){
+    float output = 0.0f;        // Samples from each channel are added to this
+
+    for(uint8_t icx=0; icx<CHANNEL_COUNT; icx++){
+        audio_channel_class_obj_t *channel = channels[icx];
+
+        // If the channel is not playing/set or if it is
+        // busy being setup, skip it
+        if(channel->source == NULL || channel->busy){
+            continue;
+        }
+
+        // Calculate the volume of all the samples on this channel
+        float volume = channel->gain * game_volume * master_volume;
+
+        // Playing at least one sample, switch flag
+        *play = true;
+
+        // Get one sample from a channel at a time
+        bool channel_source_complete = false;
+        float sample = audio_channel_get_rate_limited_sample(channel, volume, &channel_source_complete);
+
+        // Set the amplitude just retrieved as the last sample
+        // to have been played on the channel
+        channel->amplitude = sample;
+
+        // Mix the sample into the output
+        output += sample;
+
+        // If the channel is not set to loop the source, stop
+        // the channel now that the source says it is done
+        if(channel->loop == false && channel_source_complete){
+            audio_channel_stop(channel);
+        }
+    }
+
+    return output;
 }
 
 

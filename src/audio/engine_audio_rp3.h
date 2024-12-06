@@ -16,8 +16,8 @@
 
     void engine_audio_rp3_adjust_freq(uint32_t core_clock_hz);
 
-    void engine_audio_rp3_init();
-    void engine_audio_rp3_channel_init(int *dma_channel, dma_channel_config *dma_config);
+    void engine_audio_rp3_init_one_time();
+    void engine_audio_rp3_channel_init_one_time(int *dma_channel, dma_channel_config *dma_config);
     void engine_audio_rp3_setup_playback();
     void engine_audio_rp3_copy(int dma_copy_channel, dma_channel_config *dma_copy_config, uint8_t *dest, uint8_t *src, uint32_t count);
 #endif

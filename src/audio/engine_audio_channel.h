@@ -9,7 +9,7 @@
 #if defined(__EMSCRIPTEN__)
 
 #elif defined(__unix__)
-
+    #include <SDL2/SDL.h>
 #elif defined(__arm__)
     #include "hardware/dma.h"
 #endif

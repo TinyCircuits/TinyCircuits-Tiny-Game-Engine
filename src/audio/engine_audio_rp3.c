@@ -13,43 +13,10 @@
 
     // Samples each channel, adds, normalizes, and sets PWM
     void ENGINE_FAST_FUNCTION(engine_audio_rp3_playback_cb)(void){
-        float output = 0.0f;        // Samples from each channel are added to this
-        bool play_ouput = false;    // Set `true` if at least one channel is ready to play
+        bool play = false;    // Set `true` if at least one channel is ready to play
+        float output = engine_audio_get_mixed_output_sample(&play);
 
-        for(uint8_t icx=0; icx<CHANNEL_COUNT; icx++){
-            audio_channel_class_obj_t *channel = engine_audio_get_channel(icx);
-
-            // If the channel is not playing/set or if it is
-            // busy being setup, skip it
-            if(channel->source == NULL || channel->busy){
-                continue;
-            }
-
-            // Calculate the volume of all the samples on this channel
-            float volume = channel->gain * engine_audio_get_master_volume() * engine_audio_get_game_volume();
-
-            // Playing at least one sample, switch flag
-            play_ouput = true;
-
-            // Get one sample from a channel at a time
-            bool channel_source_complete = false;
-            float sample = audio_channel_get_rate_limited_sample(channel, volume, &channel_source_complete);
-
-            // Set the amplitude just retrieved as the last sample
-            // to have been played on the channel
-            channel->amplitude = sample;
-
-            // Mix the sample into the output
-            output += sample;
-
-            // If the channel is not set to loop the source, stop
-            // the channel now that the source says it is done
-            if(channel->loop == false && channel_source_complete){
-                audio_channel_stop(channel);
-            }
-        }
-
-        if(play_ouput){
+        if(play){
             // Up to the user to make sure all playing channels do not add up and
             // go out of -1.0 ~ 1.0 range. Clamp the total sample sum since
             // very likely it could end of out of bounds, and map to PWM levels
@@ -73,7 +40,7 @@
     }
 
 
-    void engine_audio_rp3_init(){
+    void engine_audio_rp3_init_one_time(){
         // Generate the interrupt at the audio sample rate to set the PWM duty cycle
         audio_callback_pwm_pin_slice = pwm_gpio_to_slice_num(AUDIO_CALLBACK_PWM_PIN);
         pwm_clear_irq(audio_callback_pwm_pin_slice);
@@ -88,7 +55,7 @@
     }
 
 
-    void engine_audio_rp3_channel_init(int *dma_channel, dma_channel_config *dma_config){
+    void engine_audio_rp3_channel_init_one_time(int *dma_channel, dma_channel_config *dma_config){
         *dma_channel = dma_claim_unused_channel(true);
         *dma_config  = dma_channel_get_default_config(*dma_channel);
         channel_config_set_transfer_data_size(dma_config, DMA_SIZE_8);

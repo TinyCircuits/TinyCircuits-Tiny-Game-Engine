@@ -8,7 +8,7 @@
 
 audio_channel_class_obj_t *engine_audio_get_channel(uint8_t channel_index);
 
-void engine_audio_init();
+void engine_audio_init_one_time();
 
 void engine_audio_apply_master_volume(float volume);
 float engine_audio_get_master_volume();
@@ -17,6 +17,8 @@ void engine_audio_apply_game_volume(float volume);
 float engine_audio_get_game_volume();
 
 void engine_audio_setup_playback();
+
+float engine_audio_get_mixed_output_sample();
 
 void engine_audio_play_on_channel(mp_obj_t sound_resource_obj, audio_channel_class_obj_t *channel, mp_obj_t loop_obj);
 void engine_audio_reset();
