@@ -18,16 +18,6 @@
 #endif
 
 
-// uint8_t *wave_sound_resource_fill_destination(void *channel_in, uint32_t max_buffer_size, uint16_t *leftover_size){
-//     // audio_channel_class_obj_t *channel = channel_in;
-//     // wave_sound_resource_class_obj_t *wave = (wave_sound_resource_class_obj_t*)channel->source;
-
-//     // *leftover_size = (uint16_t)fminf(wave->total_data_size - channel->source_byte_offset, max_buffer_size);
-//     // uint8_t *data = ENGINE_BYTEARRAY_OBJ_TO_DATA(wave->data);
-//     // return data + channel->source_byte_offset;
-// }
-
-
 // Provided a output buffer, starts copy
 // to buffer using platforms's copy
 uint32_t wave_fill_dest(wave_sound_resource_class_obj_t *wave, audio_channel_class_obj_t *channel, uint8_t *output, uint32_t byte_count, bool *complete){

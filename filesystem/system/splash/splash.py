@@ -3,7 +3,7 @@ import engine_draw
 import engine_audio
 import engine_link
 from engine_nodes import Sprite2DNode, CameraNode
-from engine_resources import TextureResource, WaveSoundResource
+from engine_resources import TextureResource, WaveSoundResource, ToneSoundResource
 from engine_animation import Tween, Delay, ONE_SHOT, EASE_ELAST_OUT
 from engine_math import Vector2
 import random
@@ -67,7 +67,10 @@ def splash():
     # just so developers do not have to hear it all the time
     if not engine_link.connected():
         jingle = WaveSoundResource("/system/splash/assets/jingle.wav", True)
-        engine_audio.play(jingle, 0, False)
+        tone = ToneSoundResource()
+
+        # engine_audio.play(jingle, 0, False)
+        engine_audio.play(tone, 1, False)
 
     t0 = time.ticks_ms()
     while True:

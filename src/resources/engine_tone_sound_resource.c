@@ -20,29 +20,48 @@
 #endif
 
 
-// Provided a output buffer, starts copy
-// to buffer using platforms's copy
 uint32_t tone_fill_dest(tone_sound_resource_class_obj_t *tone, audio_channel_class_obj_t *channel, uint8_t *output, uint32_t byte_count, bool *complete){
-    // By default, assume this tone is not
-    // done providing samples
+    // Tone is never done providing samples
     *complete = false;
 
-    // #if defined(__EMSCRIPTEN__)
-    //     engine_audio_web_copy(NULL, NULL, 0);
+    // Tone always places f32 samples into the channel buffer,
+    // based on how many bytes can fit into the channel, calculate
+    // how many sampels to generate
+    uint32_t sample_count = byte_count / 4; // 4 bytes per f32 sample
 
-    // #elif defined(__unix__)
-    //     engine_audio_unix_copy(NULL, NULL, 0);
+    // Keep track of where we are putting bytes in the output
+    uint32_t output_byte_cursor = 0;
 
-    // #elif defined(__arm__)
-    //     engine_audio_rp3_copy(channel->dma_copy_channel, &channel->dma_copy_config NULL, NULL, 0);
-    // #endif
+    for(uint32_t isx=0; isx<sample_count; isx++){
+        float sample = engine_math_fast_sin(tone->omega*tone->time);
 
-    return 0;
+        memcpy(output+output_byte_cursor, &sample, 4);
+        output_byte_cursor += 4;
+
+        // Sample the sin wave at the same rate (maybe the channel should keep track of time? And pass that here? TODO)
+        tone->time += ENGINE_AUDIO_SAMPLE_RATE_PERIOD;
+    }
+
+    return sample_count * 4;
 }
 
 
 uint32_t tone_convert(tone_sound_resource_class_obj_t *tone, uint8_t *channel_buffer, float *output, uint32_t sample_count, float volume){
-    return 0;
+    for(uint32_t isx=0; isx<sample_count; isx++){
+        float sample = 0.0f;
+        memcpy(&sample, channel_buffer+isx, 4);
+        output[isx] = sample * volume;
+    }
+
+    return sample_count * 4;
+}
+
+
+void tone_sound_resource_set_frequency(tone_sound_resource_class_obj_t *self, float frequency){
+    // // https://www.mathworks.com/matlabcentral/answers/36428-sine-wave-plot#answer_45572
+    self->frequency = frequency;
+    self->omega = 2.0f * PI * self->frequency;
+    self->time = 0.0f;
 }
 
 
@@ -54,24 +73,9 @@ mp_obj_t tone_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
     self->base.type = &tone_sound_resource_class_type;
     self->channel = NULL;
 
-    // https://www.mathworks.com/matlabcentral/answers/36428-sine-wave-plot#answer_45572
-    self->frequency = 1000.0f;
-    self->omega = 2.0f * PI * self->frequency;
-    self->time = 0.0f;
+    tone_sound_resource_set_frequency(self, 1000.0f);
 
     return MP_OBJ_FROM_PTR(self);
-}
-
-
-void tone_sound_resource_set_frequency(tone_sound_resource_class_obj_t *self, float frequency){
-
-    if(frequency <= 50.0f || frequency >= ENGINE_AUDIO_SAMPLE_RATE/2.0f){
-        mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("ToneSoundResource: Error: the tone generator can only play frequncies between 50Hz and %0.3f. A frequncey of %.03f was being set..."), (double)(ENGINE_AUDIO_SAMPLE_RATE/2.0f), (double)frequency);
-    }
-
-    self->frequency = frequency;
-    self->omega = 2.0f * PI * self->frequency;
-    self->time = 0.0f;
 }
 
 

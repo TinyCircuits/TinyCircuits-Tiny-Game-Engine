@@ -4,7 +4,7 @@
 #include "engine_audio_channel.h"
 
 #define ENGINE_AUDIO_SAMPLE_RATE 22050.0f
-#define ENGINE_AUDIO_SAMPLE_DT 1.0f / ENGINE_AUDIO_SAMPLE_RATE
+#define ENGINE_AUDIO_SAMPLE_RATE_PERIOD 1.0f / ENGINE_AUDIO_SAMPLE_RATE
 
 audio_channel_class_obj_t *engine_audio_get_channel(uint8_t channel_index);
 

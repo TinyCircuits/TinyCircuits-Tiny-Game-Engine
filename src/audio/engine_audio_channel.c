@@ -246,6 +246,9 @@ float audio_channel_get_rate_limited_sample(audio_channel_class_obj_t *channel, 
         return wave->last_sample;
     }else if(mp_obj_is_type(channel->source, &tone_sound_resource_class_type)){
         // tone_sound_resource_class_obj_t *tone = channel->source;
+        float sample = 0.0f;
+        audio_channel_get_samples(channel, &sample, 1, volume, complete);
+        return sample;
     }else if(mp_obj_is_type(channel->source, &rtttl_sound_resource_class_type)){
         // rtttl_sound_resource_class_obj_t *rtttl = channel->source;
     }

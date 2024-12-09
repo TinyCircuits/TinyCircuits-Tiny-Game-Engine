@@ -11,10 +11,10 @@
     // Main audio playback object
     SDL_AudioSpec sdl_audio_spec;
     SDL_AudioDeviceID sdl_audio_device;
-
     struct itimerval timer;
     
 
+    // Callback that is invoked at engine audio sample rate
     void sigint_handler(int signum){
         bool play = false;    // Set `true` if at least one channel is ready to play
         float output = engine_audio_get_mixed_output_sample(&play);
@@ -36,7 +36,6 @@
         timer.it_interval.tv_usec = 0;
         setitimer(ITIMER_REAL, &timer, NULL);
 
-        // // audio.freq = 11025;
         sdl_audio_spec.freq = ENGINE_AUDIO_SAMPLE_RATE;
         sdl_audio_spec.format = AUDIO_F32;
         sdl_audio_spec.channels = 1;
