@@ -12,14 +12,14 @@
 // ENGINE_TONE_MINIMUM_HZ            [HZ]
 //
 // Therefore: ENGINE_TONE_MINIMUM_HZ  =  1.0 / ENGINE_AUDIO_SAMPLE_RATE_PERIOD * CHANNEL_BUFFER_LEN  =  1.0 / [second/samples] * [samples]  =  1.0 / [second]  = [Hz]
-#define ENGINE_TONE_MINIMUM_HZ     1.0f / (ENGINE_AUDIO_SAMPLE_RATE_PERIOD * CHANNEL_BUFFER_LEN)
-#define ENGINE_TONE_MINIMUM_PERIOD 1.0f / ENGINE_TONE_MINIMUM_HZ
+#define ENGINE_TONE_MINIMUM_HZ     (1.0f / (ENGINE_AUDIO_SAMPLE_RATE_PERIOD * CHANNEL_BUFFER_LEN))
+#define ENGINE_TONE_MINIMUM_PERIOD (1.0f / ENGINE_TONE_MINIMUM_HZ)
 
 // ENGINE_TONE_MINIMUM_PERIOD        [second/1.0]
 // ENGINE_AUDIO_SAMPLE_RATE_PERIOD   [second/samples]
 //
 // Therefore: ENGINE_TONE_BUFFER_LEN  =  ENGINE_TONE_MINIMUM_PERIOD / ENGINE_AUDIO_SAMPLE_RATE_PERIOD  =  [second/1.0] / [second/samples]  =  [second/1.0] * [samples/second]  = [samples]
-#define ENGINE_TONE_BUFFER_LEN ENGINE_TONE_MINIMUM_PERIOD / ENGINE_AUDIO_SAMPLE_RATE_PERIOD
+#define ENGINE_TONE_BUFFER_LEN (ENGINE_TONE_MINIMUM_PERIOD / ENGINE_AUDIO_SAMPLE_RATE_PERIOD)
 
 
 typedef struct{
@@ -27,9 +27,9 @@ typedef struct{
     audio_channel_class_obj_t *channel;
 
     float frequency;
-    float omega;
-    float time;
     bool busy;
+
+    mp_obj_t data;  // When the tone frequncey is changed, the new waveform data is stored in here
 }tone_sound_resource_class_obj_t;
 
 extern const mp_obj_type_t tone_sound_resource_class_type;

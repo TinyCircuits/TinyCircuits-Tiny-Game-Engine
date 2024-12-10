@@ -24,44 +24,124 @@ uint32_t tone_fill_dest(tone_sound_resource_class_obj_t *tone, audio_channel_cla
     // Tone is never done providing samples
     *complete = false;
 
-    // Tone always places f32 samples into the channel buffer,
-    // based on how many bytes can fit into the channel, calculate
-    // how many sampels to generate
-    uint32_t sample_count = byte_count / 4; // 4 bytes per f32 sample
+    mp_obj_array_t *data = tone->data;
+    uint8_t *items = data->items;
 
-    // Keep track of where we are putting bytes in the output
-    uint32_t output_byte_cursor = 0;
 
-    for(uint32_t isx=0; isx<sample_count; isx++){
-        float sample = engine_math_fast_sin(tone->omega*tone->time);
+    // Need to fill the output buffer with as much data as possible,
+    // calculate many sample periods can fit into the output, and then
+    // copy the group that many times
+    uint32_t output_sample_group_fit_count = byte_count / data->len;
+    uint32_t copied_byte_count = data->len * output_sample_group_fit_count;
+    uint32_t output_cursor = 0;
 
-        memcpy(output+output_byte_cursor, &sample, 4);
-        output_byte_cursor += 4;
+    for(uint32_t igx=0; igx<output_sample_group_fit_count; igx++){
+        #if defined(__EMSCRIPTEN__)
+            engine_audio_web_copy(output+output_cursor, items, data->len);
+        #elif defined(__unix__)
+            engine_audio_unix_copy(output+output_cursor, items, data->len);
+        #elif defined(__arm__)
+            engine_audio_rp3_copy(channel->dma_copy_channel, &channel->dma_copy_config, output+output_cursor, items, data->len);
+        #endif
 
-        // Sample the sin wave at the same rate (maybe the channel should keep track of time? And pass that here? TODO)
-        tone->time += ENGINE_AUDIO_SAMPLE_RATE_PERIOD;
+        output_cursor += data->len;
     }
 
-    return sample_count * 4;
+    ENGINE_PRINTF("%d\n", copied_byte_count);
+
+    return copied_byte_count;
+
+
+    // // Figure which is smaller, desired bytes or length of tone buffer
+    // byte_count = byte_count < data->len ? byte_count : data->len;
+
+    // #if defined(__EMSCRIPTEN__)
+    //     engine_audio_web_copy(output, items, byte_count);
+    // #elif defined(__unix__)
+    //     engine_audio_unix_copy(output, items, byte_count);
+    // #elif defined(__arm__)
+    //     engine_audio_rp3_copy(channel->dma_copy_channel, &channel->dma_copy_config, output, items, byte_count);
+    // #endif
+
+    // return byte_count;
+
+
+
+
+    // // Tone is never done providing samples
+    // *complete = false;
+
+    // // Tone always places f32 samples into the channel buffer,
+    // // based on how many bytes can fit into the channel, calculate
+    // // how many sampels to generate
+    // uint32_t sample_count = byte_count / 4; // 4 bytes per f32 sample
+
+    // // Keep track of where we are putting bytes in the output
+    // uint32_t output_byte_cursor = 0;
+
+    // for(uint32_t isx=0; isx<sample_count; isx++){
+    //     float sample = engine_math_fast_sin(tone->omega*tone->time);
+
+    //     memcpy(output+output_byte_cursor, &sample, 4);
+    //     output_byte_cursor += 4;
+
+    //     // Sample the sin wave at the same rate (maybe the channel should keep track of time? And pass that here? TODO)
+    //     tone->time += ENGINE_AUDIO_SAMPLE_RATE_PERIOD;
+    // }
+
+    // return sample_count * 4;
 }
 
 
 uint32_t tone_convert(tone_sound_resource_class_obj_t *tone, uint8_t *channel_buffer, float *output, uint32_t sample_count, float volume){
     for(uint32_t isx=0; isx<sample_count; isx++){
-        float sample = 0.0f;
-        memcpy(&sample, channel_buffer+isx, 4);
+        float sample = (float)channel_buffer[isx];
+        sample = sample / (float)UINT8_MAX;
+        sample = sample - 0.5f;
+        sample = sample * 2.0f;
         output[isx] = sample * volume;
     }
 
-    return sample_count * 4;
+    return sample_count;
+
+    // for(uint32_t isx=0; isx<sample_count; isx++){
+    //     float sample = 0.0f;
+    //     memcpy(&sample, channel_buffer+isx, 4);
+    //     output[isx] = sample * volume;
+    // }
+
+    // return sample_count * 4;
 }
 
 
 void tone_sound_resource_set_frequency(tone_sound_resource_class_obj_t *self, float frequency){
-    // // https://www.mathworks.com/matlabcentral/answers/36428-sine-wave-plot#answer_45572
+    if(frequency <= ENGINE_TONE_MINIMUM_HZ || frequency >= ENGINE_AUDIO_SAMPLE_RATE/2.0f){
+        mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("ToneSoundResource: Error: the tone generator can only play frequncies between `%0.3f` and `%0.3f` but got `%.03f`..."), (double)ENGINE_TONE_MINIMUM_HZ, (double)(ENGINE_AUDIO_SAMPLE_RATE/2.0f), (double)frequency);
+    }
+
+    // https://www.mathworks.com/matlabcentral/answers/36428-sine-wave-plot#answer_45572
     self->frequency = frequency;
-    self->omega = 2.0f * PI * self->frequency;
-    self->time = 0.0f;
+
+    // For one period (s) how many samples can we take at `ENGINE_AUDIO_SAMPLE_RATE`
+    float period = 1.0f / frequency;
+    uint32_t sample_count = (uint32_t)(period / (ENGINE_AUDIO_SAMPLE_RATE_PERIOD));
+
+    // For generating the samples on the sin wave
+    float omega = 2.0f * PI * frequency;
+    float time = 0.0f;
+
+    // For storing the samples
+    mp_obj_array_t *data = self->data;
+    data->len = sample_count;   // 8-bit samples
+    uint8_t *items = data->items;
+
+    // Generate the samples
+    for(uint32_t isx=0; isx<sample_count; isx++){
+        float sample = engine_math_fast_sin(omega * time);
+        sample = 0.5f + (0.5f*sample);                      // -1.0 ~ 1.0  ->  0.0 ~ 1.0
+        items[isx] = (uint8_t)(sample * (float)UINT8_MAX);  //  0.0 ~ 1.0  ->  0 ~ 255
+        time += ENGINE_AUDIO_SAMPLE_RATE_PERIOD;
+    }
 }
 
 
@@ -72,6 +152,15 @@ mp_obj_t tone_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
     tone_sound_resource_class_obj_t *self = mp_obj_malloc_with_finaliser(tone_sound_resource_class_obj_t, &tone_sound_resource_class_type);
     self->base.type = &tone_sound_resource_class_type;
     self->channel = NULL;
+
+    // Allocate and assign space in RAM for tone data
+    mp_obj_array_t *array = m_new_obj(mp_obj_array_t);
+    array->base.type = &mp_type_bytearray;
+    array->typecode = BYTEARRAY_TYPECODE;
+    array->free = 0;
+    array->len = (size_t)ceilf(ENGINE_TONE_BUFFER_LEN);
+    array->items = m_new(byte, array->len);
+    self->data = array;
 
     tone_sound_resource_set_frequency(self, 1000.0f);
 
@@ -117,6 +206,9 @@ static void tone_sound_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_
             break;
             case MP_QSTR_frequency:
                 destination[0] = mp_obj_new_float(self->frequency);
+            break;
+            case MP_QSTR_data:
+                destination[0] = self->data;
             break;
             default:
                 return; // Fail
