@@ -6,6 +6,8 @@ filesystem/splash
 filesystem/Saves
 filesystem/lib
 
+production_files
+
 doc/build
 .vscode
 **/desktop.ini
