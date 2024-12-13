@@ -10,6 +10,8 @@
     #include "hardware/timer.h"
     #include "pico/multicore.h"
 
+    #include "audio/engine_audio_channel.h"
+
     #define AUDIO_PWM_PIN 23
     #define AUDIO_CALLBACK_PWM_PIN 24
     #define AUDIO_ENABLE_PIN 20

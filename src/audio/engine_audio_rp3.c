@@ -1,6 +1,5 @@
 #if defined(__arm__)
     #include "engine_audio_rp3.h"
-    #include "audio/engine_audio_channel.h"
     #include "audio/engine_audio_module.h"
     #include "utility/engine_defines.h"
     #include "math/engine_math.h"
@@ -101,7 +100,7 @@
         // https://github.com/raspberrypi/pico-examples/blob/master/flash/xip_stream/flash_xip_stream.c#L58-L70
         dma_channel_configure(
             channel->dma_copy_channel,   // Channel to be configured
-            channel->dma_copy_config,    // The configuration we just created
+            &channel->dma_copy_config,   // The configuration we just created
             dest,                        // The initial write address
             src,                         // The initial read address
             count,                       // Number of transfers; in this case each is 1 byte
