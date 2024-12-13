@@ -37,9 +37,9 @@ uint32_t wave_fill_dest(wave_sound_resource_class_obj_t *wave, audio_channel_cla
     #if defined(__EMSCRIPTEN__)
         engine_audio_web_copy(output, ((uint8_t*)wave_data->items)+source_byte_cursor, byte_count);
     #elif defined(__unix__)
-        engine_audio_unix_copy(output, ((uint8_t*)wave_data->items)+source_byte_cursor, byte_count);
+        engine_audio_unix_copy(channel, output, ((uint8_t*)wave_data->items)+source_byte_cursor, byte_count);
     #elif defined(__arm__)
-        engine_audio_rp3_copy(channel->dma_copy_channel, &channel->dma_copy_config, output, ((uint8_t*)wave_data->items)+source_byte_cursor, byte_count);
+        engine_audio_rp3_copy(channel, output, ((uint8_t*)wave_data->items)+source_byte_cursor, byte_count);
     #endif
 
     // Update where we are in the channel's source buffer

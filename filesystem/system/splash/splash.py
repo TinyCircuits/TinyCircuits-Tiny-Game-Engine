@@ -69,7 +69,7 @@ def splash():
         jingle = WaveSoundResource("/system/splash/assets/jingle.wav", True)
         tone = ToneSoundResource()
 
-        engine_audio.play(jingle, 0, False)
+        # engine_audio.play(jingle, 0, False)
         engine_audio.play(tone, 1, False)
 
     t0 = time.ticks_ms()

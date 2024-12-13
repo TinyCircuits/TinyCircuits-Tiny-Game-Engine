@@ -28,42 +28,40 @@ uint32_t tone_fill_dest(tone_sound_resource_class_obj_t *tone, audio_channel_cla
     uint8_t *items = data->items;
 
 
-    // Need to fill the output buffer with as much data as possible,
-    // calculate many sample periods can fit into the output, and then
-    // copy the group that many times
-    uint32_t output_sample_group_fit_count = byte_count / data->len;
-    uint32_t copied_byte_count = data->len * output_sample_group_fit_count;
-    uint32_t output_cursor = 0;
+    // // Need to fill the output buffer with as much data as possible,
+    // // calculate many sample periods can fit into the output, and then
+    // // copy the group that many times
+    // uint32_t output_sample_group_fit_count = byte_count / data->len;
+    // uint32_t copied_byte_count = data->len * output_sample_group_fit_count;
+    // uint32_t output_cursor = 0;
 
-    for(uint32_t igx=0; igx<output_sample_group_fit_count; igx++){
-        #if defined(__EMSCRIPTEN__)
-            engine_audio_web_copy(output+output_cursor, items, data->len);
-        #elif defined(__unix__)
-            engine_audio_unix_copy(output+output_cursor, items, data->len);
-        #elif defined(__arm__)
-            engine_audio_rp3_copy(channel->dma_copy_channel, &channel->dma_copy_config, output+output_cursor, items, data->len);
-        #endif
+    // for(uint32_t igx=0; igx<output_sample_group_fit_count; igx++){
+    //     #if defined(__EMSCRIPTEN__)
+    //         engine_audio_web_copy(output+output_cursor, items, data->len);
+    //     #elif defined(__unix__)
+    //         engine_audio_unix_copy(channel, output+output_cursor, items, data->len);
+    //     #elif defined(__arm__)
+    //         engine_audio_rp3_copy(channel, output+output_cursor, items, data->len);
+    //     #endif
 
-        output_cursor += data->len;
-    }
+    //     output_cursor += data->len;
+    // }
 
-    ENGINE_PRINTF("%d\n", copied_byte_count);
-
-    return copied_byte_count;
+    // return copied_byte_count;
 
 
-    // // Figure which is smaller, desired bytes or length of tone buffer
-    // byte_count = byte_count < data->len ? byte_count : data->len;
+    // Figure which is smaller, desired bytes or length of tone buffer
+    byte_count = byte_count < data->len ? byte_count : data->len;
 
-    // #if defined(__EMSCRIPTEN__)
-    //     engine_audio_web_copy(output, items, byte_count);
-    // #elif defined(__unix__)
-    //     engine_audio_unix_copy(output, items, byte_count);
-    // #elif defined(__arm__)
-    //     engine_audio_rp3_copy(channel->dma_copy_channel, &channel->dma_copy_config, output, items, byte_count);
-    // #endif
+    #if defined(__EMSCRIPTEN__)
+        engine_audio_web_copy(output, items, byte_count);
+    #elif defined(__unix__)
+        engine_audio_unix_copy(channel, output, items, byte_count);
+    #elif defined(__arm__)
+        engine_audio_rp3_copy(channel, output, items, byte_count);
+    #endif
 
-    // return byte_count;
+    return byte_count;
 
 
 

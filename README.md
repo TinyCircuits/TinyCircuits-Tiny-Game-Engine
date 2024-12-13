@@ -50,7 +50,7 @@ If you followed the one of two methods to setup everythign above, you can run th
 1. Follow instructions here https://emscripten.org/docs/getting_started/downloads.html and finish after executing `source ./emsdk_env.sh` (will need to execute this last command in `emsdk` in every new terminal/session)
 2. `git clone https://github.com/TinyCircuits/micropython/tree/engine micropython`
 3. `cd micropython/ports/webassembly`
-4. `make -j8 USER_C_MODULES=../../TinyCircuits-Tiny-Game-Engine`
+4. `make -j8 USER_C_MODULES=../../TinyCircuits-Tiny-Game-Engine` (or just `(cd ../ports/webassembly && make -j8 USER_C_MODULES=../../TinyCircuits-Tiny-Game-Engine)` if in game engine folder)
 
 # Linux and Webassembly heap size
 To mimic the hardware, the heap needs to be `520kB` SRAM + `2MiB` of FLASH scratch = `520*1000 + 2*1024*1024 = 2617152`

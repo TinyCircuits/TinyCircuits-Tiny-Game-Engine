@@ -19,7 +19,7 @@
     void engine_audio_rp3_init_one_time();
     void engine_audio_rp3_channel_init_one_time(int *dma_channel, dma_channel_config *dma_config);
     void engine_audio_rp3_setup_playback();
-    void engine_audio_rp3_copy(int dma_copy_channel, dma_channel_config *dma_copy_config, uint8_t *dest, uint8_t *src, uint32_t count);
+    void engine_audio_rp3_copy(audio_channel_class_obj_t *channel, uint8_t *dest, uint8_t *src, uint32_t count);
 #endif
 
 #endif  // ENGINE_AUDIO_WEB_H

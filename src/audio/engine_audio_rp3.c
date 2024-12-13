@@ -86,26 +86,26 @@
     }
 
 
-    void engine_audio_rp3_copy(int dma_copy_channel, dma_channel_config *dma_copy_config, uint8_t *dest, uint8_t *src, uint32_t count){
+    void engine_audio_rp3_copy(audio_channel_class_obj_t *channel, uint8_t *dest, uint8_t *src, uint32_t count){
         // https://github.com/raspberrypi/pico-examples/blob/eca13acf57916a0bd5961028314006983894fc84/flash/xip_stream/flash_xip_stream.c#L45-L48
         // while (!(xip_ctrl_hw->stat & XIP_STAT_FIFO_EMPTY))
         //     (void) xip_ctrl_hw->stream_fifo;
         // xip_ctrl_hw->stream_addr = (uint32_t)current_source_data;
         // xip_ctrl_hw->stream_ctr = channel->buffer_end;
 
-        if(dma_channel_is_busy(dma_copy_channel)){
+        if(dma_channel_is_busy(channel->dma_copy_channel)){
             ENGINE_WARNING_PRINTF("AudioModule: Waiting on previous DMA transfer to complete, this ideally shouldn't happen");
-            dma_channel_wait_for_finish_blocking(dma_copy_channel);
+            dma_channel_wait_for_finish_blocking(channel->dma_copy_channel);
         }
 
         // https://github.com/raspberrypi/pico-examples/blob/master/flash/xip_stream/flash_xip_stream.c#L58-L70
         dma_channel_configure(
-            dma_copy_channel,   // Channel to be configured
-            dma_copy_config,    // The configuration we just created
-            dest,               // The initial write address
-            src,                // The initial read address
-            count,              // Number of transfers; in this case each is 1 byte
-            true                // Start immediately
+            channel->dma_copy_channel,   // Channel to be configured
+            channel->dma_copy_config,    // The configuration we just created
+            dest,                        // The initial write address
+            src,                         // The initial read address
+            count,                       // Number of transfers; in this case each is 1 byte
+            true                         // Start immediately
         );
     }
 #endif

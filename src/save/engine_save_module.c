@@ -42,9 +42,9 @@ static mp_obj_t engine_save__init_saves_dir(mp_obj_t dir){
     if(!dir_str_len){
         mp_raise_ValueError(MP_ERROR_TEXT("EngineSave: ERROR: dir is empty string"));
     }
-    if(dir_str[dir_str_len - 1] == '/'){
-        mp_raise_ValueError(MP_ERROR_TEXT("EngineSave: ERROR: do not include the trailing slash"));
-    }
+    // if(dir_str[dir_str_len - 1] == '/'){
+    //     mp_raise_msg_varg(&mp_type_ValueError, MP_ERROR_TEXT("EngineSave: ERROR: do not include the trailing slash: `%s`"), dir_str);
+    // }
     if(dir_str_len > SAVES_DIR_LENGTH_MAX){
         mp_raise_ValueError(MP_ERROR_TEXT("EngineSave: ERROR: dir name is too long"));
     }

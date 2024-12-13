@@ -9,6 +9,7 @@
 #if defined(__EMSCRIPTEN__)
 
 #elif defined(__unix__)
+    #include <pthread.h>
     #include <SDL2/SDL.h>
 #elif defined(__arm__)
     #include "hardware/dma.h"
@@ -56,7 +57,11 @@ typedef struct audio_channel_class_obj_t{
     #if defined(__EMSCRIPTEN__)
         // Nothing unique needed
     #elif defined(__unix__)
-        // Nothing unique needed
+        pthread_t copy_thread_id;
+        pthread_mutex_t mutex;
+        uint8_t *copy_dest;
+        uint8_t *copy_src;
+        uint32_t copy_count;
     #elif defined(__arm__)
         int dma_copy_channel;                    // The DMA channel for this audio channel used for copying data from flash to RAM buffer in background
         dma_channel_config dma_copy_config;      // Configuration for the DMA
