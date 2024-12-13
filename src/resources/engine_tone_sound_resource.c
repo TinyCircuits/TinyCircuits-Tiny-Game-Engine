@@ -102,6 +102,7 @@ uint32_t tone_convert(tone_sound_resource_class_obj_t *tone, uint8_t *channel_bu
 
     return sample_count;
 
+
     // for(uint32_t isx=0; isx<sample_count; isx++){
     //     float sample = 0.0f;
     //     memcpy(&sample, channel_buffer+isx, 4);
@@ -124,22 +125,38 @@ void tone_sound_resource_set_frequency(tone_sound_resource_class_obj_t *self, fl
     float period = 1.0f / frequency;
     uint32_t sample_count = (uint32_t)(period / (ENGINE_AUDIO_SAMPLE_RATE_PERIOD));
 
+    // Stuff as much tone data into the tone buffer as possible
+    uint32_t iterations = ENGINE_TONE_BUFFER_LEN / sample_count;
+    // sample_count = ((uint32_t)ENGINE_TONE_BUFFER_LEN / sample_count) * sample_count;
+
+    // ENGINE_PRINTF("%d\n", sample_count);
+
     // For generating the samples on the sin wave
     float omega = 2.0f * PI * frequency;
-    float time = 0.0f;
+
+    // // For generating the samples on the sin wave
+    // self->omega = 2.0f * PI * frequency;
+    // self->time = 0.0f;
 
     // For storing the samples
     mp_obj_array_t *data = self->data;
-    data->len = sample_count;   // 8-bit samples
     uint8_t *items = data->items;
 
     // Generate the samples
-    for(uint32_t isx=0; isx<sample_count; isx++){
-        float sample = engine_math_fast_sin(omega * time);
-        sample = 0.5f + (0.5f*sample);                      // -1.0 ~ 1.0  ->  0.0 ~ 1.0
-        items[isx] = (uint8_t)(sample * (float)UINT8_MAX);  //  0.0 ~ 1.0  ->  0 ~ 255
-        time += ENGINE_AUDIO_SAMPLE_RATE_PERIOD;
+    uint32_t index = 0;
+    for(uint32_t itx=0; itx<iterations; itx++){
+        float time = 0.0f;
+
+        for(uint32_t isx=0; isx<sample_count; isx++){
+            float sample = engine_math_fast_sin(omega * time);
+            sample = 0.5f + (0.5f*sample);                        // -1.0 ~ 1.0  ->  0.0 ~ 1.0
+            items[index] = (uint8_t)(sample * (float)UINT8_MAX);  //  0.0 ~ 1.0  ->  0 ~ 255
+            time += ENGINE_AUDIO_SAMPLE_RATE_PERIOD;
+            index++;
+        }
     }
+
+    data->len = index;   // 8-bit samples
 }
 
 
