@@ -47,7 +47,7 @@ camera.add_child(battery)
 
 # Create instances of the custom launcher screens
 games_screen = GamesScreen(font)
-credits_screen = CreditsScreen(font)
+credits_screen = CreditsScreen()
 settings_screen = SettingsScreen(font)
 
 # Focus GUI layer by default, do not let user change

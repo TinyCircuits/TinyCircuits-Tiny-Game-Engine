@@ -118,6 +118,35 @@ static void text_2d_node_class_calculate_dimensions(engine_text_2d_node_class_ob
 }
 
 
+// Returns a new str only containing characters 32 <= c <= 126
+// if there ae characters that are out of bounds, otherwise,
+// returns the same passed string
+mp_obj_t santize(mp_obj_t str_obj){
+    // Do not sanitize if `None`
+    if(str_obj == mp_const_none){
+        return str_obj;
+    }
+
+    // Get the string data and create a place to store
+    // sanitzed copy of the string
+    GET_STR_DATA_LEN(str_obj, str_data, str_len);
+    char sanitized_str_data[str_len];
+
+    for(size_t i=0; i<str_len; i++){
+        if(str_data[i] < 32 || str_data[i] > 126){
+            sanitized_str_data[i] = 63;
+        }else{
+            sanitized_str_data[i] = str_data[i];
+        }
+    }
+
+
+    // Create a new santized string and return it
+    mp_obj_str_t *sanitized_str = mp_obj_new_str(sanitized_str_data, str_len);
+    return sanitized_str;
+}
+
+
 // Return `true` if handled loading the attr from internal structure, `false` otherwise
 bool text_2d_node_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp_obj_t *destination){
     // Get the underlying structure
@@ -199,9 +228,11 @@ bool text_2d_node_store_attr(engine_node_base_t *self_node_base, qstr attribute,
             return true;
         break;
         case MP_QSTR_text:
-            self->text = destination[1];
+        {
+            self->text = santize(destination[1]);
             text_2d_node_class_calculate_dimensions(self);
             return true;
+        }
         break;
         case MP_QSTR_rotation:
             self->rotation = destination[1];
@@ -347,7 +378,7 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
     text_2d_node->tick_cb = mp_const_none;
     text_2d_node->position = parsed_args[position].u_obj;
     text_2d_node->font_resource = parsed_args[font].u_obj;
-    text_2d_node->text = parsed_args[text].u_obj;
+    text_2d_node->text = santize(parsed_args[text].u_obj);
     text_2d_node->rotation = parsed_args[rotation].u_obj;
     text_2d_node->scale = parsed_args[scale].u_obj;
     text_2d_node->opacity = parsed_args[opacity].u_obj;
