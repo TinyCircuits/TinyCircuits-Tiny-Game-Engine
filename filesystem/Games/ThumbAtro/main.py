@@ -646,6 +646,7 @@ class PokerGame(Rectangle2DNode):
         self.last_sound_time = None
         self.sound_play_duration = 0
         self.sound_start_time = None
+        engine_io.rumble(0.0)
 
     def tick(self, dt):
         if engine_io.MENU.is_just_pressed:
