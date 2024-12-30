@@ -611,6 +611,12 @@ void engine_draw_text(font_resource_class_obj_t *font, mp_obj_t text, float cent
     for(uint16_t icx=0; icx<str_len; icx++){
         char current_char = ((char *)str)[icx];
 
+        // Replace any character that's not a newline or is
+        // not otherwise printable with a question mark `?`
+        if(current_char != 10 && (current_char < 32 || current_char > 126)){
+            current_char = 63;
+        }
+
         // Check if newline, otherwise any other character contributes to text box width
         if(current_char == 10){
             // Move to start of line
