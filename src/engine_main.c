@@ -29,7 +29,7 @@
 #if defined(__EMSCRIPTEN__)
 
 #elif defined(__unix__)
-    #include <dirent.h>
+    
 #elif defined(__arm__)
     #include "hardware/adc.h"
 #endif
