@@ -25,6 +25,17 @@
 #define GPIO_LED_B                  12
 
 
+void engine_io_rp3_pwm_setup(uint gpio, uint16_t default_level){
+    uint pwm_pin_slice = pwm_gpio_to_slice_num(gpio);
+    gpio_set_function(gpio, GPIO_FUNC_PWM);
+    pwm_config pwm_pin_config = pwm_get_default_config();
+    pwm_config_set_clkdiv_int(&pwm_pin_config, 1);
+    pwm_config_set_wrap(&pwm_pin_config, 2048);   // 150MHz / 2048 = 73kHz
+    pwm_init(pwm_pin_slice, &pwm_pin_config, true);
+    pwm_set_gpio_level(gpio, default_level);
+}
+
+
 void engine_io_rp3_setup(){
     ENGINE_PRINTF("EngineInput: Setting up...\n");
 
@@ -37,6 +48,7 @@ void engine_io_rp3_setup(){
     gpio_init(GPIO_BUTTON_BUMPER_LEFT);
     gpio_init(GPIO_BUTTON_BUMPER_RIGHT);
     gpio_init(GPIO_BUTTON_MENU);
+    gpio_init(GPIO_CHARGE_STAT);
     gpio_init(GPIO_LED_R);
     gpio_init(GPIO_LED_G);
     gpio_init(GPIO_LED_B);
@@ -68,13 +80,10 @@ void engine_io_rp3_setup(){
     gpio_set_dir(GPIO_LED_G, GPIO_OUT);
     gpio_set_dir(GPIO_LED_B, GPIO_OUT);
 
-    uint rumple_pwm_pin_slice = pwm_gpio_to_slice_num(GPIO_RUMBLE);
-    gpio_set_function(GPIO_RUMBLE, GPIO_FUNC_PWM);
-    pwm_config rumble_pwm_pin_config = pwm_get_default_config();
-    pwm_config_set_clkdiv_int(&rumble_pwm_pin_config, 1);
-    pwm_config_set_wrap(&rumble_pwm_pin_config, 2048);   // 125MHz / 1024 = 122kHz
-    pwm_init(rumple_pwm_pin_slice, &rumble_pwm_pin_config, true);
-    pwm_set_gpio_level(GPIO_RUMBLE, 0);
+    engine_io_rp3_pwm_setup(GPIO_RUMBLE, 0);
+    // engine_io_rp3_pwm_setup(GPIO_LED_R, 2047);
+    // engine_io_rp3_pwm_setup(GPIO_LED_G, 2047);
+    // engine_io_rp3_pwm_setup(GPIO_LED_B, 2047);
 }
 
 
@@ -102,7 +111,7 @@ void engine_io_rp3_rumble(float intensity){
     if(intensity <= EPSILON){
         pwm_set_gpio_level(GPIO_RUMBLE, 0);
     }else{
-        pwm_set_gpio_level(GPIO_RUMBLE, (uint32_t)engine_math_map_clamp(intensity, 0.0f, 1.0f, 1400.0f, 2048.0f));
+        pwm_set_gpio_level(GPIO_RUMBLE, (uint32_t)engine_math_map_clamp(intensity, 0.0f, 1.0f, 1400.0f, 2047.0f));
     }
 }
 
@@ -110,7 +119,7 @@ void engine_io_rp3_rumble(float intensity){
 bool engine_io_rp3_is_charging(){
     // Charge status line from LiIon charger IC is set
     // pulled HIGH by default and is pulled LOW by IC
-    return gpio_get(GPIO_CHARGE_STAT);
+    return !gpio_get(GPIO_CHARGE_STAT);
 }
 
 

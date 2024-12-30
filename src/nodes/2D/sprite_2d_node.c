@@ -66,6 +66,7 @@ void sprite_2d_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t camera_no
     uint16_t sprite_frame_current_y = mp_obj_get_int(sprite_2d_node->frame_current_y);
     bool sprite_playing = mp_obj_get_int(sprite_2d_node->playing);
     bool sprite_looping = mp_obj_get_int(sprite_2d_node->loop);
+    float sprite_fps = mp_obj_get_float(mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_fps));
 
     color_class_obj_t *transparent_color = sprite_2d_node->transparent_color;
     uint32_t spritesheet_width = sprite_texture->width;
@@ -111,9 +112,9 @@ void sprite_2d_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t camera_no
                      sprite_opacity,
                      shader);
 
-    // After drawing, go to the next frame if it is time to and the animation is playing
-    if(sprite_playing == true){
-        float sprite_fps = mp_obj_get_float(mp_load_attr(sprite_node_base->attr_accessor, MP_QSTR_fps));
+    // After drawing, go to the next frame if it is time to and the animation is playing.
+    // Only automaticaly play the next frames if allowed and the FPS is not 0
+    if(sprite_playing == true && !engine_math_compare_floats(sprite_fps, 0.0f)){
         uint16_t sprite_period = (uint16_t)((1.0f/sprite_fps) * 1000.0f);
 
         uint32_t current_ms_time = millis();
