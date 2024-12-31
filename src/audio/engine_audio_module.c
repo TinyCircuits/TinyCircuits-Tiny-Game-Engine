@@ -55,9 +55,7 @@ float engine_audio_get_master_volume(){
     #include "pico/multicore.h"
     #include "io/engine_io_rp3.h"
 
-    // Pin for PWM audio sample wrap callback (faster than repeating timer, by a lot)
-    // uint audio_callback_pwm_pin_slice;
-    // pwm_config audio_callback_pwm_pin_config;
+    // Playback timer
     repeating_timer_t audio_cb_timer;
 
     uint8_t *current_source_data = NULL;
@@ -288,13 +286,6 @@ void engine_audio_setup_playback(){
         // Now allow sound to play by enabling the amplifier
         gpio_put(AUDIO_ENABLE_PIN, 1);
     #endif
-}
-
-
-void engine_audio_adjust_playback_with_freq(uint32_t core_clock_hz){
-    // #if defined(__arm__)
-    //     pwm_config_set_wrap(&audio_callback_pwm_pin_config, (uint16_t)((float)(core_clock_hz) / ENGINE_AUDIO_SAMPLE_RATE) - 1);
-    // #endif
 }
 
 

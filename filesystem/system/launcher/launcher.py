@@ -14,7 +14,6 @@ from system.launcher_state import get_launcher_state
 from system.launcher.screen_icon import ScreenIcon
 from system.launcher.header import Header
 from system.launcher.dynamic_background import DynamicBackground
-from system.launcher.battery_indicator import BatteryIndicator
 from system.launcher.games_screen import GamesScreen
 from system.launcher.credits_screen import CreditsScreen
 from system.launcher.settings_screen import SettingsScreen
@@ -35,7 +34,6 @@ engine_draw.set_background(background_tex)
 screen_icon = ScreenIcon()
 header = Header(font)
 dynamic_background = DynamicBackground()
-battery = BatteryIndicator()
 
 # Create instance of custom camera and add static
 # elements as children so they don't move
@@ -43,7 +41,6 @@ camera = CustomCamera()
 camera.add_child(screen_icon)
 camera.add_child(header)
 camera.add_child(dynamic_background)
-camera.add_child(battery)
 
 # Create instances of the custom launcher screens
 games_screen = GamesScreen(font)

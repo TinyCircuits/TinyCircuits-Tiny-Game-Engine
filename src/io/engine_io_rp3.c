@@ -5,8 +5,10 @@
 #include "pico/stdlib.h"
 #include "hardware/gpio.h"
 #include "hardware/pwm.h"
+#include "hardware/timer.h"
 #include "math/engine_math.h"
 #include "draw/engine_color.h"
+#include "engine_io_module.h"
 
 #include <stdbool.h>
 
@@ -14,6 +16,8 @@
 // Used for when the indicator state is set true again, need
 // a color to go back to. Set to white by default
 uint16_t last_indicator_color_value = 0xffff;
+
+repeating_timer_t battery_monitor_cb_timer;
 
 
 void engine_io_rp3_pwm_setup(uint gpio){
@@ -102,8 +106,28 @@ void engine_io_rp3_setup(){
 }
 
 
-void engine_io_rp3_battery_monitor_setup(){
+bool repeating_battery_monitor_callback(repeating_timer_t *rt){
+    // Make indicator cyan if charging
+    if(engine_io_rp3_is_charging()){
+        engine_io_rp3_set_indicator_color(0x07FF);
+        return true;
+    }
 
+    // Otherwise, interpolate color from green to red
+    // as the battery dies
+    float level = 1.0f - engine_io_raw_battery_level();
+    
+    uint16_t color = engine_color_blend(0b0000011111100000, 0b1111100000000000, level);
+
+    engine_io_rp3_set_indicator_color(color);
+
+    return true;
+}
+
+
+void engine_io_rp3_battery_monitor_setup(){
+    // Check battery and update front indicator every second
+    add_repeating_timer_ms(-1000, &repeating_battery_monitor_callback, NULL, &battery_monitor_cb_timer);
 }
 
 

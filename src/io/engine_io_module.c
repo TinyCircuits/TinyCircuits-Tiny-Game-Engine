@@ -155,6 +155,15 @@ static float engine_io_raw_half_battery_voltage(){
 #endif
 
 
+float engine_io_raw_battery_level(){
+    #if defined(__arm__)
+        return engine_math_map_clamp(engine_io_raw_half_battery_voltage(), POWER_MIN_HALF_VOLTAGE, POWER_MAX_HALF_VOLTAGE, 0.0f, 1.0f);
+    #endif
+
+    return 1.0f;
+}
+
+
 /*  --- doc ---
     NAME: battery_voltage
     ID: battery_voltage
@@ -177,10 +186,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_io_battery_voltage_obj, engine_io_battery_volta
     RETURN: float
 */
 static mp_obj_t engine_io_battery_level(){
-    #if defined(__arm__)
-        return mp_obj_new_float(engine_math_map_clamp(engine_io_raw_half_battery_voltage(), POWER_MIN_HALF_VOLTAGE, POWER_MAX_HALF_VOLTAGE, 0.0f, 1.0f));
-    #endif
-    return mp_obj_new_float(1.0f);
+    return mp_obj_new_float(engine_io_raw_battery_level());
 }
 MP_DEFINE_CONST_FUN_OBJ_0(engine_io_battery_level_obj, engine_io_battery_level);
 
