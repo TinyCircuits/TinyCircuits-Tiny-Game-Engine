@@ -74,7 +74,7 @@ void engine_io_rp3_set_indicator_state(bool on){
 void engine_io_rp3_update_indicator_level(){
     // Don't do anything if the user did
     // anything to the indicator
-    if(indicator_overriden){
+    if(indicator_overridden){
         return;
     }
 
@@ -148,7 +148,7 @@ void engine_io_rp3_setup(){
 
 void engine_io_rp3_reset(){
     // Reset these when engine_main is imported
-    indicator_overriden = false;
+    indicator_overridden = false;
 }
 
 
