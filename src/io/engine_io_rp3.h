@@ -14,16 +14,15 @@
 #define GPIO_BUTTON_BUMPER_LEFT     6
 #define GPIO_BUTTON_BUMPER_RIGHT    22
 #define GPIO_BUTTON_MENU            26
-#define GPIO_RUMBLE                 5
+#define GPIO_PWM_RUMBLE             5   // PWM2 B
 #define GPIO_CHARGE_STAT            24
-#define GPIO_LED_R                  11
-#define GPIO_LED_G                  10
-#define GPIO_LED_B                  12
+#define GPIO_PWM_LED_R              11  // PWM5 B
+#define GPIO_PWM_LED_G              10  // PWM5 A
+#define GPIO_PWM_LED_B              12  // PWM6 A
 
 
-#define AUDIO_PWM_PIN 23
-#define AUDIO_CALLBACK_PWM_PIN 24
-#define AUDIO_ENABLE_PIN 20
+#define AUDIO_PWM_PIN 23                // PWM3 B
+#define AUDIO_ENABLE_PIN 20             // PWM2 A
 
 
 /* ##### PIN CONNECTIONS #####
@@ -47,7 +46,7 @@
 #define PIN_GP17_SPI0_CSn__TO__CS  PICO_DEFAULT_SPI_CSN_PIN     // Default refers to spi port 0
 #define PIN_GP16__TO__DC          16
 #define PIN_GP4__TO__RST          4
-#define PIN_GP7__TO__BL           7
+#define PIN_GP7_PIO_PWM__TO__BL   7     // PWM3 B
 
 
 void engine_io_rp3_set_indicator_color(uint16_t color);

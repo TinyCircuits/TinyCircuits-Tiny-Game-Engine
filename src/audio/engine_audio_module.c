@@ -26,7 +26,7 @@ volatile mp_obj_t channels[CHANNEL_COUNT];
 
 // These scale the amplitudes of each audio sample
 // Apart from these, there is also each channel's gain
-volatile float master_volume = 1.0f;    // Set by settings file, games cannot set this and effects all audio
+volatile float master_volume = 1.0f;    // Set by settings file, games cannot set this and affects all audio
 volatile float game_volume = 1.0f;      // Games are allowed to set this through `set_volume`
 
 
@@ -56,8 +56,9 @@ float engine_audio_get_master_volume(){
     #include "io/engine_io_rp3.h"
 
     // Pin for PWM audio sample wrap callback (faster than repeating timer, by a lot)
-    uint audio_callback_pwm_pin_slice;
-    pwm_config audio_callback_pwm_pin_config;
+    // uint audio_callback_pwm_pin_slice;
+    // pwm_config audio_callback_pwm_pin_config;
+    repeating_timer_t audio_cb_timer;
 
     uint8_t *current_source_data = NULL;
 
@@ -211,7 +212,7 @@ float engine_audio_get_master_volume(){
 
 
     // Samples each channel, adds, normalizes, and sets PWM
-    void ENGINE_FAST_FUNCTION(repeating_audio_callback)(void){
+    bool ENGINE_FAST_FUNCTION(repeating_audio_callback)(repeating_timer_t *rt){
         float total_sample = 0;
         bool play_sample = false;
 
@@ -256,9 +257,9 @@ float engine_audio_get_master_volume(){
             pwm_set_gpio_level(AUDIO_PWM_PIN, (uint32_t)(total_sample));
         }
 
-        pwm_clear_irq(audio_callback_pwm_pin_slice);
+        // pwm_clear_irq(audio_callback_pwm_pin_slice);
 
-        return;
+        return true;
     }
 #endif
 
@@ -291,9 +292,9 @@ void engine_audio_setup_playback(){
 
 
 void engine_audio_adjust_playback_with_freq(uint32_t core_clock_hz){
-    #if defined(__arm__)
-        pwm_config_set_wrap(&audio_callback_pwm_pin_config, (uint16_t)((float)(core_clock_hz) / ENGINE_AUDIO_SAMPLE_RATE) - 1);
-    #endif
+    // #if defined(__arm__)
+    //     pwm_config_set_wrap(&audio_callback_pwm_pin_config, (uint16_t)((float)(core_clock_hz) / ENGINE_AUDIO_SAMPLE_RATE) - 1);
+    // #endif
 }
 
 
@@ -315,17 +316,10 @@ void engine_audio_setup(){
         audio.freq = 22050;
         audio.format = AUDIO_U16;
     #elif defined(__arm__)
-        //generate the interrupt at the audio sample rate to set the PWM duty cycle
-        audio_callback_pwm_pin_slice = pwm_gpio_to_slice_num(AUDIO_CALLBACK_PWM_PIN);
-        pwm_clear_irq(audio_callback_pwm_pin_slice);
-        pwm_set_irq_enabled(audio_callback_pwm_pin_slice, true);
-        irq_set_exclusive_handler(PWM_IRQ_WRAP_0, repeating_audio_callback);
-        irq_set_priority(PWM_IRQ_WRAP_0, 1);
-        irq_set_enabled(PWM_IRQ_WRAP_0, true);
-        audio_callback_pwm_pin_config = pwm_get_default_config();
-        pwm_config_set_clkdiv_int(&audio_callback_pwm_pin_config, 1);
-        engine_audio_adjust_playback_with_freq(150 * 1000 * 1000);
-        pwm_init(audio_callback_pwm_pin_slice, &audio_callback_pwm_pin_config, true);
+        // Has to be negative delay so that the timer starts
+        // counting right away instead of just after the cb
+        // ends
+        add_repeating_timer_us((int64_t)(-1.0f / ENGINE_AUDIO_SAMPLE_RATE * 1000000.0f), &repeating_audio_callback, NULL, &audio_cb_timer);
     #endif
 }
 

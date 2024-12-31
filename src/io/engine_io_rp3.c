@@ -33,9 +33,9 @@ void engine_io_rp3_set_indicator_color(uint16_t color){
     float g_percent = 1.0f - engine_color_get_g_float(color);
     float b_percent = 1.0f - engine_color_get_b_float(color);
 
-    pwm_set_gpio_level(GPIO_LED_R, (uint16_t)(r_percent * 2047.0f));
-    pwm_set_gpio_level(GPIO_LED_G, (uint16_t)(g_percent * 2047.0f));
-    pwm_set_gpio_level(GPIO_LED_B, (uint16_t)(b_percent * 2047.0f));
+    pwm_set_gpio_level(GPIO_PWM_LED_R, (uint16_t)(r_percent * 2047.0f));
+    pwm_set_gpio_level(GPIO_PWM_LED_G, (uint16_t)(g_percent * 2047.0f));
+    pwm_set_gpio_level(GPIO_PWM_LED_B, (uint16_t)(b_percent * 2047.0f));
 
     // Save the last value for when indicator might be
     // reenabled in the future
@@ -47,9 +47,9 @@ void engine_io_rp3_set_indicator_state(bool on){
     if(on){
         engine_io_rp3_set_indicator_color(last_indicator_color_value);
     }else{
-        pwm_set_gpio_level(GPIO_LED_R, 2047);
-        pwm_set_gpio_level(GPIO_LED_G, 2047);
-        pwm_set_gpio_level(GPIO_LED_B, 2047);
+        pwm_set_gpio_level(GPIO_PWM_LED_R, 2047);
+        pwm_set_gpio_level(GPIO_PWM_LED_G, 2047);
+        pwm_set_gpio_level(GPIO_PWM_LED_B, 2047);
     }
 }
 
@@ -91,10 +91,10 @@ void engine_io_rp3_setup(){
     gpio_set_dir(GPIO_CHARGE_STAT, GPIO_IN);
     gpio_pull_up(GPIO_CHARGE_STAT);
 
-    engine_io_rp3_pwm_setup(GPIO_RUMBLE);
-    engine_io_rp3_pwm_setup(GPIO_LED_R);
-    engine_io_rp3_pwm_setup(GPIO_LED_G);
-    engine_io_rp3_pwm_setup(GPIO_LED_B);
+    engine_io_rp3_pwm_setup(GPIO_PWM_RUMBLE);
+    engine_io_rp3_pwm_setup(GPIO_PWM_LED_R);
+    engine_io_rp3_pwm_setup(GPIO_PWM_LED_G);
+    engine_io_rp3_pwm_setup(GPIO_PWM_LED_B);
 
     // By default, turn indicator on (turning off by
     // default would cause indicator to blink on restarts)
@@ -129,9 +129,9 @@ uint16_t engine_io_rp3_pressed_buttons(){
 
 void engine_io_rp3_rumble(float intensity){
     if(intensity <= EPSILON){
-        pwm_set_gpio_level(GPIO_RUMBLE, 0);
+        pwm_set_gpio_level(GPIO_PWM_RUMBLE, 0);
     }else{
-        pwm_set_gpio_level(GPIO_RUMBLE, (uint32_t)engine_math_map_clamp(intensity, 0.0f, 1.0f, 1400.0f, 2047.0f));
+        pwm_set_gpio_level(GPIO_PWM_RUMBLE, (uint32_t)engine_math_map_clamp(intensity, 0.0f, 1.0f, 1400.0f, 2047.0f));
     }
 }
 

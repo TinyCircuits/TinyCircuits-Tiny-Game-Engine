@@ -116,7 +116,7 @@ void engine_display_gc9107_init(){
     // https://github.com/raspberrypi/pico-examples/blob/master/pio/pwm/pwm.c
     // GPIO 7 and 23 share the same slice, use PIO for BL PWM
     uint offset = pio_add_program(pio, &pwm_program);
-    pwm_program_init(pio, sm, offset, PIN_GP7__TO__BL);
+    pwm_program_init(pio, sm, offset, PIN_GP7_PIO_PWM__TO__BL);
     pio_pwm_set_period(pio, sm, 255);
 
     // Do the init sequence
