@@ -20,7 +20,7 @@ uint16_t last_indicator_color_value = 0xffff;
 
 // When the user sets the state or color of the indicator LED,
 // this gets set true;
-bool indicator_overriden = false;
+bool indicator_overridden = false;
 
 // pico-sdk timer for calling battery monitor/indicator updater
 repeating_timer_t battery_monitor_cb_timer;
@@ -38,7 +38,7 @@ void engine_io_rp3_pwm_setup(uint gpio){
 
 
 void engine_io_rp3_set_indicator_overridden(bool overridden){
-    indicator_overriden = overridden;
+    indicator_overridden = overridden;
 }
 
 
