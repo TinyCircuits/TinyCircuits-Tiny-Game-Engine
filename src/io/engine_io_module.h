@@ -5,6 +5,7 @@
 #include "engine_io_buttons.h"
 
 void engine_io_setup();
+void engine_io_battery_monitor_setup();
 void engine_io_tick();
 
 #endif  // ENGINE_IO_MODULE_H

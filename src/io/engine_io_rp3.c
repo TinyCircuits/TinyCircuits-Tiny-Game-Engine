@@ -11,22 +11,6 @@
 #include <stdbool.h>
 
 
-#define GPIO_BUTTON_DPAD_UP         1
-#define GPIO_BUTTON_DPAD_LEFT       0
-#define GPIO_BUTTON_DPAD_DOWN       3
-#define GPIO_BUTTON_DPAD_RIGHT      2
-#define GPIO_BUTTON_A               21
-#define GPIO_BUTTON_B               25
-#define GPIO_BUTTON_BUMPER_LEFT     6
-#define GPIO_BUTTON_BUMPER_RIGHT    22
-#define GPIO_BUTTON_MENU            26
-#define GPIO_RUMBLE                 5
-#define GPIO_CHARGE_STAT            24
-#define GPIO_LED_R                  11
-#define GPIO_LED_G                  10
-#define GPIO_LED_B                  12
-
-
 // Used for when the indicator state is set true again, need
 // a color to go back to. Set to white by default
 uint16_t last_indicator_color_value = 0xffff;
@@ -115,6 +99,11 @@ void engine_io_rp3_setup(){
     // By default, turn indicator on (turning off by
     // default would cause indicator to blink on restarts)
     engine_io_rp3_set_indicator_state(true);
+}
+
+
+void engine_io_rp3_battery_monitor_setup(){
+
 }
 
 

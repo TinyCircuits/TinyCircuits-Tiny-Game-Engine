@@ -53,10 +53,7 @@ float engine_audio_get_master_volume(){
     #include "hardware/adc.h"
     #include "hardware/timer.h"
     #include "pico/multicore.h"
-
-    #define AUDIO_PWM_PIN 23
-    #define AUDIO_CALLBACK_PWM_PIN 24
-    #define AUDIO_ENABLE_PIN 20
+    #include "io/engine_io_rp3.h"
 
     // Pin for PWM audio sample wrap callback (faster than repeating timer, by a lot)
     uint audio_callback_pwm_pin_slice;
@@ -284,7 +281,7 @@ void engine_audio_setup_playback(){
         gpio_set_function(AUDIO_PWM_PIN, GPIO_FUNC_PWM);
         pwm_config audio_pwm_pin_config = pwm_get_default_config();
         pwm_config_set_clkdiv_int(&audio_pwm_pin_config, 1);
-        pwm_config_set_wrap(&audio_pwm_pin_config, 512);   // 125MHz / 1024 = 122kHz
+        pwm_config_set_wrap(&audio_pwm_pin_config, 512);   // 150MHz / 512 = 292kHz
         pwm_init(audio_pwm_pin_slice, &audio_pwm_pin_config, true);
 
         // Now allow sound to play by enabling the amplifier

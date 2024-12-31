@@ -27,6 +27,17 @@ void engine_io_setup(){
 }
 
 
+void engine_io_battery_monitor_setup(){
+    #if defined(__EMSCRIPTEN__)
+        // Nothing to do
+    #elif defined(__unix__)
+        // Nothing to do
+    #elif defined(__arm__)
+        engine_io_rp3_battery_monitor_setup();
+    #endif
+}
+
+
 void engine_io_tick(){
     buttons_update_state();
 }
