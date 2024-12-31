@@ -6,6 +6,7 @@
 #include "hardware/gpio.h"
 #include "hardware/pwm.h"
 #include "hardware/timer.h"
+#include "hardware/adc.h"
 #include "math/engine_math.h"
 #include "draw/engine_color.h"
 #include "engine_io_module.h"
@@ -17,6 +18,11 @@
 // a color to go back to. Set to white by default
 uint16_t last_indicator_color_value = 0xffff;
 
+// When the user sets the state or color of the indicator LED,
+// this gets set true;
+bool indicator_overriden = false;
+
+// pico-sdk timer for calling battery monitor/indicator updater
 repeating_timer_t battery_monitor_cb_timer;
 
 
@@ -28,6 +34,11 @@ void engine_io_rp3_pwm_setup(uint gpio){
     pwm_config_set_wrap(&pwm_pin_config, 2048);   // 150MHz / 2048 = 73kHz
     pwm_init(pwm_pin_slice, &pwm_pin_config, true);
     pwm_set_gpio_level(gpio, 0);
+}
+
+
+void engine_io_rp3_set_indicator_overridden(bool overridden){
+    indicator_overriden = overridden;
 }
 
 
@@ -55,6 +66,31 @@ void engine_io_rp3_set_indicator_state(bool on){
         pwm_set_gpio_level(GPIO_PWM_LED_G, 2047);
         pwm_set_gpio_level(GPIO_PWM_LED_B, 2047);
     }
+}
+
+
+// Updates the front indicator LED based on
+// battery level
+void engine_io_rp3_update_indicator_level(){
+    // Don't do anything if the user did
+    // anything to the indicator
+    if(indicator_overriden){
+        return;
+    }
+
+    // Make indicator cyan if charging
+    if(engine_io_rp3_is_charging()){
+        engine_io_rp3_set_indicator_color(0x07FF);
+        return;
+    }
+
+    // Otherwise, interpolate color from green to red
+    // as the battery dies
+    float level = 1.0f - engine_io_raw_battery_level();
+    
+    uint16_t color = engine_color_blend(0b0000011111100000, 0b1111100000000000, level);
+
+    engine_io_rp3_set_indicator_color(color);
 }
 
 
@@ -100,27 +136,24 @@ void engine_io_rp3_setup(){
     engine_io_rp3_pwm_setup(GPIO_PWM_LED_G);
     engine_io_rp3_pwm_setup(GPIO_PWM_LED_B);
 
-    // By default, turn indicator on (turning off by
-    // default would cause indicator to blink on restarts)
-    engine_io_rp3_set_indicator_state(true);
+    // Battery ADC reading init
+    adc_init();
+    adc_gpio_init(BATTERY_ADC_GPIO_PIN);
+    adc_select_input(BATTERY_ADC_PORT);
+
+    // Update with battery level right away
+    engine_io_rp3_update_indicator_level();
+}
+
+
+void engine_io_rp3_reset(){
+    // Reset these when engine_main is imported
+    indicator_overriden = false;
 }
 
 
 bool repeating_battery_monitor_callback(repeating_timer_t *rt){
-    // Make indicator cyan if charging
-    if(engine_io_rp3_is_charging()){
-        engine_io_rp3_set_indicator_color(0x07FF);
-        return true;
-    }
-
-    // Otherwise, interpolate color from green to red
-    // as the battery dies
-    float level = 1.0f - engine_io_raw_battery_level();
-    
-    uint16_t color = engine_color_blend(0b0000011111100000, 0b1111100000000000, level);
-
-    engine_io_rp3_set_indicator_color(color);
-
+    engine_io_rp3_update_indicator_level();
     return true;
 }
 

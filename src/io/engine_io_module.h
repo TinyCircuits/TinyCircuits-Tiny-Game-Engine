@@ -6,6 +6,7 @@
 
 float engine_io_raw_battery_level();
 void engine_io_setup();
+void engine_io_reset();
 void engine_io_battery_monitor_setup();
 void engine_io_tick();
 

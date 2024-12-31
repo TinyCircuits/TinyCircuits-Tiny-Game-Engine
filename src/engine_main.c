@@ -29,11 +29,8 @@
 #elif defined(__unix__)
     #include <dirent.h>
 #elif defined(__arm__)
-    #include "hardware/adc.h"
+    
 #endif
-
-#define BATTERY_ADC_GPIO_PIN 29
-#define BATTERY_ADC_PORT 3
 
 
 char filesystem_root[FILESYSTEM_ROOT_MAX_LEN];
@@ -172,6 +169,8 @@ void engine_main_reset(){
     
     engine_link_module_reset();
 
+    engine_io_reset();
+
     // Reset contigious flash space manager
     engine_audio_reset();
     engine_resource_reset();
@@ -253,12 +252,6 @@ static mp_obj_t engine_main_module_init(){
     engine_physics_init();
     engine_animation_init();
     engine_rtc_init();
-
-    #if defined(__arm__)
-        adc_init();
-        adc_gpio_init(BATTERY_ADC_GPIO_PIN);
-        adc_select_input(BATTERY_ADC_PORT);
-    #endif
 
     return mp_const_none;
 }
