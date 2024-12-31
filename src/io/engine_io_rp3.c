@@ -6,6 +6,8 @@
 #include "hardware/gpio.h"
 #include "hardware/pwm.h"
 #include "math/engine_math.h"
+#include "draw/engine_color.h"
+
 #include <stdbool.h>
 
 
@@ -25,14 +27,46 @@
 #define GPIO_LED_B                  12
 
 
-void engine_io_rp3_pwm_setup(uint gpio, uint16_t default_level){
+// Used for when the indicator state is set true again, need
+// a color to go back to. Set to white by default
+uint16_t last_indicator_color_value = 0xffff;
+
+
+void engine_io_rp3_pwm_setup(uint gpio){
     uint pwm_pin_slice = pwm_gpio_to_slice_num(gpio);
     gpio_set_function(gpio, GPIO_FUNC_PWM);
     pwm_config pwm_pin_config = pwm_get_default_config();
     pwm_config_set_clkdiv_int(&pwm_pin_config, 1);
     pwm_config_set_wrap(&pwm_pin_config, 2048);   // 150MHz / 2048 = 73kHz
     pwm_init(pwm_pin_slice, &pwm_pin_config, true);
-    pwm_set_gpio_level(gpio, default_level);
+    pwm_set_gpio_level(gpio, 0);
+}
+
+
+void engine_io_rp3_set_indicator_color(uint16_t color){
+    // TODO: Might be able to use something like this: https://github.com/gpshead/pwm_lightness
+    float r_percent = 1.0f - engine_color_get_r_float(color);
+    float g_percent = 1.0f - engine_color_get_g_float(color);
+    float b_percent = 1.0f - engine_color_get_b_float(color);
+
+    pwm_set_gpio_level(GPIO_LED_R, (uint16_t)(r_percent * 2047.0f));
+    pwm_set_gpio_level(GPIO_LED_G, (uint16_t)(g_percent * 2047.0f));
+    pwm_set_gpio_level(GPIO_LED_B, (uint16_t)(b_percent * 2047.0f));
+
+    // Save the last value for when indicator might be
+    // reenabled in the future
+    last_indicator_color_value = color;
+}
+
+
+void engine_io_rp3_set_indicator_state(bool on){
+    if(on){
+        engine_io_rp3_set_indicator_color(last_indicator_color_value);
+    }else{
+        pwm_set_gpio_level(GPIO_LED_R, 2047);
+        pwm_set_gpio_level(GPIO_LED_G, 2047);
+        pwm_set_gpio_level(GPIO_LED_B, 2047);
+    }
 }
 
 
@@ -49,9 +83,6 @@ void engine_io_rp3_setup(){
     gpio_init(GPIO_BUTTON_BUMPER_RIGHT);
     gpio_init(GPIO_BUTTON_MENU);
     gpio_init(GPIO_CHARGE_STAT);
-    gpio_init(GPIO_LED_R);
-    gpio_init(GPIO_LED_G);
-    gpio_init(GPIO_LED_B);
 
     gpio_pull_up(GPIO_BUTTON_DPAD_UP);
     gpio_pull_up(GPIO_BUTTON_DPAD_LEFT);
@@ -76,14 +107,14 @@ void engine_io_rp3_setup(){
     gpio_set_dir(GPIO_CHARGE_STAT, GPIO_IN);
     gpio_pull_up(GPIO_CHARGE_STAT);
 
-    gpio_set_dir(GPIO_LED_R, GPIO_OUT);
-    gpio_set_dir(GPIO_LED_G, GPIO_OUT);
-    gpio_set_dir(GPIO_LED_B, GPIO_OUT);
+    engine_io_rp3_pwm_setup(GPIO_RUMBLE);
+    engine_io_rp3_pwm_setup(GPIO_LED_R);
+    engine_io_rp3_pwm_setup(GPIO_LED_G);
+    engine_io_rp3_pwm_setup(GPIO_LED_B);
 
-    engine_io_rp3_pwm_setup(GPIO_RUMBLE, 0);
-    // engine_io_rp3_pwm_setup(GPIO_LED_R, 2047);
-    // engine_io_rp3_pwm_setup(GPIO_LED_G, 2047);
-    // engine_io_rp3_pwm_setup(GPIO_LED_B, 2047);
+    // By default, turn indicator on (turning off by
+    // default would cause indicator to blink on restarts)
+    engine_io_rp3_set_indicator_state(true);
 }
 
 
@@ -120,11 +151,4 @@ bool engine_io_rp3_is_charging(){
     // Charge status line from LiIon charger IC is set
     // pulled HIGH by default and is pulled LOW by IC
     return !gpio_get(GPIO_CHARGE_STAT);
-}
-
-
-void engine_io_rp3_set_indicator(bool off){
-    gpio_put(GPIO_LED_R, off);
-    gpio_put(GPIO_LED_G, off);
-    gpio_put(GPIO_LED_B, off);
 }

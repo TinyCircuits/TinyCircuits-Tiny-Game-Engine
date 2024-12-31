@@ -3,6 +3,7 @@
 #include "engine_gui.h"
 #include "engine_main.h"
 #include "math/engine_math.h"
+#include "draw/engine_color.h"
 #include "utility/engine_defines.h"
 
 #if defined(__EMSCRIPTEN__)
@@ -239,23 +240,28 @@ MP_DEFINE_CONST_FUN_OBJ_0(buttons_reset_params_all_obj, engine_io_reset_all_butt
 /*  --- doc ---
     NAME: indicator
     ID: indicator
-    DESC: Disables front LED indicator
-    PARAM:  [type=boolean | optional]   [name=off]  [value=True or False]
+    DESC: Disables, enables, or sets the front indicator LED color
+    PARAM:  [type=boolean | int | {ref_link:Color}]   [name=value]  [value=True, False, 16-bit RGB565 int | or {ref_link:Color}]
     RETURN: None
 */
-static mp_obj_t engine_io_indicator(size_t n_args, const mp_obj_t *args){
+static mp_obj_t engine_io_indicator(mp_obj_t arg){
     #if defined(__arm__)
-        bool off = true;
-
-        if(n_args == 1 && mp_obj_is_bool(args[0])){
-            off = mp_obj_get_int(args[0]);
+        if(mp_obj_is_bool(arg)){
+            bool state = mp_obj_get_int(arg);
+            engine_io_rp3_set_indicator_state(state);
+        }else if(mp_obj_is_int(arg)){
+            uint16_t color = mp_obj_get_int(arg);
+            engine_io_rp3_set_indicator_color(color);
+        }else if(engine_color_is_instance(arg)){
+            uint16_t color = engine_color_class_color_value(arg);
+            engine_io_rp3_set_indicator_color(color);
+        }else{
+            mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineIO: Expected bool, int, or Color but got `%s`"), mp_obj_get_type_str(arg));
         }
-
-        engine_io_rp3_set_indicator(off);
     #endif
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_io_indicator_obj, 0, 1, engine_io_indicator);
+MP_DEFINE_CONST_FUN_OBJ_1(engine_io_indicator_obj, engine_io_indicator);
 
 
 /*  --- doc ---

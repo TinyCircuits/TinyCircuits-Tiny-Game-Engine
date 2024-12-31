@@ -28,4 +28,4 @@
 
 
 #define POWER_MAX_HALF_VOLTAGE 2.0f
-#define POWER_MIN_HALF_VOLTAGE 1.4f // https://www.digikey.com/htmldatasheets/production/2065025/0/0/1/DTP401525-Specifications.pdf?#page=7 (release voltage)
+#define POWER_MIN_HALF_VOLTAGE 1.4f + 0.1f // https://www.digikey.com/htmldatasheets/production/2065025/0/0/1/DTP401525-Specifications.pdf?#page=7 (release voltage + some extra (hand tweaked))
