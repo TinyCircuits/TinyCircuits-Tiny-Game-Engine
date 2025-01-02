@@ -16,11 +16,11 @@
 
 // Used for when the indicator state is set true again, need
 // a color to go back to. Set to white by default
-uint16_t last_indicator_color_value = 0b0000011111100000;
+volatile uint16_t last_indicator_color_value = 0b0000011111100000;
 
 // When the user sets the state or color of the indicator LED,
 // this gets set true;
-bool indicator_overridden = false;
+volatile bool indicator_overridden = false;
 
 // pico-sdk timer for calling battery monitor/indicator updater
 repeating_timer_t battery_monitor_cb_timer;
