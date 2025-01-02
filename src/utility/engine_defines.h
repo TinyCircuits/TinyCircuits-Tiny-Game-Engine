@@ -27,5 +27,5 @@
 //               (110mA/1000)(180mOhm/1000) [DTP401525/https://www.digikey.com/htmldatasheets/production/2065025/0/0/1/DTP401525-Specifications.pdf?#page=5]) = 2.08    <-  MAX VOLTAGE AT WORST DRAW
 
 
-#define POWER_MAX_HALF_VOLTAGE (2.0 - 0.2f)
+#define POWER_MAX_HALF_VOLTAGE (2.0f - 0.15f) // Hand tweaked relative to half of 4.2V
 #define POWER_MIN_HALF_VOLTAGE (1.4f + 0.05f) // https://www.digikey.com/htmldatasheets/production/2065025/0/0/1/DTP401525-Specifications.pdf?#page=7 (release voltage + some extra (hand tweaked))

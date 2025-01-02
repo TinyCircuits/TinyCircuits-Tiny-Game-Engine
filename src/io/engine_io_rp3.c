@@ -16,7 +16,7 @@
 
 // Used for when the indicator state is set true again, need
 // a color to go back to. Set to white by default
-uint16_t last_indicator_color_value = 0xffff;
+uint16_t last_indicator_color_value = 0b0000011111100000;
 
 // When the user sets the state or color of the indicator LED,
 // this gets set true;
@@ -24,6 +24,12 @@ bool indicator_overridden = false;
 
 // pico-sdk timer for calling battery monitor/indicator updater
 repeating_timer_t battery_monitor_cb_timer;
+
+// Use a running average to calculate interpolation
+// value for front indicator
+#define BATTERY_LEVEL_SAMPLE_COUNT 3
+uint8_t battery_level_running_index = 0;
+float battery_level_samples[BATTERY_LEVEL_SAMPLE_COUNT];
 
 
 void engine_io_rp3_pwm_setup(uint gpio){
@@ -85,10 +91,27 @@ void engine_io_rp3_update_indicator_level(){
     }
 
     // Otherwise, interpolate color from green to red
-    // as the battery dies
+    // as the battery dies. Get the newest level reading
     float level = 1.0f - engine_io_raw_battery_level();
+
+    // Add level reading to running avg samples
+    battery_level_samples[battery_level_running_index] = level;
+
+    // Loop when reach end
+    battery_level_running_index++;
+    if(battery_level_running_index >= BATTERY_LEVEL_SAMPLE_COUNT){
+        battery_level_running_index = 0;
+    }
+
+    // Calculate the average
+    float level_avg = 0.0f;
+    for(uint8_t i=0; i<BATTERY_LEVEL_SAMPLE_COUNT; i++){
+        level_avg += battery_level_samples[i];
+    }
+    level_avg = level_avg / (float)BATTERY_LEVEL_SAMPLE_COUNT;
     
-    uint16_t color = engine_color_blend(0b0000011111100000, 0b1111100000000000, level);
+    // Use the average for the color
+    uint16_t color = engine_color_blend(0b0000011111100000, 0b1111100000000000, level_avg);
 
     engine_io_rp3_set_indicator_color(color);
 }
@@ -96,6 +119,36 @@ void engine_io_rp3_update_indicator_level(){
 
 void engine_io_rp3_setup(){
     ENGINE_PRINTF("EngineInput: Setting up...\n");
+
+    // Have to set this up now since used right away (
+    // unlike other pins)
+    gpio_init(GPIO_CHARGE_STAT);
+    gpio_set_dir(GPIO_CHARGE_STAT, GPIO_IN);
+    gpio_pull_up(GPIO_CHARGE_STAT);
+
+    engine_io_rp3_pwm_setup(GPIO_PWM_RUMBLE);
+    engine_io_rp3_pwm_setup(GPIO_PWM_LED_R);
+    engine_io_rp3_pwm_setup(GPIO_PWM_LED_G);
+    engine_io_rp3_pwm_setup(GPIO_PWM_LED_B);
+
+    // Battery ADC reading init
+    adc_init();
+    adc_gpio_init(BATTERY_ADC_GPIO_PIN);
+    adc_select_input(BATTERY_ADC_PORT);
+    sleep_us(50);   // Delay needed to lagging voltage readings are not taken
+
+    // Fill samples for average level with initial samples
+    for(uint8_t i=0; i<BATTERY_LEVEL_SAMPLE_COUNT; i++){
+        battery_level_samples[i] = 1.0f - engine_io_raw_battery_level();
+        
+        // Space out the samples a little bit over time.
+        // Needs to be fast and the number of samples small
+        // otherwise get blink when soft resets
+        sleep_us(50);
+    }
+
+    // Update with battery level right away
+    engine_io_rp3_update_indicator_level();
 
     gpio_init(GPIO_BUTTON_DPAD_UP);
     gpio_init(GPIO_BUTTON_DPAD_LEFT);
@@ -106,7 +159,6 @@ void engine_io_rp3_setup(){
     gpio_init(GPIO_BUTTON_BUMPER_LEFT);
     gpio_init(GPIO_BUTTON_BUMPER_RIGHT);
     gpio_init(GPIO_BUTTON_MENU);
-    gpio_init(GPIO_CHARGE_STAT);
 
     gpio_pull_up(GPIO_BUTTON_DPAD_UP);
     gpio_pull_up(GPIO_BUTTON_DPAD_LEFT);
@@ -127,22 +179,6 @@ void engine_io_rp3_setup(){
     gpio_set_dir(GPIO_BUTTON_BUMPER_LEFT, GPIO_IN);
     gpio_set_dir(GPIO_BUTTON_BUMPER_RIGHT, GPIO_IN);
     gpio_set_dir(GPIO_BUTTON_MENU, GPIO_IN);
-
-    gpio_set_dir(GPIO_CHARGE_STAT, GPIO_IN);
-    gpio_pull_up(GPIO_CHARGE_STAT);
-
-    engine_io_rp3_pwm_setup(GPIO_PWM_RUMBLE);
-    engine_io_rp3_pwm_setup(GPIO_PWM_LED_R);
-    engine_io_rp3_pwm_setup(GPIO_PWM_LED_G);
-    engine_io_rp3_pwm_setup(GPIO_PWM_LED_B);
-
-    // Battery ADC reading init
-    adc_init();
-    adc_gpio_init(BATTERY_ADC_GPIO_PIN);
-    adc_select_input(BATTERY_ADC_PORT);
-
-    // Update with battery level right away
-    engine_io_rp3_update_indicator_level();
 }
 
 

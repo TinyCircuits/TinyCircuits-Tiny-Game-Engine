@@ -232,6 +232,9 @@ static mp_obj_t engine_main_module_init(){
 
     ENGINE_PRINTF("Engine init!\n");
 
+    engine_io_setup();
+    engine_io_battery_monitor_setup();
+
     engine_resource_init();
 
     // Init display first
@@ -247,8 +250,6 @@ static mp_obj_t engine_main_module_init(){
     engine_audio_setup();
     engine_audio_setup_playback();
 
-    engine_io_setup();
-    engine_io_battery_monitor_setup();
     engine_physics_init();
     engine_animation_init();
     engine_rtc_init();
