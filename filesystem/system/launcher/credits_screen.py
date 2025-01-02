@@ -108,6 +108,9 @@ class Name(Text2DNode):
         global lowest_row
         global row_height
 
+        # Sanitize newlines every tick (brute-force, but whatever)
+        self.text = self.text.replace("\n", "")
+
         if scroll is False:
             return
         
