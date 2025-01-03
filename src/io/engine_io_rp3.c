@@ -28,8 +28,8 @@ repeating_timer_t battery_monitor_cb_timer;
 // Use a running average to calculate interpolation
 // value for front indicator
 #define BATTERY_LEVEL_SAMPLE_COUNT 3
-uint8_t battery_level_running_index = 0;
-float battery_level_samples[BATTERY_LEVEL_SAMPLE_COUNT];
+volatile uint8_t battery_level_running_index = 0;
+volatile float battery_level_samples[BATTERY_LEVEL_SAMPLE_COUNT];
 
 
 void engine_io_rp3_pwm_setup(uint gpio){
@@ -135,7 +135,7 @@ void engine_io_rp3_setup(){
     adc_init();
     adc_gpio_init(BATTERY_ADC_GPIO_PIN);
     adc_select_input(BATTERY_ADC_PORT);
-    sleep_us(50);   // Delay needed to lagging voltage readings are not taken
+    sleep_us(50);   // Delay needed so lagging voltage readings are not taken
 
     // Fill samples for average level with initial samples
     for(uint8_t i=0; i<BATTERY_LEVEL_SAMPLE_COUNT; i++){

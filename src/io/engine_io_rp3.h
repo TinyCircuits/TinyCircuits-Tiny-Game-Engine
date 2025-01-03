@@ -51,6 +51,9 @@
 #define BATTERY_ADC_GPIO_PIN 29
 #define BATTERY_ADC_PORT 3
 
+#define RTC_I2C_SCL_GPIO 9
+#define RTC_I2C_SDA_GPIO 8
+
 
 
 void engine_io_rp3_set_indicator_overridden(bool overriden);
