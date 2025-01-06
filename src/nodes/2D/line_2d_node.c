@@ -82,7 +82,7 @@ void line_2d_node_class_draw(mp_obj_t line_node_base_obj, mp_obj_t camera_node){
                          floorf(inherited.px), floorf(inherited.py),
                          (int32_t)line_thickness, (int32_t)line_length,
                          1.0f, 1.0f,
-                        -inherited.rotation,
+                         inherited.rotation,
                          line_opacity,
                          shader);
     }else{
