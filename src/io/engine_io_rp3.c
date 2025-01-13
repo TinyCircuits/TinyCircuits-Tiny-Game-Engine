@@ -32,12 +32,12 @@ volatile uint8_t battery_level_running_index = 0;
 volatile float battery_level_samples[BATTERY_LEVEL_SAMPLE_COUNT];
 
 
-void engine_io_rp3_pwm_setup(uint gpio){
+void engine_io_rp3_pwm_setup(uint gpio, uint16_t wrap){
     uint pwm_pin_slice = pwm_gpio_to_slice_num(gpio);
     gpio_set_function(gpio, GPIO_FUNC_PWM);
     pwm_config pwm_pin_config = pwm_get_default_config();
     pwm_config_set_clkdiv_int(&pwm_pin_config, 1);
-    pwm_config_set_wrap(&pwm_pin_config, 2048);   // 150MHz / 2048 = 73kHz
+    pwm_config_set_wrap(&pwm_pin_config, wrap);   // 150MHz / 2048 = 73kHz, 150MHz / 4092 = 37kHz
     pwm_init(pwm_pin_slice, &pwm_pin_config, true);
     pwm_set_gpio_level(gpio, 0);
 }
@@ -126,10 +126,10 @@ void engine_io_rp3_setup(){
     gpio_set_dir(GPIO_CHARGE_STAT, GPIO_IN);
     gpio_pull_up(GPIO_CHARGE_STAT);
 
-    engine_io_rp3_pwm_setup(GPIO_PWM_RUMBLE);
-    engine_io_rp3_pwm_setup(GPIO_PWM_LED_R);
-    engine_io_rp3_pwm_setup(GPIO_PWM_LED_G);
-    engine_io_rp3_pwm_setup(GPIO_PWM_LED_B);
+    engine_io_rp3_pwm_setup(GPIO_PWM_RUMBLE, 4096);
+    engine_io_rp3_pwm_setup(GPIO_PWM_LED_R, 2048);
+    engine_io_rp3_pwm_setup(GPIO_PWM_LED_G, 2048);
+    engine_io_rp3_pwm_setup(GPIO_PWM_LED_B, 2048);
 
     // Battery ADC reading init
     adc_init();
@@ -224,7 +224,7 @@ void engine_io_rp3_rumble(float intensity){
     if(intensity <= EPSILON){
         pwm_set_gpio_level(GPIO_PWM_RUMBLE, 0);
     }else{
-        pwm_set_gpio_level(GPIO_PWM_RUMBLE, (uint32_t)engine_math_map_clamp(intensity, 0.0f, 1.0f, 1400.0f, 2047.0f));
+        pwm_set_gpio_level(GPIO_PWM_RUMBLE, (uint32_t)engine_math_map_clamp(intensity, 0.0f, 1.0f, 2800.0f, 4095.0f));
     }
 }
 
