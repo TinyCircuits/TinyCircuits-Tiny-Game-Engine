@@ -3,7 +3,7 @@
 
 mp_obj_t collision_contact_2d_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New CollisionContact2D");
-    mp_arg_check_num(n_args, n_kw, 0, 5, false);
+    mp_arg_check_num(n_args, n_kw, 0, 6, false);
 
     collision_contact_2d_class_obj_t *self = m_new_obj(collision_contact_2d_class_obj_t);
     self->base.type = &collision_contact_2d_class_type;
