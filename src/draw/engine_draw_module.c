@@ -351,17 +351,19 @@ MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_draw_module_text_obj, 8, 8, engine_dr
     NAME: blit
     ID: engine_draw_module_blit
     DESC: Directly draws a texture to the screen without camera transformation. All parameters are required and keywords are not allowed. This keeps this function as fast as possible.
-    PARAM: [type={ref_link:TextureResource}]    [name=texture]         [value={ref_link:TextureResource}]
-    PARAM: [type=float]                         [name=top_left_x]      [value=any]
-    PARAM: [type=float]                         [name=top_left_y]      [value=any]
-    PARAM: [type=float]                         [name=opacity]         [value=any]
+    PARAM: [type={ref_link:TextureResource}]          [name=texture]            [value={ref_link:TextureResource}]
+    PARAM: [type=float]                               [name=top_left_x]         [value=any]
+    PARAM: [type=float]                               [name=top_left_y]         [value=any]
+    PARAM: [type=uint16 | {ref_link:Color} | `None`]  [name=transparent_color]  [value=positive unsigned RGB565 16-bit int | {ref_link:Color} | `None`]
+    PARAM: [type=float]                               [name=opacity]            [value=any]
     RETURN: None
 */
 static mp_obj_t engine_draw_module_blit(size_t n_args, const mp_obj_t *args) {
     texture_resource_class_obj_t *texture = args[0];
     float top_left_x                      = mp_obj_get_float(args[1]);
     float top_left_y                      = mp_obj_get_float(args[2]);
-    float opacity                         = mp_obj_get_float(args[3]);
+    uint16_t transparent_color            = engine_color_class_color_value(args[3]);
+    float opacity                         = mp_obj_get_float(args[4]);
 
     engine_shader_t *shader = NULL;
     if(opacity < 1.0f){
@@ -376,11 +378,11 @@ static mp_obj_t engine_draw_module_blit(size_t n_args, const mp_obj_t *args) {
     float center_x = top_left_x + width * 0.5f;
     float center_y = top_left_y + height * 0.5f;
 
-    engine_draw_blit(texture, 0, center_x, center_y, (int32_t)width, (int32_t)height, (int32_t)width, 1.0f, 1.0f, 0.0f, ENGINE_NO_TRANSPARENCY_COLOR, opacity, shader);
+    engine_draw_blit(texture, 0, center_x, center_y, (int32_t)width, (int32_t)height, (int32_t)width, 1.0f, 1.0f, 0.0f, transparent_color, opacity, shader);
 
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_draw_module_blit_obj, 4, 4, engine_draw_module_blit);
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_draw_module_blit_obj, 5, 5, engine_draw_module_blit);
 
 
 /*  --- doc ---
