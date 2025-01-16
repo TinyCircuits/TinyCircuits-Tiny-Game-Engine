@@ -26,6 +26,7 @@ from system.launcher.custom_camera import CustomCamera
 
 # Load some resources and set background 
 font = FontResource("system/assets/outrunner_outline.bmp")
+font5x7 = FontResource("system/assets/font5x7.bmp")
 background_tex = TextureResource("system/launcher/assets/launcher-background.bmp")
 engine_draw.set_background(background_tex)
 
@@ -44,8 +45,8 @@ camera.add_child(dynamic_background)
 
 # Create instances of the custom launcher screens
 games_screen = GamesScreen(font)
-credits_screen = CreditsScreen()
-settings_screen = SettingsScreen(font)
+credits_screen = CreditsScreen(font5x7)
+settings_screen = SettingsScreen(font5x7)
 
 # Focus GUI layer by default, do not let user change
 # focus manually, no navigation wrapping, and pass

@@ -6,6 +6,7 @@ from engine_resources import TextureResource
 import engine_draw
 import engine
 from engine_draw import Color
+import os
 
 setting_background_color = Color(0.157, 0.137, 0.263)                          # Background color for category rows
 bar_color = Color(0.757, 0.737, 0.978)
@@ -125,6 +126,35 @@ class SettingsScreen():
 
         self.brightness_slider = SettingsSlider(font, sun_texture, 0.05, 1.0, engine.setting_brightness)
         self.brightness_slider.position.y = -2
+
+        # https://docs.micropython.org/en/latest/library/os.html#os.statvfs
+        fs_stat = os.statvfs("/")
+
+        f_bsize = fs_stat[0]
+        f_frsize = fs_stat[1]
+        f_blocks = fs_stat[2]
+        f_bfree = fs_stat[3]
+
+        total_space_bytes = f_bsize * f_blocks
+        free_space_bytes  = f_bsize * f_bfree
+        used_space_bytes  = total_space_bytes - free_space_bytes
+
+        factor = 1000000
+        unit = "MB"
+
+        # If not on Thumby and size is too big to fit on
+        # screen in MB, switch to GB
+        if total_space_bytes > 13631488:
+            factor = 1000000000
+            unit = "GB"
+
+        total_space= round(total_space_bytes/factor, 1)
+        used_space  = round(used_space_bytes/factor, 1)
+
+        # self.fs = Text2DNode(font=font, text="FS: " + str(total_space) + "/" + str(used_space), letter_spacing=1)
+        self.fs = Text2DNode(font=font, text=f"Storage: {used_space}/{total_space} {unit}", letter_spacing=0.75)
+        self.fs.position.x = 128
+        self.fs.position.y = 24
     
     def tell_page(self, new_page):
         global page

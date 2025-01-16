@@ -65,7 +65,7 @@ mp_obj_t tone_sound_resource_class_new(const mp_obj_type_t *type, size_t n_args,
     self->time = 0.0f;
 
     self->next_frequency = 0.0f;
-    self->fade_type = FADE_NONE; 
+    self->fade_type = FADE_NONE;
     self->fade_factor = 0.0f;
 
     return MP_OBJ_FROM_PTR(self);

@@ -5,8 +5,6 @@ import engine_io
 import engine_draw
 import math
 
-font5x7 = FontResource("system/assets/font5x7.bmp")
-
 # Holds information about each section
 class Section:
     def __init__(self, header, path):
@@ -94,7 +92,7 @@ line_retriever = SectionLineRetriever()
 # Holds information about the row as well as
 # moves it up the screen and repositions it
 class Name(Text2DNode):
-    def __init__(self, text):
+    def __init__(self, text, font5x7):
         super().__init__(self)
         self.font = font5x7
         self.text = text
@@ -133,27 +131,29 @@ class Name(Text2DNode):
 
 
 class CreditsScreen():
-    def __init__(self):
+    def __init__(self, font5x7):
         global y_limit_start
         global y_limit_end
         global lowest_row
         global row_height
 
+        self.font5x7 = font5x7
+
         # Calculate bounds to just outside the top/bottom of the screen
-        y_limit_start = 64 + font5x7.height + 1
-        y_limit_end = -64 - font5x7.height - 1
+        y_limit_start = 64 + self.font5x7.height + 1
+        y_limit_end = -64 - self.font5x7.height - 1
         y_span = y_limit_start - y_limit_end
 
         # Calculate row height based on font height and then 
         # calculate how many rows can fit in that
-        row_height = font5x7.height + y_row_space_px
+        row_height = self.font5x7.height + y_row_space_px
         self.row_count = int(math.floor(y_span / row_height))+1
 
         # Create the rows
         self.rows = []
 
         for irx in range(self.row_count):
-            self.rows.append(Name("TEST"))
+            self.rows.append(Name("TEST", self.font5x7 ))
     
     def reset_rows(self):
         global lowest_row
