@@ -656,7 +656,7 @@ mp_obj_t gui_button_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, 
     mp_arg_t allowed_args[] = {
         { MP_QSTR_child_class,              MP_ARG_OBJ,  {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_position,                 MP_ARG_OBJ,  {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(0.0f)})} },
-        { MP_QSTR_font,                     MP_ARG_OBJ,  {.u_obj = &font} },
+        { MP_QSTR_font,                     MP_ARG_OBJ,  {.u_obj = &default_font} },
         { MP_QSTR_text,                     MP_ARG_OBJ,  {.u_obj = mp_const_none} },
         { MP_QSTR_outline,                  MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(2.0f)} },
         { MP_QSTR_padding,                  MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(2.0f)} },

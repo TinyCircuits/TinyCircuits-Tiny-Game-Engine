@@ -241,6 +241,7 @@ static mp_obj_t engine_main_module_init(){
     engine_display_init();
     engine_display_init_framebuffers();
     engine_display_send();
+    engine_display_clear();
 
     // Setup fault handlers after screen is setup since
     // we need the screen to output the fault

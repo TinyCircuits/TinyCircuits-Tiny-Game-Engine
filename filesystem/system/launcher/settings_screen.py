@@ -151,7 +151,6 @@ class SettingsScreen():
         total_space= round(total_space_bytes/factor, 1)
         used_space  = round(used_space_bytes/factor, 1)
 
-        # self.fs = Text2DNode(font=font, text="FS: " + str(total_space) + "/" + str(used_space), letter_spacing=1)
         self.fs = Text2DNode(font=font, text=f"Storage: {used_space}/{total_space} {unit}", letter_spacing=0.75)
         self.fs.position.x = 128
         self.fs.position.y = 24

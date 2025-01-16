@@ -35,7 +35,7 @@ texture_resource_class_obj_t font_texture = {
 };
 
 
-font_resource_class_obj_t font = {
+font_resource_class_obj_t default_font = {
   .base.type = &font_resource_class_type,
   .glyph_height = 7,
   .glyph_widths = { 5,5,5,5,5,5,5,5,5,5,5,5,4,6,4,6,5,4,6,5,5,5,5,5,5,5,4,6,5,5,5,5,5,5,5,5,5,5,5,5,5,4,5,6,5,5,5,5,5,5,5,5,5,5,5,5,5,5,6,4,5,4,6,5,5,5,5,5,5,5,5,5,5,4,6,5,4,6,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5 },

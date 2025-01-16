@@ -62,6 +62,19 @@ float engine_display_get_brightness(){
 }
 
 
+void engine_display_clear(){
+    uint16_t *engine_fill_background = engine_display_get_background();
+
+    // Clear the new active screen buffer
+    if(engine_fill_background != NULL){
+        engine_draw_fill_buffer(engine_fill_background, active_screen_buffer);
+    }else{
+        uint16_t engine_fill_color = engine_display_get_color();
+        engine_draw_fill_color(engine_fill_color, active_screen_buffer);
+    }
+}
+
+
 void engine_display_send(){
     // Send the screen buffer to the display
     // Send the screen buffer to the display
@@ -74,14 +87,4 @@ void engine_display_send(){
     #endif
 
     engine_switch_active_screen_buffer();
-
-    uint16_t *engine_fill_background = engine_display_get_background();
-
-    // Clear the new active screen buffer
-    if(engine_fill_background != NULL){
-        engine_draw_fill_buffer(engine_fill_background, active_screen_buffer);
-    }else{
-        uint16_t engine_fill_color = engine_display_get_color();
-        engine_draw_fill_color(engine_fill_color, active_screen_buffer);
-    }
 }

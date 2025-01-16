@@ -42,6 +42,8 @@ void engine_init_screen_buffers();
 // Switches active screen buffer
 void engine_switch_active_screen_buffer();
 
+void engine_display_clear_screen_buffer(uint16_t color);
+
 // Resets all elements to 0x0000
 void engine_display_clear_depth_buffer();
 

@@ -20,7 +20,7 @@ typedef struct{
     uint8_t glyph_height;
 }font_resource_class_obj_t;
 
-extern font_resource_class_obj_t font;
+extern font_resource_class_obj_t default_font;
 
 extern const mp_obj_type_t font_resource_class_type;
 

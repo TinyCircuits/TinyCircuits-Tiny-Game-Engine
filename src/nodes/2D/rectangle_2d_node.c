@@ -94,10 +94,10 @@ void rectangle_2d_node_class_draw(mp_obj_t rectangle_node_base_obj, mp_obj_t cam
         engine_math_rotate_point(&brx, &bry, inherited.px, inherited.py, inherited.rotation);
         engine_math_rotate_point(&blx, &bly, inherited.px, inherited.py, inherited.rotation);
 
-        engine_draw_line(rectangle_color->value, tlx, tly, trx, try, camera_node, rectangle_opacity, shader);
-        engine_draw_line(rectangle_color->value, trx, try, brx, bry, camera_node, rectangle_opacity, shader);
-        engine_draw_line(rectangle_color->value, brx, bry, blx, bly, camera_node, rectangle_opacity, shader);
-        engine_draw_line(rectangle_color->value, blx, bly, tlx, tly, camera_node, rectangle_opacity, shader);
+        engine_draw_line(rectangle_color->value, tlx, tly, trx, try, rectangle_opacity, shader);
+        engine_draw_line(rectangle_color->value, trx, try, brx, bry, rectangle_opacity, shader);
+        engine_draw_line(rectangle_color->value, brx, bry, blx, bly, rectangle_opacity, shader);
+        engine_draw_line(rectangle_color->value, blx, bly, tlx, tly, rectangle_opacity, shader);
     }
 }
 

@@ -32,7 +32,8 @@ void engine_fault_report(uint32_t lr, uint32_t pc){
         .data = (byte*)message
     };
 
-    engine_draw_text(&font, &text, 64.0f, 64.0f, 128.0f, 128.0f, 1.0f, 2.0f, 1.0f, 1.0f, 0.0f, 1.0f, engine_get_builtin_shader(EMPTY_SHADER));
+    engine_draw_text(&default_font, &text, 64.0f, 64.0f, 128.0f, 128.0f, 1.0f, 2.0f, 1.0f, 1.0f, 0.0f, 1.0f, engine_get_builtin_shader(EMPTY_SHADER));
 
     engine_display_send();
+    engine_display_clear();
 }

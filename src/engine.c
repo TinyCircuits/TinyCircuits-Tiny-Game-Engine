@@ -281,6 +281,7 @@ bool engine_tick(){
 
         // After every game cycle send the current active screen buffer to the display
         engine_display_send();
+        engine_display_clear();
 
         // Clear the depth buffer, if needed
         engine_display_clear_depth_buffer();

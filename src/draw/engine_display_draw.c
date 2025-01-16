@@ -52,7 +52,7 @@ void ENGINE_FAST_FUNCTION(engine_draw_pixel_no_check)(uint16_t color, int32_t x,
 
 
 // https://en.wikipedia.org/wiki/Digital_differential_analyzer_(graphics_algorithm)
-void engine_draw_line(uint16_t color, float x_start, float y_start, float x_end, float y_end, mp_obj_t camera_node_base_in, float alpha, engine_shader_t *shader){
+void engine_draw_line(uint16_t color, float x_start, float y_start, float x_end, float y_end, float alpha, engine_shader_t *shader){
     // Distance difference between endpoints
     float dx = x_end - x_start;
     float dy = y_end - y_start;
