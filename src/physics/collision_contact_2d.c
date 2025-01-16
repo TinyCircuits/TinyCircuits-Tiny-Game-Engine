@@ -75,6 +75,7 @@ static void collision_contact_2d_class_attr(mp_obj_t self_in, qstr attribute, mp
             break;
             case MP_QSTR_penetration:
                 self->penetration.value = mp_obj_get_float(destination[1]);
+            break;
             case MP_QSTR_node:
                 self->node = destination[1];
             break;
