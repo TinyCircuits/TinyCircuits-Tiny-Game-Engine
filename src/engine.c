@@ -35,7 +35,7 @@
     // new serial data can be retrieved from the web page
     // while just MicroPython is running, not just the engine
     EM_JS(void, new_hook, (), {
-        self.get_serial();
+        self.main_call();
     });
 
     const char *firmware_date = "0000-00-00_00:00:00";
