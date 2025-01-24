@@ -13,3 +13,5 @@ doc/build
 **/desktop.ini
 filesystem/system/settings.txt
 firmware_date.h
+filesystem/lib
+filesystem/Games/TempGames

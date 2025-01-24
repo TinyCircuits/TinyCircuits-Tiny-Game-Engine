@@ -27,9 +27,8 @@
 
 #include "engine_main.h"
 
-#if defined(__unix__)
-    const char *firmware_date = "0000-00-00_00:00:00";
-#elif defined(__EMSCRIPTEN__)
+
+#if defined(__EMSCRIPTEN__)
     #include <emscripten.h>
 
     // This is called by the MicroPython VM hook so that
@@ -39,6 +38,8 @@
         self.get_serial();
     });
 
+    const char *firmware_date = "0000-00-00_00:00:00";
+#elif defined(__unix__)
     const char *firmware_date = "0000-00-00_00:00:00";
 #elif defined(__arm__)
     #include "hardware/clocks.h"
