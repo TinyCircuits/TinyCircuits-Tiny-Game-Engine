@@ -38,14 +38,19 @@ def get_drives():
 
 # ### Step 1: Get arguments
 arguments = sys.argv[1:]
+upload = True
 
 if len(arguments) > 0 and arguments[0] == "clean":
     execute(['make', '-C', '../ports/rp2', 'clean', 'BOARD=THUMBY_COLOR'])
     print("\n\nSUCCESS: Done cleaning rp2 port!\n")
     exit(1)
+elif len(arguments) > 0 and arguments[0] == "no_upload":
+    upload = False
 
-# ### Step 2: Get teh date of the last commit and bake into firmware
+
+# ### Step 2: Get the date of the last commit and bake into firmware
 firmware_date_file = open("src/firmware_date.h", "w")
+commit_id   = os.popen('git rev-parse --short HEAD').read()
 commit_date = os.popen('git log -1 --format="%cd" --date=iso').read()
 commit_date = commit_date.splitlines()
 commit_date = commit_date[0]
@@ -66,8 +71,8 @@ print("\n\nBuilding rp2 port...\n")
 execute(['make', '-C', '../ports/rp2', '-j8', 'BOARD=THUMBY_COLOR', 'USER_C_MODULES=../../TinyCircuits-Tiny-Game-Engine/src/micropython.cmake'])
 print("\n\nDone building rp2 port!\n")
 
-# Rename UF2 to commit date
-firmware_path = f"../ports/rp2/build-THUMBY_COLOR/firmware-{commit_date}.uf2"
+# Rename UF2 if want to
+firmware_path = f"../ports/rp2/build-THUMBY_COLOR/firmware.uf2"
 shutil.move("../ports/rp2/build-THUMBY_COLOR/firmware.uf2", firmware_path)
 
 # ### Step 4: Make sure output binary isn't larger than 1 MiB
@@ -78,6 +83,10 @@ output_bin_size = os.path.getsize("../ports/rp2/build-THUMBY_COLOR/firmware.bin"
 
 if output_bin_size >= 1 * 1024 * 1024:
     raise Exception("ERROR: Output binary size is too large! It can only be upto 1Mib in size. See: https://github.com/TinyCircuits/TinyCircuits-Tiny-Game-Engine/issues/66")
+
+# Exit if told not to upload
+if(upload is False):
+    exit(0)
 
 # ### Step 5: Assume that the port is plugged in and may be running a program, connect to it
 #             end program with ctrl-c, and put into BOOTLOADER mode for upload
