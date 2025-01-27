@@ -72,7 +72,7 @@ execute(['make', '-C', '../ports/rp2', '-j8', 'BOARD=THUMBY_COLOR', 'USER_C_MODU
 print("\n\nDone building rp2 port!\n")
 
 # Rename UF2 if want to
-firmware_path = f"../ports/rp2/build-THUMBY_COLOR/firmware.uf2"
+firmware_path = f"../ports/rp2/build-THUMBY_COLOR/firmware_{commit_id}.uf2"
 shutil.move("../ports/rp2/build-THUMBY_COLOR/firmware.uf2", firmware_path)
 
 # ### Step 4: Make sure output binary isn't larger than 1 MiB
