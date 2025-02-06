@@ -141,7 +141,7 @@ bool audio_channel_fill_internal_buffer(audio_channel_class_obj_t *channel, uint
 //                                                           |
 //                                                           | data from any of these sources are moved in their current raw form to audio channel buffers (DMA from flash/ram to ram)
 //                                                           V
-//                                                  autio_channel_buffer
+//                                                  audio_channel_buffer
 //                                                           |
 //                                                           | As the playback buffer needs more data, it is converted and volume/gain mixed on the fly for the requested amounts
 //                                                           V
