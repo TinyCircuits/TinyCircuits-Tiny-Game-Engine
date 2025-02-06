@@ -77,7 +77,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(noise_resource_class_del_obj, noise_resource_class_del
     DESC: Object for outputting various types of 2D and 3D noise data. Uses the FastNoiseLite library: https://github.com/Auburn/FastNoiseLite. Since most aspects of the FastNoiseLite library were just directly exposed, refer to the library for further documentation or try different configurations and see what happens, or try this web preview: https://auburn.github.io/FastNoiseLite/
     ATTR:   [type=function]         [name={ref_link:noise_3d}]                      [value=function]
     ATTR:   [type=function]         [name={ref_link:noise_2d}]                      [value=function]
-    ATTR:   [type=int]              [name=seed]                                     [value=any (set this to different numbers for different variations of noise). Default: 13337]
+    ATTR:   [type=int]              [name=seed]                                     [value=any (set this to different numbers for different variations of noise). Default: 1337]
     ATTR:   [type=float]            [name=frequency]                                [value=any (the frequency of all noise types, higher means more dense noise and lower means less dense). Default: 0.01]
     ATTR:   [type=int]              [name=noise_type]                               [value=NOISE_OPENSIMPLEX2 | NOISE_OPENSIMPLEX2S | NOISE_CELLULAR | NOISE_PERLIN | NOISE_VALUE_CUBIC | NOISE_VALUE (noise algorithm to use for 2D and 3D noise). Default: NOISE_OPENSIMPLEX2]
     ATTR:   [type=int]              [name=rotation_type_3d]                         [value=ROTATION_NONE | ROTATION_IMPROVE_XY_PLANE | ROTATION_IMPROVE_XZ_PLANES (3D noise rotation types). Default: ROTATION_NONE]
