@@ -109,6 +109,7 @@ bool audio_channel_fill_internal_buffer(audio_channel_class_obj_t *channel, uint
     // indicating it is done providing samples
     bool complete = false;
 
+    // Modify these with data and length of data
     uint8_t *channel_buffer_to_fill = channel->buffers[buffer_to_fill_index];
     uint32_t filled_channel_buffer_len = 0;
 
@@ -160,7 +161,7 @@ uint32_t audio_channel_get_samples(audio_channel_class_obj_t *channel, float *ou
     uint32_t channel_buffer_data_len      = channel->buffers_data_len[channel_buffer_to_read_index];
     if(channel_buffer_byte_cursor >= channel_buffer_data_len){
         // 1. Both buffers have audio samples but the read buffer
-        //    has been completly played, switch buffers
+        //    has been completely played, switch buffers
         channel->buffer_to_fill_index = !channel->buffer_to_fill_index; // 0 to 1 or 1 to 0
         channel->buffer_to_read_index = !channel->buffer_to_read_index; // 1 to 0 or 0 to 1
 
@@ -230,7 +231,7 @@ float audio_channel_get_rate_limited_sample(audio_channel_class_obj_t *channel, 
     if(mp_obj_is_type(channel->source, &wave_sound_resource_class_type)){
         wave_sound_resource_class_obj_t *wave = channel->source;
 
-        // Keep returning current sample until time to get next one
+        // Keep returning current sample until time to get next one (rate-limited)
         if(wave->play_counter != 0){
             if(wave->play_counter == wave->play_counter_max){
                 wave->play_counter = 0;
@@ -246,6 +247,8 @@ float audio_channel_get_rate_limited_sample(audio_channel_class_obj_t *channel, 
         return wave->last_sample;
     }else if(mp_obj_is_type(channel->source, &tone_sound_resource_class_type)){
         // tone_sound_resource_class_obj_t *tone = channel->source;
+        // No rate limiting here since tone sources are generated
+        // at sample playback rate exactly, no reason to go slower
         float sample = 0.0f;
         audio_channel_get_samples(channel, &sample, 1, volume, complete);
         return sample;
