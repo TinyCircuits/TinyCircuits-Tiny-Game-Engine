@@ -14,7 +14,6 @@ from system.launcher_state import get_launcher_state
 from system.launcher.screen_icon import ScreenIcon
 from system.launcher.header import Header
 from system.launcher.dynamic_background import DynamicBackground
-from system.launcher.battery_indicator import BatteryIndicator
 from system.launcher.games_screen import GamesScreen
 from system.launcher.credits_screen import CreditsScreen
 from system.launcher.settings_screen import SettingsScreen
@@ -27,6 +26,7 @@ from system.launcher.custom_camera import CustomCamera
 
 # Load some resources and set background 
 font = FontResource("system/assets/outrunner_outline.bmp")
+font5x7 = FontResource("system/assets/font5x7.bmp")
 background_tex = TextureResource("system/launcher/assets/launcher-background.bmp")
 engine_draw.set_background(background_tex)
 
@@ -35,7 +35,6 @@ engine_draw.set_background(background_tex)
 screen_icon = ScreenIcon()
 header = Header(font)
 dynamic_background = DynamicBackground()
-battery = BatteryIndicator()
 
 # Create instance of custom camera and add static
 # elements as children so they don't move
@@ -43,12 +42,11 @@ camera = CustomCamera()
 camera.add_child(screen_icon)
 camera.add_child(header)
 camera.add_child(dynamic_background)
-camera.add_child(battery)
 
 # Create instances of the custom launcher screens
 games_screen = GamesScreen(font)
-credits_screen = CreditsScreen(font)
-settings_screen = SettingsScreen(font)
+credits_screen = CreditsScreen(font5x7)
+settings_screen = SettingsScreen(font5x7)
 
 # Focus GUI layer by default, do not let user change
 # focus manually, no navigation wrapping, and pass
@@ -69,7 +67,7 @@ def end_rumble(delay):
     engine_io.rumble(0.0)
 
 def start_rumble():
-    engine_io.rumble(0.425)
+    engine_io.rumble(0.5)
     rumble_delay.start(90, end_rumble)
 
 # Main launcher loop

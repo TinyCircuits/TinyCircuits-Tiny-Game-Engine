@@ -9,25 +9,23 @@
     #include "hardware/gpio.h"
     #include "hardware/i2c.h"
     #include "pico/time.h"
+    #include "io/engine_io_rp3.h"
 
     bm8563_t bm;
-
-    #define RTC_I2C_SCL_GPIO 9
-    #define RTC_I2C_SDA_GPIO 8
 
     // Custom I2C reader/writer functions for bm8563 library to call
     int32_t custom_i2c_read(void *handle, uint8_t address, uint8_t reg, uint8_t *buffer, uint16_t size){
         // Write register we want to read from
         int ret = i2c_write_timeout_us(i2c0, address, &reg, 1, true, 250000);
         if(ret == PICO_ERROR_GENERIC || ret == PICO_ERROR_TIMEOUT){
-            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineTime: ERROR: I2C could not write register to read from RTC IC!"));
+            ENGINE_ERROR_PRINTF("EngineTime: ERROR: I2C could not write register to read from RTC IC!");
             return BM8563_ERROR_NOTTY;
         }
 
         // Read what was returned by the write
         ret = i2c_read_timeout_us(i2c0, address, buffer, size, false, 250000);
         if(ret == PICO_ERROR_GENERIC || ret == PICO_ERROR_TIMEOUT){
-            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineTime: ERROR: I2C could not read data from RTC IC!"));
+            ENGINE_ERROR_PRINTF("EngineTime: ERROR: I2C could not read data from RTC IC!");
             return BM8563_ERROR_NOTTY;
         }
 
@@ -42,7 +40,7 @@
         // Write the data
         int ret = i2c_write_timeout_us(i2c0, address, data, size+1, false, 250000);
         if(ret == PICO_ERROR_GENERIC || ret == PICO_ERROR_TIMEOUT){
-            mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineTime: ERROR: I2C could not write data to RTC IC!"));
+            ENGINE_ERROR_PRINTF("EngineTime: ERROR: I2C could not write data to RTC IC!");
             return BM8563_ERROR_NOTTY;
         }
 

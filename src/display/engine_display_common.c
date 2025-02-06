@@ -116,6 +116,10 @@ void engine_switch_active_screen_buffer(){
     back->buf = screen_buffers[active_screen_buffer_index];
 }
 
+void ENGINE_FAST_FUNCTION(engine_display_clear_screen_buffer)(uint16_t color){
+    engine_draw_fill_color(color, active_screen_buffer);
+}
+
 
 void ENGINE_FAST_FUNCTION(engine_display_clear_depth_buffer)(){
     if(depth_buffer != NULL) engine_draw_fill_color(UINT16_MAX, depth_buffer);

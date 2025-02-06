@@ -23,7 +23,15 @@ mp_obj_t noise_resource_class_new(const mp_obj_type_t *type, size_t n_args, size
 }
 
 
-// Class methods
+/*  --- doc ---
+    NAME: noise_3d
+    ID: noise_3d
+    DESC: Given three values usually representing a position, output one value of noise
+    PARAM: [type=float]     [name=x]    [value=any]
+    PARAM: [type=float]     [name=y]    [value=any]
+    PARAM: [type=float]     [name=z]    [value=any]
+    RETURN: float
+*/
 static mp_obj_t noise_resource_class_noise_3d(size_t n_args, const mp_obj_t *args){
     noise_resource_class_obj_t *self = args[0];
 
@@ -36,6 +44,14 @@ static mp_obj_t noise_resource_class_noise_3d(size_t n_args, const mp_obj_t *arg
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(noise_resource_class_noise_3d_obj, 4, 4, noise_resource_class_noise_3d);
 
 
+/*  --- doc ---
+    NAME: noise_2d
+    ID: noise_2d
+    DESC: Given two values usually representing a position, output one value of noise
+    PARAM: [type=float]     [name=x]    [value=any]
+    PARAM: [type=float]     [name=z]    [value=any]
+    RETURN: float
+*/
 static mp_obj_t noise_resource_class_noise_2d(mp_obj_t self_in, mp_obj_t x_obj, mp_obj_t z_obj){
     noise_resource_class_obj_t *self = self_in;
 
@@ -55,6 +71,63 @@ static mp_obj_t noise_resource_class_del(mp_obj_t self_in){
 MP_DEFINE_CONST_FUN_OBJ_1(noise_resource_class_del_obj, noise_resource_class_del);
 
 
+/*  --- doc ---
+    NAME: NoiseResource
+    ID: NoiseResource
+    DESC: Object for outputting various types of 2D and 3D noise data. Uses the FastNoiseLite library: https://github.com/Auburn/FastNoiseLite. Since most aspects of the FastNoiseLite library were just directly exposed, refer to the library for further documentation or try different configurations and see what happens, or try this web preview: https://auburn.github.io/FastNoiseLite/
+    ATTR:   [type=function]         [name={ref_link:noise_3d}]                      [value=function]
+    ATTR:   [type=function]         [name={ref_link:noise_2d}]                      [value=function]
+    ATTR:   [type=int]              [name=seed]                                     [value=any (set this to different numbers for different variations of noise). Default: 1337]
+    ATTR:   [type=float]            [name=frequency]                                [value=any (the frequency of all noise types, higher means more dense noise and lower means less dense). Default: 0.01]
+    ATTR:   [type=int]              [name=noise_type]                               [value=NOISE_OPENSIMPLEX2 | NOISE_OPENSIMPLEX2S | NOISE_CELLULAR | NOISE_PERLIN | NOISE_VALUE_CUBIC | NOISE_VALUE (noise algorithm to use for 2D and 3D noise). Default: NOISE_OPENSIMPLEX2]
+    ATTR:   [type=int]              [name=rotation_type_3d]                         [value=ROTATION_NONE | ROTATION_IMPROVE_XY_PLANE | ROTATION_IMPROVE_XZ_PLANES (3D noise rotation types). Default: ROTATION_NONE]
+    ATTR:   [type=int]              [name=fractal_type]                             [value=FRACTAL_NONE | FRACTAL_FBM, FRACTAL_RIDGED | FRACTAL_PINGPONG | FRACTAL_DOMAIN_WARP_PROGRESSIVE | FRACTAL_DOMAIN_WARP_INDEPENDENT (algorithm for combining octaves for fractal noise types). Default: FRACTAL_NONE]
+    ATTR:   [type=int]              [name=octaves]                                  [value=any (the more octaves the long the compute time and the more chaotic the noise gets). Default: 3]
+    ATTR:   [type=float]            [name=lacunarity]                               [value=any (applies to fractal noise types, sort of like noise frequency). Default: 2.0]
+    ATTR:   [type=float]            [name=gain]                                     [value=any (octave gain for all noise types). Default: 0.5]
+    ATTR:   [type=float]            [name=weighted_strength]                        [value=any (octave weighting for none domain warp fractal noise types). Default: 0.0]
+    ATTR:   [type=float]            [name=ping_pong_strength]                       [value=any (fractal ping pong effect strength). Default: 2.0]
+    ATTR:   [type=int]              [name=cellular_distance_func]                   [value=CELLULAR_DISTANCE_EUCLIDEAN | CELLULAR_DISTANCE_EUCLIDEANSQ | CELLULAR_DISTANCE_MANHATTAN | CELLULAR_DISTANCE_HYBRID (Distance function for cellular noise). Default: CELLULAR_DISTANCE_EUCLIDEANSQ]
+    ATTR:   [type=int]              [name=cellular_return_type]                     [value=CELLULAR_RETURN_TYPE_CELLVALUE | CELLULAR_RETURN_TYPE_DISTANCE | CELLULAR_RETURN_TYPE_DISTANCE2 | CELLULAR_RETURN_TYPE_DISTANCE2ADD | CELLULAR_RETURN_TYPE_DISTANCE2SUB | CELLULAR_RETURN_TYPE_DISTANCE2MUL | CELLULAR_RETURN_TYPE_DISTANCE2DIV (return type for cellular noise). Default: FNL_CELLULAR_RETURN_TYPE_DISTANCE]
+    ATTR:   [type=float]            [name=cellular_jitter_mod]                      [value=any (Max distance cellular points are allowed to move from their grid positions). Default: 1.0]
+    ATTR:   [type=int]              [name=domain_warp_type]                         [value=DOMAIN_WARP_OPENSIMPLEX2 | DOMAIN_WARP_OPENSIMPLEX2_REDUCED | DOMAIN_WARP_BASICGRID (algorithm for domain warp). Default: DOMAIN_WARP_OPENSIMPLEX2]
+    ATTR:   [type=float]            [name=domain_warp_amp]                          [value=any (Max distance from original position while using domain warp). Default: 1.0]
+
+    ATTR:   [type=int]              [name=NOISE_OPENSIMPLEX2]                       [value=0]
+    ATTR:   [type=int]              [name=NOISE_OPENSIMPLEX2S]                      [value=1]
+    ATTR:   [type=int]              [name=NOISE_CELLULAR]                           [value=2]
+    ATTR:   [type=int]              [name=NOISE_PERLIN]                             [value=3]
+    ATTR:   [type=int]              [name=NOISE_VALUE_CUBIC]                        [value=4]
+    ATTR:   [type=int]              [name=NOISE_VALUE]                              [value=5]
+
+    ATTR:   [type=int]              [name=ROTATION_NONE]                            [value=0]
+    ATTR:   [type=int]              [name=ROTATION_IMPROVE_XY_PLANE]                [value=1]
+    ATTR:   [type=int]              [name=ROTATION_IMPROVE_XZ_PLANES]               [value=2]
+
+    ATTR:   [type=int]              [name=FRACTAL_NONE]                             [value=0]
+    ATTR:   [type=int]              [name=FRACTAL_FBM]                              [value=1]
+    ATTR:   [type=int]              [name=FRACTAL_RIDGED]                           [value=2]
+    ATTR:   [type=int]              [name=FRACTAL_PINGPONG]                         [value=3]
+    ATTR:   [type=int]              [name=FRACTAL_DOMAIN_WARP_PROGRESSIVE]          [value=4]
+    ATTR:   [type=int]              [name=FRACTAL_FRACTAL_DOMAIN_WARP_INDEPENDENT]  [value=5]
+
+    ATTR:   [type=int]              [name=CELLULAR_DISTANCE_EUCLIDEAN]              [value=0]
+    ATTR:   [type=int]              [name=CELLULAR_DISTANCE_EUCLIDEANSQ]            [value=1]
+    ATTR:   [type=int]              [name=CELLULAR_DISTANCE_MANHATTAN]              [value=2]
+    ATTR:   [type=int]              [name=CELLULAR_DISTANCE_HYBRID]                 [value=3]
+
+    ATTR:   [type=int]              [name=CELLULAR_RETURN_TYPE_CELLVALUE]           [value=0]
+    ATTR:   [type=int]              [name=CELLULAR_RETURN_TYPE_DISTANCE]            [value=1]
+    ATTR:   [type=int]              [name=CELLULAR_RETURN_TYPE_DISTANCE2]           [value=2]
+    ATTR:   [type=int]              [name=CELLULAR_RETURN_TYPE_DISTANCE2ADD]        [value=3]
+    ATTR:   [type=int]              [name=CELLULAR_RETURN_TYPE_DISTANCE2SUB]        [value=4]
+    ATTR:   [type=int]              [name=CELLULAR_RETURN_TYPE_DISTANCE2MUL]        [value=5]
+    ATTR:   [type=int]              [name=CELLULAR_RETURN_TYPE_DISTANCE2DIV]        [value=6]
+
+    ATTR:   [type=int]              [name=DOMAIN_WARP_OPENSIMPLEX2]                 [value=0]
+    ATTR:   [type=int]              [name=DOMAIN_WARP_OPENSIMPLEX2_REDUCED]         [value=1]
+    ATTR:   [type=int]              [name=DOMAIN_WARP_BASICGRID]                    [value=2]
+*/ 
 static void noise_resource_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing NoiseResource attr");
 
@@ -191,6 +264,13 @@ static const mp_rom_map_elem_t noise_resource_class_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_ROTATION_NONE), MP_ROM_INT(FNL_ROTATION_NONE) },
     { MP_ROM_QSTR(MP_QSTR_ROTATION_IMPROVE_XY_PLANES), MP_ROM_INT(FNL_ROTATION_IMPROVE_XY_PLANES) },
     { MP_ROM_QSTR(MP_QSTR_ROTATION_IMPROVE_XZ_PLANES), MP_ROM_INT(FNL_ROTATION_IMPROVE_XZ_PLANES) },
+
+    { MP_ROM_QSTR(MP_QSTR_FRACTAL_NONE), MP_ROM_INT(FNL_FRACTAL_NONE) },
+    { MP_ROM_QSTR(MP_QSTR_FRACTAL_FBM), MP_ROM_INT(FNL_FRACTAL_FBM) },
+    { MP_ROM_QSTR(MP_QSTR_FRACTAL_RIDGED), MP_ROM_INT(FNL_FRACTAL_RIDGED) },
+    { MP_ROM_QSTR(MP_QSTR_FRACTAL_PINGPONG), MP_ROM_INT(FNL_FRACTAL_PINGPONG) },
+    { MP_ROM_QSTR(MP_QSTR_FRACTAL_DOMAIN_WARP_PROGRESSIVE), MP_ROM_INT(FNL_FRACTAL_DOMAIN_WARP_PROGRESSIVE) },
+    { MP_ROM_QSTR(MP_QSTR_FRACTAL_DOMAIN_WARP_INDEPENDENT), MP_ROM_INT(FNL_FRACTAL_DOMAIN_WARP_INDEPENDENT) },
 
     { MP_ROM_QSTR(MP_QSTR_CELLULAR_DISTANCE_EUCLIDEAN), MP_ROM_INT(FNL_CELLULAR_DISTANCE_EUCLIDEAN) },
     { MP_ROM_QSTR(MP_QSTR_CELLULAR_DISTANCE_EUCLIDEANSQ), MP_ROM_INT(FNL_CELLULAR_DISTANCE_EUCLIDEANSQ) },

@@ -82,7 +82,7 @@ void line_2d_node_class_draw(mp_obj_t line_node_base_obj, mp_obj_t camera_node){
                          floorf(inherited.px), floorf(inherited.py),
                          (int32_t)line_thickness, (int32_t)line_length,
                          1.0f, 1.0f,
-                        -inherited.rotation,
+                         inherited.rotation,
                          line_opacity,
                          shader);
     }else{
@@ -109,10 +109,10 @@ void line_2d_node_class_draw(mp_obj_t line_node_base_obj, mp_obj_t camera_node){
         engine_math_rotate_point(&brx, &bry, inherited.px, inherited.py, inherited.py);
         engine_math_rotate_point(&blx, &bly, inherited.px, inherited.py, inherited.py);
 
-        engine_draw_line(line_color->value, tlx, tly, trx, try, camera_node, line_opacity, shader);
-        engine_draw_line(line_color->value, trx, try, brx, bry, camera_node, line_opacity, shader);
-        engine_draw_line(line_color->value, brx, bry, blx, bly, camera_node, line_opacity, shader);
-        engine_draw_line(line_color->value, blx, bly, tlx, tly, camera_node, line_opacity, shader);
+        engine_draw_line(line_color->value, tlx, tly, trx, try, line_opacity, shader);
+        engine_draw_line(line_color->value, trx, try, brx, bry, line_opacity, shader);
+        engine_draw_line(line_color->value, brx, bry, blx, bly, line_opacity, shader);
+        engine_draw_line(line_color->value, blx, bly, tlx, tly, line_opacity, shader);
     }
 }
 

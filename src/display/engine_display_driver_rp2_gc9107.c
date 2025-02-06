@@ -11,34 +11,12 @@
 #include "hardware/gpio.h"
 #include "hardware/pio.h"
 #include "pwm.pio.h"
+#include "io/engine_io_rp3.h"
 
 
 // Based on max from Bodmer: https://github.com/Bodmer/TFT_eSPI/blob/5162af0a0e13e0d4bc0e4c792ed28d38599a1f23/User_Setup.h#L366
 #define GC9107_SPI_MHZ 80 * 1000 * 1000
 
-
-/* ##### PIN CONNECTIONS #####
-
-    | BRD/PROCESSOR |              GC9107 0.85"               |
-    |---------------|-----------------------------------------|
-    | VCC+          | VCC [Power 3.3V/5V]                     |
-    | GND           | GND [Ground]                            |
-    | GP19/SPI0 TX  | SDA [SPI data input/SDA]                |
-    | GP18/SPI0 SCK | SCK [SPI clock input]                   |
-    | GP17/SPI0 CSn | CS  [Chip select, low=active]           |
-    | GP16          | DC  [Data or CMD select, h=data, l=cmd] |
-    | GP11          | RST [Reset, low=active/reset]           |
-    | GP20          | BL/LCD_LED  [Backlight enable]          |
-    |---------------|-----------------------------------------|
-
-    NOTE: Not using PIO since we're using a standard SPI port (see: https://github.com/Bodmer/TFT_eSPI/blob/5162af0a0e13e0d4bc0e4c792ed28d38599a1f23/User_Setup.h#L331C90-L332C1)
-*/
-#define PIN_GP19_SPI0_TX__TO__SDA  PICO_DEFAULT_SPI_TX_PIN      // Default refers to spi port 0
-#define PIN_GP18_SPI0_SCK__TO__CLK PICO_DEFAULT_SPI_SCK_PIN     // Default refers to spi port 0
-#define PIN_GP17_SPI0_CSn__TO__CS  PICO_DEFAULT_SPI_CSN_PIN     // Default refers to spi port 0
-#define PIN_GP16__TO__DC          16
-#define PIN_GP4__TO__RST          4
-#define PIN_GP7__TO__BL           7
 
 // Who add these numbers? Not sure, if you don't then the window address is wrong
 // const uint16_t WINDOW_ADDR_X1 = 0 + 2;
@@ -138,7 +116,7 @@ void engine_display_gc9107_init(){
     // https://github.com/raspberrypi/pico-examples/blob/master/pio/pwm/pwm.c
     // GPIO 7 and 23 share the same slice, use PIO for BL PWM
     uint offset = pio_add_program(pio, &pwm_program);
-    pwm_program_init(pio, sm, offset, PIN_GP7__TO__BL);
+    pwm_program_init(pio, sm, offset, PIN_GP7_PIO_PWM__TO__BL);
     pio_pwm_set_period(pio, sm, 255);
 
     // Do the init sequence

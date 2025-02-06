@@ -199,9 +199,11 @@ bool text_2d_node_store_attr(engine_node_base_t *self_node_base, qstr attribute,
             return true;
         break;
         case MP_QSTR_text:
+        {
             self->text = destination[1];
             text_2d_node_class_calculate_dimensions(self);
             return true;
+        }
         break;
         case MP_QSTR_rotation:
             self->rotation = destination[1];
@@ -302,7 +304,7 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
     mp_arg_t allowed_args[] = {
         { MP_QSTR_child_class,          MP_ARG_OBJ,  {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_position,             MP_ARG_OBJ,  {.u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL)} },
-        { MP_QSTR_font,                 MP_ARG_OBJ,  {.u_obj = &font} },
+        { MP_QSTR_font,                 MP_ARG_OBJ,  {.u_obj = &default_font} },
         { MP_QSTR_text,                 MP_ARG_OBJ,  {.u_obj = mp_const_none} },
         { MP_QSTR_rotation,             MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(0.0f)} },
         { MP_QSTR_scale,                MP_ARG_OBJ,  {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)})} },

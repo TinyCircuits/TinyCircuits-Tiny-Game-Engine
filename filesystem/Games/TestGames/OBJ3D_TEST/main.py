@@ -93,9 +93,9 @@ class MyCam(CameraNode):
 camera = MyCam()
 camera.position = Vector3(0, 5, 25)
 
-checker_texture = TextureResource("Games/TestGames/OBJ3D_TEST/checker.bmp")
-obj_mesh = MeshResource("Games/TestGames/OBJ3D_TEST/cube.obj")
-obj_mesh_node = MeshNode(mesh=obj_mesh, color=engine_draw.orange, texture=checker_texture)
+# checker_texture = TextureResource("Games/TestGames/OBJ3D_TEST/checker.bmp")
+# obj_mesh = MeshResource("Games/TestGames/OBJ3D_TEST/cube.obj")
+# obj_mesh_node = MeshNode(mesh=obj_mesh, color=engine_draw.orange, texture=checker_texture)
 
 
 while True:

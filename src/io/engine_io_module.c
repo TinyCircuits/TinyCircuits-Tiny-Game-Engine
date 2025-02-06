@@ -3,6 +3,7 @@
 #include "engine_gui.h"
 #include "engine_main.h"
 #include "math/engine_math.h"
+#include "draw/engine_color.h"
 #include "utility/engine_defines.h"
 
 #if defined(__EMSCRIPTEN__)
@@ -22,6 +23,28 @@ void engine_io_setup(){
         // Nothing to do
     #elif defined(__arm__)
         engine_io_rp3_setup();
+    #endif
+}
+
+
+void engine_io_reset(){
+    #if defined(__EMSCRIPTEN__)
+        // Nothing to do
+    #elif defined(__unix__)
+        // Nothing to do
+    #elif defined(__arm__)
+        engine_io_rp3_reset();
+    #endif
+}
+
+
+void engine_io_battery_monitor_setup(){
+    #if defined(__EMSCRIPTEN__)
+        // Nothing to do
+    #elif defined(__unix__)
+        // Nothing to do
+    #elif defined(__arm__)
+        engine_io_rp3_battery_monitor_setup();
     #endif
 }
 
@@ -138,17 +161,18 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_io_focused_node_obj, engine_io_focused_node);
 static float engine_io_raw_half_battery_voltage(){
     // Read the 12-bit sample with ADC max ref voltage of 3.3V
     uint16_t battery_voltage_12_bit = adc_read();
-    // Battery voltage is either 5V when charging or 4.2V to 2.75V on battery.
-    // The input voltage we're measuring is before the LDO. The measured voltage
-    // is dropped to below max readable reference voltage of 3.3V through 1/(1+1)
-    // voltage divider (cutting it in half):
-    // 5/2                                  = 2.5V     <- CHARGING
-    // (5-0.435)/2 (NSR0230P2T5G @ 120mA)   = ~2.28V   <- CHARGING MORE REALISTIC
-    // 4.2/2                                = 2.1V     <- MAX
-    // 3.3/2                                = 1.65V    <- MIN
     return battery_voltage_12_bit * ADC_CONV_FACTOR;
 }
 #endif
+
+
+float engine_io_raw_battery_level(){
+    #if defined(__arm__)
+        return engine_math_map_clamp(engine_io_raw_half_battery_voltage(), POWER_MIN_HALF_VOLTAGE, POWER_MAX_HALF_VOLTAGE, 0.0f, 1.0f);
+    #endif
+
+    return 1.0f;
+}
 
 
 /*  --- doc ---
@@ -170,26 +194,38 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_io_battery_voltage_obj, engine_io_battery_volta
     NAME: battery_level
     ID: battery_level
     DESC: Get the battery level percentage as a float between 0.0 and 1.0. This is obviously approximate.
-    RETURN: int
+    RETURN: float
 */
 static mp_obj_t engine_io_battery_level(){
-    #if defined(__arm__)
-        return mp_obj_new_float(engine_math_map_clamp(engine_io_raw_half_battery_voltage(), 1.65f, 2.1f, 0.0f, 1.0f));
-    #endif
-    return mp_obj_new_float(1.0f);
+    return mp_obj_new_float(engine_io_raw_battery_level());
 }
 MP_DEFINE_CONST_FUN_OBJ_0(engine_io_battery_level_obj, engine_io_battery_level);
 
 
 /*  --- doc ---
+    NAME: is_plugged_in
+    ID: is_plugged_in
+    DESC: Get whether the device is currently connected to external power.
+    RETURN: bool
+*/
+static mp_obj_t engine_io_is_plugged_in(){
+    #if defined(__arm__)
+        return mp_obj_new_bool(engine_io_raw_half_battery_voltage() >= POWER_MAX_HALF_VOLTAGE);
+    #endif
+    return mp_const_true;
+}
+MP_DEFINE_CONST_FUN_OBJ_0(engine_io_is_plugged_in_obj, engine_io_is_plugged_in);
+
+
+/*  --- doc ---
     NAME: is_charging
     ID: is_charging
-    DESC: Get whether the device is currently connected to external power.
+    DESC: Get whether the device is currently connected to external power and is charging. Returns `True` when charging IC indicates it is charging and `False` otherwise.
     RETURN: bool
 */
 static mp_obj_t engine_io_is_charging(){
     #if defined(__arm__)
-        return mp_obj_new_bool(engine_io_raw_half_battery_voltage() >= 2.1f);
+        return mp_obj_new_bool(engine_io_rp3_is_charging());
     #endif
     return mp_const_true;
 }
@@ -232,23 +268,33 @@ MP_DEFINE_CONST_FUN_OBJ_0(buttons_reset_params_all_obj, engine_io_reset_all_butt
 /*  --- doc ---
     NAME: indicator
     ID: indicator
-    DESC: Disables front LED indicator
-    PARAM:  [type=boolean | optional]   [name=off]  [value=True or False]
+    DESC: Disables, enables, or sets the front indicator LED color. This overrides the default battery indicator when called. Reenable the default battery indicator by passing `None`.
+    PARAM:  [type=boolean | int | {ref_link:Color} | None]   [name=value]  [value=True, False, 16-bit RGB565 int | {ref_link:Color} | None]
     RETURN: None
 */
-static mp_obj_t engine_io_indicator(size_t n_args, const mp_obj_t *args){
+static mp_obj_t engine_io_indicator(mp_obj_t arg){
     #if defined(__arm__)
-        bool off = true;
-
-        if(n_args == 1 && mp_obj_is_bool(args[0])){
-            off = mp_obj_get_int(args[0]);
+        if(arg == mp_const_none){
+            engine_io_rp3_set_indicator_overridden(false);
+        }else if(mp_obj_is_bool(arg)){
+            bool state = mp_obj_get_int(arg);
+            engine_io_rp3_set_indicator_state(state);
+            engine_io_rp3_set_indicator_overridden(true);
+        }else if(mp_obj_is_int(arg)){
+            uint16_t color = mp_obj_get_int(arg);
+            engine_io_rp3_set_indicator_color(color);
+            engine_io_rp3_set_indicator_overridden(true);
+        }else if(engine_color_is_instance(arg)){
+            uint16_t color = engine_color_class_color_value(arg);
+            engine_io_rp3_set_indicator_color(color);
+            engine_io_rp3_set_indicator_overridden(true);
+        }else{
+            mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineIO: Expected bool, int, or Color but got `%s`"), mp_obj_get_type_str(arg));
         }
-
-        engine_io_rp3_set_indicator(off);
     #endif
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_io_indicator_obj, 0, 1, engine_io_indicator);
+MP_DEFINE_CONST_FUN_OBJ_1(engine_io_indicator_obj, engine_io_indicator);
 
 
 /*  --- doc ---
@@ -262,6 +308,7 @@ MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_io_indicator_obj, 0, 1, engine_io_ind
     ATTR: [type=function]            [name={ref_link:gui_passing}]              [value=getter/setter function]
     ATTR: [type=function]            [name={ref_link:battery_voltage}]          [value=function]
     ATTR: [type=function]            [name={ref_link:battery_level}]            [value=function]
+    ATTR: [type=function]            [name={ref_link:is_plugged_in}]            [value=function]
     ATTR: [type=function]            [name={ref_link:is_charging}]              [value=function]
     ATTR: [type=function]            [name={ref_link:indicator}]                [value=function]
     ATTR: [type=function]            [name={ref_link:focused_node}]             [value=function]
@@ -289,6 +336,7 @@ static const mp_rom_map_elem_t engine_io_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_gui_passing), MP_ROM_PTR(&engine_io_gui_passing_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_battery_voltage), MP_ROM_PTR(&engine_io_battery_voltage_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_battery_level), MP_ROM_PTR(&engine_io_battery_level_obj) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_is_plugged_in), MP_ROM_PTR(&engine_io_is_plugged_in_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_is_charging), MP_ROM_PTR(&engine_io_is_charging_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_indicator), MP_ROM_PTR(&engine_io_indicator_obj) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_focused_node), MP_ROM_PTR(&engine_io_focused_node_obj) },

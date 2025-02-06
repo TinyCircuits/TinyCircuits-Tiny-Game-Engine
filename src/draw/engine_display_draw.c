@@ -52,7 +52,7 @@ void ENGINE_FAST_FUNCTION(engine_draw_pixel_no_check)(uint16_t color, int32_t x,
 
 
 // https://en.wikipedia.org/wiki/Digital_differential_analyzer_(graphics_algorithm)
-void engine_draw_line(uint16_t color, float x_start, float y_start, float x_end, float y_end, mp_obj_t camera_node_base_in, float alpha, engine_shader_t *shader){
+void engine_draw_line(uint16_t color, float x_start, float y_start, float x_end, float y_end, float alpha, engine_shader_t *shader){
     // Distance difference between endpoints
     float dx = x_end - x_start;
     float dy = y_end - y_start;
@@ -610,6 +610,12 @@ void engine_draw_text(font_resource_class_obj_t *font, mp_obj_t text, float cent
 
     for(uint16_t icx=0; icx<str_len; icx++){
         char current_char = ((char *)str)[icx];
+
+        // Replace any character that's not a newline or is
+        // not otherwise printable with a question mark `?`
+        if(current_char != 10 && (current_char < 32 || current_char > 126)){
+            current_char = 63;
+        }
 
         // Check if newline, otherwise any other character contributes to text box width
         if(current_char == 10){

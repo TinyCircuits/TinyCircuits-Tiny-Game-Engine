@@ -32,7 +32,7 @@ volatile mp_obj_t channels[CHANNEL_COUNT];
 
 // These scale the amplitudes of each audio sample
 // Apart from these, there is also each channel's gain
-volatile float master_volume = 1.0f;    // Set by settings file, games cannot set this and effects all audio
+volatile float master_volume = 1.0f;    // Set by settings file, games cannot set this and affects all audio
 volatile float game_volume = 1.0f;      // Games are allowed to set this through `set_volume`
 
 
@@ -235,7 +235,7 @@ float engine_audio_get_game_volume(){
 
 
 //     // Samples each channel, adds, normalizes, and sets PWM
-//     void ENGINE_FAST_FUNCTION(repeating_audio_callback)(void){
+//     bool ENGINE_FAST_FUNCTION(repeating_audio_callback)(repeating_timer_t *rt){
 //         float total_sample = 0;
 //         bool play_sample = false;
 

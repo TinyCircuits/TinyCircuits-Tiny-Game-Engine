@@ -10,6 +10,7 @@ float engine_display_get_brightness();
 
 // Send the active frame to the display/screen
 // and switch the dual buffers/active buffer
+void engine_display_clear();
 void engine_display_send();
 
 

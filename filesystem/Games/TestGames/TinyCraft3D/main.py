@@ -14,7 +14,7 @@ engine.freq(250 * 1000 * 1000)
 # engine.fps_limit(60)
 engine.disable_fps_limit()
 
-texture = TextureResource("Games/TestGames/TinyCraft3D/atlas.bmp")
+texture = TextureResource("atlas.bmp")
 
 CHUNK_SIZE_VOXELS = 10
 VOXEL_SIZE = 5

@@ -37,6 +37,10 @@
     EM_JS(void, new_hook, (), {
         self.main_call();
     });
+
+    const char *firmware_date = "0000-00-00_00:00:00";
+#elif defined(__unix__)
+    const char *firmware_date = "0000-00-00_00:00:00";
 #elif defined(__arm__)
     #include "hardware/clocks.h"
     #include "hardware/pll.h"
@@ -47,6 +51,9 @@
     #include "hardware/xosc.h"
     #include "py/mphal.h"
     #include "audio/engine_audio_rp3.h"
+    #include "firmware_date.h"
+
+    const char *firmware_date = FIRMWARE_DATE;
 #endif
 
 
@@ -283,6 +290,7 @@ bool engine_tick(){
 
         // After every game cycle send the current active screen buffer to the display
         engine_display_send();
+        engine_display_clear();
 
         // Clear the depth buffer, if needed
         engine_display_clear_depth_buffer();
@@ -453,6 +461,18 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_module_init_obj, engine_module_init);
 
 
 /* --- doc ---
+   NAME: firmware_date
+   ID: engine_firmware_date
+   DESC: Returns the date and time as a string
+   RETURN: string
+*/
+static mp_obj_t engine_firmware_date(){
+    return mp_obj_new_str(firmware_date, strlen(firmware_date));
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_0(engine_firmware_date_obj, engine_firmware_date);
+
+/* --- doc ---
    NAME: engine
    ID: engine
    DESC: Main component for controlling vital engine features
@@ -468,6 +488,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_module_init_obj, engine_module_init);
    ATTR: [type=function] [name={ref_link:engine_freq}]                      [value=function]
    ATTR: [type=function] [name={ref_link:engine_setting_volume}]            [value=function]
    ATTR: [type=function] [name={ref_link:engine_setting_brightness}]        [value=function]
+   ATTR: [type=function] [name={ref_link:engine_firmware_date}]             [value=function]
 */
 static const mp_rom_map_elem_t engine_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine) },
@@ -485,6 +506,7 @@ static const mp_rom_map_elem_t engine_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_setting_volume), (mp_obj_t)&engine_setting_volume_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_setting_brightness), (mp_obj_t)&engine_setting_brightness_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_root_dir), (mp_obj_t)&engine_root_dir_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_firmware_date), (mp_obj_t)&engine_firmware_date_obj },
 };
 
 // Module init

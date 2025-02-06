@@ -31,11 +31,8 @@
 #elif defined(__unix__)
     
 #elif defined(__arm__)
-    #include "hardware/adc.h"
+    
 #endif
-
-#define BATTERY_ADC_GPIO_PIN 29
-#define BATTERY_ADC_PORT 3
 
 
 char filesystem_root[FILESYSTEM_ROOT_MAX_LEN];
@@ -174,6 +171,8 @@ void engine_main_reset(){
     
     engine_link_module_reset();
 
+    engine_io_reset();
+
     // Reset contigious flash space manager
     engine_audio_reset();
     engine_resource_reset();
@@ -235,12 +234,16 @@ static mp_obj_t engine_main_module_init(){
 
     ENGINE_PRINTF("Engine init!\n");
 
+    engine_io_setup();
+    engine_io_battery_monitor_setup();
+
     engine_resource_init();
 
     // Init display first
     engine_display_init();
     engine_display_init_framebuffers();
     engine_display_send();
+    engine_display_clear();
 
     // Setup fault handlers after screen is setup since
     // we need the screen to output the fault
@@ -250,16 +253,9 @@ static mp_obj_t engine_main_module_init(){
     engine_audio_init_one_time();
     engine_audio_setup_playback();
 
-    engine_io_setup();
     engine_physics_init();
     engine_animation_init();
     engine_rtc_init();
-
-    #if defined(__arm__)
-        adc_init();
-        adc_gpio_init(BATTERY_ADC_GPIO_PIN);
-        adc_select_input(BATTERY_ADC_PORT);
-    #endif
 
     return mp_const_none;
 }

@@ -85,10 +85,10 @@ void physics_rectangle_2d_node_class_draw(mp_obj_t rectangle_node_base_obj, mp_o
 
     engine_shader_t *shader = engine_get_builtin_shader(EMPTY_SHADER);
 
-    engine_draw_line(color, tlx, tly, trx, try, camera_node, 1.0f, shader);
-    engine_draw_line(color, trx, try, brx, bry, camera_node, 1.0f, shader);
-    engine_draw_line(color, brx, bry, blx, bly, camera_node, 1.0f, shader);
-    engine_draw_line(color, blx, bly, tlx, tly, camera_node, 1.0f, shader);
+    engine_draw_line(color, tlx, tly, trx, try, 1.0f, shader);
+    engine_draw_line(color, trx, try, brx, bry, 1.0f, shader);
+    engine_draw_line(color, brx, bry, blx, bly, 1.0f, shader);
+    engine_draw_line(color, blx, bly, tlx, tly, 1.0f, shader);
 }
 
 

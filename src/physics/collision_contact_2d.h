@@ -10,6 +10,7 @@ typedef struct{
     mp_obj_base_t base;
     vector2_class_obj_t *position;
     vector2_class_obj_t *normal;
+    mp_obj_float_t penetration;
     mp_obj_t node;                  // The other node
 }collision_contact_2d_class_obj_t;
 
