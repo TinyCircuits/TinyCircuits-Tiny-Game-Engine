@@ -5,13 +5,12 @@
     #include "math/engine_math.h"
     #include "debug/debug_print.h"
 
-    // Pin for PWM audio sample wrap callback (faster than repeating timer, by a lot)
-    uint audio_callback_pwm_pin_slice;
-    pwm_config audio_callback_pwm_pin_config;
+    // Playback timer
+    repeating_timer_t audio_cb_timer;
 
 
     // Samples each channel, adds, normalizes, and sets PWM
-    void ENGINE_FAST_FUNCTION(engine_audio_rp3_playback_cb)(void){
+    bool ENGINE_FAST_FUNCTION(engine_audio_rp3_playback_cb)(repeating_timer_t *tr){
         bool play = false;    // Set `true` if at least one channel is ready to play
         float output = engine_audio_get_mixed_output_sample(&play);
 
@@ -26,31 +25,22 @@
             pwm_set_gpio_level(AUDIO_PWM_PIN, (uint32_t)(output));
         }
 
-        pwm_clear_irq(audio_callback_pwm_pin_slice);
-
-        return;
+        return true;
     }
 
 
     // Adjusts PWM wrap value based on clock speed
     // to keep callback sample rate consistent
     void engine_audio_rp3_adjust_freq(uint32_t core_clock_hz){
-        pwm_config_set_wrap(&audio_callback_pwm_pin_config, (uint16_t)((float)(core_clock_hz) / ENGINE_AUDIO_SAMPLE_RATE) - 1);
+        // pwm_config_set_wrap(&audio_callback_pwm_pin_config, (uint16_t)((float)(core_clock_hz) / ENGINE_AUDIO_SAMPLE_RATE) - 1);
     }
 
 
     void engine_audio_rp3_init_one_time(){
-        // Generate the interrupt at the audio sample rate to set the PWM duty cycle
-        audio_callback_pwm_pin_slice = pwm_gpio_to_slice_num(AUDIO_CALLBACK_PWM_PIN);
-        pwm_clear_irq(audio_callback_pwm_pin_slice);
-        pwm_set_irq_enabled(audio_callback_pwm_pin_slice, true);
-        irq_set_exclusive_handler(PWM_IRQ_WRAP_0, engine_audio_rp3_playback_cb);
-        irq_set_priority(PWM_IRQ_WRAP_0, 1);
-        irq_set_enabled(PWM_IRQ_WRAP_0, true);
-        audio_callback_pwm_pin_config = pwm_get_default_config();
-        pwm_config_set_clkdiv_int(&audio_callback_pwm_pin_config, 1);
-        engine_audio_rp3_adjust_freq(150 * 1000 * 1000);
-        pwm_init(audio_callback_pwm_pin_slice, &audio_callback_pwm_pin_config, true);
+        // Has to be negative delay so that the timer starts
+        // counting right away instead of just after the cb
+        // ends
+        add_repeating_timer_us((int64_t)(-1.0f / ENGINE_AUDIO_SAMPLE_RATE * 1000000.0f), &engine_audio_rp3_playback_cb, NULL, &audio_cb_timer);
     }
 
 
