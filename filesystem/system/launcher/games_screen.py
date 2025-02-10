@@ -60,7 +60,7 @@ def check_and_get_game_info(directory_path, directory_contents):
     #   * A manifest file or
     #   * A main.py or
     #   * A .py file with the same name as its containing folder (Thumby legacy compatibility)
-    if "manifest.ini" not in directory_contents and "main.py" not in directory_contents and legacy_main_file not in directory_contents:
+    if "manifest.ini" not in directory_contents and "manifest.txt" not in directory_contents and "main.py" not in directory_contents and legacy_main_file not in directory_contents:
         return False
     
     # This is a game, create default info object
@@ -78,10 +78,19 @@ def check_and_get_game_info(directory_path, directory_contents):
     if "icon.bmp" in directory_contents:
         game_info.icon_path = f"{directory_path}/icon.bmp"
     
-    # Complete `game_info` as fully as possible if `manifest.ini` exists
+    # Figure what kind of manifest file is
+    # maybe in this directory (.ini is legacy)
+    manifest_name = None
+
     if "manifest.ini" in directory_contents:
+        manifest_name = "manifest.ini"
+    elif "manifest.txt" in directory_contents:
+        manifest_name = "manifest.txt"
+
+    # Complete `game_info` as fully as possible if `manifest.ini` exists
+    if manifest_name is not None:
         # Open, read, and close manifest file
-        manifest_file = open(f"{directory_path}/manifest.ini")
+        manifest_file = open(f"{directory_path}/{manifest_name}")
         manifest_lines = manifest_file.readlines()
         manifest_file.close()
 
