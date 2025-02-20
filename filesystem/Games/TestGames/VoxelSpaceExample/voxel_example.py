@@ -191,7 +191,7 @@ camera.position.z = 0
 # camera.rotation.x = 0.3
 camera.view_distance = 350
 # camera.fov = 32 * (math.pi/180)
-camera.fov = 70 * (math.pi/180)
+camera.fov = 70
 
 camera.add_child(Circle2DNode(radius=1, color=engine_draw.green, outline=True))
 
