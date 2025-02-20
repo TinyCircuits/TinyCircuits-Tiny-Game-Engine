@@ -17,7 +17,7 @@ This is a 2D/3D game engine for MicroPython. Core engine features are written in
 * Tween/animation API to animate attributes of nodes
 * Saves API for reading and writing certain common types of data
 * Time API for utilizing hardware real-time-clock (RTC) for keeping persistent time across device power-downs
-* Link API for connecting two Thumby Colors together to make local multiplayer games
+* Link API for connecting two devices together to make local multiplayer games
 
 You can also read the engine documentation, visit the arcade to download games, or make your own games using the Code Editor Web App:
 * [Engine Documentation](https://color.thumby.us/doc/landing.html)
