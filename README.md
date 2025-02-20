@@ -8,6 +8,7 @@ This is a 2D/3D game engine for MicroPython. Core engine features are written in
 
 ### **Engine Features**:
 * Node API with hierarchy format (parent/child) to render rectangles, circles, lines, text, GUI buttons, sprites, and 3D meshes.
+* All nodes can be rotated and scaled
 * Resource API for loading and holding data like 1/4/8/16-bit bitmap textures, .wav sound files, RTTTL ringtone tracks, fonts, and 2D/3D noise
 * Basic button API
 * Audio API for 4 audio channels to play .wav, RTTTL, or tones
