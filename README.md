@@ -2,7 +2,9 @@
 
 This is a 2D/3D game engine for MicroPython. Core engine features are written in C and integrated into MicroPython as external C modules. The engine API is exposed through Python modules.
 
-![Games banner](images/games.png)
+<center>
+<img src="images/games.png" alt="drawing" width="75%"/>
+</center>
 
 The engine has the following modules and features:
 * Node API with hierarchy format (parent/child) to render rectangles, circles, lines, text, GUI buttons, sprites, and 3D meshes.
