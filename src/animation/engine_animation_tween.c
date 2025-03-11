@@ -639,6 +639,19 @@ static mp_attr_fun_t tween_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
    OVRR:    [type=function]            [name={ref_link:tick}]         [value=function]
    OVRR:    [type=function]            [name={ref_link:after}]        [value=function]
 */
+
+/**
+ * @anchor Tween
+ * @defgroup engine_animation_tween Tween
+ * @addtogroup engine_animation_tween
+ * @ingroup engine_animation
+ * @{
+ *      Object that executes a variety of different interpolation functions over time. These functions can interpolate many different Python and engine object types
+ *      @details <b>Example</b>
+ *      @include Tween/main.py
+ *      @details <hr>
+ * @}
+ */
 mp_obj_t tween_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Tween");
 
