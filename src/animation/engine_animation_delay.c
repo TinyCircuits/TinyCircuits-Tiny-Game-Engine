@@ -13,12 +13,71 @@
 
 /**
  * @ingroup engine_animation_delay
+ * 
+ * @anchor start
+ * @page engine_animation_delay_start start(delay, after)
+ * 
+ * @details - type: `function`
+ * @details - access: `get`
+ * @details Starts internal timer that counts up until >= \ref delay at which point the \ref after callback is executed. The delay does not block the main loop and counts at engine `tick` resolution
+ * 
+ * @param delay delay time, in milliseconds, before the \ref after function is executed
+ * \parblock
+ *      \n
+ *      - type: `float`
+ *      \n
+ *      - default: `1000`
+ *      \n
+ *      - optional: yes
+ * \endparblock
+ * @param after(self) called after \ref delay time once \ref start is executed
+ * \parblock
+ *      \n
+ *      - type: `function`
+ *      \n
+ *      - default: `None`
+ *      \n
+ *      - optional: yes
+ * \endparblock
+ * 
+ * @return `None`
+ * @details <hr>
+ */
+mp_obj_t delay_class_start(size_t n_args, const mp_obj_t *args){
+    ENGINE_INFO_PRINTF("Delay: start");
+
+    // self, always `delay_class_obj_t` since attr function handles getting base
+    delay_class_obj_t *delay = args[0];
+
+    delay->finished = false;
+    delay->time = 0.0f;
+
+    // Handle setting the delay
+    if(n_args >= 2){
+        delay->delay = mp_obj_get_float(args[1]);
+    }
+
+    // Handle setting the `after` function
+    if(n_args >= 3){
+        delay->after = args[2];
+    }
+
+    return mp_const_none;
+}
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(delay_class_start_obj, 2, 3, delay_class_start);
+
+
+/**
+ * @ingroup engine_animation_delay
+ * 
+ * @anchor tick
  * @page engine_animation_delay_tick tick(dt)
+ * 
  * @details - type: `function`
  * @details - access: `set/get`
- * @details A function that can be overridden in a class that inherits `Delay` or set directly. This will be called at the main engine `tick` rate.
+ * @details Overridable function that is called at the engine `tick` rate. The overriding function will have to handle comparing a manually kept timer against \ref delay, setting the \ref finished flag, and calling \ref after
  * 
- * @param dt difference in time in milliseconds since the last time this function was called
+ * @param dt difference in time, in milliseconds, since the last time this function was called
  * \parblock
  *      \n
  *      - type: `float`
@@ -27,36 +86,6 @@
  * \endparblock
  * 
  * @return `None`
- * 
- * @details <b>Example #1</b>
- * @code{.py}
- *      from engine_animation import Delay
- * 
- *      # Override through inheritance
- *      class CustomDelay(Delay):
- *          def __init__(self):
- *              pass
- *          
- *          def tick(self, dt):
- *              print("Time since last tick (ms)", dt)
- * 
- *      customDelay = CustomDelay()
- *      
- * @endcode
- * 
- * @details <b>Example #2</b>
- * @code{.py}
- *      from engine_animation import Delay
- * 
- *      # Set directly
- *      def customTick(self, dt):
- *          print("Time since last tick (ms)", dt)
- * 
- *      delay = Delay()
- *      delay.tick = customTick()
- *      
- * @endcode
- * 
  * @details <hr>
  */
 static mp_obj_t delay_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
@@ -98,70 +127,6 @@ static mp_obj_t delay_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_2(delay_class_tick_obj, delay_class_tick);
-
-
- /**
- * @ingroup engine_animation_delay
- * @page engine_animation_delay_start start(delay, after)
- * @details - type: `function`
- * @details - access: `get`
- * @details Starts a delay that will call a function after a certain amount of time
- * 
- * @param delay delay time, in milliseconds, before the \ref engine_animation_delay_after "after" function is executed
- * \parblock
- *      \n
- *      - type: `float`
- *      \n
- *      - optional: no
- * \endparblock
- * @param after(self) called after \ref engine_animation_delay_delay "delay" time once \ref engine_animation_delay_start "start" is executed
- * \parblock
- *      \n
- *      - type: `function`
- *      - optional: no
- * \endparblock
- * 
- * @return `None`
- * 
- * @details <b>Example</b>
- * @code{.py}
- *      from engine_animation import Delay
- * 
- *      # Override through inheritance
- *      class CustomDelay(Delay):
- *          def __init__(self):
- *              pass
- *          
- *          def tick(self, dt):
- *              print("Time since last tick (ms)", dt)
- * 
- *      customDelay = CustomDelay()
- *      
- * @endcode
- * @details <hr>
- */
-mp_obj_t delay_class_start(size_t n_args, const mp_obj_t *args){
-    ENGINE_INFO_PRINTF("Delay: start");
-
-    // self, always `delay_class_obj_t` since attr function handles getting base
-    delay_class_obj_t *delay = args[0];
-
-    delay->finished = false;
-    delay->time = 0.0f;
-
-    // Handle setting the delay
-    if(n_args >= 2){
-        delay->delay = mp_obj_get_float(args[1]);
-    }
-
-    // Handle setting the `after` function
-    if(n_args >= 3){
-        delay->after = args[2];
-    }
-
-    return mp_const_none;
-}
-static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(delay_class_start_obj, 2, 3, delay_class_start);
 
 
 mp_obj_t delay_class_del(mp_obj_t self_in){
@@ -243,28 +208,15 @@ bool delay_store_attr(delay_class_obj_t *delay, qstr attribute, mp_obj_t *destin
 
  /**
  * @ingroup engine_animation_delay
+ * 
+ * @anchor after
  * @page engine_animation_delay_after after(self)
+ * 
  * @details - type: `function`
  * @details - access: `set/get`
- * @details Starts a delay that will call a function after a certain amount of time
- * @param self reference to the \ref engine_animation_delay object that executed this function
+ * @details Callback function that is executed after \ref delay time after \ref start is invoked
+ * @param self reference to the \ref Delay object that executed this function
  * @return `None`
- * 
- * @details <b>Example</b>
- * @code{.py}
- *      from engine_animation import Delay
- * 
- *      # Override through inheritance
- *      class CustomDelay(Delay):
- *          def __init__(self):
- *              pass
- *          
- *          def tick(self, dt):
- *              print("Time since last tick (ms)", dt)
- * 
- *      customDelay = CustomDelay()
- *      
- * @endcode
  * @details <hr>
  */
 static mp_attr_fun_t delay_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
@@ -306,43 +258,41 @@ static mp_attr_fun_t delay_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
 
 
 /**
+ * @anchor Delay
  * @defgroup engine_animation_delay Delay
  * @addtogroup engine_animation_delay
  * @ingroup engine_animation
  * @{
- *      Object that executes a function after a certain amount of time/delay
- * 
- *      @paragraph Attributes
- * 
- *      \ref engine_animation_delay_tick
- * 
- *      \ref engine_animation_delay_start
- * 
- *      \ref engine_animation_delay_after
- * 
- *      \ref engine_animation_delay_delay
- * 
- *      \ref engine_animation_delay_finished
- * 
+ *      Object that executes a function after a certain amount of delay without blocking the main engine loop
+ *      @details <b>Example</b>
+ *      @include Delay/main.py
  *      @details <hr>
  * @}
  */
 
  /**
  * @ingroup engine_animation_delay
+ * 
+ * @anchor delay
  * @page engine_animation_delay_delay delay
+ * 
  * @details - type: `float`
+ * @details - default: `1000`
  * @details - access: `set/get`
- * @details Positive value, in milliseconds, representing the amount of time until the \ref engine_animation_delay_after "after" function is called after executing \ref engine_animation_delay_start "start". Can be changed at any time.
+ * @details Positive value, in milliseconds, representing the amount of time until the \ref after function is called after executing \ref start. Can be changed at any time
  * @details <hr>
  */
 
  /**
  * @ingroup engine_animation_delay
+ * 
+ * @anchor finished
  * @page engine_animation_delay_finished finished
+ * 
  * @details - type: `bool`
+ * @details - default: `True`
  * @details - access: `get`
- * @details Boolean flag that is set `False` when \ref engine_animation_delay_start "start" is executed and `True` after \ref engine_animation_delay_delay "delay" time when \ref engine_animation_delay_after "after" is called.
+ * @details Boolean flag that is set `False` when \ref start is executed and `True` after \ref delay time when \ref after is called
  * @details <hr>
  */
 mp_obj_t delay_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
