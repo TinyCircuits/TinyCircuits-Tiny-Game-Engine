@@ -11,13 +11,54 @@
 #include <string.h>
 
 
-/* --- doc ---
-   NAME: tick
-   ID: delay_tick
-   DESC: Main tick callback function of Delay. Override this in a class or set to a function that accepts a parameter dt to redefine how the delay works. After `delay` time the `after` function is called by default.
-   PARAM: [type=float]       [name=dt]          [value=time in milliseconds]
-   RETURN: None
-*/
+/**
+ * @ingroup engine_animation_delay
+ * @page engine_animation_delay_tick tick(dt)
+ * @details - type: `function`
+ * @details - access: `set/get`
+ * @details A function that can be overridden in a class that inherits `Delay` or set directly. This will be called at the main engine `tick` rate.
+ * 
+ * @param dt difference in time in milliseconds since the last time this function was called
+ * \parblock
+ *      \n
+ *      - type: `float`
+ *      \n
+ *      - optional: no
+ * \endparblock
+ * 
+ * @return `None`
+ * 
+ * @details <b>Example #1</b>
+ * @code{.py}
+ *      from engine_animation import Delay
+ * 
+ *      # Override through inheritance
+ *      class CustomDelay(Delay):
+ *          def __init__(self):
+ *              pass
+ *          
+ *          def tick(self, dt):
+ *              print("Time since last tick (ms)", dt)
+ * 
+ *      customDelay = CustomDelay()
+ *      
+ * @endcode
+ * 
+ * @details <b>Example #2</b>
+ * @code{.py}
+ *      from engine_animation import Delay
+ * 
+ *      # Set directly
+ *      def customTick(self, dt):
+ *          print("Time since last tick (ms)", dt)
+ * 
+ *      delay = Delay()
+ *      delay.tick = customTick()
+ *      
+ * @endcode
+ * 
+ * @details <hr>
+ */
 static mp_obj_t delay_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
     ENGINE_INFO_PRINTF("Delay: tick!");
 
@@ -59,14 +100,46 @@ static mp_obj_t delay_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
 MP_DEFINE_CONST_FUN_OBJ_2(delay_class_tick_obj, delay_class_tick);
 
 
-/* --- doc ---
-   NAME: start
-   ID: delay_start
-   DESC: Starts a delay that will call a function after a certain amount of time
-   PARAM: [type=float]       [name=delay]          [value=any value in milliseconds]
-   PARAM: [type=function]    [name=after]          [value=function to be called after delay]
-   RETURN: None
-*/
+ /**
+ * @ingroup engine_animation_delay
+ * @page engine_animation_delay_start start(delay, after)
+ * @details - type: `function`
+ * @details - access: `get`
+ * @details Starts a delay that will call a function after a certain amount of time
+ * 
+ * @param delay delay time, in milliseconds, before the \ref engine_animation_delay_after "after" function is executed
+ * \parblock
+ *      \n
+ *      - type: `float`
+ *      \n
+ *      - optional: no
+ * \endparblock
+ * @param after(self) called after \ref engine_animation_delay_delay "delay" time once \ref engine_animation_delay_start "start" is executed
+ * \parblock
+ *      \n
+ *      - type: `function`
+ *      - optional: no
+ * \endparblock
+ * 
+ * @return `None`
+ * 
+ * @details <b>Example</b>
+ * @code{.py}
+ *      from engine_animation import Delay
+ * 
+ *      # Override through inheritance
+ *      class CustomDelay(Delay):
+ *          def __init__(self):
+ *              pass
+ *          
+ *          def tick(self, dt):
+ *              print("Time since last tick (ms)", dt)
+ * 
+ *      customDelay = CustomDelay()
+ *      
+ * @endcode
+ * @details <hr>
+ */
 mp_obj_t delay_class_start(size_t n_args, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("Delay: start");
 
@@ -168,13 +241,32 @@ bool delay_store_attr(delay_class_obj_t *delay, qstr attribute, mp_obj_t *destin
 }
 
 
-/* --- doc ---
-   NAME: after
-   ID: delay_after
-   PARAM: [type=object] [name=self] [value=Delay]
-   DESC: After `delay` amount of time this callback function is called
-   RETURN: None
-*/
+ /**
+ * @ingroup engine_animation_delay
+ * @page engine_animation_delay_after after(self)
+ * @details - type: `function`
+ * @details - access: `set/get`
+ * @details Starts a delay that will call a function after a certain amount of time
+ * @param self reference to the \ref engine_animation_delay object that executed this function
+ * @return `None`
+ * 
+ * @details <b>Example</b>
+ * @code{.py}
+ *      from engine_animation import Delay
+ * 
+ *      # Override through inheritance
+ *      class CustomDelay(Delay):
+ *          def __init__(self):
+ *              pass
+ *          
+ *          def tick(self, dt):
+ *              print("Time since last tick (ms)", dt)
+ * 
+ *      customDelay = CustomDelay()
+ *      
+ * @endcode
+ * @details <hr>
+ */
 static mp_attr_fun_t delay_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination){
     ENGINE_INFO_PRINTF("Accessing PhysicsCircle2DNode attr");
 
@@ -213,19 +305,46 @@ static mp_attr_fun_t delay_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
 }
 
 
+/**
+ * @defgroup engine_animation_delay Delay
+ * @addtogroup engine_animation_delay
+ * @ingroup engine_animation
+ * @{
+ *      Object that executes a function after a certain amount of time/delay
+ * 
+ *      @paragraph Attributes
+ * 
+ *      \ref engine_animation_delay_tick
+ * 
+ *      \ref engine_animation_delay_start
+ * 
+ *      \ref engine_animation_delay_after
+ * 
+ *      \ref engine_animation_delay_delay
+ * 
+ *      \ref engine_animation_delay_finished
+ * 
+ *      @details <hr>
+ * @}
+ */
 
-/* --- doc ---
-   NAME: Delay
-   ID: Delay
-   DESC: Object for executing code after a certain non-blocking delay
-   ATTR:    [type=function]            [name={ref_link:delay_start}]  [value=function]
-   ATTR:    [type=function]            [name={ref_link:delay_tick}]   [value=function]
-   ATTR:    [type=function]            [name={ref_link:delay_after}]  [value=function]
-   ATTR:    [type=float]               [name=delay]                   [value=any positive value representing milliseconds]
-   ATTR:    [type=boolean]             [name=finished]                [value=True or False (read-only)]
-   OVRR:    [type=function]            [name={ref_link:delay_tick}]   [value=function]
-   OVRR:    [type=function]            [name={ref_link:delay_after}]  [value=function]
-*/
+ /**
+ * @ingroup engine_animation_delay
+ * @page engine_animation_delay_delay delay
+ * @details - type: `float`
+ * @details - access: `set/get`
+ * @details Positive value, in milliseconds, representing the amount of time until the \ref engine_animation_delay_after "after" function is called after executing \ref engine_animation_delay_start "start". Can be changed at any time.
+ * @details <hr>
+ */
+
+ /**
+ * @ingroup engine_animation_delay
+ * @page engine_animation_delay_finished finished
+ * @details - type: `bool`
+ * @details - access: `get`
+ * @details Boolean flag that is set `False` when \ref engine_animation_delay_start "start" is executed and `True` after \ref engine_animation_delay_delay "delay" time when \ref engine_animation_delay_after "after" is called.
+ * @details <hr>
+ */
 mp_obj_t delay_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Delay");
 

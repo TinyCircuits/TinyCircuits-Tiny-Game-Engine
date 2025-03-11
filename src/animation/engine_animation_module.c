@@ -75,6 +75,13 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_animation_module_init_obj, engine_animation_mod
    ATTR: [type=enum/int]   [name=ONE_SHOT]              [value=2]
    ATTR: [type=enum/int]   [name=PING_PONG]             [value=3]
 */
+
+/**
+ * @defgroup engine_animation engine_animation
+ * @{
+ *      Module for basic animation related tasks
+ * @} End of engine_animation group
+ */
 static const mp_rom_map_elem_t engine_animation_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_animation) },
     { MP_OBJ_NEW_QSTR(MP_QSTR___init__), (mp_obj_t)&engine_animation_module_init_obj },
