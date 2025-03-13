@@ -131,8 +131,8 @@ void engine_draw_blit(texture_resource_class_obj_t *texture, uint32_t offset, fl
     float dim_half = (dim / 2.0f);
 
     // The top-left of the bitmap destination
-    int32_t top_left_x = (int32_t)floorf(center_x - dim_half);
-    int32_t top_left_y = (int32_t)floorf(center_y - dim_half);
+    int32_t top_left_x = (int32_t)roundf(center_x - dim_half);
+    int32_t top_left_y = (int32_t)roundf(center_y - dim_half);
 
     // If the top-left is above the viewport but
     // the bitmap may eventually showup, clip the

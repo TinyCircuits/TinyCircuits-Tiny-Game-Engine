@@ -50,7 +50,7 @@ void voxelspace_sprite_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t c
 
     vector3_class_obj_t *camera_position = camera->position;
     vector3_class_obj_t *camera_rotation = camera->rotation;
-    float camera_fov_half = mp_obj_get_float(camera->fov) * 0.5f;
+    float camera_fov_half = (mp_obj_get_float(camera->fov) * PI / 180.0f) * 0.5f;
     float view_distance = mp_obj_get_float(camera->view_distance);
 
     uint16_t sprite_frame_count_x = mp_obj_get_int(voxelspace_sprite_node->frame_count_x);

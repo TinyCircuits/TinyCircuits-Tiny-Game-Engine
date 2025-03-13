@@ -38,11 +38,19 @@
 char filesystem_root[FILESYSTEM_ROOT_MAX_LEN];
 bool is_engine_initialized = false;
 
-mp_obj_str_t settings_location = {
+
+mp_obj_str_t settings_dir_location = {
+    .base.type = &mp_type_str,
+    .hash = 0,
+    .data = (byte[]){"/system"},
+    .len = 7,
+};
+
+mp_obj_str_t settings_file_location = {
     .base.type = &mp_type_str,
     .hash = 0,
     .data = (byte[]){"/system/settings.txt"},
-    .len = 0,
+    .len = 20,
 };
 
 void engine_main_raise_if_not_initialized(){
@@ -53,7 +61,7 @@ void engine_main_raise_if_not_initialized(){
 
 
 void engine_main_settings_write(float volume, float brightness){
-    engine_file_open_create_write(0, &settings_location);
+    engine_file_open_create_write(0, &settings_file_location);
 
     char buffer[32];
 
@@ -72,7 +80,7 @@ void engine_main_settings_read(){
     float volume = 1.0f;
     float brightness = 1.0f;
 
-    engine_file_open_read(0, &settings_location);
+    engine_file_open_read(0, &settings_file_location);
     uint32_t file_size = engine_file_size(0);
     
     // Buffer to hold read characters
@@ -148,11 +156,13 @@ void engine_main_settings_read(){
 
 
 void engine_main_handle_settings(){
-    ENGINE_PRINTF("Settings location: %s\n", settings_location.data);
+    ENGINE_PRINTF("Settings location: %s\n", settings_file_location.data);
 
     // Create settings file if it does not exist, otherwise,
     // parse the file
-    if(!engine_file_exists(&settings_location)){
+    if(!engine_file_exists(&settings_file_location)){
+        // Only if the system folder doesn't exist do we create it
+        if(!engine_file_exists(&settings_dir_location)) engine_file_mkdir(&settings_dir_location);
         engine_main_settings_write(1.0f, 1.0f);
     }else{
         engine_main_settings_read();

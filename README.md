@@ -1,5 +1,38 @@
 # TinyCircuits-Tiny-Game-Engine
-This is a 2D/3D game engine for embedded devices that can run Python/MicroPython.
+
+This is a 2D/3D game engine for MicroPython. Core engine features are written in C and integrated into MicroPython as external C modules. The engine API is exposed through Python modules.
+
+<p align="center">
+  <img width="65%" src="images/games.png">
+</p>
+
+### **Engine Features**:
+* Node API with hierarchy format (parent/child) to render rectangles, circles, lines, text, GUI buttons, sprites, and 3D meshes.
+* All nodes can be rotated and scaled
+* Resource API for loading and holding data like 1/4/8/16-bit bitmap textures, .wav sound files, RTTTL ringtone tracks, fonts, and 2D/3D noise
+* Basic button API
+* Audio API for 4 audio channels to play .wav, RTTTL, or tones
+* Basic 2D physics engine with rotated rectangle and circle colliders exposed as nodes
+* Math API for `Vector2` and `Vector3` types
+* Tween/animation API to animate attributes of nodes
+* Saves API for reading and writing certain common types of data
+* Time API for utilizing hardware real-time-clock (RTC) for keeping persistent time across device power-downs
+* Link API for connecting two devices together to make local multiplayer games
+
+You can also read the engine documentation, visit the arcade to download games, or make your own games using the Code Editor Web App:
+* [Engine Documentation](https://color.thumby.us/doc/landing.html)
+* [Arcade](https://color.thumby.us/code/arcade)
+* [MicroPython Code Editor](https://color.thumby.us/code/)
+
+
+# Platforms
+The engine can run on most platforms that run [MicroPython](https://github.com/TinyCircuits/micropython/tree/engine). However, some drivers may need to be implemented for buttons, screen, and audio.
+
+The engine has been tested on and ported to the following platforms:
+* Linux/Unix
+* RP2350 with 16MiB flash
+* Webassembly
+
 
 # Building on Linux for RP2350
 1. Update package list: `sudo apt update`

@@ -53,6 +53,7 @@
     #include "audio/engine_audio_rp3.h"
     #include "firmware_date.h"
 
+    // Set firmware date from generated header file if using Python build script
     const char *firmware_date = FIRMWARE_DATE;
 #endif
 
@@ -79,7 +80,7 @@ float engine_get_fps_limit_ms(){
 void engine_set_freq(uint32_t hz){
     #if defined(__arm__)
         if(!set_sys_clock_khz(hz / 1000, false)){
-            mp_raise_ValueError(MP_ERROR_TEXT("cannot change frequency"));
+            mp_raise_ValueError(MP_ERROR_TEXT("Engine ERROR: cannot change frequency"));
         }
         engine_audio_rp3_adjust_freq(hz);
     #endif
