@@ -21,30 +21,31 @@ os.mkdir(output_folder_tree)
 os.mkdir(output_folder_temp)
 time.sleep(1)
 
+# Legacy Thumby system files and games download and copy
+print("\n##### Grabbing files from GitHub repos for Games and core files #####\n")
+os.system("git clone https://github.com/TinyCircuits/TinyCircuits-Thumby-Color-Games.git " + output_folder_temp + "/TinyCircuits-Thumby-Color-Games")
+os.system("git clone https://github.com/TinyCircuits/TinyCircuits-Thumby-Games.git " + output_folder_temp + "/TinyCircuits-Thumby-Games")
+os.system("git clone https://github.com/TinyCircuits/TinyCircuits-Thumby-Code-Editor.git " + output_folder_temp + "/TinyCircuits-Thumby-Code-Editor")
+time.sleep(1)
+
 
 # Thumby Color system files and games copy
 shutil.copyfile("filesystem/main.py", output_folder_tree + "/main.py")
 shutil.copytree("filesystem/system", output_folder_tree + "/system")
 
-shutil.copytree("filesystem/Games/4Connect",     output_folder_tree + "/Games/4Connect")
-shutil.copytree("filesystem/Games/2048",         output_folder_tree + "/Games/2048")
-shutil.copytree("filesystem/Games/BustAThumb",   output_folder_tree + "/Games/BustAThumb")
-shutil.copytree("filesystem/Games/Chess",        output_folder_tree + "/Games/Chess")
-shutil.copytree("filesystem/Games/Monstra",      output_folder_tree + "/Games/Monstra")
-shutil.copytree("filesystem/Games/PuzzleAttack", output_folder_tree + "/Games/PuzzleAttack")
-shutil.copytree("filesystem/Games/Sand",         output_folder_tree + "/Games/Sand")
-shutil.copytree("filesystem/Games/Solitaire",    output_folder_tree + "/Games/Solitaire")
-shutil.copytree("filesystem/Games/SongOfMorus",  output_folder_tree + "/Games/SongOfMorus")
-shutil.copytree("filesystem/Games/Tagged",       output_folder_tree + "/Games/Tagged")
-shutil.copytree("filesystem/Games/ThumbAtro",    output_folder_tree + "/Games/ThumbAtro")
-shutil.copytree("filesystem/Games/Thumgeon_II",  output_folder_tree + "/Games/Thumgeon_II")
+shutil.copytree(output_folder_temp + "/TinyCircuits-Thumby-Color-Games" + "/4Connect",     output_folder_tree + "/Games/4Connect")
+shutil.copytree(output_folder_temp + "/TinyCircuits-Thumby-Color-Games" + "/2048",         output_folder_tree + "/Games/2048")
+shutil.copytree(output_folder_temp + "/TinyCircuits-Thumby-Color-Games" + "/BustAThumb",   output_folder_tree + "/Games/BustAThumb")
+shutil.copytree(output_folder_temp + "/TinyCircuits-Thumby-Color-Games" + "/Chess",        output_folder_tree + "/Games/Chess")
+shutil.copytree(output_folder_temp + "/TinyCircuits-Thumby-Color-Games" + "/Monstra",      output_folder_tree + "/Games/Monstra")
+shutil.copytree(output_folder_temp + "/TinyCircuits-Thumby-Color-Games" + "/PuzzleAttack", output_folder_tree + "/Games/PuzzleAttack")
+shutil.copytree(output_folder_temp + "/TinyCircuits-Thumby-Color-Games" + "/Sand",         output_folder_tree + "/Games/Sand")
+shutil.copytree(output_folder_temp + "/TinyCircuits-Thumby-Color-Games" + "/Solitaire",    output_folder_tree + "/Games/Solitaire")
+shutil.copytree(output_folder_temp + "/TinyCircuits-Thumby-Color-Games" + "/SongOfMorus",  output_folder_tree + "/Games/SongOfMorus")
+shutil.copytree(output_folder_temp + "/TinyCircuits-Thumby-Color-Games" + "/Tagged",       output_folder_tree + "/Games/Tagged")
+shutil.copytree(output_folder_temp + "/TinyCircuits-Thumby-Color-Games" + "/ThumbAtro",    output_folder_tree + "/Games/ThumbAtro")
+shutil.copytree(output_folder_temp + "/TinyCircuits-Thumby-Color-Games" + "/Thumgeon_II",  output_folder_tree + "/Games/Thumgeon_II")
 
-
-# Legacy Thumby system files and games download and copy
-print("\n##### WARNING: Grabbing files from GitHub for Thumby legacy lib files and games #####\n")
-os.system("git clone https://github.com/TinyCircuits/TinyCircuits-Thumby-Games.git " + output_folder_temp + "/TinyCircuits-Thumby-Games")
-os.system("git clone https://github.com/TinyCircuits/TinyCircuits-Thumby-Code-Editor.git " + output_folder_temp + "/TinyCircuits-Thumby-Code-Editor")
-time.sleep(1)
 
 # Legacy lib copy
 shutil.copytree(output_folder_temp + "/TinyCircuits-Thumby-Code-Editor" + "/CoreThumbyFiles/lib", output_folder_tree + "/lib")
