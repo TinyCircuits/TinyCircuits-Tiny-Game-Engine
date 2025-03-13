@@ -9,6 +9,9 @@
 void engine_audio_apply_master_volume(float volume);
 float engine_audio_get_master_volume();
 
+// Makes sure audio sample rate callback is adjusted (used when engine.freq(...) is called)
+void engine_audio_freq_adjust();
+
 void engine_audio_setup();
 void engine_audio_setup_playback();
 
