@@ -59,7 +59,15 @@ float engine_audio_get_master_volume(){
     #include "pico/multicore.h"
     #include "io/engine_io_rp3.h"
 
+    #define CALLBACK_TIMER_ALARM_NUM 0
+    #define CALLBACK_TIMER_ALARM_IRQ timer_hardware_alarm_get_irq_num(timer_hw, CALLBACK_TIMER_ALARM_NUM)
+    const uint32_t sample_period_delay_us = (uint32_t)(1.0f / ENGINE_AUDIO_SAMPLE_RATE * 1000000.0f);
+
+    // Prototype
+    void engine_audio_set_timer();
+
     uint8_t *current_source_data = NULL;
+
 
     void ENGINE_FAST_FUNCTION(engine_audio_handle_buffer)(audio_channel_class_obj_t *channel, bool *complete){
         // When 'buffer_byte_offset = 0' that means the buffer hasn't been filled before, fill it (see that after this function it is immediately incremented)
@@ -211,7 +219,7 @@ float engine_audio_get_master_volume(){
 
 
     // Samples each channel, adds, normalizes, and sets PWM
-    void ENGINE_FAST_FUNCTION(repeating_audio_callback)(){
+    static void repeating_audio_callback(){
         float total_sample = 0;
         bool play_sample = false;
 
@@ -256,9 +264,19 @@ float engine_audio_get_master_volume(){
             pwm_set_gpio_level(AUDIO_PWM_PIN, (uint32_t)(total_sample));
         }
 
-        // pwm_clear_irq(audio_callback_pwm_pin_slice);
+        // https://datasheets.raspberrypi.com/rp2350/rp2350-datasheet.pdf#page=1183
+        hw_clear_bits(&timer_hw->intr, 1u << CALLBACK_TIMER_ALARM_NUM);
+        engine_audio_set_timer();
+    }
 
-        // return true;
+    void engine_audio_set_timer(){
+        // https://datasheets.raspberrypi.com/rp2350/rp2350-datasheet.pdf#page=1183
+        hw_set_bits(&timer_hw->inte, 1u << CALLBACK_TIMER_ALARM_NUM);
+        irq_set_exclusive_handler(CALLBACK_TIMER_ALARM_IRQ, repeating_audio_callback);
+        irq_set_enabled(CALLBACK_TIMER_ALARM_IRQ, true);
+
+        uint64_t target = timer_hw->timerawl + sample_period_delay_us;
+        timer_hw->alarm[CALLBACK_TIMER_ALARM_NUM] = (uint32_t)target;
     }
 #endif
 
@@ -292,7 +310,7 @@ void engine_audio_setup_playback(){
 
 void engine_audio_freq_adjust(){
     #if defined(__arm__)
-        systick_hw->rvr = (clock_get_hz(clk_sys) / (uint32_t)ENGINE_AUDIO_SAMPLE_RATE) - 1;    // Set initial time value, calls interrupt once timer <= 0
+        
     #endif
 }
 
@@ -321,11 +339,9 @@ void engine_audio_setup(){
         //  * https://github.com/raspberrypi/pico-sdk/issues/2118
         //  * https://github.com/raspberrypi/pico-sdk/releases/tag/2.1.1#:~:text=to%20increase%20performance-,pico_time,-Fixed%20a%20rare
         //
-        // Using this lower-level timer now:
-        //  * https://forums.raspberrypi.com/viewtopic.php?t=349809#p2096858
-        systick_hw->csr |= 0x00000007;                                                  // Timer with interrupt
-        engine_audio_freq_adjust();
-        exception_set_exclusive_handler(SYSTICK_EXCEPTION, repeating_audio_callback);	// Interrupt
+        // Using rp2350 system timers:
+        //  https://datasheets.raspberrypi.com/rp2350/rp2350-datasheet.pdf#page=1183
+        engine_audio_set_timer();
     #endif
 }
 

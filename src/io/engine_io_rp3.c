@@ -6,6 +6,10 @@
 #include "hardware/gpio.h"
 #include "hardware/pwm.h"
 #include "hardware/timer.h"
+#include "hardware/irq.h"
+#include "hardware/clocks.h"
+#include "hardware/structs/systick.h"
+#include "hardware/exception.h"
 #include "hardware/adc.h"
 #include "math/engine_math.h"
 #include "draw/engine_color.h"
@@ -13,6 +17,13 @@
 
 #include <stdbool.h>
 
+#define CALLBACK_TIMER_ALARM_NUM 1
+#define CALLBACK_TIMER_ALARM_IRQ timer_hardware_alarm_get_irq_num(timer_hw, CALLBACK_TIMER_ALARM_NUM)
+const uint32_t check_period_delay_us = 1000000; // 1s
+
+
+// Prototype
+void engine_io_rp3_set_timer();
 
 // Used for when the indicator state is set true again, need
 // a color to go back to. Set to white by default
@@ -188,15 +199,29 @@ void engine_io_rp3_reset(){
 }
 
 
-bool repeating_battery_monitor_callback(repeating_timer_t *rt){
+static void repeating_battery_monitor_callback(){
     engine_io_rp3_update_indicator_level();
-    return true;
+    
+    // https://datasheets.raspberrypi.com/rp2350/rp2350-datasheet.pdf#page=1183
+    hw_clear_bits(&timer_hw->intr, 1u << CALLBACK_TIMER_ALARM_NUM);
+    engine_io_rp3_set_timer();
+}
+
+
+void engine_io_rp3_set_timer(){
+    // https://datasheets.raspberrypi.com/rp2350/rp2350-datasheet.pdf#page=1183
+    hw_set_bits(&timer_hw->inte, 1u << CALLBACK_TIMER_ALARM_NUM);
+    irq_set_exclusive_handler(CALLBACK_TIMER_ALARM_IRQ, repeating_battery_monitor_callback);
+    irq_set_enabled(CALLBACK_TIMER_ALARM_IRQ, true);
+
+    uint64_t target = timer_hw->timerawl + check_period_delay_us;
+    timer_hw->alarm[CALLBACK_TIMER_ALARM_NUM] = (uint32_t)target;
 }
 
 
 void engine_io_rp3_battery_monitor_setup(){
     // Check battery and update front indicator every second
-    add_repeating_timer_ms(-1000, &repeating_battery_monitor_callback, NULL, &battery_monitor_cb_timer);
+    engine_io_rp3_set_timer();
 }
 
 
