@@ -16,7 +16,7 @@
     #define AUDIO_CALLBACK_PWM_PIN 24
     #define AUDIO_ENABLE_PIN 20
 
-    void engine_audio_rp3_adjust_freq(uint32_t core_clock_hz);
+    void engine_audio_rp3_adjust_freq();
 
     void engine_audio_rp3_init_one_time();
     void engine_audio_rp3_channel_init_one_time(int *dma_channel, dma_channel_config *dma_config);
