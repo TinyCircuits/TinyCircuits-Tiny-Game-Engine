@@ -52,11 +52,12 @@ float engine_audio_get_master_volume(){
     #include "hardware/pwm.h"
     #include "hardware/adc.h"
     #include "hardware/timer.h"
+    #include "hardware/irq.h"
+    #include "hardware/clocks.h"
+    #include "hardware/structs/systick.h"
+    #include "hardware/exception.h"
     #include "pico/multicore.h"
     #include "io/engine_io_rp3.h"
-
-    // Playback timer
-    repeating_timer_t audio_cb_timer;
 
     uint8_t *current_source_data = NULL;
 
@@ -210,7 +211,7 @@ float engine_audio_get_master_volume(){
 
 
     // Samples each channel, adds, normalizes, and sets PWM
-    bool ENGINE_FAST_FUNCTION(repeating_audio_callback)(repeating_timer_t *rt){
+    void ENGINE_FAST_FUNCTION(repeating_audio_callback)(){
         float total_sample = 0;
         bool play_sample = false;
 
@@ -257,7 +258,7 @@ float engine_audio_get_master_volume(){
 
         // pwm_clear_irq(audio_callback_pwm_pin_slice);
 
-        return true;
+        // return true;
     }
 #endif
 
@@ -289,6 +290,13 @@ void engine_audio_setup_playback(){
 }
 
 
+void engine_audio_freq_adjust(){
+    #if defined(__arm__)
+        systick_hw->rvr = (clock_get_hz(clk_sys) / (uint32_t)ENGINE_AUDIO_SAMPLE_RATE) - 1;    // Set initial time value, calls interrupt once timer <= 0
+    #endif
+}
+
+
 void engine_audio_setup(){
     ENGINE_PRINTF("EngineAudio: Setting up...\n");
 
@@ -307,10 +315,17 @@ void engine_audio_setup(){
         audio.freq = 22050;
         audio.format = AUDIO_U16;
     #elif defined(__arm__)
-        // Has to be negative delay so that the timer starts
-        // counting right away instead of just after the cb
-        // ends
-        add_repeating_timer_us((int64_t)(-1.0f / ENGINE_AUDIO_SAMPLE_RATE * 1000000.0f), &repeating_audio_callback, NULL, &audio_cb_timer);
+        // Start the main ENGINE_AUDIO_SAMPLE_RATE (22050Hz) audio sample rate playback interrupt
+        //
+        // Switched from pico-sdk repeating timer because of:
+        //  * https://github.com/raspberrypi/pico-sdk/issues/2118
+        //  * https://github.com/raspberrypi/pico-sdk/releases/tag/2.1.1#:~:text=to%20increase%20performance-,pico_time,-Fixed%20a%20rare
+        //
+        // Using this lower-level timer now:
+        //  * https://forums.raspberrypi.com/viewtopic.php?t=349809#p2096858
+        systick_hw->csr |= 0x00000007;                                                  // Timer with interrupt
+        engine_audio_freq_adjust();
+        exception_set_exclusive_handler(SYSTICK_EXCEPTION, repeating_audio_callback);	// Interrupt
     #endif
 }
 

@@ -159,7 +159,8 @@ void engine_main_handle_settings(){
     // Create settings file if it does not exist, otherwise,
     // parse the file
     if(!engine_file_exists(&settings_file_location)){
-        engine_file_mkdir(&settings_dir_location);
+        // Only if the system folder doesn't exist do we create it
+        if(!engine_file_exists(&settings_dir_location)) engine_file_mkdir(&settings_dir_location);
         engine_main_settings_write(1.0f, 1.0f);
     }else{
         engine_main_settings_read();
