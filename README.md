@@ -77,7 +77,18 @@ Use `(cd ../../ports/unix && make clean)` to make clean if needed
 # Building and Running On Linux Quickly 
 If you followed the one of two methods to setup everythign above, you can run the following from `micropython/TinyCircuits-Tiny-Game-Engine/filesystem` to build and run a MicroPython script on Linux quickly:
 
-`(cd ../../ports/unix && make -j8 USER_C_MODULES=../../TinyCircuits-Tiny-Game-Engine) && (../../ports/unix/build-standard/micropython main.py)`
+`(cd ../../ports/unix && make -j8 DEBUG=1 USER_C_MODULES=../../TinyCircuits-Tiny-Game-Engine) && (../../ports/unix/build-standard/micropython main.py)`
+
+# Diagnosing HARD_FAULT
+If a hard fault blue screen occurs on the device, it will also usually occur in the Linux build too. It likely still won't be easy to solve, but you can see exactly where in MicroPython or the engine C code where the fault occurs using `gdb`. Using Linux is easier, but `gdb` can be used with the device as well but it is harder to setup.
+
+Refer to the above section where MicroPython and the engine are built on Linux for Linux. Make sure the `DEBUG=1` flag is added to the `make` command as shown above and then run MicroPython using `gdb` like so:
+1. Navigate filesystem: `cd TinyCircuits-Tiny-Game-Engine/filesystem`
+2. Build and run with `gdb`: `(cd ../../ports/unix && make -j8 DEBUG=1 USER_C_MODULES=../../TinyCircuits-Tiny-Game-Engine) && (gdb ../../ports/unix/build-standard/micropython main.py)`
+3. In the `gdb` prompt, execute `run main.py` and do it again after launching game when the window closes
+4. Play the game until it crashes and see the line in the C code where the fault occurred. In the `gdb` prompt, execute `bt` to see a stacktrace for the steps up to this point
+
+The above steps will get you started, you will likely need to understand the code and use other `gdb` tools to investigate the issue. For example, to see the value of a memory address, use `x <hex address>` in the `gdb` prompt.
 
 # Building on Linux for WebAssembly
 1. Follow instructions here https://emscripten.org/docs/getting_started/downloads.html and finish after executing `source ./emsdk_env.sh` (will need to execute this last command in `emsdk` in every new terminal/session)
