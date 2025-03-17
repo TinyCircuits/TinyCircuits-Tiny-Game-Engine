@@ -171,29 +171,27 @@ void engine_main_handle_settings(){
 void engine_main_reset(){
     ENGINE_PRINTF("EngineMain: Resetting engine...\n");
 
-    // Always reset the processor core clock speed
-    // engine_set_freq(150 * 1000 * 1000);
+    // Probably should reset the processor clock speed to base 150MHz (depending on platform): TODO - engine_set_freq(150 * 1000 * 1000);
 
-    // Always reset screen background fills
-    engine_display_reset_fills();
-    
-    engine_link_module_reset();
+    engine_display_reset_fills();       // Always reset screen background fills to no texture and black color
+    engine_link_module_reset();         // Reset callbacks to None and stop link if started
+    engine_io_reset();                  // Reset certain flags like if the indicator is overriden by the game and is not showing battery level
+    engine_audio_reset();               // Reset game volume and stop all channels from playing audio
+    engine_resource_reset();            // Reset contigious flash space manager (TODO: should implement some wear-leveling)
+    engine_gui_reset();                 // Reset flags for overriding input to GUI system
+    engine_objects_clear_all();         // Clear all nodes so that they get collected and not drawn anymores
+    engine_display_free_depth_buffer(); // If the depth buffer was allocated, free it
 
-    engine_io_reset();
+    gc_collect();                       // Collect all MicroPython memory
 
-    // Reset contigious flash space manager
-    engine_audio_reset();
-    engine_resource_reset();
-    engine_gui_reset();
+    engine_io_setup();                  // IO setup should be called first so that RGB and motor rumble PWM get their required slices for their GPIO
+    engine_audio_setup_playback();      // This should be called after IO setup so that all required slices for other IO are taken first and then callback for audio playback can be put on any unused slice
+    engine_display_init_framebuffers(); // Always recreate the MicroPython framebuffers after they were collected (not the actual memory where pixels are stored, just wrappers over that)
+}
 
-    engine_objects_clear_all();
 
-    engine_display_free_depth_buffer();
+void engine_main_one_time_setup(){
 
-    gc_collect();
-
-    // mp_obj_t machine_module = mp_import_name(MP_QSTR_machine, mp_const_none, MP_OBJ_NEW_SMALL_INT(0));
-    // mp_call_function_0(mp_load_attr(machine_module, MP_QSTR_soft_reset));
 }
 
 // ### MODULE ###
@@ -218,20 +216,14 @@ static mp_obj_t engine_main_module_init(){
         ENGINE_PRINTF("Filesystem root: %s\n", filesystem_root);
     }
 
+    // Handle settings setup
     engine_main_handle_settings();
 
     if(is_engine_initialized == true){
         // Always do a engine reset on import since there are
         // cases when we can't catch the end of the script
         engine_main_reset();
-        engine_audio_setup_playback();
-
-        // Always recreate the framebuffers after soft reset
-        engine_display_init_framebuffers();
-
-        // Setup IO every time, otherwise rumble motor will not
-        // work after soft resets
-        engine_io_setup();
+        
 
         // On subsequent resets, anything allocated m_tracked_buffers
         // will need to be restored since they are erased in soft resets
@@ -258,9 +250,10 @@ static mp_obj_t engine_main_module_init(){
     engine_fault_handling_register();
 
     // Needs to be setup before hand since dynamicly inits array
-    engine_audio_setup();
     engine_audio_setup_playback();
+    engine_audio_setup();
 
+    // One time setups for 
     engine_physics_init();
     engine_animation_init();
     engine_rtc_init();

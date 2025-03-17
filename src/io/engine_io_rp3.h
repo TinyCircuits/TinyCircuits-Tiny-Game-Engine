@@ -24,6 +24,8 @@
 #define AUDIO_PWM_PIN 23                // PWM3 B
 #define AUDIO_ENABLE_PIN 20             // PWM2 A
 
+#define PWM_AUDIO_TIMER_SLICE_NUM           4
+#define PWM_BATTERY_MONITOR_TIMER_SLICE_NUM 7
 
 /* ##### PIN CONNECTIONS #####
 

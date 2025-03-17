@@ -42,6 +42,8 @@ repeating_timer_t battery_monitor_cb_timer;
 volatile uint8_t battery_level_running_index = 0;
 volatile float battery_level_samples[BATTERY_LEVEL_SAMPLE_COUNT];
 
+// Used to limit rate at which battery monitor callback is run even more
+volatile uint8_t timer_counter = 0;
 
 void engine_io_rp3_pwm_setup(uint gpio, uint16_t wrap){
     uint pwm_pin_slice = pwm_gpio_to_slice_num(gpio);
@@ -199,23 +201,33 @@ void engine_io_rp3_reset(){
 }
 
 
-static void repeating_battery_monitor_callback(){
-    engine_io_rp3_update_indicator_level();
+void repeating_battery_monitor_callback(){
+    if(timer_counter > 16){
+        engine_io_rp3_update_indicator_level();
+        timer_counter = 0;
+    }
     
-    // https://datasheets.raspberrypi.com/rp2350/rp2350-datasheet.pdf#page=1183
-    hw_clear_bits(&timer_hw->intr, 1u << CALLBACK_TIMER_ALARM_NUM);
-    engine_io_rp3_set_timer();
+    timer_counter++;
+    
+    pwm_clear_irq(PWM_BATTERY_MONITOR_TIMER_SLICE_NUM);
 }
 
 
 void engine_io_rp3_set_timer(){
-    // https://datasheets.raspberrypi.com/rp2350/rp2350-datasheet.pdf#page=1183
-    hw_set_bits(&timer_hw->inte, 1u << CALLBACK_TIMER_ALARM_NUM);
-    irq_set_exclusive_handler(CALLBACK_TIMER_ALARM_IRQ, repeating_battery_monitor_callback);
-    irq_set_enabled(CALLBACK_TIMER_ALARM_IRQ, true);
-
-    uint64_t target = timer_hw->timerawl + check_period_delay_us;
-    timer_hw->alarm[CALLBACK_TIMER_ALARM_NUM] = (uint32_t)target;
+    // Start the main ENGINE_AUDIO_SAMPLE_RATE (22050Hz) audio sample rate playback interrupt
+    //
+    // Switched from pico-sdk repeating timer because of:
+    //  * https://github.com/raspberrypi/pico-sdk/issues/2118
+    //  * https://github.com/raspberrypi/pico-sdk/releases/tag/2.1.1#:~:text=to%20increase%20performance-,pico_time,-Fixed%20a%20rare
+    pwm_clear_irq(PWM_BATTERY_MONITOR_TIMER_SLICE_NUM);
+    pwm_set_irq_enabled(PWM_BATTERY_MONITOR_TIMER_SLICE_NUM, true);
+    irq_add_shared_handler(PWM_IRQ_WRAP, repeating_battery_monitor_callback, 0);
+    irq_set_priority(PWM_IRQ_WRAP, 1);
+    irq_set_enabled(PWM_IRQ_WRAP, true);
+    pwm_config config = pwm_get_default_config();
+    pwm_config_set_clkdiv_int(&config, 255);
+    pwm_config_set_wrap(&config, UINT16_MAX);
+    pwm_init(PWM_BATTERY_MONITOR_TIMER_SLICE_NUM, &config, true);
 }
 
 
