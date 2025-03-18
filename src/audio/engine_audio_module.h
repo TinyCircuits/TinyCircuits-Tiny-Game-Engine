@@ -9,6 +9,8 @@
 void engine_audio_apply_master_volume(float volume);
 float engine_audio_get_master_volume();
 
+void engine_audio_freq_adjust();
+
 void engine_audio_setup();
 void engine_audio_setup_playback();
 

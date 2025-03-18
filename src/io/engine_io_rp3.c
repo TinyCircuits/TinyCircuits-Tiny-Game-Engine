@@ -202,7 +202,7 @@ void engine_io_rp3_reset(){
 
 
 void repeating_battery_monitor_callback(){
-    if(timer_counter > 16){
+    if(timer_counter > 24){
         engine_io_rp3_update_indicator_level();
         timer_counter = 0;
     }

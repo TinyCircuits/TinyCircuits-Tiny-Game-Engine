@@ -59,12 +59,7 @@ float engine_audio_get_master_volume(){
     #include "pico/multicore.h"
     #include "io/engine_io_rp3.h"
 
-    // #define CALLBACK_TIMER_ALARM_NUM 0
-    // #define CALLBACK_TIMER_ALARM_IRQ timer_hardware_alarm_get_irq_num(timer_hw, CALLBACK_TIMER_ALARM_NUM)
-    // const uint32_t sample_period_delay_us = (uint32_t)(1.0f / ENGINE_AUDIO_SAMPLE_RATE * 1000000.0f);
-
-    // Prototype
-    // void engine_audio_set_timer();
+    pwm_config pwm_timer_config;
 
     uint8_t *current_source_data = NULL;
 
@@ -265,20 +260,7 @@ float engine_audio_get_master_volume(){
         }
 
         pwm_clear_irq(PWM_AUDIO_TIMER_SLICE_NUM);
-        // https://datasheets.raspberrypi.com/rp2350/rp2350-datasheet.pdf#page=1183
-        // hw_clear_bits(&timer_hw->intr, 1u << CALLBACK_TIMER_ALARM_NUM);
-        // engine_audio_set_timer();
     }
-
-    // void engine_audio_set_timer(){
-    //     // https://datasheets.raspberrypi.com/rp2350/rp2350-datasheet.pdf#page=1183
-    //     hw_set_bits(&timer_hw->inte, 1u << CALLBACK_TIMER_ALARM_NUM);
-    //     irq_set_exclusive_handler(CALLBACK_TIMER_ALARM_IRQ, repeating_audio_callback);
-    //     irq_set_enabled(CALLBACK_TIMER_ALARM_IRQ, true);
-
-    //     uint64_t target = timer_hw->timerawl + sample_period_delay_us;
-    //     timer_hw->alarm[CALLBACK_TIMER_ALARM_NUM] = (uint32_t)target;
-    // }
 #endif
 
 
@@ -311,7 +293,7 @@ void engine_audio_setup_playback(){
 
 void engine_audio_freq_adjust(){
     #if defined(__arm__)
-        
+        pwm_config_set_wrap(&pwm_timer_config, (clock_get_hz(clk_sys) / (uint32_t)(ENGINE_AUDIO_SAMPLE_RATE)) - 1);
     #endif
 }
 
@@ -344,10 +326,10 @@ void engine_audio_setup(){
         irq_add_shared_handler(PWM_IRQ_WRAP, repeating_audio_callback, 1);
         irq_set_priority(PWM_IRQ_WRAP, 1);
         irq_set_enabled(PWM_IRQ_WRAP, true);
-        pwm_config config = pwm_get_default_config();
-        pwm_config_set_clkdiv_int(&config, 1);
-        pwm_config_set_wrap(&config, (clock_get_hz(clk_sys) / (uint32_t)(ENGINE_AUDIO_SAMPLE_RATE)) - 1);
-        pwm_init(PWM_AUDIO_TIMER_SLICE_NUM, &config, true);
+        pwm_timer_config = pwm_get_default_config();
+        pwm_config_set_clkdiv_int(&pwm_timer_config, 1);
+        pwm_config_set_wrap(&pwm_timer_config, (clock_get_hz(clk_sys) / (uint32_t)(ENGINE_AUDIO_SAMPLE_RATE)) - 1);
+        pwm_init(PWM_AUDIO_TIMER_SLICE_NUM, &pwm_timer_config, true);
     #endif
 }
 
