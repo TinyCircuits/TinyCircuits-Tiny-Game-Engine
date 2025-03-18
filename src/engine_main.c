@@ -191,7 +191,31 @@ void engine_main_reset(){
 
 
 void engine_main_one_time_setup(){
+    ENGINE_PRINTF("Engine init!\n");
 
+    engine_io_setup();
+    engine_io_battery_monitor_setup();
+
+    engine_resource_init();
+
+    // Init display first
+    engine_display_init();
+    engine_display_init_framebuffers();
+    engine_display_send();
+    engine_display_clear();
+
+    // Setup fault handlers after screen is setup since
+    // we need the screen to output the fault
+    engine_fault_handling_register();
+
+    // Needs to be setup before hand since dynamicly inits array
+    engine_audio_setup_playback();
+    engine_audio_setup();
+
+    // One time setups for 
+    engine_physics_init();
+    engine_animation_init();
+    engine_rtc_init();
 }
 
 // ### MODULE ###
@@ -224,39 +248,13 @@ static mp_obj_t engine_main_module_init(){
         // cases when we can't catch the end of the script
         engine_main_reset();
         
-
-        // On subsequent resets, anything allocated m_tracked_buffers
+        // On subsequent resets, anything allocated with m_tracked_buffers
         // will need to be restored since they are erased in soft resets
-
         return mp_const_none;
     }
+
     is_engine_initialized = true;
-
-    ENGINE_PRINTF("Engine init!\n");
-
-    engine_io_setup();
-    engine_io_battery_monitor_setup();
-
-    engine_resource_init();
-
-    // Init display first
-    engine_display_init();
-    engine_display_init_framebuffers();
-    engine_display_send();
-    engine_display_clear();
-
-    // Setup fault handlers after screen is setup since
-    // we need the screen to output the fault
-    engine_fault_handling_register();
-
-    // Needs to be setup before hand since dynamicly inits array
-    engine_audio_setup_playback();
-    engine_audio_setup();
-
-    // One time setups for 
-    engine_physics_init();
-    engine_animation_init();
-    engine_rtc_init();
+    engine_main_one_time_setup();
 
     return mp_const_none;
 }
