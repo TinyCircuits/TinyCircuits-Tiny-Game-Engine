@@ -93,8 +93,8 @@ class MyCam(CameraNode):
 camera = MyCam()
 camera.position = Vector3(0, 5, 25)
 
-arrow_texture = TextureResource("Games/TestGames/Test3D/cw.bmp")
-floor_texture = TextureResource("Games/TestGames/Test3D/checker.bmp")
+arrow_texture = TextureResource("cw.bmp")
+floor_texture = TextureResource("checker.bmp")
 
 arrow_mesh = MeshResource()
 floor_mesh = MeshResource()
