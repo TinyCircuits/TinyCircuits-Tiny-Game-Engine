@@ -37,7 +37,7 @@ The engine has been tested on and ported to the following platforms:
 # Building on Linux for RP2350
 1. Update package list: `sudo apt update`
 2. Install build chain dependencies (https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf#page=33): `sudo apt install git python3 cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential g++ libstdc++-arm-none-eabi-newlib`
-3. Clone TinyCircuits MicroPython: `git https://github.com/TinyCircuits/micropython.git mp-thumby`
+3. Clone TinyCircuits MicroPython: `git clone https://github.com/TinyCircuits/micropython.git mp-thumby`
 4. `cd` into MicroPython: `cd mp-thumby`
 5. Checkout engine branch: `git checkout engine`
 6. Init the engine submodule: `git submodule update --init --recursive`
