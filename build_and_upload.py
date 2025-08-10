@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import sys
 import os
 import time
@@ -6,12 +8,8 @@ import string
 import psutil
 import subprocess
 import datetime
+import argparse
 from subprocess import Popen, PIPE, CalledProcessError
-
-# python -m pip install pyserial
-# python -m pip install serial
-import serial
-import serial.tools.list_ports
 
 
 # Helper for running commands and processing output
@@ -37,20 +35,26 @@ def get_drives():
 
 
 # ### Step 1: Get arguments
-arguments = sys.argv[1:]
-upload = True
+parser = argparse.ArgumentParser()
+parser.add_argument('-j', '--jobs', type=int, default=8, help='(default: 8) simultaneous jobs (passed to make)')
+parser.add_argument('mode', choices=['default', 'no_upload', 'clean'], default='default', nargs='?')
+args = parser.parse_args()
 
-if len(arguments) > 0 and arguments[0] == "clean":
+if args.mode == 'default':
+    upload = True
+elif args.mode == 'no_upload':
+    upload = False
+elif args.mode == 'clean':
     execute(['make', '-C', '../ports/rp2', 'clean', 'BOARD=THUMBY_COLOR'])
     print("\n\nSUCCESS: Done cleaning rp2 port!\n")
     exit(1)
-elif len(arguments) > 0 and arguments[0] == "no_upload":
-    upload = False
+else:
+    assert False, f'unknown mode {args.mode}' # argparse should have caught this
 
 
 # ### Step 2: Get the date of the last commit and bake into firmware
 firmware_date_file = open("src/firmware_date.h", "w")
-commit_id   = os.popen('git rev-parse --short HEAD').read()
+commit_id   = os.popen('git rev-parse --short HEAD').read().strip()
 commit_date = os.popen('git log -1 --format="%cd" --date=iso').read()
 commit_date = commit_date.splitlines()
 commit_date = commit_date[0]
@@ -68,7 +72,7 @@ firmware_date_file.close()
 
 # ### Step 3: Build the firmware (which will freeze everything in `modules`)
 print("\n\nBuilding rp2 port...\n")
-execute(['make', '-C', '../ports/rp2', '-j8', 'BOARD=THUMBY_COLOR', 'USER_C_MODULES=../../TinyCircuits-Tiny-Game-Engine/src/micropython.cmake'])
+execute(['make', '-C', '../ports/rp2', f'-j{args.jobs}', 'BOARD=THUMBY_COLOR', 'USER_C_MODULES=../../TinyCircuits-Tiny-Game-Engine/src/micropython.cmake'])
 print("\n\nDone building rp2 port!\n")
 
 # Rename UF2 if want to
@@ -87,6 +91,12 @@ if output_bin_size >= 1 * 1024 * 1024:
 # Exit if told not to upload
 if(upload is False):
     exit(0)
+
+
+# python -m pip install pyserial
+# python -m pip install serial
+import serial
+import serial.tools.list_ports
 
 # ### Step 5: Assume that the port is plugged in and may be running a program, connect to it
 #             end program with ctrl-c, and put into BOOTLOADER mode for upload

@@ -1,0 +1,67 @@
+# this follows "Building on Linux for RP2350" in README.md
+
+name: Build Firmware (.uf2)
+
+on:
+  workflow_dispatch:
+    inputs:
+      micropython-repo:
+        description: 'repo to clone as mp-thumby'
+        required: true
+        default: TinyCircuits/micropython
+        type: string
+      micropython-ref:
+        description: 'commit to checkout in mp-thumby'
+        required: true
+        default: engine
+        type: string
+
+jobs:
+  build_firmware_uf2:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Install build chain dependencies (steps 1-2)
+        # https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf#page=33
+        run: |
+          # sudo apt update
+          sudo apt install -y git python3 cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential g++ libstdc++-arm-none-eabi-newlib
+
+      - name: Clone TinyCircuits MicroPython (steps 3-6)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.micropython-repo }}
+          path: mp-thumby
+          ref: ${{ inputs.micropython-ref }}
+          submodules: recursive
+
+      - name: Switch engine repo to current commit
+        uses: actions/checkout@v4
+        with:
+          path: mp-thumby/TinyCircuits-Tiny-Game-Engine
+          submodules: recursive
+
+      - name: Setup cross compiler (steps 7-8)
+        run: |
+          cd mp-thumby/mpy-cross
+          make
+
+      - name: Setup rp2 port (steps 9-10)
+        run: |
+          cd mp-thumby/ports/rp2
+          make submodules
+          # make clean
+
+      - name: Run the custom Python build script (11-12)
+        # disabling parallel jobs, because i regularly saw a race that resulted
+        # in pwm.pio.h not being generated in time -gg
+        run: |
+          cd mp-thumby/TinyCircuits-Tiny-Game-Engine
+          python3 -m pip install psutil
+          python3 build_and_upload.py -j1 no_upload
+
+      - name: Create firmware artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware (.uf2)
+          path: mp-thumby/ports/rp2/build-THUMBY_COLOR/firmware_*.uf2
+          if-no-files-found: error
