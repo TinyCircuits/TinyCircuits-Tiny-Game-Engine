@@ -320,4 +320,5 @@ while ticks < ticks_end:
 
 print("-[vox_node_perf_test.py, avg. FPS: " + str(fps_total / ticks_end) + "]-")
 
-engine.reset(True)
+import machine
+machine.soft_reset()

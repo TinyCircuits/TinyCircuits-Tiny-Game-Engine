@@ -6,6 +6,7 @@ from engine_nodes import CameraNode, Text2DNode, Rectangle2DNode
 from engine_math import Vector2
 import time
 
+
 # Only works in bottom right of screen where y and x are +
 class SyncedPlayer(Rectangle2DNode):
     def __init__(self):

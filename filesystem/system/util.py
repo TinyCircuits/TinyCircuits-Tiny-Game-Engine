@@ -1,5 +1,6 @@
 import os
 import errno
+import machine
 import sys
 
 

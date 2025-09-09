@@ -46,7 +46,7 @@ void voxelspace_node_class_draw(mp_obj_t voxelspace_node_base_obj, mp_obj_t came
 
     vector3_class_obj_t *camera_rotation = camera->rotation;
     vector3_class_obj_t *camera_position = camera->position;
-    float camera_fov_half_rad = (mp_obj_get_float(camera->fov) * PI / 180.0f) * 0.5f;
+    float camera_fov_half = mp_obj_get_float(camera->fov) * 0.5f;
     float camera_view_distance = mp_obj_get_float(camera->view_distance);
 
     engine_shader_t *shader = engine_get_builtin_shader(EMPTY_SHADER);
@@ -90,11 +90,11 @@ void voxelspace_node_class_draw(mp_obj_t voxelspace_node_base_obj, mp_obj_t came
     float skew_roll_line_dy = sinf(camera_rotation->z.value);
     float skew_roll_start_offset = -SCREEN_WIDTH_HALF * tanf(camera_rotation->z.value);
 
-    float view_left_x = cosf(camera_rotation->y.value-camera_fov_half_rad) * inverse_x_scale;
-    float view_left_y = sinf(camera_rotation->y.value-camera_fov_half_rad) * inverse_z_scale;
+    float view_left_x = cosf(camera_rotation->y.value-camera_fov_half) * inverse_x_scale;
+    float view_left_y = sinf(camera_rotation->y.value-camera_fov_half) * inverse_z_scale;
 
-    float view_right_x = cosf(camera_rotation->y.value+camera_fov_half_rad) * inverse_x_scale;
-    float view_right_y = sinf(camera_rotation->y.value+camera_fov_half_rad) * inverse_z_scale;
+    float view_right_x = cosf(camera_rotation->y.value+camera_fov_half) * inverse_x_scale;
+    float view_right_y = sinf(camera_rotation->y.value+camera_fov_half) * inverse_z_scale;
 
     // Trying to render objects in front of the camera at `camera_view_distance` units away:
     //  \-----|-----/
@@ -105,7 +105,7 @@ void voxelspace_node_class_draw(mp_obj_t voxelspace_node_base_obj, mp_obj_t came
     //       \|/
     // Find the hypotenuse based on the `camera_view_distance` we
     // want to render at
-    float hypot = camera_view_distance / cosf(camera_fov_half_rad);
+    float hypot = camera_view_distance / cosf(camera_fov_half);
 
     while(z < hypot){
         float pleft_x = z * view_left_x;
@@ -152,7 +152,7 @@ void voxelspace_node_class_draw(mp_obj_t voxelspace_node_base_obj, mp_obj_t came
             }
 
             // Now that we know we have a position to sample, sample it
-            uint32_t index = (uint32_t)((y-voxelspace_position->z.value) * heightmap->pixel_stride + (x-voxelspace_position->x.value));
+            uint32_t index = (uint32_t)((y-voxelspace_position->z.value) * heightmap->width + (x-voxelspace_position->x.value));
 
             // Get each RGB channel as a float
             uint16_t heightmap_value = heightmap->get_pixel(heightmap, index, NULL);
@@ -226,7 +226,7 @@ void voxelspace_node_class_draw(mp_obj_t voxelspace_node_base_obj, mp_obj_t came
 /*  --- doc ---
     NAME: get_abs_height
     ID: get_abs_height
-    DESC: Gets the absolute height at a position in the voxelspace node (takes position into account). If the position isn't inside the node at its current position and dimensions, returns None. Note: 3D nodes do not currently support inheritance between each other, attributes like position, rotation, scale, and opacity will not work in parent/child inheritance.
+    DESC: Gets the absolute height at a position in the voxelspace node (takes position into account). If the position isn't inside the node at its current position and dimensions, returns None.
     PARAM:  [type=float]    [name=x]   [value=any]
     PARAM:  [type=float]    [name=y]   [value=any]
     RETURN: float or None
@@ -253,7 +253,7 @@ static mp_obj_t voxelspace_node_class_get_abs_height(mp_obj_t self, mp_obj_t x_o
 
     // Only need to check bounds if repeat is not true
     if(repeat == true || ((x >= voxelspace_position->x.value && x < voxelspace_position->x.value + heightmap->width) && (z >= voxelspace_position->z.value && z < voxelspace_position->z.value+heightmap->height))){
-        uint32_t index = (uint32_t)(((int32_t)z-voxelspace_position->z.value) * heightmap->pixel_stride + ((int32_t)x-voxelspace_position->x.value));
+        uint32_t index = (uint32_t)(((int32_t)z-voxelspace_position->z.value) * heightmap->width + ((int32_t)x-voxelspace_position->x.value));
 
         // Get each RGB channel as a float
         uint16_t heightmap_value = heightmap->get_pixel(heightmap, index, NULL);
@@ -434,7 +434,6 @@ static mp_attr_fun_t voxelspace_node_class_attr(mp_obj_t self_in, qstr attribute
     ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy_all}]      [value=function]
     ATTR:   [type=function]                   [name={ref_link:node_base_mark_destroy_children}] [value=function]
     ATTR:   [type=function]                   [name={ref_link:remove_child}]                    [value=function]
-    ATTR:   [type=function]                   [name={ref_link:get_parent}]                      [value=function]
     ATTR:   [type=function]                   [name={ref_link:tick}]                            [value=function]
     ATTR:   [type=function]                   [name={ref_link:get_abs_height}]                  [value=function]
     ATTR:   [type={ref_link:Vector3}]         [name=position]                                   [value={ref_link:Vector3}]

@@ -3,8 +3,6 @@ add_library(usermod_engine INTERFACE)
 
 set(ENGINE_MOD_DIR ${CMAKE_CURRENT_LIST_DIR})
 
-pico_generate_pio_header(usermod_engine ${ENGINE_MOD_DIR}/display/pwm.pio)
-
 # Add our source files to the lib
 target_sources(usermod_engine INTERFACE
     ${ENGINE_MOD_DIR}/engine_main.c
@@ -61,7 +59,6 @@ target_sources(usermod_engine INTERFACE
     ${ENGINE_MOD_DIR}/resources/engine_resource_module.c
     ${ENGINE_MOD_DIR}/resources/engine_resource_manager.c
     ${ENGINE_MOD_DIR}/resources/engine_texture_resource.c
-    ${ENGINE_MOD_DIR}/resources/engine_mesh_resource.c
     ${ENGINE_MOD_DIR}/resources/engine_font_resource.c
     ${ENGINE_MOD_DIR}/resources/engine_wave_sound_resource.c
     ${ENGINE_MOD_DIR}/resources/engine_tone_sound_resource.c

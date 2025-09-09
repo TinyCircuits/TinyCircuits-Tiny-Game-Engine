@@ -14,8 +14,6 @@ ROOT_DIR = engine.root_dir()
 try:
     # Always append path for Thumby Legacy files so
     # that the legacy modules can be imported
-    # Needs to be here so that games that crawl into
-    # lib still work (not ideal)
     sys.path.append(f"{ROOT_DIR}/lib")
 
     # Get the last game that was set to launch from `_run_on_boot`

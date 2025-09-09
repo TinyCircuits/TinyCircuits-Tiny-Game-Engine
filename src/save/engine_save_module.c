@@ -27,7 +27,7 @@ size_t saves_dir_len = 0;
 /* --- doc ---
    NAME: _init_saves_dir
    ID: engine_save__init_saves_dir
-   DESC: Initializes the saves directory location for the current run (does not create the directory yet). Apps should never call it - it is called by the app loader. The saves API will only work if this was called first.
+   DESC: Initializes the saves directory location for the current run (does not create the directory yet). Apps should never call it - it is called by the app loader. The saves API will only work if this was called first. It cannot be called again before machine is reset.
    PARAM:   [type=str]  [name=dir]   [value=e.g. "Saves/Games/MyGame"]
    RETURN: None
 */
@@ -35,9 +35,9 @@ static mp_obj_t engine_save__init_saves_dir(mp_obj_t dir){
     if(!mp_obj_is_str(dir)){
         mp_raise_TypeError(MP_ERROR_TEXT("EngineSave: ERROR: dir is not a string"));
     }
-    // if(saves_dir_len){
-    //     mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineSave: ERROR: _init_saves_dir was already called"));
-    // }
+    if(saves_dir_len){
+        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineSave: ERROR: _init_saves_dir was already called"));
+    }
     GET_STR_DATA_LEN(dir, dir_str, dir_str_len);
     if(!dir_str_len){
         mp_raise_ValueError(MP_ERROR_TEXT("EngineSave: ERROR: dir is empty string"));

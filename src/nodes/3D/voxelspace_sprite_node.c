@@ -50,7 +50,7 @@ void voxelspace_sprite_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t c
 
     vector3_class_obj_t *camera_position = camera->position;
     vector3_class_obj_t *camera_rotation = camera->rotation;
-    float camera_fov_half = (mp_obj_get_float(camera->fov) * PI / 180.0f) * 0.5f;
+    float camera_fov_half = mp_obj_get_float(camera->fov) * 0.5f;
     float view_distance = mp_obj_get_float(camera->view_distance);
 
     uint16_t sprite_frame_count_x = mp_obj_get_int(voxelspace_sprite_node->frame_count_x);
@@ -239,6 +239,8 @@ void voxelspace_sprite_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t c
                      sprite_opacity,
                      depth,
                      shader);
+
+    // engine_draw_pixel(0b1111100000000000, floorf(((value/max) * SCREEN_WIDTH)), floorf(sprite_rotated_y), 1.0f, shader);
 
     // After drawing, go to the next frame if it is time to and the animation is playing
     if(sprite_playing == 1){
@@ -434,7 +436,7 @@ static mp_attr_fun_t voxelspace_sprite_node_class_attr(mp_obj_t self_in, qstr at
 /*  --- doc ---
     NAME: VoxelSpaceSpriteNode
     ID: VoxelSpaceSpriteNode
-    DESC: Simple 3D sprite node that can be animated or static for VoxelSpace rendering. Acts as a billboard that always faces the camera. Note: 3D nodes do not currently support inheritance between each other, attributes like position, rotation, scale, and opacity will not work in parent/child inheritance.
+    DESC: Simple 3D sprite node that can be animated or static for VoxelSpace rendering. Acts as a billboard that always faces the camera
     PARAM:  [type={ref_link:Vector3}]               [name=position]                                     [value={ref_link:Vector3}]
     PARAM:  [type={ref_link:TextureResource}]       [name=texture]                                      [value={ref_link:TextureResource}]
     PARAM:  [type={ref_link:Color}|int (RGB565)]    [name=transparent_color]                            [value=color]
@@ -455,7 +457,6 @@ static mp_attr_fun_t voxelspace_sprite_node_class_attr(mp_obj_t self_in, qstr at
     ATTR:   [type=function]                         [name={ref_link:node_base_mark_destroy_all}]        [value=function]
     ATTR:   [type=function]                         [name={ref_link:node_base_mark_destroy_children}]   [value=function]
     ATTR:   [type=function]                         [name={ref_link:remove_child}]                      [value=function]
-    ATTR:   [type=function]                         [name={ref_link:get_parent}]                        [value=function]
     ATTR:   [type=function]                         [name={ref_link:tick}]                              [value=function]
     ATTR:   [type={ref_link:Vector2}]               [name=position]                                     [value={ref_link:Vector2}]
     ATTR:   [type={ref_link:TextureResource}]       [name=texture]                                      [value={ref_link:TextureResource}]

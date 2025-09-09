@@ -31,8 +31,8 @@ void engine_link_on_just_disconnected(){
 }
 
 
-uint32_t engine_link_send(const uint8_t *send_buffer, uint32_t count, uint32_t offset){
-    return 0;
+void engine_link_send(const uint8_t *send_buffer, uint32_t count, uint32_t offset){
+    
 }
 
 

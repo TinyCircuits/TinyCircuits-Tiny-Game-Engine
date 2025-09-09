@@ -1,6 +1,6 @@
-import engine
-#__freq = engine.freq()
-#engine.freq(250000000)
+import machine
+#__freq = machine.freq()
+#machine.freq(250000000)
 import os
 os.chdir("/Games/Collision2")
 
@@ -11,6 +11,7 @@ import gc
 import engine_main
 
 import random
+import engine
 import engine_io
 import engine_physics
 import engine_draw
@@ -25,7 +26,7 @@ import engine_debug
 
 #engine_debug.enable_all()
 
-#engine.freq(__freq)
+#machine.freq(__freq)
 
 engine.fps_limit(60)
 

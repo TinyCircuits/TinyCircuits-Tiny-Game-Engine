@@ -44,44 +44,63 @@ void physics_rectangle_2d_node_class_draw(mp_obj_t rectangle_node_base_obj, mp_o
     rectangle_class_obj_t *camera_viewport = camera->viewport;
     float camera_zoom = mp_obj_get_float(camera->zoom);
 
-    // Get inherited properties
-    engine_inheritable_2d_t inherited;
-    node_base_inherit_2d(rectangle_node_base, &inherited);
+    float rectangle_resolved_hierarchy_x = 0.0f;
+    float rectangle_resolved_hierarchy_y = 0.0f;
+    float rectangle_resolved_hierarchy_rotation = 0.0f;
+    bool rectangle_is_child_of_camera = false;
+    node_base_get_child_absolute_xy(&rectangle_resolved_hierarchy_x, &rectangle_resolved_hierarchy_y, &rectangle_resolved_hierarchy_rotation, &rectangle_is_child_of_camera, rectangle_node_base);
 
-    if(inherited.is_camera_child == false){
-        engine_camera_transform_2d(camera_node, &inherited.px, &inherited.py, &inherited.rotation);
+    // Store the non-rotated x and y for a second
+    float rectangle_rotated_x = rectangle_resolved_hierarchy_x;
+    float rectangle_rotated_y = rectangle_resolved_hierarchy_y;
+    float rectangle_rotation = rectangle_resolved_hierarchy_rotation;
+
+    if(rectangle_is_child_of_camera == false){
+        float camera_resolved_hierarchy_x = 0.0f;
+        float camera_resolved_hierarchy_y = 0.0f;
+        float camera_resolved_hierarchy_rotation = 0.0f;
+        node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
+        camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
+
+        rectangle_rotated_x = (rectangle_rotated_x - camera_resolved_hierarchy_x) * camera_zoom;
+        rectangle_rotated_y = (rectangle_rotated_y - camera_resolved_hierarchy_y) * camera_zoom;
+
+        // Rotate rectangle origin about the camera
+        engine_math_rotate_point(&rectangle_rotated_x, &rectangle_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
+
+        rectangle_rotation += camera_resolved_hierarchy_rotation;
     }else{
         camera_zoom = 1.0f;
     }
 
-    inherited.px += camera_viewport->width/2;
-    inherited.py += camera_viewport->height/2;
+    rectangle_width = (uint16_t)(rectangle_width*camera_zoom);
+    rectangle_height = (uint16_t)(rectangle_height*camera_zoom);
 
-    rectangle_width = (uint16_t)(rectangle_width*inherited.sx*camera_zoom);
-    rectangle_height = (uint16_t)(rectangle_height*inherited.sy*camera_zoom);
+    rectangle_rotated_x += camera_viewport->width/2;
+    rectangle_rotated_y += camera_viewport->height/2;
 
     float rectangle_half_width = rectangle_width/2;
     float rectangle_half_height = rectangle_height/2;
 
     // Calculate the coordinates of the 4 corners of the rectangle, not rotated
     // NOTE: positive y is down
-    float tlx = floorf(inherited.px - rectangle_half_width);
-    float tly = floorf(inherited.py - rectangle_half_height);
+    float tlx = floorf(rectangle_rotated_x - rectangle_half_width);
+    float tly = floorf(rectangle_rotated_y - rectangle_half_height);
 
-    float trx = floorf(inherited.px + rectangle_half_width);
-    float try = floorf(inherited.py - rectangle_half_height);
+    float trx = floorf(rectangle_rotated_x + rectangle_half_width);
+    float try = floorf(rectangle_rotated_y - rectangle_half_height);
 
-    float brx = floorf(inherited.px + rectangle_half_width);
-    float bry = floorf(inherited.py + rectangle_half_height);
+    float brx = floorf(rectangle_rotated_x + rectangle_half_width);
+    float bry = floorf(rectangle_rotated_y + rectangle_half_height);
 
-    float blx = floorf(inherited.px - rectangle_half_width);
-    float bly = floorf(inherited.py + rectangle_half_height);
+    float blx = floorf(rectangle_rotated_x - rectangle_half_width);
+    float bly = floorf(rectangle_rotated_y + rectangle_half_height);
 
     // Rotate the points and then draw lines between them
-    engine_math_rotate_point(&tlx, &tly, inherited.px, inherited.py, inherited.rotation);
-    engine_math_rotate_point(&trx, &try, inherited.px, inherited.py, inherited.rotation);
-    engine_math_rotate_point(&brx, &bry, inherited.px, inherited.py, inherited.rotation);
-    engine_math_rotate_point(&blx, &bly, inherited.px, inherited.py, inherited.rotation);
+    engine_math_rotate_point(&tlx, &tly, rectangle_rotated_x, rectangle_rotated_y, rectangle_rotation);
+    engine_math_rotate_point(&trx, &try, rectangle_rotated_x, rectangle_rotated_y, rectangle_rotation);
+    engine_math_rotate_point(&brx, &bry, rectangle_rotated_x, rectangle_rotated_y, rectangle_rotation);
+    engine_math_rotate_point(&blx, &bly, rectangle_rotated_x, rectangle_rotated_y, rectangle_rotation);
 
     engine_shader_t *shader = engine_get_builtin_shader(EMPTY_SHADER);
 
@@ -92,11 +111,11 @@ void physics_rectangle_2d_node_class_draw(mp_obj_t rectangle_node_base_obj, mp_o
 }
 
 
-void engine_physics_rectangle_2d_node_calculate(engine_physics_node_base_t *physics_node_base, float scale_x, float scale_y, float *vertices_x, float *vertices_y, float *normals_x, float *normals_y, float rotation){
+void engine_physics_rectangle_2d_node_calculate(engine_physics_node_base_t *physics_node_base, float *vertices_x, float *vertices_y, float *normals_x, float *normals_y, float rotation){
     engine_physics_rectangle_2d_node_class_obj_t *self = physics_node_base->unique_data;
 
-    float half_width = mp_obj_get_float(self->width) * 0.5f * scale_x;
-    float half_height = mp_obj_get_float(self->height) * 0.5f * scale_y;
+    float half_width = mp_obj_get_float(self->width) * 0.5f;
+    float half_height = mp_obj_get_float(self->height) * 0.5f;
 
     float x_traversal_cos = cosf(rotation) * half_width;
     float x_traversal_sin = sinf(rotation) * half_width;
@@ -326,10 +345,6 @@ static mp_attr_fun_t physics_rectangle_2d_node_class_attr(mp_obj_t self_in, qstr
     PARAM: [type={ref_link:Color}]                       [name=outline_color]                               [value={ref_link:Color}]
     PARAM: [type=int]                                    [name=collision_mask]                              [value=32-bit bitmask (nodes with the same true bits will collide, set to 1 by default)]
     PARAM: [type=int]                                    [name=layer]                                       [value=0 ~ 127]
-    PARAM: [type=bool]                                   [name=inherit_position]                            [value=True or False]
-    PARAM: [type=bool]                                   [name=inherit_opacity]                             [value=True or False]
-    PARAM: [type=bool]                                   [name=inherit_rotation]                            [value=True or False]
-    PARAM: [type=bool]                                   [name=inherit_scale]                               [value=True or False]
     ATTR:  [type=function]                               [name={ref_link:add_child}]                        [value=function]
     ATTR:  [type=function]                               [name={ref_link:get_child}]                        [value=function]
     ATTR:  [type=function]                               [name={ref_link:get_child_count}]                  [value=function]
@@ -337,7 +352,6 @@ static mp_attr_fun_t physics_rectangle_2d_node_class_attr(mp_obj_t self_in, qstr
     ATTR:  [type=function]                               [name={ref_link:node_base_mark_destroy_all}]       [value=function]
     ATTR:  [type=function]                               [name={ref_link:node_base_mark_destroy_children}]  [value=function]
     ATTR:  [type=function]                               [name={ref_link:remove_child}]                     [value=function]
-    ATTR:  [type=function]                               [name={ref_link:get_parent}]                       [value=function]
     ATTR:  [type=function]                               [name={ref_link:tick}]                             [value=function]
     ATTR:  [type=function]                               [name={ref_link:enable_collision_layer}]           [value=function]
     ATTR:  [type=function]                               [name={ref_link:disable_collision_layer}]          [value=function]
@@ -359,10 +373,6 @@ static mp_attr_fun_t physics_rectangle_2d_node_class_attr(mp_obj_t self_in, qstr
     ATTR:  [type=function]                               [name={ref_link:on_collide}]                       [value=function]
     ATTR:  [type=function]                               [name={ref_link:on_separate}]                      [value=function]
     ATTR:  [type=int]                                    [name=layer]                                       [value=0 ~ 127]
-    ATTR:  [type=bool]                                   [name=inherit_position]                            [value=True or False]
-    ATTR:  [type=bool]                                   [name=inherit_opacity]                             [value=True or False]
-    ATTR:  [type=bool]                                   [name=inherit_rotation]                            [value=True or False]
-    ATTR:  [type=bool]                                   [name=inherit_scale]                               [value=True or False]
     OVRR:  [type=function]                               [name={ref_link:physics_tick}]                     [value=function]
     OVRR:  [type=function]                               [name={ref_link:tick}]                             [value=function]
     OVRR:  [type=function]                               [name={ref_link:on_collide}]                       [value=function]
@@ -372,30 +382,26 @@ mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n
     ENGINE_INFO_PRINTF("New PhysicsRectangle2DNode");
 
     mp_arg_t allowed_args[] = {
-        { MP_QSTR_child_class,       MP_ARG_OBJ,  {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_position,          MP_ARG_OBJ,  {.u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL)} },
-        { MP_QSTR_width,             MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(10.0f)} },
-        { MP_QSTR_height,            MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(10.0f)} },
-        { MP_QSTR_velocity,          MP_ARG_OBJ,  {.u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL)} },
-        { MP_QSTR_angular_velocity,  MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(0.0f)} },
-        { MP_QSTR_rotation,          MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(0.0)} },
-        { MP_QSTR_density,           MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(1.0f)} },
-        { MP_QSTR_friction,          MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(0.1f)} },
-        { MP_QSTR_bounciness,        MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(1.0f)} },
-        { MP_QSTR_dynamic,           MP_ARG_OBJ,  {.u_obj = mp_obj_new_int(1)} },
-        { MP_QSTR_solid,             MP_ARG_OBJ,  {.u_obj = mp_obj_new_int(1)} },
-        { MP_QSTR_gravity_scale,     MP_ARG_OBJ,  {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)})} },
-        { MP_QSTR_outline,           MP_ARG_OBJ,  {.u_obj = mp_obj_new_int(0)} },
-        { MP_QSTR_outline_color,     MP_ARG_OBJ,  {.u_obj = mp_const_none} },
-        { MP_QSTR_collision_mask,    MP_ARG_OBJ,  {.u_obj = mp_obj_new_int(1)} },
-        { MP_QSTR_layer,             MP_ARG_INT,  {.u_int = 0} },
-        { MP_QSTR_inherit_position,  MP_ARG_BOOL, {.u_bool = true} },
-        { MP_QSTR_inherit_opacity,   MP_ARG_BOOL, {.u_bool = true} },
-        { MP_QSTR_inherit_rotation,  MP_ARG_BOOL, {.u_bool = true} },
-        { MP_QSTR_inherit_scale,     MP_ARG_BOOL, {.u_bool = true} },
+        { MP_QSTR_child_class,      MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_position,         MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL)} },
+        { MP_QSTR_width,            MP_ARG_OBJ, {.u_obj = mp_obj_new_float(10.0f)} },
+        { MP_QSTR_height,           MP_ARG_OBJ, {.u_obj = mp_obj_new_float(10.0f)} },
+        { MP_QSTR_velocity,         MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL)} },
+        { MP_QSTR_angular_velocity, MP_ARG_OBJ, {.u_obj = mp_obj_new_float(0.0f)} },
+        { MP_QSTR_rotation,         MP_ARG_OBJ, {.u_obj = mp_obj_new_float(0.0)} },
+        { MP_QSTR_density,          MP_ARG_OBJ, {.u_obj = mp_obj_new_float(1.0f)} },
+        { MP_QSTR_friction,         MP_ARG_OBJ, {.u_obj = mp_obj_new_float(0.1f)} },
+        { MP_QSTR_bounciness,       MP_ARG_OBJ, {.u_obj = mp_obj_new_float(1.0f)} },
+        { MP_QSTR_dynamic,          MP_ARG_OBJ, {.u_obj = mp_obj_new_int(1)} },
+        { MP_QSTR_solid,            MP_ARG_OBJ, {.u_obj = mp_obj_new_int(1)} },
+        { MP_QSTR_gravity_scale,    MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)})} },
+        { MP_QSTR_outline,          MP_ARG_OBJ, {.u_obj = mp_obj_new_int(0)} },
+        { MP_QSTR_outline_color,    MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_collision_mask,   MP_ARG_OBJ, {.u_obj = mp_obj_new_int(1)} },
+        { MP_QSTR_layer,            MP_ARG_INT, {.u_int = 0} }
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
-    enum arg_ids {child_class, position, width, height, velocity, angular_velocity, rotation, density, friction, bounciness, dynamic, solid, gravity_scale, outline, outline_color, collision_mask, layer, inherit_position, inherit_opacity, inherit_rotation, inherit_scale};
+    enum arg_ids {child_class, position, width, height, velocity, angular_velocity, rotation, density, friction, bounciness, dynamic, solid, gravity_scale, outline, outline_color, collision_mask, layer};
     bool inherited = false;
 
     // If there is one positional argument and it isn't the first
@@ -441,10 +447,6 @@ mp_obj_t physics_rectangle_2d_node_class_new(const mp_obj_type_t *type, size_t n
     physics_node_base->outline = parsed_args[outline].u_obj;
     physics_node_base->outline_color = parsed_args[outline_color].u_obj;
     physics_node_base->collision_mask = mp_obj_get_int(parsed_args[collision_mask].u_obj);
-    node_base_set_inherit_position(node_base, parsed_args[inherit_position].u_bool);
-    node_base_set_inherit_opacity(node_base, parsed_args[inherit_opacity].u_bool);
-    node_base_set_inherit_rotation(node_base, parsed_args[inherit_rotation].u_bool);
-    node_base_set_inherit_scale(node_base, parsed_args[inherit_scale].u_bool);
 
     physics_node_base->physics_id = engine_physics_ids_take_available();
     physics_node_base->mass = 0.0f;
