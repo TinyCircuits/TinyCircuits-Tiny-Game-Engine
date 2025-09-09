@@ -28,10 +28,10 @@ import gc
 import utime
 import math
 import thumby
-import machine
+import engine
 
-#machine.freq(48000000) 
-machine.freq(125000000) 
+#engine.freq(48000000) 
+engine.freq(125000000) 
 
 gc.enable() # This line helps make sure we don't run out of memory
 
@@ -490,7 +490,7 @@ thumby.display.update()
 
 time.sleep_ms(3000)
 
-machine.reset()
+engine.reset()
 #exec(open("/main.py").read())
 
 

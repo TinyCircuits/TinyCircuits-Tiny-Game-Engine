@@ -81,8 +81,8 @@ class Player(PhysicsCircle2DNode):
 
     def on_collide(self, contact):
         self.count = self.count + 1
-        # print("Collision!", self.count)
-        # Circle2DNode(position=contact.position, radius=1)
+        print("Collision!", self.count)
+        Circle2DNode(position=contact.position, radius=1)
 
 camera = CameraNode()
 
