@@ -79,7 +79,7 @@ class Player(PhysicsCircle2DNode):
         elif engine_io.RB.is_pressed:
             self.rotation -= 0.0045
 
-    def collision(self, contact):
+    def on_collide(self, contact):
         self.count = self.count + 1
         # print("Collision!", self.count)
         # Circle2DNode(position=contact.position, radius=1)
