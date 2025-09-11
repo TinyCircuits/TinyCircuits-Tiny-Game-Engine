@@ -150,7 +150,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(audio_channel_stop_obj, audio_channel_stop);
     ATTR: [type=function]   [name={ref_link:audio_channel_play}]    [value=function]
     ATTR: [type=function]   [name={ref_link:audio_channel_stop}]    [value=function]
     ATTR: [type=object]     [name=source]                           [value={ref_link:WaveSoundResource} or {ref_link:ToneSoundResource}]
-    ATTR: [type=float]      [name=gain]                             [value=any (default is 1.0)]
+    ATTR: [type=float]      [name=gain]                             [value=0.0 to 1.0 (default is 1.0)]
     ATTR: [type=float]      [name=time]                             [value=0.0 to time at the end of the media being played (if there is an end) (read-only and is updated to represent the current time in seconds of teh media being played)]
     ATTR: [type=float]      [name=amplitude]                        [value=0.0 to 1.0 (the amplitude of the last sample played on this channel, read-only)]
     ATTR: [type=boolean]    [name=loop]                             [value=True or False (whether to loop audio or not)]
@@ -237,4 +237,5 @@ MP_DEFINE_CONST_OBJ_TYPE(
     make_new, audio_channel_class_new_dummy,
     attr, audio_channel_class_attr,
     locals_dict, &audio_channel_class_locals_dict
+
 );
