@@ -140,7 +140,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_link_module_set_disconnected_cb_obj, engine_lin
 /*  --- doc ---
     NAME: send
     ID: engine_link_send
-    DESC: Provided a `bytearray`, send up to `count`, `len(send_buffer)`, or `len(send_buffer)-offset` (whichever is smallest and passed) bytes starting at `0` by default or from `offset` if passed
+    DESC: Provided a `bytearray`, send up to `count`, `len(send_buffer)`, or `len(send_buffer)-offset` (whichever is smallest and passed). Sends bytes starting at `0` by default or from `offset` if passed. The actual number of bytes sent is returned. If the send buffer is larger than 256 bytes, the extra data is not sent.
     PARAM:  [type=bytearray] [name=send_buffer] [value=bytearray]
     PARAM:  [type=int]       [name=count]       [value=int (optional)]
     PARAM:  [type=int]       [name=offset]      [value=int (optional)]
@@ -190,12 +190,14 @@ static mp_obj_t engine_link_module_send(size_t n_args, const mp_obj_t *args){
 
     // Figure out which of the three is smallest and send
     count = min3(count, send_buffer->len, send_buffer->len-offset);
-    engine_link_send((uint8_t*)send_buffer->items, count, offset);
+
+    // Get the actual number of bytes sent/placed into the TX buffer
+    uint32_t sent_count = engine_link_send((uint8_t*)send_buffer->items, count, offset);
 
     // Run the task first (for host) to get data flowing
     engine_link_module_task();
 
-    return mp_obj_new_int(count);
+    return mp_obj_new_int(sent_count);
 }
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_link_module_send_obj, 1, 3, engine_link_module_send);
 
@@ -203,7 +205,7 @@ MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_link_module_send_obj, 1, 3, engine_li
 /*  --- doc ---
     NAME: read
     ID: engine_link_read
-    DESC: Read up to `count` or {ref_link:engine_link_available}, whichever is smallest. Allocates and returns a new `bytearray` if 1 or more bytes to read.
+    DESC: Read up to `count` or `engine_link.available()`, whichever is smallest. Allocates and returns a new `bytearray` if 1 or more bytes to read. If data is not read fast enough and `engine_link.available()` reaches 511 and new data is received, the oldest data is overwritten. 
     PARAM:  [type=int]       [name=count]       [value=int (optional)]
     RETURN: None if no bytes to read otherwise `bytearray`
 */ 
@@ -242,7 +244,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_link_module_read_obj, engine_link_module_read);
 /*  --- doc ---
     NAME: read_into
     ID: engine_link_read_into
-    DESC: Read up to `count`, {ref_link:engine_link_available} or `len(buffer)`, whichever is smallest into `buffer` starting at `0` or from `offset` if passed.
+    DESC: Read up to `count`, `engine_link.available()` or `len(buffer)`, whichever is smallest into `buffer` starting at `0` or from `offset` if passed. If data is not read fast enough and `engine_link.available()` reaches 511 and new data is received, the oldest data is overwritten. 
     PARAM:  [type=bytearray] [name=read_buffer] [value=bytearray]
     PARAM:  [type=int]       [name=count]       [value=int (optional)]
     PARAM:  [type=int]       [name=offset]      [value=int (optional)]
@@ -305,7 +307,7 @@ MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_link_module_read_into_obj, 1, 3, engi
 /*  --- doc ---
     NAME: available
     ID: engine_link_available
-    DESC: Returns the number of bytes available to read from the internal 512 byte buffer. If after 512 bytes more data is sent to the full internal buffer, those extra bytes overwrite previous bytes (ringbuffer).
+    DESC: Returns the number of bytes available to read from the internal 511 byte buffer. If after 511 bytes more data is sent to the full internal buffer, those extra bytes overwrite the oldest data (ringbuffer).
     RETURN: Number of bytes available to read (int)
 */
 static mp_obj_t engine_link_module_available(){
@@ -358,7 +360,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_link_module_is_started_obj, engine_link_module_
 /*  --- doc ---
     NAME: is_host
     ID: engine_link_is_host
-    DESC: When not connected, always returns `False`. If connected, returns `True` the unit is acting as the USB host, otherwise returns `False` if acting as a USB device.
+    DESC: When not connected, always returns `False`. If connected, returns `True` if the unit is acting as the USB host, otherwise returns `False` if acting as a USB device.
     RETURN: True or False
 */
 static mp_obj_t engine_link_module_is_host(){
