@@ -152,7 +152,6 @@ class GameLauncherTile(GUIBitmapButton2DNode):
 
         # Create title for this tile
         self.title_text_node = Text2DNode(text=game_info.name, font=title_font, position=Vector2(0, 26), opacity=1.0, letter_spacing=1.0)
-        #self.title_text_node.inherit_scale = False
         self.add_child(self.title_text_node)
 
         # Setup tween for this tile for when rows are horizontally shifted
