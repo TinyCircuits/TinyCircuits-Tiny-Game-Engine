@@ -37,37 +37,52 @@ void line_2d_node_class_draw(mp_obj_t line_node_base_obj, mp_obj_t camera_node){
 
     // The line is drawn as a rectangle since we have a nice algorithm for doing that:
     float line_length = engine_math_distance_between(line_start->x.value, line_start->y.value, line_end->x.value, line_end->y.value);
-    float line_rotation = engine_math_angle_between(line_start->x.value, line_start->y.value, line_end->x.value, line_end->y.value) + HALF_PI;
 
     // Grab camera
     rectangle_class_obj_t *camera_viewport = camera->viewport;
     float camera_zoom = mp_obj_get_float(camera->zoom);
-    float camera_opacity = mp_obj_get_float(camera->opacity);
 
-    // Get inherited properties
-    engine_inheritable_2d_t inherited;
-    node_base_inherit_2d(line_node_base, &inherited);
-    inherited.rotation += line_rotation;
+    // Get line transformation if it is a child
+    float line_resolved_hierarchy_x = 0.0f;
+    float line_resolved_hierarchy_y = 0.0f;
+    float line_resolved_hierarchy_rotation = 0.0f;
+    bool line_is_child_of_camera = false;
+    node_base_get_child_absolute_xy(&line_resolved_hierarchy_x, &line_resolved_hierarchy_y, &line_resolved_hierarchy_rotation, &line_is_child_of_camera, line_node_base);
 
-    if(inherited.is_camera_child == false){
-        engine_camera_transform_2d(camera_node, &inherited.px, &inherited.py, &inherited.rotation);
+    // Store the non-rotated x and y for a second
+    float line_rotated_x = line_resolved_hierarchy_x;
+    float line_rotated_y = line_resolved_hierarchy_y;
+    float line_rotation = line_resolved_hierarchy_rotation - engine_math_angle_between(line_start->x.value, line_start->y.value, line_end->x.value, line_end->y.value) - HALF_PI;
+
+    if(line_is_child_of_camera == false){
+        float camera_resolved_hierarchy_x = 0.0f;
+        float camera_resolved_hierarchy_y = 0.0f;
+        float camera_resolved_hierarchy_rotation = 0.0f;
+        node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
+        camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
+
+        line_rotated_x = (line_rotated_x - camera_resolved_hierarchy_x) * camera_zoom;
+        line_rotated_y = (line_rotated_y - camera_resolved_hierarchy_y) * camera_zoom;
+
+        // Rotate rectangle origin about the camera
+        engine_math_rotate_point(&line_rotated_x, &line_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
+
+        line_rotation += camera_resolved_hierarchy_rotation;
     }else{
         camera_zoom = 1.0f;
     }
 
-    inherited.px += camera_viewport->width/2;
-    inherited.py += camera_viewport->height/2;
-
-    line_opacity = inherited.opacity*camera_opacity;
-
     // Scale by camera
-    line_thickness = line_thickness * inherited.sy * camera_zoom;
-    line_length = line_length * inherited.sx * camera_zoom;
+    line_thickness = line_thickness*camera_zoom;
+    line_length = line_length*camera_zoom;
 
     // Stop line from disappearing when it gets too thin
     if(line_thickness < 1.0f){
         line_thickness = 1.0f;
     }
+
+    line_rotated_x += camera_viewport->width/2;
+    line_rotated_y += camera_viewport->height/2;
 
     // Decide which shader to use per-pixel
     engine_shader_t *shader = NULL;
@@ -79,10 +94,10 @@ void line_2d_node_class_draw(mp_obj_t line_node_base_obj, mp_obj_t camera_node){
 
     if(line_outlined == false){
         engine_draw_rect(line_color->value,
-                         floorf(inherited.px), floorf(inherited.py),
+                         floorf(line_rotated_x), floorf(line_rotated_y),
                          (int32_t)line_thickness, (int32_t)line_length,
                          1.0f, 1.0f,
-                         inherited.rotation,
+                        -line_rotation,
                          line_opacity,
                          shader);
     }else{
@@ -91,23 +106,23 @@ void line_2d_node_class_draw(mp_obj_t line_node_base_obj, mp_obj_t camera_node){
 
         // Calculate the coordinates of the 4 corners of the line, not rotated
         // NOTE: positive y is down
-        float tlx = floorf(inherited.px - line_half_width);
-        float tly = floorf(inherited.py - line_half_height);
+        float tlx = floorf(line_rotated_x - line_half_width);
+        float tly = floorf(line_rotated_y - line_half_height);
 
-        float trx = floorf(inherited.px + line_half_width);
-        float try = floorf(inherited.py - line_half_height);
+        float trx = floorf(line_rotated_x + line_half_width);
+        float try = floorf(line_rotated_y - line_half_height);
 
-        float brx = floorf(inherited.px + line_half_width);
-        float bry = floorf(inherited.py + line_half_height);
+        float brx = floorf(line_rotated_x + line_half_width);
+        float bry = floorf(line_rotated_y + line_half_height);
 
-        float blx = floorf(inherited.px - line_half_width);
-        float bly = floorf(inherited.py + line_half_height);
+        float blx = floorf(line_rotated_x - line_half_width);
+        float bly = floorf(line_rotated_y + line_half_height);
 
         // Rotate the points and then draw lines between them
-        engine_math_rotate_point(&tlx, &tly, inherited.px, inherited.py, inherited.py);
-        engine_math_rotate_point(&trx, &try, inherited.px, inherited.py, inherited.py);
-        engine_math_rotate_point(&brx, &bry, inherited.px, inherited.py, inherited.py);
-        engine_math_rotate_point(&blx, &bly, inherited.px, inherited.py, inherited.py);
+        engine_math_rotate_point(&tlx, &tly, line_rotated_x, line_rotated_y, line_rotation);
+        engine_math_rotate_point(&trx, &try, line_rotated_x, line_rotated_y, line_rotation);
+        engine_math_rotate_point(&brx, &bry, line_rotated_x, line_rotated_y, line_rotation);
+        engine_math_rotate_point(&blx, &bly, line_rotated_x, line_rotated_y, line_rotation);
 
         engine_draw_line(line_color->value, tlx, tly, trx, try, line_opacity, shader);
         engine_draw_line(line_color->value, trx, try, brx, bry, line_opacity, shader);
@@ -265,10 +280,6 @@ static mp_attr_fun_t line_2d_node_class_attr(mp_obj_t self_in, qstr attribute, m
     PARAM:  [type=float]                            [name=opacity]                                      [value=0 ~ 1.0]
     PARAM:  [type=bool]                             [name=outline]                                      [value=True or False]
     PARAM:  [type=int]                              [name=layer]                                        [value=0 ~ 127]
-    PARAM:  [type=bool]                             [name=inherit_position]                             [value=True or False]
-    PARAM:  [type=bool]                             [name=inherit_opacity]                              [value=True or False]
-    PARAM:  [type=bool]                             [name=inherit_rotation]                             [value=True or False]
-    PARAM:  [type=bool]                             [name=inherit_scale]                                [value=True or False]
     ATTR:   [type=function]                         [name={ref_link:add_child}]                         [value=function]
     ATTR:   [type=function]                         [name={ref_link:get_child}]                         [value=function]
     ATTR:   [type=function]                         [name={ref_link:get_child_count}]                   [value=function]
@@ -276,7 +287,6 @@ static mp_attr_fun_t line_2d_node_class_attr(mp_obj_t self_in, qstr attribute, m
     ATTR:   [type=function]                         [name={ref_link:node_base_mark_destroy_all}]        [value=function]
     ATTR:   [type=function]                         [name={ref_link:node_base_mark_destroy_children}]   [value=function]
     ATTR:   [type=function]                         [name={ref_link:remove_child}]                      [value=function]
-    ATTR:   [type=function]                         [name={ref_link:get_parent}]                        [value=function]
     ATTR:   [type=function]                         [name={ref_link:tick}]                              [value=function]
     ATTR:   [type={ref_link:Vector2}]               [name=start]                                        [value={ref_link:Vector2}]
     ATTR:   [type={ref_link:Vector2}]               [name=end]                                          [value={ref_link:Vector2}]
@@ -287,31 +297,23 @@ static mp_attr_fun_t line_2d_node_class_attr(mp_obj_t self_in, qstr attribute, m
     ATTR:   [type=float]                            [name=opacity]                                      [value=0 ~ 1.0]
     ATTR:   [type=bool]                             [name=outline]                                      [value=True or False]
     ATTR:   [type=int]                              [name=layer]                                        [value=0 ~ 127]
-    ATTR:   [type=bool]                             [name=inherit_position]                             [value=True or False]
-    ATTR:   [type=bool]                             [name=inherit_opacity]                              [value=True or False]
-    ATTR:   [type=bool]                             [name=inherit_rotation]                             [value=True or False]
-    ATTR:   [type=bool]                             [name=inherit_scale]                                [value=True or False]
     OVRR:   [type=function]                         [name={ref_link:tick}]                              [value=function]
 */
 mp_obj_t line_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Line2DNode");
 
     mp_arg_t allowed_args[] = {
-        { MP_QSTR_child_class,       MP_ARG_OBJ,  {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_start,             MP_ARG_OBJ,  {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(-5.0f)})} },
-        { MP_QSTR_end,               MP_ARG_OBJ,  {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(5.0f)})} },
-        { MP_QSTR_thickness,         MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(1.0f)} },
-        { MP_QSTR_color,             MP_ARG_OBJ,  {.u_obj = MP_OBJ_NEW_SMALL_INT(0xffff)} },
-        { MP_QSTR_opacity,           MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(1.0f)} },
-        { MP_QSTR_outline,           MP_ARG_OBJ,  {.u_obj = mp_obj_new_bool(false)} },
-        { MP_QSTR_layer,             MP_ARG_INT,  {.u_int = 0} },
-        { MP_QSTR_inherit_position,  MP_ARG_BOOL, {.u_bool = true} },
-        { MP_QSTR_inherit_opacity,   MP_ARG_BOOL, {.u_bool = true} },
-        { MP_QSTR_inherit_rotation,  MP_ARG_BOOL, {.u_bool = true} },
-        { MP_QSTR_inherit_scale,     MP_ARG_BOOL, {.u_bool = true} },
+        { MP_QSTR_child_class,  MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_start,        MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(-5.0f)})} },
+        { MP_QSTR_end,          MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(0.0f), mp_obj_new_float(5.0f)})} },
+        { MP_QSTR_thickness,    MP_ARG_OBJ, {.u_obj = mp_obj_new_float(1.0f)} },
+        { MP_QSTR_color,        MP_ARG_OBJ, {.u_obj = MP_OBJ_NEW_SMALL_INT(0xffff)} },
+        { MP_QSTR_opacity,      MP_ARG_OBJ, {.u_obj = mp_obj_new_float(1.0f)} },
+        { MP_QSTR_outline,      MP_ARG_OBJ, {.u_obj = mp_obj_new_bool(false)} },
+        { MP_QSTR_layer,        MP_ARG_INT, {.u_int = 0} }
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
-    enum arg_ids {child_class, start, end, thickness, color, opacity, outline, layer, inherit_position, inherit_opacity, inherit_rotation, inherit_scale};
+    enum arg_ids {child_class, start, end, thickness, color, opacity, outline, layer};
     bool inherited = false;
 
     // If there is one positional argument and it isn't the first
@@ -348,10 +350,6 @@ mp_obj_t line_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
     line_2d_node->color = engine_color_wrap(parsed_args[color].u_obj);
     line_2d_node->opacity = parsed_args[opacity].u_obj;
     line_2d_node->outline = parsed_args[outline].u_obj;
-    node_base_set_inherit_position(node_base, parsed_args[inherit_position].u_bool);
-    node_base_set_inherit_opacity(node_base, parsed_args[inherit_opacity].u_bool);
-    node_base_set_inherit_rotation(node_base, parsed_args[inherit_rotation].u_bool);
-    node_base_set_inherit_scale(node_base, parsed_args[inherit_scale].u_bool);
 
     if(inherited == true){
         // Get the Python class instance

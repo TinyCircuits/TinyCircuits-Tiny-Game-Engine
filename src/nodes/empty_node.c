@@ -86,7 +86,6 @@ static mp_attr_fun_t empty_node_class_attr(mp_obj_t self_in, qstr attribute, mp_
     ATTR:  [type=function]               [name={ref_link:node_base_mark_destroy_all}]       [value=function]
     ATTR:  [type=function]               [name={ref_link:node_base_mark_destroy_children}]  [value=function]
     ATTR:  [type=function]               [name={ref_link:remove_child}]                     [value=function]
-    ATTR:  [type=function]               [name={ref_link:get_parent}]                       [value=function]
     ATTR:  [type=function]               [name={ref_link:tick}]                             [value=function]
     ATTR:  [type={ref_link:Vector3}]     [name=position]                                    [value={ref_link:Vector3}]
     ATTR:  [type={ref_link:Vector3}]     [name=rotation]                                    [value={ref_link:Vector3}]

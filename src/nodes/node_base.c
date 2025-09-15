@@ -16,16 +16,16 @@
     ID: tick
     DESC: Overridable tick callback
     PARAM: [type=object] [name=self] [value=object]
-    PARAM: [type=float]  [name=dt] [value=positive float in seconds]                                                                                                  
+    PARAM: [type=float]  [name=dt] [value=positive float in seconds]
     RETURN: None
-*/ 
+*/
 /*  --- doc ---
     NAME: draw
     ID: draw
-    DESC: Overridable draw callback 
-    PARAM: [type=Node] [name=camera] [value=one of the camera nodes in the scene]                                                                                                         
+    DESC: Overridable draw callback
+    PARAM: [type=Node] [name=camera] [value=one of the camera nodes in the scene]
     RETURN: None
-*/ 
+*/
 void (*default_instance_attr_func)(mp_obj_t self_in, qstr attribute, mp_obj_t *destination) = NULL;
 
 
@@ -39,16 +39,13 @@ void node_base_init(engine_node_base_t *node_base, const mp_obj_type_t *mp_type,
     node_base_set_if_visible(node_base, true);
     node_base_set_if_disabled(node_base, false);
     node_base_set_if_just_added(node_base, true);
-    node_base_set_inherit_opacity(node_base, true);
-    node_base_set_inherit_scale(node_base, true);
-    node_base_set_inherit_position(node_base, true);
-    node_base_set_inherit_rotation(node_base, true);
 }
 
 
 bool node_base_is_visible(engine_node_base_t *node_base){
     return BIT_GET(node_base->meta_data, NODE_BASE_VISIBLE_BIT_INDEX);
 }
+
 
 void node_base_set_if_visible(engine_node_base_t *node_base, bool is_visible){
     if(is_visible){
@@ -94,54 +91,6 @@ void node_base_set_if_deletable(engine_node_base_t *node_base, bool is_deletable
         BIT_SET_TRUE(node_base->meta_data, NODE_BASE_DELETABLE_BIT_INDEX);
     }else{
         BIT_SET_FALSE(node_base->meta_data, NODE_BASE_DELETABLE_BIT_INDEX);
-    }
-}
-
-bool node_base_does_inherit_opacity(engine_node_base_t *node_base){
-    return BIT_GET(node_base->meta_data, NODE_BASE_INHERIT_OPACITY_BIT_INDEX);
-}
-
-void node_base_set_inherit_opacity(engine_node_base_t *node_base, bool inherit_opacity){
-    if(inherit_opacity){
-        BIT_SET_TRUE(node_base->meta_data, NODE_BASE_INHERIT_OPACITY_BIT_INDEX);
-    }else{
-        BIT_SET_FALSE(node_base->meta_data, NODE_BASE_INHERIT_OPACITY_BIT_INDEX);
-    }
-}
-
-bool node_base_does_inherit_scale(engine_node_base_t *node_base){
-    return BIT_GET(node_base->meta_data, NODE_BASE_INHERIT_SCALE_BIT_INDEX);
-}
-
-void node_base_set_inherit_scale(engine_node_base_t *node_base, bool inherit_scale){
-    if(inherit_scale){
-        BIT_SET_TRUE(node_base->meta_data, NODE_BASE_INHERIT_SCALE_BIT_INDEX);
-    }else{
-        BIT_SET_FALSE(node_base->meta_data, NODE_BASE_INHERIT_SCALE_BIT_INDEX);
-    }
-}
-
-bool node_base_does_inherit_position(engine_node_base_t *node_base){
-    return BIT_GET(node_base->meta_data, NODE_BASE_INHERIT_POSITION_BIT_INDEX);
-}
-
-void node_base_set_inherit_position(engine_node_base_t *node_base, bool inherit_position){
-    if(inherit_position){
-        BIT_SET_TRUE(node_base->meta_data, NODE_BASE_INHERIT_POSITION_BIT_INDEX);
-    }else{
-        BIT_SET_FALSE(node_base->meta_data, NODE_BASE_INHERIT_POSITION_BIT_INDEX);
-    }
-}
-
-bool node_base_does_inherit_rotation(engine_node_base_t *node_base){
-    return BIT_GET(node_base->meta_data, NODE_BASE_INHERIT_ROTATION_BIT_INDEX);
-}
-
-void node_base_set_inherit_rotation(engine_node_base_t *node_base, bool inherit_rotation){
-    if(inherit_rotation){
-        BIT_SET_TRUE(node_base->meta_data, NODE_BASE_INHERIT_ROTATION_BIT_INDEX);
-    }else{
-        BIT_SET_FALSE(node_base->meta_data, NODE_BASE_INHERIT_ROTATION_BIT_INDEX);
     }
 }
 
@@ -207,9 +156,9 @@ mp_obj_t node_base_del(mp_obj_t self_in){
 /*  --- doc ---
     NAME: mark_destroy
     ID: node_base_mark_destroy
-    DESC: Destroys node. Calls finalizer and frees memory for MicroPython to use later                                                                         
+    DESC: Destroys node. Calls finalizer and frees memory for MicroPython to use later
     RETURN: None
-*/ 
+*/
 mp_obj_t node_base_mark_destroy(mp_obj_t self_in){
     engine_node_base_t *node_base = self_in;
 
@@ -226,9 +175,9 @@ mp_obj_t node_base_mark_destroy(mp_obj_t self_in){
 /*  --- doc ---
     NAME: mark_destroy_children
     ID: node_base_mark_destroy_children
-    DESC: Destroys only the children of this node as well as the childrens' children. Calls finalizer and frees memory for MicroPython to use later                                                                         
+    DESC: Destroys only the children of this node as well as the childrens' children. Calls finalizer and frees memory for MicroPython to use later
     RETURN: None
-*/ 
+*/
 mp_obj_t node_base_mark_destroy_children(mp_obj_t self_in){
     engine_node_base_t *node_base = self_in;
 
@@ -253,9 +202,9 @@ mp_obj_t node_base_mark_destroy_children(mp_obj_t self_in){
 /*  --- doc ---
     NAME: mark_destroy_all
     ID: node_base_mark_destroy_all
-    DESC: Destroys node, its children, and the childrens' children. Calls finalizer and frees memory for MicroPython to use later for each node                                                                                              
+    DESC: Destroys node, its children, and the childrens' children. Calls finalizer and frees memory for MicroPython to use later for each node
     RETURN: None
-*/ 
+*/
 mp_obj_t node_base_mark_destroy_all(mp_obj_t self_in){
     engine_node_base_t *node_base = self_in;
     node_base_mark_destroy_children(self_in);
@@ -269,16 +218,16 @@ mp_obj_t node_base_mark_destroy_all(mp_obj_t self_in){
     NAME: add_child
     ID: add_child
     DESC: Adds child to the node this is being called on
-    PARAM: [type=Node] [name=child] [value=any node]                                                                                                         
+    PARAM: [type=Node] [name=child] [value=any node]
     RETURN: None
-*/ 
+*/
 mp_obj_t node_base_add_child(mp_obj_t self_parent_in, mp_obj_t child_in){
     // Get the node_base for cases with the child is a Python
     // class instance or just the node's native built-in type
     // without inheritance
     engine_node_base_t *parent_node_base = node_base_get(self_parent_in, NULL);
     engine_node_base_t *child_node_base = node_base_get(child_in, NULL);
-    
+
     ENGINE_INFO_PRINTF("Node Base: Adding child... parent node type: %d, child node type: %d", parent_node_base->type, child_node_base->type);
 
     child_node_base->location_in_parents_children = linked_list_add_obj(&parent_node_base->children_node_bases, child_node_base);
@@ -292,9 +241,9 @@ mp_obj_t node_base_add_child(mp_obj_t self_parent_in, mp_obj_t child_in){
     NAME: get_child
     ID: get_child
     DESC: Gets child
-    PARAM: [type=int] [name=index] [value=any positive integer]                                                                                                        
+    PARAM: [type=int] [name=index] [value=any positive integer]
     RETURN: Node
-*/ 
+*/
 mp_obj_t node_base_get_child(mp_obj_t self_parent_in, mp_obj_t index_obj){
     ENGINE_INFO_PRINTF("Node Base: Getting child...");
 
@@ -324,9 +273,9 @@ mp_obj_t node_base_get_child(mp_obj_t self_parent_in, mp_obj_t index_obj){
 /*  --- doc ---
     NAME: get_child_count
     ID: get_child_count
-    DESC: Gets the count of children directly descended from this node but not the children of the children                                                                                                       
+    DESC: Gets the count of children directly descended from this node but not the children of the children
     RETURN: 0 or positive integer
-*/ 
+*/
 mp_obj_t node_base_get_child_count(mp_obj_t self_parent_in){
     ENGINE_INFO_PRINTF("Node Base: Getting child count...");
 
@@ -339,9 +288,9 @@ mp_obj_t node_base_get_child_count(mp_obj_t self_parent_in){
     NAME: remove_child
     ID: remove_child
     DESC: Removes child from the node this is being called on
-    PARAM: [type=Node] [name=child] [value=any node]                                                                                                        
+    PARAM: [type=Node] [name=child] [value=any node]
     RETURN: None
-*/ 
+*/
 mp_obj_t node_base_remove_child(mp_obj_t self_parent_in, mp_obj_t child_in){
     ENGINE_INFO_PRINTF("Node Base: Removing child...");
 
@@ -364,9 +313,9 @@ mp_obj_t node_base_remove_child(mp_obj_t self_parent_in, mp_obj_t child_in){
 /*  --- doc ---
     NAME: get_parent
     ID: get_parent
-    DESC: Returns the parent node of the node this is called on                                                                                                        
+    DESC: Returns the parent node of the node this is called on
     RETURN: None or `object`
-*/ 
+*/
 mp_obj_t node_base_get_parent(mp_obj_t self_in){
     engine_node_base_t *self = self_in;
 
@@ -385,223 +334,89 @@ void node_base_set_layer(engine_node_base_t *node_base, uint8_t layer){
 }
 
 
-void node_base_inherit_2d(mp_obj_t child_node_base, engine_inheritable_2d_t *inheritable){
-    engine_node_base_t *node_base = child_node_base;
+void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, bool *is_child_of_camera, mp_obj_t child_node_base_in){
+    engine_node_base_t *child_node_base = child_node_base_in;
+    if(is_child_of_camera != NULL) *is_child_of_camera = false;
 
-    // Init structure
-    mp_obj_t child_position = mp_load_attr(node_base->attr_accessor, MP_QSTR_position);
-    mp_obj_t child_rotation = engine_mp_load_attr_maybe(node_base->attr_accessor, MP_QSTR_rotation);
-    mp_obj_t child_scale =    engine_mp_load_attr_maybe(node_base->attr_accessor, MP_QSTR_scale);
-
-    // Setup initial position (no nodes have 1D position)
-    if(mp_obj_is_type(child_position, &vector3_class_type)){
-        inheritable->px = ((vector3_class_obj_t*)child_position)->x.value;
-        inheritable->py = ((vector3_class_obj_t*)child_position)->y.value;
-    }else if(mp_obj_is_type(child_position, &vector2_class_type)){
-        inheritable->px = ((vector2_class_obj_t*)child_position)->x.value;
-        inheritable->py = ((vector2_class_obj_t*)child_position)->y.value;
+    mp_obj_t child_node_base_position_obj = mp_load_attr(child_node_base->attr_accessor, MP_QSTR_position);
+    if(mp_obj_is_type(child_node_base_position_obj, &vector3_class_type)){
+        *x = ((vector3_class_obj_t*)child_node_base_position_obj)->x.value;
+        *y = ((vector3_class_obj_t*)child_node_base_position_obj)->y.value;
     }else{
-        mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: Error: Do not know how to set initial inherit 2D position for this `position `object type!, got %s"), mp_obj_get_type_str(child_position));
+        *x = ((vector2_class_obj_t*)child_node_base_position_obj)->x.value;
+        *y = ((vector2_class_obj_t*)child_node_base_position_obj)->y.value;
     }
 
-    // Setup initial rotation (no nodes have 2D rotation)
-    if(child_rotation == MP_OBJ_NULL){
-        inheritable->rotation = 0.0f;
-    }else if(mp_obj_is_type(child_rotation, &vector3_class_type)){
-        inheritable->rotation = ((vector3_class_obj_t*)child_rotation)->z.value;
-    }else if(mp_obj_is_float(child_rotation)){
-        inheritable->rotation = (float)mp_obj_get_float(child_rotation);
-    }else if(mp_obj_is_int(child_rotation)){
-        inheritable->rotation = (float)mp_obj_get_int(child_rotation);
+    mp_obj_t rotation_obj = engine_mp_load_attr_maybe(child_node_base->attr_accessor, MP_QSTR_rotation);
+
+    // Use z-axis rotation for 2D rotations from 3D vectors
+    if(rotation_obj == MP_OBJ_NULL){
+        // In the case that the rotation attribute does not exist on this node, set rotation to 0
+        if(rotation != NULL) *rotation = 0.0f;
+    }else if(mp_obj_is_type(rotation_obj, &vector3_class_type)){
+        if(rotation != NULL) *rotation = ((vector3_class_obj_t*)rotation_obj)->z.value;
     }else{
-        mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: Error: Do not know how to set initial inherit 2D rotation for this `rotation` object type!, got %s"), mp_obj_get_type_str(child_rotation));
+        if(rotation != NULL) *rotation = (float)mp_obj_get_float(rotation_obj);
     }
 
-    // Setup initial scale (some nodes, like circles, have 1D scale)
-    if(child_scale == MP_OBJ_NULL){
-        inheritable->sx = 1.0f;
-        inheritable->sy = 1.0f;
-    }else if(mp_obj_is_type(child_scale, &vector3_class_type)){
-        inheritable->sx = ((vector3_class_obj_t*)child_scale)->x.value;
-        inheritable->sy = ((vector3_class_obj_t*)child_scale)->y.value;
-    }else if(mp_obj_is_type(child_scale, &vector2_class_type)){
-        inheritable->sx = ((vector2_class_obj_t*)child_scale)->x.value;
-        inheritable->sy = ((vector2_class_obj_t*)child_scale)->y.value;
-    }else if(mp_obj_is_float(child_scale)){
-        float scale = mp_obj_get_float(child_scale);
-        inheritable->sx = scale;
-        inheritable->sy = scale;
-    }else if(mp_obj_is_int(child_scale)){
-        float scale = (float)mp_obj_get_int(child_scale);
-        inheritable->sx = scale;
-        inheritable->sy = scale;
-    }else{
-        mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: Error: Do not know how to set initial inherit 2D scale for this `scale `object type, got %s!"), mp_obj_get_type_str(child_scale));
-    }
+    // Before doing anything, check if this child even has a parent
+    if(child_node_base->parent_node_base != NULL){
+        engine_node_base_t *seeking_node_base = child_node_base;
 
-    // Setup initial opacity and `is camera child`
-    // flag (most nodes use single float for opacity,
-    // except for things like physics and voxelspace)
-    mp_obj_t child_opacity_obj = engine_mp_load_attr_maybe(node_base->attr_accessor, MP_QSTR_opacity);
-    inheritable->opacity = 1.0f;
-    if(child_opacity_obj != MP_OBJ_NULL){
-        inheritable->opacity = mp_obj_get_float(child_opacity_obj);
-    }
-    
-    inheritable->is_camera_child = false;
+        while(true){
+            engine_node_base_t *seeking_parent_node_base = seeking_node_base->parent_node_base;
 
-    // Before doing anything else, check if this child
-    // even has a parent (still needed to ensure struct
-    // is initialzed)
-    if(node_base->parent_node_base == NULL){
-        return;
-    }
+            if(seeking_parent_node_base != NULL){
+                // Need to know if a child of a camera so that
+                // certain scaling and translations do not occur
+                if(is_child_of_camera != NULL && seeking_parent_node_base->type == NODE_TYPE_CAMERA){
+                    *is_child_of_camera = true;
+                }
 
-    // At this point, the `inheritable` structure only contains the
-    // childs attributes which are needed by the child anyways. Now,
-    // as we traverse the parents above it, if at any point one of
-    // the parents stops inheriting the below attributes, stop inheriting
-    // them from then on.
-    bool stop_inheriting_opacity = false;
-    bool stop_inheriting_scale = false;
-    bool stop_inheriting_position = false;
-    bool stop_inheriting_rotation = false;
+                mp_obj_t parent_position_obj = mp_load_attr(seeking_parent_node_base->attr_accessor, MP_QSTR_position);
+                mp_obj_t parent_rotation_obj = engine_mp_load_attr_maybe(seeking_parent_node_base->attr_accessor, MP_QSTR_rotation);
 
-    // Start the traversal upwards until we get to a NULL parent
-    engine_node_base_t *current_node_base = node_base;
+                float parent_x = 0.0f;
+                float parent_y = 0.0f;
+                float parent_rotation_radians = 0.0f;
 
-    while(true){
-        // Update which atributes to not inherit before getting the
-        // parent attributes. Only update if we haven't run into a
-        // child or parent of the child that stops inheriting. If we
-        // did, we want to always stop inheriting that attribute as
-        // we go further
-        if(stop_inheriting_opacity == false)  stop_inheriting_opacity  = !node_base_does_inherit_opacity(current_node_base);
-        if(stop_inheriting_scale == false)    stop_inheriting_scale    = !node_base_does_inherit_scale(current_node_base);
-        if(stop_inheriting_position == false) stop_inheriting_position = !node_base_does_inherit_position(current_node_base);
-        if(stop_inheriting_rotation == false) stop_inheriting_rotation = !node_base_does_inherit_rotation(current_node_base);
+                if(mp_obj_is_type(parent_position_obj, &vector3_class_type)){
+                    parent_x = ((vector3_class_obj_t*)parent_position_obj)->x.value;
+                    parent_y = ((vector3_class_obj_t*)parent_position_obj)->y.value;
+                }else{
+                    parent_x = ((vector2_class_obj_t*)parent_position_obj)->x.value;
+                    parent_y = ((vector2_class_obj_t*)parent_position_obj)->y.value;
+                }
 
-        // If everything is not being inherited, stop the
-        // loop since there's no reason to keep going
-        if(stop_inheriting_opacity == true && stop_inheriting_scale == true && stop_inheriting_position == true && stop_inheriting_rotation == true){
-            break;
-        }
+                if(parent_rotation_obj == MP_OBJ_NULL){
+                    // In the case that the rotation attribute does not exist on this node, set rotation to 0
+                    parent_rotation_radians = 0.0f;
+                }else if(mp_obj_is_type(parent_rotation_obj, &vector3_class_type)){
+                    parent_rotation_radians = ((vector3_class_obj_t*)parent_rotation_obj)->z.value;
+                }else{
+                    parent_rotation_radians = (float)mp_obj_get_float(parent_rotation_obj);
+                }
 
-        // Get the parent node base from the node we were just on.
-        // At this point, do update the attributes to not
-        engine_node_base_t *parent_node_base = current_node_base->parent_node_base;
+                if(is_child_of_camera == NULL || (is_child_of_camera != NULL && *is_child_of_camera == false)){
+                    *x += parent_x;
+                    *y += parent_y;
 
-        // Stop traversal only if the parent of
-        // the current traversal node is NULL
-        if(parent_node_base == NULL){
-            break;
-        }
+                    if(rotation != NULL){
+                        *rotation += parent_rotation_radians;
 
-        // Get this to stop translations for camera
-        // children due to camera transformation
-        if(parent_node_base->type == NODE_TYPE_CAMERA){
-            inheritable->is_camera_child = true;
-
-            // Do not care about the rest of the
-            // transformations the camera might
-            // have due to its parents
-            break;
-        }
-
-        // Setup temps that are re-used in multiple ways
-        float temp_parent_pos_x = 0.0f;
-        float temp_parent_pos_y = 0.0f;
-        float temp_parent_rot = 0.0f;
-        float temp_parent_scale_x = 1.0f;
-        float temp_parent_scale_y = 1.0f;
-        float temp_parent_opacity = 1.0f;
-
-        // Get position from parent
-        if(stop_inheriting_position == false){
-            mp_obj_t parent_position = mp_load_attr(parent_node_base->attr_accessor, MP_QSTR_position);
-
-            // Decode parent position (use projection of 3D position
-            // for respective 2D position that child will rotate around)
-            if(mp_obj_is_type(parent_position, &vector3_class_type)){
-                temp_parent_pos_x = ((vector3_class_obj_t*)parent_position)->x.value;
-                temp_parent_pos_y = ((vector3_class_obj_t*)parent_position)->y.value;
-            }else if(mp_obj_is_type(parent_position, &vector2_class_type)){
-                temp_parent_pos_x = ((vector2_class_obj_t*)parent_position)->x.value;
-                temp_parent_pos_y = ((vector2_class_obj_t*)parent_position)->y.value;
+                        // If the rotation sum is not close to zero, rotate the point (small optimization)
+                        if(engine_math_compare_floats(*rotation, 0.0f) == false){
+                            engine_math_rotate_point(x, y, parent_x, parent_y, parent_rotation_radians);
+                        }
+                    }
+                }
             }else{
-                mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: Error: Do not know how to get inherited 2D position for this `position `object type! got, %s"), mp_obj_get_type_str(parent_position));
+                // Done, reached top-most parent
+                break;
             }
+
+            seeking_node_base = seeking_node_base->parent_node_base;
         }
-
-        // Get rotation from parent
-        if(stop_inheriting_rotation == false){
-            mp_obj_t parent_rotation = engine_mp_load_attr_maybe(parent_node_base->attr_accessor, MP_QSTR_rotation);
-
-            // Decode parent rotation (use z-axis rotation of 3D node
-            // for rotation around parent for 2D child node)
-            if(parent_rotation == MP_OBJ_NULL){
-                temp_parent_rot = 0.0f;
-            }else if(mp_obj_is_type(parent_rotation, &vector3_class_type)){
-                temp_parent_rot = ((vector3_class_obj_t*)parent_rotation)->z.value;
-            }else if(mp_obj_is_float(parent_rotation)){
-                temp_parent_rot = mp_obj_get_float(parent_rotation);
-            }else if(mp_obj_is_int(parent_rotation)){
-                inheritable->rotation = (float)mp_obj_get_int(parent_rotation);
-            }else{
-                mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: Error: Do not know how to get inherited 2D rotation for this `rotation `object type! got, %s"), mp_obj_get_type_str(parent_rotation));
-            }
-        }
-
-        // Get scale from parent
-        if(stop_inheriting_scale == false){
-            mp_obj_t parent_scale = engine_mp_load_attr_maybe(parent_node_base->attr_accessor, MP_QSTR_scale);
-
-            // Decode parent scale (use xy of 3D for 2D scale)
-            if(parent_scale == MP_OBJ_NULL){
-                temp_parent_scale_x = 1.0f;
-                temp_parent_scale_y = 1.0f;
-            }else if(mp_obj_is_type(parent_scale, &vector3_class_type)){
-                temp_parent_scale_x = ((vector3_class_obj_t*)parent_scale)->x.value;
-                temp_parent_scale_y = ((vector3_class_obj_t*)parent_scale)->y.value;
-            }else if(mp_obj_is_type(parent_scale, &vector2_class_type)){
-                temp_parent_scale_x = ((vector2_class_obj_t*)parent_scale)->x.value;
-                temp_parent_scale_y = ((vector2_class_obj_t*)parent_scale)->y.value;
-            }else if(mp_obj_is_float(parent_scale)){
-                float scale = mp_obj_get_float(parent_scale);
-                temp_parent_scale_x = scale;
-                temp_parent_scale_y = scale;
-            }else if(mp_obj_is_int(parent_scale)){
-                float scale = (float)mp_obj_get_int(parent_scale);
-                temp_parent_scale_x = scale;
-                temp_parent_scale_y = scale;
-            }else{
-                mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: Error: Do not know how to get inherited 2D scale for this `scale `object type! got, %s"), mp_obj_get_type_str(parent_scale));
-            }
-        }
-
-        // Get opacity from parent
-        if(stop_inheriting_opacity == false){
-            mp_obj_t parent_opacity_obj = engine_mp_load_attr_maybe(parent_node_base->attr_accessor, MP_QSTR_opacity);
-
-            if(parent_opacity_obj != MP_OBJ_NULL){
-                temp_parent_opacity = mp_obj_get_float(parent_opacity_obj);
-            }
-        }
-
-        // Scale transformation due to parent scale
-        engine_math_scale_point(&inheritable->px, &inheritable->py, 0, 0, temp_parent_scale_x, temp_parent_scale_y);
-
-        inheritable->px += temp_parent_pos_x;
-        inheritable->py += temp_parent_pos_y;
-        inheritable->rotation += temp_parent_rot;
-        inheritable->sx *= temp_parent_scale_x;
-        inheritable->sy *= temp_parent_scale_y;
-        inheritable->opacity *= temp_parent_opacity;
-
-        // Rotate child around parent
-        engine_math_rotate_point(&inheritable->px, &inheritable->py, temp_parent_pos_x, temp_parent_pos_y, temp_parent_rot);
-
-        current_node_base = current_node_base->parent_node_base;
     }
 }
 
@@ -680,28 +495,15 @@ bool node_base_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp_
         break;
         case MP_QSTR_global_position:
         {
-            engine_inheritable_2d_t inherited;
-            node_base_inherit_2d(self_node_base, &inherited);
+            float x = 0.0f;
+            float y = 0.0f;
 
-            destination[0] = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(inherited.px), mp_obj_new_float(inherited.py)});
+            node_base_get_child_absolute_xy(&x, &y, NULL, NULL, self_node_base);
+
+            destination[0] = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(x), mp_obj_new_float(y)});
 
             return true;
         }
-        case MP_QSTR_inherit_opacity:
-            destination[0] = mp_obj_new_bool(node_base_does_inherit_opacity(self_node_base));
-            return true;
-        break;
-        case MP_QSTR_inherit_scale:
-            destination[0] = mp_obj_new_bool(node_base_does_inherit_scale(self_node_base));
-            return true;
-        break;
-        case MP_QSTR_inherit_position:
-            destination[0] = mp_obj_new_bool(node_base_does_inherit_position(self_node_base));
-            return true;
-        break;
-        case MP_QSTR_inherit_rotation:
-            destination[0] = mp_obj_new_bool(node_base_does_inherit_rotation(self_node_base));
-            return true;
         break;
     }
 
@@ -717,22 +519,6 @@ bool node_base_store_attr(engine_node_base_t *self_node_base, qstr attribute, mp
         break;
         case MP_QSTR_global_position:
             mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("NodeBase: ERROR: Setting the global position of a node is not supported yet!"));
-        break;
-        case MP_QSTR_inherit_opacity:
-            node_base_set_inherit_opacity(self_node_base, mp_obj_get_int(destination[1]));
-            return true;
-        break;
-        case MP_QSTR_inherit_scale:
-            node_base_set_inherit_scale(self_node_base, mp_obj_get_int(destination[1]));
-            return true;
-        break;
-        case MP_QSTR_inherit_position:
-            node_base_set_inherit_position(self_node_base, mp_obj_get_int(destination[1]));
-            return true;
-        break;
-        case MP_QSTR_inherit_rotation:
-            node_base_set_inherit_rotation(self_node_base, mp_obj_get_int(destination[1]));
-            return true;
         break;
     }
 

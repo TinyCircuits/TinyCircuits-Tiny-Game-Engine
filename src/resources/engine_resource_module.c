@@ -13,14 +13,14 @@ static mp_obj_t engine_resources_module_init(){
     engine_main_raise_if_not_initialized();
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_0(engine_resources_module_init_obj, engine_resources_module_init);    
+MP_DEFINE_CONST_FUN_OBJ_0(engine_resources_module_init_obj, engine_resources_module_init);
 
 
 /*  --- doc ---
     NAME: engine_resources
     ID: engine_resources
     DESC: Resources are objects that are used as references to certain data (textures/bitmaps, audio, fonts, etc.)
-    ATTR: [type=object]   [name={ref_link:TextureResource}]     [value=object] 
+    ATTR: [type=object]   [name={ref_link:TextureResource}]     [value=object]
     ATTR: [type=object]   [name={ref_link:WaveSoundResource}]   [value=object]
     ATTR: [type=object]   [name={ref_link:ToneSoundResource}]   [value=object]
     ATTR: [type=object]   [name={ref_link:FontResource}]        [value=object]
@@ -36,7 +36,7 @@ static const mp_rom_map_elem_t engine_resources_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_ToneSoundResource), (mp_obj_t)&tone_sound_resource_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_FontResource), (mp_obj_t)&font_resource_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_RTTTLSoundResource), (mp_obj_t)&rtttl_sound_resource_class_type },
-    { MP_OBJ_NEW_QSTR(MP_QSTR_MeshResource), (mp_obj_t)&mesh_resource_class_type },
+    // { MP_OBJ_NEW_QSTR(MP_QSTR_MeshResource), (mp_obj_t)&mesh_resource_class_type },
     { MP_OBJ_NEW_QSTR(MP_QSTR_NoiseResource), (mp_obj_t)&noise_resource_class_type },
 };
 

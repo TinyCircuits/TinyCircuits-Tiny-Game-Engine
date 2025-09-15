@@ -71,7 +71,7 @@ int engine_time_set(mp_obj_t input_tuple){
     PARAM: [type=tuple]   [name=time]  [value=tuple of ints in format (year, month, mday, hour, min, sec, wday{optional & unused}, yday{optional & unused}) (optional)]
     RETURN: RTC_OK, RTC_I2C_ERROR or tuple (year, month, mday, hour, min, sec, wday, yday)
 */
-static mp_obj_t engine_time_datetime(size_t n_args, const mp_obj_t *args){
+static mp_obj_t engine_time_datetime(mp_uint_t n_args, const mp_obj_t *args){
     int status = 0;
 
     if(n_args == 0){
@@ -96,17 +96,10 @@ MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_time_datetime_obj, 0, 1, engine_time_
     NAME: is_compromised
     ID: is_compromised
     DESC: Returns True if the RTC clock detected a low voltage that meant it lost power or was very close
-    RETURN: True, False, or RTC_I2C_ERROR
+    RETURN: True or False
 */
-static mp_obj_t engine_time_is_compromised(size_t n_args, const mp_obj_t *args){
-    int status = engine_rtc_check_compromised();
-
-    if(status == true || status == false){
-        mp_obj_new_bool(status);
-    }
-
-    // RTC_I2C_ERROR at this point
-    return mp_obj_new_int(status);
+static mp_obj_t engine_time_is_compromised(mp_uint_t n_args, const mp_obj_t *args){
+    return mp_obj_new_bool(engine_rtc_check_compromised());
 }
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_time_is_compromised_obj, 0, 1, engine_time_is_compromised);
 

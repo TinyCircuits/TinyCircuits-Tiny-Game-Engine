@@ -38,8 +38,8 @@ void text_2d_node_class_draw(mp_obj_t text_2d_node_base_obj, mp_obj_t camera_nod
         return;
     }
 
+    vector2_class_obj_t *text_scale =  text_2d_node->scale;
     color_class_obj_t *text_color = text_2d_node->color;
-    font_resource_class_obj_t *text_font = text_2d_node->font_resource;
     float text_box_width = mp_obj_get_float(text_2d_node->width);
     float text_box_height = mp_obj_get_float(text_2d_node->height);
 
@@ -48,25 +48,47 @@ void text_2d_node_class_draw(mp_obj_t text_2d_node_base_obj, mp_obj_t camera_nod
 
     rectangle_class_obj_t *camera_viewport = camera->viewport;
     float camera_zoom = mp_obj_get_float(camera->zoom);
-    float camera_opacity = mp_obj_get_float(camera->opacity);
 
-    // Get inherited properties
-    engine_inheritable_2d_t inherited;
-    node_base_inherit_2d(text_2d_node_base, &inherited);
+    float text_resolved_hierarchy_x = 0.0f;
+    float text_resolved_hierarchy_y = 0.0f;
+    float text_resolved_hierarchy_rotation = 0.0f;
+    bool text_is_child_of_camera = false;
+    node_base_get_child_absolute_xy(&text_resolved_hierarchy_x, &text_resolved_hierarchy_y, &text_resolved_hierarchy_rotation, &text_is_child_of_camera, text_2d_node_base);
 
-    if(inherited.is_camera_child == false){
-        engine_camera_transform_2d(camera_node, &inherited.px, &inherited.py, &inherited.rotation);
+    // Store the non-rotated x and y for a second
+    float text_rotated_x = text_resolved_hierarchy_x;
+    float text_rotated_y = text_resolved_hierarchy_y;
+    float text_rotation = text_resolved_hierarchy_rotation;
+
+    if(text_is_child_of_camera == false){
+        float camera_resolved_hierarchy_x = 0.0f;
+        float camera_resolved_hierarchy_y = 0.0f;
+        float camera_resolved_hierarchy_rotation = 0.0f;
+        node_base_get_child_absolute_xy(&camera_resolved_hierarchy_x, &camera_resolved_hierarchy_y, &camera_resolved_hierarchy_rotation, NULL, camera_node);
+        camera_resolved_hierarchy_rotation = -camera_resolved_hierarchy_rotation;
+
+        text_rotated_x = (text_rotated_x - camera_resolved_hierarchy_x) * camera_zoom;
+        text_rotated_y = (text_rotated_y - camera_resolved_hierarchy_y) * camera_zoom;
+
+        // Rotate rectangle origin about the camera
+        engine_math_rotate_point(&text_rotated_x, &text_rotated_y, 0, 0, camera_resolved_hierarchy_rotation);
+
+        text_rotation += camera_resolved_hierarchy_rotation;
     }else{
         camera_zoom = 1.0f;
     }
 
-    inherited.px += camera_viewport->width/2;
-    inherited.py += camera_viewport->height/2;
-
-    text_opacity = inherited.opacity*camera_opacity;
+    text_rotated_x += camera_viewport->width/2;
+    text_rotated_y += camera_viewport->height/2;
 
     float text_letter_spacing = mp_obj_get_float(text_2d_node->letter_spacing);
     float text_line_spacing = mp_obj_get_float(text_2d_node->line_spacing);
+
+    font_resource_class_obj_t *text_font = text_2d_node->font_resource;
+
+    if(text_font == mp_const_none){
+        text_font = &default_font;
+    }
 
     // Decide which shader to use per-pixel
     engine_shader_t *text_shader = NULL;
@@ -80,19 +102,14 @@ void text_2d_node_class_draw(mp_obj_t text_2d_node_base_obj, mp_obj_t camera_nod
         text_shader->program[2] = (text_color->value >> 0) & 0b11111111;
 
         memcpy(text_shader->program+3, &t, sizeof(float));
-    }else if(text_opacity < 1.0f || text_font->texture_resource->alpha_mask != 0){
-        text_shader = engine_get_builtin_shader(OPACITY_SHADER);   
+    }else
+    if(text_opacity < 1.0f || text_font->texture_resource->alpha_mask != 0){
+        text_shader = engine_get_builtin_shader(OPACITY_SHADER);
     }else{
         text_shader = engine_get_builtin_shader(EMPTY_SHADER);
     }
 
-    engine_draw_text(text_font,
-                     text_2d_node->text,
-                     inherited.px, inherited.py,
-                     text_box_width, text_box_height,
-                     text_letter_spacing, text_line_spacing,
-                     inherited.sx*camera_zoom, inherited.sy*camera_zoom,
-                     inherited.rotation, text_opacity, text_shader);
+    engine_draw_text(text_font, text_2d_node->text, text_rotated_x, text_rotated_y, text_box_width, text_box_height, text_letter_spacing, text_line_spacing, text_scale->x.value*camera_zoom, text_scale->y.value*camera_zoom, text_rotation, text_opacity, text_shader);
 }
 
 
@@ -110,6 +127,9 @@ static void text_2d_node_class_calculate_dimensions(engine_text_2d_node_class_ob
     float text_box_height = 0.0f;
 
     font_resource_class_obj_t *text_font = text_2d_node->font_resource;
+    if(text_font == mp_const_none){
+        text_font = &default_font;
+    }
 
     font_resource_get_box_dimensions(text_font, text_2d_node->text, &text_box_width, &text_box_height, mp_obj_get_float(text_2d_node->letter_spacing), mp_obj_get_float(text_2d_node->line_spacing));
 
@@ -199,11 +219,9 @@ bool text_2d_node_store_attr(engine_node_base_t *self_node_base, qstr attribute,
             return true;
         break;
         case MP_QSTR_text:
-        {
             self->text = destination[1];
             text_2d_node_class_calculate_dimensions(self);
             return true;
-        }
         break;
         case MP_QSTR_rotation:
             self->rotation = destination[1];
@@ -266,10 +284,6 @@ static mp_attr_fun_t text_2d_node_class_attr(mp_obj_t self_in, qstr attribute, m
     PARAM:  [type=float]                            [name=line_spacing]                                 [value=any]
     PARAM:  [type={ref_link:Color}|int (RGB565)]    [name=color]                                        [value=color]
     PARAM:  [type=int]                              [name=layer]                                        [value=0 ~ 127]
-    PARAM:  [type=bool]                             [name=inherit_position]                             [value=True or False]
-    PARAM:  [type=bool]                             [name=inherit_opacity]                              [value=True or False]
-    PARAM:  [type=bool]                             [name=inherit_rotation]                             [value=True or False]
-    PARAM:  [type=bool]                             [name=inherit_scale]                                [value=True or False]
     ATTR:   [type=function]                         [name={ref_link:add_child}]                         [value=function]
     ATTR:   [type=function]                         [name={ref_link:get_child}]                         [value=function]
     ATTR:   [type=function]                         [name={ref_link:get_child_count}]                   [value=function]
@@ -277,7 +291,6 @@ static mp_attr_fun_t text_2d_node_class_attr(mp_obj_t self_in, qstr attribute, m
     ATTR:   [type=function]                         [name={ref_link:node_base_mark_destroy_all}]        [value=function]
     ATTR:   [type=function]                         [name={ref_link:node_base_mark_destroy_children}]   [value=function]
     ATTR:   [type=function]                         [name={ref_link:remove_child}]                      [value=function]
-    ATTR:   [type=function]                         [name={ref_link:get_parent}]                        [value=function]
     ATTR:   [type=function]                         [name={ref_link:tick}]                              [value=function]
     ATTR:   [type=float]                            [name=width]                                        [value=any (read-only)]
     ATTR:   [type=float]                            [name=height]                                       [value=any (read-only)]
@@ -292,34 +305,26 @@ static mp_attr_fun_t text_2d_node_class_attr(mp_obj_t self_in, qstr attribute, m
     ATTR:   [type=float]                            [name=line_spacing]                                 [value=any]
     ATTR:   [type={ref_link:Color}|int (RGB565)]    [name=color]                                        [value=color]
     ATTR:   [type=int]                              [name=layer]                                        [value=0 ~ 127]
-    ATTR:   [type=bool]                             [name=inherit_position]                             [value=True or False]
-    ATTR:   [type=bool]                             [name=inherit_opacity]                              [value=True or False]
-    ATTR:   [type=bool]                             [name=inherit_rotation]                             [value=True or False]
-    ATTR:   [type=bool]                             [name=inherit_scale]                                [value=True or False]
     OVRR:   [type=function]                         [name={ref_link:tick}]                              [value=function]
 */
 mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
     ENGINE_INFO_PRINTF("New Text2DNode");
 
     mp_arg_t allowed_args[] = {
-        { MP_QSTR_child_class,          MP_ARG_OBJ,  {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_position,             MP_ARG_OBJ,  {.u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL)} },
-        { MP_QSTR_font,                 MP_ARG_OBJ,  {.u_obj = &default_font} },
-        { MP_QSTR_text,                 MP_ARG_OBJ,  {.u_obj = mp_const_none} },
-        { MP_QSTR_rotation,             MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(0.0f)} },
-        { MP_QSTR_scale,                MP_ARG_OBJ,  {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)})} },
-        { MP_QSTR_opacity,              MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(1.0f)} },
-        { MP_QSTR_letter_spacing,       MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(0.0f)} },
-        { MP_QSTR_line_spacing,         MP_ARG_OBJ,  {.u_obj = mp_obj_new_float(0.0f)} },
-        { MP_QSTR_color,                MP_ARG_OBJ,  {.u_obj = mp_const_none} },
-        { MP_QSTR_layer,                MP_ARG_INT,  {.u_int = 0} },
-        { MP_QSTR_inherit_position,     MP_ARG_BOOL, {.u_bool = true} },
-        { MP_QSTR_inherit_opacity,      MP_ARG_BOOL, {.u_bool = true} },
-        { MP_QSTR_inherit_rotation,     MP_ARG_BOOL, {.u_bool = true} },
-        { MP_QSTR_inherit_scale,        MP_ARG_BOOL, {.u_bool = true} },
+        { MP_QSTR_child_class,          MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_position,             MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 0, 0, NULL)} },
+        { MP_QSTR_font,                 MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_text,                 MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_rotation,             MP_ARG_OBJ, {.u_obj = mp_obj_new_float(0.0f)} },
+        { MP_QSTR_scale,                MP_ARG_OBJ, {.u_obj = vector2_class_new(&vector2_class_type, 2, 0, (mp_obj_t[]){mp_obj_new_float(1.0f), mp_obj_new_float(1.0f)})} },
+        { MP_QSTR_opacity,              MP_ARG_OBJ, {.u_obj = mp_obj_new_float(1.0f)} },
+        { MP_QSTR_letter_spacing,       MP_ARG_OBJ, {.u_obj = mp_obj_new_float(0.0f)} },
+        { MP_QSTR_line_spacing,         MP_ARG_OBJ, {.u_obj = mp_obj_new_float(0.0f)} },
+        { MP_QSTR_color,                MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_layer,                MP_ARG_INT, {.u_int = 0} }
     };
     mp_arg_val_t parsed_args[MP_ARRAY_SIZE(allowed_args)];
-    enum arg_ids {child_class, position, font, text, rotation, scale, opacity, letter_spacing, line_spacing, color, layer, inherit_position, inherit_opacity, inherit_rotation, inherit_scale};
+    enum arg_ids {child_class, position, font, text, rotation, scale, opacity, letter_spacing, line_spacing, color, layer};
     bool inherited = false;
 
     // If there is one positional argument and it isn't the first
@@ -356,11 +361,6 @@ mp_obj_t text_2d_node_class_new(const mp_obj_type_t *type, size_t n_args, size_t
     text_2d_node->letter_spacing = parsed_args[letter_spacing].u_obj;
     text_2d_node->line_spacing = parsed_args[line_spacing].u_obj;
     text_2d_node->color = engine_color_wrap_opt(parsed_args[color].u_obj);
-    node_base_set_inherit_position(node_base, parsed_args[inherit_position].u_bool);
-    node_base_set_inherit_opacity(node_base, parsed_args[inherit_opacity].u_bool);
-    node_base_set_inherit_rotation(node_base, parsed_args[inherit_rotation].u_bool);
-    node_base_set_inherit_scale(node_base, parsed_args[inherit_scale].u_bool);
-
     text_2d_node->width = mp_obj_new_int(0);
     text_2d_node->height = mp_obj_new_int(0);
 

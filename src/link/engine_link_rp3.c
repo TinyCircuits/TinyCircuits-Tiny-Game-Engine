@@ -163,24 +163,20 @@ void engine_link_on_just_disconnected(){
 }
 
 
-uint32_t engine_link_send(const uint8_t *send_buffer, uint32_t count, uint32_t offset){
+void engine_link_send(const uint8_t *send_buffer, uint32_t count, uint32_t offset){
     // Don't try to send if not connected to anything
     if(!engine_link_connected()){
-        return 0;
+        return;
     }
-
-    uint32_t sent_count = 0;
 
     // Send
     if(is_host){
-        sent_count = tuh_cdc_write(mounted_device_cdc_daddr, send_buffer+offset, count);
+        tuh_cdc_write(mounted_device_cdc_daddr, send_buffer+offset, count);
         tuh_cdc_write_flush(mounted_device_cdc_daddr);
     }else{
-        sent_count = tud_cdc_write(send_buffer+offset, count);
+        tud_cdc_write(send_buffer+offset, count);
         tud_cdc_write_flush();
     }
-
-    return sent_count;
 }
 
 

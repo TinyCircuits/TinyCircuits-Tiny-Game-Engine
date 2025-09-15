@@ -9,10 +9,6 @@
 #define NODE_BASE_DISABLED_BIT_INDEX 1
 #define NODE_BASE_JUST_ADDED_BIT_INDEX 2
 #define NODE_BASE_DELETABLE_BIT_INDEX 3
-#define NODE_BASE_INHERIT_OPACITY_BIT_INDEX 4
-#define NODE_BASE_INHERIT_SCALE_BIT_INDEX 5
-#define NODE_BASE_INHERIT_POSITION_BIT_INDEX 6
-#define NODE_BASE_INHERIT_ROTATION_BIT_INDEX 7
 
 typedef struct{
     mp_obj_base_t base;                     // All nodes get defined by what is placed in this
@@ -23,53 +19,23 @@ typedef struct{
     uint8_t type;                           // The type of this node (see 'node_types.h')
     void *attr_accessor;                    // Used in conjunction with mp_get_attr
     void *node;                             // Points to subclass if 'inherited' true otherwise to engine node struct
-    
+
     linked_list children_node_bases;                // Linked list of child node_bases
     void *parent_node_base;                         // If this is a child, pointer to parent node_base (can only have one parent)
     linked_list_node *location_in_parents_children; // The location of this node in the parents linked list of children (used for easy deletion upon garbage collection of this node)
 }engine_node_base_t;
 
 
-// Common data that 2D nodes inherit
-typedef struct{
-    float px;
-    float py;
-
-    float rotation;
-
-    float sx;
-    float sy;
-
-    float opacity;
-    bool is_camera_child;
-}engine_inheritable_2d_t;
-
-
 void node_base_init(engine_node_base_t *node_base, const mp_obj_type_t *mp_type, uint8_t node_type, uint8_t layer);
-
 bool node_base_is_visible(engine_node_base_t *node_base);
 void node_base_set_if_visible(engine_node_base_t *node_base, bool is_visible);
-
 bool node_base_is_disabled(engine_node_base_t *node_base);
 void node_base_set_if_disabled(engine_node_base_t *node_base, bool is_disabled);
-
 bool node_base_is_just_added(engine_node_base_t *node_base);
 void node_base_set_if_just_added(engine_node_base_t *node_base, bool is_just_added);
-
 bool node_base_is_deletable(engine_node_base_t *node_base);
 void node_base_set_if_deletable(engine_node_base_t *node_base, bool is_deletable);
 
-bool node_base_does_inherit_opacity(engine_node_base_t *node_base);
-void node_base_set_inherit_opacity(engine_node_base_t *node_base, bool inherit_opacity);
-
-bool node_base_does_inherit_scale(engine_node_base_t *node_base);
-void node_base_set_inherit_scale(engine_node_base_t *node_base, bool inherit_scale);
-
-bool node_base_does_inherit_position(engine_node_base_t *node_base);
-void node_base_set_inherit_position(engine_node_base_t *node_base, bool inherit_position);
-
-bool node_base_does_inherit_rotation(engine_node_base_t *node_base);
-void node_base_set_inherit_rotation(engine_node_base_t *node_base, bool inherit_rotation);
 
 // Given an object that may be a Python class instance or the node_base itself,
 // get the node_base from it. Returns `true` if instance and `false` if not
@@ -102,8 +68,7 @@ static MP_DEFINE_CONST_FUN_OBJ_2(node_base_remove_child_obj, node_base_remove_ch
 mp_obj_t node_base_get_parent(mp_obj_t self_in);
 static MP_DEFINE_CONST_FUN_OBJ_1(node_base_get_parent_obj, node_base_get_parent);
 
-// Fills 'inheritable' with data from parents and child
-void node_base_inherit_2d(mp_obj_t child_node_base, engine_inheritable_2d_t *inheritable);
+void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, bool *is_child_of_camera, mp_obj_t child_node_base);
 
 void node_base_set_attr_handler_default(mp_obj_t node_instance);
 void node_base_use_default_attr_handler(mp_obj_t self_in, qstr attribute, mp_obj_t *destination);

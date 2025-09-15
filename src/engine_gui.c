@@ -21,11 +21,12 @@ bool gui_passing_enabled = false;
 
 
 void resolve_gui_node_position(engine_node_base_t *gui_node_base, float *x, float *y){
-    engine_inheritable_2d_t inherited;
-    node_base_inherit_2d(gui_node_base, &inherited);
-
-    *x = inherited.px;
-    *y = inherited.py;
+    // engine_inheritable_2d_t inherited;
+    // node_base_inherit_2d(gui_node_base, &inherited);
+    //
+    // *x = inherited.px;
+    // *y = inherited.py;
+    node_base_get_child_absolute_xy(x, y, NULL, NULL, gui_node_base);
 }
 
 
@@ -402,13 +403,13 @@ void engine_gui_tick(){
     }else if(button_is_pressed_autorepeat(&BUTTON_DPAD_RIGHT)){
         dir_x = 1.0f;
     }
-    
+
     if(button_is_pressed_autorepeat(&BUTTON_DPAD_UP)){
         dir_y = -1.0f;
     }else if(button_is_pressed_autorepeat(&BUTTON_DPAD_DOWN)){
         dir_y = 1.0f;
     }
-    
+
     if((bool)dir_x || (bool)dir_y){
         bool allow_wrap = false;
         if(gui_wrapping_enabled){
