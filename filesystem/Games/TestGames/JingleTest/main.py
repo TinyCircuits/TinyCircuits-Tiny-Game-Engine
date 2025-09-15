@@ -9,6 +9,9 @@ from engine_nodes import Circle2DNode, CameraNode
 circle = Circle2DNode()
 cam = CameraNode()
 
+import os
+os.chdir("Games/JingleTest")
+
 wave = WaveSoundResource("ThumbyColorJingle1.wav")
 
 while True:

@@ -19,7 +19,7 @@ typedef struct{
     uint8_t type;                           // The type of this node (see 'node_types.h')
     void *attr_accessor;                    // Used in conjunction with mp_get_attr
     void *node;                             // Points to subclass if 'inherited' true otherwise to engine node struct
-    
+
     linked_list children_node_bases;                // Linked list of child node_bases
     void *parent_node_base;                         // If this is a child, pointer to parent node_base (can only have one parent)
     linked_list_node *location_in_parents_children; // The location of this node in the parents linked list of children (used for easy deletion upon garbage collection of this node)
@@ -64,6 +64,9 @@ static MP_DEFINE_CONST_FUN_OBJ_1(node_base_get_child_count_obj, node_base_get_ch
 
 mp_obj_t node_base_remove_child(mp_obj_t self_parent_in, mp_obj_t child_in);
 static MP_DEFINE_CONST_FUN_OBJ_2(node_base_remove_child_obj, node_base_remove_child);
+
+mp_obj_t node_base_get_parent(mp_obj_t self_in);
+static MP_DEFINE_CONST_FUN_OBJ_1(node_base_get_parent_obj, node_base_get_parent);
 
 void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, bool *is_child_of_camera, mp_obj_t child_node_base);
 

@@ -16,16 +16,16 @@
     ID: tick
     DESC: Overridable tick callback
     PARAM: [type=object] [name=self] [value=object]
-    PARAM: [type=float]  [name=dt] [value=positive float in seconds]                                                                                                  
+    PARAM: [type=float]  [name=dt] [value=positive float in seconds]
     RETURN: None
-*/ 
+*/
 /*  --- doc ---
     NAME: draw
     ID: draw
-    DESC: Overridable draw callback 
-    PARAM: [type=Node] [name=camera] [value=one of the camera nodes in the scene]                                                                                                         
+    DESC: Overridable draw callback
+    PARAM: [type=Node] [name=camera] [value=one of the camera nodes in the scene]
     RETURN: None
-*/ 
+*/
 void (*default_instance_attr_func)(mp_obj_t self_in, qstr attribute, mp_obj_t *destination) = NULL;
 
 
@@ -156,9 +156,9 @@ mp_obj_t node_base_del(mp_obj_t self_in){
 /*  --- doc ---
     NAME: mark_destroy
     ID: node_base_mark_destroy
-    DESC: Destroys node. Calls finalizer and frees memory for MicroPython to use later                                                                         
+    DESC: Destroys node. Calls finalizer and frees memory for MicroPython to use later
     RETURN: None
-*/ 
+*/
 mp_obj_t node_base_mark_destroy(mp_obj_t self_in){
     engine_node_base_t *node_base = self_in;
 
@@ -175,9 +175,9 @@ mp_obj_t node_base_mark_destroy(mp_obj_t self_in){
 /*  --- doc ---
     NAME: mark_destroy_children
     ID: node_base_mark_destroy_children
-    DESC: Destroys only the children of this node as well as the childrens' children. Calls finalizer and frees memory for MicroPython to use later                                                                         
+    DESC: Destroys only the children of this node as well as the childrens' children. Calls finalizer and frees memory for MicroPython to use later
     RETURN: None
-*/ 
+*/
 mp_obj_t node_base_mark_destroy_children(mp_obj_t self_in){
     engine_node_base_t *node_base = self_in;
 
@@ -202,9 +202,9 @@ mp_obj_t node_base_mark_destroy_children(mp_obj_t self_in){
 /*  --- doc ---
     NAME: mark_destroy_all
     ID: node_base_mark_destroy_all
-    DESC: Destroys node, its children, and the childrens' children. Calls finalizer and frees memory for MicroPython to use later for each node                                                                                              
+    DESC: Destroys node, its children, and the childrens' children. Calls finalizer and frees memory for MicroPython to use later for each node
     RETURN: None
-*/ 
+*/
 mp_obj_t node_base_mark_destroy_all(mp_obj_t self_in){
     engine_node_base_t *node_base = self_in;
     node_base_mark_destroy_children(self_in);
@@ -218,16 +218,16 @@ mp_obj_t node_base_mark_destroy_all(mp_obj_t self_in){
     NAME: add_child
     ID: add_child
     DESC: Adds child to the node this is being called on
-    PARAM: [type=Node] [name=child] [value=any node]                                                                                                         
+    PARAM: [type=Node] [name=child] [value=any node]
     RETURN: None
-*/ 
+*/
 mp_obj_t node_base_add_child(mp_obj_t self_parent_in, mp_obj_t child_in){
     // Get the node_base for cases with the child is a Python
     // class instance or just the node's native built-in type
     // without inheritance
     engine_node_base_t *parent_node_base = node_base_get(self_parent_in, NULL);
     engine_node_base_t *child_node_base = node_base_get(child_in, NULL);
-    
+
     ENGINE_INFO_PRINTF("Node Base: Adding child... parent node type: %d, child node type: %d", parent_node_base->type, child_node_base->type);
 
     child_node_base->location_in_parents_children = linked_list_add_obj(&parent_node_base->children_node_bases, child_node_base);
@@ -241,9 +241,9 @@ mp_obj_t node_base_add_child(mp_obj_t self_parent_in, mp_obj_t child_in){
     NAME: get_child
     ID: get_child
     DESC: Gets child
-    PARAM: [type=int] [name=index] [value=any positive integer]                                                                                                        
+    PARAM: [type=int] [name=index] [value=any positive integer]
     RETURN: Node
-*/ 
+*/
 mp_obj_t node_base_get_child(mp_obj_t self_parent_in, mp_obj_t index_obj){
     ENGINE_INFO_PRINTF("Node Base: Getting child...");
 
@@ -273,9 +273,9 @@ mp_obj_t node_base_get_child(mp_obj_t self_parent_in, mp_obj_t index_obj){
 /*  --- doc ---
     NAME: get_child_count
     ID: get_child_count
-    DESC: Gets the count of children directly descended from this node but not the children of the children                                                                                                       
+    DESC: Gets the count of children directly descended from this node but not the children of the children
     RETURN: 0 or positive integer
-*/ 
+*/
 mp_obj_t node_base_get_child_count(mp_obj_t self_parent_in){
     ENGINE_INFO_PRINTF("Node Base: Getting child count...");
 
@@ -288,9 +288,9 @@ mp_obj_t node_base_get_child_count(mp_obj_t self_parent_in){
     NAME: remove_child
     ID: remove_child
     DESC: Removes child from the node this is being called on
-    PARAM: [type=Node] [name=child] [value=any node]                                                                                                        
+    PARAM: [type=Node] [name=child] [value=any node]
     RETURN: None
-*/ 
+*/
 mp_obj_t node_base_remove_child(mp_obj_t self_parent_in, mp_obj_t child_in){
     ENGINE_INFO_PRINTF("Node Base: Removing child...");
 
@@ -307,6 +307,23 @@ mp_obj_t node_base_remove_child(mp_obj_t self_parent_in, mp_obj_t child_in){
     }
 
     return mp_const_none;
+}
+
+
+/*  --- doc ---
+    NAME: get_parent
+    ID: get_parent
+    DESC: Returns the parent node of the node this is called on
+    RETURN: None or `object`
+*/
+mp_obj_t node_base_get_parent(mp_obj_t self_in){
+    engine_node_base_t *self = self_in;
+
+    if(self->parent_node_base == NULL){
+        return mp_const_none;
+    }else{
+        return (mp_obj_t)self->parent_node_base;
+    }
 }
 
 
@@ -342,15 +359,15 @@ void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, bool *
         if(rotation != NULL) *rotation = (float)mp_obj_get_float(rotation_obj);
     }
 
-    // Before doing anything, check if this child even has a parent 
+    // Before doing anything, check if this child even has a parent
     if(child_node_base->parent_node_base != NULL){
         engine_node_base_t *seeking_node_base = child_node_base;
-        
+
         while(true){
             engine_node_base_t *seeking_parent_node_base = seeking_node_base->parent_node_base;
 
             if(seeking_parent_node_base != NULL){
-                // Need to know if a child of a camera so that 
+                // Need to know if a child of a camera so that
                 // certain scaling and translations do not occur
                 if(is_child_of_camera != NULL && seeking_parent_node_base->type == NODE_TYPE_CAMERA){
                     *is_child_of_camera = true;
@@ -383,7 +400,7 @@ void node_base_get_child_absolute_xy(float *x, float *y, float *rotation, bool *
                 if(is_child_of_camera == NULL || (is_child_of_camera != NULL && *is_child_of_camera == false)){
                     *x += parent_x;
                     *y += parent_y;
-                    
+
                     if(rotation != NULL){
                         *rotation += parent_rotation_radians;
 
@@ -463,6 +480,11 @@ bool node_base_load_attr(engine_node_base_t *self_node_base, qstr attribute, mp_
             destination[1] = self_node_base;
             return true;
         break;
+      case MP_QSTR_get_parent:
+          destination[0] = MP_OBJ_FROM_PTR(&node_base_get_parent);
+          destination[1] = self_node_base;
+          return true;
+      break;
         case MP_QSTR_layer:
             destination[0] = mp_obj_new_int(self_node_base->layer);
             return true;
