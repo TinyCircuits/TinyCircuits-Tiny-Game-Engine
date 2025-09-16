@@ -6,8 +6,8 @@ from engine_math import Vector3, Matrix4x4
 from engine_resources import NoiseResource
 import engine_io
 import math
-# import machine
-# machine.freq(250 * 1000 * 1000)
+
+# engine.freq(250 * 1000 * 1000)
 
 engine.fps_limit(60)
 

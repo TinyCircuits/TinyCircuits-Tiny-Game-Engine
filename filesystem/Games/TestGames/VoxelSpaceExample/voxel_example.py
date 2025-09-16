@@ -13,9 +13,7 @@ import math
 import os
 import time
 
-# import machine
-
-# machine.freq(250 * 1000 * 1000)
+# engine.freq(250 * 1000 * 1000)
 
 
 engine.fps_limit(60)
