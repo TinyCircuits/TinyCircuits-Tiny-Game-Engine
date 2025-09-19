@@ -3,7 +3,7 @@ run-name: Linux Push Build
 on: [push]
 jobs:
   linux_push_build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - run: echo "Starting build process"
 
@@ -30,7 +30,7 @@ jobs:
         run: |
           sudo apt install -y libsdl2-2.0-0
           sudo apt install -y libsdl2-dev
-          sudo apt install -y libffi7
+          sudo apt install -y libffi8
 
       - name: Setup UNIX port and build
         run: |
