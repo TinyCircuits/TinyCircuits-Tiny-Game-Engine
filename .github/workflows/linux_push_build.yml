@@ -28,6 +28,7 @@ jobs:
 
       - name: Install Linux build dependencies
         run: |
+          sudo apt update --fix-missing
           sudo apt install -y libsdl2-2.0-0
           sudo apt install -y libsdl2-dev
           sudo apt install -y libffi8
