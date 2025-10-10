@@ -171,6 +171,7 @@ bool delay_store_attr(delay_class_obj_t *delay, qstr attribute, mp_obj_t *destin
 /* --- doc ---
    NAME: after
    ID: delay_after
+   PARAM: [type=object] [name=self] [value=Delay]
    DESC: After `delay` amount of time this callback function is called
    RETURN: None
 */
