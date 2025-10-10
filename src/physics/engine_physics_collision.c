@@ -322,7 +322,7 @@ void engine_physics_rect_circle_get_contact(physics_contact_t *contact, float ci
     float a_edge_v1_y = 0.0f;
 
     engine_physics_rect_rect_get_contacting(abs_rect->abs_x, abs_rect->abs_y, -contact->collision_normal_x, -contact->collision_normal_y, &a_max_proj_vertex_x, &a_max_proj_vertex_y, &a_edge_v0_x, &a_edge_v0_y, &a_edge_v1_x, &a_edge_v1_y, abs_rect->vertices_x, abs_rect->vertices_y);
-
+    
     float circle_radius = mp_obj_get_float(physics_circle->radius);
 
     float circle_pos_proj = engine_math_dot_product(abs_circle->abs_x, abs_circle->abs_y, contact->collision_normal_y, -contact->collision_normal_x);
@@ -415,7 +415,7 @@ bool engine_physics_check_rect_circle_collision(physics_abs_rectangle_t *abs_rec
     for(uint8_t ivx=0; ivx<4; ivx++){
         float vert_x = abs_rect->abs_x + abs_rect->vertices_x[ivx];
         float vert_y = abs_rect->abs_y + abs_rect->vertices_y[ivx];
-
+        
         // Get the position difference between rect vertex and circle
         // (rect vertices are rotated when the rect's rotation changes)
         float delta_x = vert_x - abs_rect->abs_x;
