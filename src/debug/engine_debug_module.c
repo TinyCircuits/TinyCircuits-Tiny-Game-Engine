@@ -1,6 +1,8 @@
+#line 2 "engine_debug_module.c"
 #include "py/obj.h"
 
 #include "debug_print.h"
+#include "../fault/engine_trace_portable.h"
 
 
 /*  --- doc ---
@@ -8,7 +10,7 @@
     ID: disable_all
     DESC: Disables all debug levels/outputs
     RETURN: None
-*/ 
+*/
 static mp_obj_t engine_debug_disable_all(){
     DEBUG_INFO_ENABLED = false;
     DEBUG_WARNINGS_ENABLED = false;
@@ -25,7 +27,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_debug_disable_all_obj, engine_debug_disable_all
     ID: enable_all
     DESC: Enables all debug levels/outputs
     RETURN: None
-*/ 
+*/
 static mp_obj_t engine_debug_enable_all(){
     DEBUG_INFO_ENABLED = true;
     DEBUG_WARNINGS_ENABLED = true;
@@ -36,6 +38,11 @@ static mp_obj_t engine_debug_enable_all(){
 }
 MP_DEFINE_CONST_FUN_OBJ_0(engine_debug_enable_all_obj, engine_debug_enable_all);
 
+TRACE_DECL(static mp_obj_t engine_runtime_tracer_breakpoint, (),
+  *((int*)0) = 1;
+)
+MP_DEFINE_CONST_FUN_OBJ_0(engine_runtime_tracer_breakpoint_obj, engine_runtime_tracer_breakpoint);
+
 
 /*  --- doc ---
     NAME: enable_setting
@@ -43,7 +50,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_debug_enable_all_obj, engine_debug_enable_all);
     DESC: Enables a debug level/output
     PARAM: [type=enum/int]   [name=debug_setting]   [value=enum/int 0 ~ 3]
     RETURN: None
-*/ 
+*/
 static mp_obj_t engine_debug_enable_setting(mp_obj_t debug_setting){
     // Translate the debug level and check if inbounds
     uint8_t engine_debug_setting = mp_obj_get_int(debug_setting);
@@ -53,7 +60,7 @@ static mp_obj_t engine_debug_enable_setting(mp_obj_t debug_setting){
             DEBUG_INFO_ENABLED = true;
             ENGINE_FORCE_PRINTF("Enabled info debug prints");
         break;
-        case DEBUG_SETTING_WARNINGS: 
+        case DEBUG_SETTING_WARNINGS:
             DEBUG_WARNINGS_ENABLED = true;
             ENGINE_FORCE_PRINTF("Enabled warning debug prints");
         break;
@@ -76,17 +83,18 @@ MP_DEFINE_CONST_FUN_OBJ_1(engine_debug_enable_setting_obj, engine_debug_enable_s
     NAME: engine_debug
     ID: engine_debug
     DESC: Module for what types of information gets printed from the engine
-    ATTR: [type=function]   [name={ref_link:enable_all}]        [value=function] 
+    ATTR: [type=function]   [name={ref_link:enable_all}]        [value=function]
     ATTR: [type=function]   [name={ref_link:disable_all}]       [value=function]
     ATTR: [type=function]   [name={ref_link:enable_setting}]    [value=function]
     ATTR: [type=enum/int]   [name=info]                         [value=0]
     ATTR: [type=enum/int]   [name=warnings]                     [value=1]
     ATTR: [type=enum/int]   [name=errors]                       [value=2]
     ATTR: [type=enum/int]   [name=performance]                  [value=3]
-*/ 
+*/
 static const mp_rom_map_elem_t engine_debug_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_engine_debug) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_enable_all), (mp_obj_t)&engine_debug_enable_all_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_runtime_tracer_breakpoint), (mp_obj_t)&engine_runtime_tracer_breakpoint_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_disable_all), (mp_obj_t)&engine_debug_disable_all_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_enable_setting), (mp_obj_t)&engine_debug_enable_setting_obj },
     { MP_ROM_QSTR(MP_QSTR_info), MP_ROM_INT(DEBUG_SETTING_INFO) },

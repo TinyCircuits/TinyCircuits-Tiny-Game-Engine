@@ -1,3 +1,4 @@
+#line 2 "engine_main.c"
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
@@ -24,12 +25,14 @@
 #include "link/engine_link_module.h"
 #include "py/mpstate.h"
 
+#include "fault/engine_trace_portable.h"
+
 #if defined(__EMSCRIPTEN__)
 
 #elif defined(__unix__)
     #include <dirent.h>
 #elif defined(__arm__)
-    
+
 #endif
 
 
@@ -58,7 +61,7 @@ void engine_main_raise_if_not_initialized(){
 }
 
 
-void engine_main_settings_write(float volume, float brightness){
+TRACE_DECL(void engine_main_settings_write, (float volume, float brightness),
     engine_file_open_create_write(0, &settings_file_location);
 
     char buffer[32];
@@ -70,17 +73,17 @@ void engine_main_settings_write(float volume, float brightness){
     engine_file_write(0, buffer, size);
 
     engine_file_close(0);
-}
+)
 
 
-void engine_main_settings_read(){
+TRACE_DECL(void engine_main_settings_read, (),
     // Default values
     float volume = 1.0f;
     float brightness = 1.0f;
 
     engine_file_open_read(0, &settings_file_location);
     uint32_t file_size = engine_file_size(0);
-    
+
     // Buffer to hold read characters
     char line_buffer[32] = {0};
     uint8_t line_buffer_cursor = 0;
@@ -88,7 +91,7 @@ void engine_main_settings_read(){
     uint8_t equals_index = 0;
     uint8_t line_number = 1;
     uint32_t total_read_amount = 0;
-    
+
     while(true){
         // Accumlate one character at a time into the buffer
         uint8_t read_amount = engine_file_read(0, &character, 1);
@@ -150,7 +153,7 @@ void engine_main_settings_read(){
     // Set the master volume and brightness in the other engine modules
     engine_audio_apply_master_volume((float)volume);
     engine_display_apply_brightness((float)brightness);
-}
+)
 
 
 void engine_main_handle_settings(){
@@ -168,7 +171,7 @@ void engine_main_handle_settings(){
 }
 
 
-void engine_main_reset(){
+TRACE_DECL(void engine_main_reset, (),
     ENGINE_PRINTF("EngineMain: Resetting engine...\n");
 
     // Probably should reset the processor clock speed to base 150MHz (depending on platform): TODO - engine_set_freq(150 * 1000 * 1000);
@@ -187,10 +190,10 @@ void engine_main_reset(){
     engine_io_setup();                  // IO setup should be called first so that RGB and motor rumble PWM get their required slices for their GPIO
     engine_audio_setup_playback();      // This should be called after IO setup so that all required slices for other IO are taken first and then callback for audio playback can be put on any unused slice
     engine_display_init_framebuffers(); // Always recreate the MicroPython framebuffers after they were collected (not the actual memory where pixels are stored, just wrappers over that)
-}
+)
 
 
-void engine_main_one_time_setup(){
+TRACE_DECL(void engine_main_one_time_setup, (),
     ENGINE_PRINTF("Engine init!\n");
 
     engine_io_setup();
@@ -212,18 +215,18 @@ void engine_main_one_time_setup(){
     engine_audio_setup_playback();
     engine_audio_setup();
 
-    // One time setups for 
+    // One time setups for
     engine_physics_init();
     engine_animation_init();
     engine_rtc_init();
-}
+)
 
 // ### MODULE ###
 
 // Module functions
 
 
-static mp_obj_t engine_main_module_init(){
+TRACE_DECL(static mp_obj_t engine_main_module_init, (),
     // If the engine has not been initialzed yet, get the filesystem root
     if(!is_engine_initialized){
         #if defined(__EMSCRIPTEN__) || defined(__arm__)
@@ -247,7 +250,7 @@ static mp_obj_t engine_main_module_init(){
         // Always do a engine reset on import since there are
         // cases when we can't catch the end of the script
         engine_main_reset();
-        
+
         // On subsequent resets, anything allocated with m_tracked_buffers
         // will need to be restored since they are erased in soft resets
         return mp_const_none;
@@ -257,7 +260,7 @@ static mp_obj_t engine_main_module_init(){
     engine_main_one_time_setup();
 
     return mp_const_none;
-}
+)
 MP_DEFINE_CONST_FUN_OBJ_0(engine_main_module_init_obj, engine_main_module_init);
 
 

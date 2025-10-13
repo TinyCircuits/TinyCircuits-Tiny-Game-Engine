@@ -1,3 +1,4 @@
+#line 2 "engine_object_layers.c"
 #include "engine_object_layers.h"
 #include "nodes/empty_node.h"
 #include "nodes/3D/camera_node.h"
@@ -19,11 +20,13 @@
 
 #include "py/gc.h"
 
+#include "fault/engine_trace_portable.h"
+
 uint16_t engine_object_layer_count = 128;
 linked_list engine_object_layers[128];
 
 
-void engine_objects_clear_all(){
+TRACE_DECL(void engine_objects_clear_all, (),
     ENGINE_INFO_PRINTF("Untracking all nodes...");
     for(uint8_t inx=0; inx<engine_object_layer_count; inx++){
 
@@ -36,10 +39,10 @@ void engine_objects_clear_all(){
             m_del_obj(mp_obj_get_type(node_base), node_base);
         }
     }
-}
+)
 
 
-void engine_objects_clear_deletable(){
+TRACE_DECL(void engine_objects_clear_deletable, (),
     linked_list *deletable = engine_collections_get_deletable_list();
 
     while(deletable->start != NULL){
@@ -50,39 +53,39 @@ void engine_objects_clear_deletable(){
         mp_call_function_0(final);
         m_del_obj(mp_obj_get_type(node_base), node_base);
     }
-}
+)
 
 
-uint16_t engine_get_total_object_count(){
+TRACE_DECL(uint16_t engine_get_total_object_count, (),
     uint16_t count = 0;
     for(uint8_t ilx=0; ilx<engine_object_layer_count; ilx++){
         count += engine_object_layers[ilx].count;
     }
 
     return count;
-}
+)
 
 
 // Add an object to the pool of all nodes in 'engine_object_layers' at some layer
-linked_list_node *engine_add_object_to_layer(void *obj, uint8_t layer_index){
+TRACE_DECL(linked_list_node *engine_add_object_to_layer, (void *obj, uint8_t layer_index),
     if(layer_index >= engine_object_layer_count){
         ENGINE_ERROR_PRINTF("Tried to add object to layer %d but the max layer index is %d. Resize the number of available draw layers at the cost of memory", layer_index, engine_object_layer_count-1);
         mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Tried to add object to layer index that is out of bounds! Resize the object layer count!"));
     }
 
     return linked_list_add_obj(&engine_object_layers[layer_index], obj);
-}
+)
 
 
-void engine_remove_object_from_layer(linked_list_node *object_list_node, uint8_t layer_index){
+TRACE_DECL(void engine_remove_object_from_layer, (linked_list_node *object_list_node, uint8_t layer_index),
     linked_list_del_list_node(&engine_object_layers[layer_index], object_list_node);
-}
+)
 
 
 // Go through all nodes and call their tick callbacks depending on the
 // node type. For example, some nodes will only have a 'tick()'
 // dt_s - delta time in seconds
-void engine_invoke_all_node_tick_callbacks(float dt_s){
+TRACE_DECL(void engine_invoke_all_node_tick_callbacks, (float dt_s),
     linked_list_node *current_linked_list_node = NULL;
 
     for(uint16_t ilx=0; ilx<engine_object_layer_count; ilx++){
@@ -345,10 +348,10 @@ void engine_invoke_all_node_tick_callbacks(float dt_s){
     }
 
     ENGINE_INFO_PRINTF("##### GAME TICKS COMPLETE #####\n");
-}
+)
 
 
-void engine_invoke_all_node_draw_callbacks(){
+TRACE_DECL(void engine_invoke_all_node_draw_callbacks, (),
     linked_list_node *current_linked_list_node = NULL;
 
     for(uint16_t ilx=0; ilx<engine_object_layer_count; ilx++){
@@ -442,4 +445,4 @@ void engine_invoke_all_node_draw_callbacks(){
     }
 
     ENGINE_INFO_PRINTF("##### GAME DRAWING COMPLETE #####\n");
-}
+)

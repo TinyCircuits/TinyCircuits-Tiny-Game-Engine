@@ -1,3 +1,4 @@
+#line 2 "engine_animation_delay.c"
 #include "engine_animation_delay.h"
 #include "debug/debug_print.h"
 #include "py/objtype.h"
@@ -10,6 +11,7 @@
 #include "draw/engine_color.h"
 #include <string.h>
 
+#include "fault/engine_trace_portable.h"
 
 /* --- doc ---
    NAME: tick
@@ -18,7 +20,7 @@
    PARAM: [type=float]       [name=dt]          [value=time in milliseconds]
    RETURN: None
 */
-static mp_obj_t delay_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
+TRACE_DECL(static mp_obj_t delay_class_tick, (mp_obj_t self_in, mp_obj_t dt_obj),
     ENGINE_INFO_PRINTF("Delay: tick!");
 
     delay_class_obj_t *delay = NULL;
@@ -55,7 +57,7 @@ static mp_obj_t delay_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
     }
 
     return mp_const_none;
-}
+)
 MP_DEFINE_CONST_FUN_OBJ_2(delay_class_tick_obj, delay_class_tick);
 
 
@@ -67,7 +69,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(delay_class_tick_obj, delay_class_tick);
    PARAM: [type=function]    [name=after]          [value=function to be called after delay]
    RETURN: None
 */
-mp_obj_t delay_class_start(size_t n_args, const mp_obj_t *args){
+TRACE_DECL(mp_obj_t delay_class_start, (size_t n_args, const mp_obj_t *args),
     ENGINE_INFO_PRINTF("Delay: start");
 
     // self, always `delay_class_obj_t` since attr function handles getting base
@@ -87,18 +89,18 @@ mp_obj_t delay_class_start(size_t n_args, const mp_obj_t *args){
     }
 
     return mp_const_none;
-}
+)
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(delay_class_start_obj, 2, 3, delay_class_start);
 
 
-mp_obj_t delay_class_del(mp_obj_t self_in){
+TRACE_DECL(mp_obj_t delay_class_del, (mp_obj_t self_in),
     ENGINE_INFO_PRINTF("Delay: Deleted");
 
     delay_class_obj_t *delay = self_in;
     engine_animation_untrack(delay->list_node);
 
     return mp_const_none;
-}
+)
 static MP_DEFINE_CONST_FUN_OBJ_1(delay_class_del_obj, delay_class_del);
 
 
@@ -226,7 +228,7 @@ static mp_attr_fun_t delay_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
    OVRR:    [type=function]            [name={ref_link:delay_tick}]   [value=function]
    OVRR:    [type=function]            [name={ref_link:delay_after}]  [value=function]
 */
-mp_obj_t delay_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
+TRACE_DECL(mp_obj_t delay_class_new, (const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args),
     ENGINE_INFO_PRINTF("New Delay");
 
     bool inherited = false;
@@ -288,7 +290,7 @@ mp_obj_t delay_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, 
     }
 
     return MP_OBJ_FROM_PTR(self);
-}
+)
 
 
 // Class attributes
