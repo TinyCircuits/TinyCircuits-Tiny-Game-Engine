@@ -13,6 +13,9 @@
 
 #include "fault/engine_trace_portable.h"
 
+#undef DEBUG_TRACER_NUMBER
+#define DEBUG_TRACER_NUMBER (1)
+
 /* --- doc ---
    NAME: tick
    ID: delay_tick

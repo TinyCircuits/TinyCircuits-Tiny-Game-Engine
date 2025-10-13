@@ -90,6 +90,8 @@ TRACE_DECL(void engine_set_freq, (uint32_t hz),
     #endif
 )
 
+#undef DEBUG_TRACER_NUMBER
+#define DEBUG_TRACER_NUMBER (1)
 
 /* --- doc ---
    NAME: fps_limit

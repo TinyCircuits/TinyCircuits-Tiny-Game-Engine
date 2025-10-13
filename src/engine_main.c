@@ -225,6 +225,8 @@ TRACE_DECL(void engine_main_one_time_setup, (),
 
 // Module functions
 
+#undef DEBUG_TRACER_NUMBER
+#define DEBUG_TRACER_NUMBER (1)
 
 TRACE_DECL(static mp_obj_t engine_main_module_init, (),
     // If the engine has not been initialzed yet, get the filesystem root

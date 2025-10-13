@@ -15,6 +15,9 @@
 
 #include "fault/engine_trace_portable.h"
 
+#undef DEBUG_TRACER_NUMBER
+#define DEBUG_TRACER_NUMBER (1)
+
 // Function positions in this array must correlate to enums in `engine_animation_ease_types`
 float (*ease[31])(float) = {
     &glm_ease_linear,
