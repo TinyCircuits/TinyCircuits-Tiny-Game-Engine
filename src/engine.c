@@ -91,7 +91,7 @@ TRACE_DECL(void engine_set_freq, (uint32_t hz),
 )
 
 #undef DEBUG_TRACER_NUMBER
-#define DEBUG_TRACER_NUMBER (1)
+#define DEBUG_TRACER_NUMBER (0)
 
 /* --- doc ---
    NAME: fps_limit
@@ -247,7 +247,6 @@ static mp_obj_t engine_mp_time_to_next_tick(){
     return mp_obj_new_int(time_to_next_tick);
 }
 MP_DEFINE_CONST_FUN_OBJ_0(engine_time_to_next_tick_obj, engine_mp_time_to_next_tick);
-
 
 TRACE_DECL(bool engine_tick, (),
     // Run this as often as possible
