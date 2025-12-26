@@ -53,11 +53,11 @@
     #include "hardware/watchdog.h"
     #include "hardware/xosc.h"
     #include "py/mphal.h"
-    // #include "firmware_date.h"
+    #include "firmware_date.h"
     //
     // // Set firmware date from generated header file if using Python build script
-    // const char *firmware_date = FIRMWARE_DATE;
-    const char *firmware_date = "0000-00-00_00:00:00";
+    const char *firmware_date = FIRMWARE_DATE;
+    // const char *firmware_date = "0000-00-00_00:00:00";
 #endif
 
 
