@@ -7,6 +7,8 @@
 #include "math/engine_math.h"
 #include "resources/engine_font_resource.h"
 
+#include "engine_trace_portable.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -22,8 +24,8 @@ void engine_fault_report(uint32_t lr, uint32_t pc){
 
     engine_draw_fill_color(0b0000000000011111, active_screen_buffer);
 
-    char message[100] = { 0 };
-    int len = snprintf(message, 75, "ERROR: HARD_FAULT\nLR: %x\nPC: %x\nRESTART DEVICE\n\n:(", (int)lr, (int)pc);
+    char message[128] = { 0 };
+    int len = snprintf(message, 127, "ERROR: HARD_FAULT\nLR: %x\nPC: %x\nDUMP:\nhard_fault_log.txt\n\nRESTART DEVICE\n\n:(", (int)lr, (int)pc);
 
     mp_obj_str_t text = {
         .base.type = &mp_type_str,
@@ -33,6 +35,8 @@ void engine_fault_report(uint32_t lr, uint32_t pc){
     };
 
     engine_draw_text(&default_font, &text, 64.0f, 64.0f, 128.0f, 128.0f, 1.0f, 2.0f, 1.0f, 1.0f, 0.0f, 1.0f, engine_get_builtin_shader(EMPTY_SHADER));
+
+    debug_trace_panic(-1);
 
     engine_display_send();
     engine_display_clear();

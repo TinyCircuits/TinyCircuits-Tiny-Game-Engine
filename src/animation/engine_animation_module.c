@@ -1,7 +1,9 @@
+#line 2 "engine_animation_module.c"
 #include "engine_animation_module.h"
 #include "py/obj.h"
 #include "engine_main.h"
 
+#include "fault/engine_trace_portable.h"
 
 // Holds a list of Tween and Delay
 linked_list animation_list;
@@ -22,7 +24,7 @@ void engine_animation_init(){
 }
 
 
-void engine_animation_tick(float dt_ms){
+TRACE_DECL(void engine_animation_tick, (float dt_ms),
     linked_list_node *current = animation_list.start;
     mp_obj_t exec[3];
 
@@ -55,7 +57,7 @@ void engine_animation_tick(float dt_ms){
 
         current = current->next;
     }
-}
+)
 
 
 static mp_obj_t engine_animation_module_init(){

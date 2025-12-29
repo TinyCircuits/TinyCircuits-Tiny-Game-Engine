@@ -1,8 +1,10 @@
+#line 2 "physics_node_base.c"
 #include "physics_node_base.h"
 #include "math/vector2.h"
 #include "math/engine_math.h"
 #include "draw/engine_color.h"
 
+#include "fault/engine_trace_portable.h"
 
 // https://github.com/RandyGaul/ImpulseEngine/blob/8d5f4d9113876f91a53cfb967879406e975263d1/Body.h#L35-L39
 void physics_node_base_apply_impulse_base(engine_physics_node_base_t *physics_node_base, float impulse_x, float impulse_y, float position_x, float position_y){

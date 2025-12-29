@@ -1,3 +1,4 @@
+#line 2 "engine_animation_tween.c"
 #include "engine_animation_tween.h"
 #include "debug/debug_print.h"
 #include "py/objtype.h"
@@ -12,6 +13,10 @@
 
 #include "../lib/cglm/include/cglm/ease.h"
 
+#include "fault/engine_trace_portable.h"
+
+#undef DEBUG_TRACER_NUMBER
+#define DEBUG_TRACER_NUMBER (1)
 
 // Function positions in this array must correlate to enums in `engine_animation_ease_types`
 float (*ease[31])(float) = {
@@ -118,7 +123,7 @@ void set_value_to_end(tween_class_obj_t *tween){
    PARAM: [type=object] [name=tween] [value=object (the tween object that just finished)]
    RETURN: None
 */
-static mp_obj_t tween_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
+TRACE_DECL(static mp_obj_t tween_class_tick, (mp_obj_t self_in, mp_obj_t dt_obj),
     ENGINE_INFO_PRINTF("Tween: tick!");
 
     tween_class_obj_t *tween = self_in;
@@ -252,7 +257,7 @@ static mp_obj_t tween_class_tick(mp_obj_t self_in, mp_obj_t dt_obj){
     }
 
     return mp_const_none;
-}
+)
 MP_DEFINE_CONST_FUN_OBJ_2(tween_class_tick_obj, tween_class_tick);
 
 
@@ -270,7 +275,7 @@ MP_DEFINE_CONST_FUN_OBJ_2(tween_class_tick_obj, tween_class_tick);
    PARAM: [type=enum/int]    [name=ease_type]      [value=EASE_LINEAR, EASE_SINE_IN, EASE_SINE_OUT, EASE_SINE_IN_OUT, EASE_QUAD_IN, EASE_QUAD_OUT, EASE_QUAD_IN_OUT, EASE_CUBIC_IN, EASE_CUBIC_OUT, EASE_CUBIC_IN_OUT, EASE_QUART_IN, EASE_QUART_OUT, EASE_QUART_IN_OUT, EASE_QUINT_IN, EASE_QUINT_OUT, EASE_QUINT_IN_OUT, EASE_EXP_IN, EASE_EXP_OUT, EASE_EXP_IN_OUT, EASE_CIRC_IN, EASE_CIRC_OUT, EASE_CIRC_IN_OUT, EASE_BACK_IN, EASE_BACK_OUT, EASE_BACK_IN_OUT, EASE_ELAST_IN, EASE_ELAST_OUT, EASE_ELAST_IN_OUT, EASE_BOUNCE_IN, EASE_BOUNCE_OUT, or EASE_BOUNCE_IN_OUT]
    RETURN: None
 */
-mp_obj_t tween_class_start(size_t n_args, const mp_obj_t *args){
+TRACE_DECL(mp_obj_t tween_class_start, (size_t n_args, const mp_obj_t *args),
     ENGINE_INFO_PRINTF("Tween: start");
 
     // self, always `tween_class_obj_t` since attr function handles getting base
@@ -375,7 +380,7 @@ mp_obj_t tween_class_start(size_t n_args, const mp_obj_t *args){
     }
 
     return mp_const_none;
-}
+)
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(tween_class_start_obj, 4, 9, tween_class_start);
 
 
@@ -385,7 +390,7 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(tween_class_start_obj, 4, 9, tween_cl
    DESC: Stops tweening a value and sets to end value
    RETURN: None
 */
-mp_obj_t tween_class_stop(mp_obj_t self_in){
+TRACE_DECL(mp_obj_t tween_class_stop, (mp_obj_t self_in),
     ENGINE_INFO_PRINTF("Tween: stop");
     tween_class_obj_t *tween = self_in;
 
@@ -396,7 +401,7 @@ mp_obj_t tween_class_stop(mp_obj_t self_in){
     set_value_to_end(tween);
 
     return mp_const_none;
-}
+)
 static MP_DEFINE_CONST_FUN_OBJ_1(tween_class_stop_obj, tween_class_stop);
 
 
@@ -452,14 +457,14 @@ mp_obj_t tween_class_restart(mp_obj_t self_in){
 static MP_DEFINE_CONST_FUN_OBJ_1(tween_class_restart_obj, tween_class_restart);
 
 
-mp_obj_t tween_class_del(mp_obj_t self_in){
+TRACE_DECL(mp_obj_t tween_class_del, (mp_obj_t self_in),
     ENGINE_INFO_PRINTF("Tween: Deleted");
 
     tween_class_obj_t *tween = self_in;
     engine_animation_untrack(tween->list_node);
 
     return mp_const_none;
-}
+)
 static MP_DEFINE_CONST_FUN_OBJ_1(tween_class_del_obj, tween_class_del);
 
 
@@ -639,7 +644,7 @@ static mp_attr_fun_t tween_class_attr(mp_obj_t self_in, qstr attribute, mp_obj_t
    OVRR:    [type=function]            [name={ref_link:tick}]         [value=function]
    OVRR:    [type=function]            [name={ref_link:after}]        [value=function]
 */
-mp_obj_t tween_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args){
+TRACE_DECL(mp_obj_t tween_class_new, (const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args),
     ENGINE_INFO_PRINTF("New Tween");
 
     bool inherited = false;
@@ -717,7 +722,7 @@ mp_obj_t tween_class_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, 
     }
 
     return MP_OBJ_FROM_PTR(self);
-}
+)
 
 
 // Class attributes

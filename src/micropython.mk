@@ -7,6 +7,7 @@ SRC_USERMOD += $(ENGINE_MOD_DIR)/engine_collections.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/fault/engine_fault.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/fault/engine_fault_unix.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/fault/engine_fault_report.c
+SRC_USERMOD += $(ENGINE_MOD_DIR)/fault/engine_trace_portable.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/math/engine_math.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/draw/engine_draw_module.c
 SRC_USERMOD += $(ENGINE_MOD_DIR)/draw/engine_color.c

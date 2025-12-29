@@ -1,3 +1,4 @@
+#line 2 "node_base.c"
 #include "py/objtype.h"
 
 #include "node_base.h"
@@ -10,6 +11,7 @@
 #include "py/misc.h"
 #include "engine_collections.h"
 
+#include "fault/engine_trace_portable.h"
 
 /*  --- doc ---
     NAME: tick
@@ -113,7 +115,7 @@ engine_node_base_t *node_base_get(mp_obj_t object, bool *is_obj_instance){
 }
 
 
-mp_obj_t node_base_del(mp_obj_t self_in){
+TRACE_DECL(mp_obj_t node_base_del, (mp_obj_t self_in),
     ENGINE_INFO_PRINTF("Node Base: Deleted (garbage collected, removing self from active engine objects): %s", mp_obj_get_type_str(self_in));
 
     engine_node_base_t *node_base = self_in;
@@ -150,7 +152,7 @@ mp_obj_t node_base_del(mp_obj_t self_in){
     engine_collections_untrack_deletable(node_base->deletable_list_node);
 
     return mp_const_none;
-}
+)
 
 
 /*  --- doc ---
@@ -221,7 +223,7 @@ mp_obj_t node_base_mark_destroy_all(mp_obj_t self_in){
     PARAM: [type=Node] [name=child] [value=any node]
     RETURN: None
 */
-mp_obj_t node_base_add_child(mp_obj_t self_parent_in, mp_obj_t child_in){
+TRACE_DECL(mp_obj_t node_base_add_child, (mp_obj_t self_parent_in, mp_obj_t child_in),
     // Get the node_base for cases with the child is a Python
     // class instance or just the node's native built-in type
     // without inheritance
@@ -234,7 +236,7 @@ mp_obj_t node_base_add_child(mp_obj_t self_parent_in, mp_obj_t child_in){
     child_node_base->parent_node_base = parent_node_base;
 
     return mp_const_none;
-}
+)
 
 
 /*  --- doc ---
@@ -291,7 +293,7 @@ mp_obj_t node_base_get_child_count(mp_obj_t self_parent_in){
     PARAM: [type=Node] [name=child] [value=any node]
     RETURN: None
 */
-mp_obj_t node_base_remove_child(mp_obj_t self_parent_in, mp_obj_t child_in){
+TRACE_DECL(mp_obj_t node_base_remove_child, (mp_obj_t self_parent_in, mp_obj_t child_in),
     ENGINE_INFO_PRINTF("Node Base: Removing child...");
 
     engine_node_base_t *parent_node_base = self_parent_in;
@@ -307,7 +309,7 @@ mp_obj_t node_base_remove_child(mp_obj_t self_parent_in, mp_obj_t child_in){
     }
 
     return mp_const_none;
-}
+)
 
 
 /*  --- doc ---

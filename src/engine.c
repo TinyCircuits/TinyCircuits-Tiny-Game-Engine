@@ -1,3 +1,4 @@
+#line 2 "engine.c"
 #include <stdio.h>
 #include <string.h>
 
@@ -27,6 +28,8 @@
 
 #include "engine_main.h"
 
+#include "fault/engine_trace_portable.h"
+
 
 #if defined(__EMSCRIPTEN__)
     #include <emscripten.h>
@@ -50,11 +53,11 @@
     #include "hardware/watchdog.h"
     #include "hardware/xosc.h"
     #include "py/mphal.h"
-    // #include "firmware_date.h"
+    #include "firmware_date.h"
     //
     // // Set firmware date from generated header file if using Python build script
-    // const char *firmware_date = FIRMWARE_DATE;
-    const char *firmware_date = "0000-00-00_00:00:00";
+    const char *firmware_date = FIRMWARE_DATE;
+    // const char *firmware_date = "0000-00-00_00:00:00";
 #endif
 
 
@@ -77,7 +80,7 @@ float engine_get_fps_limit_ms(){
 }
 
 
-void engine_set_freq(uint32_t hz){
+TRACE_DECL(void engine_set_freq, (uint32_t hz),
     #if defined(__arm__)
         if(!set_sys_clock_khz(hz / 1000, false)){
             mp_raise_ValueError(MP_ERROR_TEXT("Engine ERROR: cannot change frequency"));
@@ -85,8 +88,10 @@ void engine_set_freq(uint32_t hz){
 
         engine_audio_freq_adjust();
     #endif
-}
+)
 
+#undef DEBUG_TRACER_NUMBER
+#define DEBUG_TRACER_NUMBER (0)
 
 /* --- doc ---
    NAME: fps_limit
@@ -95,7 +100,7 @@ void engine_set_freq(uint32_t hz){
    PARAM: [type=float (optional)] [name=fps] [value=a positive FPS value]
    RETURN: None or float
 */
-static mp_obj_t engine_fps_limit(size_t n_args, const mp_obj_t *args){
+TRACE_DECL(static mp_obj_t engine_fps_limit, (size_t n_args, const mp_obj_t *args),
     if(n_args == 0){
         if (fps_limit_disabled){
             return mp_obj_new_float(INFINITY);
@@ -117,7 +122,7 @@ static mp_obj_t engine_fps_limit(size_t n_args, const mp_obj_t *args){
         engine_fps_limit_period_ms = 1000.0f / fps;
     }
     return mp_const_none;
-}
+)
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_fps_limit_obj, 0, 1, engine_fps_limit);
 
 
@@ -165,7 +170,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_get_running_fps_obj, engine_get_running_fps);
    PARAM: [type=bool]   [name=soft_reset]   [value=True or False (default: False)]
    RETURN: None
 */
-static mp_obj_t engine_reset(size_t n_args, const mp_obj_t *args){
+TRACE_DECL(static mp_obj_t engine_reset, (size_t n_args, const mp_obj_t *args),
     // Set default reset as not a soft reset and see if any arguments set it
     bool soft_reset = false;
 
@@ -195,7 +200,7 @@ static mp_obj_t engine_reset(size_t n_args, const mp_obj_t *args){
     #endif
 
     return mp_const_none;
-}
+)
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_reset_obj, 0, 1, engine_reset);
 
 
@@ -205,7 +210,7 @@ MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(engine_reset_obj, 0, 1, engine_reset);
    DESC: Stops the main loop if it is running, otherwise resets the internal engine state right away (for the case someone is calling engine.tick() themselves)
    RETURN: None
 */
-static mp_obj_t engine_end(){
+TRACE_DECL(static mp_obj_t engine_end, (),
     ENGINE_INFO_PRINTF("Stopping engine...");
 
     // If the engine is looping because of engine.start(), stop it
@@ -217,7 +222,7 @@ static mp_obj_t engine_end(){
     ENGINE_INFO_PRINTF("Engine stopped!");
 
     return mp_const_none;
-}
+)
 MP_DEFINE_CONST_FUN_OBJ_0(engine_end_obj, engine_end);
 
 
@@ -243,8 +248,7 @@ static mp_obj_t engine_mp_time_to_next_tick(){
 }
 MP_DEFINE_CONST_FUN_OBJ_0(engine_time_to_next_tick_obj, engine_mp_time_to_next_tick);
 
-
-bool engine_tick(){
+TRACE_DECL(bool engine_tick, (),
     // Run this as often as possible
     engine_link_module_task();
 
@@ -315,7 +319,7 @@ bool engine_tick(){
     }
 
     return ticked;
-}
+)
 
 
 /* --- doc ---

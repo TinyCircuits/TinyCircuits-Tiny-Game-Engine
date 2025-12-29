@@ -1,3 +1,4 @@
+#line 2 "engine_physics.c"
 #include "engine_physics.h"
 #include "debug/debug_print.h"
 #include "nodes/2D/physics_rectangle_2d_node.h"
@@ -15,6 +16,8 @@
 #include "engine.h"
 #include "engine_collections.h"
 #include "engine_physics_module.h"
+
+#include "fault/engine_trace_portable.h"
 
 // Bit array/collection to track nodes that have collided. In the `init` function
 // this is sized so that the output indices from a simple paring function can fit
@@ -37,7 +40,7 @@ void engine_physics_init(){
 }
 
 
-void engine_physics_apply_impulses(float dt, float alpha){
+TRACE_DECL(void engine_physics_apply_impulses, (float dt, float alpha),
     vector2_class_obj_t *gravity = engine_physics_get_gravity();
 
     linked_list *physics_list = engine_collections_get_physics_list();
@@ -81,7 +84,7 @@ void engine_physics_apply_impulses(float dt, float alpha){
 
         physics_link_node = physics_link_node->next;
     }
-}
+)
 
 
 bool engine_physics_collision_checked_before(engine_physics_node_base_t *physics_node_base_a, engine_physics_node_base_t *physics_node_base_b){
@@ -356,7 +359,7 @@ void engine_physics_collide_types(engine_node_base_t *node_base_a, engine_node_b
 }
 
 
-void engine_physics_update(float dt){
+TRACE_DECL(void engine_physics_update, (float dt),
     // Loop through all nodes and test for collision against
     // all other nodes (not optimized checking of if nodes are
     // even possibly close to each other)
@@ -383,10 +386,10 @@ void engine_physics_update(float dt){
     // After everything physics related is done, reset the bit array
     // used for tracking which pairs of nodes had already collided
     engine_bit_collection_erase(&collided_physics_nodes);
-}
+)
 
 
-void engine_physics_physics_tick(float dt_s){
+TRACE_DECL(void engine_physics_physics_tick, (float dt_s),
     mp_obj_t exec[3];
 
     // Loop through all nodes and call their physics_tick callbacks
@@ -412,7 +415,7 @@ void engine_physics_physics_tick(float dt_s){
 
         physics_link_node = physics_link_node->next;
     }
-}
+)
 
 
 void engine_physics_tick(){
