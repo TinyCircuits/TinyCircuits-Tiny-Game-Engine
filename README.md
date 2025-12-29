@@ -2,8 +2,6 @@
 
 This is a 2D/3D game engine for MicroPython. Core engine features are written in C and integrated into MicroPython as external C modules. The engine API is exposed through Python modules.
 
-TEST BRANCH!!
-
 <p align="center">
   <img width="65%" src="images/games.png">
 </p>
