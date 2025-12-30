@@ -19,12 +19,12 @@ from system.launcher.credits_screen import CreditsScreen
 from system.launcher.settings_screen import SettingsScreen
 from system.launcher.custom_camera import CustomCamera
 
-# Speed up the processor to draw the launcher at a 
+# Speed up the processor to draw the launcher at a
 # higher speed and set an FPS limit
-# engine.freq(250 * 1000 * 1000)
-# engine.fps_limit(60)
+engine.freq(250 * 1000 * 1000)
+engine.fps_limit(60)
 
-# Load some resources and set background 
+# Load some resources and set background
 font = FontResource("system/assets/outrunner_outline.bmp")
 font5x7 = FontResource("system/assets/font5x7.bmp")
 background_tex = TextureResource("system/launcher/assets/launcher-background.bmp")
@@ -85,13 +85,13 @@ while True:
             new_page = page - 1
             page_switched = True
             start_rumble()
-        
+
         # Loop page of at either end
         if new_page >= 3:
             new_page = 0
         elif new_page < 0:
             new_page = 2
-        
+
         # If the page was switched, and all animations
         # are complete, store the page index
         if page_switched == True and screen_icon.tween.finished and header.tween_0.finished and header.tween_1.finished and camera.tween.finished:

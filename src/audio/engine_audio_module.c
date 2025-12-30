@@ -293,7 +293,12 @@ void engine_audio_setup_playback(){
 
 void engine_audio_freq_adjust(){
     #if defined(__arm__)
+        // pwm_config_set_wrap(&pwm_timer_config, (clock_get_hz(clk_sys) / (uint32_t)(ENGINE_AUDIO_SAMPLE_RATE)) - 1);
+        //
+        // pwm_timer_config = pwm_get_default_config();
+        // pwm_config_set_clkdiv_int(&pwm_timer_config, 1);
         pwm_config_set_wrap(&pwm_timer_config, (clock_get_hz(clk_sys) / (uint32_t)(ENGINE_AUDIO_SAMPLE_RATE)) - 1);
+        pwm_init(PWM_AUDIO_TIMER_SLICE_NUM, &pwm_timer_config, true);
     #endif
 }
 
