@@ -19,10 +19,19 @@ from system.launcher.credits_screen import CreditsScreen
 from system.launcher.settings_screen import SettingsScreen
 from system.launcher.custom_camera import CustomCamera
 
+from system.util import directory_hash
+
 # Speed up the processor to draw the launcher at a
 # higher speed and set an FPS limit
 engine.freq(250 * 1000 * 1000)
 engine.fps_limit(60)
+
+system_hash = directory_hash("system", ["main.py"])
+
+if(system_hash != engine.system_files_digest()):
+    print("System files hash mismatch! System scripts may be out of sync.")
+else:
+    print("Verified system files hash!")
 
 # Load some resources and set background
 font = FontResource("system/assets/outrunner_outline.bmp")

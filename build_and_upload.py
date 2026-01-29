@@ -46,7 +46,7 @@ def directory_hash(dir, extra = []):
         file = open(file, 'rb')
         while chunk := file.read(8192):
             sha.update(chunk)
-
+    '''
     for root, dir, manifest in dirtree:
         for file in sorted(manifest):
             if(file.endswith('.py')):
@@ -54,6 +54,27 @@ def directory_hash(dir, extra = []):
                 file = open(os.path.join(root, file), 'rb')
                 while chunk := file.read(8192):
                     sha.update(chunk)
+    '''
+    def _traverse(path):
+        # listdir returns names; we sort them for consistency with the build script
+        items = sorted(os.listdir(path))
+
+        for item in items:
+            full_path = path + "/" + item if path != "/" else "/" + item
+            stat = os.stat(full_path)
+
+            if stat[0] & 0x4000:  # Check if it's a directory
+                _traverse(full_path)
+            elif item.endswith('.py'):
+                with open(full_path, 'rb') as f:
+                    print("Hashing "+str(full_path))
+                    while True:
+                        chunk = f.read(128)
+                        if not chunk:
+                            break
+                        sha.update(chunk)
+    _traverse(dir)
+
     print("System scripts digest: "+sha.hexdigest()[:12])
     return sha.hexdigest()[:12]
 
