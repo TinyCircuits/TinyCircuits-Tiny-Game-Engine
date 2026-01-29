@@ -37,7 +37,7 @@ def directory_hash(dir, extra = []):
                 with open(full_path, 'rb') as f:
                     print("Hashing "+str(full_path))
                     while True:
-                        chunk = f.read(128)
+                        chunk = f.read(512)
                         if not chunk:
                             break
                         sha.update(chunk)
