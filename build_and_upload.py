@@ -13,6 +13,8 @@ from subprocess import Popen, PIPE, CalledProcessError
 import serial
 import serial.tools.list_ports
 
+import hashlib
+
 
 # Helper for running commands and processing output
 def execute(cmd):
@@ -34,6 +36,26 @@ def get_drives():
         drives.append(p.mountpoint)
 
     return drives
+
+def directory_hash(dir, extra = []):
+    sha = hashlib.sha256()
+    dirtree = sorted(os.walk(dir))
+
+    for file in sorted(extra):
+        print("Hashing "+file)
+        file = open(file, 'rb')
+        while chunk := file.read(8192):
+            sha.update(chunk)
+
+    for root, dir, manifest in dirtree:
+        for file in sorted(manifest):
+            if(file.endswith('.py')):
+                print("Hashing "+file+" in "+str(dir))
+                file = open(os.path.join(root, file), 'rb')
+                while chunk := file.read(8192):
+                    sha.update(chunk)
+    print("System scripts digest: "+sha.hexdigest()[:12])
+    return sha.hexdigest()[:12]
 
 
 # ### Step 1: Get arguments
@@ -61,9 +83,18 @@ firmware_date_file.write(f"""
 #define FIRMWARE_DATE_H
 
 #define FIRMWARE_DATE "{commit_date}"
-                             
+""")
+
+# ### Step 2.5: get manifest hash for system files
+
+system_files_digest = directory_hash("filesystem/system", ["filesystem/main.py"])
+
+firmware_date_file.write(f"""
+#define SYSTEM_FILES_DIGEST (0x{system_files_digest}ull)
+
 #endif
 """)
+
 firmware_date_file.close()
 
 # ### Step 3: Build the firmware (which will freeze everything in `modules`)

@@ -86,7 +86,7 @@ mp_obj_t engine_resource_get_space_bytearray(uint32_t space_size, bool fast_spac
         array->items = m_new(byte, array->len);
         memset(array->items, 0, array->len);
     }else{
-        // How many flash pages will be needed to fit 'space_size' data?
+        // How many flash pages will be needed to fit 'space_size' data? 
         // Pages are 256 bytes and data must be written in that page size:
         // https://www.raspberrypi.com/documentation/pico-sdk/hardware.html#rpip8ee511575881aa0f3936
         uint32_t required_pages_count = (uint32_t)ceilf(((float)space_size)/FLASH_PAGE_SIZE);
@@ -120,7 +120,7 @@ mp_obj_t engine_resource_get_space_bytearray(uint32_t space_size, bool fast_spac
         if(erase_end > FLASH_RESOURCE_SPACE_BASE+FLASH_RESOURCE_SPACE_SIZE){
             mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("EngineResourceManager: ERROR: Scratch space is going to overflow! Too many assets loaded! Scratch space is %ld bytes but the asset requires erasing %ld bytes from %ld to %ld"), FLASH_RESOURCE_SPACE_SIZE, erase_size, erase_start, erase_end);
         }
-
+        
         #if defined(__arm__)
             // Need to disable interrupts when texture resources are created:
             // https://github.com/raspberrypi/pico-examples/issues/34#issuecomment-1369267917
@@ -184,7 +184,7 @@ void engine_resource_store_u8(uint8_t to_store){
             page_prog_count++;
         }
     }
-
+    
     index_in_storing_location++;
 }
 
@@ -217,7 +217,7 @@ void engine_resource_store_u16(uint16_t to_store){
             page_prog_count++;
         }
     }
-
+    
     index_in_storing_location++;
 }
 

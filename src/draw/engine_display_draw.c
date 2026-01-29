@@ -157,7 +157,7 @@ void engine_draw_blit(texture_resource_class_obj_t *texture, uint32_t offset, fl
     uint32_t dest_offset = center_pixel_offset;
 
     // The stride to the next row usually consists of just the
-    // screen width, however, subtract the dimensions of the
+    // screen width, however, subtract the dimensions of the 
     // destination rect so that we end up at the next row
     // in the rect. Also proceed forward on the next row
     // by the amount we are left clipping the dest rect
@@ -257,7 +257,7 @@ void engine_draw_blit_depth(texture_resource_class_obj_t *texture, uint32_t offs
     // ENGINE_PERFORMANCE_CYCLES_START();
     float inverse_x_scale = 1.0f / x_scale;
     float inverse_y_scale = 1.0f / y_scale;
-
+    
     // https://codereview.stackexchange.com/a/86546
     float sin_angle = sinf(rotation_radians);
     float cos_angle = cosf(rotation_radians);
@@ -306,7 +306,7 @@ void engine_draw_blit_depth(texture_resource_class_obj_t *texture, uint32_t offs
     uint32_t dest_offset = center_pixel_offset;
 
     // The stride to the next row usually consists of just the
-    // screen width, however, subtract the dimensions of the
+    // screen width, however, subtract the dimensions of the 
     // destination rect so that we end up at the next row
     // in the rect. Also proceed forward on the next row
     // by the amount we are left clipping the dest rect
@@ -407,7 +407,7 @@ void engine_draw_rect(uint16_t color, float center_x, float center_y, int32_t wi
     // ENGINE_PERFORMANCE_CYCLES_START();
     float inverse_x_scale = 1.0f / x_scale;
     float inverse_y_scale = 1.0f / y_scale;
-
+    
     // https://codereview.stackexchange.com/a/86546
     float sin_angle = sinf(rotation_radians);
     float cos_angle = cosf(rotation_radians);
@@ -456,7 +456,7 @@ void engine_draw_rect(uint16_t color, float center_x, float center_y, int32_t wi
     uint32_t dest_offset = center_pixel_offset;
 
     // The stride to the next row usually consists of just the
-    // screen width, however, subtract the dimensions of the
+    // screen width, however, subtract the dimensions of the 
     // destination rect so that we end up at the next row
     // in the rect. Also proceed forward on the next row
     // by the amount we are left clipping the dest rect
@@ -532,7 +532,7 @@ void engine_draw_outline_circle(uint16_t color, float center_x, float center_y, 
     for(float angle = 0; angle <= 90; angle += angle_increment){
         float cx = distance * cosf(angle);
         float cy = distance * sinf(angle);
-
+        
         // Bottom right quadrant of the circle
         int brx = (int)(center_x+cx);
         int bry = (int)(center_y+cy);
@@ -575,7 +575,7 @@ void engine_draw_filled_circle(uint16_t color, float center_x, float center_y, f
 }
 
 
-void engine_draw_text(font_resource_class_obj_t *font, mp_obj_t text, float center_x, float center_y, float text_box_width, float text_box_height, float letter_spacing, float line_spacing, float x_scale, float y_scale, float rotation_radians, float alpha, engine_shader_t *shader){
+void engine_draw_text(font_resource_class_obj_t *font, mp_obj_t text, float center_x, float center_y, float text_box_width, float text_box_height, float letter_spacing, float line_spacing, float x_scale, float y_scale, float rotation_radians, float alpha, engine_shader_t *shader){    
     float sin_angle = sinf(rotation_radians);
     float cos_angle = cosf(rotation_radians);
 
@@ -791,7 +791,7 @@ void engine_draw_filled_triangle_depth(texture_resource_class_obj_t *texture, ui
     // https://fgiesen.wordpress.com/2013/02/10/optimizing-the-basic-rasterizer/#:~:text=In%20our%20basic%20triangle%20rasterization%20loop
     float dy_bc = (float)(by - cy) / ABC;
     float dx_bc = (float)(cx - bx) / ABC;
-
+    
     float dy_ca = (float)(cy - ay) / ABC;
     float dx_ca = (float)(ax - cx) / ABC;
 

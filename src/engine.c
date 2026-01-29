@@ -474,9 +474,19 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_module_init_obj, engine_module_init);
 */
 static mp_obj_t engine_firmware_date(){
     return mp_obj_new_str(firmware_date, strlen(firmware_date));
-    return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_0(engine_firmware_date_obj, engine_firmware_date);
+
+/* --- doc ---
+   NAME: system_files_digest
+   ID: engine_system_files_digest
+   DESC: Returns the expected hash-manifest of the system scripts
+   RETURN: int
+*/
+static mp_obj_t engine_system_files_digest(){
+    return mp_obj_new_int_from_ull(SYSTEM_FILES_DIGEST);
+}
+MP_DEFINE_CONST_FUN_OBJ_0(engine_system_files_digest_obj, engine_system_files_digest);
 
 /* --- doc ---
    NAME: engine
@@ -513,6 +523,7 @@ static const mp_rom_map_elem_t engine_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_setting_brightness), (mp_obj_t)&engine_setting_brightness_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_root_dir), (mp_obj_t)&engine_root_dir_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_firmware_date), (mp_obj_t)&engine_firmware_date_obj },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_system_files_digest), (mp_obj_t)&engine_system_files_digest_obj },
 };
 
 // Module init
