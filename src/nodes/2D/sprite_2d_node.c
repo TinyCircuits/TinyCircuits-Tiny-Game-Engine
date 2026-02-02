@@ -120,7 +120,7 @@ void sprite_2d_node_class_draw(mp_obj_t sprite_node_base_obj, mp_obj_t camera_no
     engine_draw_blit(sprite_texture, sprite_frame_fb_start_index,
                      floorf(sprite_rotated_x), floorf(sprite_rotated_y),
                      sprite_frame_width, sprite_frame_height,
-                     spritesheet_width,
+                     sprite_texture->pixel_stride,
                      sprite_scale->x.value*camera_zoom,
                      sprite_scale->y.value*camera_zoom,
                     -sprite_rotation,

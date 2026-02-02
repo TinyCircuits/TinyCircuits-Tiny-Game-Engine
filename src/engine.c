@@ -42,8 +42,10 @@
     });
 
     const char *firmware_date = "0000-00-00_00:00:00";
+    const unsigned long long int system_files_digest = 0;
 #elif defined(__unix__)
     const char *firmware_date = "0000-00-00_00:00:00";
+    const unsigned long long int system_files_digest = 0;
 #elif defined(__arm__)
     #include "hardware/clocks.h"
     #include "hardware/pll.h"
@@ -58,6 +60,7 @@
     // // Set firmware date from generated header file if using Python build script
     const char *firmware_date = FIRMWARE_DATE;
     // const char *firmware_date = "0000-00-00_00:00:00";
+    const unsigned long long int system_files_digest = SYSTEM_FILES_DIGEST;
 #endif
 
 
@@ -484,7 +487,7 @@ MP_DEFINE_CONST_FUN_OBJ_0(engine_firmware_date_obj, engine_firmware_date);
    RETURN: int
 */
 static mp_obj_t engine_system_files_digest(){
-    return mp_obj_new_int_from_ull(SYSTEM_FILES_DIGEST);
+    return mp_obj_new_int_from_ull(system_files_digest);
 }
 MP_DEFINE_CONST_FUN_OBJ_0(engine_system_files_digest_obj, engine_system_files_digest);
 

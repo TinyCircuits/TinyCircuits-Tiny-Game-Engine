@@ -39,24 +39,15 @@ def get_drives():
 
 def directory_hash(dir, extra = []):
     sha = hashlib.sha256()
-    dirtree = sorted(os.walk(dir))
 
     for file in sorted(extra):
         print("Hashing "+file)
         file = open(file, 'rb')
         while chunk := file.read(8192):
             sha.update(chunk)
-    '''
-    for root, dir, manifest in dirtree:
-        for file in sorted(manifest):
-            if(file.endswith('.py')):
-                print("Hashing "+file+" in "+str(dir))
-                file = open(os.path.join(root, file), 'rb')
-                while chunk := file.read(8192):
-                    sha.update(chunk)
-    '''
+
+    # uPy doesn't have os.walk(), and the firmware hash has to match, so this is custom
     def _traverse(path):
-        # listdir returns names; we sort them for consistency with the build script
         items = sorted(os.listdir(path))
 
         for item in items:

@@ -79,7 +79,7 @@ static mp_attr_fun_t empty_node_class_attr(mp_obj_t self_in, qstr attribute, mp_
     PARAM: [type={ref_link:Vector3}]     [name=position]                                    [value={ref_link:Vector3}]
     PARAM: [type={ref_link:Vector3}]     [name=rotation]                                    [value={ref_link:Vector3}]
     PARAM: [type=int]                    [name=layer]                                       [value=0 ~ 127]
-    ATTR:  [type=function]               [name={ref_link:add_child}]                        [value=function] 
+    ATTR:  [type=function]               [name={ref_link:add_child}]                        [value=function]
     ATTR:  [type=function]               [name={ref_link:get_child}]                        [value=function]
     ATTR:  [type=function]               [name={ref_link:get_child_count}]                  [value=function]
     ATTR:  [type=function]               [name={ref_link:node_base_mark_destroy}]           [value=function]
@@ -105,7 +105,7 @@ static mp_obj_t empty_node_class_new(const mp_obj_type_t *type, size_t n_args, s
     enum arg_ids {child_class, position, rotation, layer};
     bool inherited = false;
 
-    // If there is one positional argument and it isn't the first 
+    // If there is one positional argument and it isn't the first
     // expected argument (as is expected when using positional
     // arguments) then define which way to parse the arguments
     if(n_args >= 1 && mp_obj_get_type(args[0]) != &vector3_class_type){
@@ -175,7 +175,6 @@ static const mp_rom_map_elem_t empty_node_class_locals_dict_table[] = {
 
 };
 static MP_DEFINE_CONST_DICT(empty_node_class_locals_dict, empty_node_class_locals_dict_table);
-
 
 MP_DEFINE_CONST_OBJ_TYPE(
     engine_empty_node_class_type,
