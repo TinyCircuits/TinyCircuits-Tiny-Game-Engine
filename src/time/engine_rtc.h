@@ -14,7 +14,7 @@ void engine_rtc_init();
 
 // Checks if the RTC may have gone below voltage and lost time.
 // Returns true of compromised
-bool engine_rtc_check_compromised();
+int engine_rtc_check_compromised();
 
 // Get the broken down time
 int engine_rtc_get_datetime(struct tm *rtc);
