@@ -1,6 +1,7 @@
 #include "draw/engine_display_draw.h"
 #include "display/engine_display_common.h"
 #include "debug/debug_print.h"
+#include <math.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -58,12 +59,7 @@ void engine_draw_line(uint16_t color, float x_start, float y_start, float x_end,
     float dy = y_end - y_start;
 
     // See which axis requires most steps to draw complete line, store it
-    float step_count = 0.0f;
-    if(abs((int)dx) >= abs((int)dy)){
-        step_count = abs((int)dx);
-    }else{
-        step_count = abs((int)dy);
-    }
+    float step_count = ceilf(fmax(fabs(dx), fabs(dy)));
 
     // Calculate how much to increment each axis each step
     float slope_x = dx / step_count;
@@ -73,11 +69,11 @@ void engine_draw_line(uint16_t color, float x_start, float y_start, float x_end,
     float line_y = y_start;
 
     // Draw the line
-    for(uint32_t step=0; step<step_count; step++){
+    for(uint32_t step=0; step<=step_count; step++){
+        engine_draw_pixel(color, (int32_t)line_x, (int32_t)line_y, alpha, shader);
+        
         line_x = line_x + slope_x;
         line_y = line_y + slope_y;
-
-        engine_draw_pixel(color, (int32_t)line_x, (int32_t)line_y, alpha, shader);
     }
 }
 
