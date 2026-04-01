@@ -103,7 +103,82 @@ void engine_draw_blit(texture_resource_class_obj_t *texture, uint32_t offset, fl
 
         As that link mentions, we'll do the rotation by doing three shears/displacements per-pixel per column.
         The displacements are performed twice on the x-axis and once on the y axis in x y x order.
+
+        Start with a fast blit path for textures that have no rotation and either no scaling or
+        are just flipped horizontally (x_scale == -1.0).
     */
+    // Find min and max x and y positions of the texture on the display
+    int32_t left_x = (int32_t)(center_x - ceilf(window_width/2.0f));
+    int32_t right_x = left_x + window_width - 1;
+    int32_t top_y = (int32_t)(center_y - ceilf(window_height/2.0f));
+    int32_t bottom_y = top_y + window_height - 1;
+
+    // Fast path for textures with no rotation and either no scaling or just flipped horizontally
+    if(rotation_radians == 0.0f &&
+       (x_scale == 1.0f || x_scale == -1.0f) &&
+        y_scale == 1.0f){
+
+        // Iterate over each pixel in the display that is occupied by the texture, 
+        // find the texture pixel and put it in the display buffer
+        int32_t x_start = 0; // x position within the sprite window to start
+        int32_t y_start = 0; // y position within the sprite window to start
+
+        // Distance to jump in the texture array between the last pixel
+        // in one row and the first pixel in the next row
+        int32_t sprite_draw_width = window_width; 
+        
+        // If the texture is hanging off the edge of the display, start
+        // drawing midway through the texture
+        if(left_x < 0){
+            x_start = left_x * -1;
+            sprite_draw_width -= x_start;
+        }
+
+        int32_t sprite_draw_height = window_height;
+        if(top_y < 0){
+            y_start = top_y * -1;
+            sprite_draw_height -= y_start;
+        }
+
+        if(right_x >= SCREEN_WIDTH){
+            sprite_draw_width -= (right_x - SCREEN_WIDTH + 1);
+        }
+        if(bottom_y >= SCREEN_HEIGHT){
+            sprite_draw_height -= (bottom_y - SCREEN_HEIGHT +1);
+        }
+
+        // Distance to jump in the display array from the end of one
+        // row in the texture to the start of the next row
+        uint32_t next_dest_row_offset = SCREEN_WIDTH - sprite_draw_width;
+        int32_t y, x;
+        
+        // The offset into the display array for the start of each texture row.
+        uint32_t dest_offset = (top_y + y_start) * SCREEN_WIDTH + left_x + x_start;
+        
+        // The direction we'll be drawing onto the display.  1 is right-to-left
+        // -1 is left-to-right (for horizontally flipped textures).
+        int32_t dest_increment = 1;
+
+        // If the sprite is flipped horizontally, draw from right to left.
+        if(x_scale == -1.0f){
+            dest_offset += (sprite_draw_width-1);
+            dest_increment = -1;
+            next_dest_row_offset = SCREEN_WIDTH + sprite_draw_width;
+        }
+        for(y=y_start;y < y_start + sprite_draw_height;y++){
+            for(x=x_start;x < x_start + sprite_draw_width;x++){
+                uint32_t src_offset = y * pixels_stride + x;
+                float src_alpha = 1.0f;
+                uint16_t src_color = texture->get_pixel(texture, offset+src_offset, &src_alpha);
+                if(src_color != transparent_color || src_color == ENGINE_NO_TRANSPARENCY_COLOR){
+                    active_screen_buffer[dest_offset] = shader->execute(active_screen_buffer[dest_offset], src_color, alpha*src_alpha, shader);                   
+                }
+                dest_offset+=dest_increment;
+            }
+            dest_offset += next_dest_row_offset;  
+        }
+        return;
+    }
 
     // ENGINE_PERFORMANCE_CYCLES_START();
     float inverse_x_scale = 1.0f / x_scale;

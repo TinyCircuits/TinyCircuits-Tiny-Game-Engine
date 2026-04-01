@@ -232,6 +232,79 @@ uint16_t texture_resource_get_indexed_pixel(texture_resource_class_obj_t *textur
 }
 
 
+uint16_t texture_resource_get_1bit_pixel(
+    texture_resource_class_obj_t *texture, 
+    uint32_t pixel_offset, 
+    float *out_alpha){
+    mp_obj_array_t *data = texture->data;
+    mp_obj_array_t *colors = texture->colors;
+     
+    // Get the byte containing the pixel
+    uint8_t byte_containing_pixel = ((uint8_t*)data->items)[pixel_offset/8];
+
+    // Get number of places to shift to the right
+    /*  pixel offset    pixel_offset%8  bits to shift right
+        0               0               7
+        1               1               6
+        ...             ...             ...
+        7               7               0
+        8               0               7
+        
+        Therefore,
+        bits_to_shift = 7 - pixel_offset%8
+        Which is the same as 7 - (pixel_offset&7)
+    */
+    byte_containing_pixel >>= 7 - (pixel_offset&7);
+    uint8_t color_index = byte_containing_pixel & 0x01; // We only want the rightmost bit
+    return ((uint16_t*)colors->items)[color_index];
+}
+
+
+uint16_t texture_resource_get_4bit_pixel(
+    texture_resource_class_obj_t *texture, 
+    uint32_t pixel_offset, 
+    float *out_alpha){
+    mp_obj_array_t *data = texture->data;
+    mp_obj_array_t *colors = texture->colors;
+
+    // Get the byte containing the pixel
+    uint8_t byte_containing_pixel = ((uint8_t*)data->items)[pixel_offset/2];
+
+    // Get the number of places to shift to the right.
+    /*
+      Pixels with an even-numbered pixel_offset sit in the left half of the 
+      byte and need to be shifted 4 bits to the right.    
+      We don't need to shift pixels with an odd-numbered pixel_offset.
+
+      pixel_offset & 1 returns 1 if the pixel_offset is odd
+      
+      (pixel_offset & 1) ^ 1) returns 1 if the pixel_offset is even
+      
+      ((pixel_offset & 1) ^ 1) << 2 returns 4 if the pixel_offset is even and 
+      0 if it is odd      
+    */
+
+    byte_containing_pixel >>= ((pixel_offset & 1) ^ 1) << 2;
+
+    uint8_t color_index = byte_containing_pixel & 0x0F; // We only want the right 4 bits
+    return ((uint16_t*)colors->items)[color_index];
+}
+
+
+uint16_t texture_resource_get_8bit_pixel(
+    texture_resource_class_obj_t *texture, 
+    uint32_t pixel_offset, 
+    float *out_alpha){
+    mp_obj_array_t *data = texture->data;
+    mp_obj_array_t *colors = texture->colors;
+    
+    // Each pixel_offset is contained in exactly one byte
+
+    uint8_t color_index = ((uint8_t*)data->items)[pixel_offset];
+    return ((uint16_t*)colors->items)[color_index];
+}
+
+
 uint16_t texture_resource_get_16bit_rgb565(texture_resource_class_obj_t *texture, uint32_t pixel_offset, float *out_alpha){
     mp_obj_array_t *data = texture->data;
     return ((uint16_t*)data->items)[pixel_offset];
@@ -521,7 +594,19 @@ void create_from_file(texture_resource_class_obj_t *self, mp_obj_t filepath, mp_
 
     // Assign a function for getting pixels from texture resource
     if(self->bit_depth < 16){
-        self->get_pixel = texture_resource_get_indexed_pixel;
+        switch(self->bit_depth){
+            case 1:
+                self->get_pixel = texture_resource_get_1bit_pixel;
+                break;
+            case 4:
+                self->get_pixel = texture_resource_get_4bit_pixel;
+                break;
+            case 8:
+                self->get_pixel = texture_resource_get_8bit_pixel;
+                break;
+            default:
+                self->get_pixel = texture_resource_get_indexed_pixel;
+        }
     }else{
         if((self->combined_masks == 65535 && self->alpha_mask == 0) || self->combined_masks == 0){   // RGB565
             self->get_pixel = texture_resource_get_16bit_rgb565;
