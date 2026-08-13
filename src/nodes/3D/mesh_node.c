@@ -124,6 +124,90 @@ void mesh_node_project_draw(texture_resource_class_obj_t *texture, vec3 v0, vec3
 }
 
 
+// Clip a triangle (given in mesh-local space) against the camera's near
+// plane before projecting/drawing it. Previously, `mesh_node_project_draw`
+// dropped the whole triangle if ANY vertex projected behind the camera, so
+// any triangle straddling the near plane just vanished/flickered instead of
+// being clipped - very visible whenever the camera gets close to geometry.
+//
+// Clipping happens in homogeneous clip space (before the perspective
+// divide): the near plane is exactly `clip_z >= 0` there (this projection
+// uses the ZO/zero-to-one depth convention), and that test is valid
+// regardless of the sign of clip_w, so there's no risk of the
+// divide-by-near-zero-or-negative-w corruption that doing this after
+// `glm_project_zo()` (post-divide) would have.
+void mesh_node_clip_near_and_draw(texture_resource_class_obj_t *texture, vec3 v0, vec3 v1, vec3 v2, vec2 v0uv, vec2 v1uv, vec2 v2uv, mat4 mvp, vec4 v_viewport, uint16_t triangle_color, engine_shader_t *shader){
+    vec4 clip[3];
+    vec4 h0 = {v0[0], v0[1], v0[2], 1.0f};
+    vec4 h1 = {v1[0], v1[1], v1[2], 1.0f};
+    vec4 h2 = {v2[0], v2[1], v2[2], 1.0f};
+    glm_mat4_mulv(mvp, h0, clip[0]);
+    glm_mat4_mulv(mvp, h1, clip[1]);
+    glm_mat4_mulv(mvp, h2, clip[2]);
+
+    float *verts[3] = {v0, v1, v2};
+    float *uvs[3] = {v0uv, v1uv, v2uv};
+
+    bool in_front[3] = {clip[0][2] >= 0.0f, clip[1][2] >= 0.0f, clip[2][2] >= 0.0f};
+    uint8_t in_count = (uint8_t)in_front[0] + (uint8_t)in_front[1] + (uint8_t)in_front[2];
+
+    if(in_count == 0){
+        // Entire triangle is behind the near plane: nothing to draw
+        return;
+    }
+
+    if(in_count == 3){
+        // Entire triangle is in front: no clipping needed
+        mesh_node_project_draw(texture, v0, v1, v2, v0uv, v1uv, v2uv, mvp, v_viewport, triangle_color, shader);
+        return;
+    }
+
+    // Interpolate a mesh-local vertex/uv pair at the point where edge (a, b)
+    // crosses the near plane. The same `t` that zeroes clip-space z along
+    // this edge is valid for lerping the mesh-local position/uv too, since
+    // `mvp` is a fixed linear map from mesh-local to clip space.
+    #define ENGINE_MESH_LERP_NEAR_EDGE(a, b, out_v, out_uv) do { \
+        float t = clip[a][2] / (clip[a][2] - clip[b][2]); \
+        out_v[0] = verts[a][0] + t * (verts[b][0] - verts[a][0]); \
+        out_v[1] = verts[a][1] + t * (verts[b][1] - verts[a][1]); \
+        out_v[2] = verts[a][2] + t * (verts[b][2] - verts[a][2]); \
+        out_uv[0] = uvs[a][0] + t * (uvs[b][0] - uvs[a][0]); \
+        out_uv[1] = uvs[a][1] + t * (uvs[b][1] - uvs[a][1]); \
+    } while(0)
+
+    if(in_count == 1){
+        // One vertex in front, two behind: clipped shape stays a triangle
+        uint8_t i_in = in_front[0] ? 0 : (in_front[1] ? 1 : 2);
+        uint8_t i_out_a = (i_in + 1) % 3;
+        uint8_t i_out_b = (i_in + 2) % 3;
+
+        vec3 isect_a; vec2 isect_a_uv;
+        vec3 isect_b; vec2 isect_b_uv;
+        ENGINE_MESH_LERP_NEAR_EDGE(i_in, i_out_a, isect_a, isect_a_uv);
+        ENGINE_MESH_LERP_NEAR_EDGE(i_in, i_out_b, isect_b, isect_b_uv);
+
+        mesh_node_project_draw(texture, verts[i_in], isect_a, isect_b, uvs[i_in], isect_a_uv, isect_b_uv, mvp, v_viewport, triangle_color, shader);
+    }else{
+        // Two vertices in front, one behind: clipped shape is a quad,
+        // split into two triangles (winding kept consistent with the
+        // original triangle for backface culling)
+        uint8_t i_out = in_front[0] ? (in_front[1] ? 2 : 1) : 0;
+        uint8_t i_in_a = (i_out + 1) % 3;
+        uint8_t i_in_b = (i_out + 2) % 3;
+
+        vec3 isect_a; vec2 isect_a_uv;
+        vec3 isect_b; vec2 isect_b_uv;
+        ENGINE_MESH_LERP_NEAR_EDGE(i_in_b, i_out, isect_a, isect_a_uv);
+        ENGINE_MESH_LERP_NEAR_EDGE(i_in_a, i_out, isect_b, isect_b_uv);
+
+        mesh_node_project_draw(texture, verts[i_in_a], verts[i_in_b], isect_a, uvs[i_in_a], uvs[i_in_b], isect_a_uv, mvp, v_viewport, triangle_color, shader);
+        mesh_node_project_draw(texture, verts[i_in_a], isect_a, isect_b, uvs[i_in_a], isect_a_uv, isect_b_uv, mvp, v_viewport, triangle_color, shader);
+    }
+
+    #undef ENGINE_MESH_LERP_NEAR_EDGE
+}
+
+
 void mesh_node_get_tri_verts_vec3_list(mp_obj_t vertex_data, vec3 v0, vec3 v1, vec3 v2, uint16_t vertex_index){
     mp_obj_list_t *vertices = vertex_data;
 
@@ -367,8 +451,8 @@ void mesh_node_class_draw(mp_obj_t mesh_node_base_obj, mp_obj_t camera_node){
 
         get_tri_verts_func(mesh->vertices, v0, v1, v2, vertex_index);
 
-        // Project and draw the triangle
-        mesh_node_project_draw(mesh_texture, v0, v1, v2, v0uv, v1uv, v2uv, mvp, camera->v_viewport, triangle_color, shader);
+        // Clip against the near plane (if needed), then project and draw the triangle
+        mesh_node_clip_near_and_draw(mesh_texture, v0, v1, v2, v0uv, v1uv, v2uv, mvp, camera->v_viewport, triangle_color, shader);
 
         vertex_index += 3;
     }
