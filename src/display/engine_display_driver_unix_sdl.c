@@ -47,6 +47,14 @@
 
         SDL_SetWindowSize(window, SCREEN_WIDTH*3, SCREEN_HEIGHT*3);
 
+        // SDL2 leaves text-input/IME composition active by default for a
+        // focused window, which lets the desktop input method (ibus/fcitx)
+        // intercept held letter keys for accented-character candidate
+        // popups instead of delivering them as normal SDL_KEYDOWN/KEYUP
+        // events -- engine_io_sdl.c relies on raw key events for button
+        // state, so this silently ate most of the gameplay keys.
+        SDL_StopTextInput();
+
         engine_display_sdl_update_screen(active_screen_buffer);
     }
 
