@@ -36,7 +36,7 @@ void engine_display_init(){
     #elif defined(__unix__)
         engine_display_sdl_init();
     #elif defined(__arm__)
-        engine_display_gc9107_init();
+        engine_display_hardware_init();
     #endif
 }
 
@@ -50,9 +50,9 @@ void engine_display_apply_brightness(float brightness){
     #if defined(__EMSCRIPTEN__)
 
     #elif defined(__unix__)
-        
+
     #elif defined(__arm__)
-        engine_display_gc9107_apply_brightness(brightness);
+        engine_display_pwm_apply_brightness(brightness);
     #endif
 }
 
@@ -83,7 +83,7 @@ void engine_display_send(){
     #elif defined(__unix__)
         engine_display_sdl_update_screen(active_screen_buffer);
     #elif defined(__arm__)
-        engine_display_gc9107_update(active_screen_buffer);
+        engine_display_hardware_update(active_screen_buffer);
     #endif
 
     engine_switch_active_screen_buffer();
