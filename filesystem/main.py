@@ -10,7 +10,7 @@ from system.launcher_state import has_launcher_state, hold_launcher_state
 
 ROOT_DIR = engine.root_dir()
 
-engine.fps_limit(30)
+# engine.fps_limit(30)
 
 # Catch exceptions from game or system file execution
 try:

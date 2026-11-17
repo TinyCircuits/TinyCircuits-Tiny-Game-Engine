@@ -23,8 +23,8 @@ from system.util import directory_hash
 
 # Speed up the processor to draw the launcher at a
 # higher speed and set an FPS limit
-engine.freq(250 * 1000 * 1000)
-engine.fps_limit(60)
+# engine.freq(250 * 1000 * 1000)
+# engine.fps_limit(60)
 
 system_hash = directory_hash("system", ["main.py"])
 
