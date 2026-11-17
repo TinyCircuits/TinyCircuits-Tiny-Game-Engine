@@ -33,6 +33,10 @@ time.sleep(1)
 shutil.copyfile("filesystem/main.py", output_folder_tree + "/main.py")
 shutil.copytree("filesystem/system", output_folder_tree + "/system")
 
+games_preload_list = ["4Connect", "2048", "BustAThumb", "Chess", "Monstra", "PuzzleAttack", "Sand", "Solitaire", "SongOfMorus", "Tagged", "ThumbAtro", "Thumgeon_II"]
+
+
+'''
 shutil.copytree(output_folder_temp + "/TinyCircuits-Thumby-Color-Games" + "/4Connect",     output_folder_tree + "/Games/4Connect")
 shutil.copytree(output_folder_temp + "/TinyCircuits-Thumby-Color-Games" + "/2048",         output_folder_tree + "/Games/2048")
 shutil.copytree(output_folder_temp + "/TinyCircuits-Thumby-Color-Games" + "/BustAThumb",   output_folder_tree + "/Games/BustAThumb")
@@ -45,6 +49,24 @@ shutil.copytree(output_folder_temp + "/TinyCircuits-Thumby-Color-Games" + "/Song
 shutil.copytree(output_folder_temp + "/TinyCircuits-Thumby-Color-Games" + "/Tagged",       output_folder_tree + "/Games/Tagged")
 shutil.copytree(output_folder_temp + "/TinyCircuits-Thumby-Color-Games" + "/ThumbAtro",    output_folder_tree + "/Games/ThumbAtro")
 shutil.copytree(output_folder_temp + "/TinyCircuits-Thumby-Color-Games" + "/Thumgeon_II",  output_folder_tree + "/Games/Thumgeon_II")
+'''
+
+for game in games_preload_list:
+    shutil.copytree(output_folder_temp + "/TinyCircuits-Thumby-Color-Games/" + game,     output_folder_tree + "/Games/" + game)
+    try:
+        os.remove(output_folder_tree + "/Games/"+game+"/arcade_title_video.webm")
+    except:
+        pass
+    try:
+        os.remove(output_folder_tree + "/Games/"+game+"/arcade_title_video.mp4")
+    except:
+        pass
+    try:
+        os.remove(output_folder_tree + "/Games/"+game+"/arcade_description.txt")
+    except:
+        pass
+
+
 
 
 # Legacy lib copy
